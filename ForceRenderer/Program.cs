@@ -22,7 +22,7 @@ namespace ForceRenderer
 				Scene scene = new Scene();
 				Camera camera = new Camera(110f) {Angles = new Float2(-20f, 160f)};
 
-				using Cubemap cubemap = new Cubemap("Assets/Cubemaps/Debug");
+				using Cubemap cubemap = new Cubemap("Assets/Cubemaps/DebugCubemap");
 				scene.Cubemap = cubemap;
 
 				scene.AddSceneObject(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});

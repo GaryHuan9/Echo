@@ -9,21 +9,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c9584d5d-5173-403c-8f23-276c411e2af4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/ForceRenderer/Renderers/Cubemap.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ForceRenderer/render cubes.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/contentModel.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/BoxObject.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/Camera.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/ForceRenderer.csproj" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/ForceRenderer.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/Modifier.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/Object.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/Objects/Object.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ForceRenderer/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/Renderer.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/RepetitionModifier.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/Scene.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/Scene.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/SceneObject.cs" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/SphereObject.cs" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,8 +48,9 @@
         <option value="$PROJECT_DIR$/ForceRenderer/Scene.cs" />
         <option value="$PROJECT_DIR$/ForceRenderer/Renderers/Renderer.cs" />
         <option value="$PROJECT_DIR$/ForceRenderer/Renderers/Cubemap.cs" />
-        <option value="$PROJECT_DIR$/ForceRenderer/Program.cs" />
         <option value="$PROJECT_DIR$/ForceRenderer/Objects/Object.cs" />
+        <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/ForceRenderer/Program.cs" />
       </list>
     </option>
   </component>
@@ -125,6 +114,7 @@
       <workItem from="1603951377968" duration="188000" />
       <workItem from="1603951594467" duration="82000" />
       <workItem from="1603973462135" duration="17765000" />
+      <workItem from="1604009648623" duration="249000" />
     </task>
     <servers />
   </component>
