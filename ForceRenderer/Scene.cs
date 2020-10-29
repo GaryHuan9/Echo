@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using CodeHelpers.Vectors;
+using ForceRenderer.Objects;
+using ForceRenderer.Renderers;
 
-namespace ForceRenderer
+namespace ForceRenderer.Scenes
 {
 	public class Scene
 	{
-		List<SceneObject> sceneObjects = new List<SceneObject>();
+		readonly List<SceneObject> sceneObjects = new List<SceneObject>();
+		public Cubemap Cubemap { get; set; }
 
 		public void AddSceneObject(SceneObject sceneObject)
 		{

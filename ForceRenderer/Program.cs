@@ -3,6 +3,10 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using CodeHelpers;
 using CodeHelpers.Vectors;
+using ForceRenderer.Modifiers;
+using ForceRenderer.Objects;
+using ForceRenderer.Renderers;
+using ForceRenderer.Scenes;
 
 namespace ForceRenderer
 {
@@ -16,7 +20,10 @@ namespace ForceRenderer
 			{
 				//Create scene
 				Scene scene = new Scene();
-				Camera camera = new Camera(100f);
+				Camera camera = new Camera(110f) {Angles = new Float2(-20f, 160f)};
+
+				using Cubemap cubemap = new Cubemap("Assets/Cubemaps/Debug");
+				scene.Cubemap = cubemap;
 
 				scene.AddSceneObject(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});
 				scene.AddSceneObject(new SphereObject(0.3f) {Position = new Float3(-2.3f, 0.7f, 2.6f)});
@@ -26,6 +33,7 @@ namespace ForceRenderer
 
 				//Render
 				Int2 resolution = new Int2(854, 480); //Half million pixels
+				//Int2 resolution = new Int2(1000, 1000);
 				//Int2 resolution = new Int2(1920, 1080); //1080p
 				//Int2 resolution = new Int2(3840, 2160); //2160p
 
