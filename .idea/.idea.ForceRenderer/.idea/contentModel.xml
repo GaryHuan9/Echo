@@ -6,6 +6,297 @@
     <e p="C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer" t="IncludeFlat">
       <e p="ForceRenderer" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
+        <e p="CodeHelpers" t="Include">
+          <e p=".gitignore" t="Include" />
+          <e p="AI" t="Include">
+            <e p="BehaviorTrees" t="Include">
+              <e p="Attributes.cs" t="Include" />
+              <e p="Attributes.cs.meta" t="Include" />
+              <e p="BehaviorTree.cs" t="Include" />
+              <e p="BehaviorTree.cs.meta" t="Include" />
+              <e p="BehaviorTreeBlueprint.cs" t="Include" />
+              <e p="BehaviorTreeBlueprint.cs.meta" t="Include" />
+              <e p="BehaviorTreeBlueprintNodes.cs" t="Include" />
+              <e p="BehaviorTreeBlueprintNodes.cs.meta" t="Include" />
+              <e p="INodeType.cs" t="Include" />
+              <e p="INodeType.cs.meta" t="Include" />
+              <e p="Result.cs" t="Include" />
+              <e p="Result.cs.meta" t="Include" />
+            </e>
+            <e p="BehaviorTrees.meta" t="Include" />
+          </e>
+          <e p="AI.meta" t="Include" />
+          <e p="CodeHelpers.asmdef" t="Include" />
+          <e p="CodeHelpers.asmdef.meta" t="Include" />
+          <e p="CodeHelpers.cs" t="Include" />
+          <e p="CodeHelpers.cs.meta" t="Include" />
+          <e p="Collections" t="Include">
+            <e p="BinaryHeap.cs" t="Include" />
+            <e p="BinaryHeap.cs.meta" t="Include" />
+            <e p="CollectionHelper.cs" t="Include" />
+            <e p="CollectionHelper.cs.meta" t="Include" />
+            <e p="LimitedSet.cs" t="Include" />
+            <e p="LimitedSet.cs.meta" t="Include" />
+            <e p="TypeCollectionFactory.cs" t="Include" />
+            <e p="TypeCollectionFactory.cs.meta" t="Include" />
+            <e p="TypeDictionary.cs" t="Include" />
+            <e p="TypeDictionary.cs.meta" t="Include" />
+            <e p="UniqueQueue.cs" t="Include" />
+            <e p="UniqueQueue.cs.meta" t="Include" />
+          </e>
+          <e p="Collections.meta" t="Include" />
+          <e p="CurveHelpers.cs" t="Include" />
+          <e p="CurveHelpers.cs.meta" t="Include" />
+          <e p="DebugHelper.cs" t="Include" />
+          <e p="DebugHelper.cs.meta" t="Include" />
+          <e p="EnumHelpers.cs" t="Include" />
+          <e p="EnumHelpers.cs.meta" t="Include" />
+          <e p="Events" t="Include">
+            <e p="EventList.cs" t="Include" />
+            <e p="EventList.cs.meta" t="Include" />
+            <e p="WeakEvent.cs" t="Include" />
+            <e p="WeakEvent.cs.meta" t="Include" />
+            <e p="WeakEventHandler.cs" t="Include" />
+            <e p="WeakEventHandler.cs.meta" t="Include" />
+          </e>
+          <e p="Events.meta" t="Include" />
+          <e p="ExceptionHelpers.cs" t="Include" />
+          <e p="ExceptionHelpers.cs.meta" t="Include" />
+          <e p="ISealable.cs" t="Include" />
+          <e p="ISealable.cs.meta" t="Include" />
+          <e p="MinMax" t="Include">
+            <e p="MinMax.cs" t="Include" />
+            <e p="MinMax.cs.meta" t="Include" />
+            <e p="MinMaxInt.cs" t="Include" />
+            <e p="MinMaxInt.cs.meta" t="Include" />
+          </e>
+          <e p="MinMax.meta" t="Include" />
+          <e p="PerformanceTest.cs" t="Include" />
+          <e p="PerformanceTest.cs.meta" t="Include" />
+          <e p="Pooling" t="Include">
+            <e p="CollectionPooler.cs" t="Include" />
+            <e p="CollectionPooler.cs.meta" t="Include" />
+            <e p="CommonPooler.cs" t="Include" />
+            <e p="CommonPooler.cs.meta" t="Include" />
+            <e p="PoolerBase.cs" t="Include" />
+            <e p="PoolerBase.cs.meta" t="Include" />
+            <e p="RecyclingPoolerBase.cs" t="Include" />
+            <e p="RecyclingPoolerBase.cs.meta" t="Include" />
+          </e>
+          <e p="Pooling.meta" t="Include" />
+          <e p="RandomHelpers.cs" t="Include" />
+          <e p="RandomHelpers.cs.meta" t="Include" />
+          <e p="README.md" t="Include" />
+          <e p="README.md.meta" t="Include" />
+          <e p="Segment" t="Include">
+            <e p="Segment2.cs" t="Include" />
+            <e p="Segment2.cs.meta" t="Include" />
+            <e p="Segment3.cs" t="Include" />
+            <e p="Segment3.cs.meta" t="Include" />
+          </e>
+          <e p="Segment.meta" t="Include" />
+          <e p="StringHelpers.cs" t="Include" />
+          <e p="StringHelpers.cs.meta" t="Include" />
+          <e p="Threads" t="Include">
+            <e p="ThreadExecute.cs" t="Include" />
+            <e p="ThreadExecute.cs.meta" t="Include" />
+            <e p="ThreadHelper.cs" t="Include" />
+            <e p="ThreadHelper.cs.meta" t="Include" />
+          </e>
+          <e p="Threads.meta" t="Include" />
+          <e p="Unity" t="Include">
+            <e p="AudioController.cs" t="Include" />
+            <e p="AudioController.cs.meta" t="Include" />
+            <e p="BehaviorTreeUIEditor" t="Include">
+              <e p="ActionImportData.cs" t="Include" />
+              <e p="ActionImportData.cs.meta" t="Include" />
+              <e p="BehaviorTreeBlueprintData.cs" t="Include" />
+              <e p="BehaviorTreeBlueprintData.cs.meta" t="Include" />
+              <e p="Editor" t="Include">
+                <e p="ActionImportWindow" t="Include">
+                  <e p="ActionImportDataCustomEditor.cs" t="Include" />
+                  <e p="ActionImportDataCustomEditor.cs.meta" t="Include" />
+                  <e p="ActionImportDataEditorWindow.cs" t="Include" />
+                  <e p="ActionImportDataEditorWindow.cs.meta" t="Include" />
+                </e>
+                <e p="ActionImportWindow.meta" t="Include" />
+                <e p="CodeHelpersEditor.asmref" t="Include" />
+                <e p="CodeHelpersEditor.asmref.meta" t="Include" />
+                <e p="Resources" t="Include">
+                  <e p="BehaviorTreeGraph.uss" t="Include" />
+                  <e p="BehaviorTreeGraph.uss.meta" t="Include" />
+                </e>
+                <e p="Resources.meta" t="Include" />
+                <e p="TreeGraph" t="Include">
+                  <e p="ActionSearcher.cs" t="Include" />
+                  <e p="ActionSearcher.cs.meta" t="Include" />
+                  <e p="EdgeConnectorListener.cs" t="Include" />
+                  <e p="EdgeConnectorListener.cs.meta" t="Include" />
+                  <e p="NodeEntry.cs" t="Include" />
+                  <e p="NodeEntry.cs.meta" t="Include" />
+                  <e p="NodeSearcher.cs" t="Include" />
+                  <e p="NodeSearcher.cs.meta" t="Include" />
+                  <e p="TreeBlueprintCustomEditor.cs" t="Include" />
+                  <e p="TreeBlueprintCustomEditor.cs.meta" t="Include" />
+                  <e p="TreeGraphEditorWindow.cs" t="Include" />
+                  <e p="TreeGraphEditorWindow.cs.meta" t="Include" />
+                  <e p="TreeGraphNode.cs" t="Include" />
+                  <e p="TreeGraphNode.cs.meta" t="Include" />
+                  <e p="TreeGraphSerializer.cs" t="Include" />
+                  <e p="TreeGraphSerializer.cs.meta" t="Include" />
+                  <e p="TreeGraphView.cs" t="Include" />
+                  <e p="TreeGraphView.cs.meta" t="Include" />
+                </e>
+                <e p="TreeGraph.meta" t="Include" />
+              </e>
+              <e p="Editor.meta" t="Include" />
+              <e p="Serializable.cs" t="Include" />
+              <e p="Serializable.cs.meta" t="Include" />
+            </e>
+            <e p="BehaviorTreeUIEditor.meta" t="Include" />
+            <e p="CodeCounter" t="Include">
+              <e p="CodeCounter.cs" t="Include" />
+              <e p="CodeCounter.cs.meta" t="Include" />
+              <e p="CodeHelpersEditor.asmref" t="Include" />
+              <e p="CodeHelpersEditor.asmref.meta" t="Include" />
+              <e p="ProjectAnalyzer.cs" t="Include" />
+              <e p="ProjectAnalyzer.cs.meta" t="Include" />
+            </e>
+            <e p="CodeCounter.meta" t="Include" />
+            <e p="CodeHelperMonoBehavior.cs" t="Include" />
+            <e p="CodeHelperMonoBehavior.cs.meta" t="Include" />
+            <e p="CodeHelperUnity.cs" t="Include" />
+            <e p="CodeHelperUnity.cs.meta" t="Include" />
+            <e p="Debug" t="Include">
+              <e p="DebugHelperUnity.cs" t="Include" />
+              <e p="DebugHelperUnity.cs.meta" t="Include" />
+              <e p="GizmosHelper.cs" t="Include" />
+              <e p="GizmosHelper.cs.meta" t="Include" />
+              <e p="InfiniteLoopDebug.cs" t="Include" />
+              <e p="InfiniteLoopDebug.cs.meta" t="Include" />
+            </e>
+            <e p="Debug.meta" t="Include" />
+            <e p="DelayedExecute" t="Include">
+              <e p="DelayedController.cs" t="Include" />
+              <e p="DelayedController.cs.meta" t="Include" />
+              <e p="DelayedDestroy.cs" t="Include" />
+              <e p="DelayedDestroy.cs.meta" t="Include" />
+              <e p="DelayedJob.cs" t="Include" />
+              <e p="DelayedJob.cs.meta" t="Include" />
+            </e>
+            <e p="DelayedExecute.meta" t="Include" />
+            <e p="Editable" t="Include">
+              <e p="EditablePosition.cs" t="Include" />
+              <e p="EditablePosition.cs.meta" t="Include" />
+              <e p="EditablePositionRotation.cs" t="Include" />
+              <e p="EditablePositionRotation.cs.meta" t="Include" />
+              <e p="Editor" t="Include">
+                <e p="CodeHelpersEditor.asmdef" t="Include" />
+                <e p="CodeHelpersEditor.asmdef.meta" t="Include" />
+                <e p="EditableDrawer.cs" t="Include" />
+                <e p="EditableDrawer.cs.meta" t="Include" />
+                <e p="EditableEditor.cs" t="Include" />
+                <e p="EditableEditor.cs.meta" t="Include" />
+                <e p="EditablePositionDrawer.cs" t="Include" />
+                <e p="EditablePositionDrawer.cs.meta" t="Include" />
+                <e p="EditablePositionRotationDrawer.cs" t="Include" />
+                <e p="EditablePositionRotationDrawer.cs.meta" t="Include" />
+              </e>
+              <e p="Editor.meta" t="Include" />
+              <e p="IEditable.cs" t="Include" />
+              <e p="IEditable.cs.meta" t="Include" />
+            </e>
+            <e p="Editable.meta" t="Include" />
+            <e p="Editor" t="Include">
+              <e p="CodeHelpersEditor.asmref" t="Include" />
+              <e p="CodeHelpersEditor.asmref.meta" t="Include" />
+              <e p="CubemapGenerator.cs" t="Include" />
+              <e p="CubemapGenerator.cs.meta" t="Include" />
+              <e p="GradientTextureEditorWindow.cs" t="Include" />
+              <e p="GradientTextureEditorWindow.cs.meta" t="Include" />
+              <e p="VectorPropertyDrawers.cs" t="Include" />
+              <e p="VectorPropertyDrawers.cs.meta" t="Include" />
+            </e>
+            <e p="Editor.meta" t="Include" />
+            <e p="InputHelpers.cs" t="Include" />
+            <e p="InputHelpers.cs.meta" t="Include" />
+            <e p="Meshes" t="Include">
+              <e p="BetterRecalculateNormals.cs" t="Include" />
+              <e p="BetterRecalculateNormals.cs.meta" t="Include" />
+              <e p="Collections" t="Include">
+                <e p="ExtractedMesh.cs" t="Include" />
+                <e p="ExtractedMesh.cs.meta" t="Include" />
+                <e p="MeshThreadedData.cs" t="Include" />
+                <e p="MeshThreadedData.cs.meta" t="Include" />
+              </e>
+              <e p="Collections.meta" t="Include" />
+              <e p="Combinations" t="Include">
+                <e p="MeshMaterials.cs" t="Include" />
+                <e p="MeshMaterials.cs.meta" t="Include" />
+                <e p="MeshMatrix.cs" t="Include" />
+                <e p="MeshMatrix.cs.meta" t="Include" />
+                <e p="RendererFilter.cs" t="Include" />
+                <e p="RendererFilter.cs.meta" t="Include" />
+              </e>
+              <e p="Combinations.meta" t="Include" />
+              <e p="MeshHelpers.cs" t="Include" />
+              <e p="MeshHelpers.cs.meta" t="Include" />
+            </e>
+            <e p="Meshes.meta" t="Include" />
+            <e p="NoiseGeneration.cs" t="Include" />
+            <e p="NoiseGeneration.cs.meta" t="Include" />
+            <e p="PositionRotation.cs" t="Include" />
+            <e p="PositionRotation.cs.meta" t="Include" />
+            <e p="RandomHelperUnity.cs" t="Include" />
+            <e p="RandomHelperUnity.cs.meta" t="Include" />
+            <e p="SingletonHelpers.cs" t="Include" />
+            <e p="SingletonHelpers.cs.meta" t="Include" />
+            <e p="ThreadHelperUnity.cs" t="Include" />
+            <e p="ThreadHelperUnity.cs.meta" t="Include" />
+            <e p="UIHelpers.cs" t="Include" />
+            <e p="UIHelpers.cs.meta" t="Include" />
+            <e p="Vectors" t="Include">
+              <e p="QuaternionHelpers.cs" t="Include" />
+              <e p="QuaternionHelpers.cs.meta" t="Include" />
+              <e p="SerializableVectors.cs" t="Include" />
+              <e p="SerializableVectors.cs.meta" t="Include" />
+              <e p="VectorHelpers.cs" t="Include" />
+              <e p="VectorHelpers.cs.meta" t="Include" />
+            </e>
+            <e p="Vectors.meta" t="Include" />
+            <e p="VideoApplier.cs" t="Include" />
+            <e p="VideoApplier.cs.meta" t="Include" />
+          </e>
+          <e p="Unity.meta" t="Include" />
+          <e p="Vectors" t="Include">
+            <e p="BitVector8.cs" t="Include" />
+            <e p="BitVector8.cs.meta" t="Include" />
+            <e p="Direction.cs" t="Include" />
+            <e p="Direction.cs.meta" t="Include" />
+            <e p="Enumerables" t="Include">
+              <e p="EnumerableLine.cs" t="Include" />
+              <e p="EnumerableLine.cs.meta" t="Include" />
+              <e p="EnumerableSpace.cs" t="Include" />
+              <e p="EnumerableSpace.cs.meta" t="Include" />
+              <e p="EnumerableSphere.cs" t="Include" />
+              <e p="EnumerableSphere.cs.meta" t="Include" />
+            </e>
+            <e p="Enumerables.meta" t="Include" />
+            <e p="Float2.cs" t="Include" />
+            <e p="Float2.cs.meta" t="Include" />
+            <e p="Float3.cs" t="Include" />
+            <e p="Float3.cs.meta" t="Include" />
+            <e p="Int2.cs" t="Include" />
+            <e p="Int2.cs.meta" t="Include" />
+            <e p="Int3.cs" t="Include" />
+            <e p="Int3.cs.meta" t="Include" />
+            <e p="LimitedRotation.cs" t="Include" />
+            <e p="LimitedRotation.cs.meta" t="Include" />
+            <e p="Scalers.cs" t="Include" />
+            <e p="Scalers.cs.meta" t="Include" />
+          </e>
+          <e p="Vectors.meta" t="Include" />
+        </e>
         <e p="ForceRenderer.csproj" t="IncludeRecursive" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">

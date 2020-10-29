@@ -9,10 +9,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c9584d5d-5173-403c-8f23-276c411e2af4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ForceRenderer.sln" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ForceRenderer/ForceRenderer.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ForceRenderer/Program.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/contentModel.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/PerformanceTest.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/PerformanceTest.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Int2.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Int2.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Scalers.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Scalers.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,6 +30,10 @@
       <list>
         <option value="$PROJECT_DIR$/ForceRenderer/ForceRenderer.csproj" />
         <option value="$PROJECT_DIR$/ForceRenderer/Program.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/CurveHelpers.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/PerformanceTest.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Int2.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Scalers.cs" />
       </list>
     </option>
   </component>
@@ -47,6 +54,7 @@
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="Inspections-C#" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
@@ -79,13 +87,14 @@
       <option name="presentableId" value="Default" />
       <updated>1603231659283</updated>
       <workItem from="1603231668043" duration="3180000" />
+      <workItem from="1603932048104" duration="1231000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
-  <component name="UnityProjectConfiguration" hasMinimizedUI="null" />
+  <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -97,6 +106,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
