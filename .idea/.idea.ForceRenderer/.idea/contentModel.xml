@@ -7,8 +7,7 @@
       <e p="ForceRenderer" t="IncludeRecursive">
         <e p="Assets" t="Include">
           <e p="Cubemaps" t="Include">
-            <e p="Cubemap1" t="Include" />
-            <e p="Debug" t="Include">
+            <e p="DebugCubemap" t="Include">
               <e p="NegativeX.png" t="Include" />
               <e p="NegativeY.png" t="Include" />
               <e p="NegativeZ.png" t="Include" />
