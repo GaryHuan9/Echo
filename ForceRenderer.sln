@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceRenderer", "ForceRenderer\ForceRenderer.csproj", "{619F5156-12E9-489E-812D-06EDC7A9FFDA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
