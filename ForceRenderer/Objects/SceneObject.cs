@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Vectors;
 
-namespace ForceRenderer
+namespace ForceRenderer.Objects
 {
 	public abstract class SceneObject : Object
 	{

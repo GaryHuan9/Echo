@@ -1,9 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Vectors;
+using ForceRenderer.Scenes;
 
-namespace ForceRenderer
+namespace ForceRenderer.Renderers
 {
 	public class Renderer
 	{
@@ -25,7 +25,7 @@ namespace ForceRenderer
 		public readonly int bufferSize;
 
 		public float Epsilon { get; set; } = Scalars.Epsilon;
-		public float Range { get; set; } = 100f;
+		public float Range { get; set; } = 1000f;
 		public int MaxSteps { get; set; } = 1000;
 
 		public int Render(Float3[] results, bool threaded)
@@ -61,13 +61,20 @@ namespace ForceRenderer
 			Float3 direction = camera.GetDirection(scaled);
 
 			bool hit = TrySphereTrace(position, direction, out float hitDistance);
-			if (!hit) return Float3.zero;
-
 			Float3 color = Float3.zero;
-			Float3 point = position + direction * hitDistance;
 
-			color = (Float3)(1f - 1f / hitDistance);
-			color = GetNormal(point);
+			if (hit)
+			{
+				Float3 point = position + direction * hitDistance;
+
+				//color = (Float3)(1f - 1f / hitDistance);
+				color = GetNormal(point);
+			}
+			else
+			{
+				//Sample skybox
+				if (scene.Cubemap != null) color = scene.Cubemap.Sample(direction);
+			}
 
 			return color;
 		}

@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Vectors;
 
-namespace ForceRenderer
+namespace ForceRenderer.Objects
 {
 	public class BoxObject : SceneObject
 	{

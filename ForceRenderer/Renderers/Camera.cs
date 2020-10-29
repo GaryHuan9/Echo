@@ -1,9 +1,10 @@
 ﻿using System;
 using CodeHelpers.Vectors;
+using Object = ForceRenderer.Objects.Object;
 
-namespace ForceRenderer
+namespace ForceRenderer.Renderers
 {
-	public class Camera : Object
+	public class Camera : Objects.Object
 	{
 		public Camera(float fieldOfView) => FieldOfView = fieldOfView;
 

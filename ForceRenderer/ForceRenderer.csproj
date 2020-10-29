@@ -9,4 +9,10 @@
       <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Assets\Cubemaps\Cubemap1" />
+      <Folder Include="Assets\Cubemaps\Debug" />
+      <Folder Include="Modifiers" />
+    </ItemGroup>
+
 </Project>
