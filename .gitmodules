@@ -1,0 +1,3 @@
+[submodule "ForceRenderer/CodeHelpers"]
+	path = ForceRenderer/CodeHelpers
+	url = https://github.com/MMXXX-VIII/CodeHelpers.git
