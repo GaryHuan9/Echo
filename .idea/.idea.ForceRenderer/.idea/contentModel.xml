@@ -6,6 +6,8 @@
     <e p="C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer" t="IncludeFlat">
       <e p="ForceRenderer" t="IncludeRecursive">
         <e p="bin" t="ExcludeRecursive" />
+        <e p="BoxObject.cs" t="Include" />
+        <e p="Camera.cs" t="Include" />
         <e p="CodeHelpers" t="Include">
           <e p=".gitignore" t="Include" />
           <e p="AI" t="Include">
@@ -298,6 +300,7 @@
           <e p="Vectors.meta" t="Include" />
         </e>
         <e p="ForceRenderer.csproj" t="IncludeRecursive" />
+        <e p="Modifier.cs" t="Include" />
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
             <e p="netcoreapp3.1" t="Include">
@@ -305,7 +308,13 @@
             </e>
           </e>
         </e>
+        <e p="Object.cs" t="Include" />
         <e p="Program.cs" t="Include" />
+        <e p="Renderer.cs" t="Include" />
+        <e p="RepetitionModifier.cs" t="Include" />
+        <e p="Scene.cs" t="Include" />
+        <e p="SceneObject.cs" t="Include" />
+        <e p="SphereObject.cs" t="Include" />
       </e>
       <e p="ForceRenderer.sln" t="IncludeFlat" />
       <e p="packages" t="ExcludeRecursive" />

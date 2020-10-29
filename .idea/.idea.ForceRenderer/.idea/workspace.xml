@@ -9,13 +9,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c9584d5d-5173-403c-8f23-276c411e2af4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/BoxObject.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/Camera.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/Modifier.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/Object.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/Renderer.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/RepetitionModifier.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/Scene.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/SceneObject.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/ForceRenderer/SphereObject.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/contentModel.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/contentModel.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ForceRenderer/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/PerformanceTest.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/PerformanceTest.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Int2.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Int2.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Scalers.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Scalers.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ForceRenderer/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/ForceRenderer/Program.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,20 +31,39 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="mock:///Dummy.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/4EDFAFBA-FB99-43F1-9D16-5CCA250B8AC8/B/Color.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock:///Dummy.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/MMXXXVIII/Things/CodingStuff/C#/ForceRenderer/ForceRenderer/Program.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/4EDFAFBA-FB99-43F1-9D16-5CCA250B8AC8/0/KnownColor.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/ForceRenderer/ForceRenderer.csproj" />
-        <option value="$PROJECT_DIR$/ForceRenderer/Program.cs" />
         <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/CurveHelpers.cs" />
         <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/PerformanceTest.cs" />
         <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Int2.cs" />
         <option value="$PROJECT_DIR$/ForceRenderer/CodeHelpers/Vectors/Scalers.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/Scene.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/SceneObject.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/Object.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/SphereObject.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/BoxObject.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/Camera.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/ModifierObject.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/Modifier.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/RepetitionModifier.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/Program.cs" />
+        <option value="$PROJECT_DIR$/ForceRenderer/Renderer.cs" />
       </list>
     </option>
   </component>
   <component name="ProjectId" id="1jA0bTeJgnEpwgHQ1xR7DdfRWgA" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="autoscrollFromSource" value="true" />
     <option name="autoscrollToSource" value="true" />
@@ -46,6 +71,8 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="DebuggerViewTab_PTCS_FirstProportionKey" value="0.34995976" />
+    <property name="DebuggerViewTab_PTCS_LastProportionKey" value="0.30008045" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="node.js.path.for.package.stylelint" value="project" />
@@ -87,7 +114,8 @@
       <option name="presentableId" value="Default" />
       <updated>1603231659283</updated>
       <workItem from="1603231668043" duration="3180000" />
-      <workItem from="1603932048104" duration="1231000" />
+      <workItem from="1603932048104" duration="1323000" />
+      <workItem from="1603933466921" duration="13705000" />
     </task>
     <servers />
   </component>
@@ -112,25 +140,101 @@
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="2517" height="413" key="GridCell.Tab.0.bottom" timestamp="1603235321968">
+    <state x="1457" y="440" width="490" height="596" key="#xdebugger.evaluate" timestamp="1603947336050">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2517" height="413" key="GridCell.Tab.0.bottom/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603235321968" />
-    <state width="2517" height="413" key="GridCell.Tab.0.center" timestamp="1603235321968">
+    <state x="1457" y="440" width="490" height="596" key="#xdebugger.evaluate/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603947336050" />
+    <state width="2517" height="534" key="GridCell.Tab.0.bottom" timestamp="1603950521846">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2517" height="413" key="GridCell.Tab.0.center/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603235321968" />
-    <state width="2517" height="413" key="GridCell.Tab.0.left" timestamp="1603235321968">
+    <state width="2517" height="534" key="GridCell.Tab.0.bottom/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.0.center" timestamp="1603950521846">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2517" height="413" key="GridCell.Tab.0.left/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603235321968" />
-    <state width="2517" height="413" key="GridCell.Tab.0.right" timestamp="1603235321968">
+    <state width="2517" height="534" key="GridCell.Tab.0.center/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.0.left" timestamp="1603950521846">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
-    <state width="2517" height="413" key="GridCell.Tab.0.right/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603235321968" />
+    <state width="2517" height="534" key="GridCell.Tab.0.left/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.0.right" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.0.right/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.1.bottom" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.1.bottom/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.1.center" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.1.center/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.1.left" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.1.left/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.1.right" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.1.right/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.2.bottom" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.2.bottom/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.2.center" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.2.center/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.2.left" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.2.left/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.2.right" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.2.right/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.3.bottom" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.3.bottom/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.3.center" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.3.center/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.3.left" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.3.left/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.3.right" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.3.right/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.4.bottom" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.4.bottom/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.4.center" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.4.center/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.4.left" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.4.left/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state width="2517" height="534" key="GridCell.Tab.4.right" timestamp="1603950521846">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state width="2517" height="534" key="GridCell.Tab.4.right/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603950521846" />
+    <state x="990" y="409" key="RiderGenerateDialog" timestamp="1603948236505">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="990" y="409" key="RiderGenerateDialog/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603948236505" />
     <state x="781" y="364" key="SettingsEditor" timestamp="1603231933395">
       <screen x="0" y="0" width="2560" height="1440" />
     </state>
     <state x="781" y="364" key="SettingsEditor/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603231933395" />
+    <state x="936" y="340" key="run.anything.popup" timestamp="1603942251537">
+      <screen x="0" y="0" width="2560" height="1440" />
+    </state>
+    <state x="936" y="340" key="run.anything.popup/0.0.2560.1440/2560.349.1920.1080@0.0.2560.1440" timestamp="1603942251537" />
   </component>
 </project>
