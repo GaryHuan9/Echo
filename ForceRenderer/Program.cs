@@ -1,5 +1,8 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Drawing.Imaging;
+using CodeHelpers;
+using CodeHelpers.Vectors;
 
 namespace ForceRenderer
 {
@@ -7,16 +10,44 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			using Bitmap bitmap = new Bitmap(50, 50);
+			PerformanceTest test = new PerformanceTest();
 
-			for (int x = 0; x < 50; x++)
+			using (test.Start())
 			{
-				bitmap.SetPixel(x, 0, Color.Brown);
-				bitmap.SetPixel(x, 49, Color.Brown);
+				//Create scene
+				Scene scene = new Scene();
+				Camera camera = new Camera(100f);
+
+				scene.AddSceneObject(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});
+				scene.AddSceneObject(new SphereObject(0.3f) {Position = new Float3(-2.3f, 0.7f, 2.6f)});
+				scene.AddSceneObject(new BoxObject(new Float3(1f, 0.3f, 1.4f)) {Position = new Float3(0.1f, 0.3f, 2.3f)});
+				scene.AddSceneObject(new BoxObject(new Float3(1f, 0.3f, 1.4f)) {Position = new Float3(0.1f, -0.4f, 2.3f)});
+				scene.AddSceneObject(new RepetitionModifier(new SphereObject(0.1f), (Float3)1f) {Position = new Float3(0.31f, -0.5f, 0.26f)});
+
+				//Render
+				Int2 resolution = new Int2(854, 480); //Half million pixels
+				//Int2 resolution = new Int2(1920, 1080); //1080p
+				//Int2 resolution = new Int2(3840, 2160); //2160p
+
+				Renderer renderer = new Renderer(scene, camera, resolution);
+				Float3[] colors = new Float3[renderer.bufferSize];
+
+				renderer.Render(colors, true);
+
+				//Export
+				using Bitmap bitmap = new Bitmap(resolution.x, resolution.y);
+				int index = 0;
+
+				foreach (Int2 pixel in resolution.Loop())
+				{
+					Int3 color = (colors[index++].Clamp(0f, 1f - Scalars.Epsilon) * 256f).Floored;
+					bitmap.SetPixel(pixel.x, resolution.y - pixel.y - 1, Color.FromArgb(color.x, color.y, color.z));
+				}
+
+				bitmap.Save("render.png", ImageFormat.Png);
 			}
 
-			bitmap.SetPixel(2, 2, Color.Aqua);
-			bitmap.Save("green.png", ImageFormat.Png);
+			Console.WriteLine($"Finished in {test.ElapsedMilliseconds}ms");
 		}
 	}
 }
