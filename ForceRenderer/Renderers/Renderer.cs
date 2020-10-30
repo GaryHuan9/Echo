@@ -28,11 +28,27 @@ namespace ForceRenderer.Renderers
 		public float Range { get; set; } = 1000f;
 		public int MaxSteps { get; set; } = 1000;
 
-		public int Render(Float3[] results, bool threaded)
+		PressedScene pressedScene;
+		Shade[] _renderBuffer;
+
+		public Shade[] RenderBuffer
+		{
+			get => _renderBuffer;
+			set
+			{
+				if (value != null && value.Length >= bufferSize) _renderBuffer = value;
+				else throw ExceptionHelper.Invalid(nameof(RenderBuffer), this, "is not large enough!");
+			}
+		}
+
+		void Begin() { }
+
+		public int Render(Shade[] results, bool threaded)
 		{
 			if (results.Length < bufferSize) throw ExceptionHelper.Invalid(nameof(results), results, "is not large enough!");
 
 			Float2 oneLess = resolution - Float2.one;
+			pressedScene = new PressedScene(scene);
 
 			if (!threaded)
 			{
@@ -53,7 +69,7 @@ namespace ForceRenderer.Renderers
 		/// Renders a single pixel and returns the result.
 		/// </summary>
 		/// <param name="uv">Zero to one normalized raw uv without any scaling.</param>
-		Float3 Render(Float2 uv)
+		Shade Render(Float2 uv)
 		{
 			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / aspect);
 
@@ -61,14 +77,15 @@ namespace ForceRenderer.Renderers
 			Float3 direction = camera.GetDirection(scaled);
 
 			bool hit = TrySphereTrace(position, direction, out float hitDistance);
-			Float3 color = Float3.zero;
+			Shade color = Shade.black;
 
 			if (hit)
 			{
 				Float3 point = position + direction * hitDistance;
+				Float3 normal = GetNormal(point);
 
-				//color = (Float3)(1f - 1f / hitDistance);
-				color = GetNormal(point);
+				if (scene.Cubemap == null) color = (Shade)normal;
+				else color = scene.Cubemap.Sample(direction.Reflect(normal));
 			}
 			else
 			{
@@ -85,7 +102,7 @@ namespace ForceRenderer.Renderers
 
 			for (int i = 0; i < MaxSteps; i++)
 			{
-				float step = scene.SignedDistance(position);
+				float step = pressedScene.GetSignedDistance(position);
 				distance += step;
 
 				if (step <= Epsilon) return true;   //Trace hit
@@ -100,7 +117,7 @@ namespace ForceRenderer.Renderers
 		Float3 GetNormal(Float3 point)
 		{
 			const float E = Scalars.Epsilon;
-			float center = scene.SignedDistance(point);
+			float center = pressedScene.GetSignedDistance(point);
 
 			return new Float3
 			(
@@ -109,7 +126,7 @@ namespace ForceRenderer.Renderers
 				(Sample(Float3.CreateZ(E)) - Sample(Float3.CreateZ(-E))) / (2f * E)
 			);
 
-			float Sample(Float3 epsilon) => scene.SignedDistance(point + epsilon) - center;
+			float Sample(Float3 epsilon) => pressedScene.GetSignedDistance(point + epsilon) - center;
 		}
 	}
 }

@@ -1,32 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using CodeHelpers.Vectors;
 using ForceRenderer.Objects;
 using ForceRenderer.Renderers;
+using Object = ForceRenderer.Objects.Object;
 
 namespace ForceRenderer.Scenes
 {
-	public class Scene
+	public class Scene : SceneObject
 	{
-		readonly List<SceneObject> sceneObjects = new List<SceneObject>();
 		public Cubemap Cubemap { get; set; }
 
-		public void AddSceneObject(SceneObject sceneObject)
+		public override float SignedDistanceRaw(Float3 point)
 		{
-			sceneObjects.Add(sceneObject);
-		}
+			float distance = float.PositiveInfinity;
 
-		public float SignedDistance(Float3 point)
-		{
-			float distance = float.MaxValue;
-
-			for (int i = 0; i < sceneObjects.Count; i++)
-			{
-				float local = sceneObjects[i].SignedDistance(point);
-				distance = Math.Min(distance, local);
-			}
+			for (int i = 0; i < children.Count; i++) SignedDistance(children[i], point, ref distance);
 
 			return distance;
+		}
+
+		static void SignedDistance(Object target, Float3 point, ref float distance)
+		{
+			if (target is SceneObject sceneObject) distance = Math.Min(distance, sceneObject.GetSignedDistance(point));
+			for (int i = 0; i < target.children.Count; i++) SignedDistance(target.children[i], point, ref distance);
 		}
 	}
 }

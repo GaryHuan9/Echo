@@ -1,36 +1,56 @@
 using System;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using CodeHelpers;
 using CodeHelpers.Vectors;
 
 namespace ForceRenderer.Renderers
 {
-	public class Cubemap : IDisposable
+	public class Cubemap
 	{
 		public Cubemap(string path)
 		{
 			this.path = path;
 
-			maps = new[]
-				   {
-					   Load("PositiveX"), Load("PositiveY"), Load("PositiveZ"),
-					   Load("NegativeX"), Load("NegativeY"), Load("NegativeZ")
-				   };
+			ReadOnlyCollection<string> names = IndividualMapNames;
+			ReadOnlyCollection<Shade>[] sources = new ReadOnlyCollection<Shade>[names.Count];
 
-			Bitmap Load(string name)
+			for (int i = 0; i < names.Count; i++)
 			{
-				string directory = Directory.GetParent(Environment.CurrentDirectory).Parent?.Parent?.FullName;
-				string relative = Path.ChangeExtension(Path.Combine(path, name), ".png");
+				string localPath = Path.Combine(path, names[i]);
+				using var map = new Bitmap(Assets.GetAssetsPath(localPath, ".png"));
 
-				return new Bitmap(Path.Combine(directory ?? "", relative));
+				Int2 resolution = new Int2(map.Width, map.Height);
+
+				if (resolution.x != resolution.y) throw ExceptionHelper.Invalid(nameof(path), localPath, "is not a square image!");
+				if (mapSize != 0 && mapSize != resolution.x) throw ExceptionHelper.Invalid(nameof(path), localPath, "does not have the same size as other images!");
+
+				mapSize = resolution.x;
+				Shade[] pixels = new Shade[resolution.Product];
+
+				for (int j = 0; j < pixels.Length; j++)
+				{
+					Int2 position = GetPixel(j);
+					Color color = map.GetPixel(position.x, position.y);
+
+					pixels[j] = new Shade(color.R, color.G, color.B);
+				}
+
+				sources[i] = new ReadOnlyCollection<Shade>(pixels);
 			}
+
+			maps = new ReadOnlyCollection<ReadOnlyCollection<Shade>>(sources);
 		}
 
 		public readonly string path;
-		readonly Bitmap[] maps;
+		public readonly int mapSize;
 
-		public Float3 Sample(Float3 direction)
+		readonly ReadOnlyCollection<ReadOnlyCollection<Shade>> maps;
+		public static readonly ReadOnlyCollection<string> IndividualMapNames = new ReadOnlyCollection<string>(new[] {"PositiveX", "PositiveY", "PositiveZ", "NegativeX", "NegativeY", "NegativeZ"});
+
+		public Shade Sample(Float3 direction)
 		{
 			Float3 absoluted = direction.Absoluted;
 			int index = absoluted.MaxIndex;
@@ -39,14 +59,14 @@ namespace ForceRenderer.Renderers
 			if (direction[index] < 0f) index += 3;
 
 			Float2 uv = index switch
-			{
-				0 => new Float2(-direction.z, direction.y),
-				1 => new Float2(direction.x, -direction.z),
-				2 => direction.XY,
-				3 => direction.ZY,
-				4 => direction.XZ,
-				_ => new Float2(-direction.x, direction.y)
-			};
+						{
+							0 => new Float2(-direction.z, direction.y),
+							1 => new Float2(direction.x, -direction.z),
+							2 => direction.XY,
+							3 => direction.ZY,
+							4 => direction.XZ,
+							_ => new Float2(-direction.x, direction.y)
+						};
 
 			component = Math.Abs(component) * 2f;
 			return Sample(index, uv / component);
@@ -56,20 +76,15 @@ namespace ForceRenderer.Renderers
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Float3 Sample(int index, Float2 uv)
+		Shade Sample(int index, Float2 uv)
 		{
-			Bitmap map = maps[index];
+			float x = (uv.x + 0.5f) * (mapSize - 1);
+			float y = (0.5f - uv.y) * (mapSize - 1);
 
-			float x = (uv.x + 0.5f) * (map.Width - 1);
-			float y = (0.5f - uv.y) * (map.Height - 1);
-
-			Color color = map.GetPixel(x.Round(), y.Round());
-			return new Float3(color.R / 255f, color.G / 255f, color.B / 255f);
+			return maps[index][GetIndex(new Int2(x.Round(), y.Round()))];
 		}
 
-		public void Dispose()
-		{
-			for (int i = 0; i < maps.Length; i++) maps[i].Dispose();
-		}
+		Int2 GetPixel(int index) => new Int2(index / mapSize, index % mapSize);
+		int GetIndex(Int2 pixel) => pixel.x * mapSize + pixel.y;
 	}
 }

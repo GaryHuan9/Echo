@@ -3,6 +3,16 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants>TRACE; UNSAFE_CODE_ENABLED</DefineConstants>
+      <Optimize>false</Optimize>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants>TRACE; UNSAFE_CODE_ENABLED</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -12,7 +22,6 @@
     <ItemGroup>
       <Folder Include="Assets\Cubemaps\Cubemap1" />
       <Folder Include="Assets\Cubemaps\Debug" />
-      <Folder Include="Modifiers" />
     </ItemGroup>
 
 </Project>
