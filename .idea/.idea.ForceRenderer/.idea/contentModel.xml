@@ -1,13 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ContentModelStore">
-    <e p="$USER_HOME$/Library/Caches/JetBrains/Rider2020.2/extResources" t="IncludeRecursive" />
-    <e p="$USER_HOME$/Library/Caches/JetBrains/Rider2020.2/resharper-host/local/Transient/Rider/v202/SolutionCaches/_ForceRenderer.-1485449442.00" t="ExcludeRecursive" />
-    <e p="$PROJECT_DIR$" t="IncludeFlat">
+    <e p="C:\Users\MMXXXVIII\AppData\local\JetBrains\Rider2020.2\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\MMXXXVIII\AppData\local\JetBrains\Rider2020.2\resharper-host\local\Transient\Rider\v202\SolutionCaches\_ForceRenderer.2068116861.00" t="ExcludeRecursive" />
+    <e p="C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer" t="IncludeFlat">
       <e p="ForceRenderer" t="IncludeRecursive">
         <e p="Assets" t="Include">
           <e p="Cubemaps" t="Include">
+            <e p="Cubemap1" t="Include" />
+            <e p="Debug" t="Include" />
             <e p="DebugCubemap" t="Include">
+              <e p="NegativeX.png" t="Include" />
+              <e p="NegativeY.png" t="Include" />
+              <e p="NegativeZ.png" t="Include" />
+              <e p="PositiveX.png" t="Include" />
+              <e p="PositiveY.png" t="Include" />
+              <e p="PositiveZ.png" t="Include" />
+            </e>
+            <e p="OutsideDayTime" t="Include">
               <e p="NegativeX.png" t="Include" />
               <e p="NegativeY.png" t="Include" />
               <e p="NegativeZ.png" t="Include" />
@@ -17,6 +27,7 @@
             </e>
           </e>
         </e>
+        <e p="Assets.cs" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
         <e p="CodeHelpers" t="Include">
           <e p=".gitignore" t="Include" />
@@ -107,6 +118,7 @@
             <e p="Segment3.cs.meta" t="Include" />
           </e>
           <e p="Segment.meta" t="Include" />
+          <e p="Shade.cs" t="Include" />
           <e p="StringHelpers.cs" t="Include" />
           <e p="StringHelpers.cs.meta" t="Include" />
           <e p="Threads" t="Include">
@@ -310,10 +322,6 @@
           <e p="Vectors.meta" t="Include" />
         </e>
         <e p="ForceRenderer.csproj" t="IncludeRecursive" />
-        <e p="Modifiers" t="Include">
-          <e p="Modifier.cs" t="Include" />
-          <e p="RepetitionModifier.cs" t="Include" />
-        </e>
         <e p="obj" t="ExcludeRecursive">
           <e p="Debug" t="Include">
             <e p="netcoreapp3.1" t="Include">
@@ -326,15 +334,21 @@
           <e p="Object.cs" t="Include" />
           <e p="SceneObject.cs" t="Include" />
           <e p="SphereObject.cs" t="Include" />
+          <e p="Transformation.cs" t="Include" />
         </e>
         <e p="Program.cs" t="Include" />
-        <e p="render bw.png" t="Include" />
-        <e p="render cubes.png" t="Include" />
-        <e p="render normal.png" t="Include" />
         <e p="Renderers" t="Include">
           <e p="Camera.cs" t="Include" />
           <e p="Cubemap.cs" t="Include" />
+          <e p="PressedScene.cs" t="Include" />
           <e p="Renderer.cs" t="Include" />
+          <e p="Texture.cs" t="Include" />
+        </e>
+        <e p="Renders" t="Include">
+          <e p="render bw.png" t="Include" />
+          <e p="render cubes.png" t="Include" />
+          <e p="render normal.png" t="Include" />
+          <e p="render reflection.png" t="Include" />
         </e>
         <e p="Scene.cs" t="Include" />
       </e>

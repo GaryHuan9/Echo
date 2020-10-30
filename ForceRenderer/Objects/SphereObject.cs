@@ -8,6 +8,6 @@ namespace ForceRenderer.Objects
 
 		public float Radius { get; set; }
 
-		public override float SignedDistance(Float3 point) => (point - Position).Magnitude - Radius;
+		public override float SignedDistanceRaw(Float3 point) => point.Magnitude - Radius;
 	}
 }
