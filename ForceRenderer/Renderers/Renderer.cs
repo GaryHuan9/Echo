@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Vectors;
 using ForceRenderer.Scenes;
@@ -14,7 +16,7 @@ namespace ForceRenderer.Renderers
 
 			this.resolution = resolution;
 			aspect = (float)resolution.x / resolution.y;
-			bufferSize = resolution.Product;
+			pixelCount = resolution.Product;
 		}
 
 		public readonly Scene scene;
@@ -22,93 +24,128 @@ namespace ForceRenderer.Renderers
 
 		public readonly Int2 resolution;
 		public readonly float aspect;
-		public readonly int bufferSize;
+		public readonly int pixelCount;
 
 		public float Epsilon { get; set; } = Scalars.Epsilon;
 		public float Range { get; set; } = 1000f;
+
 		public int MaxSteps { get; set; } = 1000;
+		public int MaxBounce { get; set; } = 32;
 
 		PressedScene pressedScene;
+		Thread renderThread;
+
 		Shade[] _renderBuffer;
+		long _completedPixelCount;
 
 		public Shade[] RenderBuffer
 		{
 			get => _renderBuffer;
 			set
 			{
-				if (value != null && value.Length >= bufferSize) _renderBuffer = value;
+				if (CurrentState == State.rendering) throw new Exception("Cannot modify buffer when rendering!");
+
+				if (value != null && value.Length >= pixelCount) _renderBuffer = value;
 				else throw ExceptionHelper.Invalid(nameof(RenderBuffer), this, "is not large enough!");
 			}
 		}
 
-		void Begin() { }
+		public long CompletedPixelCount => Interlocked.Read(ref _completedPixelCount);
 
-		public int Render(Shade[] results, bool threaded)
+		public State CurrentState { get; private set; }
+		public bool Completed => CurrentState == State.completed;
+
+		public void Begin()
 		{
-			if (results.Length < bufferSize) throw ExceptionHelper.Invalid(nameof(results), results, "is not large enough!");
+			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), this, InvalidType.isNull);
+			if (CurrentState != State.waiting) throw new Exception("Incorrect state! Must reset before rendering!");
 
-			Float2 oneLess = resolution - Float2.one;
 			pressedScene = new PressedScene(scene);
+			renderThread = new Thread(RenderThread)
+						   {
+							   Priority = ThreadPriority.Highest,
+							   IsBackground = true
+						   };
 
-			if (!threaded)
-			{
-				for (int i = 0; i < bufferSize; i++) RenderPixel(i);
-			}
-			else Parallel.For(0, bufferSize, RenderPixel);
+			renderThread.Start();
+			CurrentState = State.rendering;
+		}
 
-			return bufferSize;
+		public void WaitForRender() => renderThread.Join();
+		public void Stop() => CurrentState = State.stopped;
 
-			void RenderPixel(int index)
-			{
-				Int2 pixel = new Int2(index / resolution.y, index % resolution.y);
-				results[index] = Render(pixel / oneLess);
-			}
+		public void Reset()
+		{
+			CurrentState = State.waiting;
+			_completedPixelCount = 0;
+
+			pressedScene = null;
+			renderThread = null;
+		}
+
+		void RenderThread()
+		{
+			Float2 uvPixel = 1f / resolution;
+
+			Parallel.For
+			(
+				0, pixelCount, (index, state) =>
+				{
+					if (CurrentState == State.stopped)
+					{
+						state.Break();
+						return;
+					}
+
+					Int2 pixel = new Int2(index / resolution.y, index % resolution.y);
+					RenderBuffer[index] = RenderPixel((pixel + Float2.half) * uvPixel);
+
+					Interlocked.Increment(ref _completedPixelCount);
+				}
+			);
+
+			CurrentState = State.completed;
 		}
 
 		/// <summary>
 		/// Renders a single pixel and returns the result.
 		/// </summary>
 		/// <param name="uv">Zero to one normalized raw uv without any scaling.</param>
-		Shade Render(Float2 uv)
+		Shade RenderPixel(Float2 uv)
 		{
 			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / aspect);
 
 			Float3 position = camera.Position;
 			Float3 direction = camera.GetDirection(scaled);
 
-			bool hit = TrySphereTrace(position, direction, out float hitDistance);
-			Shade color = Shade.black;
+			int bounce = 0;
 
-			if (hit)
+			while (TrySphereTrace(position, direction, out float distance) && bounce++ < MaxBounce)
 			{
-				Float3 point = position + direction * hitDistance;
-				Float3 normal = GetNormal(point);
+				position += direction * distance;
+				direction = direction.Reflect(GetNormal(position));
 
-				if (scene.Cubemap == null) color = (Shade)normal;
-				else color = scene.Cubemap.Sample(direction.Reflect(normal));
-			}
-			else
-			{
-				//Sample skybox
-				if (scene.Cubemap != null) color = scene.Cubemap.Sample(direction);
+				position += direction * Epsilon * 10f;
 			}
 
-			return color;
+			//return (Shade)(direction * 10f % 1f);
+			//return (Shade)(Float3)(bounce / 7f);
+			return scene.Cubemap?.Sample(direction) ?? Shade.black;
 		}
 
-		bool TrySphereTrace(Float3 position, Float3 direction, out float distance)
+		bool TrySphereTrace(Float3 origin, Float3 direction, out float distance)
 		{
 			distance = 0f;
 
 			for (int i = 0; i < MaxSteps; i++)
 			{
+				Float3 position = origin + direction * distance;
 				float step = pressedScene.GetSignedDistance(position);
+
 				distance += step;
 
-				if (step <= Epsilon) return true;   //Trace hit
+				if (step <= Epsilon) return true;     //Trace hit
 				if (distance > Range) return false; //Trace miss
-
-				position += direction * step;
 			}
 
 			return false;
@@ -116,7 +153,7 @@ namespace ForceRenderer.Renderers
 
 		Float3 GetNormal(Float3 point)
 		{
-			const float E = Scalars.Epsilon;
+			const float E = 1E-5f;
 			float center = pressedScene.GetSignedDistance(point);
 
 			return new Float3
@@ -124,9 +161,17 @@ namespace ForceRenderer.Renderers
 				(Sample(Float3.CreateX(E)) - Sample(Float3.CreateX(-E))) / (2f * E),
 				(Sample(Float3.CreateY(E)) - Sample(Float3.CreateY(-E))) / (2f * E),
 				(Sample(Float3.CreateZ(E)) - Sample(Float3.CreateZ(-E))) / (2f * E)
-			);
+			).Normalized;
 
 			float Sample(Float3 epsilon) => pressedScene.GetSignedDistance(point + epsilon) - center;
+		}
+
+		public enum State
+		{
+			waiting,
+			rendering,
+			completed,
+			stopped
 		}
 	}
 }
