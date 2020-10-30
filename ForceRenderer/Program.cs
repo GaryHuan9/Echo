@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using CodeHelpers;
 using CodeHelpers.Vectors;
-using ForceRenderer.Modifiers;
 using ForceRenderer.Objects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Scenes;
@@ -20,27 +19,30 @@ namespace ForceRenderer
 			{
 				//Create scene
 				Scene scene = new Scene();
-				Camera camera = new Camera(110f) {Angles = new Float2(-20f, 160f)};
+				Camera camera = new Camera(110f) {Angles = new Float2(0f, 0f)};
 
-				using Cubemap cubemap = new Cubemap("Assets/Cubemaps/DebugCubemap");
-				scene.Cubemap = cubemap;
+				scene.Cubemap = new Cubemap("Assets/Cubemaps/OutsideDayTime");
+				//scene.Cubemap = new Cubemap("Assets/Cubemaps/DebugCubemap");
 
-				scene.AddSceneObject(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});
-				scene.AddSceneObject(new SphereObject(0.3f) {Position = new Float3(-2.3f, 0.7f, 2.6f)});
-				scene.AddSceneObject(new BoxObject(new Float3(1f, 0.3f, 1.4f)) {Position = new Float3(0.1f, 0.3f, 2.3f)});
-				scene.AddSceneObject(new BoxObject(new Float3(1f, 0.3f, 1.4f)) {Position = new Float3(0.1f, -0.4f, 2.3f)});
-				scene.AddSceneObject(new RepetitionModifier(new SphereObject(0.1f), (Float3)1f) {Position = new Float3(0.31f, -0.5f, 0.26f)});
+				scene.children.Add(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});
+				scene.children.Add(new SphereObject(0.3f) {Position = new Float3(-2.3f, 0.7f, 2.6f)});
+				scene.children.Add(new BoxObject(new Float3(1f, 0.3f, 1.4f)) {Position = new Float3(0.1f, 0.3f, 2.3f), Rotation = new Float2(30f, 77f)});
+				scene.children.Add(new BoxObject(new Float3(0.8f, 0.24f, 0.9f)) {Position = new Float3(-0.3f, -0.6f, 1.3f), Rotation = new Float2(-10f, -6f)});
+				scene.children.Add(new SphereObject(0.1f) {Position = new Float3(0.31f, -0.2f, 0.26f)});
 
 				//Render
-				Int2 resolution = new Int2(854, 480); //Half million pixels
+				//Int2 resolution = new Int2(854, 480); //Half million pixels
 				//Int2 resolution = new Int2(1000, 1000);
 				//Int2 resolution = new Int2(1920, 1080); //1080p
-				//Int2 resolution = new Int2(3840, 2160); //2160p
+				Int2 resolution = new Int2(3840, 2160); //2160p
 
 				Renderer renderer = new Renderer(scene, camera, resolution);
-				Float3[] colors = new Float3[renderer.bufferSize];
+				Shade[] colors = new Shade[renderer.bufferSize];
 
-				renderer.Render(colors, true);
+				PerformanceTest renderTest = new PerformanceTest();
+				using (renderTest.Start()) renderer.Render(colors, true);
+
+				Console.WriteLine(renderTest.ElapsedMilliseconds);
 
 				//Export
 				using Bitmap bitmap = new Bitmap(resolution.x, resolution.y);
@@ -48,8 +50,10 @@ namespace ForceRenderer
 
 				foreach (Int2 pixel in resolution.Loop())
 				{
-					Int3 color = (colors[index++].Clamp(0f, 1f - Scalars.Epsilon) * 256f).Floored;
-					bitmap.SetPixel(pixel.x, resolution.y - pixel.y - 1, Color.FromArgb(color.x, color.y, color.z));
+					Shade shade = colors[index++];
+					Color color = Color.FromArgb(shade.A, shade.R, shade.G, shade.B);
+
+					bitmap.SetPixel(pixel.x, resolution.y - pixel.y - 1, color);
 				}
 
 				bitmap.Save("render.png", ImageFormat.Png);

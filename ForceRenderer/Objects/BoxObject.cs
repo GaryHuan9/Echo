@@ -15,10 +15,15 @@ namespace ForceRenderer.Objects
 			set => extend = value / 2f;
 		}
 
-		public override float SignedDistance(Float3 point)
+		public override float SignedDistanceRaw(Float3 point)
 		{
-			Float3 q = (point - Position).Absoluted - extend;
-			return q.Max(Float3.zero).Magnitude + Math.Min(Math.Max(q.x, Math.Max(q.y, q.z)), 0f);
+			point = point.Absoluted;
+
+			float x = point.x - extend.x;
+			float y = point.y - extend.y;
+			float z = point.z - extend.z;
+
+			return new Float3(Math.Max(x, 0f), Math.Max(y, 0f), Math.Max(z, 0f)).Magnitude + Math.Min(0f, Math.Max(x, Math.Max(y, z)));
 		}
 	}
 }
