@@ -25,7 +25,7 @@ namespace ForceRenderer.Objects
 			}
 		}
 
-		public override float SignedDistanceRaw(Float3 point)
+		public override float GetSignedDistanceRaw(Float3 point)
 		{
 			Float3 q = Mod(point + half, gap) - half;
 			return q.Magnitude - Radius;

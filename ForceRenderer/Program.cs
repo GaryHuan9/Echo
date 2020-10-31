@@ -20,26 +20,26 @@ namespace ForceRenderer
 			{
 				//Create scene
 				Scene scene = new Scene();
-				Camera camera = new Camera(110f) {Angles = new Float2(0f, 0f)};
+				Camera camera = new Camera(110f) {Position = new Float3(0f, 0f, 0f), Angles = new Float2(0f, 0f)};
 
 				scene.Cubemap = new Cubemap("Assets/Cubemaps/OutsideDayTime");
 				//scene.Cubemap = new Cubemap("Assets/Cubemaps/DebugCubemap");
+				//scene.Cubemap = new Cubemap("Assets/Cubemaps/OutsideSea");
 
-				// scene.children.Add(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});
-				// scene.children.Add(new SphereObject(0.3f) {Position = new Float3(-2.3f, 0.7f, 2.6f)});
-				// scene.children.Add(new BoxObject(new Float3(1f, 0.3f, 1.4f)) {Position = new Float3(0.1f, 0.3f, 2.3f), Rotation = new Float2(30f, 77f)});
-				// scene.children.Add(new BoxObject(new Float3(0.8f, 0.24f, 0.9f)) {Position = new Float3(-0.3f, -0.6f, 1.3f), Rotation = new Float2(-10f, -6f)});
-				// scene.children.Add(new SphereObject(0.1f) {Position = new Float3(0.31f, -0.2f, 0.26f)});
+				scene.children.Add(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});
+				scene.children.Add(new SphereObject(0.3f) {Position = new Float3(-2.3f, 0.7f, 2.6f)});
+				scene.children.Add(new BoxObject(new Float3(1f, 0.3f, 2.4f)) {Position = new Float3(0.1f, 0.3f, 2.3f), Rotation = new Float2(30f, 47f)});
+				scene.children.Add(new BoxObject(new Float3(0.8f, 0.24f, 0.9f)) {Position = new Float3(-0.2f, -0.6f, 1.3f), Rotation = new Float2(-10f, 6f)});
+				scene.children.Add(new SphereObject(0.1f) {Position = new Float3(0.31f, -0.2f, 0.26f)});
+
+				//scene.children.Add(new BoxObject(new Float3(1f, 1f, 1f)) {Position = new Float3(-0.2f, -0.9f, 1.8f), Rotation = new Float2(20f, 20f)});
 
 				//scene.children.Add(new InfiniteSphereObject(Float3.one, 0.25f) {Position = Float3.half});
 
 				// for (int i = 0; i < 10; i++) scene.children.Add(new SphereObject(0.45f) {Position = new Float3(-2f, -2f, 0f) + new Float3(0.7f, 0.7f, 0.4f) * i});
-
-				//scene.children.Add(new BoxObject(Float3.one) {Position = Float3.forward});
-				//scene.children.Add(new BoxObject(Float3.one) {Position = Float3.backward});
-
-				scene.children.Add(new SphereObject(0.5f) {Position = Float3.forward});
-				scene.children.Add(new SphereObject(0.5f) {Position = Float3.backward});
+				//
+				// scene.children.Add(new BoxObject(Float3.one) {Position = Float3.forward});
+				// scene.children.Add(new BoxObject(Float3.one) {Position = Float3.backward, Rotation = new Float2(0f, -2f)});
 
 				//Render
 				//Int2 resolution = new Int2(854, 480); //Half million pixels
