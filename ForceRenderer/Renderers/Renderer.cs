@@ -26,11 +26,13 @@ namespace ForceRenderer.Renderers
 		public readonly float aspect;
 		public readonly int pixelCount;
 
-		public float Epsilon { get; set; } = Scalars.Epsilon;
 		public float Range { get; set; } = 1000f;
-
 		public int MaxSteps { get; set; } = 1000;
 		public int MaxBounce { get; set; } = 32;
+
+		public float DistanceEpsilon { get; set; } = 1E-5f;   //Epsilon value used to terminate a sphere trace hit
+		public float NormalEpsilon { get; set; } = 1E-5f;     //Epsilon value used to calculate gradients for normal vector
+		public float ReflectionEpsilon { get; set; } = 3E-3f; //Epsilon value to pre trace ray for reflections
 
 		PressedScene pressedScene;
 		Thread renderThread;
@@ -90,18 +92,18 @@ namespace ForceRenderer.Renderers
 			Parallel.For
 			(
 				0, pixelCount, (index, state) =>
-				{
-					if (CurrentState == State.stopped)
-					{
-						state.Break();
-						return;
-					}
+							   {
+								   if (CurrentState == State.stopped)
+								   {
+									   state.Break();
+									   return;
+								   }
 
-					Int2 pixel = new Int2(index / resolution.y, index % resolution.y);
-					RenderBuffer[index] = RenderPixel((pixel + Float2.half) * uvPixel);
+								   Int2 pixel = new Int2(index / resolution.y, index % resolution.y);
+								   RenderBuffer[index] = RenderPixel((pixel + Float2.half) * uvPixel);
 
-					Interlocked.Increment(ref _completedPixelCount);
-				}
+								   Interlocked.Increment(ref _completedPixelCount);
+							   }
 			);
 
 			CurrentState = State.completed;
@@ -123,13 +125,13 @@ namespace ForceRenderer.Renderers
 			while (TrySphereTrace(position, direction, out float distance) && bounce++ < MaxBounce)
 			{
 				position += direction * distance;
-				direction = direction.Reflect(GetNormal(position));
+				Float3 normal = pressedScene.GetNormal(position);
 
-				position += direction * Epsilon * 10f;
+				direction = direction.Reflect(normal).Normalized;
+				position += direction * ReflectionEpsilon;
 			}
 
-			//return (Shade)(direction * 10f % 1f);
-			//return (Shade)(Float3)(bounce / 7f);
+			//return (Shade)(Float3)((float)bounce / MaxBounce);
 			return scene.Cubemap?.Sample(direction) ?? Shade.black;
 		}
 
@@ -144,26 +146,11 @@ namespace ForceRenderer.Renderers
 
 				distance += step;
 
-				if (step <= Epsilon) return true;     //Trace hit
-				if (distance > Range) return false; //Trace miss
+				if (step <= DistanceEpsilon) return true; //Trace hit
+				if (distance > Range) return false;       //Trace miss
 			}
 
 			return false;
-		}
-
-		Float3 GetNormal(Float3 point)
-		{
-			const float E = 1E-5f;
-			float center = pressedScene.GetSignedDistance(point);
-
-			return new Float3
-			(
-				(Sample(Float3.CreateX(E)) - Sample(Float3.CreateX(-E))) / (2f * E),
-				(Sample(Float3.CreateY(E)) - Sample(Float3.CreateY(-E))) / (2f * E),
-				(Sample(Float3.CreateZ(E)) - Sample(Float3.CreateZ(-E))) / (2f * E)
-			).Normalized;
-
-			float Sample(Float3 epsilon) => pressedScene.GetSignedDistance(point + epsilon) - center;
 		}
 
 		public enum State

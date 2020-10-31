@@ -16,11 +16,20 @@ namespace ForceRenderer.Renderers
 
 			ReadOnlyCollection<string> names = IndividualMapNames;
 			ReadOnlyCollection<Shade>[] sources = new ReadOnlyCollection<Shade>[names.Count];
+			string[] extensions = {".png", ".jpg"};
 
 			for (int i = 0; i < names.Count; i++)
 			{
 				string localPath = Path.Combine(path, names[i]);
-				using var map = new Bitmap(Assets.GetAssetsPath(localPath, ".png"));
+				string fullPath;
+
+				int extensionIndex = 0;
+
+				do fullPath = Assets.GetAssetsPath(localPath, extensions[extensionIndex++]);
+				while (!File.Exists(fullPath) && extensionIndex < extensions.Length);
+
+				if (!File.Exists(fullPath)) throw ExceptionHelper.Invalid(nameof(path), path, $"has no image for {names[i]}");
+				using var map = new Bitmap(fullPath);
 
 				Int2 resolution = new Int2(map.Width, map.Height);
 

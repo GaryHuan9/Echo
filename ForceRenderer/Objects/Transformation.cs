@@ -43,7 +43,7 @@ namespace ForceRenderer.Objects
 			float y = point.y;
 			float z = point.z;
 
-			Rotate(ref x, ref y, ref z, sinX, cosX, sinY, cosY);
+			RotateForward(ref x, ref y, ref z);
 			return new Float3(x + positionX, y + positionY, z + positionZ);
 		}
 
@@ -53,21 +53,54 @@ namespace ForceRenderer.Objects
 			float y = point.y - positionY;
 			float z = point.z - positionZ;
 
-			Rotate(ref x, ref y, ref z, -sinX, cosX, -sinY, cosY);
+			RotateBackward(ref x, ref y, ref z);
 			return new Float3(x, y, z);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static void Rotate(ref float x, ref float y, ref float z, float sinX, float cosX, float sinY, float cosY)
+		public Float3 ForwardDirection(Float3 direction)
 		{
-			float sourceY = y;
+			float x = direction.x;
+			float y = direction.y;
+			float z = direction.z;
+
+			RotateForward(ref x, ref y, ref z);
+			return new Float3(x, y, z);
+		}
+
+		public Float3 BackwardDirection(Float3 direction)
+		{
+			float x = direction.x;
+			float y = direction.y;
+			float z = direction.z;
+
+			RotateBackward(ref x, ref y, ref z);
+			return new Float3(x, y, z);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		void RotateForward(ref float x, ref float y, ref float z)
+		{
 			float sourceX = x;
+			float sourceY = y;
 
 			y = cosX * sourceY - sinX * z;
 			z = sinX * sourceY + cosX * z;
 
 			x = cosY * sourceX - sinY * z;
 			z = sinY * sourceX + cosY * z;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		void RotateBackward(ref float x, ref float y, ref float z)
+		{
+			float sourceX = x;
+			float sourceY = y;
+
+			x = cosY * sourceX + sinY * z;
+			z = cosY * z - sinY * sourceX;
+
+			y = cosX * sourceY + sinX * z;
+			z = cosX * z - sinX * sourceY;
 		}
 	}
 }
