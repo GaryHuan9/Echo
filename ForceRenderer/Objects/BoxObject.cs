@@ -15,7 +15,7 @@ namespace ForceRenderer.Objects
 			set => extend = value / 2f;
 		}
 
-		public override float SignedDistanceRaw(Float3 point)
+		public override float GetSignedDistanceRaw(Float3 point)
 		{
 			point = point.Absoluted;
 
@@ -24,6 +24,12 @@ namespace ForceRenderer.Objects
 			float z = point.z - extend.z;
 
 			return new Float3(Math.Max(x, 0f), Math.Max(y, 0f), Math.Max(z, 0f)).Magnitude + Math.Min(0f, Math.Max(x, Math.Max(y, z)));
+		}
+
+		public override Float3 GetNormalRaw(Float3 point)
+		{
+			int index = (point.Absoluted / extend).MaxIndex;
+			return Float3.Create(index, point[index].Sign());
 		}
 	}
 }
