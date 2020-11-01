@@ -21,6 +21,7 @@ namespace ForceRenderer.Objects
 				_position = value;
 
 				RecalculateTransformations();
+				OnTransformationChanged?.Invoke();
 			}
 		}
 
@@ -33,13 +34,18 @@ namespace ForceRenderer.Objects
 				_rotation = value;
 
 				RecalculateTransformations();
+				OnTransformationChanged?.Invoke();
 			}
 		}
 
 		public Transformation Transformation { get; private set; } = Transformation.identity; //NOTE: Currently no world/local transformation differences
+		public event Action OnTransformationChanged;
 
-		public Float3 TransformToWorld(Float3 local) => Transformation.Forward(local);
-		public Float3 TransformToLocal(Float3 world) => Transformation.Backward(world);
+		public Float3 PointToWorld(Float3 local) => Transformation.Forward(local);
+		public Float3 PointToLocal(Float3 world) => Transformation.Backward(world);
+
+		public Float3 DirectionToWorld(Float3 local) => Transformation.ForwardDirection(local);
+		public Float3 DirectionToLocal(Float3 world) => Transformation.BackwardDirection(world);
 
 		public readonly Children children;
 
