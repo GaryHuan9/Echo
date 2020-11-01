@@ -14,15 +14,18 @@ namespace ForceRenderer
 
 		public readonly static string basePath;
 
-		public static string GetAssetsPath(string path, string extension)
+		/// <summary>
+		/// Returns the absolute path to a path relative to the project folder.
+		/// </summary>
+		public static string GetAssetsPath(string path)
 		{
 			string[] parts = path.Split('/', '\\');
 			string[] splits = new string[parts.Length + 1];
 
-			splits[0] = basePath;
-
 			for (int i = 0; i < parts.Length; i++) splits[i + 1] = parts[i];
-			return Path.ChangeExtension(Path.Combine(splits), extension);
+
+			splits[0] = basePath;
+			return Path.Combine(splits);
 		}
 	}
 }

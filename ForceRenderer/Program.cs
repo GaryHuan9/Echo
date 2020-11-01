@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Vectors;
 using ForceRenderer.Objects;
+using ForceRenderer.Objects.Lights;
+using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Scenes;
 
@@ -20,26 +19,25 @@ namespace ForceRenderer
 			{
 				//Create scene
 				Scene scene = new Scene();
-				Camera camera = new Camera(110f) {Position = new Float3(0f, 0f, 0f), Angles = new Float2(0f, 0f)};
 
-				scene.Cubemap = new Cubemap("Assets/Cubemaps/OutsideDayTime");
+				scene.children.Add(new Camera(110f) {Position = new Float3(0f, 1f, -2), Rotation = new Float2(0f, 0f)});
+				//scene.children.Add(new Camera(90f) {Position = new Float3(0f, 3f, -3f), Rotation = new Float2(45f, 0f)});
+				scene.children.Add(new DirectionalLight {Rotation = new Float2(60f, 0f)});
+
+				//scene.Cubemap = new Cubemap("Assets/Cubemaps/OutsideDayTime");
 				//scene.Cubemap = new Cubemap("Assets/Cubemaps/DebugCubemap");
-				//scene.Cubemap = new Cubemap("Assets/Cubemaps/OutsideSea");
+				scene.Cubemap = new Cubemap("Assets/Cubemaps/OutsideSea");
 
-				scene.children.Add(new SphereObject(0.5f) {Position = new Float3(1f, -0.4f, 3f)});
-				scene.children.Add(new SphereObject(0.3f) {Position = new Float3(-2.3f, 0.7f, 2.6f)});
-				scene.children.Add(new BoxObject(new Float3(1f, 0.3f, 2.4f)) {Position = new Float3(0.1f, 0.3f, 2.3f), Rotation = new Float2(30f, 47f)});
-				scene.children.Add(new BoxObject(new Float3(0.8f, 0.24f, 0.9f)) {Position = new Float3(-0.2f, -0.6f, 1.3f), Rotation = new Float2(-10f, 6f)});
-				scene.children.Add(new SphereObject(0.1f) {Position = new Float3(0.31f, -0.2f, 0.26f)});
+				// scene.children.Add(new BoxObject(new Float3(1f, 1f, 1f)) {Position = new Float3(-1.5f, 0.5f, 0f), Rotation = new Float2(0f, 15f)});
+				// scene.children.Add(new SphereObject(0.5f) {Position = new Float3(1.5f, 0.5f, 0f)});
 
-				//scene.children.Add(new BoxObject(new Float3(1f, 1f, 1f)) {Position = new Float3(-0.2f, -0.9f, 1.8f), Rotation = new Float2(20f, 20f)});
-
-				//scene.children.Add(new InfiniteSphereObject(Float3.one, 0.25f) {Position = Float3.half});
-
-				// for (int i = 0; i < 10; i++) scene.children.Add(new SphereObject(0.45f) {Position = new Float3(-2f, -2f, 0f) + new Float3(0.7f, 0.7f, 0.4f) * i});
-				//
-				// scene.children.Add(new BoxObject(Float3.one) {Position = Float3.forward});
-				// scene.children.Add(new BoxObject(Float3.one) {Position = Float3.backward, Rotation = new Float2(0f, -2f)});
+				scene.children.Add(new PlaneObject());
+				scene.children.Add(new HexagonalPrismObject(1f, 0.3f) {Position = new Float3(-2.2f, 0.3f, 1.4f), Rotation = new Float2(20f, 60f)});
+				scene.children.Add(new SphereObject(0.5f) {Position = new Float3(1f, 0.6f, 1f)});
+				scene.children.Add(new SphereObject(0.3f) {Position = new Float3(-2.3f, 1.7f, 0.6f)});
+				scene.children.Add(new SphereObject(0.1f) {Position = new Float3(0.32f, 0.8f, -1.73f)});
+				scene.children.Add(new BoxObject(new Float3(1f, 0.3f, 2.4f)) {Position = new Float3(0.1f, 1.3f, 0.54f), Rotation = new Float2(30f, 47f)});
+				scene.children.Add(new BoxObject(new Float3(0.8f, 0.24f, 0.9f)) {Position = new Float3(-0.6f, 0.36f, 0.3f), Rotation = new Float2(-20f, 16f)});
 
 				//Render
 				//Int2 resolution = new Int2(854, 480); //Half million pixels
@@ -47,8 +45,8 @@ namespace ForceRenderer
 				//Int2 resolution = new Int2(1920, 1080); //1080p
 				Int2 resolution = new Int2(3840, 2160); //2160p
 
-				Renderer renderer = new Renderer(scene, camera, resolution);
-				Shade[] buffer = new Shade[renderer.pixelCount];
+				Renderer renderer = new Renderer(scene);
+				Texture buffer = new Texture(resolution);
 
 				renderer.RenderBuffer = buffer;
 				renderer.Begin();
@@ -56,27 +54,13 @@ namespace ForceRenderer
 				while (!renderer.Completed)
 				{
 					Console.CursorVisible = false;
-					Thread.Sleep(300);
-
-					Console.Write($"\r{renderer.CompletedPixelCount} / {renderer.pixelCount} Pixels Rendered");
+					Console.Write($"\r{renderer.CompletedPixelCount} / {renderer.RenderLength} Pixels Rendered");
 				}
 
 				Console.WriteLine();
 				renderer.WaitForRender();
 
-				//Export
-				using Bitmap bitmap = new Bitmap(resolution.x, resolution.y);
-				int index = 0;
-
-				foreach (Int2 pixel in resolution.Loop())
-				{
-					Shade shade = buffer[index++];
-					Color color = Color.FromArgb(shade.A, shade.R, shade.G, shade.B);
-
-					bitmap.SetPixel(pixel.x, resolution.y - pixel.y - 1, color);
-				}
-
-				bitmap.Save("render.png", ImageFormat.Png);
+				buffer.SaveFile("render.png");
 			}
 
 			Console.WriteLine($"Completed in {test.ElapsedMilliseconds}ms");
