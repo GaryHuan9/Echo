@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Vectors;
 
-namespace ForceRenderer.Objects
+namespace ForceRenderer.Objects.SceneObjects
 {
 	public abstract class SceneObject : Object
 	{
@@ -10,7 +10,7 @@ namespace ForceRenderer.Objects
 		/// </summary>
 		public float GetSignedDistance(Float3 point)
 		{
-			point = TransformToLocal(point);
+			point = PointToLocal(point);
 			return GetSignedDistanceRaw(point);
 		}
 

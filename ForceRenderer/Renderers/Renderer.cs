@@ -3,58 +3,52 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Vectors;
+using ForceRenderer.Objects.Lights;
 using ForceRenderer.Scenes;
 
 namespace ForceRenderer.Renderers
 {
 	public class Renderer
 	{
-		public Renderer(Scene scene, Camera camera, Int2 resolution)
-		{
-			this.scene = scene;
-			this.camera = camera;
-
-			this.resolution = resolution;
-			aspect = (float)resolution.x / resolution.y;
-			pixelCount = resolution.Product;
-		}
+		public Renderer(Scene scene) => this.scene = scene;
 
 		public readonly Scene scene;
-		public readonly Camera camera;
-
-		public readonly Int2 resolution;
-		public readonly float aspect;
-		public readonly int pixelCount;
+		PressedScene pressedScene;
 
 		public float Range { get; set; } = 1000f;
 		public int MaxSteps { get; set; } = 1000;
-		public int MaxBounce { get; set; } = 32;
+		public int MaxBounce { get; set; } = 8;
 
 		public float DistanceEpsilon { get; set; } = 1E-5f;   //Epsilon value used to terminate a sphere trace hit
-		public float NormalEpsilon { get; set; } = 1E-5f;     //Epsilon value used to calculate gradients for normal vector
 		public float ReflectionEpsilon { get; set; } = 3E-3f; //Epsilon value to pre trace ray for reflections
 
-		PressedScene pressedScene;
 		Thread renderThread;
 
-		Shade[] _renderBuffer;
-		long _completedPixelCount;
+		volatile Texture _renderBuffer;
 
-		public Shade[] RenderBuffer
+		long _completedPixelCount;
+		long _currentState;
+
+		public Texture RenderBuffer
 		{
 			get => _renderBuffer;
 			set
 			{
 				if (CurrentState == State.rendering) throw new Exception("Cannot modify buffer when rendering!");
-
-				if (value != null && value.Length >= pixelCount) _renderBuffer = value;
-				else throw ExceptionHelper.Invalid(nameof(RenderBuffer), this, "is not large enough!");
+				Interlocked.Exchange(ref _renderBuffer, value);
 			}
 		}
 
 		public long CompletedPixelCount => Interlocked.Read(ref _completedPixelCount);
+		public float RenderAspect => RenderBuffer.aspect;
+		public int RenderLength => RenderBuffer.length;
 
-		public State CurrentState { get; private set; }
+		public State CurrentState
+		{
+			get => (State)Interlocked.Read(ref _currentState);
+			private set => Interlocked.Exchange(ref _currentState, (long)value);
+		}
+
 		public bool Completed => CurrentState == State.completed;
 
 		public void Begin()
@@ -69,8 +63,10 @@ namespace ForceRenderer.Renderers
 							   IsBackground = true
 						   };
 
-			renderThread.Start();
+			if (pressedScene.camera == null) throw new Exception("No camera in scene! Cannot render without a camera!");
+
 			CurrentState = State.rendering;
+			renderThread.Start();
 		}
 
 		public void WaitForRender() => renderThread.Join();
@@ -87,23 +83,21 @@ namespace ForceRenderer.Renderers
 
 		void RenderThread()
 		{
-			Float2 uvPixel = 1f / resolution;
-
 			Parallel.For
 			(
-				0, pixelCount, (index, state) =>
-							   {
-								   if (CurrentState == State.stopped)
-								   {
-									   state.Break();
-									   return;
-								   }
+				0, RenderBuffer.length, (index, state) =>
+										{
+											if (CurrentState == State.stopped)
+											{
+												state.Break();
+												return;
+											}
 
-								   Int2 pixel = new Int2(index / resolution.y, index % resolution.y);
-								   RenderBuffer[index] = RenderPixel((pixel + Float2.half) * uvPixel);
+											Shade color = RenderPixel(RenderBuffer.ToUV(index));
+											RenderBuffer.SetPixel(index, color);
 
-								   Interlocked.Increment(ref _completedPixelCount);
-							   }
+											Interlocked.Increment(ref _completedPixelCount);
+										}
 			);
 
 			CurrentState = State.completed;
@@ -115,42 +109,83 @@ namespace ForceRenderer.Renderers
 		/// <param name="uv">Zero to one normalized raw uv without any scaling.</param>
 		Shade RenderPixel(Float2 uv)
 		{
-			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / aspect);
+			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / RenderAspect);
 
-			Float3 position = camera.Position;
-			Float3 direction = camera.GetDirection(scaled);
+			Float3 position = pressedScene.camera.Position;
+			Float3 direction = pressedScene.camera.GetDirection(scaled);
 
+			int token = -1;
 			int bounce = 0;
 
-			while (TrySphereTrace(position, direction, out float distance) && bounce++ < MaxBounce)
+			Float3 energy = Float3.one;
+			Float3 color = Float3.zero;
+
+			Float3 specular = new Float3(0.6f, 0.6f, 0.6f);
+			Float3 albedo = new Float3(0.8f, 0.8f, 0.8f);
+
+			while (TrySphereTrace(position, direction, out float distance, out token, token) && bounce++ < MaxBounce)
 			{
 				position += direction * distance;
-				Float3 normal = pressedScene.GetNormal(position);
 
+				Float3 normal = pressedScene.GetNormal(position);
 				direction = direction.Reflect(normal).Normalized;
-				position += direction * ReflectionEpsilon;
+
+				energy *= specular;
+
+				if (pressedScene.directionalLight != null)
+				{
+					DirectionalLight light = pressedScene.directionalLight;
+					Float3 lightDirection = -light.Direction;
+
+					float coefficient = normal.Dot(lightDirection).Clamp(0f, 1f) * light.Intensity;
+					coefficient *= TraceSoftShadow(position, lightDirection, light.ShadowHardness, token);
+
+					color += coefficient * albedo * energy;
+				}
 			}
 
+			color += energy * (Float3)scene.Cubemap.Sample(direction); //Sample skybox
+
 			//return (Shade)(Float3)((float)bounce / MaxBounce);
-			return scene.Cubemap?.Sample(direction) ?? Shade.black;
+			return (Shade)color;
 		}
 
-		bool TrySphereTrace(Float3 origin, Float3 direction, out float distance)
+		bool TrySphereTrace(Float3 origin, Float3 direction, out float distance, out int token, int exclude = -1)
 		{
 			distance = 0f;
+			token = -1;
 
 			for (int i = 0; i < MaxSteps; i++)
 			{
 				Float3 position = origin + direction * distance;
-				float step = pressedScene.GetSignedDistance(position);
+				float step = pressedScene.GetSignedDistance(position, out token, exclude);
 
 				distance += step;
 
-				if (step <= DistanceEpsilon) return true; //Trace hit
-				if (distance > Range) return false;       //Trace miss
+				if (Math.Abs(step) <= DistanceEpsilon) return true; //Trace hit
+				if (distance > Range) return false;                 //Trace miss
 			}
 
 			return false;
+		}
+
+		float TraceSoftShadow(Float3 origin, Float3 direction, float hardness, int exclude = -1)
+		{
+			float light = 1f;
+			float distance = 0f;
+
+			for (int i = 0; i < MaxSteps; i++)
+			{
+				Float3 position = origin + direction * distance;
+				float step = pressedScene.GetSignedDistance(position, exclude);
+
+				light = Math.Min(light, hardness * step / distance);
+				distance += step;
+
+				if (step <= DistanceEpsilon || distance > Range) break;
+			}
+
+			return light.Clamp(0f, 1f);
 		}
 
 		public enum State

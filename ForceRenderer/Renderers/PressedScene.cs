@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Collections;
 using CodeHelpers.ObjectPooling;
 using CodeHelpers.Vectors;
 using ForceRenderer.Objects;
+using ForceRenderer.Objects.Lights;
+using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Scenes;
 using Object = ForceRenderer.Objects.Object;
 
@@ -28,7 +29,29 @@ namespace ForceRenderer.Renderers
 			while (frontier.Count > 0)
 			{
 				Object target = frontier.Dequeue();
-				if (target != source && target is SceneObject sceneObject) objects.Add(sceneObject);
+
+				switch (target)
+				{
+					case SceneObject value:
+					{
+						objects.Add(value);
+						break;
+					}
+					case Camera value:
+					{
+						if (camera == null) camera = value;
+						else Console.WriteLine($"Multiple {nameof(Camera)} found! Only the first one will be used.");
+
+						break;
+					}
+					case DirectionalLight value:
+					{
+						if (directionalLight == null) directionalLight = value;
+						else Console.WriteLine($"Multiple {nameof(DirectionalLight)} found! Only the first one will be used.");
+
+						break;
+					}
+				}
 
 				Object.Children children = target.children;
 				for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
@@ -51,6 +74,9 @@ namespace ForceRenderer.Renderers
 
 		public readonly Scene source;
 
+		public readonly Camera camera;
+		public readonly DirectionalLight directionalLight;
+
 		readonly int bundleCount;
 		readonly Bundle[] bundles; //Contiguous chunks of data; sorted by scene object hash code
 
@@ -58,13 +84,14 @@ namespace ForceRenderer.Renderers
 		/// Gets the signed distance from <paramref name="point"/> to the scene.
 		/// <paramref name="token"/> contains the token of the <see cref="SceneObject"/> that is the closest to <paramref name="point"/>.
 		/// </summary>
-		public float GetSignedDistance(Float3 point, out int token)
+		public float GetSignedDistance(Float3 point, out int token, int exclude = -1)
 		{
 			float distance = float.PositiveInfinity;
 			token = -1;
 
 			for (int i = 0; i < bundleCount; i++)
 			{
+				if (i == exclude) continue;
 				Bundle bundle = bundles[i];
 
 				Float3 transformed = bundle.transformation.Backward(point);
@@ -83,16 +110,16 @@ namespace ForceRenderer.Renderers
 		/// <summary>
 		/// Gets the signed distance from <paramref name="point"/> to the scene.
 		/// </summary>
-		public float GetSignedDistance(Float3 point) => GetSignedDistance(point, out int _);
+		public float GetSignedDistance(Float3 point, int exclude = -1) => GetSignedDistance(point, out int _, exclude);
 
 		/// <summary>
 		/// Gets the signed distance from <paramref name="point"/> to object with <paramref name="token"/>.
 		/// </summary>
-		public float GetSignedDistance(Float3 point, int token) => GetSignedDistance(point, bundles[token]);
+		public float GetSingleDistance(Float3 point, int token) => GetSingleDistance(point, bundles[token]);
 
-		/// <inheritdoc cref="GetSignedDistance(CodeHelpers.Vectors.Float3,int)"/>
+		/// <inheritdoc cref="GetSingleDistance"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		static float GetSignedDistance(Float3 point, in Bundle bundle)
+		static float GetSingleDistance(Float3 point, in Bundle bundle)
 		{
 			Float3 transformed = bundle.transformation.Backward(point);
 			return bundle.sceneObject.GetSignedDistanceRaw(transformed);
@@ -102,7 +129,22 @@ namespace ForceRenderer.Renderers
 		/// <paramref name="token"/> contains the token of the object used to calculate normal.
 		public Float3 GetNormal(Float3 point, out int token)
 		{
-			float center = GetSignedDistance(point, out token);
+			GetSignedDistance(point, out token);
+			return GetNormal(point, token);
+		}
+
+		/// <summary>
+		/// Gets the normal of the scene at <paramref name="point"/>.
+		/// This value might be approximated using distance gradients or it might be exact.
+		/// Your <see cref="SceneObject"/> implementation determines the calculation.
+		/// </summary>
+		public Float3 GetNormal(Float3 point) => GetNormal(point, out int _);
+
+		/// <inheritdoc cref="GetNormal(CodeHelpers.Vectors.Float3)"/>
+		/// The object with <paramref name="token"/> should be closest to <paramref name="point"/>,
+		/// and it will be the only object tested for normal.
+		public Float3 GetNormal(Float3 point, int token)
+		{
 			Bundle bundle = bundles[token];
 
 			if (bundle.hasNormalImplementation)
@@ -115,7 +157,9 @@ namespace ForceRenderer.Renderers
 			}
 
 			//No proper normal implementation, fallback to gradient approximation
-			const float E = 1E-5f; //Epsilon value used for gradient offsets
+			//Sample 6 distance values gradient using, 2 for each axis
+
+			const float E = 1.2E-4f; //Epsilon value used for gradient offsets
 
 			return new Float3
 			(
@@ -124,15 +168,8 @@ namespace ForceRenderer.Renderers
 				Sample(Float3.CreateZ(E)) - Sample(Float3.CreateZ(-E))
 			).Normalized;
 
-			float Sample(Float3 epsilon) => GetSignedDistance(point + epsilon, bundle) - center;
+			float Sample(Float3 epsilon) => GetSingleDistance(point + epsilon, bundle);
 		}
-
-		/// <summary>
-		/// Gets the normal of the scene at <paramref name="point"/>.
-		/// This value might be approximated using distance gradients or it might be exact.
-		/// Your <see cref="SceneObject"/> implementation determines the calculation.
-		/// </summary>
-		public Float3 GetNormal(Float3 point) => GetNormal(point, out int _);
 
 		readonly struct Bundle
 		{
