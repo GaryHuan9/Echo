@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 
-namespace ForceRenderer
+namespace ForceRenderer.IO
 {
-	public static class Assets
+	public static class AssetsUtility
 	{
-		static Assets()
+		static AssetsUtility()
 		{
 			basePath = Directory.GetParent(Environment.CurrentDirectory).Parent?.Parent?.FullName;
 			if (basePath == null) throw new Exception("Cannot find assets directory!");

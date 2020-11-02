@@ -1,17 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
-using System.Drawing;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Vectors;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.IO
 {
-	public class Cubemap
+	public class SixSideCubemap : Cubemap
 	{
-		public Cubemap(string path)
+		public SixSideCubemap(string path)
 		{
 			this.path = path;
 			Exception error = null;
@@ -45,7 +43,7 @@ namespace ForceRenderer.Renderers
 
 		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new ReadOnlyCollection<string>(new[] {"px", "py", "pz", "nx", "ny", "nz"});
 
-		public Shade Sample(Float3 direction)
+		public override Shade Sample(Float3 direction)
 		{
 			Float3 absoluted = direction.Absoluted;
 			int index = absoluted.MaxIndex;

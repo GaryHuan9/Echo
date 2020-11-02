@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
 using CodeHelpers;
 using CodeHelpers.Vectors;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.IO
 {
 	/// <summary>
 	/// An asset object used to read or save an image. Pixels are stored raw for fast access but uses much more memory.
@@ -23,7 +21,7 @@ namespace ForceRenderer.Renderers
 			if (string.IsNullOrEmpty(extension))
 			{
 				//No provided extension, check through all available extensions
-				string assetPath = Assets.GetAssetsPath(relativePath);
+				string assetPath = AssetsUtility.GetAssetsPath(relativePath);
 
 				foreach (string compatibleExtension in compatibleExtensions)
 				{
@@ -33,7 +31,7 @@ namespace ForceRenderer.Renderers
 			}
 			else
 			{
-				if (compatibleExtensions.Contains(extension)) path = Assets.GetAssetsPath(relativePath);
+				if (compatibleExtensions.Contains(extension)) path = AssetsUtility.GetAssetsPath(relativePath);
 				else throw new FileNotFoundException($"Incompatible file type at {relativePath} for {nameof(Texture)}");
 			}
 
@@ -133,7 +131,7 @@ namespace ForceRenderer.Renderers
 				if (extensionIndex < 0) throw ExceptionHelper.Invalid(nameof(relativePath), relativePath, "does not have a compatible extension!");
 			}
 
-			string path = Assets.GetAssetsPath(relativePath);
+			string path = AssetsUtility.GetAssetsPath(relativePath);
 
 			//Export
 			using Bitmap bitmap = new Bitmap(size.x, size.y);
@@ -169,7 +167,8 @@ namespace ForceRenderer.Renderers
 		public int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public int ToIndex(Float2 uv) => ToIndex(ToPosition(uv));
 
-		public Float2 ToUV(Int2 position) => (Float2)position / oneLess;
+		public Float2 ToUV(Int2 position) => (position + Float2.half) / size;
+		public Float2 ToUV(Float2 position) => position / size;
 		public Float2 ToUV(int index) => ToUV(ToPosition(index));
 	}
 }

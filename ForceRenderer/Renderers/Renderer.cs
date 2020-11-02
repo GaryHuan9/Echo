@@ -3,25 +3,45 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Vectors;
+using ForceRenderer.IO;
+using ForceRenderer.Mathematics;
 using ForceRenderer.Objects.Lights;
+using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Scenes;
 
 namespace ForceRenderer.Renderers
 {
 	public class Renderer
 	{
-		public Renderer(Scene scene) => this.scene = scene;
+		public Renderer(Scene scene, int sampleCount)
+		{
+			this.scene = scene;
+			this.sampleCount = sampleCount;
+
+			//Create sample spiral
+			sampleSpiral = new Float2[sampleCount];
+
+			for (int i = 0; i < sampleCount; i++)
+			{
+				float index = i + 0.5f;
+
+				float length = (float)Math.Sqrt(index / sampleCount);
+				float angle = Scalars.PI * (1f + (float)Math.Sqrt(5d)) * index;
+
+				Float2 sample = new Float2((float)Math.Cos(angle), (float)Math.Sin(angle));
+				sampleSpiral[i] = sample * length / 2f + Float2.half;
+			}
+		}
 
 		public readonly Scene scene;
+		public readonly int sampleCount;
+
+		public int MaxBounce { get; set; } = 32;
+		public float EnergyEpsilon { get; set; } = 1E-3f; //Epsilon lower bound value to determine when an energy is essentially zero
+
+		readonly Float2[] sampleSpiral;
+
 		PressedScene pressedScene;
-
-		public float Range { get; set; } = 1000f;
-		public int MaxSteps { get; set; } = 1000;
-		public int MaxBounce { get; set; } = 8;
-
-		public float DistanceEpsilon { get; set; } = 1E-5f;   //Epsilon value used to terminate a sphere trace hit
-		public float ReflectionEpsilon { get; set; } = 3E-3f; //Epsilon value to pre trace ray for reflections
-
 		Thread renderThread;
 
 		volatile Texture _renderBuffer;
@@ -50,6 +70,11 @@ namespace ForceRenderer.Renderers
 		}
 
 		public bool Completed => CurrentState == State.completed;
+
+		/// <summary>
+		/// Returns a random number within [0f, 1f). Thread-safe
+		/// </summary>
+		static float RandomValue => (float)RandomHelper.Value;
 
 		public void Begin()
 		{
@@ -93,9 +118,17 @@ namespace ForceRenderer.Renderers
 												return;
 											}
 
-											Shade color = RenderPixel(RenderBuffer.ToUV(index));
-											RenderBuffer.SetPixel(index, color);
+											Float3 color = default;
 
+											for (int i = 0; i < sampleCount; i++)
+											{
+												Int2 position = RenderBuffer.ToPosition(index);
+												Float2 random = sampleSpiral[i];
+
+												color += RenderPixel(RenderBuffer.ToUV(position + random));
+											}
+
+											RenderBuffer.SetPixel(index, (Shade)(color / sampleCount));
 											Interlocked.Increment(ref _completedPixelCount);
 										}
 			);
@@ -107,86 +140,59 @@ namespace ForceRenderer.Renderers
 		/// Renders a single pixel and returns the result.
 		/// </summary>
 		/// <param name="uv">Zero to one normalized raw uv without any scaling.</param>
-		Shade RenderPixel(Float2 uv)
+		Float3 RenderPixel(Float2 uv)
 		{
 			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / RenderAspect);
+			Ray ray = new Ray(pressedScene.camera.Position, pressedScene.camera.GetDirection(scaled));
 
-			Float3 position = pressedScene.camera.Position;
-			Float3 direction = pressedScene.camera.GetDirection(scaled);
-
-			int token = -1;
 			int bounce = 0;
 
 			Float3 energy = Float3.one;
 			Float3 color = Float3.zero;
 
-			Float3 specular = new Float3(0.6f, 0.6f, 0.6f);
-			Float3 albedo = new Float3(0.8f, 0.8f, 0.8f);
-
-			while (TrySphereTrace(position, direction, out float distance, out token, token) && bounce++ < MaxBounce)
+			while (TryTrace(ray, out float distance, out int token) && bounce++ < MaxBounce)
 			{
-				position += direction * distance;
+				ref PressedBundle bundle = ref pressedScene.GetPressedBundle(token);
 
-				Float3 normal = pressedScene.GetNormal(position);
-				direction = direction.Reflect(normal).Normalized;
-
-				energy *= specular;
+				Float3 position = ray.GetPoint(distance);
+				Float3 normal = pressedScene.GetNormal(position, token);
 
 				if (pressedScene.directionalLight != null)
 				{
 					DirectionalLight light = pressedScene.directionalLight;
-					Float3 lightDirection = -light.Direction;
+					Ray lightRay = new Ray(position, -light.Direction, true);
 
-					float coefficient = normal.Dot(lightDirection).Clamp(0f, 1f) * light.Intensity;
-					coefficient *= TraceSoftShadow(position, lightDirection, light.ShadowHardness, token);
+					float coefficient = normal.Dot(lightRay.direction).Clamp(0f, 1f);
+					if (coefficient > 0f) coefficient *= TryTraceShadow(lightRay);
 
-					color += coefficient * albedo * energy;
+					color += coefficient * energy * bundle.material.albedo * light.Intensity;
 				}
+
+				energy *= bundle.material.specular;
+				ray = new Ray(position, ray.direction.Reflect(normal), true);
+
+				if (IsZeroEnergy(energy)) break;
 			}
 
-			color += energy * (Float3)scene.Cubemap.Sample(direction); //Sample skybox
+			//return (Float3)((float)bounce / MaxBounce);
 
-			//return (Shade)(Float3)((float)bounce / MaxBounce);
-			return (Shade)color;
+			if (scene.Cubemap == null) return color;
+			return color + energy * (Float3)scene.Cubemap.Sample(ray.direction) * 1.8f; //Sample skybox
 		}
 
-		bool TrySphereTrace(Float3 origin, Float3 direction, out float distance, out int token, int exclude = -1)
+		bool TryTrace(in Ray ray, out float distance, out int token)
 		{
-			distance = 0f;
-			token = -1;
-
-			for (int i = 0; i < MaxSteps; i++)
-			{
-				Float3 position = origin + direction * distance;
-				float step = pressedScene.GetSignedDistance(position, out token, exclude);
-
-				distance += step;
-
-				if (Math.Abs(step) <= DistanceEpsilon) return true; //Trace hit
-				if (distance > Range) return false;                 //Trace miss
-			}
-
-			return false;
+			distance = pressedScene.GetIntersection(ray, out token);
+			return distance < float.PositiveInfinity;
 		}
 
-		float TraceSoftShadow(Float3 origin, Float3 direction, float hardness, int exclude = -1)
+		float TryTraceShadow(in Ray ray)
 		{
-			float light = 1f;
-			float distance = 0f;
-
-			for (int i = 0; i < MaxSteps; i++)
-			{
-				Float3 position = origin + direction * distance;
-				float step = pressedScene.GetSignedDistance(position, exclude);
-
-				light = Math.Min(light, hardness * step / distance);
-				distance += step;
-
-				if (step <= DistanceEpsilon || distance > Range) break;
-			}
-
-			return light.Clamp(0f, 1f);
+			float distance = pressedScene.GetIntersection(ray);
+			return distance < float.PositiveInfinity ? 0f : 1f;
 		}
+
+		bool IsZeroEnergy(Float3 energy) => energy.x <= EnergyEpsilon && energy.y <= EnergyEpsilon && energy.z <= EnergyEpsilon;
 
 		public enum State
 		{
