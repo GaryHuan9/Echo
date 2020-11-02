@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using CodeHelpers;
 using CodeHelpers.ObjectPooling;
 using CodeHelpers.Vectors;
+using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.Lights;
 using ForceRenderer.Objects.SceneObjects;
@@ -18,6 +20,7 @@ namespace ForceRenderer.Renderers
 	{
 		public PressedScene(Scene source)
 		{
+			ExceptionHelper.InvalidIfNotMainThread();
 			this.source = source;
 
 			List<SceneObject> objects = CollectionPooler<SceneObject>.list.GetObject();
@@ -59,12 +62,12 @@ namespace ForceRenderer.Renderers
 
 			//Extract pressed data
 			bundleCount = objects.Count;
-			bundles = new Bundle[bundleCount];
+			bundles = new PressedBundle[bundleCount];
 
 			for (int i = 0; i < bundleCount; i++)
 			{
 				SceneObject sceneObject = objects[i];
-				bundles[i] = new Bundle(i, sceneObject);
+				bundles[i] = new PressedBundle(i, sceneObject);
 			}
 
 			//Release
@@ -78,24 +81,29 @@ namespace ForceRenderer.Renderers
 		public readonly DirectionalLight directionalLight;
 
 		readonly int bundleCount;
-		readonly Bundle[] bundles; //Contiguous chunks of data; sorted by scene object hash code
+		readonly PressedBundle[] bundles; //Contiguous chunks of data; sorted by scene object hash code
 
 		/// <summary>
-		/// Gets the signed distance from <paramref name="point"/> to the scene.
-		/// <paramref name="token"/> contains the token of the <see cref="SceneObject"/> that is the closest to <paramref name="point"/>.
+		/// Returns pressed bundle for object with <paramref name="token"/>
 		/// </summary>
-		public float GetSignedDistance(Float3 point, out int token, int exclude = -1)
+		/// <param name="token"></param>
+		/// <returns></returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		public ref PressedBundle GetPressedBundle(int token) => ref bundles[token];
+
+		/// <summary>
+		/// Returns the distance from scene intersection to ray origin.
+		/// <paramref name="token"/> contains the token of the <see cref="SceneObject"/> that intersected with ray.
+		/// </summary>
+		public float GetIntersection(in Ray ray, out int token)
 		{
 			float distance = float.PositiveInfinity;
 			token = -1;
 
 			for (int i = 0; i < bundleCount; i++)
 			{
-				if (i == exclude) continue;
-				Bundle bundle = bundles[i];
-
-				Float3 transformed = bundle.transformation.Backward(point);
-				float local = bundle.sceneObject.GetSignedDistanceRaw(transformed);
+				ref PressedBundle bundle = ref GetPressedBundle(i);
+				float local = GetSingleIntersection(ray, bundle);
 
 				if (local >= distance) continue;
 
@@ -106,90 +114,40 @@ namespace ForceRenderer.Renderers
 			return distance;
 		}
 
+		/// <summary>
+		/// Returns the distance of the intersection between <paramref name="ray"/> and the scene.
+		/// </summary>
+		public float GetIntersection(in Ray ray) => GetIntersection(ray, out int _);
 
 		/// <summary>
-		/// Gets the signed distance from <paramref name="point"/> to the scene.
+		/// Returns the distance of the intersection between <paramref name="ray"/> and <paramref name="token"/>.
 		/// </summary>
-		public float GetSignedDistance(Float3 point, int exclude = -1) => GetSignedDistance(point, out int _, exclude);
+		public float GetSingleIntersection(in Ray ray, int token)
+		{
+			ref PressedBundle bundle = ref GetPressedBundle(token);
+			return GetSingleIntersection(ray, bundle);
+		}
 
-		/// <summary>
-		/// Gets the signed distance from <paramref name="point"/> to object with <paramref name="token"/>.
-		/// </summary>
-		public float GetSingleDistance(Float3 point, int token) => GetSingleDistance(point, bundles[token]);
-
-		/// <inheritdoc cref="GetSingleDistance"/>
+		/// <inheritdoc cref="GetSingleIntersection"/>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		static float GetSingleDistance(Float3 point, in Bundle bundle)
+		static float GetSingleIntersection(in Ray ray, in PressedBundle bundle)
 		{
-			Float3 transformed = bundle.transformation.Backward(point);
-			return bundle.sceneObject.GetSignedDistanceRaw(transformed);
-		}
-
-		/// <inheritdoc cref="GetNormal(CodeHelpers.Vectors.Float3)"/>
-		/// <paramref name="token"/> contains the token of the object used to calculate normal.
-		public Float3 GetNormal(Float3 point, out int token)
-		{
-			GetSignedDistance(point, out token);
-			return GetNormal(point, token);
+			Ray transformed = ray.TransformBackward(bundle.transformation);
+			return bundle.sceneObject.GetRawIntersection(transformed);
 		}
 
 		/// <summary>
-		/// Gets the normal of the scene at <paramref name="point"/>.
-		/// This value might be approximated using distance gradients or it might be exact.
-		/// Your <see cref="SceneObject"/> implementation determines the calculation.
+		/// Gets the normal of <see cref="SceneObject"/> with <paramref name="token"/> at <paramref name="point"/>.
 		/// </summary>
-		public Float3 GetNormal(Float3 point) => GetNormal(point, out int _);
-
-		/// <inheritdoc cref="GetNormal(CodeHelpers.Vectors.Float3)"/>
-		/// The object with <paramref name="token"/> should be closest to <paramref name="point"/>,
-		/// and it will be the only object tested for normal.
 		public Float3 GetNormal(Float3 point, int token)
 		{
-			Bundle bundle = bundles[token];
+			ref PressedBundle bundle = ref GetPressedBundle(token);
 
-			if (bundle.hasNormalImplementation)
-			{
-				Transformation transformation = bundle.transformation;
-				Float3 transformed = transformation.Backward(point);
+			Transformation transformation = bundle.transformation;
+			Float3 transformed = transformation.Backward(point);
 
-				Float3 normal = bundle.sceneObject.GetNormalRaw(transformed);
-				return transformation.ForwardDirection(normal);
-			}
-
-			//No proper normal implementation, fallback to gradient approximation
-			//Sample 6 distance values gradient using, 2 for each axis
-
-			const float E = 1.2E-4f; //Epsilon value used for gradient offsets
-
-			return new Float3
-			(
-				Sample(Float3.CreateX(E)) - Sample(Float3.CreateX(-E)),
-				Sample(Float3.CreateY(E)) - Sample(Float3.CreateY(-E)),
-				Sample(Float3.CreateZ(E)) - Sample(Float3.CreateZ(-E))
-			).Normalized;
-
-			float Sample(Float3 epsilon) => GetSingleDistance(point + epsilon, bundle);
-		}
-
-		readonly struct Bundle
-		{
-			public Bundle(int token, SceneObject sceneObject)
-			{
-				this.token = token;
-				this.sceneObject = sceneObject;
-
-				transformation = sceneObject.Transformation;
-				hasNormalImplementation = true;
-
-				try { sceneObject.GetNormalRaw(Float3.zero); }
-				catch (NotSupportedException) { hasNormalImplementation = false; }
-			}
-
-			public readonly int token;
-			public readonly SceneObject sceneObject;
-
-			public readonly Transformation transformation;
-			public readonly bool hasNormalImplementation; //Use enum flags?
+			Float3 normal = bundle.sceneObject.GetRawNormal(transformed);
+			return transformation.ForwardDirection(normal);
 		}
 	}
 }
