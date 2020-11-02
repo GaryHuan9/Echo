@@ -174,7 +174,7 @@ namespace ForceRenderer.Renderers
 				if (IsZeroEnergy(energy)) break;
 			}
 
-			//return (Float3)((float)bounce / MaxBounce);
+			return (Float3)((float)bounce / MaxBounce);
 
 			if (scene.Cubemap == null) return color;
 			return color + energy * (Float3)scene.Cubemap.Sample(ray.direction) * 1.8f; //Sample skybox
@@ -193,6 +193,18 @@ namespace ForceRenderer.Renderers
 		}
 
 		bool IsZeroEnergy(Float3 energy) => energy.x <= EnergyEpsilon && energy.y <= EnergyEpsilon && energy.z <= EnergyEpsilon;
+
+		public Float3 GetHemisphereDirection(Float3 normal, float alpha)
+		{
+			//Transform local direction to world based on normal
+		}
+
+		static void Transform(Float3 normal)
+		{
+			Float3 helper = normal.x >= 0.9f ? Float3.forward : Float3.right;
+			Float3 binormal = Float3.Cross(normal, helper).Normalized;
+			Float3 tangent = Float3.Cross(binormal, normal).Normalized;
+		}
 
 		public enum State
 		{
