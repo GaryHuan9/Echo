@@ -1,30 +1,33 @@
 ﻿using System;
+using CodeHelpers;
 using CodeHelpers.Vectors;
+using ForceRenderer.Mathematics;
+using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Objects.SceneObjects
 {
 	public abstract class SceneObject : Object
 	{
-		/// <summary>
-		/// Returns the signed distance value to world-space <paramref name="point"/>.
-		/// </summary>
-		public float GetSignedDistance(Float3 point)
+		protected SceneObject(Material material) => Material = material;
+
+		Material _material;
+
+		public Material Material
 		{
-			point = PointToLocal(point);
-			return GetSignedDistanceRaw(point);
+			get => _material;
+			set => _material = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
 		}
 
 		/// <summary>
-		/// The raw signed distance value to this object located at origin
-		/// with no rotation. NOTE: Should be as optimized as possible.
+		/// Returns the distance from a ray to its intersection with the object in local-space.
+		/// NOTE: Positive infinity will be returned if the intersection does not exist.
 		/// </summary>
-		public abstract float GetSignedDistanceRaw(Float3 point);
+		public abstract float GetRawIntersection(in Ray ray);
 
 		/// <summary>
-		/// May be overriden to return the raw normal of this object at local-space <paramref name="point"/>.
-		/// If this method is not implemented then a gradient approximation method will be used.
+		/// Returns the raw normal of this object at local-space <paramref name="point"/>.
 		/// NOTE: The returned normal vector should be normalized.
 		/// </summary>
-		public virtual Float3 GetNormalRaw(Float3 point) => throw new NotSupportedException();
+		public abstract Float3 GetRawNormal(Float3 point);
 	}
 }

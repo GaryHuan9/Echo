@@ -9,6 +9,7 @@ namespace ForceRenderer.Objects
 	/// </summary>
 	public readonly struct Transformation
 	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public Transformation(Float3 position, Float2 rotation)
 		{
 			positionX = position.x;
@@ -37,6 +38,7 @@ namespace ForceRenderer.Objects
 
 		public static readonly Transformation identity = new Transformation(Float3.zero, Float2.zero);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public Float3 Forward(Float3 point)
 		{
 			float x = point.x;
@@ -47,6 +49,7 @@ namespace ForceRenderer.Objects
 			return new Float3(x + positionX, y + positionY, z + positionZ);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public Float3 Backward(Float3 point)
 		{
 			float x = point.x - positionX;
@@ -57,6 +60,7 @@ namespace ForceRenderer.Objects
 			return new Float3(x, y, z);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public Float3 ForwardDirection(Float3 direction)
 		{
 			float x = direction.x;
@@ -67,6 +71,7 @@ namespace ForceRenderer.Objects
 			return new Float3(x, y, z);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public Float3 BackwardDirection(Float3 direction)
 		{
 			float x = direction.x;
