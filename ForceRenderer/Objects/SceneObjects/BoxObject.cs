@@ -23,11 +23,8 @@ namespace ForceRenderer.Objects.SceneObjects
 			Float3 n = m * ray.origin;
 			Float3 k = m.Absoluted * extend;
 
-			Float3 point1 = n - k;
-			Float3 point2 = n + k;
-
-			float near = Math.Max(Math.Max(point1.x, point1.y), point1.z);
-			float far = Math.Min(Math.Min(point2.x, point2.y), point2.z);
+			float near = (n - k).MaxComponent;
+			float far = (n + k).MinComponent;
 
 			return near > far || far < 0f || near < 0f ? float.PositiveInfinity : near;
 		}

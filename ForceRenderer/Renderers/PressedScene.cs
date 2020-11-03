@@ -38,6 +38,8 @@ namespace ForceRenderer.Renderers
 					case SceneObject value:
 					{
 						objects.Add(value);
+						value.OnPressed();
+
 						break;
 					}
 					case Camera value:
@@ -95,6 +97,7 @@ namespace ForceRenderer.Renderers
 		/// Returns the distance from scene intersection to ray origin.
 		/// <paramref name="token"/> contains the token of the <see cref="SceneObject"/> that intersected with ray.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public float GetIntersection(in Ray ray, out int token)
 		{
 			float distance = float.PositiveInfinity;
@@ -117,11 +120,13 @@ namespace ForceRenderer.Renderers
 		/// <summary>
 		/// Returns the distance of the intersection between <paramref name="ray"/> and the scene.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public float GetIntersection(in Ray ray) => GetIntersection(ray, out int _);
 
 		/// <summary>
 		/// Returns the distance of the intersection between <paramref name="ray"/> and <paramref name="token"/>.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public float GetSingleIntersection(in Ray ray, int token)
 		{
 			ref PressedBundle bundle = ref GetPressedBundle(token);
@@ -139,6 +144,7 @@ namespace ForceRenderer.Renderers
 		/// <summary>
 		/// Gets the normal of <see cref="SceneObject"/> with <paramref name="token"/> at <paramref name="point"/>.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public Float3 GetNormal(Float3 point, int token)
 		{
 			ref PressedBundle bundle = ref GetPressedBundle(token);
