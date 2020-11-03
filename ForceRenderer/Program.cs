@@ -54,14 +54,14 @@ namespace ForceRenderer
 				// scene.children.Add(new BoxObject(materialGold, new Float3(0.5f, 0.5f, 0.5f)) {Position = new Float3(-1.5f, 0.25f, -0.5f), Rotation = new Float2(0f, 0f)});
 
 				//Render
-				//Int2 resolution = new Int2(160, 90);
-				Int2 resolution = new Int2(854, 480); //Half million pixels
-				//Int2 resolution = new Int2(1000, 1000);
-				//Int2 resolution = new Int2(1920, 1080); //1080p
-				//Int2 resolution = new Int2(3840, 2160); //2160p
+				Int2[] resolutions =
+				{
+					new Int2(320, 180), new Int2(854, 480), new Int2(1000, 1000),
+					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
+				};
 
-				Renderer renderer = new Renderer(scene, 2);
-				Texture buffer = new Texture(resolution);
+				Renderer renderer = new Renderer(scene, 32);
+				Texture buffer = new Texture(resolutions[4]);
 
 				renderer.RenderBuffer = buffer;
 				renderer.Begin();
@@ -75,7 +75,11 @@ namespace ForceRenderer
 				Console.WriteLine();
 				renderer.WaitForRender();
 
-				buffer.SaveFile("render.png");
+				Texture denoised = new Texture(buffer.size);
+				Denoiser denoiser = new Denoiser(buffer, denoised);
+
+				denoiser.Dispatch();
+				denoised.SaveFile("render.png");
 			}
 
 			Console.WriteLine($"Completed in {test.ElapsedMilliseconds}ms");
@@ -102,7 +106,7 @@ namespace ForceRenderer
 				//Material
 				Float3 color = new Float3((float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value);
 
-				bool metal = RandomHelper.Value < 0.5d;
+				bool metal = RandomHelper.Value < 0d;
 				Material material = new Material
 									{
 										Albedo = metal ? Float3.zero : color,

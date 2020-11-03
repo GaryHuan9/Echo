@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Vectors;
+﻿using System.Runtime.CompilerServices;
+using CodeHelpers.Vectors;
 using ForceRenderer.Objects;
 
 namespace ForceRenderer.Mathematics
@@ -33,8 +34,8 @@ namespace ForceRenderer.Mathematics
 
 		public Float3 GetPoint(float distance) => origin + direction * distance;
 
-		public Ray TransformForward(in Transformation transformation) => new Ray(transformation.Forward(origin), transformation.ForwardDirection(direction));
-		public Ray TransformBackward(in Transformation transformation) => new Ray(transformation.Backward(origin), transformation.BackwardDirection(direction));
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)] public Ray TransformForward(in Transformation value) => new Ray(value.Forward(origin), value.ForwardDirection(direction));
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)] public Ray TransformBackward(in Transformation value) => new Ray(value.Backward(origin), value.BackwardDirection(direction));
 
 		public override string ToString() => $"{nameof(origin)}: {origin}, {nameof(direction)}: {direction}";
 	}
