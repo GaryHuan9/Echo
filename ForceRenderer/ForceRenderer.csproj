@@ -16,6 +16,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Avalonia" Version="0.9.12" />
+      <PackageReference Include="Avalonia.Desktop" Version="0.9.12" />
       <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     </ItemGroup>
 
