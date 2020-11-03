@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
@@ -18,8 +19,8 @@ namespace ForceRenderer.Renderers
 			this.scene = scene;
 			this.sampleCount = sampleCount;
 
-			//Create sample spiral
-			sampleSpiral = new Float2[sampleCount];
+			//Create sample spiral offset positions
+			sampleSpiralOffsets = new Float2[sampleCount];
 
 			for (int i = 0; i < sampleCount; i++)
 			{
@@ -29,20 +30,22 @@ namespace ForceRenderer.Renderers
 				float angle = Scalars.PI * (1f + (float)Math.Sqrt(5d)) * index;
 
 				Float2 sample = new Float2((float)Math.Cos(angle), (float)Math.Sin(angle));
-				sampleSpiral[i] = sample * length / 2f + Float2.half;
+				sampleSpiralOffsets[i] = sample * length / 2f + Float2.half;
 			}
 		}
 
 		public readonly Scene scene;
 		public readonly int sampleCount;
 
+		public int PathTraceSeed { get; set; } = 47;
 		public int MaxBounce { get; set; } = 32;
 		public float EnergyEpsilon { get; set; } = 1E-3f; //Epsilon lower bound value to determine when an energy is essentially zero
 
-		readonly Float2[] sampleSpiral;
+		readonly Float2[] sampleSpiralOffsets;
 
 		PressedScene pressedScene;
 		Thread renderThread;
+		RenderProfile profile;
 
 		volatile Texture _renderBuffer;
 
@@ -71,24 +74,16 @@ namespace ForceRenderer.Renderers
 
 		public bool Completed => CurrentState == State.completed;
 
-		/// <summary>
-		/// Returns a random number within [0f, 1f). Thread-safe
-		/// </summary>
-		static float RandomValue => (float)RandomHelper.Value;
-
 		public void Begin()
 		{
 			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), this, InvalidType.isNull);
 			if (CurrentState != State.waiting) throw new Exception("Incorrect state! Must reset before rendering!");
 
 			pressedScene = new PressedScene(scene);
-			renderThread = new Thread(RenderThread)
-						   {
-							   Priority = ThreadPriority.Highest,
-							   IsBackground = true
-						   };
-
 			if (pressedScene.camera == null) throw new Exception("No camera in scene! Cannot render without a camera!");
+
+			profile = new RenderProfile(PathTraceSeed, RenderBuffer, MaxBounce, EnergyEpsilon);
+			renderThread = new Thread(RenderThread) {Priority = ThreadPriority.Highest, IsBackground = true};
 
 			CurrentState = State.rendering;
 			renderThread.Start();
@@ -102,45 +97,70 @@ namespace ForceRenderer.Renderers
 			CurrentState = State.waiting;
 			_completedPixelCount = 0;
 
+			profile = default;
 			pressedScene = null;
 			renderThread = null;
 		}
 
 		void RenderThread()
 		{
+			//Different path tracing seed for each pixel
+			double[] seeds = new double[profile.buffer.length];
+			Random seedsRandom = new Random(profile.pathTraceSeed);
+
+			for (int i = 0; i < profile.buffer.length; i++) seeds[i] = seedsRandom.NextDouble();
+
 			Parallel.For
 			(
-				0, RenderBuffer.length, (index, state) =>
-										{
-											if (CurrentState == State.stopped)
-											{
-												state.Break();
-												return;
-											}
+				0, profile.buffer.length, (index, state) =>
+										  {
+											  if (CurrentState == State.stopped)
+											  {
+												  state.Break();
+												  return;
+											  }
 
-											Float3 color = default;
-
-											for (int i = 0; i < sampleCount; i++)
-											{
-												Int2 position = RenderBuffer.ToPosition(index);
-												Float2 random = sampleSpiral[i];
-
-												color += RenderPixel(RenderBuffer.ToUV(position + random));
-											}
-
-											RenderBuffer.SetPixel(index, (Shade)(color / sampleCount));
-											Interlocked.Increment(ref _completedPixelCount);
-										}
+											  profile.buffer.SetPixel(index, RenderIndex(index, seeds[index]));
+											  Interlocked.Increment(ref _completedPixelCount);
+										  }
 			);
 
 			CurrentState = State.completed;
+		}
+
+		Shade RenderIndex(int index, double seed)
+		{
+			HashRandom random = new HashRandom(seed);
+
+			//Final buffer, need high precision
+			double r = 0d;
+			double g = 0d;
+			double b = 0d;
+
+			for (int i = 1; i <= sampleCount; i++)
+			{
+				Int2 position = profile.buffer.ToPosition(index); //Integer pixel position
+				Float2 offset = sampleSpiralOffsets[i - 1];       //Multi sample offset; from zero to one; generated before render started
+				Float3 single = RenderPixel(profile.buffer.ToUV(position + offset), random);
+
+				//Combine colors by averaging all samples
+				double multiplier = (i - 1d) / i;
+
+				r = r * multiplier + (double)single.x / i;
+				g = g * multiplier + (double)single.y / i;
+				b = b * multiplier + (double)single.z / i;
+			}
+
+			//Instead of doing total / count, this averaging method avoid precision loss
+			return new Shade((float)r, (float)g, (float)b);
 		}
 
 		/// <summary>
 		/// Renders a single pixel and returns the result.
 		/// </summary>
 		/// <param name="uv">Zero to one normalized raw uv without any scaling.</param>
-		Float3 RenderPixel(Float2 uv)
+		/// <param name="random">The unique RNG used for this pixel.</param>
+		Float3 RenderPixel(Float2 uv, HashRandom random)
 		{
 			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / RenderAspect);
 			Ray ray = new Ray(pressedScene.camera.Position, pressedScene.camera.GetDirection(scaled));
@@ -150,36 +170,41 @@ namespace ForceRenderer.Renderers
 			Float3 energy = Float3.one;
 			Float3 color = Float3.zero;
 
-			while (TryTrace(ray, out float distance, out int token) && bounce++ < MaxBounce)
+			while (TryTrace(ray, out float distance, out int token) && bounce++ < profile.maxBounce)
 			{
 				ref PressedBundle bundle = ref pressedScene.GetPressedBundle(token);
 
 				Float3 position = ray.GetPoint(distance);
 				Float3 normal = pressedScene.GetNormal(position, token);
 
-				if (pressedScene.directionalLight != null)
-				{
-					DirectionalLight light = pressedScene.directionalLight;
-					Ray lightRay = new Ray(position, -light.Direction, true);
+				//Lambert diffuse
+				ray = new Ray(position, GetHemisphereDirection(normal, random), true);
+				energy *= 2f * normal.Dot(ray.direction).Clamp(0f, 1f) * bundle.material.albedo;
 
-					float coefficient = normal.Dot(lightRay.direction).Clamp(0f, 1f);
-					if (coefficient > 0f) coefficient *= TryTraceShadow(lightRay);
+				// if (pressedScene.directionalLight != null)
+				// {
+				// 	DirectionalLight light = pressedScene.directionalLight;
+				// 	Ray lightRay = new Ray(position, -light.Direction, true);
+				//
+				// 	float coefficient = normal.Dot(lightRay.direction).Clamp(0f, 1f);
+				// 	if (coefficient > 0f) coefficient *= TryTraceShadow(lightRay);
+				//
+				// 	color += coefficient * energy * bundle.material.albedo * light.Intensity;
+				// }
 
-					color += coefficient * energy * bundle.material.albedo * light.Intensity;
-				}
+				// ray = new Ray(position, ray.direction.Reflect(normal), true);
+				// energy *= bundle.material.specular;
 
-				energy *= bundle.material.specular;
-				ray = new Ray(position, ray.direction.Reflect(normal), true);
-
-				if (IsZeroEnergy(energy)) break;
+				if (energy.x <= profile.energyEpsilon && energy.y <= profile.energyEpsilon && energy.z <= profile.energyEpsilon) break;
 			}
 
-			return (Float3)((float)bounce / MaxBounce);
+			//return (Float3)((float)bounce / profile.maxBounce);
 
 			if (scene.Cubemap == null) return color;
 			return color + energy * (Float3)scene.Cubemap.Sample(ray.direction) * 1.8f; //Sample skybox
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		bool TryTrace(in Ray ray, out float distance, out int token)
 		{
 			distance = pressedScene.GetIntersection(ray, out token);
@@ -192,18 +217,31 @@ namespace ForceRenderer.Renderers
 			return distance < float.PositiveInfinity ? 0f : 1f;
 		}
 
-		bool IsZeroEnergy(Float3 energy) => energy.x <= EnergyEpsilon && energy.y <= EnergyEpsilon && energy.z <= EnergyEpsilon;
-
-		public Float3 GetHemisphereDirection(Float3 normal, float alpha)
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		static Float3 GetHemisphereDirection(Float3 normal, HashRandom random)
 		{
-			//Transform local direction to world based on normal
-		}
+			//Uniformly sample directions in a hemisphere
+			float cos = random.NextFloat();
+			float sin = (float)Math.Sqrt(Math.Max(0f, 1f - cos * cos));
+			float phi = Scalars.TAU * random.NextFloat();
 
-		static void Transform(Float3 normal)
-		{
-			Float3 helper = normal.x >= 0.9f ? Float3.forward : Float3.right;
-			Float3 binormal = Float3.Cross(normal, helper).Normalized;
-			Float3 tangent = Float3.Cross(binormal, normal).Normalized;
+			float x = (float)Math.Cos(phi) * sin;
+			float y = (float)Math.Sin(phi) * sin;
+			float z = cos;
+
+			//Transform local direction to world-space based on normal
+			Float3 helper = Math.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
+
+			Float3 tangent = Float3.Cross(normal, helper).Normalized;
+			Float3 binormal = Float3.Cross(normal, tangent).Normalized;
+
+			//Transforms using matrix multiplication. 3x3 matrix instead of 4x4 because direction only
+			return new Float3
+			(
+				x * tangent.x + y * binormal.x + z * normal.x,
+				x * tangent.y + y * binormal.y + z * normal.y,
+				x * tangent.z + y * binormal.z + z * normal.z
+			);
 		}
 
 		public enum State

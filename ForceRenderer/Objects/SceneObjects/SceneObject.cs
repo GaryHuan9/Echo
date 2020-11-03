@@ -29,5 +29,11 @@ namespace ForceRenderer.Objects.SceneObjects
 		/// NOTE: The returned normal vector should be normalized.
 		/// </summary>
 		public abstract Float3 GetRawNormal(Float3 point);
+
+		/// <summary>
+		/// Invoked when this scene object is pressed. You can use this method to
+		/// store cached values to offload the calculation offline.
+		/// </summary>
+		public virtual void OnPressed() { }
 	}
 }
