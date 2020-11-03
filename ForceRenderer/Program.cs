@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Threading;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Logging.Serilog;
 using CodeHelpers;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
@@ -12,12 +15,15 @@ using ForceRenderer.Scenes;
 
 namespace ForceRenderer
 {
-	class Program
+	public class Program : Application
 	{
-		static void Main()
+		static void Main(string[] arguments)
 		{
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
+
+			AppBuilder.Configure<Program>().UsePlatformDetect().LogToDebug().StartWithClassicDesktopLifetime(arguments);
+			return;
 
 			PerformanceTest test = new PerformanceTest();
 
@@ -60,8 +66,8 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				Renderer renderer = new Renderer(scene, 32);
-				Texture buffer = new Texture(resolutions[4]);
+				Renderer renderer = new Renderer(scene, 16384);
+				Texture buffer = new Texture(resolutions[0]);
 
 				renderer.RenderBuffer = buffer;
 				renderer.Begin();
@@ -75,11 +81,11 @@ namespace ForceRenderer
 				Console.WriteLine();
 				renderer.WaitForRender();
 
-				Texture denoised = new Texture(buffer.size);
-				Denoiser denoiser = new Denoiser(buffer, denoised);
+				// Texture denoised = new Texture(buffer.size);
+				// Denoiser denoiser = new Denoiser(buffer, denoised);
 
-				denoiser.Dispatch();
-				denoised.SaveFile("render.png");
+				// buffer.Dispatch();
+				buffer.SaveFile("render.png");
 			}
 
 			Console.WriteLine($"Completed in {test.ElapsedMilliseconds}ms");
@@ -129,6 +135,16 @@ namespace ForceRenderer
 
 				return false;
 			}
+		}
+
+		public override void OnFrameworkInitializationCompleted()
+		{
+			if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+			{
+				desktop.MainWindow = new RenderEngineWindow();
+			}
+
+			base.OnFrameworkInitializationCompleted();
 		}
 	}
 }
