@@ -6,28 +6,26 @@ using CodeHelpers;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Objects.Lights;
-using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Scenes;
 
 namespace ForceRenderer.Renderers
 {
 	public class Renderer
 	{
-		public Renderer(Scene scene, int sampleCount)
+		public Renderer(Scene scene, int pixelSample)
 		{
 			this.scene = scene;
-			this.sampleCount = sampleCount;
+			this.pixelSample = pixelSample;
 
 			threadRandom = new ThreadLocal<Random>(() => new Random(Thread.CurrentThread.ManagedThreadId));
-			sampleSpiralOffsets = new Float2[sampleCount];
+			sampleSpiralOffsets = new Float2[pixelSample];
 
 			//Create sample spiral offset positions
-			for (int i = 0; i < sampleCount; i++)
+			for (int i = 0; i < pixelSample; i++)
 			{
 				float index = i + 0.5f;
 
-				float length = (float)Math.Sqrt(index / sampleCount);
+				float length = (float)Math.Sqrt(index / pixelSample);
 				float angle = Scalars.PI * (1f + (float)Math.Sqrt(5d)) * index;
 
 				Float2 sample = new Float2((float)Math.Cos(angle), (float)Math.Sin(angle));
@@ -36,7 +34,7 @@ namespace ForceRenderer.Renderers
 		}
 
 		public readonly Scene scene;
-		public readonly int sampleCount;
+		public readonly int pixelSample; //Sample per pixel
 
 		public int MaxBounce { get; set; } = 32;
 		public float EnergyEpsilon { get; set; } = 1E-3f; //Epsilon lower bound value to determine when an energy is essentially zero
@@ -84,7 +82,7 @@ namespace ForceRenderer.Renderers
 			pressedScene = new PressedScene(scene);
 			if (pressedScene.camera == null) throw new Exception("No camera in scene! Cannot render without a camera!");
 
-			profile = new RenderProfile(RenderBuffer, MaxBounce, EnergyEpsilon);
+			profile = new RenderProfile(RenderBuffer, pixelSample, scene, pressedScene, MaxBounce, EnergyEpsilon);
 			renderThread = new Thread(RenderThread) {Priority = ThreadPriority.Highest, IsBackground = true};
 
 			CurrentState = State.rendering;
@@ -109,16 +107,16 @@ namespace ForceRenderer.Renderers
 			Parallel.For
 			(
 				0, profile.buffer.length, (index, state) =>
-				{
-					if (CurrentState == State.stopped)
-					{
-						state.Break();
-						return;
-					}
+										  {
+											  if (CurrentState == State.stopped)
+											  {
+												  state.Break();
+												  return;
+											  }
 
-					profile.buffer.SetPixel(index, RenderIndex(index));
-					Interlocked.Increment(ref _completedPixelCount);
-				}
+											  profile.buffer.SetPixel(index, RenderIndex(index));
+											  Interlocked.Increment(ref _completedPixelCount);
+										  }
 			);
 
 			CurrentState = State.completed;
@@ -131,7 +129,7 @@ namespace ForceRenderer.Renderers
 			double g = 0d;
 			double b = 0d;
 
-			for (int i = 1; i <= sampleCount; i++)
+			for (int i = 1; i <= pixelSample; i++)
 			{
 				Int2 position = profile.buffer.ToPosition(index); //Integer pixel position
 				Float2 offset = sampleSpiralOffsets[i - 1];       //Multi sample offset; from zero to one; generated before render started
