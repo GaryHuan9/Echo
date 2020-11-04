@@ -10,9 +10,9 @@ using ForceRenderer.Scenes;
 
 namespace ForceRenderer.Renderers
 {
-	public class Renderer
+	public class RenderEngine
 	{
-		public Renderer(Scene scene, int pixelSample)
+		public RenderEngine(Scene scene, int pixelSample)
 		{
 			this.scene = scene;
 			this.pixelSample = pixelSample;
@@ -47,8 +47,6 @@ namespace ForceRenderer.Renderers
 		RenderProfile profile;
 
 		volatile Texture _renderBuffer;
-
-		long _completedPixelCount;
 		long _currentState;
 
 		public Texture RenderBuffer
@@ -61,10 +59,6 @@ namespace ForceRenderer.Renderers
 			}
 		}
 
-		public long CompletedPixelCount => Interlocked.Read(ref _completedPixelCount);
-		public float RenderAspect => RenderBuffer.aspect;
-		public int RenderLength => RenderBuffer.length;
-
 		public State CurrentState
 		{
 			get => (State)Interlocked.Read(ref _currentState);
@@ -72,7 +66,9 @@ namespace ForceRenderer.Renderers
 		}
 
 		public bool Completed => CurrentState == State.completed;
-		float RandomValue => (float)threadRandom.Value.NextDouble();
+
+		TileWorker primaryWorker;
+		TileWorker secondaryWorker;
 
 		public void Begin()
 		{
@@ -82,7 +78,7 @@ namespace ForceRenderer.Renderers
 			pressedScene = new PressedScene(scene);
 			if (pressedScene.camera == null) throw new Exception("No camera in scene! Cannot render without a camera!");
 
-			profile = new RenderProfile(RenderBuffer, pixelSample, scene, pressedScene, MaxBounce, EnergyEpsilon);
+			profile = new RenderProfile(scene, pressedScene, pixelSample, RenderBuffer.aspect, MaxBounce, EnergyEpsilon);
 			renderThread = new Thread(RenderThread) {Priority = ThreadPriority.Highest, IsBackground = true};
 
 			CurrentState = State.rendering;
@@ -95,7 +91,7 @@ namespace ForceRenderer.Renderers
 		public void Reset()
 		{
 			CurrentState = State.waiting;
-			_completedPixelCount = 0;
+			primaryWorker = secondaryWorker = null;
 
 			profile = default;
 			pressedScene = null;
@@ -104,20 +100,7 @@ namespace ForceRenderer.Renderers
 
 		void RenderThread()
 		{
-			Parallel.For
-			(
-				0, profile.buffer.length, (index, state) =>
-										  {
-											  if (CurrentState == State.stopped)
-											  {
-												  state.Break();
-												  return;
-											  }
-
-											  profile.buffer.SetPixel(index, RenderIndex(index));
-											  Interlocked.Increment(ref _completedPixelCount);
-										  }
-			);
+			primaryWorker = new TileWorker(pixelSample,);
 
 			CurrentState = State.completed;
 		}
