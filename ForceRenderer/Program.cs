@@ -16,7 +16,6 @@ namespace ForceRenderer
 {
 	public class Program : Form
 	{
-		[STAThread]
 		static void Main(string[] arguments)
 		{
 			ThreadHelper.MainThread = Thread.CurrentThread;
@@ -65,20 +64,20 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				Renderer renderer = new Renderer(scene, 1024);
+				RenderEngine engine = new RenderEngine(scene, 1024);
 				Texture buffer = new Texture(resolutions[4]);
 
-				renderer.RenderBuffer = buffer;
-				renderer.Begin();
+				engine.RenderBuffer = buffer;
+				engine.Begin();
 
-				while (!renderer.Completed)
+				while (!engine.Completed)
 				{
 					Console.CursorVisible = false;
-					Console.Write($"\r{renderer.CompletedPixelCount} / {renderer.RenderLength} Pixels Rendered");
+					Console.Write($"\r{engine.CompletedPixelCount} / {engine.RenderLength} Pixels Rendered");
 				}
 
 				Console.WriteLine();
-				renderer.WaitForRender();
+				engine.WaitForRender();
 
 				// Texture denoised = new Texture(buffer.size);
 				// Denoiser denoiser = new Denoiser(buffer, denoised);
