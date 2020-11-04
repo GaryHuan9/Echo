@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Threading;
-using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Logging.Serilog;
 using CodeHelpers;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
+using Eto;
+using Eto.Forms;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.Lights;
@@ -15,15 +14,15 @@ using ForceRenderer.Scenes;
 
 namespace ForceRenderer
 {
-	public class Program : Application
+	public class Program : Form
 	{
+		[STAThread]
 		static void Main(string[] arguments)
 		{
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
 
-			AppBuilder.Configure<Program>().UsePlatformDetect().LogToDebug().StartWithClassicDesktopLifetime(arguments);
-			return;
+			StartForm();
 
 			PerformanceTest test = new PerformanceTest();
 
@@ -66,8 +65,8 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				Renderer renderer = new Renderer(scene, 16384);
-				Texture buffer = new Texture(resolutions[0]);
+				Renderer renderer = new Renderer(scene, 1024);
+				Texture buffer = new Texture(resolutions[4]);
 
 				renderer.RenderBuffer = buffer;
 				renderer.Begin();
@@ -137,14 +136,12 @@ namespace ForceRenderer
 			}
 		}
 
-		public override void OnFrameworkInitializationCompleted()
+		static void StartForm()
 		{
-			if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-			{
-				desktop.MainWindow = new RenderEngineWindow();
-			}
+			Thread uiThread = new Thread(() => new Application().Run(new RenderEngineForm()));
 
-			base.OnFrameworkInitializationCompleted();
+			uiThread.SetApartmentState(ApartmentState.STA);
+			uiThread.Start();
 		}
 	}
 }

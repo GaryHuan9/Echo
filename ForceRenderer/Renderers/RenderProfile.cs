@@ -1,4 +1,5 @@
 ﻿using ForceRenderer.IO;
+using ForceRenderer.Scenes;
 
 namespace ForceRenderer.Renderers
 {
@@ -8,14 +9,24 @@ namespace ForceRenderer.Renderers
 	/// </summary>
 	public readonly struct RenderProfile
 	{
-		public RenderProfile(Texture buffer, int maxBounce, float energyEpsilon)
+		public RenderProfile(Texture buffer, int pixelSample, Scene scene, PressedScene pressedScene, int maxBounce, float energyEpsilon)
 		{
 			this.buffer = buffer;
+			this.pixelSample = pixelSample;
+
+			this.scene = scene;
+			this.pressedScene = pressedScene;
+
 			this.maxBounce = maxBounce;
 			this.energyEpsilon = energyEpsilon;
 		}
 
 		public readonly Texture buffer;
+		public readonly int pixelSample;
+
+		public readonly Scene scene;
+		public readonly PressedScene pressedScene;
+
 		public readonly int maxBounce;
 		public readonly float energyEpsilon;
 
