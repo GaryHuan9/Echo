@@ -9,23 +9,23 @@ namespace ForceRenderer.Renderers
 	/// </summary>
 	public readonly struct RenderProfile
 	{
-		public RenderProfile(Texture buffer, int pixelSample, Scene scene, PressedScene pressedScene, int maxBounce, float energyEpsilon)
+		public RenderProfile(Scene scene, PressedScene pressedScene, int pixelSample, float aspect, int maxBounce, float energyEpsilon)
 		{
-			this.buffer = buffer;
-			this.pixelSample = pixelSample;
-
 			this.scene = scene;
 			this.pressedScene = pressedScene;
+
+			this.pixelSample = pixelSample;
+			this.aspect = aspect;
 
 			this.maxBounce = maxBounce;
 			this.energyEpsilon = energyEpsilon;
 		}
 
-		public readonly Texture buffer;
-		public readonly int pixelSample;
-
 		public readonly Scene scene;
 		public readonly PressedScene pressedScene;
+
+		public readonly int pixelSample;
+		public readonly float aspect;
 
 		public readonly int maxBounce;
 		public readonly float energyEpsilon;

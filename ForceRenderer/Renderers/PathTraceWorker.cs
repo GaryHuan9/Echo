@@ -11,7 +11,7 @@ namespace ForceRenderer.Renderers
 
 		public override Float3 Render(Float2 uv)
 		{
-			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / profile.buffer.aspect);
+			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / profile.aspect);
 			Ray ray = new Ray(pressedScene.camera.Position, pressedScene.camera.GetDirection(scaled));
 
 			int bounce = 0;
