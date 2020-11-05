@@ -11,6 +11,7 @@ using ForceRenderer.Objects.Lights;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Scenes;
+using ForceRendererGUI;
 
 namespace ForceRenderer
 {
@@ -20,8 +21,6 @@ namespace ForceRenderer
 		{
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
-
-			//StartForm();
 
 			PerformanceTest test = new PerformanceTest();
 
@@ -64,11 +63,11 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				Texture buffer = new Texture(resolutions[0]);
+				Texture buffer = new Texture(resolutions[1]);
 				using RenderEngine engine = new RenderEngine
 											{
 												RenderBuffer = buffer, Scene = scene,
-												PixelSample = 32, TileSize = 32
+												PixelSample = 30, TileSize = 32
 											};
 
 				engine.Begin();
@@ -138,7 +137,7 @@ namespace ForceRenderer
 
 		static void StartForm()
 		{
-			Thread uiThread = new Thread(() => new Application().Run(new RenderEngineForm()));
+			Thread uiThread = new Thread(() => new Application().Run(new MainForm()));
 
 			uiThread.SetApartmentState(ApartmentState.STA);
 			uiThread.Start();
