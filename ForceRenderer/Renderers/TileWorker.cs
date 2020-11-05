@@ -26,8 +26,7 @@ namespace ForceRenderer.Renderers
 			worker = new Thread(WorkThread)
 					 {
 						 IsBackground = true,
-						 // Priority = ThreadPriority.Highest,
-						 Name = $"Tile Worker {size}x{size} #{id}"
+						 Name = $"Tile Worker #{id} {size}x{size}"
 					 };
 		}
 
@@ -37,11 +36,18 @@ namespace ForceRenderer.Renderers
 		public readonly int size;
 		public readonly long sampleCount;
 
-		public Int2 RenderOffset { get; private set; }
-		public Texture RenderBuffer { get; private set; }
+		volatile int _renderOffsetX;
+		volatile int _renderOffsetY;
+		volatile Texture _renderBuffer;
 
-		public PixelWorker PixelWorker { get; private set; }
-		public SamplePattern SamplePattern { get; private set; }
+		volatile PixelWorker _pixelWorker;
+		volatile SamplePattern _samplePattern;
+
+		public Int2 RenderOffset => new Int2(_renderOffsetX, _renderOffsetY);
+		public Texture RenderBuffer => _renderBuffer;
+
+		public PixelWorker PixelWorker => _pixelWorker;
+		public SamplePattern SamplePattern => _samplePattern;
 
 		long _completedSample;
 		long _initiatedSample;
@@ -70,11 +76,12 @@ namespace ForceRenderer.Renderers
 		{
 			if (Working) throw new Exception("Cannot reset when the worker is dispatched and already working!");
 
-			RenderOffset = renderOffset;
-			RenderBuffer = renderBuffer ?? RenderBuffer;
+			_renderOffsetX = renderOffset.x;
+			_renderOffsetY = renderOffset.y;
+			_renderBuffer = renderBuffer ?? _renderBuffer;
 
-			PixelWorker = pixelWorker ?? PixelWorker;
-			SamplePattern = samplePattern ?? SamplePattern;
+			_pixelWorker = pixelWorker ?? _pixelWorker;
+			_samplePattern = samplePattern ?? _samplePattern;
 
 			Interlocked.Exchange(ref _initiatedSample, 0);
 			Interlocked.Exchange(ref _completedSample, 0);
@@ -140,14 +147,15 @@ namespace ForceRenderer.Renderers
 			Int2 position = ToBufferPosition(pixelIndex);
 			if (!IsValid(position)) return;
 
-			Shade color = pixels[pixelIndex].Color;
-			RenderBuffer.SetPixel(position, color);
+			ref Pixel pixel = ref pixels[pixelIndex];
+			RenderBuffer.SetPixel(position, pixel.Color);
+			pixel = default;
 		}
 
 		Int2 ToBufferPosition(int pixelIndex)
 		{
-			int x = pixelIndex / size + RenderOffset.x;
-			int y = pixelIndex % size + RenderOffset.y;
+			int x = pixelIndex % size + RenderOffset.x;
+			int y = pixelIndex / size + RenderOffset.y;
 			return new Int2(x, y);
 		}
 
@@ -164,7 +172,7 @@ namespace ForceRenderer.Renderers
 		bool IsValid(Int2 bufferPosition) => bufferPosition.x >= 0 && bufferPosition.y >= 0 && bufferPosition.x < RenderBuffer.size.x && bufferPosition.y < RenderBuffer.size.y;
 
 		public override int GetHashCode() => id;
-		public override string ToString() => $"Tile Worker {size}x{size} #{id}";
+		public override string ToString() => $"Tile Worker #{id} {size}x{size}";
 
 		public void Dispose()
 		{

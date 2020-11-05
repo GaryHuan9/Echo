@@ -21,7 +21,7 @@ namespace ForceRenderer
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
 
-			StartForm();
+			//StartForm();
 
 			PerformanceTest test = new PerformanceTest();
 
@@ -64,11 +64,11 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				Texture buffer = new Texture(resolutions[1]);
+				Texture buffer = new Texture(resolutions[0]);
 				using RenderEngine engine = new RenderEngine
 											{
 												RenderBuffer = buffer, Scene = scene,
-												PixelSample = 512, TileSize = 64
+												PixelSample = 32, TileSize = 32
 											};
 
 				engine.Begin();
