@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Vectors;
+using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Renderers
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public PathTraceWorker(RenderProfile profile) : base(profile) { }
+		public PathTraceWorker(RenderEngine.Profile profile) : base(profile) { }
 
 		public override Float3 Render(Float2 uv)
 		{
-			Float2 scaled = new Float2(uv.x - 0.5f, (uv.y - 0.5f) / profile.aspect);
-			Ray ray = new Ray(pressedScene.camera.Position, pressedScene.camera.GetDirection(scaled));
+			Ray ray = new Ray(profile.camera.Position, profile.camera.GetDirection(uv));
 
 			int bounce = 0;
 
@@ -21,10 +21,24 @@ namespace ForceRenderer.Renderers
 
 			while (TryTrace(ray, out float distance, out int token) && bounce++ < profile.maxBounce)
 			{
-				ref PressedBundle bundle = ref pressedScene.GetPressedBundle(token);
+				ref PressedBundle bundle = ref profile.pressed.GetPressedBundle(token);
 
 				Float3 position = ray.GetPoint(distance);
-				Float3 normal = pressedScene.GetNormal(position, token);
+				Float3 normal = profile.pressed.GetNormal(position, token);
+
+				// if (pressedScene.directionalLight != null)
+				// {
+				// 	DirectionalLight light = pressedScene.directionalLight;
+				// 	Ray lightRay = new Ray(position, -light.Direction, true);
+				//
+				// 	float coefficient = normal.Dot(lightRay.direction).Clamp(0f, 1f);
+				// 	if (coefficient > 0f) coefficient *= TryTraceShadow(lightRay);
+				//
+				// 	color += coefficient * energy * bundle.material.albedo * light.Intensity;
+				// }
+
+				// ray = new Ray(position, ray.direction.Reflect(normal), true);
+				// energy *= bundle.material.specular;
 
 				//Lambert diffuse
 				ray = new Ray(position, GetHemisphereDirection(normal), true);
@@ -35,8 +49,11 @@ namespace ForceRenderer.Renderers
 
 			//return (Float3)((float)bounce / profile.maxBounce);
 
-			if (scene.Cubemap == null) return color;
-			return color + energy * (Float3)scene.Cubemap.Sample(ray.direction) * 1.8f; //Sample skybox
+			Cubemap cubemap = profile.scene.Cubemap;
+			if (cubemap == null) return color;
+
+			//Sample skybox
+			return color + energy * (Float3)cubemap.Sample(ray.direction) * 1.8f;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
@@ -64,6 +81,12 @@ namespace ForceRenderer.Renderers
 				x * tangent.y + y * binormal.y + z * normal.y,
 				x * tangent.z + y * binormal.z + z * normal.z
 			);
+		}
+
+		float TryTraceShadow(in Ray ray)
+		{
+			float distance = profile.pressed.GetIntersection(ray);
+			return distance < float.PositiveInfinity ? 0f : 1f;
 		}
 	}
 }

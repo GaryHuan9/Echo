@@ -14,28 +14,34 @@ namespace ForceRenderer.Renderers
 	/// </summary>
 	public class TileWorker : IDisposable
 	{
-		public TileWorker(int pixelSample, int size)
+		public TileWorker(RenderEngine.Profile profile)
 		{
+			this.profile = profile;
+			size = profile.tileSize;
+
 			id = Interlocked.Increment(ref workerIdAccumulator);
-			sampleCount = (long)size * size * pixelSample;
-			this.size = size;
+			sampleCount = (long)size * size * profile.pixelSample;
 
 			pixels = new Pixel[size * size];
 			worker = new Thread(WorkThread)
 					 {
 						 IsBackground = true,
-						 Priority = ThreadPriority.Highest,
+						 // Priority = ThreadPriority.Highest,
 						 Name = $"Tile Worker {size}x{size} #{id}"
 					 };
 		}
 
 		public readonly int id;
-		public readonly long sampleCount;
+		public readonly RenderEngine.Profile profile;
+
 		public readonly int size;
+		public readonly long sampleCount;
 
 		public Int2 RenderOffset { get; private set; }
-		public PixelWorker PixelWorker { get; private set; }
 		public Texture RenderBuffer { get; private set; }
+
+		public PixelWorker PixelWorker { get; private set; }
+		public SamplePattern SamplePattern { get; private set; }
 
 		long _completedSample;
 		long _initiatedSample;
@@ -47,7 +53,7 @@ namespace ForceRenderer.Renderers
 		readonly Thread worker;
 
 		readonly ManualResetEventSlim resetEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
-		readonly SemaphoreSlim writeSemaphore = new SemaphoreSlim(0, 1);
+		readonly SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
 
 		public bool Working => resetEvent.IsSet;
 
@@ -55,29 +61,20 @@ namespace ForceRenderer.Renderers
 		static volatile int workerIdAccumulator;
 
 		/// <summary>
-		/// Invoked on render thread when half of the samples are rendered.
-		/// </summary>
-		public event Action OnHalfCompleted;
-
-		/// <summary>
-		/// Invoked on render thread when all of the samples are rendered.
-		/// </summary>
-		public event Action OnFullCompleted;
-
-		/// <summary>
 		/// Invoked on worker thread when all rendered pixels are stored in the buffer.
+		/// Passes in <see cref="TileWorker"/> for easy identification.
 		/// </summary>
-		public event Action OnPixelsBuffered;
+		public static event Action<TileWorker> OnWorkCompleted;
 
-		public void ResetParameters(Int2 renderOffset, PixelWorker pixelWorker = null, Texture renderBuffer = null)
+		public void ResetParameters(Int2 renderOffset, Texture renderBuffer = null, PixelWorker pixelWorker = null, SamplePattern samplePattern = null)
 		{
-			if (pixelWorker == null && PixelWorker == null) throw ExceptionHelper.Invalid(nameof(pixelWorker), InvalidType.isNull);
-			if (renderBuffer == null && RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(renderBuffer), InvalidType.isNull);
 			if (Working) throw new Exception("Cannot reset when the worker is dispatched and already working!");
 
 			RenderOffset = renderOffset;
-			PixelWorker = pixelWorker;
-			RenderBuffer = renderBuffer;
+			RenderBuffer = renderBuffer ?? RenderBuffer;
+
+			PixelWorker = pixelWorker ?? PixelWorker;
+			SamplePattern = samplePattern ?? SamplePattern;
 
 			Interlocked.Exchange(ref _initiatedSample, 0);
 			Interlocked.Exchange(ref _completedSample, 0);
@@ -89,6 +86,7 @@ namespace ForceRenderer.Renderers
 
 			if (PixelWorker == null) throw ExceptionHelper.Invalid(nameof(PixelWorker), InvalidType.isNull);
 			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), InvalidType.isNull);
+			if (SamplePattern == null) throw ExceptionHelper.Invalid(nameof(SamplePattern), InvalidType.isNull);
 
 			if (!worker.IsAlive) worker.Start();
 			resetEvent.Set();
@@ -107,39 +105,43 @@ namespace ForceRenderer.Renderers
 				}
 				finally { resetEvent.Reset(); }
 
-				OnPixelsBuffered?.Invoke();
+				OnWorkCompleted?.Invoke(this);
 			}
 		}
 
 		void WorkSample(long sample)
 		{
 			Interlocked.Increment(ref _initiatedSample);
+
 			int pixelIndex = (int)(sample % pixels.Length);
+			Int2 position = ToBufferPosition(pixelIndex);
 
-			//Render pixel
-			Int2 position = ToBufferPosition(pixelIndex); //TODO: Add spiral offset
-			Float3 color = PixelWorker.Render(RenderBuffer.ToUV(position));
-
-			//Write to pixels
-			writeSemaphore.Wait();
-			try
+			if (IsValid(position))
 			{
-				ref Pixel pixel = ref pixels[pixelIndex];
-				pixel.Accumulate(color);
+				//Render pixel
+				Float2 uv = ToAdjustedUV(position, sample);
+				Float3 color = PixelWorker.Render(uv); //UV is adjusted to the correct scaling to match worker's requirement
+
+				//Write to pixels
+				writeSemaphore.Wait();
+				try
+				{
+					ref Pixel pixel = ref pixels[pixelIndex];
+					pixel.Accumulate(color);
+				}
+				finally { writeSemaphore.Release(); }
 			}
-			finally { writeSemaphore.Wait(); }
 
-			//Finalize
-			long order = Interlocked.Increment(ref _completedSample);
-
-			if (order == sampleCount) OnFullCompleted?.Invoke();
-			if (order == sampleCount / 2L) OnHalfCompleted?.Invoke();
+			Interlocked.Increment(ref _completedSample);
 		}
 
 		void StorePixel(int pixelIndex)
 		{
+			Int2 position = ToBufferPosition(pixelIndex);
+			if (!IsValid(position)) return;
+
 			Shade color = pixels[pixelIndex].Color;
-			RenderBuffer.SetPixel(ToBufferPosition(pixelIndex), color);
+			RenderBuffer.SetPixel(position, color);
 		}
 
 		Int2 ToBufferPosition(int pixelIndex)
@@ -149,7 +151,20 @@ namespace ForceRenderer.Renderers
 			return new Int2(x, y);
 		}
 
+		Float2 ToAdjustedUV(Int2 bufferPosition, long sample)
+		{
+			Float2 offset = SamplePattern[(int)(sample / pixels.Length)];
+			Float2 uv = RenderBuffer.ToUV(bufferPosition + offset);
+			return new Float2(uv.x - 0.5f, (uv.y - 0.5f) / RenderBuffer.aspect);
+		}
+
+		/// <summary>
+		/// Check to make sure the <paramref name="bufferPosition"/> is inside our canvas; parts of some edge tiles might be outside.
+		/// </summary>
+		bool IsValid(Int2 bufferPosition) => bufferPosition.x >= 0 && bufferPosition.y >= 0 && bufferPosition.x < RenderBuffer.size.x && bufferPosition.y < RenderBuffer.size.y;
+
 		public override int GetHashCode() => id;
+		public override string ToString() => $"Tile Worker {size}x{size} #{id}";
 
 		public void Dispose()
 		{
