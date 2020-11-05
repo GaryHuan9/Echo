@@ -12,7 +12,7 @@ namespace ForceRenderer.Renderers
 			pattern = grid.Select(position => position * tileSize).ToArray();
 
 			//Shuffle it just for fun
-			//pattern.Shuffle();
+			pattern.Shuffle();
 		}
 
 		readonly Int2[] pattern;
