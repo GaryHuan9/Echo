@@ -100,7 +100,7 @@ namespace ForceRenderer.IO
 		public readonly Int2 size;
 		readonly Int2 oneLess;
 
-		public readonly float aspect;
+		public readonly float aspect; //Width over height
 		public readonly int length;
 
 		public static readonly ReadOnlyCollection<string> compatibleExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});

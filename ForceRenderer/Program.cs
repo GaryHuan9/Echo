@@ -64,20 +64,21 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				RenderEngine engine = new RenderEngine(scene, 1024);
-				Texture buffer = new Texture(resolutions[4]);
+				Texture buffer = new Texture(resolutions[1]);
+				using RenderEngine engine = new RenderEngine
+											{
+												RenderBuffer = buffer, Scene = scene,
+												PixelSample = 512, TileSize = 64
+											};
 
-				engine.RenderBuffer = buffer;
 				engine.Begin();
 
 				while (!engine.Completed)
 				{
 					Console.CursorVisible = false;
-					Console.Write($"\r{engine.CompletedPixelCount} / {engine.RenderLength} Pixels Rendered");
+					Console.Write($"\r{engine.DispatchedTileCount} / {engine.TotalTileCount} Tiles Dispatched");
+					Thread.Sleep(1000);
 				}
-
-				Console.WriteLine();
-				engine.WaitForRender();
 
 				// Texture denoised = new Texture(buffer.size);
 				// Denoiser denoiser = new Denoiser(buffer, denoised);
