@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
@@ -28,6 +29,18 @@ namespace ForceRenderer.Renderers
 						 IsBackground = true,
 						 Name = $"Tile Worker #{id} {size}x{size}"
 					 };
+
+			//Create golden ratio spiral for pixel offsets
+			float goldenRatio = (1f + (float)Math.Sqrt(5d)) / 2f;
+			pixelOffsets = new Float2[profile.pixelSample];
+
+			for (float i = 0.5f; i < profile.pixelSample; i++)
+			{
+				float angle = Scalars.TAU * goldenRatio * i;
+				Float2 offset = new Float2((float)Math.Cos(angle), (float)Math.Sin(angle));
+
+				pixelOffsets[(int)i] = offset * (float)Math.Sqrt(i / profile.pixelSample) / 2f + Float2.half;
+			}
 		}
 
 		public readonly int id;
@@ -38,16 +51,14 @@ namespace ForceRenderer.Renderers
 
 		volatile int _renderOffsetX;
 		volatile int _renderOffsetY;
-		volatile Texture _renderBuffer;
 
+		volatile Texture _renderBuffer;
 		volatile PixelWorker _pixelWorker;
-		volatile SamplePattern _samplePattern;
 
 		public Int2 RenderOffset => new Int2(_renderOffsetX, _renderOffsetY);
-		public Texture RenderBuffer => _renderBuffer;
 
+		public Texture RenderBuffer => _renderBuffer;
 		public PixelWorker PixelWorker => _pixelWorker;
-		public SamplePattern SamplePattern => _samplePattern;
 
 		long _completedSample;
 		long _initiatedSample;
@@ -57,6 +68,7 @@ namespace ForceRenderer.Renderers
 
 		readonly Pixel[] pixels;
 		readonly Thread worker;
+		readonly Float2[] pixelOffsets; //Sample offset applied within each pixel
 
 		readonly ManualResetEventSlim resetEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
 		readonly SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
@@ -72,16 +84,15 @@ namespace ForceRenderer.Renderers
 		/// </summary>
 		public static event Action<TileWorker> OnWorkCompleted;
 
-		public void ResetParameters(Int2 renderOffset, Texture renderBuffer = null, PixelWorker pixelWorker = null, SamplePattern samplePattern = null)
+		public void ResetParameters(Int2 renderOffset, Texture renderBuffer = null, PixelWorker pixelWorker = null)
 		{
 			if (Working) throw new Exception("Cannot reset when the worker is dispatched and already working!");
 
 			_renderOffsetX = renderOffset.x;
 			_renderOffsetY = renderOffset.y;
-			_renderBuffer = renderBuffer ?? _renderBuffer;
 
+			_renderBuffer = renderBuffer ?? _renderBuffer;
 			_pixelWorker = pixelWorker ?? _pixelWorker;
-			_samplePattern = samplePattern ?? _samplePattern;
 
 			Interlocked.Exchange(ref _initiatedSample, 0);
 			Interlocked.Exchange(ref _completedSample, 0);
@@ -90,10 +101,8 @@ namespace ForceRenderer.Renderers
 		public void Dispatch()
 		{
 			if (Working) throw new Exception("Worker already dispatched!");
-
 			if (PixelWorker == null) throw ExceptionHelper.Invalid(nameof(PixelWorker), InvalidType.isNull);
 			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), InvalidType.isNull);
-			if (SamplePattern == null) throw ExceptionHelper.Invalid(nameof(SamplePattern), InvalidType.isNull);
 
 			if (!worker.IsAlive) worker.Start();
 			resetEvent.Set();
@@ -161,7 +170,7 @@ namespace ForceRenderer.Renderers
 
 		Float2 ToAdjustedUV(Int2 bufferPosition, long sample)
 		{
-			Float2 offset = SamplePattern[(int)(sample / pixels.Length)];
+			Float2 offset = pixelOffsets[(int)(sample / pixels.Length)];
 			Float2 uv = RenderBuffer.ToUV(bufferPosition + offset);
 			return new Float2(uv.x - 0.5f, (uv.y - 0.5f) / RenderBuffer.aspect);
 		}
