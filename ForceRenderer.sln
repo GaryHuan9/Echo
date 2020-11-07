@@ -2,14 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceRenderer", "ForceRenderer\ForceRenderer.csproj", "{619F5156-12E9-489E-812D-06EDC7A9FFDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceRendererGUI", "ForceRendererGUI\ForceRendererGUI\ForceRendererGUI.csproj", "{2E96E52F-87F8-43BF-A503-E15A5708E821}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceRendererGUI.Gtk", "ForceRendererGUI\ForceRendererGUI.Gtk\ForceRendererGUI.Gtk.csproj", "{7330CCDA-5967-4F0C-885F-63E46DB91E3F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceRendererGUI.Mac", "ForceRendererGUI\ForceRendererGUI.Mac\ForceRendererGUI.Mac.csproj", "{C2671B77-EBF0-4D99-858F-E533AD68C5B6}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceRendererGUI.Wpf", "ForceRendererGUI\ForceRendererGUI.Wpf\ForceRendererGUI.Wpf.csproj", "{8FE880E4-637F-4E2E-B83A-02EE3F74D88D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,21 +12,5 @@ Global
 		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2E96E52F-87F8-43BF-A503-E15A5708E821}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2E96E52F-87F8-43BF-A503-E15A5708E821}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2E96E52F-87F8-43BF-A503-E15A5708E821}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2E96E52F-87F8-43BF-A503-E15A5708E821}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7330CCDA-5967-4F0C-885F-63E46DB91E3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7330CCDA-5967-4F0C-885F-63E46DB91E3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7330CCDA-5967-4F0C-885F-63E46DB91E3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7330CCDA-5967-4F0C-885F-63E46DB91E3F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C2671B77-EBF0-4D99-858F-E533AD68C5B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C2671B77-EBF0-4D99-858F-E533AD68C5B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C2671B77-EBF0-4D99-858F-E533AD68C5B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C2671B77-EBF0-4D99-858F-E533AD68C5B6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8FE880E4-637F-4E2E-B83A-02EE3F74D88D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8FE880E4-637F-4E2E-B83A-02EE3F74D88D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8FE880E4-637F-4E2E-B83A-02EE3F74D88D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8FE880E4-637F-4E2E-B83A-02EE3F74D88D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
