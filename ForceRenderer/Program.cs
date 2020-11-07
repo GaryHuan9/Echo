@@ -3,22 +3,24 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
-using Eto;
-using Eto.Forms;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.Lights;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Scenes;
-using ForceRendererGUI;
 
 namespace ForceRenderer
 {
-	public class Program : Form
+	public class Program
 	{
-		static void Main(string[] arguments)
+		static void Main()
 		{
+			for (char i = '\u2588'; i <= '\u258F'; i++)
+			{
+				Console.WriteLine(i);
+			}
+
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
 
@@ -133,14 +135,6 @@ namespace ForceRenderer
 
 				return false;
 			}
-		}
-
-		static void StartForm()
-		{
-			Thread uiThread = new Thread(() => new Application().Run(new MainForm()));
-
-			uiThread.SetApartmentState(ApartmentState.STA);
-			uiThread.Start();
 		}
 	}
 }

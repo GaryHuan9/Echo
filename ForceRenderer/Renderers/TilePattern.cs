@@ -8,7 +8,7 @@ namespace ForceRenderer.Renderers
 	{
 		public TilePattern(Int2 bufferSize, int tileSize)
 		{
-			var grid = bufferSize.CeiledDivide(tileSize).Loop();
+			Int2.LoopEnumerable grid = bufferSize.CeiledDivide(tileSize).Loop();
 			pattern = grid.Select(position => position * tileSize).ToArray();
 
 			//Shuffle it just for fun

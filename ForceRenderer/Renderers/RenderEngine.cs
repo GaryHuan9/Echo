@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
@@ -44,13 +46,14 @@ namespace ForceRenderer.Renderers
 
 		public bool Completed => CurrentState == State.completed;
 
-		volatile int dispatchedTileCount;
+		Int2[] tilePositions;   //Positions of tiles. Processed from 0 to length. Positions can be in any order.
+		int[] tileWorkerStatus; //Status of tiles, negative means either completed or not yet started. Positive indicates worker index
+
+		volatile int dispatchedTileCount; //Number of tiles being processed or are already processed.
+		TileWorker[] workers;             //All of the workers that should process the tiles
 
 		public int DispatchedTileCount => Interlocked.CompareExchange(ref dispatchedTileCount, 0, 0);
-		public int TotalTileCount => tilePattern?.Length ?? 0; //The number of processed tiles or tiles currently being processed
-
-		TileWorker[] workers;
-		TilePattern tilePattern;
+		public int TotalTileCount => tilePositions?.Length ?? 0; //The number of processed tiles or tiles currently being processed
 
 		readonly object manageLocker = new object(); //Locker used when managing any of the workers
 
@@ -69,22 +72,34 @@ namespace ForceRenderer.Renderers
 			if (EnergyEpsilon < 0f) throw ExceptionHelper.Invalid(nameof(EnergyEpsilon), EnergyEpsilon, "cannot be negative!");
 
 			CurrentState = State.rendering;
+
+			CreateTilePositions();
 			InitializeWorkers();
+		}
+
+		void CreateTilePositions()
+		{
+			Int2.LoopEnumerable grid = RenderBuffer.size.CeiledDivide(profile.tileSize).Loop();
+
+			tilePositions = grid.Select(position => position * profile.tileSize).ToArray();
+			tileWorkerStatus = Enumerable.Repeat(-1, TotalTileCount).ToArray();
+
+			tilePositions.Shuffle(); //Shuffle it just for fun
 		}
 
 		void InitializeWorkers()
 		{
-			tilePattern = new TilePattern(RenderBuffer.size, profile.tileSize);
-
-			SamplePattern samplePattern = new SamplePattern(profile.pixelSample);
-			PixelWorker pixelWorker = new PathTraceWorker(profile);
-
-			for (int i = 0; i < profile.workerSize; i++)
+			lock (manageLocker)
 			{
-				TileWorker worker = new TileWorker(profile);
+				PixelWorker pixelWorker = new PathTraceWorker(profile);
 
-				worker.ResetParameters(Int2.zero, RenderBuffer, pixelWorker, samplePattern);
-				DispatchWorker(worker);
+				for (int i = 0; i < profile.workerSize; i++)
+				{
+					TileWorker worker = new TileWorker(profile);
+
+					worker.ResetParameters(Int2.zero, RenderBuffer, pixelWorker);
+					DispatchWorker(worker);
+				}
 			}
 		}
 
@@ -93,11 +108,12 @@ namespace ForceRenderer.Renderers
 			lock (manageLocker)
 			{
 				int count = DispatchedTileCount;
-				if (count == tilePattern.Length) return;
+				if (count == TotalTileCount) return;
 
-				worker.ResetParameters(tilePattern[count]);
+				worker.ResetParameters(tilePositions[count]);
 				worker.Dispatch();
 
+				tileWorkerStatus[count] = Array.IndexOf(workers, worker);
 				Interlocked.Increment(ref dispatchedTileCount);
 			}
 		}
@@ -106,9 +122,18 @@ namespace ForceRenderer.Renderers
 		{
 			lock (manageLocker)
 			{
-				if (DispatchedTileCount == tilePattern.Length) CurrentState = State.completed;
+				if (DispatchedTileCount == TotalTileCount) CurrentState = State.completed;
 				else if (CurrentState == State.rendering) DispatchWorker(worker);
 			}
+		}
+
+		/// <summary>
+		/// Returns the <see cref="TileWorker"/> working on <paramref name="tile"/>. Returns null if no worker is currently working on it.
+		/// <paramref name="completed"/> will be set to true if a worker already finished the tile. No worker will be returned if a tile is done.
+		/// </summary>
+		public TileWorker GetWorker(Int2 tile, out bool completed)
+		{
+			throw new NotImplementedException();
 		}
 
 		/// <summary>
@@ -133,7 +158,8 @@ namespace ForceRenderer.Renderers
 			workers = null;
 			profile = default;
 
-			tilePattern = null;
+			tilePositions = null;
+			tileWorkerStatus = null;
 			dispatchedTileCount = 0;
 
 			GC.Collect();
