@@ -16,11 +16,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\ForceRendererGUI\ForceRendererGUI\ForceRendererGUI.csproj" />
+      <PackageReference Include="System.Drawing.Common" Version="4.7.0"/>
     </ItemGroup>
 
 </Project>
