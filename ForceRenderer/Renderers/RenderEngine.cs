@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
@@ -46,14 +47,19 @@ namespace ForceRenderer.Renderers
 
 		public bool Completed => CurrentState == State.completed;
 
-		Int2[] tilePositions;   //Positions of tiles. Processed from 0 to length. Positions can be in any order.
-		int[] tileWorkerStatus; //Status of tiles, negative means either completed or not yet started. Positive indicates worker index
+		TileWorker[] workers; //All of the workers that should process the tiles
+		Int2[] tilePositions; //Positions of tiles. Processed from 0 to length. Positions can be in any order.
+
+		Dictionary<Int2, TileStatus> tileStatuses; //Indexer to status of tiles, tile position in tile-space, meaning the gap between tiles is one
 
 		volatile int dispatchedTileCount; //Number of tiles being processed or are already processed.
-		TileWorker[] workers;             //All of the workers that should process the tiles
+		volatile int completedTileCount;  //Number of tiles finished processing
 
 		public int DispatchedTileCount => Interlocked.CompareExchange(ref dispatchedTileCount, 0, 0);
-		public int TotalTileCount => tilePositions?.Length ?? 0; //The number of processed tiles or tiles currently being processed
+		public int CompletedTileCount => Interlocked.CompareExchange(ref completedTileCount, 0, 0);
+
+		public Int2 TotalTileSize { get; private set; }     //The size of the rendering tile grid
+		public int TotalTileCount => TotalTileSize.Product; //The number of processed tiles or tiles currently being processed
 
 		readonly object manageLocker = new object(); //Locker used when managing any of the workers
 
@@ -79,27 +85,30 @@ namespace ForceRenderer.Renderers
 
 		void CreateTilePositions()
 		{
-			Int2.LoopEnumerable grid = RenderBuffer.size.CeiledDivide(profile.tileSize).Loop();
+			TotalTileSize = RenderBuffer.size.CeiledDivide(profile.tileSize);
+			tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
 
-			tilePositions = grid.Select(position => position * profile.tileSize).ToArray();
-			tileWorkerStatus = Enumerable.Repeat(-1, TotalTileCount).ToArray();
+			//Shuffle it just for fun, we might reposition them differently (spiral or checkerboard .etc) later.
+			tilePositions.Shuffle();
 
-			tilePositions.Shuffle(); //Shuffle it just for fun
+			tileStatuses = tilePositions.ToDictionary
+			(
+				position => position / profile.tileSize,
+				position => new TileStatus(position, Array.IndexOf(tilePositions, position))
+			);
 		}
 
 		void InitializeWorkers()
 		{
-			lock (manageLocker)
+			PixelWorker pixelWorker = new PathTraceWorker(profile);
+			workers = new TileWorker[profile.workerSize];
+
+			for (int i = 0; i < profile.workerSize; i++)
 			{
-				PixelWorker pixelWorker = new PathTraceWorker(profile);
+				TileWorker worker = workers[i] = new TileWorker(profile);
 
-				for (int i = 0; i < profile.workerSize; i++)
-				{
-					TileWorker worker = new TileWorker(profile);
-
-					worker.ResetParameters(Int2.zero, RenderBuffer, pixelWorker);
-					DispatchWorker(worker);
-				}
+				worker.ResetParameters(Int2.zero, RenderBuffer, pixelWorker);
+				DispatchWorker(worker);
 			}
 		}
 
@@ -110,10 +119,13 @@ namespace ForceRenderer.Renderers
 				int count = DispatchedTileCount;
 				if (count == TotalTileCount) return;
 
+				Int2 position = tilePositions[count] / profile.tileSize;
+				TileStatus status = tileStatuses[position];
+
 				worker.ResetParameters(tilePositions[count]);
 				worker.Dispatch();
 
-				tileWorkerStatus[count] = Array.IndexOf(workers, worker);
+				tileStatuses[position] = new TileStatus(status, Array.IndexOf(workers, worker));
 				Interlocked.Increment(ref dispatchedTileCount);
 			}
 		}
@@ -122,7 +134,9 @@ namespace ForceRenderer.Renderers
 		{
 			lock (manageLocker)
 			{
-				if (DispatchedTileCount == TotalTileCount) CurrentState = State.completed;
+				Interlocked.Increment(ref completedTileCount);
+
+				if (CompletedTileCount == TotalTileCount) CurrentState = State.completed;
 				else if (CurrentState == State.rendering) DispatchWorker(worker);
 			}
 		}
@@ -130,10 +144,16 @@ namespace ForceRenderer.Renderers
 		/// <summary>
 		/// Returns the <see cref="TileWorker"/> working on <paramref name="tile"/>. Returns null if no worker is currently working on it.
 		/// <paramref name="completed"/> will be set to true if a worker already finished the tile. No worker will be returned if a tile is done.
+		/// <paramref name="tile"/> should be the position of indicating tile in tile-space, where the gap between tiles is one.
 		/// </summary>
 		public TileWorker GetWorker(Int2 tile, out bool completed)
 		{
-			throw new NotImplementedException();
+			if (!tileStatuses.ContainsKey(tile)) throw ExceptionHelper.Invalid(nameof(tile), tile, InvalidType.outOfBounds);
+
+			TileStatus status = tileStatuses[tile];
+			completed = status.index >= CompletedTileCount;
+
+			return workers[status.worker];
 		}
 
 		/// <summary>
@@ -156,11 +176,15 @@ namespace ForceRenderer.Renderers
 			}
 
 			workers = null;
-			profile = default;
 
 			tilePositions = null;
-			tileWorkerStatus = null;
+			tileStatuses = null;
+
 			dispatchedTileCount = 0;
+			completedTileCount = 0;
+
+			profile = default;
+			TotalTileSize = default;
 
 			GC.Collect();
 			CurrentState = State.waiting;
@@ -182,6 +206,22 @@ namespace ForceRenderer.Renderers
 			rendering,
 			completed,
 			stopped
+		}
+
+		readonly struct TileStatus
+		{
+			public TileStatus(Int2 position, int index, int worker = -1)
+			{
+				this.position = position;
+				this.index = index;
+				this.worker = worker;
+			}
+
+			public TileStatus(TileStatus status, int worker) : this(status.position, status.index, worker) { }
+
+			public readonly Int2 position;
+			public readonly int index;
+			public readonly int worker;
 		}
 
 		/// <summary>
