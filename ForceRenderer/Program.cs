@@ -9,6 +9,7 @@ using ForceRenderer.Objects.Lights;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Scenes;
+using ForceRenderer.Terminals;
 
 namespace ForceRenderer
 {
@@ -16,10 +17,13 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			for (char i = '\u2588'; i <= '\u258F'; i++)
-			{
-				Console.WriteLine(i);
-			}
+			// for (char i = '\u2588'; i <= '\u258F'; i++)
+			// {
+			// 	Console.WriteLine(i);
+			// }
+
+			new Terminal();
+			while (true) ;
 
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
@@ -65,11 +69,11 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				Texture buffer = new Texture(resolutions[1]);
+				Texture buffer = new Texture(resolutions[0]);
 				using RenderEngine engine = new RenderEngine
 											{
 												RenderBuffer = buffer, Scene = scene,
-												PixelSample = 30, TileSize = 32
+												PixelSample = 10, TileSize = 32
 											};
 
 				engine.Begin();
