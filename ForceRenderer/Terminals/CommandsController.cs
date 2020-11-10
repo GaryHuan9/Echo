@@ -4,12 +4,14 @@ using CodeHelpers;
 
 namespace ForceRenderer.Terminals
 {
-	public class CommandsController
+	public class CommandsController : Terminal.Section
 	{
+		public CommandsController(Terminal terminal, MinMaxInt displayDomain) : base(terminal, displayDomain) { }
+
 		readonly StringBuilder builder = new StringBuilder();
 		int cursorPosition;
 
-		public void Update()
+		public override void Update()
 		{
 			if (Console.KeyAvailable) ProcessInput();
 
@@ -24,9 +26,6 @@ namespace ForceRenderer.Terminals
 
 			Console.Write(builder);
 			Console.CursorLeft = cursorPosition;
-
-			Console.ForegroundColor = ConsoleColor.Black;
-			Console.BackgroundColor = ConsoleColor.White;
 
 			Console.Write(cursorChar);
 			if (cursorPosition != builder.Length) builder[cursorPosition] = cursorChar;
