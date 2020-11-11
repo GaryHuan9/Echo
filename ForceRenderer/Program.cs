@@ -17,12 +17,14 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			// for (char i = '\u2588'; i <= '\u258F'; i++)
-			// {
-			// 	Console.WriteLine(i);
-			// }
+			Terminal terminal = new Terminal();
 
-			new Terminal();
+			var commandsController = new CommandsController(terminal, new MinMaxInt(0, 4));
+			var renderDisplay = new RenderDisplay(terminal, new MinMaxInt(4, 10));
+
+			terminal.AddSection(commandsController);
+			//terminal.AddSection(renderDisplay);
+
 			while (true) ;
 
 			ThreadHelper.MainThread = Thread.CurrentThread;
@@ -76,19 +78,10 @@ namespace ForceRenderer
 												PixelSample = 10, TileSize = 32
 											};
 
+				renderDisplay.Engine = engine;
 				engine.Begin();
 
-				while (!engine.Completed)
-				{
-					Console.CursorVisible = false;
-					Console.Write($"\r{engine.DispatchedTileCount} / {engine.TotalTileCount} Tiles Dispatched");
-					Thread.Sleep(1000);
-				}
-
-				// Texture denoised = new Texture(buffer.size);
-				// Denoiser denoiser = new Denoiser(buffer, denoised);
-
-				// buffer.Dispatch();
+				engine.WaitForRender();
 				buffer.SaveFile("render.png");
 			}
 
