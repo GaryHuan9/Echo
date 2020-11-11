@@ -190,6 +190,11 @@ namespace ForceRenderer.Renderers
 			CurrentState = State.waiting;
 		}
 
+		public void WaitForRender()
+		{
+			for (int i = 0; i < workers.Length; i++) workers[i].WaitForWorker();
+		}
+
 		public void Dispose()
 		{
 			if (workers != null)

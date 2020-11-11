@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Vectors;
 
 namespace ForceRenderer.Terminals
@@ -19,8 +20,6 @@ namespace ForceRenderer.Terminals
 							};
 
 			displayThread.Start();
-
-			AddSection(new CommandsController(this, new MinMaxInt(0, 4)));
 		}
 
 		public float UpdateFrequency { get; set; } = 24f;
@@ -34,21 +33,21 @@ namespace ForceRenderer.Terminals
 		{
 			get
 			{
-				StringBuilder builder = index.y >= outputGrid.Count ? null : outputGrid[index.y];
+				StringBuilder builder = outputGrid[index.y];
 				return builder == null || index.x >= builder.Length ? default : builder[index.x];
 			}
 			set
 			{
-				StringBuilder builder = index.y < outputGrid.Count ? outputGrid[index.y] : outputGrid[index.y] = new StringBuilder();
+				StringBuilder builder = outputGrid[index.y] ?? (outputGrid[index.y] = new StringBuilder());
 				if (builder.Length < index.x) builder.Append(stackalloc char[index.x - builder.Length]);
 
-				builder.Insert(index.x, value);
+				builder[index.x] = value;
 			}
 		}
 
 		StringBuilder this[int index]
 		{
-			get => outputGrid[index];
+			get => outputGrid[index] ?? (outputGrid[index] = new StringBuilder());
 			set => outputGrid[index] = value;
 		}
 
@@ -65,9 +64,27 @@ namespace ForceRenderer.Terminals
 			}
 		}
 
-		public void AddSection(Section section)
+		public void AddSection<T>(T section) where T : Section
 		{
-			sections.Add(section);
+			int index = sections.BinarySearch(typeof(T), SectionComparer.instance);
+			if (index >= 0) throw ExceptionHelper.Invalid(nameof(section), section, InvalidType.foundDuplicate);
+
+			sections.Insert(~index, section);
+
+			outputGrid.Capacity = Math.Max(outputGrid.Capacity, section.displayDomain.max);
+			while (outputGrid.Count < section.displayDomain.max) outputGrid.Add(null);
+		}
+
+		public T GetSection<T>() where T : Section
+		{
+			int index = sections.BinarySearch(typeof(T), SectionComparer.instance);
+			return index < 0 ? null : (T)sections[index];
+		}
+
+		class SectionComparer : IDoubleComparer<Section, Type>
+		{
+			public static readonly SectionComparer instance = new SectionComparer();
+			public int CompareTo(Section first, Type second) => first.GetType().GetHashCode().CompareTo(second.GetHashCode());
 		}
 
 		public abstract class Section
@@ -79,7 +96,7 @@ namespace ForceRenderer.Terminals
 			}
 
 			protected readonly Terminal terminal;
-			readonly MinMaxInt displayDomain; //Min inclusive; max exclusive
+			public readonly MinMaxInt displayDomain; //Min inclusive; max exclusive
 
 			protected int Height => displayDomain.Range;
 
