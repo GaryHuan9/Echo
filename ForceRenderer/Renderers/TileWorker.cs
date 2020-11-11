@@ -180,6 +180,8 @@ namespace ForceRenderer.Renderers
 		/// </summary>
 		bool IsValid(Int2 bufferPosition) => bufferPosition.x >= 0 && bufferPosition.y >= 0 && bufferPosition.x < RenderBuffer.size.x && bufferPosition.y < RenderBuffer.size.y;
 
+		public void WaitForWorker() => worker.Join();
+
 		public override int GetHashCode() => id;
 		public override string ToString() => $"Tile Worker #{id} {size}x{size}";
 
