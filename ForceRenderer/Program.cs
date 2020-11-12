@@ -19,13 +19,11 @@ namespace ForceRenderer
 		{
 			Terminal terminal = new Terminal();
 
-			var commandsController = new CommandsController(terminal, new MinMaxInt(0, 4));
-			var renderDisplay = new RenderDisplay(terminal, new MinMaxInt(4, 10));
+			var commandsController = new CommandsController(terminal, new MinMaxInt(0, 3));
+			var renderDisplay = new RenderDisplay(terminal, new MinMaxInt(3, 30));
 
 			terminal.AddSection(commandsController);
-			//terminal.AddSection(renderDisplay);
-
-			while (true) ;
+			terminal.AddSection(renderDisplay);
 
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
@@ -71,7 +69,7 @@ namespace ForceRenderer
 					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
-				Texture buffer = new Texture(resolutions[0]);
+				Texture buffer = new Texture(resolutions[1]);
 				using RenderEngine engine = new RenderEngine
 											{
 												RenderBuffer = buffer, Scene = scene,

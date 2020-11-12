@@ -11,9 +11,10 @@ namespace ForceRenderer.Terminals
 		public CommandsController(Terminal terminal, MinMaxInt displayDomain) : base(terminal, displayDomain) { }
 
 		StringBuilder InputBuilder => this[0];
-		readonly Stopwatch time = Stopwatch.StartNew();
 
 		int inputLength;
+		double blinkOffset;
+
 		int cursorPosition;
 		char cursorChar;
 
@@ -30,7 +31,7 @@ namespace ForceRenderer.Terminals
 			cursorChar = cursorPosition == inputBuilder.Length ? ' ' : inputBuilder[cursorPosition];
 
 			//Replace cursor character
-			if (time.Elapsed.TotalMilliseconds.Repeat(CursorBlinkDuration * 2f) < CursorBlinkDuration)
+			if ((terminal.AliveTime - blinkOffset).Repeat(CursorBlinkDuration * 2f) < CursorBlinkDuration)
 			{
 				if (cursorPosition >= inputBuilder.Length) inputBuilder.Append(CursorCharacter);
 				else inputBuilder[cursorPosition] = CursorCharacter;
@@ -90,7 +91,7 @@ namespace ForceRenderer.Terminals
 				}
 			}
 
-			time.Restart();
+			blinkOffset = terminal.AliveTime;
 		}
 	}
 }

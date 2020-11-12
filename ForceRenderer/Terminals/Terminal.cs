@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using CodeHelpers;
@@ -19,15 +20,18 @@ namespace ForceRenderer.Terminals
 								Name = "Terminal"
 							};
 
+			stopwatch = Stopwatch.StartNew();
 			displayThread.Start();
 		}
 
-		public float UpdateFrequency { get; set; } = 24f;
+		public float UpdateFrequency { get; set; } = 30f;
+		public double AliveTime => stopwatch.Elapsed.TotalMilliseconds;
 
 		readonly List<StringBuilder> outputGrid = new List<StringBuilder>();
 		readonly List<Section> sections = new List<Section>();
 
 		readonly Thread displayThread;
+		readonly Stopwatch stopwatch;
 
 		char this[Int2 index]
 		{
@@ -55,12 +59,16 @@ namespace ForceRenderer.Terminals
 		{
 			while (true)
 			{
+				double startTime = AliveTime;
 				Console.Clear();
 
 				for (int i = 0; i < sections.Count; i++) sections[i].Update();
-				for (int i = 0; i < outputGrid.Count; i++) Console.WriteLine(outputGrid[i]);
+				Console.WriteLine(string.Join('\n', outputGrid));
 
-				Thread.Sleep((int)(1000f / UpdateFrequency));
+				double elapsed = AliveTime - startTime;
+				double remain = 1000d / UpdateFrequency - elapsed;
+
+				if (remain >= 1d) Thread.Sleep((int)remain);
 			}
 		}
 
