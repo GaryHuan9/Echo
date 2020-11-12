@@ -62,6 +62,7 @@ namespace ForceRenderer.Renderers
 		public int TotalTileCount => TotalTileSize.Product; //The number of processed tiles or tiles currently being processed
 
 		readonly object manageLocker = new object(); //Locker used when managing any of the workers
+		readonly ManualResetEvent renderCompleteEvent = new ManualResetEvent(false);
 
 		public void Begin()
 		{
@@ -77,10 +78,12 @@ namespace ForceRenderer.Renderers
 			if (MaxBounce < 0) throw ExceptionHelper.Invalid(nameof(MaxBounce), MaxBounce, "cannot be negative!");
 			if (EnergyEpsilon < 0f) throw ExceptionHelper.Invalid(nameof(EnergyEpsilon), EnergyEpsilon, "cannot be negative!");
 
-			CurrentState = State.rendering;
+			CurrentState = State.initializing;
 
 			CreateTilePositions();
 			InitializeWorkers();
+
+			CurrentState = State.rendering;
 		}
 
 		void CreateTilePositions()
@@ -136,7 +139,11 @@ namespace ForceRenderer.Renderers
 			{
 				Interlocked.Increment(ref completedTileCount);
 
-				if (CompletedTileCount == TotalTileCount) CurrentState = State.completed;
+				if (CompletedTileCount == TotalTileCount)
+				{
+					CurrentState = State.completed;
+					renderCompleteEvent.Set();
+				}
 				else if (CurrentState == State.rendering) DispatchWorker(worker);
 			}
 		}
@@ -151,9 +158,9 @@ namespace ForceRenderer.Renderers
 			if (!tileStatuses.ContainsKey(tile)) throw ExceptionHelper.Invalid(nameof(tile), tile, InvalidType.outOfBounds);
 
 			TileStatus status = tileStatuses[tile];
-			completed = status.index >= CompletedTileCount;
+			completed = status.index < CompletedTileCount;
 
-			return workers[status.worker];
+			return status.worker < 0 ? null : workers[status.worker];
 		}
 
 		/// <summary>
@@ -176,6 +183,7 @@ namespace ForceRenderer.Renderers
 			}
 
 			workers = null;
+			renderCompleteEvent.Reset();
 
 			tilePositions = null;
 			tileStatuses = null;
@@ -192,7 +200,8 @@ namespace ForceRenderer.Renderers
 
 		public void WaitForRender()
 		{
-			for (int i = 0; i < workers.Length; i++) workers[i].WaitForWorker();
+			renderCompleteEvent.WaitOne(); //If multiple threads are waiting, the event
+			renderCompleteEvent.Reset();   //will get reset multiple times but it's fine
 		}
 
 		public void Dispose()
@@ -203,11 +212,13 @@ namespace ForceRenderer.Renderers
 			}
 
 			TileWorker.OnWorkCompleted -= OnTileWorkCompleted;
+			renderCompleteEvent.Dispose();
 		}
 
 		public enum State
 		{
 			waiting,
+			initializing,
 			rendering,
 			completed,
 			stopped
