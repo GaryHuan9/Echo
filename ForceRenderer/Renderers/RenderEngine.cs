@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
@@ -91,7 +92,7 @@ namespace ForceRenderer.Renderers
 			tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
 
 			//Shuffle it just for fun, we might reposition them differently (spiral or checkerboard .etc) later.
-			//tilePositions.Shuffle();
+			tilePositions.Shuffle();
 
 			tileStatuses = tilePositions.ToDictionary
 			(
