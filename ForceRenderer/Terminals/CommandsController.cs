@@ -8,9 +8,9 @@ namespace ForceRenderer.Terminals
 {
 	public class CommandsController : Terminal.Section
 	{
-		public CommandsController(Terminal terminal, MinMaxInt displayDomain) : base(terminal, displayDomain) { }
+		public CommandsController(Terminal terminal) : base(terminal) { }
 
-		StringBuilder InputBuilder => this[0];
+		public override int Height => 4;
 
 		int inputLength;
 		double blinkOffset;
@@ -18,51 +18,45 @@ namespace ForceRenderer.Terminals
 		int cursorPosition;
 		char cursorChar;
 
+		const int CursorY = 0;
 		const char CursorCharacter = '\u2588';
-		const float CursorBlinkDuration = 500f; //In milliseconds
+		const float BlinkPeriod = 500f; //In milliseconds
+
+		Int2 Cursor => new Int2(cursorPosition, CursorY);
 
 		public override void Update()
 		{
-			StringBuilder inputBuilder = InputBuilder;
-
-			if (cursorPosition < inputBuilder.Length) inputBuilder[cursorPosition] = cursorChar;
+			builders[Cursor] = cursorChar;
 			if (Console.KeyAvailable) ProcessInput();
 
-			cursorChar = cursorPosition == inputBuilder.Length ? ' ' : inputBuilder[cursorPosition];
+			cursorChar = builders[Cursor];
 
-			//Replace cursor character
-			if ((terminal.AliveTime - blinkOffset).Repeat(CursorBlinkDuration * 2f) < CursorBlinkDuration)
-			{
-				if (cursorPosition >= inputBuilder.Length) inputBuilder.Append(CursorCharacter);
-				else inputBuilder[cursorPosition] = CursorCharacter;
-			}
-
-			Console.CursorVisible = false;
+			//Replace cursor character when blinking
+			if ((terminal.AliveTime - blinkOffset) % (BlinkPeriod * 2d) < BlinkPeriod) builders[Cursor] = CursorCharacter;
 		}
 
 		void ProcessInput()
 		{
 			ConsoleKeyInfo keyInfo = Console.ReadKey(true);
-			StringBuilder builder = InputBuilder;
 
 			switch (keyInfo.Key)
 			{
 				case ConsoleKey.Backspace:
 				{
 					if (cursorPosition == 0) break;
-					builder.Remove(cursorPosition - 1, 1);
 
 					inputLength--;
 					cursorPosition--;
 
+					builders.Remove(Cursor);
 					break;
 				}
 				case ConsoleKey.Delete:
 				{
 					if (cursorPosition == inputLength) break;
 
-					builder.Remove(cursorPosition, 1);
 					inputLength--;
+					builders.Remove(Cursor);
 
 					break;
 				}
@@ -82,7 +76,7 @@ namespace ForceRenderer.Terminals
 				}
 				default:
 				{
-					builder.Insert(cursorPosition, keyInfo.KeyChar);
+					builders.Insert(Cursor, keyInfo.KeyChar);
 
 					inputLength++;
 					cursorPosition++;
