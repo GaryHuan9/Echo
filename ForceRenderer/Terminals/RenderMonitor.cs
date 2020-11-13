@@ -54,7 +54,5 @@ namespace ForceRenderer.Terminals
 				builders[position] = character;
 			}
 		}
-
-		static char GetProgressCharacter(long current, long total) => (char)Scalars.Lerp('\u258F', '\u2588', (float)((double)current / total));
 	}
 }

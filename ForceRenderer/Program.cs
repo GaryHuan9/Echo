@@ -39,9 +39,9 @@ namespace ForceRenderer
 				scene.children.Add(new Camera(90f) {Position = new Float3(0f, 2f, -4.5f), Rotation = new Float2(25f, 0f)});
 				scene.children.Add(new DirectionalLight {Intensity = new Float3(0.9f, 0.9f, 0.9f), Rotation = new Float2(60f, 80f)});
 
-				scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+				//scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 				//scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/DebugCubemap");
-				//scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
+				scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
 				//scene.Cubemap = new CylindricalCubemap("Assets/Cubemaps/CapeHill.png"); //Bad quality
 
 				Material materialChrome = new Material {Albedo = new Float3(0.4f, 0.4f, 0.4f), Specular = new Float3(0.775f, 0.775f, 0.775f)};
