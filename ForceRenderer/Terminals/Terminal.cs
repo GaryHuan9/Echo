@@ -113,8 +113,10 @@ namespace ForceRenderer.Terminals
 			readonly Section section;
 
 			//TODO: Convert to char arrays!
-			readonly List<StringBuilder> builders = new List<StringBuilder>();
+			readonly List<char[]> lines = new List<char[]>();
 			readonly List<bool> dirties = new List<bool>();
+
+			const int MinimumCapacity = 16;
 
 			public char this[Int2 index]
 			{
@@ -122,21 +124,20 @@ namespace ForceRenderer.Terminals
 				{
 					CheckHeight(index);
 
-					StringBuilder builder = builders.TryGetValue(index.y);
-					return builder == null || index.y >= builder.Length ? default : builder[index.x];
+					if (lines.Count < index.y) return default;
+					char[] line = lines[index.y];
+
+					return line != null && index.x < line.Length ? line[index.x] : default;
 				}
 				set
 				{
 					CheckHeight(index);
+					char[] line = EnsureCapacity(index);
 
-					StringBuilder builder = PrepareBuilder(index);
-					char old = index.x < builder.Length ? builder[index.x] : default;
+					if (line[index.x] == value) return;
 
-					if (old != value)
-					{
-						builder[index.x] = value;
-						dirties[index.y] = true;
-					}
+					line[index.x] = value;
+					dirties[index.y] = true;
 				}
 			}
 
@@ -145,6 +146,9 @@ namespace ForceRenderer.Terminals
 			public void Insert(Int2 index, ReadOnlySpan<char> value)
 			{
 				CheckHeight(index);
+
+				lines[0].Insert();
+
 				var builder = PrepareBuilder(index);
 
 				builder.Insert(index.x, value);
@@ -233,6 +237,47 @@ namespace ForceRenderer.Terminals
 			{
 				list.Capacity = Math.Max(list.Capacity, index);
 				for (int i = list.Count; i <= index; i++) list.Add(new U());
+			}
+
+			char[] EnsureCapacity(Int2 index, int length = 1)
+			{
+				if (lines.Count <= index.y)
+				{
+					lines.Capacity = dirties.Capacity = index.y + 1;
+
+					for (int i = lines.Count; i <= index.y; i++)
+					{
+						lines.Add(default);
+						dirties.Add(default);
+					}
+				}
+
+				int capacity = Math.Max(MinimumCapacity, GetSmallestPower(index.x + length));
+				char[] line = lines[index.y] ??= new char[capacity];
+
+				if (line.Length < capacity)
+				{
+					char[] newLine = new char[capacity];
+					Array.Copy(line, newLine, line.Length);
+
+					lines[index.y] = line = newLine;
+				}
+
+				return line;
+			}
+
+			/// <summary>
+			/// Returns the smallest power of two larger than <paramref name="largerThan"/>.
+			/// </summary>
+			static int GetSmallestPower(int largerThan)
+			{
+				largerThan--;
+				largerThan |= largerThan >> 1;
+				largerThan |= largerThan >> 2;
+				largerThan |= largerThan >> 4;
+				largerThan |= largerThan >> 8;
+				largerThan |= largerThan >> 16;
+				return largerThan + 1;
 			}
 		}
 	}
