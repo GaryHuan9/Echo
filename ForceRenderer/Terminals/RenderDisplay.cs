@@ -1,5 +1,3 @@
-using System.Text;
-using CodeHelpers;
 using CodeHelpers.Vectors;
 using ForceRenderer.Renderers;
 
@@ -7,57 +5,44 @@ namespace ForceRenderer.Terminals
 {
 	public class RenderDisplay : Terminal.Section
 	{
-		public RenderDisplay(Terminal terminal, MinMaxInt displayDomain) : base(terminal, displayDomain) { }
+		public RenderDisplay(Terminal terminal) : base(terminal) { }
 
 		public RenderEngine Engine { get; set; }
 
+		bool IsEngineReady => Engine != null && Engine.CurrentState == RenderEngine.State.rendering;
+		public override int Height => IsEngineReady ? Engine.TotalTileSize.y : 2;
+
 		public override void Update()
 		{
-			if (Engine == null || Engine.CurrentState != RenderEngine.State.rendering)
+			if (!IsEngineReady)
 			{
-				var builder = this[0];
+				builders.Clear(0);
 
-				builder.Clear();
-				builder.Append("Awaiting Render Engine");
+				const string Message = "Awaiting Render Engine";
+				builders.Insert(Int2.zero, Message);
 
 				int periodCount = (int)(terminal.AliveTime / 1000f % 4d);
-				for (int i = 0; i < periodCount; i++) builder.Append('.');
+				for (int i = 0; i < periodCount; i++) builders[new Int2(Message.Length + i, 0)] = '.';
 
 				return;
 			}
 
-			Int2 tileSize = Engine.TotalTileSize;
+			builders.Clear(0); //Clear first row leftover message
 
-			if (tileSize.y > Height)
+			foreach (Int2 position in Engine.TotalTileSize.Loop())
 			{
-				var builder = this[0];
-				builder.Clear();
+				TileWorker worker = Engine.GetWorker(position, out bool completed);
 
-				builder.Append("Insufficient render display height! ");
-				builder.Append($"Tile size: {tileSize}; Display height: {Height}");
-				return;
-			}
-
-			for (int y = 0; y < tileSize.y; y++)
-			{
-				var builder = this[y];
-				builder.Clear();
-
-				for (int x = 0; x < tileSize.x; x++)
+				if (worker != null)
 				{
-					TileWorker worker = Engine.GetWorker(new Int2(x, y), out bool completed);
+					float progress;
 
-					if (!completed)
-					{
-						if (worker != null)
-						{
-							double progress = (double)worker.CompletedSample / worker.sampleCount;
-							builder.Append(GetProgressCharacter((float)progress));
-						}
-						else builder.Append(' ');
-					}
-					else builder.Append('#');
+					if (completed) progress = 1f;
+					else progress = (float)worker.CompletedSample / worker.sampleCount;
+
+					builders[position] = GetProgressCharacter(progress);
 				}
+				else builders[position] = '_';
 			}
 		}
 

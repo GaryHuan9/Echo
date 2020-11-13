@@ -19,8 +19,8 @@ namespace ForceRenderer
 		{
 			Terminal terminal = new Terminal();
 
-			var commandsController = new CommandsController(terminal, new MinMaxInt(0, 3));
-			var renderDisplay = new RenderDisplay(terminal, new MinMaxInt(3, 30));
+			var commandsController = new CommandsController(terminal);
+			var renderDisplay = new RenderDisplay(terminal);
 
 			terminal.AddSection(commandsController);
 			terminal.AddSection(renderDisplay);
@@ -65,15 +65,14 @@ namespace ForceRenderer
 				//Render
 				Int2[] resolutions =
 				{
-					new Int2(320, 180), new Int2(854, 480), new Int2(1000, 1000),
-					new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
+					new Int2(320, 180), new Int2(854, 480), new Int2(1000, 1000), new Int2(1920, 1080), new Int2(3840, 2160)
 				};
 
 				Texture buffer = new Texture(resolutions[1]);
 				using RenderEngine engine = new RenderEngine
 											{
 												RenderBuffer = buffer, Scene = scene,
-												PixelSample = 10, TileSize = 32
+												PixelSample = 512, TileSize = 64
 											};
 
 				renderDisplay.Engine = engine;
