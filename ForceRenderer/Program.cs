@@ -20,7 +20,7 @@ namespace ForceRenderer
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
-			var renderDisplay = new RenderDisplay(terminal);
+			var renderDisplay = new RenderMonitor(terminal);
 
 			terminal.AddSection(commandsController);
 			terminal.AddSection(renderDisplay);
@@ -72,7 +72,7 @@ namespace ForceRenderer
 				using RenderEngine engine = new RenderEngine
 											{
 												RenderBuffer = buffer, Scene = scene,
-												PixelSample = 512, TileSize = 64
+												PixelSample = 128, TileSize = 64
 											};
 
 				renderDisplay.Engine = engine;

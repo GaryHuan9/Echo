@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Vectors;
+using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Terminals
 {
@@ -112,6 +112,7 @@ namespace ForceRenderer.Terminals
 
 			readonly Section section;
 
+			//TODO: Convert to char arrays!
 			readonly List<StringBuilder> builders = new List<StringBuilder>();
 			readonly List<bool> dirties = new List<bool>();
 
