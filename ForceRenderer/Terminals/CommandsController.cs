@@ -1,7 +1,4 @@
 using System;
-using System.Diagnostics;
-using System.Text;
-using CodeHelpers;
 using CodeHelpers.Vectors;
 
 namespace ForceRenderer.Terminals
@@ -10,7 +7,7 @@ namespace ForceRenderer.Terminals
 	{
 		public CommandsController(Terminal terminal) : base(terminal) { }
 
-		public override int Height => 4;
+		public override int Height => 3;
 
 		int inputLength;
 		double blinkOffset;

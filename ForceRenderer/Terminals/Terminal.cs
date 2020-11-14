@@ -29,7 +29,7 @@ namespace ForceRenderer.Terminals
 			Console.OutputEncoding = Encoding.UTF8;
 		}
 
-		public float UpdateFrequency { get; set; } = 30f;
+		public float UpdateFrequency { get; set; } = 24f;
 		public double AliveTime => stopwatch.Elapsed.TotalMilliseconds;
 
 		readonly List<Section> sections = new List<Section>();
@@ -112,11 +112,8 @@ namespace ForceRenderer.Terminals
 
 			readonly Section section;
 
-			//TODO: Convert to char arrays!
-			readonly List<char[]> lines = new List<char[]>();
-			readonly List<bool> dirties = new List<bool>();
-
-			const int MinimumCapacity = 16;
+			readonly List<Line> lines = new List<Line>();
+			char[] writeBuffer;
 
 			public char this[Int2 index]
 			{
@@ -124,21 +121,39 @@ namespace ForceRenderer.Terminals
 				{
 					CheckHeight(index);
 
-					if (lines.Count < index.y) return default;
-					char[] line = lines[index.y];
-
-					return line != null && index.x < line.Length ? line[index.x] : default;
+					if (lines.Count <= index.y) return default;
+					return lines[index.y]?[index.x] ?? default;
 				}
 				set
 				{
 					CheckHeight(index);
-					char[] line = EnsureCapacity(index);
 
-					if (line[index.x] == value) return;
+					if (value == default)
+					{
+						Line line = lines.TryGetValue(index.y);
+						if (line == null) return;
+					}
 
-					line[index.x] = value;
-					dirties[index.y] = true;
+					EnsureCapacity(index.y);
+					lines[index.y][index.x] = value;
 				}
+			}
+
+			/// <inheritdoc cref="Line.GetSlice"/>
+			public ReadOnlySpan<char> GetSlice(Int2 index, int length)
+			{
+				CheckHeight(index);
+
+				Line line = lines.Count < index.y ? null : lines[index.y];
+				return line == null ? default : line.GetSlice(index.x, length);
+			}
+
+			public void SetSlice(Int2 index, ReadOnlySpan<char> slice) //NOTE: Currently indexers do not support stackalloc assignment, so we have to use methods
+			{
+				CheckHeight(index);
+				EnsureCapacity(index.y);
+
+				lines[index.y].SetSlice(index.x, slice.Slice(0, slice.Length));
 			}
 
 			public void Insert(Int2 index, char value) => Insert(index, stackalloc char[1] {value});
@@ -146,79 +161,78 @@ namespace ForceRenderer.Terminals
 			public void Insert(Int2 index, ReadOnlySpan<char> value)
 			{
 				CheckHeight(index);
+				EnsureCapacity(index.y);
 
-				lines[0].Insert();
+				Line line = lines[index.y];
+				int length = value.Length;
 
-				var builder = PrepareBuilder(index);
+				Span<char> slice = stackalloc char[line.Count - index.x];
+				line.GetSlice(index.x, slice.Length).CopyTo(slice);
 
-				builder.Insert(index.x, value);
-				dirties[index.y] = true;
+				line.SetSlice(index.x + length, slice);
+				line.SetSlice(index.x, value);
 			}
 
 			public void Remove(Int2 index, int length = 1)
 			{
 				CheckHeight(index);
 
-				StringBuilder builder = builders.TryGetValue(index.y);
-				if (builder == null || builder.Length <= index.x) return;
+				Line line = lines.TryGetValue(index.y);
+				if (line == null || line.Count <= index.x) return;
 
-				length = Math.Min(length, builder.Length - index.x);
-				builder.Remove(index.x, length);
+				Span<char> slice = stackalloc char[line.Count - index.x - length];
+				line.GetSlice(index.x + length, slice.Length).CopyTo(slice);
 
-				dirties[index.y] = true;
+				line.SetSlice(index.x, slice);
+				line.SetSlice(index.x + slice.Length, stackalloc char[length]);
 			}
 
 			public void Clear(int index)
 			{
 				CheckHeight(index);
 
-				StringBuilder builder = builders.TryGetValue(index);
-				if (builder == null || builder.Length == 0) return;
-
-				builder.Clear();
-				dirties[index] = true;
+				Line line = lines.TryGetValue(index);
+				line?.SetSlice(0, stackalloc char[line.Count]);
 			}
 
-			StringBuilder PrepareBuilder(Int2 index)
+			public void Clear()
 			{
-				FillTo<List<StringBuilder>, StringBuilder>(builders, index.y);
-				FillTo<List<bool>, bool>(dirties, index.y);
+				RemoveExtraLines();
+				for (int i = 0; i < lines.Count; i++) Clear(i);
+			}
 
-				StringBuilder builder = builders[index.y];
-				int length = index.x - builder.Length + 1;
-
-				if (length > 0) builder.Append(stackalloc char[length]);
-
-				return builder;
+			void RemoveExtraLines()
+			{
+				int extra = lines.Count - section.Height;
+				if (extra > 0) lines.RemoveRange(section.Height, extra);
 			}
 
 			public void Write(bool fullRewrite)
 			{
+				RemoveExtraLines();
 				for (int i = 0; i < section.Height; i++) WriteLine(i, fullRewrite);
-
-				//Remove extra builders if section height changed
-				int extra = builders.Count - section.Height;
-				if (extra > 0) builders.RemoveRange(section.Height, extra);
 			}
 
 			void WriteLine(int index, bool fullRewrite)
 			{
-				if (!fullRewrite && !dirties.TryGetValue(index))
+				Line line = lines.TryGetValue(index);
+
+				if (line == null || !fullRewrite && !line.Dirtied)
 				{
 					Console.WriteLine();
 					return; //No edits nor need full rewrite
 				}
 
-				var builder = builders.TryGetValue(index);
-				if (builder != null) dirties[index] = false;
+				line.ClearDirtied();
+				int width = Console.WindowWidth - 1;
 
-				ReadOnlySpan<char> output = builder?.ToString() ?? "";
-				Span<char> print = stackalloc char[Console.WindowWidth - 1];
+				if (writeBuffer?.Length != width) writeBuffer = new char[width];
+				else Array.Clear(writeBuffer, 0, writeBuffer.Length);
 
-				output.Slice(0, Math.Min(output.Length, print.Length)).CopyTo(print);
+				line.GetSlice(0, Math.Min(line.Count, writeBuffer.Length)).CopyTo(writeBuffer);
 
 				Console.Write('\r');
-				Console.WriteLine(new string(print));
+				Console.WriteLine(writeBuffer);
 			}
 
 			void CheckHeight(Int2 index) => CheckHeight(index.y);
@@ -230,54 +244,104 @@ namespace ForceRenderer.Terminals
 			}
 
 			/// <summary>
-			/// Fills <paramref name="list"/> so that index at <paramref name="index"/> is valid by adding in new items.
+			/// Prepares the lines array for indexing at <paramref name="index"/>.
 			/// </summary>
-			static void FillTo<T, U>(T list, int index) where T : List<U>
-														where U : new()
+			void EnsureCapacity(int index)
 			{
-				list.Capacity = Math.Max(list.Capacity, index);
-				for (int i = list.Count; i <= index; i++) list.Add(new U());
+				lines.Capacity = Math.Max(lines.Capacity, index + 1);
+				while (lines.Count <= index) lines.Add(new Line());
 			}
 
-			char[] EnsureCapacity(Int2 index, int length = 1)
+			class Line
 			{
-				if (lines.Count <= index.y)
-				{
-					lines.Capacity = dirties.Capacity = index.y + 1;
+				char[] chars;
 
-					for (int i = lines.Count; i <= index.y; i++)
+				public int Count { get; private set; }    //The number of chars actually used. Everything after this number should be default(char)
+				public bool Dirtied { get; private set; } //Returns whether this line has been modified. This flag can be reset to false.
+
+				const int MinimumCapacity = 16;
+
+				public char this[int index]
+				{
+					get => chars == null || chars.Length <= index ? default : chars[index];
+					set
 					{
-						lines.Add(default);
-						dirties.Add(default);
+						char old = this[index];
+						if (old == value) return;
+
+						Dirtied = true;
+
+						if (value == default)
+						{
+							chars[index] = default;
+							if (Count - 1 > index) return; //If there are other real chars after this one
+
+							//Reduce count until hit another real character
+							while (Count > 0 && chars[Count - 1] == default) Count--;
+						}
+						else
+						{
+							EnsureCapacity(index + 1);
+							chars[index] = value;
+
+							Count = Math.Max(Count, index + 1);
+						}
 					}
 				}
 
-				int capacity = Math.Max(MinimumCapacity, GetSmallestPower(index.x + length));
-				char[] line = lines[index.y] ??= new char[capacity];
-
-				if (line.Length < capacity)
+				/// <summary>
+				/// Returns the slice of chars in memory at <paramref name="index"/> with <paramref name="length"/>.
+				/// NOTE: Returned span might be shorter than <paramref name="length"/>. Only available memory is returned.
+				/// </summary>
+				public ReadOnlySpan<char> GetSlice(int index, int length)
 				{
-					char[] newLine = new char[capacity];
-					Array.Copy(line, newLine, line.Length);
+					if (chars == null || chars.Length <= index) return ReadOnlySpan<char>.Empty;
 
-					lines[index.y] = line = newLine;
+					length = Math.Min(length, chars.Length - index);
+					return new ReadOnlySpan<char>(chars, index, length);
 				}
 
-				return line;
-			}
+				public void SetSlice(int index, ReadOnlySpan<char> slice)
+				{
+					if (index < 0) throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
+					for (int i = slice.Length - 1; i >= 0; i--) this[index + i] = slice[i]; //Might optimize/inline this later if needed
+				}
 
-			/// <summary>
-			/// Returns the smallest power of two larger than <paramref name="largerThan"/>.
-			/// </summary>
-			static int GetSmallestPower(int largerThan)
-			{
-				largerThan--;
-				largerThan |= largerThan >> 1;
-				largerThan |= largerThan >> 2;
-				largerThan |= largerThan >> 4;
-				largerThan |= largerThan >> 8;
-				largerThan |= largerThan >> 16;
-				return largerThan + 1;
+				public void ClearDirtied() => Dirtied = false;
+
+				/// <summary>
+				/// Ensures that the line is longer than or equals to <paramref name="length"/>.
+				/// </summary>
+				void EnsureCapacity(int length)
+				{
+					if (length <= (chars?.Length ?? 0)) return;
+
+					int capacity = GetSmallestPowerOf2(length);
+					capacity = Math.Max(MinimumCapacity, capacity);
+
+					if (chars != null)
+					{
+						char[] newChars = new char[capacity];
+						Array.Copy(chars, newChars, chars.Length);
+
+						chars = newChars;
+					}
+					else chars = new char[capacity];
+				}
+
+				/// <summary>
+				/// Returns the smallest power of two larger than <paramref name="largerThan"/>.
+				/// </summary>
+				static int GetSmallestPowerOf2(int largerThan)
+				{
+					int value = largerThan - 1;
+					value |= value >> 1;
+					value |= value >> 2;
+					value |= value >> 4;
+					value |= value >> 8;
+					value |= value >> 16;
+					return value + 1;
+				}
 			}
 		}
 	}
