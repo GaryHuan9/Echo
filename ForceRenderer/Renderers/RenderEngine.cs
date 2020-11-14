@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
@@ -46,17 +47,46 @@ namespace ForceRenderer.Renderers
 		}
 
 		public bool Completed => CurrentState == State.completed;
+		public Profile CurrentProfile => profile;
+
+		public PixelWorker PixelWorker { get; private set; }
+		public TimeSpan Elapsed => stopwatch.Elapsed;
 
 		TileWorker[] workers; //All of the workers that should process the tiles
 		Int2[] tilePositions; //Positions of tiles. Processed from 0 to length. Positions can be in any order.
 
 		Dictionary<Int2, TileStatus> tileStatuses; //Indexer to status of tiles, tile position in tile-space, meaning the gap between tiles is one
+		Stopwatch stopwatch;
 
 		volatile int dispatchedTileCount; //Number of tiles being processed or are already processed.
 		volatile int completedTileCount;  //Number of tiles finished processing
 
 		public int DispatchedTileCount => Interlocked.CompareExchange(ref dispatchedTileCount, 0, 0);
 		public int CompletedTileCount => Interlocked.CompareExchange(ref completedTileCount, 0, 0);
+
+		public long InitiatedSample
+		{
+			get
+			{
+				lock (manageLocker)
+				{
+					long tileSample = (long)profile.tileSize * profile.tileSize * profile.pixelSample;
+					return CompletedTileCount * tileSample + workers.Sum(worker => worker.InitiatedSample);
+				}
+			}
+		}
+
+		public long CompletedSample
+		{
+			get
+			{
+				lock (manageLocker)
+				{
+					long tileSample = (long)profile.tileSize * profile.tileSize * profile.pixelSample;
+					return CompletedTileCount * tileSample + workers.Sum(worker => worker.CompletedSample);
+				}
+			}
+		}
 
 		public Int2 TotalTileSize { get; private set; }     //The size of the rendering tile grid
 		public int TotalTileCount => TotalTileSize.Product; //The number of processed tiles or tiles currently being processed
@@ -83,6 +113,7 @@ namespace ForceRenderer.Renderers
 			CreateTilePositions();
 			InitializeWorkers();
 
+			stopwatch = Stopwatch.StartNew();
 			CurrentState = State.rendering;
 		}
 
@@ -103,14 +134,14 @@ namespace ForceRenderer.Renderers
 
 		void InitializeWorkers()
 		{
-			PixelWorker pixelWorker = new PathTraceWorker(profile);
+			PixelWorker = new PathTraceWorker(profile);
 			workers = new TileWorker[profile.workerSize];
 
 			for (int i = 0; i < profile.workerSize; i++)
 			{
 				TileWorker worker = workers[i] = new TileWorker(profile);
 
-				worker.ResetParameters(Int2.zero, RenderBuffer, pixelWorker);
+				worker.ResetParameters(Int2.zero, RenderBuffer, PixelWorker);
 				DispatchWorker(worker);
 			}
 		}
@@ -143,6 +174,7 @@ namespace ForceRenderer.Renderers
 				if (CompletedTileCount == TotalTileCount)
 				{
 					CurrentState = State.completed;
+					stopwatch.Stop();
 					renderCompleteEvent.Set();
 				}
 				else if (CurrentState == State.rendering) DispatchWorker(worker);
@@ -208,6 +240,9 @@ namespace ForceRenderer.Renderers
 
 			profile = default;
 			TotalTileSize = default;
+
+			PixelWorker = null;
+			stopwatch = null;
 
 			GC.Collect();
 			CurrentState = State.waiting;

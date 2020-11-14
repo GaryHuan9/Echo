@@ -82,7 +82,7 @@ namespace ForceRenderer.Renderers
 		public readonly Camera camera;
 		public readonly DirectionalLight directionalLight;
 
-		readonly int bundleCount;
+		public readonly int bundleCount;
 		readonly PressedBundle[] bundles; //Contiguous chunks of data; sorted by scene object hash code
 
 		/// <summary>
