@@ -21,7 +21,7 @@ namespace ForceRenderer.Renderers
 
 			while (TryTrace(ray, out float distance, out int token) && bounce++ < profile.maxBounce)
 			{
-				ref PressedBundle bundle = ref profile.pressed.GetPressedBundle(token);
+				ref PressedMaterial material = ref profile.pressed.GetMaterial(token);
 
 				Float3 position = ray.GetPoint(distance);
 				Float3 normal = profile.pressed.GetNormal(position, token);
@@ -42,7 +42,7 @@ namespace ForceRenderer.Renderers
 
 				//Lambert diffuse
 				ray = new Ray(position, GetHemisphereDirection(normal), true);
-				energy *= 2f * normal.Dot(ray.direction).Clamp(0f, 1f) * bundle.material.albedo;
+				energy *= 2f * normal.Dot(ray.direction).Clamp(0f, 1f) * material.albedo;
 
 				if (energy.x <= profile.energyEpsilon && energy.y <= profile.energyEpsilon && energy.z <= profile.energyEpsilon) break;
 			}
@@ -81,12 +81,6 @@ namespace ForceRenderer.Renderers
 				x * tangent.y + y * binormal.y + z * normal.y,
 				x * tangent.z + y * binormal.z + z * normal.z
 			);
-		}
-
-		float TryTraceShadow(in Ray ray)
-		{
-			float distance = profile.pressed.GetIntersection(ray);
-			return distance < float.PositiveInfinity ? 0f : 1f;
 		}
 	}
 }

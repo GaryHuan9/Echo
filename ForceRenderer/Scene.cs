@@ -1,10 +1,9 @@
 ﻿using ForceRenderer.IO;
-using ForceRenderer.Renderers;
 using Object = ForceRenderer.Objects.Object;
 
-namespace ForceRenderer.Scenes
+namespace ForceRenderer
 {
-	public class Scene : Object //If Scene derives from SceneObject, then we must exclude it when pressing the scene
+	public class Scene : Object
 	{
 		public Cubemap Cubemap { get; set; }
 	}

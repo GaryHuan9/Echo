@@ -10,12 +10,33 @@ namespace ForceRenderer.Objects.SceneObjects
 		public SphereObject(Material material, float radius) : base(material) => Radius = radius;
 
 		public float Radius { get; set; }
-		float radiusSquared;
+	}
 
-		public override float GetRawIntersection(in Ray ray)
+	public readonly struct PressedSphere
+	{
+		public PressedSphere(SphereObject sphere, int materialToken)
 		{
-			float point1 = -ray.direction.Dot(ray.origin);
-			float point2Squared = point1 * point1 - ray.origin.SquaredMagnitude + radiusSquared;
+			position = sphere.LocalToWorld.MultiplyPoint(Float3.zero);
+			radius = sphere.Scale.MaxComponent * sphere.Radius;
+
+			radiusSquared = radius * radius;
+			this.materialToken = materialToken;
+		}
+
+		public readonly Float3 position;
+		public readonly float radius;
+
+		public readonly float radiusSquared;
+		public readonly int materialToken;
+
+		public float GetIntersection(in Ray ray)
+		{
+			float x = ray.origin.x - position.x;
+			float y = ray.origin.y - position.y;
+			float z = ray.origin.z - position.z;
+
+			float point1 = -ray.direction.x * x - ray.direction.y * y - ray.direction.z * z;
+			float point2Squared = point1 * point1 - x * x - y * y - z * z + radiusSquared;
 
 			if (point2Squared < 0f) return float.PositiveInfinity;
 			float point2 = (float)Math.Sqrt(point2Squared);
@@ -26,12 +47,6 @@ namespace ForceRenderer.Objects.SceneObjects
 			return float.PositiveInfinity;
 		}
 
-		public override Float3 GetRawNormal(Float3 point) => point.Normalized;
-
-		public override void OnPressed()
-		{
-			base.OnPressed();
-			radiusSquared = Radius * Radius;
-		}
+		public Float3 GetNormal(Float3 point) => point.Normalized;
 	}
 }
