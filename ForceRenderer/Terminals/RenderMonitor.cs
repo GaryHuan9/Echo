@@ -67,13 +67,13 @@ namespace ForceRenderer.Terminals
 			PressedScene pressed = profile.pressed;
 
 			//Display configuration information
-			long totalSample = buffer.size.Product * profile.pixelSample;
+			long totalSample = (long)Engine.TotalTileCount * profile.tileSize * profile.tileSize * profile.pixelSample;
 
 			builders.SetSlice
 			(
 				new Int2(0, 0),
-				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample}; TotalSP {totalSample}; Bundle {pressed.bundleCount}; " +
-				$"Light {(pressed.directionalLight == null ? 0 : 1)}; W/H {buffer.aspect}; Tile {Engine.TotalTileCount}; TileSize {Engine.TileSize}; Method {Engine.PixelWorker}; "
+				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample}; TotalSP {totalSample}; Material {pressed.materialCount}; Triangle {pressed.triangleCount}; Sphere {pressed.sphereCount}; " +
+				$"Light {(pressed.directionalLight == null ? 0 : 1)}; W/H {buffer.aspect}; Tile {Engine.TotalTileCount}; TileSize {profile.tileSize}; Method {Engine.PixelWorker}; "
 			);
 
 			//Display dynamic information

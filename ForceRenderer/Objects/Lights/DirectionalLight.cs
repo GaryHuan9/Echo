@@ -13,6 +13,6 @@ namespace ForceRenderer.Objects.Lights
 		public Float3 Direction { get; private set; }
 		public float ShadowHardness { get; set; } = 10f;
 
-		void RecalculateDirection() => Direction = DirectionToWorld(Float3.forward);
+		void RecalculateDirection() => Direction = LocalToWorld.MultiplyDirection(Float3.forward).Normalized;
 	}
 }

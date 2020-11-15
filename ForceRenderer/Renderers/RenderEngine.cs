@@ -8,7 +8,6 @@ using CodeHelpers.Collections;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
-using ForceRenderer.Scenes;
 
 namespace ForceRenderer.Renderers
 {
@@ -70,8 +69,8 @@ namespace ForceRenderer.Renderers
 			{
 				lock (manageLocker)
 				{
-					long tileSample = (long)profile.tileSize * profile.tileSize * profile.pixelSample;
-					return CompletedTileCount * tileSample + workers.Sum(worker => worker.InitiatedSample);
+					long completedSample = (long)CompletedTileCount * profile.tileSize * profile.tileSize * profile.pixelSample;
+					return completedSample + workers.Where(worker => worker.Working).Sum(worker => worker.InitiatedSample);
 				}
 			}
 		}
@@ -82,8 +81,8 @@ namespace ForceRenderer.Renderers
 			{
 				lock (manageLocker)
 				{
-					long tileSample = (long)profile.tileSize * profile.tileSize * profile.pixelSample;
-					return CompletedTileCount * tileSample + workers.Sum(worker => worker.CompletedSample);
+					long completedSample = (long)CompletedTileCount * profile.tileSize * profile.tileSize * profile.pixelSample;
+					return completedSample + workers.Where(worker => worker.Working).Sum(worker => worker.CompletedSample);
 				}
 			}
 		}

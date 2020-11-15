@@ -34,9 +34,6 @@ namespace ForceRenderer.Mathematics
 
 		public Float3 GetPoint(float distance) => origin + direction * distance;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)] public Ray TransformForward(in Transformation value) => new Ray(value.Forward(origin), value.ForwardDirection(direction));
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)] public Ray TransformBackward(in Transformation value) => new Ray(value.Backward(origin), value.BackwardDirection(direction));
-
 		public override string ToString() => $"{nameof(origin)}: {origin}, {nameof(direction)}: {direction}";
 	}
 }
