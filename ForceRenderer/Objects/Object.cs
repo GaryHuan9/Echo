@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CodeHelpers;
 using CodeHelpers.Vectors;
+using ForceRenderer.CodeHelpers.Vectors;
 
 namespace ForceRenderer.Objects
 {
@@ -10,7 +11,8 @@ namespace ForceRenderer.Objects
 		public Object() => children = new Children(this);
 
 		Float3 _position;
-		Float2 _rotation;
+		Float3 _rotation;
+		Float3 _scale = Float3.one;
 
 		public Float3 Position
 		{
@@ -25,7 +27,7 @@ namespace ForceRenderer.Objects
 			}
 		}
 
-		public Float2 Rotation
+		public Float3 Rotation
 		{
 			get => _rotation;
 			set
@@ -38,21 +40,35 @@ namespace ForceRenderer.Objects
 			}
 		}
 
-		public Transformation Transformation { get; private set; } = Transformation.identity; //NOTE: Currently no world/local transformation differences
+		public Float3 Scale
+		{
+			get => _scale;
+			set
+			{
+				if (_scale == value) return;
+				_scale = value;
+
+				RecalculateTransformations();
+				OnTransformationChanged?.Invoke();
+			}
+		}
+
+		public Float4x4 LocalToWorld { get; private set; } = Float4x4.identity;
+		public Float4x4 WorldToLocal { get; private set; } = Float4x4.identity;
+
 		public event Action OnTransformationChanged;
 
-		public Float3 PointToWorld(Float3 local) => Transformation.Forward(local);
-		public Float3 PointToLocal(Float3 world) => Transformation.Backward(world);
-
-		public Float3 DirectionToWorld(Float3 local) => Transformation.ForwardDirection(local);
-		public Float3 DirectionToLocal(Float3 world) => Transformation.BackwardDirection(world);
-
+		//TODO: Currently child/parent relationship does not affect transformation
 		public readonly Children children;
 
 		public Object Parent { get; private set; }
 		public int ParentIndex { get; private set; }
 
-		void RecalculateTransformations() => Transformation = new Transformation(Position, Rotation);
+		void RecalculateTransformations()
+		{
+			LocalToWorld = Float4x4.Transformation(Position, Rotation, Scale);
+			WorldToLocal = LocalToWorld.Inversed;
+		}
 
 		public class Children
 		{
