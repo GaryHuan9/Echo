@@ -200,7 +200,7 @@ namespace ForceRenderer.Renderers
 
 			int accumulation;
 
-			public Shade Color => new Shade((float)(r / accumulation), (float)(g / accumulation), (float)(b / accumulation));
+			public Color32 Color => new Color32((float)(r / accumulation), (float)(g / accumulation), (float)(b / accumulation));
 
 			public void Accumulate(Float3 value)
 			{

@@ -15,7 +15,7 @@ namespace ForceRenderer.IO
 		public readonly string path;
 		readonly Texture texture;
 
-		public override Shade Sample(Float3 direction) => texture.GetPixel
+		public override Color32 Sample(Float3 direction) => texture.GetPixel
 		(
 			new Float2
 			(

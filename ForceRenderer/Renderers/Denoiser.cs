@@ -37,7 +37,7 @@ namespace ForceRenderer.Renderers
 					}
 				}
 
-				buffer.SetPixel(position, (Shade)(total / pixelCount));
+				buffer.SetPixel(position, (Color32)(total / pixelCount));
 			}
 		}
 

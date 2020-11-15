@@ -46,7 +46,7 @@ namespace ForceRenderer.IO
 			aspect = (float)size.x / size.y;
 
 			length = size.Product;
-			pixels = new Shade[length];
+			pixels = new Color32[length];
 
 			Rectangle rectangle = new Rectangle(0, 0, size.x, size.y);
 			BitmapData data = source.LockBits(rectangle, ImageLockMode.ReadOnly, format);
@@ -62,7 +62,7 @@ namespace ForceRenderer.IO
 					{
 						for (int i = 0; i < length; i++)
 						{
-							pixels[i] = new Shade(pointer[2], pointer[1], pointer[0]);
+							pixels[i] = new Color32(pointer[2], pointer[1], pointer[0]);
 							pointer += 3;
 						}
 
@@ -72,7 +72,7 @@ namespace ForceRenderer.IO
 					{
 						for (int i = 0; i < length; i++)
 						{
-							pixels[i] = new Shade(pointer[2], pointer[1], pointer[0], pointer[3]);
+							pixels[i] = new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
 							pointer += 4;
 						}
 
@@ -92,10 +92,10 @@ namespace ForceRenderer.IO
 			aspect = (float)size.x / size.y;
 
 			length = size.Product;
-			pixels = new Shade[length];
+			pixels = new Color32[length];
 		}
 
-		readonly Shade[] pixels;
+		readonly Color32[] pixels;
 
 		public readonly Int2 size;
 		readonly Int2 oneLess;
@@ -106,13 +106,13 @@ namespace ForceRenderer.IO
 		public static readonly ReadOnlyCollection<string> compatibleExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});
 		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new ReadOnlyCollection<ImageFormat>(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif});
 
-		public Shade GetPixel(int index) => pixels[index];
-		public Shade GetPixel(Int2 position) => GetPixel(ToIndex(position));
-		public Shade GetPixel(Float2 uv) => GetPixel(ToIndex(uv));
+		public Color32 GetPixel(int index) => pixels[index];
+		public Color32 GetPixel(Int2 position) => GetPixel(ToIndex(position));
+		public Color32 GetPixel(Float2 uv) => GetPixel(ToIndex(uv));
 
-		public void SetPixel(int index, Shade value) => pixels[index] = value;
-		public void SetPixel(Int2 position, Shade value) => SetPixel(ToIndex(position), value);
-		public void SetPixel(Float2 uv, Shade value) => SetPixel(ToIndex(uv), value);
+		public void SetPixel(int index, Color32 value) => pixels[index] = value;
+		public void SetPixel(Int2 position, Color32 value) => SetPixel(ToIndex(position), value);
+		public void SetPixel(Float2 uv, Color32 value) => SetPixel(ToIndex(uv), value);
 
 		public void SaveFile(string relativePath)
 		{
@@ -146,12 +146,12 @@ namespace ForceRenderer.IO
 
 				for (int i = 0; i < length; i++)
 				{
-					Shade pixel = pixels[i];
+					Color32 pixel = pixels[i];
 
-					pointer[0] = pixel.B;
-					pointer[1] = pixel.G;
-					pointer[2] = pixel.R;
-					pointer[3] = pixel.A;
+					pointer[0] = pixel.b;
+					pointer[1] = pixel.g;
+					pointer[2] = pixel.r;
+					pointer[3] = pixel.a;
 
 					pointer += 4;
 				}
