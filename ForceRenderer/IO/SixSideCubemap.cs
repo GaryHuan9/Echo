@@ -43,7 +43,7 @@ namespace ForceRenderer.IO
 
 		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new ReadOnlyCollection<string>(new[] {"px", "py", "pz", "nx", "ny", "nz"});
 
-		public override Shade Sample(Float3 direction)
+		public override Color32 Sample(Float3 direction)
 		{
 			Float3 absoluted = direction.Absoluted;
 			int index = absoluted.MaxIndex;
@@ -69,6 +69,6 @@ namespace ForceRenderer.IO
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Shade Sample(int index, Float2 uv) => textures[index].GetPixel(uv + Float2.half);
+		Color32 Sample(int index, Float2 uv) => textures[index].GetPixel(uv + Float2.half);
 	}
 }

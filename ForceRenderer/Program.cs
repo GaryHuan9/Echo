@@ -3,6 +3,7 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
+using ForceRenderer.CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.Lights;
@@ -17,6 +18,29 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
+			// ThreadHelper.MainThread = Thread.CurrentThread;
+			//
+			// // var matrix = new Float4x4
+			// // (
+			// // 	00f, 01f, 02f, 03f,
+			// // 	10f, 11f, 12f, 13f,
+			// // 	20f, 21f, 22f, 23f,
+			// // 	30f, 31f, 32f, 33f
+			// // );
+			//
+			// var m = Float4x4.Scaling(new Float3(2f, 2f, 3f));
+			// Console.WriteLine(m.MultiplyDirection(new Float3(1f, -1f, 1f)));
+			//
+			// static Float4x4 GetRandom() => new Float4x4
+			// (
+			// 	(float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value,
+			// 	(float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value,
+			// 	(float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value,
+			// 	(float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value
+			// );
+			//
+			// return;
+
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
