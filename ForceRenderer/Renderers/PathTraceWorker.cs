@@ -14,54 +14,55 @@ namespace ForceRenderer.Renderers
 		{
 			Ray ray = new Ray(profile.camera.Position, profile.camera.GetDirection(uv));
 
-			int bounce = 0;
-
 			Float3 energy = Float3.one;
-			Float3 color = Float3.zero;
+			Float3 light = Float3.zero;
 
-			while (TryTrace(ray, out float distance, out int token) && bounce++ < profile.maxBounce)
+			int bounce;
+
+			for (bounce = 0; bounce <= profile.maxBounce && TryTrace(ray, out float distance, out int token); bounce++)
 			{
 				ref PressedMaterial material = ref profile.pressed.GetMaterial(token);
 
 				Float3 position = ray.GetPoint(distance);
 				Float3 normal = profile.pressed.GetNormal(position, token);
 
-				// if (pressedScene.directionalLight != null)
-				// {
-				// 	DirectionalLight light = pressedScene.directionalLight;
-				// 	Ray lightRay = new Ray(position, -light.Direction, true);
-				//
-				// 	float coefficient = normal.Dot(lightRay.direction).Clamp(0f, 1f);
-				// 	if (coefficient > 0f) coefficient *= TryTraceShadow(lightRay);
-				//
-				// 	color += coefficient * energy * bundle.material.albedo * light.Intensity;
-				// }
+				light += energy * material.emission;
 
-				// ray = new Ray(position, ray.direction.Reflect(normal), true);
-				// energy *= bundle.material.specular;
-
-				//Lambert diffuse
-				ray = new Ray(position, GetHemisphereDirection(normal), true);
-				energy *= 2f * normal.Dot(ray.direction).Clamp(0f, 1f) * material.albedo;
+				//Randomly choose between diffuse and specular BSDF
+				if (RandomValue < material.specularChance)
+				{
+					//Phong specular reflection
+					ray = new Ray(position, GetHemisphereDirection(ray.direction.Reflect(normal), material.phongAlpha), true);
+					energy *= 1f / material.specularChance * (normal.Dot(ray.direction) * material.phongMultiplier).Clamp(0f, 1f) * material.specular;
+				}
+				else
+				{
+					//Lambert diffuse reflection
+					ray = new Ray(position, GetHemisphereDirection(normal, 1f), true); //Using cosine distribution
+					energy *= 1f / material.diffuseChance * material.albedo;
+				}
 
 				if (energy.x <= profile.energyEpsilon && energy.y <= profile.energyEpsilon && energy.z <= profile.energyEpsilon) break;
 			}
 
 			//return (Float3)((float)bounce / profile.maxBounce);
 
-			Cubemap cubemap = profile.scene.Cubemap;
-			if (cubemap == null) return color;
+			Cubemap skybox = profile.scene.Cubemap; //Sample skybox if present
+			if (skybox != null) light += energy * (Float3)skybox.Sample(ray.direction);
 
-			//Sample skybox
-			return color + energy * (Float3)cubemap.Sample(ray.direction) * 1.8f;
+			return light;
 		}
 
+		/// <summary>
+		/// Samples a hemisphere pointing towards <paramref name="normal"/>.
+		/// <paramref name="alpha"/> determines whether the sampling distribution is uniform or cosine.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		Float3 GetHemisphereDirection(Float3 normal)
+		Float3 GetHemisphereDirection(Float3 normal, float alpha)
 		{
-			//Uniformly sample directions in a hemisphere
-			float cos = RandomValue;
-			float sin = (float)Math.Sqrt(Math.Max(0f, 1f - cos * cos));
+			//Samples hemisphere based on alpha
+			float cos = MathF.Pow(RandomValue, 1f / (alpha + 1f));
+			float sin = MathF.Sqrt(1f - cos * cos);
 			float phi = Scalars.TAU * RandomValue;
 
 			float x = (float)Math.Cos(phi) * sin;

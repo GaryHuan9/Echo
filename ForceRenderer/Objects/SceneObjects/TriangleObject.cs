@@ -19,7 +19,7 @@ namespace ForceRenderer.Objects.SceneObjects
 		public Float3 Vertex2 { get; set; }
 	}
 
-	public readonly struct PressedTriangle //Triangle for a left-handed coordinate system. Thus implementation might be flipped from standard.
+	public readonly struct PressedTriangle //Winding order for triangles is CLOCKWISE
 	{
 		public PressedTriangle(TriangleObject triangle, int materialToken)
 		{
@@ -30,7 +30,7 @@ namespace ForceRenderer.Objects.SceneObjects
 			edge1 = vertex1 - vertex0;
 			edge2 = vertex2 - vertex0;
 
-			normal = Float3.Cross(edge2, edge1).Normalized;
+			normal = Float3.Cross(edge1, edge2).Normalized;
 			this.materialToken = materialToken;
 		}
 
@@ -48,8 +48,8 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public float GetIntersection(in Ray ray)
 		{
-			Float3 cross0 = Float3.Cross(ray.direction, edge1); //Calculating determinant and u
-			float determinant = Float3.Dot(edge2, cross0);      //If determinant is close to zero, ray is parallel to triangle
+			Float3 cross0 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
+			float determinant = Float3.Dot(edge1, cross0);      //If determinant is close to zero, ray is parallel to triangle
 
 			if (determinant < Epsilon) return float.PositiveInfinity; //No intersection
 
@@ -58,12 +58,12 @@ namespace ForceRenderer.Objects.SceneObjects
 
 			if (u < 0f || u > determinant) return float.PositiveInfinity; //Outside barycentric bounds
 
-			Float3 cross1 = Float3.Cross(offset, edge2);
+			Float3 cross1 = Float3.Cross(offset, edge1);
 			float v = Float3.Dot(ray.direction, cross1);
 
 			if (v < 0f || u + v > determinant) return float.PositiveInfinity; //Outside barycentric bounds
 
-			float distance = Float3.Dot(edge1, cross1);
+			float distance = Float3.Dot(edge2, cross1);
 			if (distance < 0f) return float.PositiveInfinity; //Ray pointing away from triangle = negative distance
 
 			float inverse = 1f / determinant;

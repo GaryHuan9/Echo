@@ -90,7 +90,7 @@ namespace ForceRenderer.Renderers
 			triangles = new PressedTriangle[triangleCount];
 			spheres = new PressedSphere[sphereCount];
 
-			for (int i = 0; i < materialCount; i++) materials[i] = materialObjects[i].Pressed;
+			for (int i = 0; i < materialCount; i++) materials[i] = new PressedMaterial(materialObjects[i]);
 
 			for (int i = 0; i < triangleCount; i++)
 			{

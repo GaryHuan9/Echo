@@ -72,8 +72,8 @@ namespace ForceRenderer.Terminals
 			builders.SetSlice
 			(
 				new Int2(0, 0),
-				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample}; TotalSP {totalSample}; Material {pressed.materialCount}; Triangle {pressed.triangleCount}; Sphere {pressed.sphereCount}; " +
-				$"Light {(pressed.directionalLight == null ? 0 : 1)}; W/H {buffer.aspect}; Tile {Engine.TotalTileCount}; TileSize {profile.tileSize}; Method {Engine.PixelWorker}; "
+				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample:N0}; TotalSP {totalSample:N0}; Material {pressed.materialCount:N0}; Triangle {pressed.triangleCount:N0}; Sphere {pressed.sphereCount:N0}; " +
+				$"Light {(pressed.directionalLight == null ? 0 : 1):N0}; W/H {buffer.aspect}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker}; "
 			);
 
 			//Display dynamic information
@@ -86,13 +86,13 @@ namespace ForceRenderer.Terminals
 			long initiated = Engine.InitiatedSample;
 			long completed = Engine.CompletedSample;
 
-			double estimate = Math.Max(0d, totalSample / (completed / second) - second);
+			double estimate = (totalSample / (completed / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds);
 
 			builders.SetSlice
 			(
 				new Int2(0, 1),
-				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; CompleteSP {completed}; RenderSP {initiated - completed}; CompleteTile {completedTile}; Estimate {TimeSpan.FromSeconds(estimate):hh\\:mm\\:ss\\:ff}; " +
-				$"Complete% {100d * completed / totalSample:F2}; SPPS {completed / second:F2}; CompleteTilePS {completedTile / second:F2}; DispatchTilePS {dispatchedTile / second:F2}; "
+				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; CompleteSP {completed:N0}; RenderSP {Math.Abs(initiated - completed):D3}; CompleteTile {completedTile}; Estimate {TimeSpan.FromSeconds(estimate):hh\\:mm\\:ss\\:ff}; " +
+				$"Complete% {100d * completed / totalSample:F2}; SPPS {completed / second:N0}; CompleteTilePS {completedTile / second:N0}; DispatchTilePS {dispatchedTile / second:N0}; "
 			);
 		}
 
