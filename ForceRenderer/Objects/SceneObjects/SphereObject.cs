@@ -47,6 +47,6 @@ namespace ForceRenderer.Objects.SceneObjects
 			return float.PositiveInfinity;
 		}
 
-		public Float3 GetNormal(Float3 point) => point.Normalized;
+		public Float3 GetNormal(Float3 point) => (point - position).Normalized;
 	}
 }

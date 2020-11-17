@@ -17,6 +17,9 @@ namespace ForceRenderer.Renderers
 		readonly ThreadLocal<Random> threadRandom;
 		protected readonly RenderEngine.Profile profile;
 
+		/// <summary>
+		/// Returns a thread-safe random value larger than or equals zero, and smaller than one.
+		/// </summary>
 		protected float RandomValue => (float)threadRandom.Value.NextDouble();
 
 		/// <summary>
