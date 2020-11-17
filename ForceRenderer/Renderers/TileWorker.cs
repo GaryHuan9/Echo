@@ -30,16 +30,18 @@ namespace ForceRenderer.Renderers
 						 Name = $"Tile Worker #{id} {size}x{size}"
 					 };
 
-			//Create golden ratio spiral for pixel offsets
-			float goldenRatio = (1f + (float)Math.Sqrt(5d)) / 2f;
+			//Create golden ratio square spiral for pixel sample offsets
 			pixelOffsets = new Float2[profile.pixelSample];
 
-			for (float i = 0.5f; i < profile.pixelSample; i++)
+			for (int i = 0; i < profile.pixelSample; i++)
 			{
-				float angle = Scalars.TAU * goldenRatio * i;
-				Float2 offset = new Float2((float)Math.Cos(angle), (float)Math.Sin(angle));
+				float theta = Scalars.TAU * Scalars.GoldenRatio * i;
+				Float2 offset = new Float2(MathF.Cos(theta), MathF.Sin(theta));
 
-				pixelOffsets[(int)i] = offset * (float)Math.Sqrt(i / profile.pixelSample) / 2f + Float2.half;
+				float square = 1f / (Math.Abs(MathF.Cos(theta + Scalars.PI / 4)) + Math.Abs(MathF.Sin(theta + Scalars.PI / 4)));
+				float radius = MathF.Sqrt((i + 0.5f) / profile.pixelSample) * Scalars.Sqrt2 * square / 2f;
+
+				pixelOffsets[i] = offset * radius + Float2.half;
 			}
 		}
 
