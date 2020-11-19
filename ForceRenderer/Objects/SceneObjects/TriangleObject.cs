@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
@@ -17,16 +18,26 @@ namespace ForceRenderer.Objects.SceneObjects
 		public Float3 Vertex0 { get; set; }
 		public Float3 Vertex1 { get; set; }
 		public Float3 Vertex2 { get; set; }
+
+		public override void Press(List<PressedTriangle> triangles, List<PressedSphere> spheres, int materialToken)
+		{
+			triangles.Add(new PressedTriangle(this, materialToken));
+		}
 	}
 
 	public readonly struct PressedTriangle //Winding order for triangles is CLOCKWISE
 	{
-		public PressedTriangle(TriangleObject triangle, int materialToken)
-		{
-			vertex0 = triangle.LocalToWorld.MultiplyPoint(triangle.Vertex0);
-			vertex1 = triangle.LocalToWorld.MultiplyPoint(triangle.Vertex1);
-			vertex2 = triangle.LocalToWorld.MultiplyPoint(triangle.Vertex2);
+		public PressedTriangle(TriangleObject triangle, int materialToken) : this
+		(
+			triangle.LocalToWorld.MultiplyPoint(triangle.Vertex0),
+			triangle.LocalToWorld.MultiplyPoint(triangle.Vertex1),
+			triangle.LocalToWorld.MultiplyPoint(triangle.Vertex2),
+			materialToken
+		) { }
 
+		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, int materialToken)
+		{
+			this.vertex0 = vertex0;
 			edge1 = vertex1 - vertex0;
 			edge2 = vertex2 - vertex0;
 
@@ -34,11 +45,8 @@ namespace ForceRenderer.Objects.SceneObjects
 			this.materialToken = materialToken;
 		}
 
-		public readonly Float3 vertex0;
-		public readonly Float3 vertex1;
-		public readonly Float3 vertex2;
-
-		public readonly Float3 edge1;
+		public readonly Float3 vertex0; //NOTE: Vertex one and two are actually not needed for intersection
+		public readonly Float3 edge1;   //but we can easily add them back if needed
 		public readonly Float3 edge2;
 
 		public readonly Float3 normal;

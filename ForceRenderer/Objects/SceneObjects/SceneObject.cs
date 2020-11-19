@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CodeHelpers;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
@@ -17,5 +18,11 @@ namespace ForceRenderer.Objects.SceneObjects
 			get => _material;
 			set => _material = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
 		}
+
+		/// <summary>
+		/// Presses the scene object and add it to either of the lists. The material token for the pressed object is
+		/// provided through <paramref name="materialToken"/>.
+		/// </summary>
+		public abstract void Press(List<PressedTriangle> triangles, List<PressedSphere> spheres, int materialToken);
 	}
 }

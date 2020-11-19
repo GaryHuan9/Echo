@@ -72,7 +72,7 @@ namespace ForceRenderer.Terminals
 			builders.SetSlice
 			(
 				new Int2(0, 0),
-				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample:N0}; TotalSP {totalSample:N0}; Material {pressed.materialCount:N0}; Triangle {pressed.triangleCount:N0}; Sphere {pressed.sphereCount:N0}; " +
+				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample:N0}; TotalSP {totalSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.TriangleCount:N0}; Sphere {pressed.SphereCount:N0}; " +
 				$"Light {(pressed.directionalLight == null ? 0 : 1):N0}; W/H {buffer.aspect}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker}; "
 			);
 
@@ -92,7 +92,7 @@ namespace ForceRenderer.Terminals
 			(
 				new Int2(0, 1),
 				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; CompleteSP {completed:N0}; RenderSP {Math.Abs(initiated - completed):D3}; CompleteTile {completedTile}; Estimate {TimeSpan.FromSeconds(estimate):hh\\:mm\\:ss\\:ff}; " +
-				$"Complete% {100d * completed / totalSample:F2}; SPPS {completed / second:N0}; CompleteTilePS {completedTile / second:N0}; DispatchTilePS {dispatchedTile / second:N0}; "
+				$"Complete% {100d * completed / totalSample:F2}; SPPS {completed / second:N0}; CompleteTilePS {completedTile / second:F2}; DispatchTilePS {dispatchedTile / second:F2}; "
 			);
 		}
 
