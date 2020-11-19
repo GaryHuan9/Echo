@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.ObjectPooling;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
@@ -23,10 +24,10 @@ namespace ForceRenderer.Renderers
 			ExceptionHelper.InvalidIfNotMainThread();
 			this.source = source;
 
-			List<TriangleObject> triangleObjects = CollectionPooler<TriangleObject>.list.GetObject();
-			List<SphereObject> sphereObjects = CollectionPooler<SphereObject>.list.GetObject();
+			List<PressedTriangle> triangleList = CollectionPooler<PressedTriangle>.list.GetObject();
+			List<PressedSphere> sphereList = CollectionPooler<PressedSphere>.list.GetObject();
 
-			List<Material> materialObjects = CollectionPooler<Material>.list.GetObject();
+			Dictionary<Material, int> materialObjects = CollectionPooler<Material, int>.dictionary.GetObject();
 			Queue<Object> frontier = CollectionPooler<Object>.queue.GetObject();
 
 			//Find all rendering-related objects
@@ -38,18 +39,17 @@ namespace ForceRenderer.Renderers
 
 				switch (target)
 				{
-					case TriangleObject value:
+					case SceneObject sceneObject:
 					{
-						triangleObjects.Add(value);
-						TryAddMaterial(value);
+						Material material = sceneObject.Material;
 
-						break;
-					}
-					case SphereObject value:
-					{
-						sphereObjects.Add(value);
-						TryAddMaterial(value);
+						if (!materialObjects.TryGetValue(material, out int materialToken))
+						{
+							materialToken = materialObjects.Count;
+							materialObjects.Add(material, materialToken);
+						}
 
+						sceneObject.Press(triangleList, sphereList, materialToken);
 						break;
 					}
 					case Camera value:
@@ -70,49 +70,21 @@ namespace ForceRenderer.Renderers
 
 				Object.Children children = target.children;
 				for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
-
-				void TryAddMaterial(SceneObject sceneObject)
-				{
-					Material material = sceneObject.Material;
-					int index = materialObjects.BinarySearch(material, MaterialComparer.instance);
-
-					if (index >= 0) return;
-					materialObjects.Insert(~index, material);
-				}
 			}
 
 			//Extract pressed data
-			materialCount = materialObjects.Count;
-			triangleCount = triangleObjects.Count;
-			sphereCount = sphereObjects.Count;
+			materials = (from pair in materialObjects
+						 orderby pair.Value
+						 select new PressedMaterial(pair.Key)).ToArray();
 
-			materials = new PressedMaterial[materialCount];
-			triangles = new PressedTriangle[triangleCount];
-			spheres = new PressedSphere[sphereCount];
-
-			for (int i = 0; i < materialCount; i++) materials[i] = new PressedMaterial(materialObjects[i]);
-
-			for (int i = 0; i < triangleCount; i++)
-			{
-				TriangleObject triangle = triangleObjects[i];
-				Material material = triangle.Material;
-
-				triangles[i] = new PressedTriangle(triangle, materialObjects.BinarySearch(material, MaterialComparer.instance));
-			}
-
-			for (int i = 0; i < sphereCount; i++)
-			{
-				SphereObject sphere = sphereObjects[i];
-				Material material = sphere.Material;
-
-				spheres[i] = new PressedSphere(sphere, materialObjects.BinarySearch(material, MaterialComparer.instance));
-			}
+			triangles = triangleList.ToArray();
+			spheres = sphereList.ToArray();
 
 			//Release
-			CollectionPooler<TriangleObject>.list.ReleaseObject(triangleObjects);
-			CollectionPooler<SphereObject>.list.ReleaseObject(sphereObjects);
+			CollectionPooler<PressedTriangle>.list.ReleaseObject(triangleList);
+			CollectionPooler<PressedSphere>.list.ReleaseObject(sphereList);
 
-			CollectionPooler<Material>.list.ReleaseObject(materialObjects);
+			CollectionPooler<Material, int>.dictionary.ReleaseObject(materialObjects);
 			CollectionPooler<Object>.queue.ReleaseObject(frontier);
 		}
 
@@ -121,14 +93,14 @@ namespace ForceRenderer.Renderers
 		public readonly Camera camera;
 		public readonly DirectionalLight directionalLight;
 
-		public readonly int materialCount;
-		public readonly int triangleCount;
-		public readonly int sphereCount;
-
 		//Contiguous chunks of data
 		readonly PressedMaterial[] materials;
 		readonly PressedTriangle[] triangles;
 		readonly PressedSphere[] spheres;
+
+		public int MaterialCount => materials.Length;
+		public int TriangleCount => triangles.Length;
+		public int SphereCount => spheres.Length;
 
 		/// <summary>
 		/// Returns the <see cref="PressedMaterial"/> for object with <paramref name="token"/>.
@@ -162,7 +134,7 @@ namespace ForceRenderer.Renderers
 			float distance = float.PositiveInfinity;
 			token = int.MaxValue;
 
-			for (int i = 0; i < triangleCount; i++)
+			for (int i = 0; i < triangles.Length; i++)
 			{
 				ref PressedTriangle triangle = ref triangles[i];
 				float local = triangle.GetIntersection(ray);
@@ -173,7 +145,7 @@ namespace ForceRenderer.Renderers
 				token = i;
 			}
 
-			for (int i = 0; i < sphereCount; i++)
+			for (int i = 0; i < spheres.Length; i++)
 			{
 				ref PressedSphere sphere = ref spheres[i];
 				float local = sphere.GetIntersection(ray);

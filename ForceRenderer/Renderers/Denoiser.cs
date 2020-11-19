@@ -58,7 +58,7 @@ namespace ForceRenderer.Renderers
 						}
 					}
 
-					const float Sensitivity = 0.327f;  //Between 0 and 1
+					const float Sensitivity = 0.483f;  //Between 0 and 1
 					distance = distance.Clamp(0f, 1f); //https://www.desmos.com/calculator/mydvwdv5oz
 
 					float sigmoid = CurveHelper.Sigmoid(distance + 0.43f, 9f) * (1f - Sensitivity);

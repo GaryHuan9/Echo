@@ -202,6 +202,9 @@ namespace ForceRenderer.Renderers
 
 			int accumulation;
 
+			/// <summary>
+			/// Returns the gamma-corrected color average
+			/// </summary>
 			public Color32 Color => new Color32((float)(r / accumulation), (float)(g / accumulation), (float)(b / accumulation));
 
 			public void Accumulate(Float3 value)
