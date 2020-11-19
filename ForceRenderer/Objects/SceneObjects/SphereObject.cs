@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
@@ -10,6 +11,11 @@ namespace ForceRenderer.Objects.SceneObjects
 		public SphereObject(Material material, float radius) : base(material) => Radius = radius;
 
 		public float Radius { get; set; }
+
+		public override void Press(List<PressedTriangle> triangles, List<PressedSphere> spheres, int materialToken)
+		{
+			spheres.Add(new PressedSphere(this, materialToken));
+		}
 	}
 
 	public readonly struct PressedSphere

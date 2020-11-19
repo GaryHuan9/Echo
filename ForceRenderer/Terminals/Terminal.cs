@@ -61,10 +61,11 @@ namespace ForceRenderer.Terminals
 					}
 
 					if (fullRewrite) Console.Clear();
-					else Console.CursorTop = 0;
 
 					for (int i = 0; i < sections.Count; i++) sections[i].Write(fullRewrite);
 				}
+
+				Console.CursorTop = 0;
 
 				double elapsed = AliveTime - startTime;
 				double remain = 1000d / UpdateFrequency - elapsed;
