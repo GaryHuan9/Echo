@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Vectors;
-using ForceRenderer.Objects;
+﻿using CodeHelpers.Vectors;
 
 namespace ForceRenderer.Mathematics
 {
@@ -12,11 +10,11 @@ namespace ForceRenderer.Mathematics
 		/// <param name="origin">The origin of the ray</param>
 		/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
 		/// <param name="forwardShift">Whether you want to create the ray so it is shifted a bit forward to avoid intersection with itself.</param>
-		public Ray(Float3 origin, Float3 direction, bool forwardShift)
-		{
-			this.origin = forwardShift ? origin + direction * 5E-4f : origin;
-			this.direction = direction;
-		}
+		public Ray(Float3 origin, Float3 direction, bool forwardShift) : this
+		(
+			forwardShift ? origin + direction * 5E-4f : origin,
+			direction
+		) { }
 
 		/// <summary>
 		/// Constructs a ray.
@@ -27,10 +25,12 @@ namespace ForceRenderer.Mathematics
 		{
 			this.origin = origin;
 			this.direction = direction;
+			inverseDirection = 1f / direction;
 		}
 
 		public readonly Float3 origin;
 		public readonly Float3 direction;
+		public readonly Float3 inverseDirection;
 
 		public Float3 GetPoint(float distance) => origin + direction * distance;
 

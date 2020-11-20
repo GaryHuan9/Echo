@@ -6,7 +6,6 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Vectors;
-using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Terminals
 {

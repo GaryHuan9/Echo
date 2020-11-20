@@ -73,7 +73,7 @@ namespace ForceRenderer.Terminals
 			(
 				new Int2(0, 0),
 				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample:N0}; TotalSP {totalSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.TriangleCount:N0}; Sphere {pressed.SphereCount:N0}; " +
-				$"Light {(pressed.directionalLight == null ? 0 : 1):N0}; W/H {buffer.aspect}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker}; "
+				$"Light {(pressed.directionalLight.direction == default ? 0 : 1):N0}; W/H {buffer.aspect}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker}; "
 			);
 
 			//Display dynamic information
