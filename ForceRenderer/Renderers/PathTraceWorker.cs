@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Objects;
 
 namespace ForceRenderer.Renderers
 {
@@ -47,8 +48,11 @@ namespace ForceRenderer.Renderers
 
 			//return (Float3)((float)bounce / profile.maxBounce);
 
-			Cubemap skybox = profile.scene.Cubemap; //Sample skybox if present
+			Cubemap skybox = profile.scene.Cubemap;
+			PressedDirectionalLight sun = profile.pressed.directionalLight;
+
 			if (skybox != null) light += energy * (Float3)skybox.Sample(ray.direction);
+			if (sun.direction != default) light += energy * sun.intensity * -sun.direction.Dot(ray.direction).Clamp(-1f, 0f); //Sun not really working right now
 
 			return light;
 		}

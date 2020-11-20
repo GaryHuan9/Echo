@@ -15,6 +15,8 @@ namespace ForceRenderer.Terminals
 		int cursorPosition;
 		char cursorChar;
 
+		string log; //Temporary;
+
 		const int CursorY = 0;
 		const char CursorCharacter = '\u2588';
 		const float BlinkPeriod = 500f; //In milliseconds
@@ -27,9 +29,16 @@ namespace ForceRenderer.Terminals
 			if (Console.KeyAvailable) ProcessInput();
 
 			cursorChar = builders[Cursor];
+			builders.SetSlice(Int2.up, log);
 
 			//Replace cursor character when blinking
 			if ((terminal.AliveTime - blinkOffset) % (BlinkPeriod * 2d) < BlinkPeriod) builders[Cursor] = CursorCharacter;
+		}
+
+		public void Log(string log)
+		{
+			this.log = log;
+			Console.WriteLine(log);
 		}
 
 		void ProcessInput()

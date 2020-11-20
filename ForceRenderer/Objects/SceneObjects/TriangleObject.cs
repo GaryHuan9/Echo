@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
@@ -53,6 +52,21 @@ namespace ForceRenderer.Objects.SceneObjects
 		public readonly int materialToken;
 
 		public const float Epsilon = 1E-7f;
+
+		public AxisAlignedBoundingBox AABB
+		{
+			get
+			{
+				Float3 vertex1 = vertex0 + edge1;
+				Float3 vertex2 = vertex0 + edge2;
+
+				Float3 min = vertex0.Min(vertex1).Min(vertex2);
+				Float3 max = vertex0.Max(vertex1).Max(vertex2);
+
+				Float3 extend = (max - min) / 2f;
+				return new AxisAlignedBoundingBox(min + extend, extend);
+			}
+		}
 
 		public float GetIntersection(in Ray ray)
 		{

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CodeHelpers;
-using CodeHelpers.Vectors;
-using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Objects.SceneObjects
