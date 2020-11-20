@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
@@ -8,7 +7,6 @@ using CodeHelpers.ObjectPooling;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
-using ForceRenderer.Objects.Lights;
 using ForceRenderer.Objects.SceneObjects;
 using Object = ForceRenderer.Objects.Object;
 
@@ -61,7 +59,7 @@ namespace ForceRenderer.Renderers
 					}
 					case DirectionalLight value:
 					{
-						if (directionalLight == null) directionalLight = value;
+						if (directionalLight.direction == default) directionalLight = new PressedDirectionalLight(value);
 						else Console.WriteLine($"Multiple {nameof(DirectionalLight)} found! Only the first one will be used.");
 
 						break;
@@ -89,9 +87,9 @@ namespace ForceRenderer.Renderers
 		}
 
 		public readonly Scene source;
-
 		public readonly Camera camera;
-		public readonly DirectionalLight directionalLight;
+
+		public readonly PressedDirectionalLight directionalLight;
 
 		//Contiguous chunks of data
 		readonly PressedMaterial[] materials;
@@ -128,7 +126,7 @@ namespace ForceRenderer.Renderers
 		/// Returns the distance from scene intersection to ray origin.
 		/// <paramref name="token"/> contains the token of the <see cref="SceneObject"/> that intersected with ray.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float GetIntersection(in Ray ray, out int token)
 		{
 			float distance = float.PositiveInfinity;
@@ -160,15 +158,25 @@ namespace ForceRenderer.Renderers
 		}
 
 		/// <summary>
-		/// Returns the distance of the intersection between <paramref name="ray"/> and the scene.
+		/// Returns the intersection status with one object of <paramref name="token"/>.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		public float GetIntersection(in Ray ray) => GetIntersection(ray, out int _);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public float GetIntersection(in Ray ray, int token)
+		{
+			if (token < 0)
+			{
+				ref PressedSphere sphere = ref spheres[~token];
+				return sphere.GetIntersection(ray);
+			}
+
+			ref PressedTriangle triangle = ref triangles[token];
+			return triangle.GetIntersection(ray);
+		}
 
 		/// <summary>
 		/// Gets the normal of <see cref="SceneObject"/> with <paramref name="token"/> at <paramref name="point"/>.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Float3 GetNormal(Float3 point, int token)
 		{
 			if (token < 0)
@@ -179,12 +187,6 @@ namespace ForceRenderer.Renderers
 
 			ref PressedTriangle triangle = ref triangles[token];
 			return triangle.GetNormal();
-		}
-
-		class MaterialComparer : IComparer<Material>
-		{
-			public readonly static MaterialComparer instance = new MaterialComparer();
-			public int Compare(Material x, Material y) => (x?.GetHashCode() ?? 0).CompareTo(y?.GetHashCode() ?? 0);
 		}
 	}
 }

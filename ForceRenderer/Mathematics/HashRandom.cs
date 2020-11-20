@@ -1,19 +1,12 @@
-﻿using System;
-using CodeHelpers.Vectors;
-
-namespace ForceRenderer.Mathematics
+﻿namespace ForceRenderer.Mathematics
 {
-	public class HashRandom
+	public static class HashRandom
 	{
-		public HashRandom(double seed) => this.seed = seed;
-
-		double seed;
-
-		public float NextFloat()
+		public static int Next(int value)
 		{
-			double value = Math.Sin(seed * 12.9898d);
-			seed = (seed + Math.E).Repeat(1E4d);
-			return (float)(value * 43758.545312d).Repeat(1d);
+			long number = (value + 0xE120FC15) * 0x4A39B70D;
+			number = (long)(int)((number >> 32) ^ number) * 0x12FAD5C9;
+			return (int)((number >> 32) ^ number);
 		}
 	}
 }

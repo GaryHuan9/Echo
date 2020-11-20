@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
-using ForceRenderer.CodeHelpers.Vectors;
 using ForceRenderer.IO;
-using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
-using ForceRenderer.Objects.Lights;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
@@ -67,7 +63,7 @@ namespace ForceRenderer
 
 			//scene.children.Add(new Camera(120f) {Position = new Float3(0f, 1f, -2), Rotation = new Float2(0f, 0f, 0f)});
 			scene.children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(20f, 0f, 0f)});
-			scene.children.Add(new DirectionalLight {Intensity = new Float3(0.9f, 0.9f, 0.9f), Rotation = new Float3(60f, 80f, 0f)});
+			//scene.children.Add(new DirectionalLight {Intensity = new Float3(0.9f, 0.9f, 0.9f), Rotation = new Float3(60f, 90f, 0f)});
 
 			//scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 			//scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/DebugCubemap");
@@ -79,11 +75,12 @@ namespace ForceRenderer
 			Material materialChrome = new Material {Albedo = new Float3(0.4f, 0.4f, 0.4f), Specular = new Float3(0.775f, 0.775f, 0.775f), Smoothness = 0.92f};
 			Material materialGold = new Material {Albedo = new Float3(0.346f, 0.314f, 0.0903f), Specular = new Float3(0.797f, 0.724f, 0.208f), Smoothness = 0.78f};
 			Material materialSmooth = new Material {Albedo = new Float3(0f, 0f, 0f), Specular = new Float3(1f, 1f, 1f), Smoothness = 3f};
+			Material materialFakeGold = new Material {Albedo = new Float3(0.797f, 0.724f, 0.208f), Specular = new Float3(0.346f, 0.314f, 0.0903f), Smoothness = 0.13f};
 
 			scene.children.Add(new TriangleObject(materialChrome, new Float3(-8f, 0f, -8f), new Float3(8f, 0f, 8f), new Float3(8f, 0f, -8f)));
 			scene.children.Add(new TriangleObject(materialConcrete, new Float3(-8f, 0f, -8f), new Float3(-8f, 0f, 8f), new Float3(8f, 0f, 8f)));
 
-			scene.children.Add(new MeshObject(materialGold, bunny) {Position = new Float3(0f, 0f, -2f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)3f});
+			scene.children.Add(new MeshObject(materialFakeGold, bunny) {Position = new Float3(0f, 0f, -2f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)3f});
 			//scene.children.Add(new TriangleObject(materialGold, new Float3(0f, 0f, 0f), new Float3(1f, 1f, 0f), new Float3(1f, 0f, 0f)) {Position = new Float3(0f, 1f, 0f), Rotation = new Float3(-45f, 30f, 60f), Scale = new Float3(1f, 10f, 1f)});
 
 			//FillRandomSpheres(scene, 80);
@@ -95,11 +92,11 @@ namespace ForceRenderer
 				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1000, 1000)
 			};
 
-			Texture buffer = new Texture(resolutions[2]);
+			Texture buffer = new Texture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = scene,
-											PixelSample = 2048, TileSize = 100
+											PixelSample = 256, TileSize = 100
 										};
 
 			renderDisplay.Engine = engine;
@@ -114,7 +111,7 @@ namespace ForceRenderer
 			denoiser.Dispatch();
 			noisy.SaveFile("noisy.png");
 
-			Console.WriteLine($"Completed in {engine.Elapsed.TotalMilliseconds}ms");
+			commandsController.Log($"Completed in {engine.Elapsed.TotalMilliseconds}ms");
 		}
 
 		static void FillRandomSpheres(Scene scene, int count)
@@ -146,7 +143,7 @@ namespace ForceRenderer
 									{
 										Albedo = color,
 										Specular = metal ? color : Float3.one * 0.05f,
-										Emission = emissive ? bright : Float3.zero,
+										//Emission = emissive ? bright : Float3.zero,
 										Smoothness = (float)RandomHelper.Value / 2f + (metal ? 0.5f : 0f)
 									};
 

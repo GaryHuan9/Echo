@@ -35,14 +35,14 @@ namespace ForceRenderer.Objects.SceneObjects
 		public readonly float radiusSquared;
 		public readonly int materialToken;
 
+		public AxisAlignedBoundingBox AABB => new AxisAlignedBoundingBox(position, (Float3)radius);
+
 		public float GetIntersection(in Ray ray)
 		{
-			float x = ray.origin.x - position.x;
-			float y = ray.origin.y - position.y;
-			float z = ray.origin.z - position.z;
+			Float3 offset = ray.origin - position;
 
-			float point1 = -ray.direction.x * x - ray.direction.y * y - ray.direction.z * z;
-			float point2Squared = point1 * point1 - x * x - y * y - z * z + radiusSquared;
+			float point1 = -offset.Dot(ray.direction);
+			float point2Squared = point1 * point1 - offset.SquaredMagnitude + radiusSquared;
 
 			if (point2Squared < 0f) return float.PositiveInfinity;
 			float point2 = (float)Math.Sqrt(point2Squared);
