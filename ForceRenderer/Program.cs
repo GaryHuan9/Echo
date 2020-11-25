@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
+using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Renderers;
@@ -46,6 +49,18 @@ namespace ForceRenderer
 			// destination.SaveFile("denoised.png");
 			//
 			// return;
+
+			AxisAlignedBoundingBox[] aabbs =
+			{
+				new AxisAlignedBoundingBox(Float3.up, Float3.half),
+				new AxisAlignedBoundingBox(Float3.one * 2, Float3.half),
+				new AxisAlignedBoundingBox(Float3.right * 2, Float3.half),
+				new AxisAlignedBoundingBox(Float3.down * 2, Float3.half)
+			};
+
+			var bvh = new BoundingVolumeHierarchy(null, aabbs, Enumerable.Range(0, aabbs.Length).ToList());
+
+			return;
 
 			Terminal terminal = new Terminal();
 
