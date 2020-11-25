@@ -19,7 +19,11 @@ namespace ForceRenderer.Mathematics
 		public Float3 Max => center + extend;
 		public Float3 Min => center - extend;
 
-		public bool Intersect(in Ray ray)
+		/// <summary>
+		/// Tests intersection with bounding box. Returning vector x is the near distance (NOTE: might be negative)
+		/// vector y is far distance (will not be negative). Negative near means ray origins inside box.
+		/// </summary>
+		public Float2 Intersect(in Ray ray)
 		{
 			Float3 n = ray.inverseDirection * (ray.origin - center);
 			Float3 k = ray.inverseDirection.Absoluted * extend;
@@ -27,7 +31,7 @@ namespace ForceRenderer.Mathematics
 			float near = (n - k).MaxComponent;
 			float far = (n + k).MinComponent;
 
-			return near <= far && far >= 0f && near >= 0f;
+			return near > far || far < 0f ? Float2.positiveInfinity : new Float2(near, far);
 		}
 
 		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other)
@@ -45,14 +49,32 @@ namespace ForceRenderer.Mathematics
 		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes) => Construct(boxes, 0, boxes.Count);
 
 		/// <inheritdoc cref="Construct(System.Collections.Generic.IReadOnlyList{ForceRenderer.Mathematics.AxisAlignedBoundingBox})"/>
-		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, int index, int length)
+		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, int start, int length)
 		{
 			Float3 max = Float3.negativeInfinity;
 			Float3 min = Float3.positiveInfinity;
 
 			for (int i = 0; i < length; i++)
 			{
-				AxisAlignedBoundingBox box = boxes[i + index];
+				AxisAlignedBoundingBox box = boxes[i + start];
+
+				max = box.Max.Max(max);
+				min = box.Min.Min(min);
+			}
+
+			Float3 extend = (max - min) / 2f;
+			return new AxisAlignedBoundingBox(min + extend, extend);
+		}
+
+		/// <inheritdoc cref="Construct(System.Collections.Generic.IReadOnlyList{ForceRenderer.Mathematics.AxisAlignedBoundingBox})"/>
+		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, IReadOnlyList<int> indices)
+		{
+			Float3 max = Float3.negativeInfinity;
+			Float3 min = Float3.positiveInfinity;
+
+			for (int i = 0; i < indices.Count; i++)
+			{
+				AxisAlignedBoundingBox box = boxes[indices[i]];
 
 				max = box.Max.Max(max);
 				min = box.Min.Min(min);
