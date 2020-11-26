@@ -70,13 +70,36 @@ namespace ForceRenderer.Renderers
 				for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
 			}
 
-			//Extract pressed data
+			//Extract pressed data and construct BVH acceleration structure
 			materials = (from pair in materialObjects
 						 orderby pair.Value
 						 select new PressedMaterial(pair.Key)).ToArray();
 
-			triangles = triangleList.ToArray();
-			spheres = sphereList.ToArray();
+			triangles = new PressedTriangle[triangleList.Count];
+			spheres = new PressedSphere[sphereList.Count];
+
+			var aabbs = CollectionPooler<AxisAlignedBoundingBox>.list.GetObject();
+			var indices = CollectionPooler<int>.list.GetObject();
+
+			aabbs.Capacity = indices.Capacity = triangles.Length + spheres.Length;
+
+			for (int i = 0; i < triangles.Length; i++)
+			{
+				var triangle = triangles[i] = triangleList[i];
+
+				aabbs.Add(triangle.AABB);
+				indices.Add(i);
+			}
+
+			for (int i = 0; i < spheres.Length; i++)
+			{
+				var sphere = spheres[i] = sphereList[i];
+
+				aabbs.Add(sphere.AABB);
+				indices.Add(~i);
+			}
+
+			bvh = new BoundingVolumeHierarchy(this, aabbs, indices);
 
 			//Release
 			CollectionPooler<PressedTriangle>.list.ReleaseObject(triangleList);
@@ -84,14 +107,17 @@ namespace ForceRenderer.Renderers
 
 			CollectionPooler<Material, int>.dictionary.ReleaseObject(materialObjects);
 			CollectionPooler<Object>.queue.ReleaseObject(frontier);
+
+			CollectionPooler<AxisAlignedBoundingBox>.list.ReleaseObject(aabbs);
+			CollectionPooler<int>.list.ReleaseObject(indices);
 		}
 
 		public readonly Scene source;
 		public readonly Camera camera;
-
 		public readonly PressedDirectionalLight directionalLight;
 
-		//Contiguous chunks of data
+		readonly BoundingVolumeHierarchy bvh;
+
 		readonly PressedMaterial[] materials;
 		readonly PressedTriangle[] triangles;
 		readonly PressedSphere[] spheres;
@@ -129,6 +155,8 @@ namespace ForceRenderer.Renderers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public float GetIntersection(in Ray ray, out int token)
 		{
+			return bvh.GetIntersection(ray, out token);
+
 			float distance = float.PositiveInfinity;
 			token = int.MaxValue;
 

@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Vectors;
+﻿using System.Diagnostics;
+using CodeHelpers.Vectors;
 
 namespace ForceRenderer.Mathematics
 {
@@ -23,9 +24,12 @@ namespace ForceRenderer.Mathematics
 		/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
 		public Ray(Float3 origin, Float3 direction)
 		{
+			Debug.Assert(Scalars.AlmostEquals(direction.SquaredMagnitude, 1f));
+
 			this.origin = origin;
 			this.direction = direction;
-			inverseDirection = 1f / direction;
+
+			inverseDirection = (1f / direction).Clamp(Float3.minValue, Float3.maxValue);
 		}
 
 		public readonly Float3 origin;
