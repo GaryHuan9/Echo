@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
@@ -18,10 +20,12 @@ namespace ForceRenderer.Objects.SceneObjects
 		public Float3 Vertex1 { get; set; }
 		public Float3 Vertex2 { get; set; }
 
-		public override void Press(List<PressedTriangle> triangles, List<PressedSphere> spheres, int materialToken)
+		public override IEnumerable<PressedTriangle> ExtractTriangles(int materialToken)
 		{
-			triangles.Add(new PressedTriangle(this, materialToken));
+			yield return new PressedTriangle(this, materialToken);
 		}
+
+		public override IEnumerable<PressedSphere> ExtractSpheres(int materialToken) => Enumerable.Empty<PressedSphere>();
 	}
 
 	public readonly struct PressedTriangle //Winding order for triangles is CLOCKWISE
@@ -53,18 +57,39 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public const float Epsilon = 1E-7f;
 
+		public Float3 Vertex1 => vertex0 + edge1;
+		public Float3 Vertex2 => vertex0 + edge2;
+
 		public AxisAlignedBoundingBox AABB
 		{
 			get
 			{
-				Float3 vertex1 = vertex0 + edge1;
-				Float3 vertex2 = vertex0 + edge2;
+				Float3 vertex1 = Vertex1;
+				Float3 vertex2 = Vertex2;
 
 				Float3 min = vertex0.Min(vertex1).Min(vertex2);
 				Float3 max = vertex0.Max(vertex1).Max(vertex2);
 
 				Float3 extend = (max - min) / 2f;
 				return new AxisAlignedBoundingBox(min + extend, extend);
+			}
+		}
+
+		/// <summary>
+		/// Returns the area of the triangle using Heron's formula.
+		/// </summary>
+		public float Area
+		{
+			get
+			{
+				float distance0 = (edge1 - edge2).Magnitude;
+				float distance1 = edge1.Magnitude;
+				float distance2 = edge2.Magnitude;
+
+				float sum = (distance0 + distance1 + distance2) / 2f;
+				float value = sum * (sum - distance0) * (sum - distance1) * (sum - distance2);
+
+				return value <= 0f ? 0f : MathF.Sqrt(value); //To avoid square rooting negative values due to floating point precision issues
 			}
 		}
 
@@ -90,8 +115,13 @@ namespace ForceRenderer.Objects.SceneObjects
 
 			float inverse = 1f / determinant;
 
-			// u *= inverse; Currently not used
-			// v *= inverse;
+#if false //Wireframe
+			u *= inverse;
+			v *= inverse;
+
+			const float WireframeThreshold = 0.1f;
+			if (u > WireframeThreshold && v > WireframeThreshold && 1f - u - v > WireframeThreshold) return float.PositiveInfinity;
+#endif
 
 			return distance * inverse;
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Renderers;
@@ -12,16 +13,14 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public Mesh Mesh { get; set; }
 
-		public override void Press(List<PressedTriangle> triangles, List<PressedSphere> spheres, int materialToken)
+		public override IEnumerable<PressedTriangle> ExtractTriangles(int materialToken)
 		{
-			if (Mesh == null) return;
-
-			triangles.Capacity = Math.Max(triangles.Capacity, triangles.Count + Mesh.TriangleCount);
+			if (Mesh == null) yield break;
 
 			for (int i = 0; i < Mesh.TriangleCount; i++)
 			{
 				Int3 indices = Mesh.GetTriangle(i);
-				triangles.Add(new PressedTriangle(GetVertex(0), GetVertex(1), GetVertex(2), materialToken));
+				yield return new PressedTriangle(GetVertex(0), GetVertex(1), GetVertex(2), materialToken);
 
 				Float3 GetVertex(int index)
 				{
@@ -30,5 +29,7 @@ namespace ForceRenderer.Objects.SceneObjects
 				}
 			}
 		}
+
+		public override IEnumerable<PressedSphere> ExtractSpheres(int materialToken) => Enumerable.Empty<PressedSphere>();
 	}
 }
