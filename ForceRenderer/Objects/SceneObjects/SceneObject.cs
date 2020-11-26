@@ -17,9 +17,15 @@ namespace ForceRenderer.Objects.SceneObjects
 		}
 
 		/// <summary>
-		/// Presses the scene object and add it to either of the lists. The material token for the pressed object is
-		/// provided through <paramref name="materialToken"/>.
+		/// Enumerates through all of the triangles that can be extracted from this <see cref="SceneObject"/>.
+		/// NOTE: Can simply return nothing if this object does not have any triangle.
 		/// </summary>
-		public abstract void Press(List<PressedTriangle> triangles, List<PressedSphere> spheres, int materialToken);
+		public abstract IEnumerable<PressedTriangle> ExtractTriangles(int materialToken);
+
+		/// <summary>
+		/// Enumerates through all of the spheres that can be extracted from this <see cref="SceneObject"/>.
+		/// NOTE: Can simply return nothing if this object does not have any sphere.
+		/// </summary>
+		public abstract IEnumerable<PressedSphere> ExtractSpheres(int materialToken);
 	}
 }
