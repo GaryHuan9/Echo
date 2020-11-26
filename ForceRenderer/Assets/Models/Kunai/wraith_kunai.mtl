@@ -1,0 +1,15 @@
+# Blender MTL File: 'None'
+# Material Count: 1
+
+newmtl throwing_knife
+Ns 0.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.000000 0.000000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.500000
+d 1.000000
+illum 2
+map_Bump _images\0xc34df917d05046c0.png
+map_Kd _images\0xcc8e6fab22c01e3e.png
+map_Ks _images\0x321b95dec3c8a32f.png

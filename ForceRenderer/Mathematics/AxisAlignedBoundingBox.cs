@@ -20,12 +20,12 @@ namespace ForceRenderer.Mathematics
 		public Float3 Min => center - extend;
 
 		/// <summary>
-		/// Tests intersection with bounding box. Returning vector x is the near distance (NOTE: might be negative)
-		/// vector y is far distance (will not be negative). Negative near means ray origins inside box.
+		/// Tests intersection with bounding box. Returning vector x component is the near distance (might be negative)
+		/// vector component y is far distance (will not be negative). Negative near means ray origins inside box.
 		/// </summary>
 		public Float2 Intersect(in Ray ray)
 		{
-			Float3 n = ray.inverseDirection * (ray.origin - center);
+			Float3 n = ray.inverseDirection * (center - ray.origin);
 			Float3 k = ray.inverseDirection.Absoluted * extend;
 
 			float near = (n - k).MaxComponent;

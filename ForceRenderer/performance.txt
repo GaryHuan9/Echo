@@ -16,3 +16,7 @@ Release Mode:
 
 Average Time With Float3 Ray-Triangle Intersection Calculation: 49500ms (88200ms Debug Mode 1/4 sample)
 Average Time With float Ray-Triangle Intersection Calculation: 50000ms (37000ms Debug Mode 1/4 sample)
+
+Behavior Volume Hierarchy Implementation Tests (Stanford Bunny (854, 480) 256 SP 506 tris Release Mode):
+Brute Force Linear Intersection (SPPS: 2.4M; 50000ms)
+BVH Acceleration Structure Intersection (SPPS: 9.3M; 14000ms)

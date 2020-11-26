@@ -25,6 +25,7 @@ namespace ForceRenderer.IO
 			foreach (string line in File.ReadAllLines(path))
 			{
 				string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+				if (parts.Length == 0) continue;
 
 				switch (parts[0])
 				{
