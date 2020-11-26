@@ -30,6 +30,7 @@ namespace ForceRenderer.Renderers
 
 			//Find all rendering-related objects
 			frontier.Enqueue(source);
+			double totalArea = 0d; //Total area of all triangles combined
 
 			while (frontier.Count > 0)
 			{
@@ -47,7 +48,13 @@ namespace ForceRenderer.Renderers
 							materialObjects.Add(material, materialToken);
 						}
 
-						sceneObject.Press(triangleList, sphereList, materialToken);
+						int triangleCount = triangleList.Count;
+
+						triangleList.AddRange(sceneObject.ExtractTriangles(materialToken));
+						sphereList.AddRange(sceneObject.ExtractSpheres(materialToken));
+
+						for (int i = triangleCount; i < triangleList.Count; i++) totalArea += triangleList[i].Area;
+
 						break;
 					}
 					case Camera value:
@@ -68,6 +75,47 @@ namespace ForceRenderer.Renderers
 
 				Object.Children children = target.children;
 				for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
+			}
+
+			//Divide large triangles for better BVH space partitioning
+			{
+				const float DivideThresholdMultiplier = 2.4f;
+				const int DivideMaxIteration = 3;
+
+				int triangleCount = triangleList.Count;
+				float threshold = (float)(totalArea / triangleCount * DivideThresholdMultiplier);
+
+				for (int i = 0; i < triangleCount; i++)
+				{
+					PressedTriangle pressed = triangleList[i];
+					int materialToken = pressed.materialToken;
+
+					Fragment(i, MathF.Log2(pressed.Area / threshold).Ceil().Clamp(0, DivideMaxIteration));
+
+					void Fragment(int index, int iteration)
+					{
+						if (iteration == 0) return;
+
+						var triangle = triangleList[index];
+						int listCount = triangleList.Count;
+
+						Float3 midPoint01 = triangle.vertex0 + triangle.edge1 / 2f;
+						Float3 midPoint02 = triangle.vertex0 + triangle.edge2 / 2f;
+						Float3 midPoint12 = triangle.vertex0 + triangle.edge1 / 2f + triangle.edge2 / 2f;
+
+						triangleList[index] = new PressedTriangle(midPoint01, midPoint12, midPoint02, materialToken);
+						triangleList.Add(new PressedTriangle(triangle.vertex0, midPoint01, midPoint02, materialToken));
+						triangleList.Add(new PressedTriangle(triangle.Vertex1, midPoint12, midPoint01, materialToken));
+						triangleList.Add(new PressedTriangle(triangle.Vertex2, midPoint02, midPoint12, materialToken));
+
+						if (--iteration == 0) return;
+
+						Fragment(index, iteration);
+						Fragment(listCount, iteration);
+						Fragment(listCount + 1, iteration);
+						Fragment(listCount + 2, iteration);
+					}
+				}
 			}
 
 			//Extract pressed data and construct BVH acceleration structure
