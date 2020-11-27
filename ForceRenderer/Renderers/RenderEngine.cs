@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
@@ -41,7 +42,7 @@ namespace ForceRenderer.Renderers
 
 		public State CurrentState
 		{
-			get => (State)Interlocked.CompareExchange(ref _currentState, 0, 0);
+			get => (State)InterlockedHelper.Read(ref _currentState);
 			private set => Interlocked.Exchange(ref _currentState, (int)value);
 		}
 

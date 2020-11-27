@@ -11,21 +11,24 @@ namespace ForceRenderer.Renderers
 	{
 		public PathTraceWorker(RenderEngine.Profile profile) : base(profile) { }
 
-		public override Float3 Render(Float2 uv)
+		public override Float3 Render(Float2 screenUV)
 		{
-			Ray ray = new Ray(profile.camera.Position, profile.camera.GetDirection(uv));
+			Ray ray = new Ray(profile.camera.Position, profile.camera.GetDirection(screenUV));
 
 			Float3 energy = Float3.one;
 			Float3 light = Float3.zero;
 
 			int bounce;
 
-			for (bounce = 0; bounce <= profile.maxBounce && TryTrace(ray, out float distance, out int token); bounce++)
+			for (bounce = 0; bounce <= profile.maxBounce && TryTrace(ray, out float distance, out int token, out Float2 uv); bounce++)
 			{
 				ref PressedMaterial material = ref profile.pressed.GetMaterial(token);
 
 				Float3 position = ray.GetPoint(distance);
-				Float3 normal = profile.pressed.GetNormal(position, token);
+				Float3 normal = profile.pressed.GetNormal(uv, token);
+
+				// return (Float3)(uv.x + uv.y);
+				return (Float3)normal.y;
 
 				light += energy * material.emission;
 

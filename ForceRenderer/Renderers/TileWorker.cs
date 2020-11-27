@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
+using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 
@@ -72,12 +73,10 @@ namespace ForceRenderer.Renderers
 		readonly Float2[] pixelOffsets; //Sample offset applied within each pixel
 
 		readonly ManualResetEventSlim resetEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
-		readonly SemaphoreSlim writeSemaphore = new SemaphoreSlim(1, 1);
-
 		public bool Working => resetEvent.IsSet;
 
-		bool disposed;
 		static volatile int workerIdAccumulator;
+		bool disposed;
 
 		/// <summary>
 		/// Invoked on worker thread when all rendered pixels are stored in the buffer.
@@ -140,13 +139,7 @@ namespace ForceRenderer.Renderers
 				Float3 color = PixelWorker.Render(uv); //UV is adjusted to the correct scaling to match worker's requirement
 
 				//Write to pixels
-				writeSemaphore.Wait();
-				try
-				{
-					ref Pixel pixel = ref pixels[pixelIndex];
-					pixel.Accumulate(color);
-				}
-				finally { writeSemaphore.Release(); }
+				pixels[pixelIndex].Accumulate(color);
 			}
 
 			Interlocked.Increment(ref _completedSample);
@@ -190,7 +183,6 @@ namespace ForceRenderer.Renderers
 			disposed = true;
 
 			resetEvent?.Dispose();
-			writeSemaphore?.Dispose();
 		}
 
 		struct Pixel
@@ -202,17 +194,20 @@ namespace ForceRenderer.Renderers
 			int accumulation;
 
 			/// <summary>
-			/// Returns the gamma-corrected color average
+			/// Returns the color average
 			/// </summary>
 			public Color32 Color => new Color32((float)(r / accumulation), (float)(g / accumulation), (float)(b / accumulation));
 
+			/// <summary>
+			/// Accumulates the color <paramref name="value"/> to pixel in a thread-safe manner.
+			/// </summary>
 			public void Accumulate(Float3 value)
 			{
-				r += value.x;
-				g += value.y;
-				b += value.z;
+				InterlockedHelper.Add(ref r, value.x);
+				InterlockedHelper.Add(ref g, value.y);
+				InterlockedHelper.Add(ref b, value.z);
 
-				accumulation++;
+				Interlocked.Increment(ref accumulation);
 			}
 		}
 	}

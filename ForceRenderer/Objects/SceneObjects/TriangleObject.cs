@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CodeHelpers;
 using CodeHelpers.Vectors;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
@@ -20,9 +21,30 @@ namespace ForceRenderer.Objects.SceneObjects
 		public Float3 Vertex1 { get; set; }
 		public Float3 Vertex2 { get; set; }
 
+		public Float3 Normal0 { get; set; }
+		public Float3 Normal1 { get; set; }
+		public Float3 Normal2 { get; set; }
+
 		public override IEnumerable<PressedTriangle> ExtractTriangles(int materialToken)
 		{
-			yield return new PressedTriangle(this, materialToken);
+			if (Normal0 == Float3.zero || Normal1 == Float3.zero || Normal2 == Float3.zero)
+			{
+				yield return new PressedTriangle
+				(
+					LocalToWorld.MultiplyPoint(Vertex0),
+					LocalToWorld.MultiplyPoint(Vertex1),
+					LocalToWorld.MultiplyPoint(Vertex2), materialToken
+				);
+			}
+			else
+			{
+				yield return new PressedTriangle
+				(
+					LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
+					LocalToWorld.MultiplyDirection(Normal0), LocalToWorld.MultiplyDirection(Normal1), LocalToWorld.MultiplyDirection(Normal2),
+					materialToken
+				);
+			}
 		}
 
 		public override IEnumerable<PressedSphere> ExtractSpheres(int materialToken) => Enumerable.Empty<PressedSphere>();
@@ -30,21 +52,30 @@ namespace ForceRenderer.Objects.SceneObjects
 
 	public readonly struct PressedTriangle //Winding order for triangles is CLOCKWISE
 	{
-		public PressedTriangle(TriangleObject triangle, int materialToken) : this
+		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, int materialToken) : this
 		(
-			triangle.LocalToWorld.MultiplyPoint(triangle.Vertex0),
-			triangle.LocalToWorld.MultiplyPoint(triangle.Vertex1),
-			triangle.LocalToWorld.MultiplyPoint(triangle.Vertex2),
+			vertex0, vertex1, vertex2,
+			Float3.Cross(vertex1 - vertex0, vertex2 - vertex0), materialToken
+		) { }
+
+		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, int materialToken) : this
+		(
+			vertex0, vertex1, vertex2,
+			normal, normal, normal,
 			materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, int materialToken)
+		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+							   Float3 normal0, Float3 normal1, Float3 normal2, int materialToken)
 		{
 			this.vertex0 = vertex0;
 			edge1 = vertex1 - vertex0;
 			edge2 = vertex2 - vertex0;
 
-			normal = Float3.Cross(edge1, edge2).Normalized;
+			this.normal0 = normal0.Normalized;
+			this.normal1 = normal1.Normalized;
+			this.normal2 = normal2.Normalized;
+
 			this.materialToken = materialToken;
 		}
 
@@ -52,7 +83,10 @@ namespace ForceRenderer.Objects.SceneObjects
 		public readonly Float3 edge1;   //but we can easily add them back if needed
 		public readonly Float3 edge2;
 
-		public readonly Float3 normal;
+		public readonly Float3 normal0;
+		public readonly Float3 normal1;
+		public readonly Float3 normal2;
+
 		public readonly int materialToken;
 
 		public const float Epsilon = 1E-7f;
@@ -93,39 +127,67 @@ namespace ForceRenderer.Objects.SceneObjects
 			}
 		}
 
-		public float GetIntersection(in Ray ray)
+		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
 			Float3 cross0 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
 			float determinant = Float3.Dot(edge1, cross0);      //If determinant is close to zero, ray is parallel to triangle
 
-			if (determinant < Epsilon) return float.PositiveInfinity; //No intersection
+			if (determinant < Epsilon) goto noIntersection;
 
 			Float3 offset = ray.origin - vertex0;
 			float u = Float3.Dot(offset, cross0);
 
-			if (u < 0f || u > determinant) return float.PositiveInfinity; //Outside barycentric bounds
+			if (u < 0f || u > determinant) goto noIntersection; //Outside barycentric bounds
 
 			Float3 cross1 = Float3.Cross(offset, edge1);
 			float v = Float3.Dot(ray.direction, cross1);
 
-			if (v < 0f || u + v > determinant) return float.PositiveInfinity; //Outside barycentric bounds
+			if (v < 0f || u + v > determinant) goto noIntersection; //Outside barycentric bounds
 
 			float distance = Float3.Dot(edge2, cross1);
-			if (distance < 0f) return float.PositiveInfinity; //Ray pointing away from triangle = negative distance
+			if (distance < 0f) goto noIntersection; //Ray pointing away from triangle = negative distance
 
 			float inverse = 1f / determinant;
+			uv = new Float2(u * inverse, v * inverse);
 
 #if false //Wireframe
-			u *= inverse;
-			v *= inverse;
-
 			const float WireframeThreshold = 0.1f;
-			if (u > WireframeThreshold && v > WireframeThreshold && 1f - u - v > WireframeThreshold) return float.PositiveInfinity;
+			if (uv.x > WireframeThreshold && uv.y > WireframeThreshold && 1f - uv.x - uv.y > WireframeThreshold) return float.PositiveInfinity;
 #endif
 
 			return distance * inverse;
+
+			noIntersection:
+			uv = default;
+			return float.PositiveInfinity;
 		}
 
-		public Float3 GetNormal() => normal;
+		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
+
+		//The uv locations right in the middle of two vertices
+		static readonly Float2 uv01 = new Float2(0.5f, 0f);
+		static readonly Float2 uv02 = new Float2(0f, 0.5f);
+		static readonly Float2 uv12 = new Float2(0.5f, 0.5f);
+
+		public void GetSubdivided(Span<PressedTriangle> triangles, int iteration)
+		{
+			int requiredLength = 1 << (iteration * 2);
+			if (triangles.Length < requiredLength) throw ExceptionHelper.Invalid(nameof(triangles), triangles.Length, $"is not long enough! Need at least {requiredLength}!");
+
+			Float3 midPoint01 = vertex0 + edge1 / 2f;
+			Float3 midPoint02 = vertex0 + edge2 / 2f;
+			Float3 midPoint12 = vertex0 + edge1 / 2f + edge2 / 2f;
+
+			Float3 normal01 = GetNormal(uv01);
+			Float3 normal02 = GetNormal(uv02);
+			Float3 normal12 = GetNormal(uv12);
+
+			//TODO: texcoords
+
+			triangles[0] = new PressedTriangle(midPoint01, midPoint12, midPoint02, normal01, normal12, normal02, materialToken);
+			triangles[1] = new PressedTriangle(vertex0, midPoint01, midPoint02, normal0, normal01, normal02, materialToken);
+			triangles[2] = new PressedTriangle(Vertex1, midPoint12, midPoint01, normal1, normal12, normal01, materialToken);
+			triangles[3] = new PressedTriangle(Vertex2, midPoint02, midPoint12, normal2, normal02, normal12, materialToken);
+		}
 	}
 }
