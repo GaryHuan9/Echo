@@ -69,32 +69,34 @@ namespace ForceRenderer.Mathematics
 		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
 		/// Returns the distance of ths intersection if found. <see cref="float.PositiveInfinity"/> otherwise.
 		/// </summary>
-		public float GetIntersection(in Ray ray, out int token)
+		public float GetIntersection(in Ray ray, out int token, out Float2 uv)
 		{
 			token = default;
+			uv = default;
 
 			ref Node node = ref nodes[0]; //The root node
-			Float2 hits = node.aabb.Intersect(ray);
+			float hit = node.aabb.Intersect(ray);
 
-			if (float.IsInfinity(hits.x)) return float.PositiveInfinity;
+			if (float.IsInfinity(hit)) return float.PositiveInfinity;
 
 			float distance = float.PositiveInfinity;
-			IntersectNode(ref node, ray, ref distance, ref token);
+			IntersectNode(ref node, ray, ref distance, ref token, ref uv);
 
 			return distance;
 		}
 
-		void IntersectNode(ref Node node, in Ray ray, ref float distance, ref int token)
+		void IntersectNode(ref Node node, in Ray ray, ref float distance, ref int token, ref Float2 uv)
 		{
 			if (node.IsLeaf)
 			{
 				//Now we finally calculate the real intersection
-				float hit = pressed.GetIntersection(ray, node.token);
+				float hit = pressed.GetIntersection(ray, node.token, out Float2 local);
 
 				if (hit < distance)
 				{
-					token = node.token;
 					distance = hit;
+					token = node.token;
+					uv = local;
 				}
 
 				return;
@@ -103,18 +105,18 @@ namespace ForceRenderer.Mathematics
 			ref Node child0 = ref nodes[node.childIndex0];
 			ref Node child1 = ref nodes[node.childIndex1];
 
-			Float2 hits0 = child0.aabb.Intersect(ray);
-			Float2 hits1 = child1.aabb.Intersect(ray);
+			float hit0 = child0.aabb.Intersect(ray);
+			float hit1 = child1.aabb.Intersect(ray);
 
-			if (hits0.x < hits1.x) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
+			if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
 			{
-				if (hits0.x < distance) IntersectNode(ref child0, ray, ref distance, ref token);
-				if (hits1.x < distance) IntersectNode(ref child1, ray, ref distance, ref token);
+				if (hit0 < distance) IntersectNode(ref child0, ray, ref distance, ref token, ref uv);
+				if (hit1 < distance) IntersectNode(ref child1, ray, ref distance, ref token, ref uv);
 			}
 			else
 			{
-				if (hits1.x < distance) IntersectNode(ref child1, ray, ref distance, ref token);
-				if (hits0.x < distance) IntersectNode(ref child0, ray, ref distance, ref token);
+				if (hit1 < distance) IntersectNode(ref child1, ray, ref distance, ref token, ref uv);
+				if (hit0 < distance) IntersectNode(ref child0, ray, ref distance, ref token, ref uv);
 			}
 		}
 

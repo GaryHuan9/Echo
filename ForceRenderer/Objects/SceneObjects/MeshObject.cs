@@ -17,16 +17,29 @@ namespace ForceRenderer.Objects.SceneObjects
 		{
 			if (Mesh == null) yield break;
 
+			bool hasTexcoord = Mesh.TexcoordCount > 0;
+			bool hasNormal = Mesh.NormalCount > 0;
+
 			for (int i = 0; i < Mesh.TriangleCount; i++)
 			{
-				Int3 indices = Mesh.GetTriangle(i);
-				yield return new PressedTriangle(GetVertex(0), GetVertex(1), GetVertex(2), materialToken);
+				Triangle triangle = Mesh.GetTriangle(i);
+
+				if (!hasNormal) yield return new PressedTriangle(GetVertex(0), GetVertex(1), GetVertex(2), materialToken);
+				else yield return new PressedTriangle(GetVertex(0), GetVertex(1), GetVertex(2), GetNormal(0), GetNormal(1), GetNormal(2), materialToken);
 
 				Float3 GetVertex(int index)
 				{
-					Float3 vertex = Mesh.GetVertex(indices[index]);
+					Float3 vertex = Mesh.GetVertex(triangle.vertexIndices[index]);
 					return LocalToWorld.MultiplyPoint(vertex);
 				}
+
+				Float3 GetNormal(int index)
+				{
+					Float3 normal = Mesh.GetNormal(triangle.normalIndices[index]);
+					return LocalToWorld.MultiplyDirection(normal);
+				}
+
+				Float2 GetTexcoord(int index) => Mesh.GetTexcoord(triangle.texcoordIndices[index]);
 			}
 		}
 

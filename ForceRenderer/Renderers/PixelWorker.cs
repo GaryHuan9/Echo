@@ -25,15 +25,15 @@ namespace ForceRenderer.Renderers
 		/// <summary>
 		/// Sample and render at a specific point.
 		/// </summary>
-		/// <param name="uv">The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
+		/// <param name="screenUV">The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
 		/// Y should have the same scale as X and it would depend on the aspect ratio.</param>
-		public abstract Float3 Render(Float2 uv);
+		public abstract Float3 Render(Float2 screenUV);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		protected bool TryTrace(in Ray ray, out float distance, out int token)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected bool TryTrace(in Ray ray, out float distance, out int token, out Float2 uv)
 		{
-			distance = profile.pressed.GetIntersection(ray, out token);
-			return distance < float.PositiveInfinity;
+			distance = profile.pressed.bvh.GetIntersection(ray, out token, out uv);
+			return float.IsFinite(distance);
 		}
 	}
 }
