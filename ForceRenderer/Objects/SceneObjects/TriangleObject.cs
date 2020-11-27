@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Vectors;
+using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
 
@@ -42,6 +43,7 @@ namespace ForceRenderer.Objects.SceneObjects
 				(
 					LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
 					LocalToWorld.MultiplyDirection(Normal0), LocalToWorld.MultiplyDirection(Normal1), LocalToWorld.MultiplyDirection(Normal2),
+					Float2.zero, Float2.zero, Float2.zero,
 					materialToken
 				);
 			}
@@ -61,12 +63,37 @@ namespace ForceRenderer.Objects.SceneObjects
 		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
-			normal, normal, normal,
-			materialToken
+			normal, normal, normal, materialToken
 		) { }
 
 		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							   Float3 normal0, Float3 normal1, Float3 normal2, int materialToken)
+							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
+		(
+			vertex0, vertex1, vertex2,
+			Float3.Cross(vertex1 - vertex0, vertex2 - vertex0),
+			texcoord0, texcoord1, texcoord2, materialToken
+		) { }
+
+		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+							   Float3 normal,
+							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
+		(
+			vertex0, vertex1, vertex2,
+			normal, normal, normal,
+			texcoord0, texcoord1, texcoord2, materialToken
+		) { }
+
+		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+							   Float3 normal0, Float3 normal1, Float3 normal2, int materialToken) : this
+		(
+			vertex0, vertex1, vertex2,
+			normal0, normal1, normal2,
+			Float2.zero, Float2.zero, Float2.zero, materialToken
+		) { }
+
+		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+							   Float3 normal0, Float3 normal1, Float3 normal2,
+							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken)
 		{
 			this.vertex0 = vertex0;
 			edge1 = vertex1 - vertex0;
@@ -75,6 +102,10 @@ namespace ForceRenderer.Objects.SceneObjects
 			this.normal0 = normal0.Normalized;
 			this.normal1 = normal1.Normalized;
 			this.normal2 = normal2.Normalized;
+
+			this.texcoord0 = texcoord0;
+			this.texcoord1 = texcoord1;
+			this.texcoord2 = texcoord2;
 
 			this.materialToken = materialToken;
 		}
@@ -86,6 +117,10 @@ namespace ForceRenderer.Objects.SceneObjects
 		public readonly Float3 normal0;
 		public readonly Float3 normal1;
 		public readonly Float3 normal2;
+
+		public readonly Float2 texcoord0;
+		public readonly Float2 texcoord1;
+		public readonly Float2 texcoord2;
 
 		public readonly int materialToken;
 
@@ -164,30 +199,64 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
 
+		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
+
+		public void GetSubdivided(Span<PressedTriangle> triangles, int iteration)
+		{
+			int requiredLength = 1 << (iteration * 2);
+			triangles[0] = this;
+
+			if (triangles.Length >= requiredLength) GetSubdivided(triangles.Slice(requiredLength), normal0, normal1, normal2);
+			else throw ExceptionHelper.Invalid(nameof(triangles), triangles.Length, $"is not long enough! Need at least {requiredLength}!");
+		}
+
 		//The uv locations right in the middle of two vertices
 		static readonly Float2 uv01 = new Float2(0.5f, 0f);
 		static readonly Float2 uv02 = new Float2(0f, 0.5f);
 		static readonly Float2 uv12 = new Float2(0.5f, 0.5f);
 
-		public void GetSubdivided(Span<PressedTriangle> triangles, int iteration)
+		static void GetSubdivided(Span<PressedTriangle> triangles, Float3 normal0, Float3 normal1, Float3 normal2)
 		{
-			int requiredLength = 1 << (iteration * 2);
-			if (triangles.Length < requiredLength) throw ExceptionHelper.Invalid(nameof(triangles), triangles.Length, $"is not long enough! Need at least {requiredLength}!");
+			if (triangles.Length <= 1) return;
+			PressedTriangle triangle = triangles[0];
 
-			Float3 midPoint01 = vertex0 + edge1 / 2f;
-			Float3 midPoint02 = vertex0 + edge2 / 2f;
-			Float3 midPoint12 = vertex0 + edge1 / 2f + edge2 / 2f;
+			Float3 vertex01 = triangle.vertex0 + triangle.edge1 / 2f;
+			Float3 vertex02 = triangle.vertex0 + triangle.edge2 / 2f;
+			Float3 vertex12 = triangle.vertex0 + triangle.edge1 / 2f + triangle.edge2 / 2f;
 
-			Float3 normal01 = GetNormal(uv01);
-			Float3 normal02 = GetNormal(uv02);
-			Float3 normal12 = GetNormal(uv12);
+			Float3 normal01 = GetInterpolatedNormal(uv01);
+			Float3 normal02 = GetInterpolatedNormal(uv02);
+			Float3 normal12 = GetInterpolatedNormal(uv12);
 
-			//TODO: texcoords
+			Float2 texcoord01 = triangle.GetTexcoord(uv01);
+			Float2 texcoord02 = triangle.GetTexcoord(uv02);
+			Float2 texcoord12 = triangle.GetTexcoord(uv12);
 
-			triangles[0] = new PressedTriangle(midPoint01, midPoint12, midPoint02, normal01, normal12, normal02, materialToken);
-			triangles[1] = new PressedTriangle(vertex0, midPoint01, midPoint02, normal0, normal01, normal02, materialToken);
-			triangles[2] = new PressedTriangle(Vertex1, midPoint12, midPoint01, normal1, normal12, normal01, materialToken);
-			triangles[3] = new PressedTriangle(Vertex2, midPoint02, midPoint12, normal2, normal02, normal12, materialToken);
+			Fill(triangles, 0, triangle.materialToken, vertex01, vertex12, vertex02, normal01, normal12, normal02, texcoord01, texcoord12, texcoord02);
+			Fill(triangles, 1, triangle.materialToken, triangle.vertex0, vertex01, vertex02, normal0, normal01, normal02, triangle.texcoord0, texcoord01, texcoord02);
+			Fill(triangles, 2, triangle.materialToken, triangle.Vertex1, vertex12, vertex01, normal1, normal12, normal01, triangle.texcoord1, texcoord12, texcoord01);
+			Fill(triangles, 3, triangle.materialToken, triangle.Vertex2, vertex02, vertex12, normal2, normal02, normal12, triangle.texcoord2, texcoord02, texcoord12);
+
+			//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
+			Float3 GetInterpolatedNormal(Float2 uv) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
+
+			static void Fill(Span<PressedTriangle> span, int index, int materialToken,
+							 Float3 vertex0, Float3 vertex1, Float3 vertex2,
+							 Float3 normal0, Float3 normal1, Float3 normal2,
+							 Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
+			{
+				int gap = span.Length / 4;
+				var slice = span.Slice(gap * index, gap);
+
+				slice[0] = new PressedTriangle
+				(
+					vertex0, vertex1, vertex2,
+					normal0, normal1, normal2,
+					texcoord0, texcoord1, texcoord2, materialToken
+				);
+
+				GetSubdivided(slice, normal0, normal1, normal2);
+			}
 		}
 	}
 }

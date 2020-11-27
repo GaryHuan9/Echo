@@ -27,9 +27,6 @@ namespace ForceRenderer.Renderers
 				Float3 position = ray.GetPoint(distance);
 				Float3 normal = profile.pressed.GetNormal(uv, token);
 
-				// return (Float3)(uv.x + uv.y);
-				return (Float3)normal.y;
-
 				light += energy * material.emission;
 
 				//Randomly choose between diffuse and specular BSDF

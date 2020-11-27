@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
-using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Objects.SceneObjects
 {
@@ -24,8 +22,44 @@ namespace ForceRenderer.Objects.SceneObjects
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
 
-				if (!hasNormal) yield return new PressedTriangle(GetVertex(0), GetVertex(1), GetVertex(2), materialToken);
-				else yield return new PressedTriangle(GetVertex(0), GetVertex(1), GetVertex(2), GetNormal(0), GetNormal(1), GetNormal(2), materialToken);
+				if (hasNormal)
+				{
+					if (hasTexcoord)
+					{
+						yield return new PressedTriangle
+						(
+							GetVertex(0), GetVertex(1), GetVertex(2),
+							GetNormal(0), GetNormal(1), GetNormal(2),
+							GetTexcoord(0), GetTexcoord(1), GetTexcoord(2), materialToken
+						);
+					}
+					else
+					{
+						yield return new PressedTriangle
+						(
+							GetVertex(0), GetVertex(1), GetVertex(2),
+							GetNormal(0), GetNormal(1), GetNormal(2), materialToken
+						);
+					}
+				}
+				else
+				{
+					if (hasTexcoord)
+					{
+						yield return new PressedTriangle
+						(
+							GetVertex(0), GetVertex(1), GetVertex(2),
+							GetTexcoord(0), GetTexcoord(1), GetTexcoord(2), materialToken
+						);
+					}
+					else
+					{
+						yield return new PressedTriangle
+						(
+							GetVertex(0), GetVertex(1), GetVertex(2), materialToken
+						);
+					}
+				}
 
 				Float3 GetVertex(int index)
 				{
