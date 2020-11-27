@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using CodeHelpers;
 using CodeHelpers.Collections;
@@ -35,6 +34,11 @@ namespace ForceRenderer.IO
 					case "vn":
 					{
 						normals.Add(new Float3(float.Parse(parts[1]), float.Parse(parts[2]), float.Parse(parts[3])));
+						break;
+					}
+					case "vt":
+					{
+						texcoords.Add(new Float2(float.Parse(parts[1]), float.Parse(parts[2])));
 						break;
 					}
 					case "f":

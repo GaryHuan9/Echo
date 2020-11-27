@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.ObjectPooling;
 using CodeHelpers.Vectors;
+using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
@@ -78,39 +79,27 @@ namespace ForceRenderer.Renderers
 			}
 
 			//Divide large triangles for better BVH space partitioning
+			const float DivideThresholdMultiplier = 4.8f;
+			const int DivideMaxIteration = 3;
+
+			float fragmentThreshold = (float)(totalArea / triangleList.Count * DivideThresholdMultiplier);
+
+			for (int i = 0; i < triangleList.Count; i++)
 			{
-				const float DivideThresholdMultiplier = 4.8f;
-				const int DivideMaxIteration = 3;
+				float multiplier = triangleList[i].Area / fragmentThreshold;
+				if (multiplier > 0f) Fragment(MathF.Log2(multiplier).Ceil());
 
-				int triangleCount = triangleList.Count;
-				float threshold = (float)(totalArea / triangleCount * DivideThresholdMultiplier);
-
-				for (int i = 0; i < triangleCount; i++)
+				void Fragment(int iteration) //Should be placed in a local method because of stack allocation
 				{
-					PressedTriangle pressed = triangleList[i];
+					iteration = iteration.Clamp(0, DivideMaxIteration);
 
-					Fragment(i, Math.Min(MathF.Log2(pressed.Area / threshold).Ceil(), DivideMaxIteration));
+					int subdivision = 1 << (iteration * 2);
+					Span<PressedTriangle> divided = stackalloc PressedTriangle[subdivision];
 
-					void Fragment(int index, int iteration)
-					{
-						if (iteration <= 0) return;
-						Span<PressedTriangle> divided = stackalloc PressedTriangle[4];
+					triangleList[i].GetSubdivided(divided, iteration);
+					triangleList[i] = divided[0];
 
-						triangleList[index].GetSubdivided(divided);
-						int listCount = triangleList.Count;
-
-						triangleList[index] = divided[0];
-						triangleList.Add(divided[1]);
-						triangleList.Add(divided[2]);
-						triangleList.Add(divided[3]);
-
-						if (--iteration == 0) return;
-
-						Fragment(index, iteration);
-						Fragment(listCount, iteration);
-						Fragment(listCount + 1, iteration);
-						Fragment(listCount + 2, iteration);
-					}
+					for (int j = 1; j < subdivision; j++) triangleList.Add(divided[j]);
 				}
 			}
 

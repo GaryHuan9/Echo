@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Vectors;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.IO
 {
 	public class Material
 	{
