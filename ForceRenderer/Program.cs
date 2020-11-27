@@ -4,6 +4,7 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
+using ForceRenderer.CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
@@ -43,26 +44,6 @@ namespace ForceRenderer
 			//
 			// return;
 
-			Float3 zero = new Float3(1f, 0f, 0f);
-			Float3 one = new Float3(0f, 0f, 1f);
-
-			Float3 half = zero.Lerp(one, 0.5f);
-			Console.WriteLine(half);
-
-			half = half.Normalized;
-			Console.WriteLine(half);
-
-			Float3 quarter = zero.Lerp(half, 0.5f);
-			Console.WriteLine(quarter);
-
-			quarter = quarter.Normalized;
-			Console.WriteLine(quarter);
-
-			Console.WriteLine(zero.Lerp(one, 0.25f));
-			Console.WriteLine(zero.Lerp(one, 0.25f).Normalized);
-
-			return;
-
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
@@ -77,8 +58,8 @@ namespace ForceRenderer
 			//Create scene
 			Scene scene = new Scene();
 
-			scene.children.Add(new Camera(90f) {Position = new Float3(0f, 12f, 0), Rotation = new Float3(90f, 0f, 0f)});
-			// scene.children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
+			// scene.children.Add(new Camera(120f) {Position = new Float3(0f, 10f, 0), Rotation = new Float3(90f, 0f, 0f)});
+			scene.children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
 			// scene.children.Add(new DirectionalLight {Intensity = new Float3(0.9f, 0.9f, 0.9f), Rotation = new Float3(60f, 90f, 0f)});
 
 			//scene.Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
@@ -95,16 +76,17 @@ namespace ForceRenderer
 			Material materialChrome = new Material {Albedo = new Float3(0.4f, 0.4f, 0.4f), Specular = new Float3(0.775f, 0.775f, 0.775f), Smoothness = 0.92f};
 			Material materialGold = new Material {Albedo = new Float3(0.346f, 0.314f, 0.0903f), Specular = new Float3(0.797f, 0.724f, 0.208f), Smoothness = 0.78f};
 			Material materialSmooth = new Material {Albedo = new Float3(0f, 0f, 0f), Specular = new Float3(1f, 1f, 1f), Smoothness = 3f};
-			Material materialBlack = new Material {Albedo = new Float3(0.1f, 0.1f, 0.1f), Specular = new Float3(0.5f, 0.5f, 0.5f), Smoothness = 0.9f};
+			Material materialDark = new Material {Albedo = new Float3(0.1f, 0.1f, 0.1f), Specular = new Float3(0.5f, 0.5f, 0.5f), Smoothness = 0.9f};
+			Material materialLight = new Material {Albedo = Float3.one, Emission = Float3.one * 3f, Smoothness = 0.9f};
 
 			// scene.children.Add(new TriangleObject(materialGold, new Float3(0f, 0f, 0f), new Float3(1f, 1f, 0f), new Float3(1f, 0f, 0f)) {Position = new Float3(0f, 1f, 0f), Rotation = new Float3(-45f, 0f, 60f), Scale = Float3.one / 10f});
 
-			scene.children.Add(new TriangleObject(materialChrome, new Float3(-12f, 0f, -8f), new Float3(12f, 0f, 8f), new Float3(12f, 0f, -8f)) {Normal0 = Float3.right, Normal1 = Float3.up, Normal2 = Float3.up});
-			scene.children.Add(new TriangleObject(materialConcrete, new Float3(-12f, 0f, -8f), new Float3(-12f, 0f, 8f), new Float3(12f, 0f, 8f)) {Normal0 = Float3.right, Normal1 = Float3.right, Normal2 = Float3.up});
+			PlacePlane(scene, Float3.zero, Float3.up, new Float2(12f, 8f), materialChrome);
+			// PlacePlane(scene, new Float3(-1f, 7f, 2f), new Float3(-0.2f, -1f, 0.1f), new Float2(5f, 5f), materialLight);
 
 			// scene.children.Add(new MeshObject(materialGold, bunny) {Position = new Float3(0f, 0f, -2f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)3f});
-			scene.children.Add(new MeshObject(materialChrome, kunai) {Position = new Float3(0f, -10f, -3f), Rotation = new Float3(0f, 90f, 0f), Scale = (Float3)2.5f});
-			// scene.children.Add(new MeshObject(materialBlack, bmw) {Position = Float3.zero, Rotation = new Float3(0f, -65f, 0f), Scale = (Float3)1.4f});
+			scene.children.Add(new MeshObject(materialChrome, kunai) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 90f, 0f), Scale = (Float3)2.5f});
+			// scene.children.Add(new MeshObject(materialDark, bmw) {Position = Float3.zero, Rotation = new Float3(0f, -65f, 0f), Scale = (Float3)1.4f});
 
 			// MinMaxInt range = new MinMaxInt(-3, 1);
 			//
@@ -129,22 +111,13 @@ namespace ForceRenderer
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = scene,
-											PixelSample = 1, TileSize = 100
+											PixelSample = 256, TileSize = 100
 										};
 
 			renderDisplay.Engine = engine;
 			engine.Begin();
 
 			engine.WaitForRender();
-
-			for (int y = 0; y < 10; y++)
-			{
-				for (int x = 0; x < buffer.size.x; x++)
-				{
-					buffer.SetPixel(new Int2(x, y), (Color32)Float3.zero.Lerp(Float3.one, (float)x / buffer.size.x));
-				}
-			}
-
 			buffer.SaveFile("render.png");
 
 			Texture noisy = new Texture(buffer.size);
@@ -156,10 +129,24 @@ namespace ForceRenderer
 			commandsController.Log($"Completed in {engine.Elapsed.TotalMilliseconds}ms");
 		}
 
-		static Material GetRandomMetallic()
+		static void PlacePlane(Scene scene, Float3 origin, Float3 normal, Float2 size, Material material)
 		{
-			Float3 color = new Float3(RandomHelper.Range(0.5f, 1f), RandomHelper.Range(0.5f, 1f), RandomHelper.Range(0.5f, 1f));
-			return new Material {Albedo = color, Specular = color, Smoothness = RandomHelper.Range(0.6f, 0.95f)};
+			Float3 one = Float3.up;
+			Float3 two = normal.Normalized;
+
+			Float3 cross = one.Cross(two);
+			float dot = one.Dot(two) + 1f;
+
+			Float4 quaternion = new Float4(cross.x, cross.y, cross.z, dot);
+			Float4x4 rotation = Float4x4.Rotation(quaternion);
+
+			Float3 point00 = rotation.MultiplyPoint(new Float3(-size.x, 0f, -size.y)) + origin;
+			Float3 point01 = rotation.MultiplyPoint(new Float3(-size.x, 0f, size.y)) + origin;
+			Float3 point10 = rotation.MultiplyPoint(new Float3(size.x, 0f, -size.y)) + origin;
+			Float3 point11 = rotation.MultiplyPoint(new Float3(size.x, 0f, size.y)) + origin;
+
+			scene.children.Add(new TriangleObject(material, point00, point11, point10));
+			scene.children.Add(new TriangleObject(material, point00, point01, point11));
 		}
 
 		static void FillRandomSpheres(Scene scene, int count)
@@ -269,13 +256,12 @@ namespace ForceRenderer
 
 			bool IntersectingOthers(float size, Float3 position)
 			{
-				const float Sqrt2 = 1.41421356237f;
-				float radius = Sqrt2 * size;
+				float radius = Scalars.Sqrt2 * size;
 
 				for (int i = 0; i < positions.Count; i++)
 				{
 					Float3 cube = positions[i];
-					float distance = Sqrt2 * cube.y + radius;
+					float distance = Scalars.Sqrt2 * cube.y + radius;
 					if ((cube - position).SquaredMagnitude <= distance * distance) return true;
 				}
 
