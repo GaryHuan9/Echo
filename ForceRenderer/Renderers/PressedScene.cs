@@ -79,7 +79,7 @@ namespace ForceRenderer.Renderers
 
 			//Divide large triangles for better BVH space partitioning
 			{
-				const float DivideThresholdMultiplier = 2.4f;
+				const float DivideThresholdMultiplier = 4.8f;
 				const int DivideMaxIteration = 3;
 
 				int triangleCount = triangleList.Count;
@@ -88,25 +88,21 @@ namespace ForceRenderer.Renderers
 				for (int i = 0; i < triangleCount; i++)
 				{
 					PressedTriangle pressed = triangleList[i];
-					int materialToken = pressed.materialToken;
 
-					Fragment(i, MathF.Log2(pressed.Area / threshold).Ceil().Clamp(0, DivideMaxIteration));
+					Fragment(i, Math.Min(MathF.Log2(pressed.Area / threshold).Ceil(), DivideMaxIteration));
 
 					void Fragment(int index, int iteration)
 					{
-						if (iteration == 0) return;
+						if (iteration <= 0) return;
+						Span<PressedTriangle> divided = stackalloc PressedTriangle[4];
 
-						var triangle = triangleList[index];
+						triangleList[index].GetSubdivided(divided);
 						int listCount = triangleList.Count;
 
-						Float3 midPoint01 = triangle.vertex0 + triangle.edge1 / 2f;
-						Float3 midPoint02 = triangle.vertex0 + triangle.edge2 / 2f;
-						Float3 midPoint12 = triangle.vertex0 + triangle.edge1 / 2f + triangle.edge2 / 2f;
-
-						triangleList[index] = new PressedTriangle(midPoint01, midPoint12, midPoint02, materialToken);
-						triangleList.Add(new PressedTriangle(triangle.vertex0, midPoint01, midPoint02, materialToken));
-						triangleList.Add(new PressedTriangle(triangle.Vertex1, midPoint12, midPoint01, materialToken));
-						triangleList.Add(new PressedTriangle(triangle.Vertex2, midPoint02, midPoint12, materialToken));
+						triangleList[index] = divided[0];
+						triangleList.Add(divided[1]);
+						triangleList.Add(divided[2]);
+						triangleList.Add(divided[3]);
 
 						if (--iteration == 0) return;
 
@@ -161,10 +157,10 @@ namespace ForceRenderer.Renderers
 		}
 
 		public readonly Scene source;
+		public readonly BoundingVolumeHierarchy bvh;
+
 		public readonly Camera camera;
 		public readonly PressedDirectionalLight directionalLight;
-
-		readonly BoundingVolumeHierarchy bvh;
 
 		readonly PressedMaterial[] materials;
 		readonly PressedTriangle[] triangles;
@@ -177,7 +173,7 @@ namespace ForceRenderer.Renderers
 		/// <summary>
 		/// Returns the <see cref="PressedMaterial"/> for object with <paramref name="token"/>.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref PressedMaterial GetMaterial(int token)
 		{
 			int materialToken;
@@ -197,72 +193,35 @@ namespace ForceRenderer.Renderers
 		}
 
 		/// <summary>
-		/// Returns the distance from scene intersection to ray origin.
-		/// <paramref name="token"/> contains the token of the <see cref="SceneObject"/> that intersected with ray.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public float GetIntersection(in Ray ray, out int token)
-		{
-			return bvh.GetIntersection(ray, out token);
-
-			float distance = float.PositiveInfinity;
-			token = int.MaxValue;
-
-			for (int i = 0; i < triangles.Length; i++)
-			{
-				ref PressedTriangle triangle = ref triangles[i];
-				float local = triangle.GetIntersection(ray);
-
-				if (local >= distance) continue;
-
-				distance = local;
-				token = i;
-			}
-
-			for (int i = 0; i < spheres.Length; i++)
-			{
-				ref PressedSphere sphere = ref spheres[i];
-				float local = sphere.GetIntersection(ray);
-
-				if (local >= distance) continue;
-
-				distance = local;
-				token = ~i;
-			}
-
-			return distance;
-		}
-
-		/// <summary>
 		/// Returns the intersection status with one object of <paramref name="token"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public float GetIntersection(in Ray ray, int token)
+		public float GetIntersection(in Ray ray, int token, out Float2 uv)
 		{
 			if (token < 0)
 			{
 				ref PressedSphere sphere = ref spheres[~token];
-				return sphere.GetIntersection(ray);
+				return sphere.GetIntersection(ray, out uv);
 			}
 
 			ref PressedTriangle triangle = ref triangles[token];
-			return triangle.GetIntersection(ray);
+			return triangle.GetIntersection(ray, out uv);
 		}
 
 		/// <summary>
-		/// Gets the normal of <see cref="SceneObject"/> with <paramref name="token"/> at <paramref name="point"/>.
+		/// Gets the normal of <see cref="SceneObject"/> with <paramref name="token"/> at <paramref name="uv"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Float3 GetNormal(Float3 point, int token)
+		public Float3 GetNormal(Float2 uv, int token)
 		{
 			if (token < 0)
 			{
 				ref PressedSphere sphere = ref spheres[~token];
-				return sphere.GetNormal(point);
+				return sphere.GetNormal(uv);
 			}
 
 			ref PressedTriangle triangle = ref triangles[token];
-			return triangle.GetNormal();
+			return triangle.GetNormal(uv);
 		}
 	}
 }
