@@ -22,8 +22,9 @@ namespace ForceRenderer.IO
 			albedo = albedo.Min(Float3.one - specular); //Albedo and specular combined cannot be larger than one
 			emission = material.Emission;
 
-			float smoothness = material.Smoothness.Clamp(0f, 3f);
-			phongAlpha = MathF.Pow(1000f, smoothness * smoothness);
+			// phongAlpha = MathF.Pow(3E8f, MathF.Pow(material.Smoothness.Clamp(0f, 1f), 1.5f)) - 1f;
+			// phongAlpha = MathF.Pow(material.Smoothness.Clamp(0f, 1f), 20f) * 3E8f;
+			phongAlpha = MathF.Pow(1200f, material.Smoothness.Clamp(0f, 1f) * 1.3f) - 1f;
 			phongMultiplier = (phongAlpha + 2f) / (phongAlpha + 1f);
 
 			//If specular is high, albedo should be contained to give more chance for specular reflection

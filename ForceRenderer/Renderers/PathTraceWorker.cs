@@ -30,7 +30,7 @@ namespace ForceRenderer.Renderers
 				light += energy * material.emission;
 
 				//Randomly choose between diffuse and specular BSDF
-				if (RandomValue < material.specularChance)
+				if (RandomValue <= material.specularChance) //Cannot be <, must be <=, because < will let a diffuseChance of 0f pass causing NaNs
 				{
 					//Phong specular reflection
 					ray = new Ray(position, GetHemisphereDirection(ray.direction.Reflect(normal), material.phongAlpha), true);
@@ -51,7 +51,7 @@ namespace ForceRenderer.Renderers
 			Cubemap skybox = profile.scene.Cubemap;
 			PressedDirectionalLight sun = profile.pressed.directionalLight;
 
-			if (skybox != null) light += energy * (Float3)skybox.Sample(ray.direction);
+			if (skybox != null) light += energy * (Float3)skybox.Sample(ray.direction) * 1.6f;
 			if (sun.direction != default) light += energy * sun.intensity * -sun.direction.Dot(ray.direction).Clamp(-1f, 0f); //Sun not really working right now
 
 			return light;
@@ -61,7 +61,7 @@ namespace ForceRenderer.Renderers
 		/// Samples a hemisphere pointing towards <paramref name="normal"/>.
 		/// <paramref name="alpha"/> determines whether the sampling distribution is uniform or cosine.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		Float3 GetHemisphereDirection(Float3 normal, float alpha)
 		{
 			//Samples hemisphere based on alpha

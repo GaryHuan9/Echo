@@ -4,6 +4,8 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
