@@ -15,12 +15,12 @@ namespace ForceRenderer.Objects.SceneObjects
 		{
 			if (Mesh == null) yield break;
 
-			bool hasTexcoord = Mesh.TexcoordCount > 0;
-			bool hasNormal = Mesh.NormalCount > 0;
-
 			for (int i = 0; i < Mesh.TriangleCount; i++)
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
+
+				bool hasNormal = triangle.normalIndices.MinComponent >= 0;
+				bool hasTexcoord = triangle.texcoordIndices.MinComponent >= 0;
 
 				if (hasNormal)
 				{

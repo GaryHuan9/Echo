@@ -138,7 +138,7 @@ namespace ForceRenderer.Renderers
 				Float2 uv = ToAdjustedUV(position, sample);
 				Float3 color = PixelWorker.Render(uv); //UV is adjusted to the correct scaling to match worker's requirement
 
-				//Write to pixels
+				//Write to pixels TODO: Add NaN filter?
 				pixels[pixelIndex].Accumulate(color);
 			}
 
