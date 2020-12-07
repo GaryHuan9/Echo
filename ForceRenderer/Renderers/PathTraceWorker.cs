@@ -51,7 +51,7 @@ namespace ForceRenderer.Renderers
 			Cubemap skybox = profile.scene.Cubemap;
 			PressedDirectionalLight sun = profile.pressed.directionalLight;
 
-			if (skybox != null) light += energy * (Float3)skybox.Sample(ray.direction) * 1.6f;
+			if (skybox != null) light += energy * (Float3)skybox.Sample(ray.direction);
 			if (sun.direction != default) light += energy * sun.intensity * -sun.direction.Dot(ray.direction).Clamp(-1f, 0f); //Sun not really working right now
 
 			return light;

@@ -8,6 +8,9 @@ namespace ForceRenderer.IO
 		public Float3 Albedo { get; set; }
 		public Float3 Specular { get; set; }
 
+		public Texture AlbedoTexture = Texture.white;
+		public Texture SpecularTexture = Texture.black;
+
 		public Float3 Emission { get; set; }
 		public float Smoothness { get; set; }
 	}
