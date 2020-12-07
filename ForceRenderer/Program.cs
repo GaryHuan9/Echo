@@ -65,7 +65,7 @@ namespace ForceRenderer
 			Texture buffer = new Texture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new BunnyScene(),
+											RenderBuffer = buffer, Scene = new SingleBMWScene(),
 											PixelSample = 128, TileSize = 100
 										};
 
