@@ -11,7 +11,7 @@ namespace ForceRenderer
 	{
 		public StandardScene(Material ground = null)
 		{
-			ground ??= new Material {Albedo = (Float3)0.75f, Specular = (Float3)0.03f, Smoothness = 0.11f};
+			ground ??= new Material {Diffuse = (Float3)0.75f, Specular = (Float3)0.03f, Smoothness = 0.11f};
 			PlacePlane(Float3.zero, Float3.up, new Float2(12f, 8f), ground);
 
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
@@ -25,7 +25,7 @@ namespace ForceRenderer
 		{
 			Mesh bunny = new Mesh("Assets/Models/StanfordBunny/bunnyLP.obj");
 
-			Material gold = new Material {Albedo = new Float3(0.346f, 0.314f, 0.0903f), Specular = new Float3(0.797f, 0.724f, 0.208f), Smoothness = 0.78f};
+			Material gold = new Material {Diffuse = new Float3(0.346f, 0.314f, 0.0903f), Specular = new Float3(0.797f, 0.724f, 0.208f), Smoothness = 0.78f};
 			children.Add(new MeshObject(gold, bunny) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f});
 		}
 	}
@@ -36,26 +36,26 @@ namespace ForceRenderer
 		{
 			Mesh kunai = new Mesh("Assets/Models/Kunai/wraith_kunai.obj");
 
-			Material chrome = new Material {Albedo = new Float3(0.4f, 0.4f, 0.4f), Specular = new Float3(0.775f, 0.775f, 0.775f), Smoothness = 0.92f};
+			Material chrome = new Material {Diffuse = new Float3(0.4f, 0.4f, 0.4f), Specular = new Float3(0.775f, 0.775f, 0.775f), Smoothness = 0.92f};
 			children.Add(new MeshObject(chrome, kunai) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 90f, 0f), Scale = (Float3)2.5f});
 		}
 	}
 
 	public class SingleBMWScene : StandardScene
 	{
-		public SingleBMWScene() : base(new Material {Albedo = (Float3)0.05f, Specular = (Float3)0.88f, Smoothness = 0.78f})
+		public SingleBMWScene() : base(new Material {Diffuse = (Float3)0.05f, Specular = (Float3)0.88f, Smoothness = 0.78f})
 		{
 			Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 
-			Material dark = new Material {Albedo = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
+			Material dark = new Material {Diffuse = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
 			children.Add(new MeshObject(dark, bmw) {Position = Float3.zero, Rotation = new Float3(0f, -65f, 0f), Scale = (Float3)1.4f});
 		}
 	}
 
 	public class MultipleBMWScene : StandardScene
 	{
-		public MultipleBMWScene() : base(new Material {Albedo = (Float3)0.05f, Specular = (Float3)0.88f, Smoothness = 0.78f})
+		public MultipleBMWScene() : base(new Material {Diffuse = (Float3)0.05f, Specular = (Float3)0.88f, Smoothness = 0.78f})
 		{
 			Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
@@ -64,7 +64,7 @@ namespace ForceRenderer
 
 			foreach (int index in range.Loop())
 			{
-				Material material = new Material {Albedo = Float3.one, Specular = (Float3)range.InverseLerp(index), Smoothness = 0.85f};
+				Material material = new Material {Diffuse = Float3.one, Specular = (Float3)range.InverseLerp(index), Smoothness = 0.85f};
 				Float3 position = new Float3(2.8f, 0f, -0.8f) * index + new Float3(1.7f, 0f, 0.2f);
 
 				children.Add(new MeshObject(material, bmw) {Position = position, Rotation = new Float3(0f, -60f, 0f)});
@@ -101,7 +101,7 @@ namespace ForceRenderer
 
 				Material material = new Material
 									{
-										Albedo = color,
+										Diffuse = color,
 										Specular = metal ? color : Float3.one * 0.05f,
 										Emission = emissive ? bright : Float3.zero,
 										Smoothness = (float)RandomHelper.Value / 2f + (metal ? 0.5f : 0f)

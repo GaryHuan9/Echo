@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -88,6 +87,8 @@ namespace ForceRenderer.IO
 
 			source.UnlockBits(data);
 		}
+
+		public Texture(Texture source, bool isReadonly = false) : this(source.size, (Color32[])source.pixels.Clone(), isReadonly) { }
 
 		public Texture(Int2 size, bool isReadonly = false) : this(size, new Color32[size.Product], isReadonly) { }
 
