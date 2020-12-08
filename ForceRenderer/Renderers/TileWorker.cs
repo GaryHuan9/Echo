@@ -203,6 +203,8 @@ namespace ForceRenderer.Renderers
 			/// </summary>
 			public void Accumulate(Float3 value)
 			{
+				if (float.IsNaN(value.Sum)) return; //NaN gate
+
 				InterlockedHelper.Add(ref r, value.x);
 				InterlockedHelper.Add(ref g, value.y);
 				InterlockedHelper.Add(ref b, value.z);
