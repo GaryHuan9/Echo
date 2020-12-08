@@ -23,24 +23,25 @@ namespace ForceRenderer.Renderers
 			for (bounce = 0; bounce <= profile.maxBounce && TryTrace(ray, out float distance, out int token, out Float2 uv); bounce++)
 			{
 				ref PressedMaterial material = ref profile.pressed.GetMaterial(token);
+				PressedMaterial.Sample sample = material.GetSample(uv);
 
 				Float3 position = ray.GetPoint(distance);
 				Float3 normal = profile.pressed.GetNormal(uv, token);
 
-				light += energy * material.emission;
+				light += energy * sample.emission;
 
 				//Randomly choose between diffuse and specular BSDF
-				if (RandomValue <= material.specularChance) //Cannot be <, must be <=, because < will let a diffuseChance of 0f pass causing NaNs
+				if (RandomValue <= sample.specularChance) //Cannot be <, must be <=, because < will let a diffuseChance of 0f pass causing NaNs
 				{
 					//Phong specular reflection
-					ray = new Ray(position, GetHemisphereDirection(ray.direction.Reflect(normal), material.phongAlpha), true);
-					energy *= 1f / material.specularChance * (normal.Dot(ray.direction) * material.phongMultiplier).Clamp(0f, 1f) * material.specular;
+					ray = new Ray(position, GetHemisphereDirection(ray.direction.Reflect(normal), sample.phongAlpha), true);
+					energy *= 1f / sample.specularChance * (normal.Dot(ray.direction) * sample.phongMultiplier).Clamp(0f, 1f) * sample.specular;
 				}
 				else
 				{
 					//Lambert diffuse reflection
 					ray = new Ray(position, GetHemisphereDirection(normal, 1f), true); //Using cosine distribution
-					energy *= 1f / material.diffuseChance * material.albedo;
+					energy *= 1f / sample.diffuseChance * sample.diffuse;
 				}
 
 				if (energy.x <= profile.energyEpsilon && energy.y <= profile.energyEpsilon && energy.z <= profile.energyEpsilon) break;
