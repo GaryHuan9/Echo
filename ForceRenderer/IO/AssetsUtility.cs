@@ -18,6 +18,8 @@ namespace ForceRenderer.IO
 		/// </summary>
 		public static string GetAssetsPath(string path)
 		{
+			if (Path.IsPathFullyQualified(path)) return path;
+
 			string[] parts = path.Split('/', '\\');
 			string[] splits = new string[parts.Length + 1];
 

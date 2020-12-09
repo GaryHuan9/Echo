@@ -22,8 +22,7 @@ namespace ForceRenderer.Renderers
 
 			for (bounce = 0; bounce <= profile.maxBounce && TryTrace(ray, out float distance, out int token, out Float2 uv); bounce++)
 			{
-				ref PressedMaterial material = ref profile.pressed.GetMaterial(token);
-				PressedMaterial.Sample sample = material.GetSample(uv);
+				PressedMaterial.Sample sample = profile.pressed.GetMaterialSample(token, uv);
 
 				Float3 position = ray.GetPoint(distance);
 				Float3 normal = profile.pressed.GetNormal(uv, token);

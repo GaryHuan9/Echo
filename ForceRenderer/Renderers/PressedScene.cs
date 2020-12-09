@@ -41,22 +41,25 @@ namespace ForceRenderer.Renderers
 				{
 					case SceneObject sceneObject:
 					{
-						Material material = sceneObject.Material;
-
-						if (!materialObjects.TryGetValue(material, out int materialToken))
-						{
-							materialToken = materialObjects.Count;
-							materialObjects.Add(material, materialToken);
-						}
-
 						int triangleCount = triangleList.Count;
 
-						triangleList.AddRange(sceneObject.ExtractTriangles(materialToken));
-						sphereList.AddRange(sceneObject.ExtractSpheres(materialToken));
+						triangleList.AddRange(sceneObject.ExtractTriangles(ConvertMaterial));
+						sphereList.AddRange(sceneObject.ExtractSpheres(ConvertMaterial));
 
 						for (int i = triangleCount; i < triangleList.Count; i++) totalArea += triangleList[i].Area;
 
 						break;
+
+						int ConvertMaterial(Material material) //Converts a material into its material token
+						{
+							if (!materialObjects.TryGetValue(material, out int materialToken))
+							{
+								materialToken = materialObjects.Count;
+								materialObjects.Add(material, materialToken);
+							}
+
+							return materialToken;
+						}
 					}
 					case Camera value:
 					{
@@ -160,25 +163,31 @@ namespace ForceRenderer.Renderers
 		public int SphereCount => spheres.Length;
 
 		/// <summary>
-		/// Returns the <see cref="PressedMaterial"/> for object with <paramref name="token"/>.
+		/// Returns the sampled <see cref="PressedMaterial"/> for object with <paramref name="token"/> at <paramref name="uv"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ref PressedMaterial GetMaterial(int token)
+		public PressedMaterial.Sample GetMaterialSample(int token, Float2 uv)
 		{
 			int materialToken;
+			Float2 texcoord;
 
 			if (token < 0)
 			{
 				ref PressedSphere sphere = ref spheres[~token];
+
 				materialToken = sphere.materialToken;
+				texcoord = uv;
 			}
 			else
 			{
 				ref PressedTriangle triangle = ref triangles[token];
+
 				materialToken = triangle.materialToken;
+				texcoord = triangle.GetTexcoord(uv);
 			}
 
-			return ref materials[materialToken];
+			ref PressedMaterial material = ref materials[materialToken];
+			return material.GetSample(texcoord);
 		}
 
 		/// <summary>

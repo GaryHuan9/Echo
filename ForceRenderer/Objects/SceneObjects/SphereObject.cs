@@ -4,7 +4,6 @@ using System.Linq;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Objects.SceneObjects
 {
@@ -14,10 +13,11 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public float Radius { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(int materialToken) => Enumerable.Empty<PressedTriangle>();
+		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter) => Enumerable.Empty<PressedTriangle>();
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(int materialToken)
+		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter)
 		{
+			int materialToken = materialConverter(Material);
 			yield return new PressedSphere(this, materialToken);
 		}
 	}

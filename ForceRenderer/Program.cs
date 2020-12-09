@@ -62,11 +62,11 @@ namespace ForceRenderer
 				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1000, 1000)
 			};
 
-			Texture buffer = new Texture(resolutions[2]);
+			Texture buffer = new Texture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new GridSpheresScene(),
-											PixelSample = 1000, TileSize = 100
+											RenderBuffer = buffer, Scene = new KunaiScene(),
+											PixelSample = 256, TileSize = 100
 										};
 
 			renderDisplay.Engine = engine;

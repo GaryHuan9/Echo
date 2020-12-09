@@ -11,11 +11,10 @@ namespace ForceRenderer.IO
 	{
 		public SixSideCubemap(string path)
 		{
-			this.path = path;
-			Exception error = null;
-
 			var names = IndividualTextureNames;
 			Texture[] sources = new Texture[names.Count];
+
+			Exception error = null;
 
 			Parallel.For
 			(
@@ -23,8 +22,7 @@ namespace ForceRenderer.IO
 								{
 									try
 									{
-										string texturePath = Path.Combine(path, names[index]);
-										sources[index] = new Texture(texturePath);
+										sources[index] = new Texture(Path.Combine(path, names[index]));
 									}
 									catch (FileNotFoundException exception)
 									{
@@ -38,7 +36,6 @@ namespace ForceRenderer.IO
 			textures = new ReadOnlyCollection<Texture>(sources);
 		}
 
-		public readonly string path;
 		readonly ReadOnlyCollection<Texture> textures;
 
 		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new ReadOnlyCollection<string>(new[] {"px", "py", "pz", "nx", "ny", "nz"});
