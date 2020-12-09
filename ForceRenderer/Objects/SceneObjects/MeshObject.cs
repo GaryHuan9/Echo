@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Vectors;
 using ForceRenderer.IO;
@@ -7,17 +8,19 @@ namespace ForceRenderer.Objects.SceneObjects
 {
 	public class MeshObject : SceneObject
 	{
-		public MeshObject(Material material, Mesh mesh) : base(material) => Mesh = mesh;
+		public MeshObject(Mesh mesh) : base(mesh.materialLibrary[0]) => Mesh = mesh;
 
 		public Mesh Mesh { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(int materialToken)
+		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter)
 		{
 			if (Mesh == null) yield break;
 
 			for (int i = 0; i < Mesh.TriangleCount; i++)
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
+				Material material = Mesh.materialLibrary[triangle.materialIndex];
+				int materialToken = materialConverter(material);
 
 				bool hasNormal = triangle.normalIndices.MinComponent >= 0;
 				bool hasTexcoord = triangle.texcoordIndices.MinComponent >= 0;
@@ -77,6 +80,6 @@ namespace ForceRenderer.Objects.SceneObjects
 			}
 		}
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(int materialToken) => Enumerable.Empty<PressedSphere>();
+		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter) => Enumerable.Empty<PressedSphere>();
 	}
 }

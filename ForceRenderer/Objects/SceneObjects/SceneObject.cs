@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CodeHelpers;
 using ForceRenderer.IO;
 using ForceRenderer.Renderers;
@@ -19,14 +20,14 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		/// <summary>
 		/// Enumerates through all of the triangles that can be extracted from this <see cref="SceneObject"/>.
-		/// NOTE: Can simply return nothing if this object does not have any triangle.
+		/// NOTE: Can simply return empty enumerable if this object does not have any triangle.
 		/// </summary>
-		public abstract IEnumerable<PressedTriangle> ExtractTriangles(int materialToken);
+		public abstract IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter);
 
 		/// <summary>
 		/// Enumerates through all of the spheres that can be extracted from this <see cref="SceneObject"/>.
-		/// NOTE: Can simply return nothing if this object does not have any sphere.
+		/// NOTE: Can simply return empty enumerable if this object does not have any sphere.
 		/// </summary>
-		public abstract IEnumerable<PressedSphere> ExtractSpheres(int materialToken);
+		public abstract IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter);
 	}
 }

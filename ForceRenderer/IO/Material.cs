@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Drawing.Drawing2D;
 using CodeHelpers.Vectors;
 
@@ -6,17 +7,92 @@ namespace ForceRenderer.IO
 {
 	public class Material
 	{
-		public Float3 Diffuse { get; set; }
-		public Float3 Specular { get; set; }
+		public Material(Material source, bool isReadonly)
+		{
+			this.isReadonly = isReadonly;
 
-		public Float3 Emission { get; set; }
-		public float Smoothness { get; set; }
+			_diffuse = source.Diffuse;
+			_specular = source.Specular;
 
-		public Texture DiffuseTexture { get; set; } = Texture.white;
-		public Texture SpecularTexture { get; set; } = Texture.white;
+			_emission = source.Emission;
+			_smoothness = source.Smoothness;
 
-		public Texture EmissionTexture { get; set; } = Texture.white;
-		public Texture SmoothnessTexture { get; set; } = Texture.white;
+			_diffuseTexture = source.DiffuseTexture;
+			_specularTexture = source.SpecularTexture;
+
+			_emissionTexture = source.EmissionTexture;
+			_smoothnessTexture = source.SmoothnessTexture;
+		}
+
+		public Material() => isReadonly = false;
+
+		public readonly bool isReadonly;
+
+		Float3 _diffuse;
+		Float3 _specular;
+
+		public Float3 Diffuse
+		{
+			get => _diffuse;
+			set => CheckedSet(ref _diffuse, value);
+		}
+
+		public Float3 Specular
+		{
+			get => _specular;
+			set => CheckedSet(ref _specular, value);
+		}
+
+		Float3 _emission;
+		float _smoothness;
+
+		public Float3 Emission
+		{
+			get => _emission;
+			set => CheckedSet(ref _emission, value);
+		}
+
+		public float Smoothness
+		{
+			get => _smoothness;
+			set => CheckedSet(ref _smoothness, value);
+		}
+
+		Texture _diffuseTexture = Texture.white;
+		Texture _specularTexture = Texture.white;
+
+		public Texture DiffuseTexture
+		{
+			get => _diffuseTexture;
+			set => CheckedSet(ref _diffuseTexture, value);
+		}
+
+		public Texture SpecularTexture
+		{
+			get => _specularTexture;
+			set => CheckedSet(ref _specularTexture, value);
+		}
+
+		Texture _emissionTexture = Texture.white;
+		Texture _smoothnessTexture = Texture.white;
+
+		public Texture EmissionTexture
+		{
+			get => _emissionTexture;
+			set => CheckedSet(ref _emissionTexture, value);
+		}
+
+		public Texture SmoothnessTexture
+		{
+			get => _smoothnessTexture;
+			set => CheckedSet(ref _smoothnessTexture, value);
+		}
+
+		void CheckedSet<T>(ref T location, T value)
+		{
+			if (!isReadonly) location = value;
+			else throw new ReadOnlyException();
+		}
 	}
 
 	public readonly struct PressedMaterial
@@ -44,14 +120,14 @@ namespace ForceRenderer.IO
 		readonly Sample defaultSample;
 		readonly bool varies;
 
-		public Sample GetSample(Float2 uv) => varies ? new Sample(this, uv, false) : defaultSample;
+		public Sample GetSample(Float2 texcoord) => varies ? new Sample(this, texcoord, false) : defaultSample;
 
 		public readonly struct Sample
 		{
-			public Sample(in PressedMaterial material, Float2 uv, bool calculateAll)
+			public Sample(in PressedMaterial material, Float2 texcoord, bool calculateAll)
 			{
-				diffuse = material.diffuse.Varies || calculateAll ? material.diffuse.GetValue(uv).Clamp(0f, 1f) : material.defaultSample.diffuse;
-				specular = material.specular.Varies || calculateAll ? material.specular.GetValue(uv).Clamp(0f, 1f) : material.defaultSample.specular;
+				diffuse = material.diffuse.Varies || calculateAll ? material.diffuse.GetValue(texcoord).Clamp(0f, 1f) : material.defaultSample.diffuse;
+				specular = material.specular.Varies || calculateAll ? material.specular.GetValue(texcoord).Clamp(0f, 1f) : material.defaultSample.specular;
 
 				if (material.diffuse.Varies || material.specular.Varies || calculateAll)
 				{
@@ -82,11 +158,11 @@ namespace ForceRenderer.IO
 					specularChance = material.defaultSample.specularChance;
 				}
 
-				emission = material.emission.Varies || calculateAll ? material.emission.GetValue(uv) : material.defaultSample.emission;
+				emission = material.emission.Varies || calculateAll ? material.emission.GetValue(texcoord) : material.defaultSample.emission;
 
 				if (material.smoothness.Varies || calculateAll)
 				{
-					float smoothness = material.smoothness.GetValue(uv).x.Clamp(0f, 1f);
+					float smoothness = material.smoothness.GetValue(texcoord).x.Clamp(0f, 1f);
 
 					phongAlpha = MathF.Pow(1200f, smoothness * 1.3f) - 1f;
 					phongMultiplier = (phongAlpha + 2f) / (phongAlpha + 1f);
@@ -133,10 +209,10 @@ namespace ForceRenderer.IO
 
 			public bool Varies => texture != null;
 
-			public Float3 GetValue(Float2 uv)
+			public Float3 GetValue(Float2 texcoord)
 			{
 				if (texture == null) return value;
-				return value * (Float3)texture.GetPixel(uv);
+				return value * (Float3)texture.GetPixel(texcoord);
 			}
 		}
 	}

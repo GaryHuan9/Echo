@@ -6,13 +6,8 @@ namespace ForceRenderer.IO
 {
 	public class CylindricalCubemap : Cubemap
 	{
-		public CylindricalCubemap(string path)
-		{
-			this.path = path;
-			texture = new Texture(path);
-		}
+		public CylindricalCubemap(string path) => texture = new Texture(path);
 
-		public readonly string path;
 		readonly Texture texture;
 
 		public override Color32 Sample(Float3 direction) => texture.GetPixel

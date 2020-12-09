@@ -26,15 +26,16 @@ namespace ForceRenderer.Objects.SceneObjects
 		public Float3 Normal1 { get; set; }
 		public Float3 Normal2 { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(int materialToken)
+		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter)
 		{
+			int materialToken = materialConverter(Material);
+
 			if (Normal0 == Float3.zero || Normal1 == Float3.zero || Normal2 == Float3.zero)
 			{
 				yield return new PressedTriangle
 				(
-					LocalToWorld.MultiplyPoint(Vertex0),
-					LocalToWorld.MultiplyPoint(Vertex1),
-					LocalToWorld.MultiplyPoint(Vertex2), materialToken
+					LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
+					materialToken
 				);
 			}
 			else
@@ -43,13 +44,12 @@ namespace ForceRenderer.Objects.SceneObjects
 				(
 					LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
 					LocalToWorld.MultiplyDirection(Normal0), LocalToWorld.MultiplyDirection(Normal1), LocalToWorld.MultiplyDirection(Normal2),
-					Float2.zero, Float2.zero, Float2.zero,
 					materialToken
 				);
 			}
 		}
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(int materialToken) => Enumerable.Empty<PressedSphere>();
+		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter) => Enumerable.Empty<PressedSphere>();
 	}
 
 	public readonly struct PressedTriangle //Winding order for triangles is CLOCKWISE
@@ -164,13 +164,13 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
-			Float3 cross0 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
-			float determinant = Float3.Dot(edge1, cross0);      //If determinant is close to zero, ray is parallel to triangle
+			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
+			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
 
 			if (determinant < Epsilon) goto noIntersection;
 
 			Float3 offset = ray.origin - vertex0;
-			float u = Float3.Dot(offset, cross0);
+			float u = Float3.Dot(offset, cross2);
 
 			if (u < 0f || u > determinant) goto noIntersection; //Outside barycentric bounds
 
