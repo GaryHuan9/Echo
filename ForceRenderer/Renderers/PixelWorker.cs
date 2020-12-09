@@ -30,7 +30,7 @@ namespace ForceRenderer.Renderers
 		public abstract Float3 Render(Float2 screenUV);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected bool TryTrace(in Ray ray, out float distance, out int token, out Float2 uv)
+		protected bool GetIntersection(in Ray ray, out float distance, out int token, out Float2 uv)
 		{
 			distance = profile.pressed.bvh.GetIntersection(ray, out token, out uv);
 			return float.IsFinite(distance);

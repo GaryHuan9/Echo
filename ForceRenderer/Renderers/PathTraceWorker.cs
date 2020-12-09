@@ -20,28 +20,34 @@ namespace ForceRenderer.Renderers
 
 			int bounce;
 
-			for (bounce = 0; bounce <= profile.maxBounce && TryTrace(ray, out float distance, out int token, out Float2 uv); bounce++)
+			for (bounce = 0; bounce <= profile.maxBounce && GetIntersection(ray, out float distance, out int token, out Float2 uv); bounce++)
 			{
 				PressedMaterial.Sample sample = profile.pressed.GetMaterialSample(token, uv);
 
 				Float3 position = ray.GetPoint(distance);
 				Float3 normal = profile.pressed.GetNormal(uv, token);
 
+				Float3 direction;
+				Float3 bsdf; //Bidirectional scattering distribution function
+
 				light += energy * sample.emission;
 
 				//Randomly choose between diffuse and specular BSDF
-				if (RandomValue <= sample.specularChance) //Cannot be <, must be <=, because < will let a diffuseChance of 0f pass causing NaNs
+				if (RandomValue < sample.specularChance)
 				{
 					//Phong specular reflection
-					ray = new Ray(position, GetHemisphereDirection(ray.direction.Reflect(normal), sample.phongAlpha), true);
-					energy *= 1f / sample.specularChance * (normal.Dot(ray.direction) * sample.phongMultiplier).Clamp(0f, 1f) * sample.specular;
+					direction = GetHemisphereDirection(ray.direction.Reflect(normal), sample.phongAlpha);
+					bsdf = 1f / sample.specularChance * (normal.Dot(direction) * sample.phongMultiplier).Clamp(0f, 1f) * sample.specular;
 				}
 				else
 				{
 					//Lambert diffuse reflection
-					ray = new Ray(position, GetHemisphereDirection(normal, 1f), true); //Using cosine distribution
-					energy *= 1f / sample.diffuseChance * sample.diffuse;
+					direction = GetHemisphereDirection(normal, 1f); //Using cosine distribution
+					bsdf = 1f / sample.diffuseChance * sample.diffuse;
 				}
+
+				ray = new Ray(position, direction, true);
+				energy *= bsdf;
 
 				if (energy.x <= profile.energyEpsilon && energy.y <= profile.energyEpsilon && energy.z <= profile.energyEpsilon) break;
 			}

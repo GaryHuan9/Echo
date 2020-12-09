@@ -74,7 +74,7 @@ namespace ForceRenderer.IO
 					case "Ns":
 					{
 						float smoothness = float.Parse(parts[1]) / 1000f;
-						CheckMaterial().Smoothness = smoothness; //Might to some curve mapping
+						CheckMaterial().Smoothness = MathF.Pow(smoothness, 0.7f); //Might to some curve mapping
 
 						break;
 					}

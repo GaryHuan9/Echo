@@ -19,11 +19,19 @@ namespace ForceRenderer
 		}
 	}
 
+	public class TestLighting : StandardScene
+	{
+		public TestLighting()
+		{
+			children.Add(new DirectionalLight {Intensity = Float3.one, Rotation = new Float3(0f, 0f, 0f)});
+		}
+	}
+
 	public class BunnyScene : StandardScene
 	{
 		public BunnyScene()
 		{
-			Mesh bunny = new Mesh("Assets/Models/StanfordBunny/bunnyLP.obj");
+			Mesh bunny = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
 			children.Add(new MeshObject(bunny) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f});
 		}
 	}
