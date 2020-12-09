@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.ObjectPooling;
 using CodeHelpers.Vectors;
 using ForceRenderer.Renderers;
@@ -19,7 +20,7 @@ namespace ForceRenderer.Mathematics
 			int currentIndex = 0;
 			nodes = new Node[aabbs.Count * 2 - 1]; //The number of nodes can be predetermined
 
-			var listPooler = new CollectionPoolerBase<List<int>, int>();
+			var listPooler = new CollectionPoolerBase<List<int>, int>(int.MaxValue);
 			ConstructLayer(Enumerable.Range(0, aabbs.Count).ToList());
 
 			int ConstructLayer(List<int> indices) //Returns an int, the index of the layer constructed
@@ -38,12 +39,26 @@ namespace ForceRenderer.Mathematics
 				//Sorts the indices by splitting axis value. NOTE: That list is modified
 				indices.Sort((index0, index1) => aabbs[index0].center[axis].CompareTo(aabbs[index1].center[axis]));
 
-				//Use the medium for now; and although we do not need to sort the list for medium, we will need it sorted later
-				int cutIndex = indices.Count / 2; //Cuts so that the item at cutIndex is the beginning of the second half
+				//Cuts so that the item at cutIndex is the beginning of the second half
+				int cutIndex = 1;
+				float minCost = float.MaxValue;
 
-				int layerIndex = currentIndex++;
+				for (int i = 1; i < indices.Count; i += Math.Max(1, indices.Count / 17))
+				{
+					//Calculate cut cost between i-1 and i
+					float area0 = AxisAlignedBoundingBox.Construct(aabbs, indices, 0, i).Area;
+					float area1 = AxisAlignedBoundingBox.Construct(aabbs, indices, i, indices.Count - i).Area;
+
+					float cost = area0 * i + area1 * (indices.Count - i);
+					if (cost >= minCost) break;
+
+					minCost = cost;
+					cutIndex = i;
+				}
 
 				//Recursively construct deeper layers
+				int layerIndex = currentIndex++;
+
 				var indices0 = listPooler.GetObject();
 				var indices1 = listPooler.GetObject();
 

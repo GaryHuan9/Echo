@@ -204,9 +204,12 @@ namespace ForceRenderer.Objects.SceneObjects
 		public void GetSubdivided(Span<PressedTriangle> triangles, int iteration)
 		{
 			int requiredLength = 1 << (iteration * 2);
-			triangles[0] = this;
 
-			if (triangles.Length >= requiredLength) GetSubdivided(triangles.Slice(requiredLength), normal0, normal1, normal2);
+			if (triangles.Length == requiredLength)
+			{
+				triangles[0] = this;
+				GetSubdivided(triangles, normal0, normal1, normal2);
+			}
 			else throw ExceptionHelper.Invalid(nameof(triangles), triangles.Length, $"is not long enough! Need at least {requiredLength}!");
 		}
 
