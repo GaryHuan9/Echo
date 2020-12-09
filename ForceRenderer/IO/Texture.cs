@@ -1,9 +1,12 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Vectors;
 
 namespace ForceRenderer.IO
@@ -12,34 +15,11 @@ namespace ForceRenderer.IO
 	/// An asset object used to read or save an image. Pixels are stored raw for fast access but uses much more memory.
 	/// File operation handled by <see cref="Bitmap"/>. Can be offloaded to separate threads for faster loading.
 	/// </summary>
-	public class Texture
+	public class Texture : LoadableAsset
 	{
-		public Texture(string relativePath)
+		public Texture(string path)
 		{
-			string extension = Path.GetExtension(relativePath);
-			string path = null;
-
-			if (string.IsNullOrEmpty(extension))
-			{
-				//No provided extension, check through all available extensions
-				string assetPath = AssetsUtility.GetAssetsPath(relativePath);
-
-				foreach (string compatibleExtension in compatibleExtensions)
-				{
-					path = Path.ChangeExtension(assetPath, compatibleExtension);
-					if (File.Exists(path)) break;
-				}
-			}
-			else
-			{
-				if (compatibleExtensions.Contains(extension)) path = AssetsUtility.GetAssetsPath(relativePath);
-				else throw new FileNotFoundException($"Incompatible file type at {relativePath} for {nameof(Texture)}");
-			}
-
-			if (string.IsNullOrEmpty(path) || !File.Exists(path)) throw new FileNotFoundException($"No file found at {path} for {nameof(Texture)}");
-
-			//Load texture
-			using Bitmap source = new Bitmap(path, true);
+			using Bitmap source = new Bitmap(GetAbsolutePath(path), true);
 			PixelFormat format = source.PixelFormat;
 
 			size = new Int2(source.Width, source.Height);
@@ -114,8 +94,10 @@ namespace ForceRenderer.IO
 		public readonly float aspect; //Width over height
 		public readonly int length;
 
-		public static readonly ReadOnlyCollection<string> compatibleExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});
+		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});
 		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new ReadOnlyCollection<ImageFormat>(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif});
+
+		protected override IReadOnlyList<string> AcceptableFileExtensions => _acceptableFileExtensions;
 
 		public static readonly Texture white = new Texture(Int2.one, new[] {Color32.white}, true);
 		public static readonly Texture black = new Texture(Int2.one, new[] {Color32.black}, true);
@@ -152,11 +134,11 @@ namespace ForceRenderer.IO
 			if (string.IsNullOrEmpty(extension))
 			{
 				extensionIndex = 0;
-				relativePath = Path.ChangeExtension(relativePath, compatibleExtensions[extensionIndex]);
+				relativePath = Path.ChangeExtension(relativePath, AcceptableFileExtensions[extensionIndex]);
 			}
 			else
 			{
-				extensionIndex = compatibleExtensions.IndexOf(extension);
+				extensionIndex = AcceptableFileExtensions.IndexOf(extension);
 				if (extensionIndex < 0) throw ExceptionHelper.Invalid(nameof(relativePath), relativePath, "does not have a compatible extension!");
 			}
 
