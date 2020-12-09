@@ -65,7 +65,7 @@ namespace ForceRenderer
 			Texture buffer = new Texture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new KunaiScene(),
+											RenderBuffer = buffer, Scene = new TestLighting(),
 											PixelSample = 256, TileSize = 100
 										};
 

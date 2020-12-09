@@ -20,3 +20,6 @@ Average Time With float Ray-Triangle Intersection Calculation: 50000ms (37000ms 
 Behavior Volume Hierarchy Implementation Tests (Stanford Bunny (854, 480) 256 SP 506 tris Release Mode):
 Brute Force Linear Intersection (SPPS: 2.4M; 50000ms)
 BVH Acceleration Structure Intersection (SPPS: 9.3M; 14000ms)
+
+BVH Cut Along Median (SPPS: 8.7M; 255000ms)
+BVH Cut SAH V1 (SPPS: 10.3M; 210000ms)

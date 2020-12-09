@@ -19,6 +19,8 @@ namespace ForceRenderer.Mathematics
 		public Float3 Max => center + extend;
 		public Float3 Min => center - extend;
 
+		public float Area => (extend.x * extend.y + extend.x * extend.z + extend.y * extend.z) * 8f;
+
 		/// <summary>
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
 		/// NOTE: return can be negative, which means the ray origins inside box.
@@ -54,9 +56,9 @@ namespace ForceRenderer.Mathematics
 			Float3 max = Float3.negativeInfinity;
 			Float3 min = Float3.positiveInfinity;
 
-			for (int i = 0; i < length; i++)
+			for (int i = start; i < start + length; i++)
 			{
-				AxisAlignedBoundingBox box = boxes[i + start];
+				AxisAlignedBoundingBox box = boxes[i];
 
 				max = box.Max.Max(max);
 				min = box.Min.Min(min);
@@ -67,12 +69,15 @@ namespace ForceRenderer.Mathematics
 		}
 
 		/// <inheritdoc cref="Construct(System.Collections.Generic.IReadOnlyList{ForceRenderer.Mathematics.AxisAlignedBoundingBox})"/>
-		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, IReadOnlyList<int> indices)
+		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, IReadOnlyList<int> indices) => Construct(boxes, indices, 0, indices.Count);
+
+		/// <inheritdoc cref="Construct(System.Collections.Generic.IReadOnlyList{ForceRenderer.Mathematics.AxisAlignedBoundingBox})"/>
+		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, IReadOnlyList<int> indices, int start, int length)
 		{
 			Float3 max = Float3.negativeInfinity;
 			Float3 min = Float3.positiveInfinity;
 
-			for (int i = 0; i < indices.Count; i++)
+			for (int i = start; i < start + length; i++)
 			{
 				AxisAlignedBoundingBox box = boxes[indices[i]];
 
