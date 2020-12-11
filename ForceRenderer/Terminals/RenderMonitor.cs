@@ -39,7 +39,7 @@ namespace ForceRenderer.Terminals
 		/// </summary>
 		bool CheckEngineStatus()
 		{
-			bool ready = Engine?.CurrentState == RenderEngine.State.rendering;
+			bool ready = Engine?.Rendering ?? false;
 			bool statusChanged = ready != EngineReady;
 
 			monitorHeight = ready ? Engine.TotalTileSize.y : 0;

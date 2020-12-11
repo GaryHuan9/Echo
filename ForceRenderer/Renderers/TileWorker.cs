@@ -76,7 +76,7 @@ namespace ForceRenderer.Renderers
 		public bool Working => resetEvent.IsSet;
 
 		static volatile int workerIdAccumulator;
-		bool disposed;
+		bool aborted;
 
 		/// <summary>
 		/// Invoked on worker thread when all rendered pixels are stored in the buffer.
@@ -110,9 +110,10 @@ namespace ForceRenderer.Renderers
 
 		void WorkThread()
 		{
-			while (!disposed)
+			while (!aborted)
 			{
 				resetEvent.Wait();
+				if (aborted) break;
 
 				try
 				{
@@ -174,16 +175,20 @@ namespace ForceRenderer.Renderers
 		/// </summary>
 		bool IsValid(Int2 bufferPosition) => bufferPosition.x >= 0 && bufferPosition.y >= 0 && bufferPosition.x < RenderBuffer.size.x && bufferPosition.y < RenderBuffer.size.y;
 
-		public override int GetHashCode() => id;
-		public override string ToString() => $"Tile Worker #{id} {size}x{size}";
+		public void Abort()
+		{
+			worker.Abort();
+			aborted = true;
+		}
 
 		public void Dispose()
 		{
-			if (disposed) return;
-			disposed = true;
-
+			if (!aborted) Abort();
 			resetEvent?.Dispose();
 		}
+
+		public override int GetHashCode() => id;
+		public override string ToString() => $"Tile Worker #{id} {size}x{size}";
 
 		struct Pixel
 		{
