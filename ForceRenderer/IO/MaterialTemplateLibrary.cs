@@ -19,7 +19,7 @@ namespace ForceRenderer.IO
 			//Load all parameters from file
 			foreach (string line in File.ReadAllLines(path))
 			{
-				string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+				string[] parts = line.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
 				if (parts.Length == 0) continue;
 
 				switch (parts[0])

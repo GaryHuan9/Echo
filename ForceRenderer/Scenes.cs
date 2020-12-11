@@ -12,7 +12,7 @@ namespace ForceRenderer
 		public StandardScene(Material ground = null)
 		{
 			ground ??= new Material {Diffuse = (Float3)0.75f, Specular = (Float3)0.03f, Smoothness = 0.11f};
-			PlacePlane(Float3.zero, Float3.up, new Float2(12f, 8f), ground);
+			children.Add(new PlaneObject(ground, new Float2(24f, 16f)));
 
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
 			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
@@ -23,7 +23,11 @@ namespace ForceRenderer
 	{
 		public TestLighting()
 		{
-			children.Add(new DirectionalLight {Intensity = Float3.one, Rotation = new Float3(0f, 0f, 0f)});
+			Cubemap = null;
+
+			children.Add(new DirectionalLight {Intensity = Float3.one * 2f, Rotation = new Float3(45f, 45f, 0f)});
+			// children.Add(new PlaneObject(new Material {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
+			children.Add(new BoxObject(new Material {Diffuse = Float3.one}, Float3.one * 2f) {Position = Float3.up});
 		}
 	}
 
@@ -50,6 +54,17 @@ namespace ForceRenderer
 			children.Add(camera);
 
 			camera.LookAt(target);
+		}
+	}
+
+	public class CornellBox : Scene
+	{
+		public CornellBox()
+		{
+			Mesh box = new Mesh("Assets/Models/CornellBox/CornellBox.obj");
+
+			children.Add(new MeshObject(box));
+			children.Add(new Camera(90f) {Position = new Float3(0f, 1f, 2.2f), Rotation = Float3.up * 180f});
 		}
 	}
 

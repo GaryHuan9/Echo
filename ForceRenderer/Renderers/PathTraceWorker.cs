@@ -52,13 +52,18 @@ namespace ForceRenderer.Renderers
 				if (energy.x <= profile.energyEpsilon && energy.y <= profile.energyEpsilon && energy.z <= profile.energyEpsilon) break;
 			}
 
-			//return (Float3)((float)bounce / profile.maxBounce);
+			// return (Float3)((float)bounce / profile.maxBounce);
 
 			Cubemap skybox = profile.scene.Cubemap;
 			PressedDirectionalLight sun = profile.pressed.directionalLight;
 
 			if (skybox != null) light += energy * (Float3)skybox.Sample(ray.direction);
-			if (sun.direction != default) light += energy * sun.intensity * -sun.direction.Dot(ray.direction).Clamp(-1f, 0f); //Sun not really working right now
+
+			if (sun.direction != default && bounce > 0)
+			{
+				float dot = -sun.direction.Dot(ray.direction);
+				light += energy * sun.intensity * dot.Clamp(0f, 1f);
+			}
 
 			return light;
 		}
@@ -75,8 +80,8 @@ namespace ForceRenderer.Renderers
 			float sin = MathF.Sqrt(1f - cos * cos);
 			float phi = Scalars.TAU * RandomValue;
 
-			float x = (float)Math.Cos(phi) * sin;
-			float y = (float)Math.Sin(phi) * sin;
+			float x = MathF.Cos(phi) * sin;
+			float y = MathF.Sin(phi) * sin;
 			float z = cos;
 
 			//Transform local direction to world-space based on normal

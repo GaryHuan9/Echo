@@ -69,9 +69,9 @@ namespace ForceRenderer.Terminals
 			//Display configuration information
 			long totalSample = (long)Engine.TotalTileCount * profile.tileSize * profile.tileSize * profile.pixelSample;
 
-			builders.SetSlice
+			builders.SetLine
 			(
-				new Int2(0, 0),
+				0,
 				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample:N0}; TotalSP {totalSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.TriangleCount:N0}; Sphere {pressed.SphereCount:N0}; " +
 				$"Light {(pressed.directionalLight.direction == default ? 0 : 1):N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker}; "
 			);
@@ -88,9 +88,9 @@ namespace ForceRenderer.Terminals
 
 			double estimate = (totalSample / (completed / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds);
 
-			builders.SetSlice
+			builders.SetLine
 			(
-				new Int2(0, 1),
+				1,
 				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; CompleteSP {completed:N0}; RenderSP {Math.Abs(initiated - completed):D3}; CompleteTile {completedTile}; Estimate {TimeSpan.FromSeconds(estimate):hh\\:mm\\:ss\\:ff}; " +
 				$"Complete% {100d * completed / totalSample:F2}; SPPS {completed / second:N0}; CompleteTilePS {completedTile / second:F2}; DispatchTilePS {dispatchedTile / second:F2}; "
 			);
