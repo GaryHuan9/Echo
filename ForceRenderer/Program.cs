@@ -90,10 +90,12 @@ namespace ForceRenderer
 		static RenderEngine renderEngine;
 
 		[Command]
-		static CommandResult DoStuff(int value)
+		static CommandResult Abort()
 		{
-			// renderEngine.
-			throw new NotImplementedException();
+			if (!renderEngine.Rendering) return new CommandResult("Cannot abort: not rendering.", false);
+
+			renderEngine.Abort();
+			return new CommandResult("Render aborted.", true);
 		}
 	}
 }
