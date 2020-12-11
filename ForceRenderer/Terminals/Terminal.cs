@@ -153,7 +153,16 @@ namespace ForceRenderer.Terminals
 				CheckHeight(index);
 				EnsureCapacity(index.y);
 
-				lines[index.y].SetSlice(index.x, slice.Slice(0, slice.Length));
+				lines[index.y].SetSlice(index.x, slice);
+			}
+
+			public void SetLine(int index, ReadOnlySpan<char> slice)
+			{
+				CheckHeight(index);
+				EnsureCapacity(index);
+
+				if (lines[index].Count > slice.Length) Clear(index);
+				SetSlice(Int2.up * index, slice);
 			}
 
 			public void Insert(Int2 index, char value) => Insert(index, stackalloc char[1] {value});

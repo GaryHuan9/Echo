@@ -23,7 +23,7 @@ namespace ForceRenderer.Renderers
 		public int WorkerSize { get; set; } = Environment.ProcessorCount / 2;
 
 		public int MaxBounce { get; set; } = 32;
-		public float EnergyEpsilon { get; set; } = 1E-3f; //Epsilon lower bound value to determine when an energy is essentially zero
+		public float EnergyEpsilon { get; set; } = 1E-2f; //Epsilon lower bound value to determine when an energy is essentially zero
 
 		Profile profile;
 
