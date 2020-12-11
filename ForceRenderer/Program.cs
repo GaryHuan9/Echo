@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Threads;
 using CodeHelpers.Vectors;
 using ForceRenderer.CodeHelpers.Vectors;
@@ -59,29 +61,39 @@ namespace ForceRenderer
 			//Render
 			Int2[] resolutions =
 			{
-				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1000, 1000)
+				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1000, 1000), new Int2(500, 500)
 			};
 
-			Texture buffer = new Texture(resolutions[1]);
+			Texture buffer = new Texture(resolutions[4]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new TestLighting(),
-											PixelSample = 256, TileSize = 100
+											RenderBuffer = buffer, Scene = new CornellBox(),
+											PixelSample = 100, TileSize = 50
 										};
 
+			renderEngine = engine;
 			renderDisplay.Engine = engine;
-			engine.Begin();
 
+			engine.Begin();
 			engine.WaitForRender();
-			buffer.SaveFile("render.png");
 
 			Texture noisy = new Texture(buffer.size);
-			var denoiser = new Denoiser(buffer, noisy);
+			new Denoiser(buffer, noisy).Dispatch();
 
-			denoiser.Dispatch();
 			noisy.SaveFile("noisy.png");
+			buffer.SaveFile("render.png");
 
 			commandsController.Log($"Completed in {engine.Elapsed.TotalMilliseconds}ms");
+			renderEngine = null;
+		}
+
+		static RenderEngine renderEngine;
+
+		[Command]
+		static CommandResult DoStuff(int value)
+		{
+			// renderEngine.
+			throw new NotImplementedException();
 		}
 	}
 }

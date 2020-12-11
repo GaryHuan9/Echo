@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.ObjectPooling;
 using CodeHelpers.Vectors;
 
 namespace ForceRenderer.IO
@@ -17,7 +19,7 @@ namespace ForceRenderer.IO
 
 			foreach (string line in File.ReadAllLines(path))
 			{
-				string[] parts = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+				string[] parts = line.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
 				if (parts.Length == 0) continue;
 
 				switch (parts[0])
@@ -52,27 +54,56 @@ namespace ForceRenderer.IO
 					}
 					case "f":
 					{
-						string[] numbers0 = parts[1].Split('/');
-						string[] numbers1 = parts[2].Split('/');
-						string[] numbers2 = parts[3].Split('/');
-
 						//Each face part consists of vertex index, texture coordinate index, and normal index
 						//.obj uses counter-clockwise winding order while we use clockwise. So we have to reverse it
+
+						List<string[]> numbers = CollectionPooler<string[]>.list.GetObject();
+						for (int i = 1; i < parts.Length; i++) numbers.Add(parts[i].Split('/'));
+
+						if (numbers.Count < 3) throw new Exception($"Invalid 2 face data indices at {path}.");
+						if (numbers.Count > 4) Console.WriteLine($"More than 4 face data index currently not supported at {path}.");
 
 						triangles.Add
 						(
 							new Triangle
 							(
-								new Int3(Parse(numbers2.TryGetValue(0)), Parse(numbers1.TryGetValue(0)), Parse(numbers0.TryGetValue(0))),
-								new Int3(Parse(numbers2.TryGetValue(2)), Parse(numbers1.TryGetValue(2)), Parse(numbers0.TryGetValue(2))),
-								new Int3(Parse(numbers2.TryGetValue(1)), Parse(numbers1.TryGetValue(1)), Parse(numbers0.TryGetValue(1))),
+								new Int3(Parse(0, 2), Parse(0, 1), Parse(0, 0)),
+								new Int3(Parse(2, 2), Parse(2, 1), Parse(2, 0)),
+								new Int3(Parse(1, 2), Parse(1, 1), Parse(1, 0)),
 								materialLibrary[currentMaterialName]
 							)
 						);
 
+						if (numbers.Count == 4)
+						{
+							triangles.Add
+							(
+								new Triangle
+								(
+									new Int3(Parse(0, 0), Parse(0, 3), Parse(0, 2)),
+									new Int3(Parse(2, 0), Parse(2, 3), Parse(2, 2)),
+									new Int3(Parse(1, 0), Parse(1, 3), Parse(1, 2)),
+									materialLibrary[currentMaterialName]
+								)
+							);
+						}
+
 						break;
 
-						static int Parse(string value) => int.TryParse(value, out int result) ? result - 1 : -1;
+						int Parse(int dataType, int index)
+						{
+							string value = numbers[index].TryGetValue(dataType);
+							if (!int.TryParse(value, out int result)) return -1;
+
+							ICollection collection = dataType switch
+													 {
+														 0 => vertices,
+														 2 => normals,
+														 1 => texcoords,
+														 _ => throw ExceptionHelper.Invalid(nameof(dataType), dataType, InvalidType.unexpected)
+													 };
+							return result < 0 ? collection.Count + result : result - 1;
+						}
 					}
 				}
 			}
