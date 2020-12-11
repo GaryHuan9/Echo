@@ -35,7 +35,7 @@ namespace ForceRenderer.Renderers
 			get => _renderBuffer;
 			set
 			{
-				if (CurrentState == State.rendering) throw new Exception("Cannot modify buffer when rendering!");
+				if (Rendering) throw new Exception("Cannot modify buffer when rendering!");
 				Interlocked.Exchange(ref _renderBuffer, value);
 			}
 		}
@@ -47,6 +47,7 @@ namespace ForceRenderer.Renderers
 		}
 
 		public bool Completed => CurrentState == State.completed;
+		public bool Rendering => CurrentState == State.rendering || CurrentState == State.paused;
 		public Profile CurrentProfile => profile;
 
 		public PixelWorker PixelWorker { get; private set; }
@@ -56,7 +57,7 @@ namespace ForceRenderer.Renderers
 		Int2[] tilePositions; //Positions of tiles. Processed from 0 to length. Positions can be in any order.
 
 		Dictionary<Int2, TileStatus> tileStatuses; //Indexer to status of tiles, tile position in tile-space, meaning the gap between tiles is one
-		Stopwatch stopwatch;
+		readonly Stopwatch stopwatch = new Stopwatch();
 
 		volatile int dispatchedTileCount; //Number of tiles being processed or are already processed.
 		volatile int completedTileCount;  //Number of tiles finished processing
@@ -108,12 +109,12 @@ namespace ForceRenderer.Renderers
 			if (MaxBounce < 0) throw ExceptionHelper.Invalid(nameof(MaxBounce), MaxBounce, "cannot be negative!");
 			if (EnergyEpsilon < 0f) throw ExceptionHelper.Invalid(nameof(EnergyEpsilon), EnergyEpsilon, "cannot be negative!");
 
-			CurrentState = State.initializing;
+			CurrentState = State.initialization;
 
 			CreateTilePositions();
 			InitializeWorkers();
 
-			stopwatch = Stopwatch.StartNew();
+			stopwatch.Restart();
 			CurrentState = State.rendering;
 		}
 
@@ -123,7 +124,7 @@ namespace ForceRenderer.Renderers
 			tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
 
 			//Shuffle it just for fun, we might reposition them differently (spiral or checkerboard .etc) later.
-			tilePositions.Shuffle();
+			tilePositions.Checkerboard();
 
 			tileStatuses = tilePositions.ToDictionary
 			(
@@ -207,13 +208,26 @@ namespace ForceRenderer.Renderers
 			}
 		}
 
+		public void Pause()
+		{
+			stopwatch.Stop();
+		}
+
+		public void Resume()
+		{
+			stopwatch.Start();
+		}
+
 		/// <summary>
 		/// Aborts current render session.
 		/// </summary>
 		public void Abort()
 		{
-			//TODO Stop the workers
-			CurrentState = State.stopped;
+			if (CurrentState != State.waiting) throw new Exception("Incorrect state! Must reset before rendering!");
+			for (int i = 0; i < workers.Length; i++) workers[i].Abort();
+
+			stopwatch.Stop();
+			CurrentState = State.aborted;
 		}
 
 		/// <summary>
@@ -242,7 +256,7 @@ namespace ForceRenderer.Renderers
 			TotalTileSize = default;
 
 			PixelWorker = null;
-			stopwatch = null;
+			stopwatch.Reset();
 
 			GC.Collect();
 			CurrentState = State.waiting;
@@ -261,6 +275,8 @@ namespace ForceRenderer.Renderers
 				for (int i = 0; i < workers.Length; i++) workers[i].Dispose();
 			}
 
+			workers = null;
+
 			TileWorker.OnWorkCompleted -= OnTileWorkCompleted;
 			renderCompleteEvent.Dispose();
 		}
@@ -268,10 +284,11 @@ namespace ForceRenderer.Renderers
 		public enum State
 		{
 			waiting,
-			initializing,
+			initialization,
 			rendering,
+			paused,
 			completed,
-			stopped
+			aborted
 		}
 
 		readonly struct TileStatus
