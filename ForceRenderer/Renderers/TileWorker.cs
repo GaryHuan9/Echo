@@ -17,7 +17,6 @@ namespace ForceRenderer.Renderers
 	{
 		public TileWorker(RenderEngine.Profile profile)
 		{
-			this.profile = profile;
 			size = profile.tileSize;
 
 			id = Interlocked.Increment(ref workerIdAccumulator);
@@ -46,8 +45,6 @@ namespace ForceRenderer.Renderers
 		}
 
 		public readonly int id;
-		public readonly RenderEngine.Profile profile;
-
 		public readonly int size;
 		public readonly long sampleCount;
 
@@ -69,8 +66,8 @@ namespace ForceRenderer.Renderers
 		public long InitiatedSample => Interlocked.Read(ref _initiatedSample);
 
 		readonly Pixel[] pixels;
-		readonly Thread worker;
 		readonly Float2[] pixelOffsets; //Sample offset applied within each pixel
+		readonly Thread worker;
 
 		readonly ManualResetEventSlim resetEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
 		public bool Working => resetEvent.IsSet;
@@ -86,6 +83,7 @@ namespace ForceRenderer.Renderers
 
 		public void ResetParameters(Int2 renderOffset, Texture renderBuffer = null, PixelWorker pixelWorker = null)
 		{
+			if (aborted) throw new Exception("Worker already aborted! It would not be used anymore!");
 			if (Working) throw new Exception("Cannot reset when the worker is dispatched and already working!");
 
 			_renderOffsetX = renderOffset.x;
@@ -100,7 +98,9 @@ namespace ForceRenderer.Renderers
 
 		public void Dispatch()
 		{
+			if (aborted) throw new Exception("Worker already aborted!");
 			if (Working) throw new Exception("Worker already dispatched!");
+
 			if (PixelWorker == null) throw ExceptionHelper.Invalid(nameof(PixelWorker), InvalidType.isNull);
 			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), InvalidType.isNull);
 
@@ -117,17 +117,18 @@ namespace ForceRenderer.Renderers
 
 				try
 				{
-					Parallel.For(0, sampleCount, WorkSample);   //Render samples
-					Parallel.For(0, pixels.Length, StorePixel); //Store pixels to buffer
+					if (!aborted) Parallel.For(0, sampleCount, WorkSample);   //Render samples
+					if (!aborted) Parallel.For(0, pixels.Length, StorePixel); //Store pixels to buffer
 				}
 				finally { resetEvent.Reset(); }
 
-				OnWorkCompleted?.Invoke(this);
+				if (!aborted) OnWorkCompleted?.Invoke(this);
 			}
 		}
 
-		void WorkSample(long sample)
+		void WorkSample(long sample, ParallelLoopState state)
 		{
+			if (aborted) state.Break();
 			Interlocked.Increment(ref _initiatedSample);
 
 			int pixelIndex = (int)(sample % pixels.Length);
@@ -139,15 +140,17 @@ namespace ForceRenderer.Renderers
 				Float2 uv = ToAdjustedUV(position, sample);
 				Float3 color = PixelWorker.Render(uv); //UV is adjusted to the correct scaling to match worker's requirement
 
-				//Write to pixels TODO: Add NaN filter?
+				//Write to pixels
 				pixels[pixelIndex].Accumulate(color);
 			}
 
 			Interlocked.Increment(ref _completedSample);
 		}
 
-		void StorePixel(int pixelIndex)
+		void StorePixel(int pixelIndex, ParallelLoopState state)
 		{
+			if (aborted) state.Break();
+
 			Int2 position = ToBufferPosition(pixelIndex);
 			if (!IsValid(position)) return;
 
@@ -177,8 +180,11 @@ namespace ForceRenderer.Renderers
 
 		public void Abort()
 		{
-			worker.Abort();
+			if (aborted) throw new Exception("Worker already aborted!");
 			aborted = true;
+
+			resetEvent.Set(); //Release the wait block
+			worker.Join();
 		}
 
 		public void Dispose()
