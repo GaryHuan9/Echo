@@ -124,7 +124,7 @@ namespace ForceRenderer.Renderers
 			tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
 
 			//Shuffle it just for fun, we might reposition them differently (spiral or checkerboard .etc) later.
-			tilePositions.Checkerboard();
+			tilePositions.Shuffle();
 
 			tileStatuses = tilePositions.ToDictionary
 			(
@@ -174,11 +174,28 @@ namespace ForceRenderer.Renderers
 
 				if (CompletedTileCount == TotalTileCount)
 				{
-					CurrentState = State.completed;
 					stopwatch.Stop();
+
+					CurrentState = State.completed;
 					renderCompleteEvent.Set();
+
+					return;
 				}
-				else if (CurrentState == State.rendering) DispatchWorker(worker);
+
+				switch (CurrentState)
+				{
+					case State.rendering:
+					{
+						DispatchWorker(worker);
+						break;
+					}
+					case State.paused:
+					{
+						if (CompletedTileCount == DispatchedTileCount) stopwatch.Stop();
+						break;
+					}
+					default: throw ExceptionHelper.Invalid(nameof(CurrentState), CurrentState, InvalidType.unexpected);
+				}
 			}
 		}
 
@@ -208,14 +225,35 @@ namespace ForceRenderer.Renderers
 			}
 		}
 
+		/// <summary>
+		/// Pause the current render session.
+		/// </summary>
 		public void Pause()
 		{
-			stopwatch.Stop();
+			if (CurrentState == State.rendering) CurrentState = State.paused; //Timer will be paused when all worker finish
+			else throw new Exception("Not rendering! No render session to pause.");
 		}
 
+		/// <summary>
+		/// Resume the current render session.
+		/// </summary>
 		public void Resume()
 		{
+			if (CurrentState != State.paused) throw new Exception("Not paused! No render session to resume.");
+
+			lock (manageLocker)
+			{
+				for (int i = 0; i < profile.workerSize; i++)
+				{
+					TileWorker worker = workers[i];
+					if (worker.Working) continue;
+
+					DispatchWorker(worker);
+				}
+			}
+
 			stopwatch.Start();
+			CurrentState = State.rendering;
 		}
 
 		/// <summary>
@@ -223,7 +261,7 @@ namespace ForceRenderer.Renderers
 		/// </summary>
 		public void Abort()
 		{
-			if (CurrentState != State.waiting) throw new Exception("Incorrect state! Must reset before rendering!");
+			if (!Rendering) throw new Exception("Not rendering! No render session to abort.");
 			for (int i = 0; i < workers.Length; i++) workers[i].Abort();
 
 			stopwatch.Stop();

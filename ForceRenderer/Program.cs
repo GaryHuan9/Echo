@@ -61,14 +61,14 @@ namespace ForceRenderer
 			//Render
 			Int2[] resolutions =
 			{
-				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1000, 1000), new Int2(500, 500)
+				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
 			};
 
 			Texture buffer = new Texture(resolutions[4]);
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new CornellBox(),
-											PixelSample = 100, TileSize = 50
+											PixelSample = 40000, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -90,12 +90,39 @@ namespace ForceRenderer
 		static RenderEngine renderEngine;
 
 		[Command]
+		static CommandResult Pause()
+		{
+			if (renderEngine.CurrentState == RenderEngine.State.rendering)
+			{
+				renderEngine.Pause();
+				return new CommandResult("Render pausing...", true);
+			}
+
+			return new CommandResult("Cannot pause: not rendering.", false);
+		}
+
+		[Command]
+		static CommandResult Resume()
+		{
+			if (renderEngine.CurrentState == RenderEngine.State.paused)
+			{
+				renderEngine.Resume();
+				return new CommandResult("Render resumed.", true);
+			}
+
+			return new CommandResult("Cannot resume: not paused.", false);
+		}
+
+		[Command]
 		static CommandResult Abort()
 		{
-			if (!renderEngine.Rendering) return new CommandResult("Cannot abort: not rendering.", false);
+			if (renderEngine.Rendering)
+			{
+				renderEngine.Abort();
+				return new CommandResult("Render aborted.", true);
+			}
 
-			renderEngine.Abort();
-			return new CommandResult("Render aborted.", true);
+			return new CommandResult("Cannot abort: not rendering.", false);
 		}
 	}
 }
