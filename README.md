@@ -17,3 +17,5 @@ It was rendered with around 1.7 million triangles and 8.7 billion samples in 4K 
 ![5 Blender BMW](https://github.com/MMXXX-VIII/ForceRenderer/blob/main/ForceRenderer/Renders/Path%20Tracing/render%20bmw%201k%20sample%201.7m%20tri.png?raw=true)
 
 ![Smooth Blender BMW](https://github.com/MMXXX-VIII/ForceRenderer/blob/main/ForceRenderer/Renders/Path%20Tracing/render%20smooth%20bmw%201k%20sp.png?raw=true)
+
+![Noisy Cornell Box](https://github.com/MMXXX-VIII/ForceRenderer/blob/main/ForceRenderer/Renders/Path%20Tracing/Noisy/render%20noisy%2040k%20cornell%203h.png?raw=true)
