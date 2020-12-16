@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CodeHelpers;
-using CodeHelpers.Vectors;
-using ForceRenderer.CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Objects
 {

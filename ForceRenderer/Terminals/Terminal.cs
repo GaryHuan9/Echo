@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
-using CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Terminals
 {

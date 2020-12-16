@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Mathematics
 {

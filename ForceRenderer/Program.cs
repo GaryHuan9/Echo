@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using CodeHelpers;
-using CodeHelpers.Collections;
+using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using CodeHelpers.Vectors;
-using ForceRenderer.CodeHelpers.Vectors;
 using ForceRenderer.IO;
-using ForceRenderer.Objects;
-using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
 
@@ -43,22 +37,22 @@ namespace ForceRenderer
 			// var aabb = new AxisAlignedBoundingBox(Float3.zero, new Float3(0.5f, 0f, 0.5f));
 			// Ray ray = new Ray(Float3.up, Float3.down);
 			//
-			// Console.WriteLine(aabb.Intersect(ray));
+			// DebugHelper.Log(aabb.Intersect(ray));
 			//
 			// return;
 
-			for (int i = 0; i < 10000; i++)
-			{
-				Float4 float4 = new Float4(RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1);
-				if (float4.Series().OrderBy(value => value).SequenceEqual(float4.Sorted.Series())) continue;
-
-				Console.WriteLine(float4);
-				Console.WriteLine(float4.Sorted);
-
-				Console.WriteLine();
-			}
-
-			return;
+			// for (int i = 0; i < 10000; i++)
+			// {
+			// 	Float4 float4 = new Float4(RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1);
+			// 	if (float4.Series().OrderBy(value => value).SequenceEqual(float4.Sorted.Series())) continue;
+			//
+			// 	DebugHelper.Log(float4);
+			// 	DebugHelper.Log(float4.Sorted);
+			//
+			// 	DebugHelper.Log();
+			// }
+			//
+			// return;
 
 			Terminal terminal = new Terminal();
 

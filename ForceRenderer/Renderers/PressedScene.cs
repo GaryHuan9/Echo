@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
-using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
@@ -64,14 +65,14 @@ namespace ForceRenderer.Renderers
 					case Camera value:
 					{
 						if (camera == null) camera = value;
-						else Console.WriteLine($"Multiple {nameof(Camera)} found! Only the first one will be used.");
+						else DebugHelper.Log($"Multiple {nameof(Camera)} found! Only the first one will be used.");
 
 						break;
 					}
 					case DirectionalLight value:
 					{
 						if (directionalLight.direction == default) directionalLight = new PressedDirectionalLight(value);
-						else Console.WriteLine($"Multiple {nameof(DirectionalLight)} found! Only the first one will be used.");
+						else DebugHelper.Log($"Multiple {nameof(DirectionalLight)} found! Only the first one will be used.");
 
 						break;
 					}
