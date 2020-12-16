@@ -1,5 +1,5 @@
 using System;
-using CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Renderers;
 

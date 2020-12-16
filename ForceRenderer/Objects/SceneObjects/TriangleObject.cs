@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers;
-using CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Objects.SceneObjects
 {

@@ -5,8 +5,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
-using CodeHelpers.Vectors;
 
 namespace ForceRenderer.IO
 {
@@ -61,7 +62,7 @@ namespace ForceRenderer.IO
 						for (int i = 1; i < parts.Length; i++) numbers.Add(parts[i].Split('/'));
 
 						if (numbers.Count < 3) throw new Exception($"Invalid 2 face data indices at {path}.");
-						if (numbers.Count > 4) Console.WriteLine($"More than 4 face data index currently not supported at {path}.");
+						if (numbers.Count > 4) DebugHelper.Log($"More than 4 face data index currently not supported at {path}.");
 
 						triangles.Add
 						(

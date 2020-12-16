@@ -5,8 +5,8 @@ using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
 

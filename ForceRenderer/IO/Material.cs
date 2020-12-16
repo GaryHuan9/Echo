@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
-using System.Drawing.Drawing2D;
-using CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.IO
 {
