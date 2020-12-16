@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
-using CodeHelpers.Vectors;
 
 namespace ForceRenderer.IO
 {

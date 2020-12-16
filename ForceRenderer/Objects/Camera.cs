@@ -1,6 +1,5 @@
 ﻿using System;
-using CodeHelpers.Vectors;
-using ForceRenderer.CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Objects
 {

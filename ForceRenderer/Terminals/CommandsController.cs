@@ -5,13 +5,18 @@ using System.Linq;
 using System.Reflection;
 using CodeHelpers;
 using CodeHelpers.Collections;
-using CodeHelpers.Vectors;
+using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Terminals
 {
-	public class CommandsController : Terminal.Section
+	public class CommandsController : Terminal.Section, ILogger
 	{
-		public CommandsController(Terminal terminal) : base(terminal) => logs = new string[Height - 1];
+		public CommandsController(Terminal terminal) : base(terminal)
+		{
+			logs = new string[SectionHeight - 1];
+			DebugHelper.Logger = this;
+		}
 
 		static CommandsController() => commands = new ReadOnlyDictionary<string, MethodInfo>
 									   (
@@ -22,7 +27,8 @@ namespace ForceRenderer.Terminals
 											select new KeyValuePair<string, MethodInfo>(method.Name, method)).ToDictionary(pair => pair.Key, pair => pair.Value)
 									   );
 
-		public override int Height => 4;
+		public override int Height => SectionHeight;
+		const int SectionHeight = 5;
 
 		int inputLength;
 		double blinkOffset;
@@ -156,6 +162,10 @@ namespace ForceRenderer.Terminals
 
 			blinkOffset = terminal.AliveTime;
 		}
+
+		void ILogger.Write(string text) => Log(text);
+		void ILogger.WriteWarning(string text) => Log($"Warning: {text}");
+		void ILogger.WriteError(string text) => Log($"Error: {text}");
 	}
 
 	[AttributeUsage(AttributeTargets.Method)]

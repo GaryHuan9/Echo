@@ -2,8 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using CodeHelpers.Vectors;
 using ForceRenderer.IO;
 
 namespace ForceRenderer.Renderers

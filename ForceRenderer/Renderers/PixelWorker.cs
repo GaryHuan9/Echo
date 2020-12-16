@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Renderers

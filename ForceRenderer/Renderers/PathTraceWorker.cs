@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Vectors;
+using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;

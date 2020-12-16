@@ -1,6 +1,5 @@
-﻿using System;
-using CodeHelpers;
-using CodeHelpers.Vectors;
+﻿using CodeHelpers;
+using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
