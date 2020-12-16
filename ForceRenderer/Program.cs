@@ -47,6 +47,19 @@ namespace ForceRenderer
 			//
 			// return;
 
+			for (int i = 0; i < 10000; i++)
+			{
+				Float4 float4 = new Float4(RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1);
+				if (float4.Series().OrderBy(value => value).SequenceEqual(float4.Sorted.Series())) continue;
+
+				Console.WriteLine(float4);
+				Console.WriteLine(float4.Sorted);
+
+				Console.WriteLine();
+			}
+
+			return;
+
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
