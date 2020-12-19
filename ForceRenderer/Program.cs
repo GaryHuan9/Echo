@@ -1,8 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
 using ForceRenderer.IO;
 using ForceRenderer.Renderers;
@@ -41,19 +45,6 @@ namespace ForceRenderer
 			//
 			// return;
 
-			// for (int i = 0; i < 10000; i++)
-			// {
-			// 	Float4 float4 = new Float4(RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1, RandomHelper.Value1To1);
-			// 	if (float4.Series().OrderBy(value => value).SequenceEqual(float4.Sorted.Series())) continue;
-			//
-			// 	DebugHelper.Log(float4);
-			// 	DebugHelper.Log(float4.Sorted);
-			//
-			// 	DebugHelper.Log();
-			// }
-			//
-			// return;
-
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
@@ -71,11 +62,11 @@ namespace ForceRenderer
 				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
 			};
 
-			Texture buffer = new Texture(resolutions[4]);
+			Texture buffer = new Texture(resolutions[2]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new CornellBox(),
-											PixelSample = 40000, TileSize = 32
+											RenderBuffer = buffer, Scene = new SingleBMWScene(),
+											PixelSample = 400, TileSize = 32
 										};
 
 			renderEngine = engine;
