@@ -6,6 +6,7 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
@@ -121,10 +122,14 @@ namespace ForceRenderer.Renderers
 		void CreateTilePositions()
 		{
 			TotalTileSize = RenderBuffer.size.CeiledDivide(profile.tileSize);
-			tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
 
-			//Shuffle it just for fun, we might reposition them differently (spiral or checkerboard .etc) later.
-			tilePositions.Shuffle();
+			// tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
+			// tilePositions.Shuffle(); //Different methods of selection
+
+			tilePositions = (from position in new EnumerableSpiral2D(TotalTileSize.MaxComponent / 2)
+							 let tile = position + TotalTileSize / 2
+							 where tile.x >= 0 && tile.y >= 0 && tile.x < TotalTileSize.x && tile.y < TotalTileSize.y
+							 select tile * profile.tileSize).ToArray();
 
 			tileStatuses = tilePositions.ToDictionary
 			(

@@ -42,7 +42,7 @@ namespace ForceRenderer.Mathematics
 				int cutIndex = 1;
 				float minCost = float.MaxValue;
 
-				for (int i = 1; i < indices.Count; i += Math.Max(1, indices.Count / 17))
+				for (int i = 1; i < indices.Count; i += Math.Max(1, indices.Count / 7))
 				{
 					//Calculate cut cost between i-1 and i
 					float area0 = AxisAlignedBoundingBox.Construct(aabbs, indices, 0, i).Area;
