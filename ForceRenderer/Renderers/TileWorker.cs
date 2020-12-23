@@ -60,10 +60,10 @@ namespace ForceRenderer.Renderers
 		public PixelWorker PixelWorker => _pixelWorker;
 
 		long _completedSample;
-		long _initiatedSample;
+		long _rejectedSample;
 
 		public long CompletedSample => Interlocked.Read(ref _completedSample);
-		public long InitiatedSample => Interlocked.Read(ref _initiatedSample);
+		public long RejectedSample => Interlocked.Read(ref _rejectedSample);
 
 		readonly Pixel[] pixels;
 		readonly Float2[] pixelOffsets; //Sample offset applied within each pixel
@@ -92,8 +92,8 @@ namespace ForceRenderer.Renderers
 			_renderBuffer = renderBuffer ?? _renderBuffer;
 			_pixelWorker = pixelWorker ?? _pixelWorker;
 
-			Interlocked.Exchange(ref _initiatedSample, 0);
 			Interlocked.Exchange(ref _completedSample, 0);
+			Interlocked.Exchange(ref _rejectedSample, 0);
 		}
 
 		public void Dispatch()
@@ -129,7 +129,6 @@ namespace ForceRenderer.Renderers
 		void WorkSample(long sample, ParallelLoopState state)
 		{
 			if (aborted) state.Break();
-			Interlocked.Increment(ref _initiatedSample);
 
 			int pixelIndex = (int)(sample % pixels.Length);
 			Int2 position = ToBufferPosition(pixelIndex);
@@ -143,6 +142,7 @@ namespace ForceRenderer.Renderers
 				//Write to pixels
 				pixels[pixelIndex].Accumulate(color);
 			}
+			else Interlocked.Increment(ref _rejectedSample);
 
 			Interlocked.Increment(ref _completedSample);
 		}

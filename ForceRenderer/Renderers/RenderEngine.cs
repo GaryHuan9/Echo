@@ -66,27 +66,22 @@ namespace ForceRenderer.Renderers
 		public int DispatchedTileCount => Interlocked.CompareExchange(ref dispatchedTileCount, 0, 0);
 		public int CompletedTileCount => Interlocked.CompareExchange(ref completedTileCount, 0, 0);
 
-		public long InitiatedSample
-		{
-			get
-			{
-				lock (manageLocker)
-				{
-					long completedSample = (long)CompletedTileCount * profile.tileSize * profile.tileSize * profile.pixelSample;
-					return completedSample + workers.Where(worker => worker.Working).Sum(worker => worker.InitiatedSample);
-				}
-			}
-		}
+		long fullyCompletedSample; //Samples that are completes in tiles that are completed
+		long fullyRejectedSample;  //Samples that are rejected in tiles that are completed
 
 		public long CompletedSample
 		{
 			get
 			{
-				lock (manageLocker)
-				{
-					long completedSample = (long)CompletedTileCount * profile.tileSize * profile.tileSize * profile.pixelSample;
-					return completedSample + workers.Where(worker => worker.Working).Sum(worker => worker.CompletedSample);
-				}
+				lock (manageLocker) return fullyCompletedSample + workers.Where(worker => worker.Working).Sum(worker => worker.CompletedSample);
+			}
+		}
+
+		public long RejectedSample
+		{
+			get
+			{
+				lock (manageLocker) return fullyRejectedSample + workers.Where(worker => worker.Working).Sum(worker => worker.RejectedSample);
 			}
 		}
 
@@ -176,6 +171,9 @@ namespace ForceRenderer.Renderers
 			lock (manageLocker)
 			{
 				Interlocked.Increment(ref completedTileCount);
+
+				Interlocked.Add(ref fullyCompletedSample, worker.CompletedSample);
+				Interlocked.Add(ref fullyRejectedSample, worker.RejectedSample);
 
 				if (CompletedTileCount == TotalTileCount)
 				{
@@ -294,6 +292,9 @@ namespace ForceRenderer.Renderers
 
 			dispatchedTileCount = 0;
 			completedTileCount = 0;
+
+			fullyCompletedSample = 0;
+			fullyRejectedSample = 0;
 
 			profile = default;
 			TotalTileSize = default;
