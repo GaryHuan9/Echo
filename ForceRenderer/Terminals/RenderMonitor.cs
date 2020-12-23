@@ -83,15 +83,15 @@ namespace ForceRenderer.Terminals
 			int dispatchedTile = Engine.DispatchedTileCount;
 			int completedTile = Engine.CompletedTileCount;
 
-			long initiated = Engine.InitiatedSample;
 			long completed = Engine.CompletedSample;
+			long rejected = Engine.RejectedSample;
 
 			double estimate = (totalSample / (completed / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds);
 
 			builders.SetLine
 			(
 				1,
-				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; CompleteSP {completed:N0}; RenderSP {Math.Abs(initiated - completed):D3}; CompleteTile {completedTile}; Estimate {TimeSpan.FromSeconds(estimate):hh\\:mm\\:ss\\:ff}; " +
+				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; CompleteSP {completed:N0}; RejectedSP {rejected:N0} CompleteTile {completedTile}; Estimate {TimeSpan.FromSeconds(estimate):hh\\:mm\\:ss\\:ff}; " +
 				$"Complete% {100d * completed / totalSample:F2}; SPPS {completed / second:N0}; CompleteTilePS {completedTile / second:F2}; DispatchTilePS {dispatchedTile / second:F2}; "
 			);
 		}
