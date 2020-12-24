@@ -65,7 +65,7 @@ namespace ForceRenderer.Renderers
 				light += energy * sun.intensity * dot.Clamp(0f, 1f);
 			}
 
-			return light;
+			return light.Max(Float3.zero); //Do not clamp up, because emissive samples can go beyond 1f
 		}
 
 		/// <summary>
