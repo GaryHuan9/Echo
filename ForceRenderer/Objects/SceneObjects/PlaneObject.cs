@@ -12,6 +12,11 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public Float2 Size { get; set; }
 
+		public Float2 Texcoord00 { get; set; } = Float2.zero;
+		public Float2 Texcoord01 { get; set; } = Float2.right;
+		public Float2 Texcoord10 { get; set; } = Float2.up;
+		public Float2 Texcoord11 { get; set; } = Float2.one;
+
 		// public void SetNormal(Float3 normal)
 		// {
 		// 	Float3 one = Float3.up;
@@ -35,8 +40,8 @@ namespace ForceRenderer.Objects.SceneObjects
 
 			int materialToken = materialConverter(Material);
 
-			yield return new PressedTriangle(point00, point11, point10, materialToken);
-			yield return new PressedTriangle(point00, point01, point11, materialToken);
+			yield return new PressedTriangle(point00, point11, point10, Texcoord00, Texcoord11, Texcoord10, materialToken);
+			yield return new PressedTriangle(point00, point01, point11, Texcoord00, Texcoord01, Texcoord11, materialToken);
 		}
 
 		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter) => Enumerable.Empty<PressedSphere>();

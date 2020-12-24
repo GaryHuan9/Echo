@@ -4,10 +4,10 @@ namespace ForceRenderer.IO
 {
 	public class SolidCubemap : Cubemap
 	{
-		public SolidCubemap(Color32 ambient) => this.ambient = ambient;
+		public SolidCubemap(Color32 ambient) => this.ambient = (Float3)ambient;
 
-		public readonly Color32 ambient;
+		public readonly Float3 ambient;
 
-		public override Color32 Sample(Float3 direction) => ambient;
+		public override Float3 Sample(Float3 direction) => ambient;
 	}
 }
