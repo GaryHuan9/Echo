@@ -29,6 +29,8 @@ namespace ForceRenderer.Renderers
 						 Name = $"Tile Worker #{id} {size}x{size}"
 					 };
 
+			for (int i = 0; i < pixels.Length; i++) pixels[i] = Pixel.Create();
+
 			//Create golden ratio square spiral for pixel sample offsets
 			pixelOffsets = new Float2[profile.pixelSample];
 
@@ -156,7 +158,7 @@ namespace ForceRenderer.Renderers
 
 			ref Pixel pixel = ref pixels[pixelIndex];
 			RenderBuffer.SetPixel(position, pixel.Color);
-			pixel = default;
+			pixel.Clear();
 		}
 
 		Int2 ToBufferPosition(int pixelIndex)
@@ -198,30 +200,104 @@ namespace ForceRenderer.Renderers
 
 		struct Pixel
 		{
-			double r;
-			double g;
-			double b;
+			public static Pixel Create() => new Pixel(new object());
+			Pixel(object locker) : this() => this.locker = locker;
+
+			Double3 average;
+			Double3 squared;
 
 			int accumulation;
+			readonly object locker;
+
+			public const double MinDeviationThreshold = 0.3d;
 
 			/// <summary>
 			/// Returns the color average
 			/// </summary>
-			public Color32 Color => new Color32((float)(r / accumulation), (float)(g / accumulation), (float)(b / accumulation));
+			public Color32 Color
+			{
+				get
+				{
+					lock (locker) return (Color32)(Float3)average;
+				}
+			}
+
+			/// <summary>
+			/// Returns the standard deviation of the pixel
+			/// </summary>
+			public float Deviation
+			{
+				get
+				{
+					lock (locker)
+					{
+						double deviation = Math.Sqrt(squared.Max / accumulation);
+						double max = Math.Max(average.Max, MinDeviationThreshold);
+
+						return (float)(deviation / max);
+					}
+				}
+			}
 
 			/// <summary>
 			/// Accumulates the color <paramref name="value"/> to pixel in a thread-safe manner.
 			/// </summary>
 			public void Accumulate(Float3 value)
 			{
-				if (float.IsNaN(value.Sum)) return; //NaN gate
+				if (float.IsNaN(value.x) || float.IsNaN(value.y) || float.IsNaN(value.z)) return; //NaN gate
 
-				InterlockedHelper.Add(ref r, value.x);
-				InterlockedHelper.Add(ref g, value.y);
-				InterlockedHelper.Add(ref b, value.z);
+				lock (locker)
+				{
+					accumulation++;
 
-				Interlocked.Increment(ref accumulation);
+					Double3 oldMean = average;
+					Double3 newValue = value;
+
+					average += (newValue - oldMean) / accumulation;
+					squared += (newValue - average) * (newValue - oldMean);
+				}
 			}
+
+			public void Clear()
+			{
+				lock (locker)
+				{
+					average = default;
+					squared = default;
+					accumulation = 0;
+				}
+			}
+		}
+
+		readonly struct Double3
+		{
+			public Double3(double x, double y, double z)
+			{
+				this.x = x;
+				this.y = y;
+				this.z = z;
+			}
+
+			readonly double x;
+			readonly double y;
+			readonly double z;
+
+			public double Max => Math.Max(x, Math.Max(y, z));
+
+			public static Double3 operator +(Double3 first, Double3 second) => new Double3(first.x + second.x, first.y + second.y, first.z + second.z);
+			public static Double3 operator -(Double3 first, Double3 second) => new Double3(first.x - second.x, first.y - second.y, first.z - second.z);
+
+			public static Double3 operator *(Double3 first, Double3 second) => new Double3(first.x * second.x, first.y * second.y, first.z * second.z);
+			public static Double3 operator /(Double3 first, Double3 second) => new Double3(first.x / second.x, first.y / second.y, first.z / second.z);
+
+			public static Double3 operator *(Double3 first, double second) => new Double3(first.x * second, first.y * second, first.z * second);
+			public static Double3 operator /(Double3 first, double second) => new Double3(first.x / second, first.y / second, first.z / second);
+
+			public static Double3 operator *(double first, Double3 second) => new Double3(first * second.x, first * second.y, first * second.z);
+			public static Double3 operator /(double first, Double3 second) => new Double3(first / second.x, first / second.y, first / second.z);
+
+			public static implicit operator Double3(Float3 value) => new Double3(value.x, value.y, value.z);
+			public static explicit operator Float3(Double3 value) => new Float3((float)value.x, (float)value.y, (float)value.z);
 		}
 	}
 }
