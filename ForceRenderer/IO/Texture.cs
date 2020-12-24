@@ -103,7 +103,27 @@ namespace ForceRenderer.IO
 
 		public Color32 GetPixel(int index) => pixels[index];
 		public Color32 GetPixel(Int2 position) => GetPixel(ToIndex(position));
-		public Color32 GetPixel(Float2 uv) => GetPixel(ToIndex(uv));
+
+		/// <summary>
+		/// Samples the texture using bilinear filtering and repeated wrapping method.
+		/// </summary>
+		public Float3 GetPixel(Float2 uv)
+		{
+			uv = uv.Repeat(1f) * size;
+			Int2 rounded = uv.Rounded;
+
+			// return (Float3)GetPixel(ToIndex(uv.Floored)); //No filter
+
+			Int2 upperRight = rounded.Min(oneLess);
+			Int2 bottomLeft = rounded.Max(Int2.one) - Int2.one;
+
+			Float2 t = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);
+
+			Float3 y0 = Float3.Lerp((Float3)GetPixel(bottomLeft), (Float3)GetPixel(new Int2(upperRight.x, bottomLeft.y)), t.x);
+			Float3 y1 = Float3.Lerp((Float3)GetPixel(new Int2(bottomLeft.x, upperRight.y)), (Float3)GetPixel(upperRight), t.x);
+
+			return Float3.Lerp(y0, y1, t.y);
+		}
 
 		public void SetPixel(int index, Color32 value)
 		{
@@ -112,17 +132,9 @@ namespace ForceRenderer.IO
 		}
 
 		public void SetPixel(Int2 position, Color32 value) => SetPixel(ToIndex(position), value);
-		public void SetPixel(Float2 uv, Color32 value) => SetPixel(ToIndex(uv), value);
-
-		public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.zero, oneLess);
-		public Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
 
 		public int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
-		public int ToIndex(Float2 uv) => ToIndex(ToPosition(uv));
-
-		public Float2 ToUV(Int2 position) => (position + Float2.half) / size;
-		public Float2 ToUV(Float2 position) => position / size;
-		public Float2 ToUV(int index) => ToUV(ToPosition(index));
+		public Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
 
 		public void SaveFile(string relativePath)
 		{

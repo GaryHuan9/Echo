@@ -171,7 +171,7 @@ namespace ForceRenderer.Renderers
 		Float2 ToAdjustedUV(Int2 bufferPosition, long sample)
 		{
 			Float2 offset = pixelOffsets[(int)(sample / pixels.Length)];
-			Float2 uv = RenderBuffer.ToUV(bufferPosition + offset);
+			Float2 uv = (bufferPosition + offset) / RenderBuffer.size;
 			return new Float2(uv.x - 0.5f, (uv.y - 0.5f) / RenderBuffer.aspect);
 		}
 
