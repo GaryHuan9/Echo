@@ -30,6 +30,18 @@ namespace ForceRenderer
 		}
 	}
 
+	public class TestTexture : StandardScene
+	{
+		public TestTexture()
+		{
+			Texture texture = new Texture("Assets/Textures/MinecraftTexture.bmp");
+			Material material = new Material {Diffuse = Float3.one, DiffuseTexture = texture};
+
+			Cubemap = new SolidCubemap(Color32.white);
+			children.Add(new PlaneObject(material, Float2.one * 18f) {Position = new Float3(-9f, 2.5f, -5f), Rotation = new Float3(-90f, 0f, 0f)});
+		}
+	}
+
 	public class BunnyScene : StandardScene
 	{
 		public BunnyScene()

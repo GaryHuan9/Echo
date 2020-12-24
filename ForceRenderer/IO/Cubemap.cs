@@ -8,6 +8,6 @@ namespace ForceRenderer.IO
 		/// Samples the <see cref="Cubemap"/> at a particular <paramref name="direction"/>.
 		/// NOTE: <paramref name="direction"/> should be normalized.
 		/// </summary>
-		public abstract Color32 Sample(Float3 direction);
+		public abstract Float3 Sample(Float3 direction);
 	}
 }

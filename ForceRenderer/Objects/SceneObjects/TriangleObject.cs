@@ -161,7 +161,7 @@ namespace ForceRenderer.Objects.SceneObjects
 			}
 		}
 
-		public float GetIntersection(in Ray ray, out Float2 uv)
+		public float GetIntersection(in Ray ray, out Float2 uv) //The famous Möller–Trumbore intersection algorithm
 		{
 			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
 			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
@@ -197,7 +197,6 @@ namespace ForceRenderer.Objects.SceneObjects
 		}
 
 		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
-
 		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
 
 		public void GetSubdivided(Span<PressedTriangle> triangles, int iteration)
