@@ -66,7 +66,7 @@ namespace ForceRenderer
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new SingleBMWScene(),
-											PixelSample = 128, AdaptiveSample = 1000, TileSize = 32
+											PixelSample = 1128, AdaptiveSample = 0, TileSize = 32
 										};
 
 			renderEngine = engine;
