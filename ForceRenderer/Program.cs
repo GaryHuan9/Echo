@@ -62,11 +62,11 @@ namespace ForceRenderer
 				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
 			};
 
-			Texture buffer = new Texture(resolutions[1]);
+			Texture buffer = new Texture(resolutions[2]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new RandomSpheresScene(80),
-											PixelSample = 640, TileSize = 32
+											RenderBuffer = buffer, Scene = new SingleBMWScene(),
+											PixelSample = 128, AdaptiveSample = 1000, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -81,8 +81,13 @@ namespace ForceRenderer
 			noisy.SaveFile("noisy.png");
 			buffer.SaveFile("render.png");
 
-			commandsController.Log($"Completed in {engine.Elapsed.TotalMilliseconds}ms");
+			double elapsedSeconds = engine.Elapsed.TotalSeconds;
+			long completedSample = engine.CompletedSample;
+
+			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
+
 			renderEngine = null;
+			Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
