@@ -116,12 +116,8 @@ namespace ForceRenderer.Terminals
 				{
 					if (!completed)
 					{
-						if (worker.CompletedPixel != worker.TotalPixel)
-						{
-							double progress = (double)worker.CompletedPixel / worker.TotalPixel;
-							character = (char)Scalars.Lerp('\u258F', '\u2588', (float)progress);
-						}
-						else character = 'S';
+						double progress = (double)worker.CompletedPixel / worker.TotalPixel;
+						character = (char)Scalars.Lerp('\u258F', '\u2588', (float)progress);
 					}
 					else character = '\u2593';
 				}

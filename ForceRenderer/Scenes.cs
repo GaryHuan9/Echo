@@ -86,8 +86,27 @@ namespace ForceRenderer
 			Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 
-			// Material dark = new Material {Diffuse = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
+			Material dark = new Material {Diffuse = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
 			children.Add(new MeshObject(bmw) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
+		}
+	}
+
+	public class LightedBMWScene : StandardScene
+	{
+		public LightedBMWScene()
+		{
+			Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
+
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+			Cubemap = new SolidCubemap((Color32)(Float3)0.22f);
+
+			Material dark = new Material {Diffuse = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
+			children.Add(new MeshObject(bmw) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
+
+			children.Add(new SphereObject(new Material {Emission = new Float3(6f, 3f, 7f)}, 8f) {Position = new Float3(24f, 16f, 18f)});   //Upper right purple
+			children.Add(new SphereObject(new Material {Emission = new Float3(8f, 4f, 3f)}, 5f) {Position = new Float3(-16f, 19f, -12f)}); //Bottom left orange
+			children.Add(new SphereObject(new Material {Emission = new Float3(2f, 7f, 4f)}, 7f) {Position = new Float3(10f, 24f, -12f)});  //Bottom right green
+			children.Add(new SphereObject(new Material {Emission = new Float3(3f, 4f, 8f)}, 8f) {Position = new Float3(-19f, 19f, 13f)});  //Upper left blue
 		}
 	}
 
