@@ -65,8 +65,8 @@ namespace ForceRenderer
 			Texture buffer = new Texture(resolutions[2]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new SingleBMWScene(),
-											PixelSample = 1128, AdaptiveSample = 0, TileSize = 32
+											RenderBuffer = buffer, Scene = new LightedBMWScene(),
+											PixelSample = 128, AdaptiveSample = 3200, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -75,10 +75,6 @@ namespace ForceRenderer
 			engine.Begin();
 			engine.WaitForRender();
 
-			Texture noisy = new Texture(buffer.size);
-			new Denoiser(buffer, noisy).Dispatch();
-
-			noisy.SaveFile("noisy.png");
 			buffer.SaveFile("render.png");
 
 			double elapsedSeconds = engine.Elapsed.TotalSeconds;
