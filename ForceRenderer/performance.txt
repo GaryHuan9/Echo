@@ -27,3 +27,6 @@ BVH Cut SAH V1 (SPPS: 10.3M; 210000ms)
 1920x1080; 1128 Pixel Sample; Single BMW
 Full Pixel Sampling: 249.74 seconds; 2,339,020,800 samples; 9,365,686 SPPS
 Adaptive Sampling (128 Full; 1000 Adaptive; looks identical): 139.74 seconds; 842,905,684 samples; 6,031,913 SPPS
+
+Adaptive Sampling; BMW Lighting Scene; 128 Full; 12000 Adaptive; 900k triangles:
+Completed after 2597.26 seconds with 17,720,482,819 samples at 6,822,759 samples per second.

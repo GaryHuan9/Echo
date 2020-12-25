@@ -48,6 +48,10 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		public AxisAlignedBoundingBox AABB => new AxisAlignedBoundingBox(position, (Float3)radius);
 
+		/// <summary>
+		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.
+		/// <paramref name="uv"/> contains the barycentric position of the intersection; if intersection does not exist, infinity is returned.
+		/// </summary>
 		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
 			Float3 offset = ray.origin - position;
@@ -55,27 +59,25 @@ namespace ForceRenderer.Objects.SceneObjects
 			float point1 = -offset.Dot(ray.direction);
 			float point2Squared = point1 * point1 - offset.SquaredMagnitude + radiusSquared;
 
-			if (point2Squared >= 0f)
-			{
-				float point2 = MathF.Sqrt(point2Squared);
-				float result = point1 - point2;
+			if (point2Squared < 0f) goto noIntersection;
 
-				if (result < 0f) result = point1 + point2;
+			float point2 = MathF.Sqrt(point2Squared);
+			float result = point1 - point2;
 
-				if (result >= 0f)
-				{
-					Float3 point = offset + ray.direction * result;
+			if (result < 0f) result = point1 + point2;
+			if (result < 0f) goto noIntersection;
 
-					uv = new Float2
-					(
-						0.5f + MathF.Atan2(point.x, point.z) / Scalars.TAU,
-						0.5f + MathF.Asin((point.y / radius).Clamp(-1f, 1f)) / Scalars.PI
-					);
+			Float3 point = offset + ray.direction * result;
 
-					return result;
-				}
-			}
+			uv = new Float2
+			(
+				0.5f + MathF.Atan2(point.x, point.z) / Scalars.TAU,
+				0.5f + MathF.Asin((point.y / radius).Clamp(-1f, 1f)) / Scalars.PI
+			);
 
+			return result;
+
+			noIntersection:
 			uv = default;
 			return float.PositiveInfinity;
 		}

@@ -161,35 +161,34 @@ namespace ForceRenderer.Objects.SceneObjects
 			}
 		}
 
-		public float GetIntersection(in Ray ray, out Float2 uv) //The famous Möller–Trumbore intersection algorithm
+		/// <summary>
+		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
+		/// Uses the famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf.
+		/// <paramref name="uv"/> contains the barycentric position of the intersection; if intersection does not exist, infinity is returned.
+		/// </summary>
+		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
 			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
 			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
 
-			if (determinant < Epsilon) goto noIntersection;
+			if (determinant > -Epsilon && determinant < Epsilon) goto noIntersection;
+			float inverse = 1f / determinant;
 
 			Float3 offset = ray.origin - vertex0;
-			float u = Float3.Dot(offset, cross2);
+			float u = offset.Dot(cross2) * inverse;
 
-			if (u < 0f || u > determinant) goto noIntersection; //Outside barycentric bounds
+			if (u < 0f || u > 1f) goto noIntersection; //Outside barycentric bounds
 
 			Float3 cross1 = Float3.Cross(offset, edge1);
-			float v = Float3.Dot(ray.direction, cross1);
+			float v = ray.direction.Dot(cross1) * inverse;
 
-			if (v < 0f || u + v > determinant) goto noIntersection; //Outside barycentric bounds
+			if (v < 0f || u + v > 1f) goto noIntersection; //Outside barycentric bounds
 
-			float distance = Float3.Dot(edge2, cross1);
+			float distance = edge2.Dot(cross1) * inverse;
 			if (distance < 0f) goto noIntersection; //Ray pointing away from triangle = negative distance
 
-			float inverse = 1f / determinant;
-			uv = new Float2(u * inverse, v * inverse);
-
-#if false //Wireframe
-			const float WireframeThreshold = 0.1f;
-			if (uv.x > WireframeThreshold && uv.y > WireframeThreshold && 1f - uv.x - uv.y > WireframeThreshold) return float.PositiveInfinity;
-#endif
-
-			return distance * inverse;
+			uv = new Float2(u, v);
+			return distance;
 
 			noIntersection:
 			uv = default;
