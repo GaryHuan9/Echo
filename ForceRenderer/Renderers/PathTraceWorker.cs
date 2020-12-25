@@ -98,5 +98,12 @@ namespace ForceRenderer.Renderers
 				x * tangent.z + y * binormal.z + z * normal.z
 			);
 		}
+
+		Float3 Refrect(Float3 direction, Float3 normal, float incidentIndex, float refractedIndex)
+		{
+			Float3 perpendicular = incidentIndex / refractedIndex * (direction + -direction.Dot(normal) * normal);
+			Float3 parallel = -MathF.Sqrt(Math.Abs(1f - perpendicular.SquaredMagnitude)) * normal;
+			return perpendicular + parallel;
+		}
 	}
 }
