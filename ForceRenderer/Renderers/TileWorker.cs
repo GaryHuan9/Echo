@@ -5,7 +5,6 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.IO;
-using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Renderers
 {
@@ -211,7 +210,8 @@ namespace ForceRenderer.Renderers
 			public Color32 Color => (Color32)(Float3)average;
 
 			/// <summary>
-			/// Returns the standard deviation of the pixel
+			/// Returns the standard deviation of the pixel.
+			/// Based on algorithm described here: https://nestedsoftware.com/2018/03/27/calculating-standard-deviation-on-streaming-data-253l.23919.html
 			/// </summary>
 			public double Deviation
 			{
