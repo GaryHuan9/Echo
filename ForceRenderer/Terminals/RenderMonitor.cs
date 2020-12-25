@@ -67,32 +67,29 @@ namespace ForceRenderer.Terminals
 			PressedScene pressed = profile.pressed;
 
 			//Display configuration information
-			long totalSample = (long)Engine.TotalTileCount * profile.tileSize * profile.tileSize * profile.pixelSample;
+			int totalPixel = buffer.size.Product;
 
 			builders.SetLine
 			(
 				0,
-				$"Worker {profile.workerSize}; Res {buffer.size}; SPP {profile.pixelSample:N0}; TotalSP {totalSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.TriangleCount:N0}; Sphere {pressed.SphereCount:N0}; " +
-				$"Light {(pressed.directionalLight.direction == default ? 0 : 1):N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker}; "
+				$"Worker {profile.workerSize}; Resolution {buffer.size}; TotalPX {totalPixel:N0}; PixelSP {profile.pixelSample:N0}; AdaptiveSP {profile.adaptiveSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.TriangleCount:N0}; " +
+				$"Sphere {pressed.SphereCount:N0}; Light {(pressed.directionalLight.direction == default ? 0 : 1):N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker};"
 			);
 
 			//Display dynamic information
 			TimeSpan elapsed = Engine.Elapsed;
 			double second = elapsed.TotalSeconds;
 
-			int dispatchedTile = Engine.DispatchedTileCount;
+			long completedSample = Engine.CompletedSample;
+			long completedPixel = Engine.CompletedPixel;
+
 			int completedTile = Engine.CompletedTileCount;
-
-			long completed = Engine.CompletedSample;
-			long rejected = Engine.RejectedSample;
-
-			double estimate = (totalSample / (completed / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds);
 
 			builders.SetLine
 			(
 				1,
-				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; CompleteSP {completed:N0}; RejectedSP {rejected:N0} CompleteTile {completedTile}; Estimate {TimeSpan.FromSeconds(estimate):hh\\:mm\\:ss\\:ff}; " +
-				$"Complete% {100d * completed / totalSample:F2}; SPPS {completed / second:N0}; CompleteTilePS {completedTile / second:F2}; DispatchTilePS {dispatchedTile / second:F2}; "
+				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; Estimate {TimeSpan.FromSeconds((totalPixel / (completedPixel / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds)):hh\\:mm\\:ss\\:ff}; Complete% {100d * completedPixel / totalPixel:F2}; " +
+				$"CompleteTile {completedTile:N0}; CompleteTilePS {completedTile / second:F2}; CompletedSP {completedSample:N0}; CompletedPX {completedPixel:N0}; SamplePS {completedSample / second:N0}; PixelPS {completedPixel / second:N0};"
 			);
 		}
 
@@ -119,9 +116,9 @@ namespace ForceRenderer.Terminals
 				{
 					if (!completed)
 					{
-						if (worker.CompletedSample != worker.sampleCount)
+						if (worker.CompletedPixel != worker.TotalPixel)
 						{
-							double progress = (double)worker.CompletedSample / worker.sampleCount;
+							double progress = (double)worker.CompletedPixel / worker.TotalPixel;
 							character = (char)Scalars.Lerp('\u258F', '\u2588', (float)progress);
 						}
 						else character = 'S';

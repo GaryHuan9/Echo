@@ -18,22 +18,24 @@ namespace ForceRenderer.Renderers
 		public RenderEngine() => TileWorker.OnWorkCompleted += OnTileWorkCompleted;
 
 		public Scene Scene { get; set; }
-		public int PixelSample { get; set; }
+
+		public int PixelSample { get; set; }    //The number of samples applied to every pixel; this is calculated first
+		public int AdaptiveSample { get; set; } //The max number of samples applied to pixels that the engine deems necessary
 
 		public int TileSize { get; set; }
 		public int WorkerSize { get; set; } = Environment.ProcessorCount / 2;
 
-		public int MaxBounce { get; set; } = 32;
-		public float EnergyEpsilon { get; set; } = 1E-2f; //Epsilon lower bound value to determine when an energy is essentially zero
+		public int MaxBounce { get; set; } = 64;
+		public float EnergyEpsilon { get; set; } = 1E-3f; //Epsilon lower bound value to determine when an energy is essentially zero
 
 		Profile profile;
 
-		volatile Texture _renderBuffer;
-		volatile int _currentState;
+		Texture _renderBuffer;
+		int _currentState;
 
 		public Texture RenderBuffer
 		{
-			get => _renderBuffer;
+			get => InterlockedHelper.Read(ref _renderBuffer);
 			set
 			{
 				if (Rendering) throw new Exception("Cannot modify buffer when rendering!");
@@ -66,8 +68,8 @@ namespace ForceRenderer.Renderers
 		public int DispatchedTileCount => Interlocked.CompareExchange(ref dispatchedTileCount, 0, 0);
 		public int CompletedTileCount => Interlocked.CompareExchange(ref completedTileCount, 0, 0);
 
-		long fullyCompletedSample; //Samples that are completes in tiles that are completed
-		long fullyRejectedSample;  //Samples that are rejected in tiles that are completed
+		long fullyCompletedSample; //Samples that are rendered in completed tiles
+		long fullyCompletedPixel;  //Pixels that are rendered in completed tiles
 
 		public long CompletedSample
 		{
@@ -77,11 +79,11 @@ namespace ForceRenderer.Renderers
 			}
 		}
 
-		public long RejectedSample
+		public long CompletedPixel
 		{
 			get
 			{
-				lock (manageLocker) return fullyRejectedSample + workers.Where(worker => worker.Working).Sum(worker => worker.RejectedSample);
+				lock (manageLocker) return fullyCompletedPixel + workers.Where(worker => worker.Working).Sum(worker => worker.CompletedPixel);
 			}
 		}
 
@@ -173,7 +175,7 @@ namespace ForceRenderer.Renderers
 				Interlocked.Increment(ref completedTileCount);
 
 				Interlocked.Add(ref fullyCompletedSample, worker.CompletedSample);
-				Interlocked.Add(ref fullyRejectedSample, worker.RejectedSample);
+				Interlocked.Add(ref fullyCompletedPixel, worker.CompletedPixel);
 
 				if (CompletedTileCount == TotalTileCount)
 				{
@@ -294,7 +296,7 @@ namespace ForceRenderer.Renderers
 			completedTileCount = 0;
 
 			fullyCompletedSample = 0;
-			fullyRejectedSample = 0;
+			fullyCompletedPixel = 0;
 
 			profile = default;
 			TotalTileSize = default;
@@ -362,6 +364,8 @@ namespace ForceRenderer.Renderers
 				camera = pressed.camera;
 
 				pixelSample = engine.PixelSample;
+				adaptiveSample = engine.AdaptiveSample;
+
 				tileSize = engine.TileSize;
 				workerSize = engine.WorkerSize;
 
@@ -374,6 +378,8 @@ namespace ForceRenderer.Renderers
 			public readonly Camera camera;
 
 			public readonly int pixelSample;
+			public readonly int adaptiveSample;
+
 			public readonly int tileSize;
 			public readonly int workerSize;
 

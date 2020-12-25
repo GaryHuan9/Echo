@@ -5,6 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.IO;
+using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Renderers
 {
@@ -17,62 +18,74 @@ namespace ForceRenderer.Renderers
 	{
 		public TileWorker(RenderEngine.Profile profile)
 		{
+			id = Interlocked.Increment(ref workerIdAccumulator);
 			size = profile.tileSize;
 
-			id = Interlocked.Increment(ref workerIdAccumulator);
-			sampleCount = (long)size * size * profile.pixelSample;
+			pixelSample = profile.pixelSample;
+			adaptiveSample = profile.adaptiveSample;
 
-			pixels = new Pixel[size * size];
 			worker = new Thread(WorkThread)
 					 {
 						 IsBackground = true,
 						 Name = $"Tile Worker #{id} {size}x{size}"
 					 };
 
-			for (int i = 0; i < pixels.Length; i++) pixels[i] = Pixel.Create();
+			spiralOffsets = new Float2[pixelSample];
+			randomOffsets = new Float2[adaptiveSample];
 
-			//Create golden ratio square spiral for pixel sample offsets
-			pixelOffsets = new Float2[profile.pixelSample];
-
-			for (int i = 0; i < profile.pixelSample; i++)
+			//Create golden ratio square spiral offsets
+			for (int i = 0; i < spiralOffsets.Length; i++)
 			{
 				float theta = Scalars.TAU * Scalars.GoldenRatio * i;
 				Float2 offset = new Float2(MathF.Cos(theta), MathF.Sin(theta));
 
 				float square = 1f / (Math.Abs(MathF.Cos(theta + Scalars.PI / 4)) + Math.Abs(MathF.Sin(theta + Scalars.PI / 4)));
-				float radius = MathF.Sqrt((i + 0.5f) / profile.pixelSample) * Scalars.Sqrt2 * square / 2f;
+				float radius = MathF.Sqrt((i + 0.5f) / spiralOffsets.Length) * Scalars.Sqrt2 * square / 2f;
 
-				pixelOffsets[i] = offset * radius + Float2.half;
+				spiralOffsets[i] = offset * radius + Float2.half;
 			}
+
+			//Create random offsets
+			Random random = new Random(unchecked((int)(Environment.TickCount64 * id * size)));
+			for (int i = 0; i < randomOffsets.Length; i++) randomOffsets[i] = new Float2((float)random.NextDouble(), (float)random.NextDouble());
 		}
 
 		public readonly int id;
 		public readonly int size;
-		public readonly long sampleCount;
 
-		volatile int _renderOffsetX;
-		volatile int _renderOffsetY;
+		public readonly int pixelSample;
+		public readonly int adaptiveSample;
 
-		volatile Texture _renderBuffer;
-		volatile PixelWorker _pixelWorker;
+		int _renderOffsetX;
+		int _renderOffsetY;
+		long _totalPixel;
 
-		public Int2 RenderOffset => new Int2(_renderOffsetX, _renderOffsetY);
+		public int RenderOffsetX => InterlockedHelper.Read(ref _renderOffsetX);
+		public int RenderOffsetY => InterlockedHelper.Read(ref _renderOffsetY);
 
-		public Texture RenderBuffer => _renderBuffer;
-		public PixelWorker PixelWorker => _pixelWorker;
+		public Int2 RenderOffset => new Int2(RenderOffsetX, RenderOffsetY);
+		public long TotalPixel => Interlocked.Read(ref _totalPixel);
+
+		Texture _renderBuffer;
+		PixelWorker _pixelWorker;
+
+		public Texture RenderBuffer => InterlockedHelper.Read(ref _renderBuffer);
+		public PixelWorker PixelWorker => InterlockedHelper.Read(ref _pixelWorker);
 
 		long _completedSample;
-		long _rejectedSample;
+		long _completedPixel;
 
 		public long CompletedSample => Interlocked.Read(ref _completedSample);
-		public long RejectedSample => Interlocked.Read(ref _rejectedSample);
+		public long CompletedPixel => Interlocked.Read(ref _completedPixel);
 
-		readonly Pixel[] pixels;
-		readonly Float2[] pixelOffsets; //Sample offset applied within each pixel
 		readonly Thread worker;
 
-		readonly ManualResetEventSlim resetEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
-		public bool Working => resetEvent.IsSet;
+		//Offsets applied within each pixel
+		readonly Float2[] spiralOffsets;
+		readonly Float2[] randomOffsets;
+
+		readonly ManualResetEventSlim dispatchEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
+		public bool Working => dispatchEvent.IsSet;
 
 		static volatile int workerIdAccumulator;
 		bool aborted;
@@ -85,17 +98,20 @@ namespace ForceRenderer.Renderers
 
 		public void ResetParameters(Int2 renderOffset, Texture renderBuffer = null, PixelWorker pixelWorker = null)
 		{
-			if (aborted) throw new Exception("Worker already aborted! It would not be used anymore!");
+			if (aborted) throw new Exception("Worker already aborted! It should not be used anymore!");
 			if (Working) throw new Exception("Cannot reset when the worker is dispatched and already working!");
 
-			_renderOffsetX = renderOffset.x;
-			_renderOffsetY = renderOffset.y;
+			Interlocked.Exchange(ref _renderOffsetX, renderOffset.x);
+			Interlocked.Exchange(ref _renderOffsetY, renderOffset.y);
 
-			_renderBuffer = renderBuffer ?? _renderBuffer;
-			_pixelWorker = pixelWorker ?? _pixelWorker;
+			if (renderBuffer != null) Interlocked.Exchange(ref _renderBuffer, renderBuffer);
+			if (pixelWorker != null) Interlocked.Exchange(ref _pixelWorker, pixelWorker);
+
+			Int2 boarder = RenderBuffer.size.Min(RenderOffset + (Int2)size); //Get the furthest buffer position
+			Interlocked.Exchange(ref _totalPixel, (boarder - RenderOffset).Product);
 
 			Interlocked.Exchange(ref _completedSample, 0);
-			Interlocked.Exchange(ref _rejectedSample, 0);
+			Interlocked.Exchange(ref _completedPixel, 0);
 		}
 
 		public void Dispatch()
@@ -107,92 +123,74 @@ namespace ForceRenderer.Renderers
 			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), InvalidType.isNull);
 
 			if (!worker.IsAlive) worker.Start();
-			resetEvent.Set();
+			dispatchEvent.Set();
 		}
 
 		void WorkThread()
 		{
 			while (!aborted)
 			{
-				resetEvent.Wait();
+				dispatchEvent.Wait();
 				if (aborted) break;
 
-				try
-				{
-					if (!aborted) Parallel.For(0, sampleCount, WorkSample);   //Render samples
-					if (!aborted) Parallel.For(0, pixels.Length, StorePixel); //Store pixels to buffer
-				}
-				finally { resetEvent.Reset(); }
+				try { Parallel.For(0, size * size, WorkPixel); }
+				finally { dispatchEvent.Reset(); }
 
 				if (!aborted) OnWorkCompleted?.Invoke(this);
 			}
 		}
 
-		void WorkSample(long sample, ParallelLoopState state)
+		void WorkPixel(int index, ParallelLoopState state)
 		{
+			Int2 position = new Int2(index % size + RenderOffsetX, index / size + RenderOffsetY);
+			if (!(position >= Int2.zero) || !(position < RenderBuffer.size)) return; //Reject pixels outside of buffer
+
 			if (aborted) state.Break();
+			Pixel pixel = new Pixel();
 
-			int pixelIndex = (int)(sample % pixels.Length);
-			Int2 position = ToBufferPosition(pixelIndex);
+			int sampleCount = pixelSample;
+			Float2[] uvOffsets = spiralOffsets;
 
-			if (IsValid(position))
+			for (int m = 0; m < 2; m++)
 			{
-				//Render pixel
-				Float2 uv = ToAdjustedUV(position, sample);
-				Float3 color = PixelWorker.Render(uv); //UV is adjusted to the correct scaling to match worker's requirement
+				for (int i = 0; i < sampleCount; i++)
+				{
+					if (aborted) state.Break();
 
-				//Write to pixels
-				pixels[pixelIndex].Accumulate(color);
+					//Sample color
+					Float2 uv = (position + uvOffsets[i]) / RenderBuffer.size - Float2.half;
+					Float3 color = PixelWorker.Render(new Float2(uv.x, uv.y / RenderBuffer.aspect));
+
+					//Write to pixel
+					pixel.Accumulate(color);
+					Interlocked.Increment(ref _completedSample);
+				}
+
+				//Change to adaptive sampling
+				sampleCount = (int)(Math.Min(1d, pixel.Deviation) * adaptiveSample);
+				uvOffsets = randomOffsets;
 			}
-			else Interlocked.Increment(ref _rejectedSample);
 
-			Interlocked.Increment(ref _completedSample);
-		}
-
-		void StorePixel(int pixelIndex, ParallelLoopState state)
-		{
 			if (aborted) state.Break();
 
-			Int2 position = ToBufferPosition(pixelIndex);
-			if (!IsValid(position)) return;
-
-			ref Pixel pixel = ref pixels[pixelIndex];
+			//Store pixel
 			RenderBuffer.SetPixel(position, pixel.Color);
-			pixel.Clear();
+			Interlocked.Increment(ref _completedPixel);
 		}
-
-		Int2 ToBufferPosition(int pixelIndex)
-		{
-			int x = pixelIndex % size + RenderOffset.x;
-			int y = pixelIndex / size + RenderOffset.y;
-			return new Int2(x, y);
-		}
-
-		Float2 ToAdjustedUV(Int2 bufferPosition, long sample)
-		{
-			Float2 offset = pixelOffsets[(int)(sample / pixels.Length)];
-			Float2 uv = (bufferPosition + offset) / RenderBuffer.size;
-			return new Float2(uv.x - 0.5f, (uv.y - 0.5f) / RenderBuffer.aspect);
-		}
-
-		/// <summary>
-		/// Check to make sure the <paramref name="bufferPosition"/> is inside our canvas; parts of some edge tiles might be outside.
-		/// </summary>
-		bool IsValid(Int2 bufferPosition) => bufferPosition.x >= 0 && bufferPosition.y >= 0 && bufferPosition.x < RenderBuffer.size.x && bufferPosition.y < RenderBuffer.size.y;
 
 		public void Abort()
 		{
 			if (aborted) throw new Exception("Worker already aborted!");
 			aborted = true;
 
-			resetEvent.Set(); //Release the wait block
+			dispatchEvent.Set(); //Release the wait block
 			worker.Join();
 		}
 
 		public void Dispose()
 		{
 			if (!aborted) Abort();
-			resetEvent?.Dispose();
+			dispatchEvent?.Dispose();
 		}
 
 		public override int GetHashCode() => id;
@@ -200,42 +198,29 @@ namespace ForceRenderer.Renderers
 
 		struct Pixel
 		{
-			public static Pixel Create() => new Pixel(new object());
-			Pixel(object locker) : this() => this.locker = locker;
-
 			Double3 average;
 			Double3 squared;
 
 			int accumulation;
-			readonly object locker;
 
 			public const double MinDeviationThreshold = 0.3d;
 
 			/// <summary>
 			/// Returns the color average
 			/// </summary>
-			public Color32 Color
-			{
-				get
-				{
-					lock (locker) return (Color32)(Float3)average;
-				}
-			}
+			public Color32 Color => (Color32)(Float3)average;
 
 			/// <summary>
 			/// Returns the standard deviation of the pixel
 			/// </summary>
-			public float Deviation
+			public double Deviation
 			{
 				get
 				{
-					lock (locker)
-					{
-						double deviation = Math.Sqrt(squared.Max / accumulation);
-						double max = Math.Max(average.Max, MinDeviationThreshold);
+					double deviation = Math.Sqrt(squared.Max / accumulation);
+					double max = Math.Max(average.Max, MinDeviationThreshold);
 
-						return (float)(deviation / max);
-					}
+					return deviation / max;
 				}
 			}
 
@@ -246,26 +231,13 @@ namespace ForceRenderer.Renderers
 			{
 				if (float.IsNaN(value.x) || float.IsNaN(value.y) || float.IsNaN(value.z)) return; //NaN gate
 
-				lock (locker)
-				{
-					accumulation++;
+				accumulation++;
 
-					Double3 oldMean = average;
-					Double3 newValue = value;
+				Double3 oldMean = average;
+				Double3 newValue = value;
 
-					average += (newValue - oldMean) / accumulation;
-					squared += (newValue - average) * (newValue - oldMean);
-				}
-			}
-
-			public void Clear()
-			{
-				lock (locker)
-				{
-					average = default;
-					squared = default;
-					accumulation = 0;
-				}
+				average += (newValue - oldMean) / accumulation;
+				squared += (newValue - average) * (newValue - oldMean);
 			}
 		}
 
