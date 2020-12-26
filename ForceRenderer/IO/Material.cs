@@ -16,56 +16,113 @@ namespace ForceRenderer.IO
 			_emission = source.Emission;
 			_smoothness = source.Smoothness;
 
+			_transparency = source.Transparency;
+			_transmission = source.Transmission;
+			_indexOfRefraction = source.IndexOfRefraction;
+
 			_diffuseTexture = source.DiffuseTexture;
 			_specularTexture = source.SpecularTexture;
 
 			_emissionTexture = source.EmissionTexture;
 			_smoothnessTexture = source.SmoothnessTexture;
+
+			_transparencyTexture = source.TransparencyTexture;
+			_transmissionTexture = source.TransmissionTexture;
 		}
 
 		public Material() => isReadonly = false;
 
 		public readonly bool isReadonly;
 
-		Float3 _diffuse;
-		Float3 _specular;
+		Float3 _diffuse = Float3.one;
+		Float3 _specular = Float3.zero;
 
+		/// <summary>
+		/// Controls the diffuse color. [0, 1]
+		/// </summary>
 		public Float3 Diffuse
 		{
 			get => _diffuse;
 			set => CheckedSet(ref _diffuse, value);
 		}
 
+		/// <summary>
+		/// Controls the specular color. [0, 1]
+		/// </summary>
 		public Float3 Specular
 		{
 			get => _specular;
 			set => CheckedSet(ref _specular, value);
 		}
 
-		Float3 _emission;
-		float _smoothness;
+		Float3 _emission = Float3.zero;
+		float _smoothness = 0.15f;
 
+		/// <summary>
+		/// Controls the amount of light emitted. [0, inf)
+		/// </summary>
 		public Float3 Emission
 		{
 			get => _emission;
 			set => CheckedSet(ref _emission, value);
 		}
 
+		/// <summary>
+		/// Controls how smooth the specular surfaces is. [0, 1]
+		/// </summary>
 		public float Smoothness
 		{
 			get => _smoothness;
 			set => CheckedSet(ref _smoothness, value);
 		}
 
+		float _transparency;
+		Float3 _transmission = Float3.one;
+
+		float _indexOfRefraction = 1f;
+
+		/// <summary>
+		/// Controls the amount of transparency. [0, 1]
+		/// </summary>
+		public float Transparency
+		{
+			get => _transparency;
+			set => CheckedSet(ref _transparency, value);
+		}
+
+		/// <summary>
+		/// Controls the color transmitted during refraction. [0, 1]
+		/// </summary>
+		public Float3 Transmission
+		{
+			get => _transmission;
+			set => CheckedSet(ref _transmission, value);
+		}
+
+		/// <summary>
+		/// Controls the index of refraction; default 1. [0.0001, 10]
+		/// </summary>
+		public float IndexOfRefraction
+		{
+			get => _indexOfRefraction;
+			set => CheckedSet(ref _indexOfRefraction, value);
+		}
+
 		Texture _diffuseTexture = Texture.white;
 		Texture _specularTexture = Texture.white;
 
+		/// <summary>
+		/// The color texture multiplied to diffuse.
+		/// </summary>
 		public Texture DiffuseTexture
 		{
 			get => _diffuseTexture;
 			set => CheckedSet(ref _diffuseTexture, value);
 		}
 
+		/// <summary>
+		/// The color texture multiplied to specular.
+		/// </summary>
 		public Texture SpecularTexture
 		{
 			get => _specularTexture;
@@ -75,16 +132,43 @@ namespace ForceRenderer.IO
 		Texture _emissionTexture = Texture.white;
 		Texture _smoothnessTexture = Texture.white;
 
+		/// <summary>
+		/// The color texture multiplied to emission.
+		/// </summary>
 		public Texture EmissionTexture
 		{
 			get => _emissionTexture;
 			set => CheckedSet(ref _emissionTexture, value);
 		}
 
+		/// <summary>
+		/// The color texture multiplied to smoothness. Only the primary/red channel is considered.
+		/// </summary>
 		public Texture SmoothnessTexture
 		{
 			get => _smoothnessTexture;
 			set => CheckedSet(ref _smoothnessTexture, value);
+		}
+
+		Texture _transparencyTexture = Texture.white;
+		Texture _transmissionTexture = Texture.white;
+
+		/// <summary>
+		/// The value multiplied to transparency. Only the primary/red channel is considered.
+		/// </summary>
+		public Texture TransparencyTexture
+		{
+			get => _transparencyTexture;
+			set => CheckedSet(ref _transparencyTexture, value);
+		}
+
+		/// <summary>
+		/// The transmission color texture applied during refraction.
+		/// </summary>
+		public Texture TransmissionTexture
+		{
+			get => _transmissionTexture;
+			set => CheckedSet(ref _transmissionTexture, value);
 		}
 
 		void CheckedSet<T>(ref T location, T value)
@@ -102,10 +186,14 @@ namespace ForceRenderer.IO
 			specular = new TexturePair(material.Specular, material.SpecularTexture);
 
 			emission = new TexturePair(material.Emission, material.EmissionTexture);
-			smoothness = new TexturePair((Float3)material.Smoothness, material.SmoothnessTexture);
+			smoothness = new TexturePair(material.Smoothness, material.SmoothnessTexture);
+
+			transparency = new TexturePair(material.Transparency, material.TransparencyTexture);
+			transmission = new TexturePair(material.Transmission, material.TransmissionTexture);
+			indexOfRefraction = material.IndexOfRefraction;
 
 			defaultSample = default;
-			varies = diffuse.Varies || specular.Varies || emission.Varies || smoothness.Varies;
+			varies = diffuse.Varies || specular.Varies || emission.Varies || smoothness.Varies || transparency.Varies || transmission.Varies;
 
 			defaultSample = new Sample(this, Float2.half, true);
 		}
@@ -115,6 +203,10 @@ namespace ForceRenderer.IO
 
 		readonly TexturePair emission;
 		readonly TexturePair smoothness;
+
+		readonly TexturePair transparency;
+		readonly TexturePair transmission;
+		readonly float indexOfRefraction;
 
 		readonly Sample defaultSample;
 		readonly bool varies;
@@ -157,7 +249,7 @@ namespace ForceRenderer.IO
 					specularChance = material.defaultSample.specularChance;
 				}
 
-				emission = material.emission.Varies || calculateAll ? material.emission.GetValue(texcoord) : material.defaultSample.emission;
+				emission = material.emission.Varies || calculateAll ? material.emission.GetValue(texcoord).Max(Float3.zero) : material.defaultSample.emission;
 
 				if (material.smoothness.Varies || calculateAll)
 				{
@@ -171,6 +263,10 @@ namespace ForceRenderer.IO
 					phongAlpha = material.defaultSample.phongAlpha;
 					phongMultiplier = material.defaultSample.phongMultiplier;
 				}
+
+				transparency = material.transparency.Varies || calculateAll ? material.transparency.GetValue(texcoord).x.Clamp(0f, 1f) : material.defaultSample.transparency;
+				transmission = material.transmission.Varies || calculateAll ? material.transmission.GetValue(texcoord).Clamp(0f, 1f) : material.defaultSample.transmission;
+				indexOfRefraction = calculateAll ? material.indexOfRefraction.Clamp(Scalars.Epsilon, 10f) : material.defaultSample.indexOfRefraction;
 			}
 
 			public readonly Float3 diffuse;
@@ -182,6 +278,10 @@ namespace ForceRenderer.IO
 
 			public readonly float phongAlpha;
 			public readonly float phongMultiplier;
+
+			public readonly float transparency;
+			public readonly Float3 transmission;
+			public readonly float indexOfRefraction;
 		}
 
 		readonly struct TexturePair
@@ -203,6 +303,8 @@ namespace ForceRenderer.IO
 				this.texture = texture;
 			}
 
+			public TexturePair(float value, Texture texture) : this((Float3)value, texture) { }
+
 			public readonly Float3 value;
 			public readonly Texture texture;
 
@@ -211,7 +313,7 @@ namespace ForceRenderer.IO
 			public Float3 GetValue(Float2 texcoord)
 			{
 				if (texture == null) return value;
-				return value * (Float3)texture.GetPixel(texcoord);
+				return value * texture.GetPixel(texcoord);
 			}
 		}
 	}

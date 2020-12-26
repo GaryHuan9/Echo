@@ -14,7 +14,9 @@ namespace ForceRenderer
 			children.Add(new PlaneObject(ground, new Float2(24f, 16f)));
 
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
-			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
+
+			children.Add(new Camera(24f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(37f, -13f, 0f)});
+			// children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
 		}
 	}
 
@@ -38,7 +40,28 @@ namespace ForceRenderer
 			Material material = new Material {Diffuse = Float3.one, DiffuseTexture = texture};
 
 			Cubemap = new SolidCubemap(Color32.white);
-			children.Add(new PlaneObject(material, Float2.one * 18f) {Position = new Float3(-9f, 2.5f, -5f), Rotation = new Float3(90f, 0f, 0f)});
+			children.Add(new PlaneObject(material, Float2.one * 18f) {Position = new Float3(-9f, 2.5f, -5f), Rotation = new Float3(-90f, 0f, 0f)});
+		}
+	}
+
+	public class TestTransparency : Scene
+	{
+		public TestTransparency()
+		{
+			// children.Add(new SphereObject(new Material {Diffuse = new Float3(0.8f, 0.8f, 0f)}, 100f) {Position = new Float3(0f, -100.5f, 0f)});
+
+			Material material = new Material {Transparency = 1f, IndexOfRefraction = 1.5f, Transmission = (Float3)0.9f};
+			children.Add(new BoxObject(material, new Float3(4f, 1f, 0.03f)) {Position = new Float3(0f, 0.5f, 0f)});
+
+			children.Add(new SphereObject(new Material {Transparency = 1f, IndexOfRefraction = 1.5f, Transmission = Float3.one}, 0.5f) {Position = new Float3(-1f, 0f, 0f)});
+			children.Add(new SphereObject(new Material {Diffuse = new Float3(0.8f, 0.6f, 0.2f)}, 0.5f) {Position = new Float3(1f, 0f, 0f)});
+
+			var camera = new Camera(90f) {Position = new Float3(0.2f, 2f, -1f)};
+
+			camera.LookAt(Float3.zero);
+			children.Add(camera);
+
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 		}
 	}
 
@@ -98,12 +121,12 @@ namespace ForceRenderer
 			Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
-			Cubemap = new SolidCubemap((Color32)(Float3)0.22f);
+			Cubemap = new SolidCubemap((Color32)(Float3)0.21f);
 
 			Material dark = new Material {Diffuse = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
 			children.Add(new MeshObject(bmw) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 
-			children.Add(new SphereObject(new Material {Emission = new Float3(6f, 3f, 7f)}, 8f) {Position = new Float3(24f, 16f, 18f)});   //Upper right purple
+			children.Add(new SphereObject(new Material {Emission = new Float3(7f, 4f, 8f)}, 8f) {Position = new Float3(24f, 15f, 18f)});   //Upper right purple
 			children.Add(new SphereObject(new Material {Emission = new Float3(8f, 4f, 3f)}, 5f) {Position = new Float3(-16f, 19f, -12f)}); //Bottom left orange
 			children.Add(new SphereObject(new Material {Emission = new Float3(2f, 7f, 4f)}, 7f) {Position = new Float3(10f, 24f, -12f)});  //Bottom right green
 			children.Add(new SphereObject(new Material {Emission = new Float3(3f, 4f, 8f)}, 8f) {Position = new Float3(-19f, 19f, 13f)});  //Upper left blue
