@@ -15,8 +15,7 @@ namespace ForceRenderer
 
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
 
-			children.Add(new Camera(24f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(37f, -13f, 0f)});
-			// children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
+			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
 		}
 	}
 
