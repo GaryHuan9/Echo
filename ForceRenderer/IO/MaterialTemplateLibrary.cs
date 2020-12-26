@@ -43,70 +43,77 @@ namespace ForceRenderer.IO
 					}
 					case "Kd":
 					{
-						CheckMaterial().Diffuse = ParseFloat3(1);
+						CheckMaterial().Diffuse = ParseFloat3();
 						break;
 					}
 					case "map_Kd":
 					{
-						CheckMaterial().DiffuseTexture = ParseTexture(1);
+						CheckMaterial().DiffuseTexture = ParseTexture();
 						break;
 					}
 					case "Ks":
 					{
-						CheckMaterial().Specular = ParseFloat3(1);
+						CheckMaterial().Specular = ParseFloat3();
 						break;
 					}
 					case "map_Ks":
 					{
-						CheckMaterial().SpecularTexture = ParseTexture(1);
+						CheckMaterial().SpecularTexture = ParseTexture();
 						break;
 					}
 					case "Ke":
 					{
-						CheckMaterial().Emission = ParseFloat3(1);
+						CheckMaterial().Emission = ParseFloat3();
 						break;
 					}
 					case "map_Ke":
 					{
-						CheckMaterial().EmissionTexture = ParseTexture(1);
+						CheckMaterial().EmissionTexture = ParseTexture();
 						break;
 					}
 					case "Ns":
 					{
-						float smoothness = float.Parse(parts[1]) / 1000f;
+						float smoothness = ParseSingle() / 1000f;
 						CheckMaterial().Smoothness = MathF.Pow(smoothness, 0.7f); //Might to some curve mapping
 
 						break;
 					}
 					case "map_Ns":
 					{
-						CheckMaterial().SmoothnessTexture = ParseTexture(1);
+						CheckMaterial().SmoothnessTexture = ParseTexture();
+						break;
+					}
+					case "d":
+					{
+						CheckMaterial().Transparency = 1f - ParseSingle();
+						break;
+					}
+
+					case "map_d":
+					{
+						CheckMaterial().TransparencyTexture = ParseTexture();
+						break;
+					}
+					case "Tf":
+					{
+						CheckMaterial().Transmission = ParseFloat3();
+						break;
+					}
+					case "map_Tf":
+					{
+						CheckMaterial().TransmissionTexture = ParseTexture();
 						break;
 					}
 					case "Ni":
 					{
-						CheckMaterial();
-						break; //Transparency currently not supported
-					}
-					case "Tr":
-					{
-						CheckMaterial();
-						break; //Transparency currently not supported
-					}
-					case "d":
-					{
-						CheckMaterial();
-						break; //Transparency currently not supported
-					}
-					case "map_d":
-					{
-						CheckMaterial();
-						break; //Transparency currently not supported
+						CheckMaterial().IndexOfRefraction = ParseSingle();
+						break;
 					}
 				}
 
-				Float3 ParseFloat3(int start) => new Float3(float.Parse(parts[start]), float.Parse(parts[start + 1]), float.Parse(parts[start + 2]));
-				Texture ParseTexture(int start) => new Texture(GetSiblingPath(path, GetRemain(parts, start)));
+				float ParseSingle(int start = 1) => float.Parse(parts[start]);
+				Float3 ParseFloat3(int start = 1) => new Float3(float.Parse(parts[start]), float.Parse(parts[start + 1]), float.Parse(parts[start + 2]));
+				Texture ParseTexture(int start = 1) => new Texture(GetSiblingPath(path, GetRemain(parts, start)));
 			}
 
 			//Finalize materials

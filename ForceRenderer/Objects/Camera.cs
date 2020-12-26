@@ -33,13 +33,12 @@ namespace ForceRenderer.Objects
 
 		public void LookAt(Float3 target)
 		{
-			Float3 from = LocalToWorld.MultiplyDirection(Float3.forward);
 			Float3 to = (target - Position).Normalized;
 
-			Rotation -= Float3.up * from.XZ.SignedAngle(to.XZ);
-			from = LocalToWorld.MultiplyDirection(Float3.forward);
+			float yAngle = -Float2.up.SignedAngle(to.XZ);
+			float xAngle = -Float2.right.SignedAngle(to.RotateXZ(yAngle).ZY);
 
-			Rotation -= Float3.right * from.YZ.SignedAngle(to.YZ);
+			Rotation = new Float3(xAngle, yAngle, 0f);
 		}
 	}
 }
