@@ -11,15 +11,22 @@ namespace ForceRenderer.Objects.SceneObjects
 		public MeshObject(Mesh mesh) : base(mesh.materialLibrary[0]) => Mesh = mesh;
 
 		public Mesh Mesh { get; set; }
+		Material FirstMaterial => Mesh.materialLibrary[0];
+
+		public override Material Material
+		{
+			set => base.Material = value ?? FirstMaterial;
+		}
 
 		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter)
 		{
 			if (Mesh == null) yield break;
+			bool hasMaterial = Material != FirstMaterial;
 
 			for (int i = 0; i < Mesh.TriangleCount; i++)
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
-				Material material = Mesh.materialLibrary[triangle.materialIndex];
+				Material material = hasMaterial ? Material : Mesh.materialLibrary[triangle.materialIndex];
 				int materialToken = materialConverter(material);
 
 				bool hasNormal = triangle.normalIndices.MinComponent >= 0;

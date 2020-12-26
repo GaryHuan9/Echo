@@ -4,6 +4,7 @@ using System.Data;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;

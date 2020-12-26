@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
@@ -32,18 +33,69 @@ namespace ForceRenderer.Renderers
 
 				light += energy * sample.emission;
 
-				//Randomly choose between diffuse and specular BSDF
-				if (RandomValue < sample.specularChance)
+				//Randomly choose between transparency or opaque
+				if (RandomValue < sample.transparency)
 				{
-					//Phong specular reflection
-					direction = GetHemisphereDirection(ray.direction.Reflect(normal), sample.phongAlpha);
-					bsdf = 1f / sample.specularChance * (normal.Dot(direction) * sample.phongMultiplier).Clamp(0f, 1f) * sample.specular;
+					//Transparency BSDF
+					Float3 innerNormal = normal;
+					float cosI = ray.direction.Dot(innerNormal);
+
+					float etaI = 1f;
+					float etaT = sample.indexOfRefraction;
+
+					if (cosI > 0f)
+					{
+						//Hit backface
+						CodeHelper.Swap(ref etaI, ref etaT);
+						innerNormal = -innerNormal;
+					}
+					else cosI = -cosI; //Hit front face
+
+					float eta = etaI / etaT;
+					float cosT2 = 1f - eta * eta * (1f - cosI * cosI);
+
+					float reflectChance;
+					float cosT = default;
+
+					if (cosT2 < 0f) reflectChance = 1f; //Total internal reflection, not possible for refraction
+					else
+					{
+						cosT = MathF.Sqrt(cosT2);
+
+						//Fresnel equation
+						float ti = etaT * cosI;
+						float it = etaI * cosT;
+
+						float ii = etaI * cosI;
+						float tt = etaT * cosT;
+
+						float Rs = (ti - it) / (ti + it);
+						float Rp = (ii - tt) / (ii + tt);
+
+						reflectChance = (Rs * Rs + Rp * Rp) / 2f;
+					}
+
+					//Randomly select between reflection or refraction
+					if (RandomValue < reflectChance) direction = ray.direction.Reflect(innerNormal); //Reflection
+					else direction = eta * ray.direction + (eta * cosI - cosT) * innerNormal;        //Refraction
+
+					bsdf = sample.transmission;
 				}
 				else
 				{
-					//Lambert diffuse reflection
-					direction = GetHemisphereDirection(normal, 1f); //Using cosine distribution
-					bsdf = 1f / sample.diffuseChance * sample.diffuse;
+					//Randomly choose between diffuse and specular BSDF
+					if (RandomValue < sample.specularChance)
+					{
+						//Phong specular reflection
+						direction = GetHemisphereDirection(ray.direction.Reflect(normal), sample.phongAlpha);
+						bsdf = 1f / sample.specularChance * (normal.Dot(direction) * sample.phongMultiplier).Clamp(0f, 1f) * sample.specular;
+					}
+					else
+					{
+						//Lambert diffuse reflection
+						direction = GetHemisphereDirection(normal, 1f); //Using cosine distribution
+						bsdf = 1f / sample.diffuseChance * sample.diffuse;
+					}
 				}
 
 				ray = new Ray(position, direction, true);
@@ -97,13 +149,6 @@ namespace ForceRenderer.Renderers
 				x * tangent.y + y * binormal.y + z * normal.y,
 				x * tangent.z + y * binormal.z + z * normal.z
 			);
-		}
-
-		Float3 Refrect(Float3 direction, Float3 normal, float incidentIndex, float refractedIndex)
-		{
-			Float3 perpendicular = incidentIndex / refractedIndex * (direction + -direction.Dot(normal) * normal);
-			Float3 parallel = -MathF.Sqrt(Math.Abs(1f - perpendicular.SquaredMagnitude)) * normal;
-			return perpendicular + parallel;
 		}
 	}
 }

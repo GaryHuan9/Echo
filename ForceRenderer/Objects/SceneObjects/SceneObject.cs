@@ -11,7 +11,7 @@ namespace ForceRenderer.Objects.SceneObjects
 
 		Material _material;
 
-		public Material Material
+		public virtual Material Material
 		{
 			get => _material;
 			set => _material = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);

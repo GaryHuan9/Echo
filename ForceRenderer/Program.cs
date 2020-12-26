@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
 using ForceRenderer.IO;
-using ForceRenderer.Mathematics;
-using ForceRenderer.Objects.SceneObjects;
+using ForceRenderer.Objects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
 
@@ -61,14 +56,15 @@ namespace ForceRenderer
 			//Render
 			Int2[] resolutions =
 			{
-				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080), new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
+				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080),
+				new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
 			};
 
 			Texture buffer = new Texture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new TestTexture(),
-											PixelSample = 32, AdaptiveSample = 256, TileSize = 32
+											RenderBuffer = buffer, Scene = new LightedBMWScene(),
+											PixelSample = 32, AdaptiveSample = 800, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -85,7 +81,9 @@ namespace ForceRenderer
 			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
 
 			renderEngine = null;
-			Thread.Sleep((int)(elapsedSeconds * 1000));
+
+			Console.ReadKey();
+			// Thread.Sleep((int)(elapsedSeconds * 1000));
 		}
 
 		static RenderEngine renderEngine;
