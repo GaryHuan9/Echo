@@ -60,11 +60,11 @@ namespace ForceRenderer
 				new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
 			};
 
-			Texture buffer = new Texture(resolutions[1]);
+			Texture buffer = new Texture(resolutions[2]);
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new LightedBMWScene(),
-											PixelSample = 32, AdaptiveSample = 800, TileSize = 32
+											PixelSample = 128, AdaptiveSample = 16000, TileSize = 32
 										};
 
 			renderEngine = engine;

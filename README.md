@@ -3,19 +3,19 @@
 ForceRenderer (name still work in progress) is a CPU path traced render engine that I am writing in C# completely from scratch.
 The only library that I am using in this project is CodeHelpers, which is also written by me (https://github.com/MMXXX-VIII/CodeHelpers).
 
-It currently supports two BSDF: Lambert Diffuse and Phong Specular. A skybox can be imported and used as environmental light.
-ForceRenderer also supports Wavefront .obj files loading, although currently only vertices and triangles are imported (normals and texture coordinates are omitted).
+It currently supports three BSDF (bidirectional scattering distribution functions): Lambert Diffuse, Phong Specular, and Fresnel Transparency. A skybox can be imported and used as environmental light.
+ForceRenderer also supports Wavefront .obj files loading; reading vertices, normals, triangles, texture coordinates, and material properties including diffuse, specular, emission, dissolve, and various maps.
 
-ForceRenderer uses Bounding Volume Hierarchy (BVH) as an acceleration structure with Axis Aligned Bounding Boxes (AABB) to significantly improve the ray-scene intersection speed.
+ForceRenderer uses bounding volume hierarchy (BVH) as an acceleration structure with axis aligned bounding boxes (AABB) to significantly improve the ray-scene intersection speed.
 Currently, the construction of a very large BVH (> 1 million triangles) is a lengthy process; it can take around several seconds to complete.
 This is mainly because all triangles are calculated and used as leaf nodes, and the construction is also performed on only one thread.
+BVH also considers multiple surface area heuristics (SAH) to further improve the intersection performance at the cost of longer construction time.
 
 ForceRenderer renders in a tile-based fashion, and it will try to utilize all cores in your CPU during a render.
-The following is a render of 5 Blender BMW with different levels of specular values.
-It was rendered with around 1.7 million triangles and 8.7 billion samples in 4K with 1024 samples per pixel.
+Settings can be configured to use adaptive sampling to provide more samples towards areas of higher importance.
 
 ![5 Blender BMW](https://github.com/MMXXX-VIII/ForceRenderer/blob/main/ForceRenderer/Renders/Path%20Tracing/render%20bmw%201k%20sample%201.7m%20tri.png?raw=true)
 
-![Smooth Blender BMW](https://github.com/MMXXX-VIII/ForceRenderer/blob/main/ForceRenderer/Renders/Path%20Tracing/render%20smooth%20bmw%201k%20sp.png?raw=true)
-
 ![Noisy Cornell Box](https://github.com/MMXXX-VIII/ForceRenderer/blob/main/ForceRenderer/Renders/Path%20Tracing/Noisy/render%20noisy%2040k%20cornell%203h.png?raw=true)
+
+![Lighted Blender BMW](https://github.com/MMXXX-VIII/ForceRenderer/blob/main/ForceRenderer/Renders/Path%20Tracing/render%20bmw%20lights%20transparency%20128%2016000%20samples.png?raw=true)
