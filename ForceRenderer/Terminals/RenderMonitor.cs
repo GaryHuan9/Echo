@@ -66,6 +66,8 @@ namespace ForceRenderer.Terminals
 			Texture buffer = Engine.RenderBuffer;
 			PressedScene pressed = profile.pressed;
 
+			//TODO: Use a string builder or something more organized, This is too messy!
+
 			//Display configuration information
 			int totalPixel = buffer.size.Product;
 
@@ -84,12 +86,13 @@ namespace ForceRenderer.Terminals
 			long completedPixel = Engine.CompletedPixel;
 
 			int completedTile = Engine.CompletedTileCount;
+			long intersections = Engine.PixelWorker.IntersectionPerformed;
 
 			builders.SetLine
 			(
 				1,
-				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; Estimate {TimeSpan.FromSeconds((totalPixel / (completedPixel / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds)):hh\\:mm\\:ss\\:ff}; Complete% {100d * completedPixel / totalPixel:F2}; " +
-				$"CompleteTile {completedTile:N0}; CompleteTilePS {completedTile / second:F2}; CompletedSP {completedSample:N0}; CompletedPX {completedPixel:N0}; SamplePS {completedSample / second:N0}; PixelPS {completedPixel / second:N0};"
+				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; Estimate {TimeSpan.FromSeconds((totalPixel / (completedPixel / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds)):hh\\:mm\\:ss\\:ff}; Complete% {100d * completedPixel / totalPixel:F2}; CompletedTile {completedTile:N0}; " +
+				$"TilePS {completedTile / second:F2}; CompletedSP {completedSample:N0}; SamplePS {completedSample / second:N0}; CompletedPX {completedPixel:N0}; PixelPS {completedPixel / second:N0}; CompletedIS {intersections:N0}; IntersectionPS {intersections / second:N0};"
 			);
 		}
 
