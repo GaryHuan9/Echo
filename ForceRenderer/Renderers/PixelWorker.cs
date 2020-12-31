@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Threads;
 using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Renderers
@@ -16,6 +17,10 @@ namespace ForceRenderer.Renderers
 
 		readonly ThreadLocal<Random> threadRandom;
 		protected readonly RenderEngine.Profile profile;
+
+		long _intersectionPerformed;
+
+		public long IntersectionPerformed => Interlocked.Read(ref _intersectionPerformed);
 
 		/// <summary>
 		/// Returns a thread-safe random value larger than or equals zero, and smaller than one.
@@ -33,6 +38,8 @@ namespace ForceRenderer.Renderers
 		protected bool GetIntersection(in Ray ray, out float distance, out int token, out Float2 uv)
 		{
 			distance = profile.pressed.bvh.GetIntersection(ray, out token, out uv);
+			Interlocked.Increment(ref _intersectionPerformed);
+
 			return float.IsFinite(distance);
 		}
 	}

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.IO;
-using ForceRenderer.Objects;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
 
@@ -15,33 +13,6 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			// var source = new Texture("render.png");
-			// var destination = new Texture(source.size);
-			//
-			// var denoiser = new Denoiser(source, destination);
-			// denoiser.Dispatch();
-			//
-			// destination.SaveFile("denoised.png");
-			//
-			// return;
-
-			// AxisAlignedBoundingBox[] aabbs =
-			// {
-			// 	new AxisAlignedBoundingBox(Float3.up, Float3.half),
-			// 	new AxisAlignedBoundingBox(Float3.one * 2, Float3.half),
-			// 	new AxisAlignedBoundingBox(Float3.right * 2, Float3.half),
-			// 	new AxisAlignedBoundingBox(Float3.down * 2, Float3.half)
-			// };
-			//
-			// var bvh = new BoundingVolumeHierarchy(null, aabbs, Enumerable.Range(0, aabbs.Length).ToList());
-			//
-			// var aabb = new AxisAlignedBoundingBox(Float3.zero, new Float3(0.5f, 0f, 0.5f));
-			// Ray ray = new Ray(Float3.up, Float3.down);
-			//
-			// DebugHelper.Log(aabb.Intersect(ray));
-			//
-			// return;
-
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
@@ -63,7 +34,7 @@ namespace ForceRenderer
 			Texture buffer = new Texture(resolutions[2]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new LightedBMWScene(),
+											RenderBuffer = buffer, Scene = new MultipleBMWScene(),
 											PixelSample = 128, AdaptiveSample = 16000, TileSize = 32
 										};
 
