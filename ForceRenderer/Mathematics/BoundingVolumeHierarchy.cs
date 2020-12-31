@@ -164,5 +164,20 @@ namespace ForceRenderer.Mathematics
 
 			public bool IsLeaf => childIndex0 == 0;
 		}
+
+		// AxisAlignedBoundingBox[] aabbs =
+		// {
+		// 	new AxisAlignedBoundingBox(Float3.up, Float3.half),
+		// 	new AxisAlignedBoundingBox(Float3.one * 2, Float3.half),
+		// 	new AxisAlignedBoundingBox(Float3.right * 2, Float3.half),
+		// 	new AxisAlignedBoundingBox(Float3.down * 2, Float3.half)
+		// };
+		//
+		// var bvh = new BoundingVolumeHierarchy(null, aabbs, Enumerable.Range(0, aabbs.Length).ToList());
+		//
+		// var aabb = new AxisAlignedBoundingBox(Float3.zero, new Float3(0.5f, 0f, 0.5f));
+		// Ray ray = new Ray(Float3.up, Float3.down);
+		//
+		// DebugHelper.Log(aabb.Intersect(ray));
 	}
 }
