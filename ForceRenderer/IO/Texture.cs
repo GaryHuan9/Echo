@@ -15,7 +15,7 @@ namespace ForceRenderer.IO
 	/// An asset object used to read or save an image. Pixels are stored raw for fast access but uses much more memory.
 	/// File operation handled by <see cref="Bitmap"/>. Can be offloaded to separate threads for faster loading.
 	/// </summary>
-	public class Texture : LoadableAsset
+	public abstract class Texture : LoadableAsset
 	{
 		public Texture(string path)
 		{
@@ -70,8 +70,6 @@ namespace ForceRenderer.IO
 
 		public Texture(Texture source, bool isReadonly = false) : this(source.size, (Color32[])source.pixels.Clone(), isReadonly) { }
 
-		public Texture(Int2 size, bool isReadonly = false) : this(size, new Color32[size.Product], isReadonly) { }
-
 		Texture(Int2 size, Color32[] pixels, bool isReadonly)
 		{
 			this.size = size;
@@ -85,12 +83,22 @@ namespace ForceRenderer.IO
 			else throw ExceptionHelper.Invalid(nameof(pixels), pixels, "has mismatched length.");
 		}
 
+		protected Texture(Int2 size, bool isReadonly)
+		{
+			this.size = size;
+			this.isReadonly = isReadonly;
+
+			oneLess = size - Int2.one;
+			aspect = (float)size.x / size.y;
+			length = size.Product;
+		}
+
 		readonly Color32[] pixels;
 
 		public readonly Int2 size;
 		public readonly bool isReadonly;
 
-		readonly Int2 oneLess;
+		protected readonly Int2 oneLess;
 		public readonly float aspect; //Width over height
 		public readonly int length;
 
@@ -133,6 +141,20 @@ namespace ForceRenderer.IO
 		}
 
 		public void SetPixel(Int2 position, Color32 value) => SetPixel(ToIndex(position), value);
+
+		/// <summary>
+		/// Retrieves and assigns the RGB color of a pixel based on its index.
+		/// Index based on <see cref="ToIndex"/> and <see cref="ToPosition"/>.
+		/// </summary>
+		public abstract Float3 this[int index] { get; set; }
+
+		public virtual Float3 this[Int2 position]
+		{
+			get => this[ToIndex(position)];
+			set => this[ToIndex(position)] = value;
+		}
+
+		public virtual Float3 this[Float2 uv] =>
 
 		public int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
@@ -183,5 +205,29 @@ namespace ForceRenderer.IO
 			bitmap.UnlockBits(bits);
 			bitmap.Save(path, compatibleFormats[extensionIndex]);
 		}
+	}
+
+	/// <summary>
+	/// Retrieves the color of a texture using a texture coordinate.
+	/// </summary>
+	public interface IFilter
+	{
+		/// <summary>
+		/// Returns the color of the texture at <see cref="uv"/>.
+		/// </summary>
+		/// <param name="texture">The target texture to retrieve the color from.</param>
+		/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
+		Float3 Convert(Texture texture, Float2 uv);
+	}
+
+	/// <summary>
+	/// How to manipulate a uv coordinate if it is out of the zero to one bounds?
+	/// </summary>
+	public interface IWrapper
+	{
+		/// <summary>
+		/// Converts a uv into a texture coordinate that is between the bounds zero to one.
+		/// </summary>
+		Float2 Convert(Float2 uv);
 	}
 }
