@@ -124,6 +124,7 @@ namespace ForceRenderer.Renderers
 		/// <summary>
 		/// Samples a hemisphere pointing towards <paramref name="normal"/>.
 		/// <paramref name="alpha"/> determines whether the sampling distribution is uniform or cosine.
+		/// Based on http://corysimon.github.io/articles/uniformdistn-on-sphere/
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		Float3 GetHemisphereDirection(Float3 normal, float alpha)
