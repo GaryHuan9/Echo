@@ -4,7 +4,6 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using ForceRenderer.IO;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
@@ -36,7 +35,7 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new BunnyScene(),
+											RenderBuffer = buffer, Scene = new LightedBMWScene(),
 											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
@@ -46,11 +45,18 @@ namespace ForceRenderer
 			engine.Begin();
 			engine.WaitForRender();
 
+			//Alter buffer
+			// Float3 max = buffer.Aggregate(Float3.epsilon, (current, pixel) => current.Max(pixel));
+			// float max = buffer.Max(pixel => pixel.Average);
+			// buffer.ForEach((ref Float3 pixel) => pixel /= max);
+
 			//Copies render texture and saves as file
 			Texture2D output = new Texture2D(buffer);
 
 			output.SetReadonly();
 			output.Save("render.png");
+
+			buffer.Save("render.rdt");
 
 			//Logs render stats
 			double elapsedSeconds = engine.Elapsed.TotalSeconds;
