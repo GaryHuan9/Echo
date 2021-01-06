@@ -4,14 +4,15 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
+using ForceRenderer.Textures;
 
 namespace ForceRenderer.IO
 {
-	public class MaterialTemplateLibrary : LoadableAsset
+	public class MaterialTemplateLibrary : ILoadableAsset
 	{
 		public MaterialTemplateLibrary(string path) //Loads .mtl based on http://paulbourke.net/dataformats/mtl/
 		{
-			path = GetAbsolutePath(path); //Formulate path
+			path = this.GetAbsolutePath(path); //Formulate path
 
 			var loading = CollectionPooler<string, Material>.dictionary.GetObject();
 			string currentMaterialName = null;
@@ -26,7 +27,7 @@ namespace ForceRenderer.IO
 				{
 					case "newmtl":
 					{
-						currentMaterialName = GetRemain(parts, 1);
+						currentMaterialName = this.GetRemain(parts, 1);
 						loading[currentMaterialName] = new Material();
 
 						break;
@@ -113,7 +114,7 @@ namespace ForceRenderer.IO
 
 				float ParseSingle(int start = 1) => float.Parse(parts[start]);
 				Float3 ParseFloat3(int start = 1) => new Float3(float.Parse(parts[start]), float.Parse(parts[start + 1]), float.Parse(parts[start + 2]));
-				Texture2D ParseTexture(int start = 1) => Texture2D.Load(GetSiblingPath(path, GetRemain(parts, start)));
+				Texture2D ParseTexture(int start = 1) => Texture2D.Load(this.GetSiblingPath(path, this.GetRemain(parts, start)));
 			}
 
 			//Finalize materials
@@ -141,7 +142,7 @@ namespace ForceRenderer.IO
 		}
 
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".mtl"});
-		protected override IReadOnlyList<string> AcceptableFileExtensions => _acceptableFileExtensions;
+		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
 		readonly ReadOnlyCollection<Material> materials;
 		readonly ReadOnlyDictionary<string, int> names;

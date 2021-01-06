@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 
-namespace ForceRenderer.IO
+namespace ForceRenderer.Textures
 {
 	public class CylindricalCubemap : Cubemap
 	{

@@ -5,6 +5,7 @@ using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
+using ForceRenderer.Textures;
 
 namespace ForceRenderer.Renderers
 {

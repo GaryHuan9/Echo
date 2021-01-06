@@ -1,30 +1,38 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
+using ForceRenderer.IO;
 
-namespace ForceRenderer.IO
+namespace ForceRenderer.Textures
 {
 	/// <summary>
 	/// The default texture; stores RGBA color information with 8 bits per channel.
 	/// Supports saving and loading from image files.
 	/// </summary>
-	public class Texture2D : Texture
+	public class Texture2D : Texture, ILoadableAsset
 	{
-		protected Texture2D(Color32[] pixels, Int2 size, bool isReadonly = false) : base(size, isReadonly)
+		public Texture2D(Int2 size, IWrapper wrapper = null, IFilter filter = null) : base(size, wrapper, filter) => pixels = new Color32[size.Product];
+
+		public Texture2D(Texture source, IWrapper wrapper = null, IFilter filter = null) : this(source.size, wrapper, filter)
 		{
-			if (pixels.Length == length) this.pixels = pixels;
-			else throw ExceptionHelper.Invalid(nameof(pixels), pixels, "has mismatched length.");
+			if (source is Texture2D texture)
+			{
+				for (int i = 0; i < length; i++) pixels[i] = texture.pixels[i];
+			}
+			else CopyFrom(source);
 		}
 
-		public Texture2D(Int2 size, bool isReadonly = false) : base(size, isReadonly) => pixels = new Color32[length];
+		Texture2D(Color32 color) : base(Int2.one) => pixels = new[] {color};
 
 		readonly Color32[] pixels;
 
-		public static readonly Texture2D white = new Texture2D(new[] {Color32.white}, Int2.one, true);
-		public static readonly Texture2D black = new Texture2D(new[] {Color32.black}, Int2.one, true);
+		public static readonly Texture2D white = new Texture2D(Color32.white);
+		public static readonly Texture2D black = new Texture2D(Color32.black);
 
 		public override Float3 this[int index]
 		{
@@ -36,16 +44,19 @@ namespace ForceRenderer.IO
 			}
 		}
 
-		public override Texture Clone(bool newReadonly = false) => new Texture2D((Color32[])pixels.Clone(), size, newReadonly);
+		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});
+		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new ReadOnlyCollection<ImageFormat>(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif});
 
-		public static Texture2D Load(string path)
+		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
+
+		public static Texture2D Load(string path, IWrapper wrapper = null, IFilter filter = null)
 		{
 			using Bitmap source = new Bitmap(white.GetAbsolutePath(path), true);
 
 			PixelFormat format = source.PixelFormat;
 			Int2 size = new Int2(source.Width, source.Height);
 
-			Texture2D texture = new Texture2D(size, true);
+			Texture2D texture = new Texture2D(size, wrapper, filter);
 			Color32[] pixels = texture.pixels;
 
 			Rectangle rectangle = new Rectangle(0, 0, texture.size.x, texture.size.y);
@@ -83,6 +94,8 @@ namespace ForceRenderer.IO
 			}
 
 			source.UnlockBits(data);
+			texture.SetReadonly();
+
 			return texture;
 		}
 
@@ -95,11 +108,11 @@ namespace ForceRenderer.IO
 			if (string.IsNullOrEmpty(extension))
 			{
 				extensionIndex = 0;
-				relativePath = Path.ChangeExtension(relativePath, AcceptableFileExtensions[extensionIndex]);
+				relativePath = Path.ChangeExtension(relativePath, ((ILoadableAsset)this).AcceptableFileExtensions[extensionIndex]);
 			}
 			else
 			{
-				extensionIndex = AcceptableFileExtensions.IndexOf(extension);
+				extensionIndex = ((ILoadableAsset)this).AcceptableFileExtensions.IndexOf(extension);
 				if (extensionIndex < 0) throw ExceptionHelper.Invalid(nameof(relativePath), relativePath, "does not have a compatible extension!");
 			}
 
