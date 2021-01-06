@@ -35,7 +35,7 @@ namespace ForceRenderer
 	{
 		public TestTexture()
 		{
-			Texture texture = new Texture("Assets/Textures/MinecraftTexture.bmp");
+			Texture texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
 			Material material = new Material {Diffuse = Float3.one, DiffuseTexture = texture};
 
 			Cubemap = new SolidCubemap(Color32.white);

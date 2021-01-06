@@ -173,7 +173,7 @@ namespace ForceRenderer.Renderers
 			if (aborted) state.Break();
 
 			//Store pixel
-			RenderBuffer.SetPixel(position, pixel.Color);
+			RenderBuffer[position] = pixel.Color;
 			Interlocked.Increment(ref _completedPixel);
 		}
 
@@ -207,7 +207,7 @@ namespace ForceRenderer.Renderers
 			/// <summary>
 			/// Returns the color average
 			/// </summary>
-			public Color32 Color => (Color32)(Float3)average;
+			public Float3 Color => (Float3)average;
 
 			/// <summary>
 			/// Returns the standard deviation of the pixel.
