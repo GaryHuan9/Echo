@@ -108,8 +108,8 @@ namespace ForceRenderer.IO
 			set => CheckedSet(ref _indexOfRefraction, value);
 		}
 
-		Texture _diffuseTexture = Texture.white;
-		Texture _specularTexture = Texture.white;
+		Texture _diffuseTexture = Texture2D.white;
+		Texture _specularTexture = Texture2D.white;
 
 		/// <summary>
 		/// The color texture multiplied to diffuse.
@@ -129,8 +129,8 @@ namespace ForceRenderer.IO
 			set => CheckedSet(ref _specularTexture, value);
 		}
 
-		Texture _emissionTexture = Texture.white;
-		Texture _smoothnessTexture = Texture.white;
+		Texture _emissionTexture = Texture2D.white;
+		Texture _smoothnessTexture = Texture2D.white;
 
 		/// <summary>
 		/// The color texture multiplied to emission.
@@ -150,8 +150,8 @@ namespace ForceRenderer.IO
 			set => CheckedSet(ref _smoothnessTexture, value);
 		}
 
-		Texture _transparencyTexture = Texture.white;
-		Texture _transmissionTexture = Texture.white;
+		Texture _transparencyTexture = Texture2D.white;
+		Texture _transmissionTexture = Texture2D.white;
 
 		/// <summary>
 		/// The value multiplied to transparency. Only the primary/red channel is considered.
@@ -290,14 +290,14 @@ namespace ForceRenderer.IO
 			{
 				if (texture.isReadonly)
 				{
-					if (texture == Texture.white) texture = null;
-					else if (texture == Texture.black)
+					if (texture == Texture2D.white) texture = null;
+					else if (texture == Texture2D.black)
 					{
 						texture = null;
 						value = Float3.zero;
 					}
 				}
-				else texture = new Texture(texture, true);
+				else texture = texture.Clone(true);
 
 				this.value = value.Max(Float3.zero);
 				this.texture = texture;
@@ -313,7 +313,7 @@ namespace ForceRenderer.IO
 			public Float3 GetValue(Float2 texcoord)
 			{
 				if (texture == null) return value;
-				return value * texture.GetPixel(texcoord);
+				return value * texture[texcoord];
 			}
 		}
 	}

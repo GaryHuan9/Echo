@@ -113,7 +113,7 @@ namespace ForceRenderer.IO
 
 				float ParseSingle(int start = 1) => float.Parse(parts[start]);
 				Float3 ParseFloat3(int start = 1) => new Float3(float.Parse(parts[start]), float.Parse(parts[start + 1]), float.Parse(parts[start + 2]));
-				Texture ParseTexture(int start = 1) => new Texture(GetSiblingPath(path, GetRemain(parts, start)));
+				Texture2D ParseTexture(int start = 1) => Texture2D.Load(GetSiblingPath(path, GetRemain(parts, start)));
 			}
 
 			//Finalize materials
