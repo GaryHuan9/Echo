@@ -9,6 +9,7 @@ using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
+using ForceRenderer.Textures;
 
 namespace ForceRenderer.Renderers
 {

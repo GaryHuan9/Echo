@@ -11,11 +11,11 @@ using CodeHelpers.ObjectPooling;
 
 namespace ForceRenderer.IO
 {
-	public class Mesh : LoadableAsset
+	public class Mesh : ILoadableAsset
 	{
 		public Mesh(string path) //Loads .obj based on http://paulbourke.net/dataformats/obj/
 		{
-			path = GetAbsolutePath(path);
+			path = this.GetAbsolutePath(path);
 			string currentMaterialName = null;
 
 			foreach (string line in File.ReadAllLines(path))
@@ -27,7 +27,7 @@ namespace ForceRenderer.IO
 				{
 					case "mtllib":
 					{
-						materialLibrary = new MaterialTemplateLibrary(GetSiblingPath(path, GetRemain(parts, 1)));
+						materialLibrary = new MaterialTemplateLibrary(this.GetSiblingPath(path, this.GetRemain(parts, 1)));
 						break;
 					}
 					case "v":
@@ -50,7 +50,7 @@ namespace ForceRenderer.IO
 					}
 					case "usemtl":
 					{
-						currentMaterialName = GetRemain(parts, 1);
+						currentMaterialName = this.GetRemain(parts, 1);
 						break;
 					}
 					case "f":
@@ -116,7 +116,7 @@ namespace ForceRenderer.IO
 		}
 
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".obj"});
-		protected override IReadOnlyList<string> AcceptableFileExtensions => _acceptableFileExtensions;
+		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
 		public readonly MaterialTemplateLibrary materialLibrary;
 

@@ -1,40 +1,36 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System;
 using System.Data;
 using System.Drawing;
-using System.Drawing.Imaging;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 
-namespace ForceRenderer.IO
+namespace ForceRenderer.Textures
 {
 	/// <summary>
 	/// An asset object used to read or save an image. Pixels are stored raw for fast access but uses much more memory.
 	/// File operation handled by <see cref="Bitmap"/>. Can be offloaded to separate threads for faster loading.
 	/// </summary>
-	public abstract class Texture : LoadableAsset
+	public abstract class Texture
 	{
-		protected Texture(Int2 size, bool isReadonly = false) : this(size, isReadonly, IO.Wrapper.clamp, IO.Filter.bilinear) { }
-
-		protected Texture(Int2 size, bool isReadonly, IWrapper wrapper, IFilter filter)
+		protected Texture(Int2 size, IWrapper wrapper = null, IFilter filter = null)
 		{
-			Wrapper = wrapper; //Has to assign wrappers and filters first because
-			Filter = filter;   //the property will throw an exception if is readonly is true
-
 			this.size = size;
-			this.isReadonly = isReadonly;
-
 			oneLess = size - Int2.one;
+
 			aspect = (float)size.x / size.y;
 			length = size.Product;
+
+			_wrapper = wrapper ?? Textures.Wrapper.clamp;
+			_filter = filter ?? Textures.Filter.bilinear;
 		}
 
 		public readonly Int2 size;
-		public readonly bool isReadonly;
-
 		public readonly Int2 oneLess;
+
 		public readonly float aspect; //Width over height
 		protected readonly int length;
+
+		public bool IsReadonly { get; protected set; }
 
 		IWrapper _wrapper;
 		IFilter _filter;
@@ -63,11 +59,6 @@ namespace ForceRenderer.IO
 			}
 		}
 
-		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});
-		protected static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new ReadOnlyCollection<ImageFormat>(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif});
-
-		protected override IReadOnlyList<string> AcceptableFileExtensions => _acceptableFileExtensions;
-
 		/// <summary>
 		/// Retrieves and assigns the RGB color of a pixel based on its index. Index based on <see cref="ToIndex"/> and <see cref="ToPosition"/>.
 		/// Should check for readonly on setter using the <see cref="CheckReadonly"/> method to ensure readonly correctness.
@@ -82,20 +73,33 @@ namespace ForceRenderer.IO
 
 		public virtual Float3 this[Float2 uv] => Filter.Convert(this, Wrapper.Convert(uv));
 
+		/// <summary>
+		/// Sets this <see cref="Texture"/> as readonly.
+		/// NOTE: This operation cannot be reverted.
+		/// </summary>
+		public void SetReadonly() => IsReadonly = true;
+
 		public virtual int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public virtual Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
 
 		protected void CheckReadonly()
 		{
-			if (!isReadonly) return;
-			throw new ReadOnlyException();
+			if (IsReadonly) throw new Exception($"Operation cannot be completed when {this} is readonly.");
 		}
 
 		/// <summary>
-		/// Creates a deep clone of this texture. Should always return a texture of the same type.
-		/// <paramref name="newReadonly"/> indicates if the new texture is readonly.
+		/// Copies the data of a <see cref="Texture"/> of the same size pixel by pixel.
+		/// An exception will be thrown if the sizes mismatch.
 		/// </summary>
-		public abstract Texture Clone(bool newReadonly = false);
+		public void CopyFrom(Texture texture)
+		{
+			if (texture.size != size) throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
+
+			//Assigns the colors using positions instead of indices because the index converters can be overloaded
+			foreach (Int2 position in size.Loop()) this[position] = texture[position];
+		}
+
+		public override string ToString() => $"{(IsReadonly ? "Readonly" : "Read-write")} {GetType()} with size {size}";
 	}
 
 	public static class Wrapper

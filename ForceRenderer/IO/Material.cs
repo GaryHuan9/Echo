@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using CodeHelpers.Mathematics;
+using ForceRenderer.Textures;
 
 namespace ForceRenderer.IO
 {
@@ -288,7 +289,7 @@ namespace ForceRenderer.IO
 		{
 			public TexturePair(Float3 value, Texture texture)
 			{
-				if (texture.isReadonly)
+				if (texture.IsReadonly)
 				{
 					if (texture == Texture2D.white) texture = null;
 					else if (texture == Texture2D.black)
@@ -297,7 +298,11 @@ namespace ForceRenderer.IO
 						value = Float3.zero;
 					}
 				}
-				else texture = texture.Clone(true);
+				else
+				{
+					texture = new Texture2D(texture); //NOTE: Currently all textures might be copied into Texture2D
+					texture.SetReadonly();
+				}
 
 				this.value = value.Max(Float3.zero);
 				this.texture = texture;

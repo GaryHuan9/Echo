@@ -2,6 +2,7 @@ using System;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Renderers;
+using ForceRenderer.Textures;
 
 namespace ForceRenderer.Terminals
 {
