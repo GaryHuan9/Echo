@@ -21,7 +21,7 @@ namespace ForceRenderer.IO
 								{
 									try
 									{
-										sources[index] = new Texture(Path.Combine(path, names[index]));
+										sources[index] = Texture2D.Load(Path.Combine(path, names[index]));
 									}
 									catch (FileNotFoundException exception)
 									{
@@ -64,6 +64,6 @@ namespace ForceRenderer.IO
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Float3 Sample(int index, Float2 uv) => textures[index].GetPixel(uv + Float2.half);
+		Float3 Sample(int index, Float2 uv) => textures[index][uv + Float2.half];
 	}
 }
