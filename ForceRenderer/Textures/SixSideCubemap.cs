@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 
-namespace ForceRenderer.IO
+namespace ForceRenderer.Textures
 {
 	public class SixSideCubemap : Cubemap
 	{

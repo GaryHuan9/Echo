@@ -3,6 +3,7 @@ using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
+using ForceRenderer.Textures;
 
 namespace ForceRenderer
 {

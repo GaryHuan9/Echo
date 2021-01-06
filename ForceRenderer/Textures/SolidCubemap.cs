@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 
-namespace ForceRenderer.IO
+namespace ForceRenderer.Textures
 {
 	public class SolidCubemap : Cubemap
 	{
