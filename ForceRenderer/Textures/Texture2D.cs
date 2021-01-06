@@ -49,7 +49,7 @@ namespace ForceRenderer.Textures
 
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
-		public static Texture2D Load(string path, IWrapper wrapper = null, IFilter filter = null)
+		public static Texture2D Read(string path, IWrapper wrapper = null, IFilter filter = null)
 		{
 			using Bitmap source = new Bitmap(white.GetAbsolutePath(path), true);
 
