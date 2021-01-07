@@ -109,13 +109,13 @@ namespace ForceRenderer.IO
 			set => CheckedSet(ref _indexOfRefraction, value);
 		}
 
-		Texture _diffuseTexture = Texture2D.white;
-		Texture _specularTexture = Texture2D.white;
+		Texture2D _diffuseTexture = Texture2D.white;
+		Texture2D _specularTexture = Texture2D.white;
 
 		/// <summary>
 		/// The color texture multiplied to diffuse.
 		/// </summary>
-		public Texture DiffuseTexture
+		public Texture2D DiffuseTexture
 		{
 			get => _diffuseTexture;
 			set => CheckedSet(ref _diffuseTexture, value);
@@ -124,19 +124,19 @@ namespace ForceRenderer.IO
 		/// <summary>
 		/// The color texture multiplied to specular.
 		/// </summary>
-		public Texture SpecularTexture
+		public Texture2D SpecularTexture
 		{
 			get => _specularTexture;
 			set => CheckedSet(ref _specularTexture, value);
 		}
 
-		Texture _emissionTexture = Texture2D.white;
-		Texture _smoothnessTexture = Texture2D.white;
+		Texture2D _emissionTexture = Texture2D.white;
+		Texture2D _smoothnessTexture = Texture2D.white;
 
 		/// <summary>
 		/// The color texture multiplied to emission.
 		/// </summary>
-		public Texture EmissionTexture
+		public Texture2D EmissionTexture
 		{
 			get => _emissionTexture;
 			set => CheckedSet(ref _emissionTexture, value);
@@ -145,19 +145,19 @@ namespace ForceRenderer.IO
 		/// <summary>
 		/// The color texture multiplied to smoothness. Only the primary/red channel is considered.
 		/// </summary>
-		public Texture SmoothnessTexture
+		public Texture2D SmoothnessTexture
 		{
 			get => _smoothnessTexture;
 			set => CheckedSet(ref _smoothnessTexture, value);
 		}
 
-		Texture _transparencyTexture = Texture2D.white;
-		Texture _transmissionTexture = Texture2D.white;
+		Texture2D _transparencyTexture = Texture2D.white;
+		Texture2D _transmissionTexture = Texture2D.white;
 
 		/// <summary>
 		/// The value multiplied to transparency. Only the primary/red channel is considered.
 		/// </summary>
-		public Texture TransparencyTexture
+		public Texture2D TransparencyTexture
 		{
 			get => _transparencyTexture;
 			set => CheckedSet(ref _transparencyTexture, value);
@@ -166,7 +166,7 @@ namespace ForceRenderer.IO
 		/// <summary>
 		/// The transmission color texture applied during refraction.
 		/// </summary>
-		public Texture TransmissionTexture
+		public Texture2D TransmissionTexture
 		{
 			get => _transmissionTexture;
 			set => CheckedSet(ref _transmissionTexture, value);
@@ -287,7 +287,7 @@ namespace ForceRenderer.IO
 
 		readonly struct TexturePair
 		{
-			public TexturePair(Float3 value, Texture texture)
+			public TexturePair(Float3 value, Texture2D texture)
 			{
 				if (texture.IsReadonly)
 				{
@@ -308,10 +308,10 @@ namespace ForceRenderer.IO
 				this.texture = texture;
 			}
 
-			public TexturePair(float value, Texture texture) : this((Float3)value, texture) { }
+			public TexturePair(float value, Texture2D texture) : this((Float3)value, texture) { }
 
 			public readonly Float3 value;
-			public readonly Texture texture;
+			public readonly Texture2D texture;
 
 			public bool Varies => texture != null;
 

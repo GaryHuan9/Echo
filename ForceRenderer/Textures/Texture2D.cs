@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 
@@ -49,7 +50,54 @@ namespace ForceRenderer.Textures
 
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
-		public static Texture2D Read(string path, IWrapper wrapper = null, IFilter filter = null)
+		public void Save(string relativePath)
+		{
+			//Get path
+			string extension = Path.GetExtension(relativePath);
+			int extensionIndex;
+
+			if (string.IsNullOrEmpty(extension))
+			{
+				extensionIndex = 0;
+				relativePath = Path.ChangeExtension(relativePath, ((ILoadableAsset)this).AcceptableFileExtensions[extensionIndex]);
+			}
+			else
+			{
+				extensionIndex = ((ILoadableAsset)this).AcceptableFileExtensions.IndexOf(extension);
+				if (extensionIndex < 0) throw ExceptionHelper.Invalid(nameof(relativePath), relativePath, "does not have a compatible extension!");
+			}
+
+			string path = AssetsUtility.GetAssetsPath(relativePath);
+
+			//Export
+			using Bitmap bitmap = new Bitmap(size.x, size.y);
+
+			Rectangle rectangle = new Rectangle(0, 0, size.x, size.y);
+			BitmapData bits = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+			unsafe
+			{
+				byte* pointer = (byte*)bits.Scan0;
+				if (pointer == null) throw ExceptionHelper.NotPossible;
+
+				for (int i = 0; i < length; i++)
+				{
+					Color32 pixel = pixels[i];
+
+					pointer[0] = pixel.b;
+					pointer[1] = pixel.g;
+					pointer[2] = pixel.r;
+					pointer[3] = pixel.a;
+
+					pointer += 4;
+				}
+			}
+
+			bitmap.UnlockBits(bits);
+			bitmap.Save(path, compatibleFormats[extensionIndex]);
+		}
+
+		public static Texture2D Load(string path, IWrapper wrapper = null, IFilter filter = null)
 		{
 			using Bitmap source = new Bitmap(white.GetAbsolutePath(path), true);
 
@@ -99,51 +147,21 @@ namespace ForceRenderer.Textures
 			return texture;
 		}
 
-		public void Save(string relativePath)
+		public void Write(FileWriter writer)
 		{
-			//Get path
-			string extension = Path.GetExtension(relativePath);
-			int extensionIndex;
+			writer.Write(size);
+			for (int i = 0; i < length; i++) writer.Write(pixels[i]);
+		}
 
-			if (string.IsNullOrEmpty(extension))
-			{
-				extensionIndex = 0;
-				relativePath = Path.ChangeExtension(relativePath, ((ILoadableAsset)this).AcceptableFileExtensions[extensionIndex]);
-			}
-			else
-			{
-				extensionIndex = ((ILoadableAsset)this).AcceptableFileExtensions.IndexOf(extension);
-				if (extensionIndex < 0) throw ExceptionHelper.Invalid(nameof(relativePath), relativePath, "does not have a compatible extension!");
-			}
+		public static Texture2D Read(FileReader reader)
+		{
+			Int2 size = reader.ReadInt2();
+			Texture2D texture = new Texture2D(size);
 
-			string path = AssetsUtility.GetAssetsPath(relativePath);
+			for (int i = 0; i < texture.length; i++) texture.pixels[i] = reader.ReadColor32();
 
-			//Export
-			using Bitmap bitmap = new Bitmap(size.x, size.y);
-
-			Rectangle rectangle = new Rectangle(0, 0, size.x, size.y);
-			BitmapData bits = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-
-			unsafe
-			{
-				byte* pointer = (byte*)bits.Scan0;
-				if (pointer == null) throw ExceptionHelper.NotPossible;
-
-				for (int i = 0; i < length; i++)
-				{
-					Color32 pixel = pixels[i];
-
-					pointer[0] = pixel.b;
-					pointer[1] = pixel.g;
-					pointer[2] = pixel.r;
-					pointer[3] = pixel.a;
-
-					pointer += 4;
-				}
-			}
-
-			bitmap.UnlockBits(bits);
-			bitmap.Save(path, compatibleFormats[extensionIndex]);
+			texture.SetReadonly();
+			return texture;
 		}
 	}
 }
