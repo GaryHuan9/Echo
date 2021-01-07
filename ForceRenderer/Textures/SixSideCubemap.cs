@@ -21,7 +21,7 @@ namespace ForceRenderer.Textures
 								{
 									try
 									{
-										sources[index] = Texture2D.Read(Path.Combine(path, names[index]));
+										sources[index] = Texture2D.Load(Path.Combine(path, names[index]));
 									}
 									catch (FileNotFoundException exception)
 									{

@@ -206,7 +206,7 @@ namespace ForceRenderer.Renderers
 			public const double MinDeviationThreshold = 0.3d;
 
 			/// <summary>
-			/// Returns the color average
+			/// Returns the color average.
 			/// </summary>
 			public Float3 Color => (Float3)average;
 
@@ -226,11 +226,16 @@ namespace ForceRenderer.Renderers
 			}
 
 			/// <summary>
-			/// Accumulates the color <paramref name="value"/> to pixel in a thread-safe manner.
+			/// Accumulates the color <paramref name="value"/> to pixel.
 			/// </summary>
 			public void Accumulate(Float3 value)
 			{
-				if (float.IsNaN(value.x) || float.IsNaN(value.y) || float.IsNaN(value.z)) return; //NaN gate
+				value = new Float3 //NaN gate
+				(
+					float.IsNaN(value.x) ? 0f : value.x,
+					float.IsNaN(value.y) ? 0f : value.y,
+					float.IsNaN(value.z) ? 0f : value.z
+				);
 
 				accumulation++;
 

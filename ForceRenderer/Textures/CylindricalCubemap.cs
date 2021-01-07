@@ -5,7 +5,7 @@ namespace ForceRenderer.Textures
 {
 	public class CylindricalCubemap : Cubemap
 	{
-		public CylindricalCubemap(string path) => texture = Texture2D.Read(path);
+		public CylindricalCubemap(string path) => texture = Texture2D.Load(path);
 
 		readonly Texture2D texture;
 

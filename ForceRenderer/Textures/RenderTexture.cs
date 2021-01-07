@@ -52,23 +52,6 @@ namespace ForceRenderer.Textures
 		public delegate void PixelDelegate(ref Float3 pixel);
 		public delegate void PixelPositionDelegate(ref Float3 pixel, Int2 position);
 
-		public static RenderTexture Read(string relativePath, IWrapper wrapper = null, IFilter filter = null)
-		{
-			using FileReader reader = new FileReader(AssetsUtility.GetAssetsPath(relativePath));
-
-			reader.ReadInt32();
-			reader.ReadInt32();
-
-			Int2 size = reader.ReadInt2();
-			RenderTexture texture = new RenderTexture(size, wrapper, filter);
-
-			Float3[] pixels = texture.pixels;
-
-			for (int i = 0; i < texture.length; i++) pixels[i] = reader.ReadFloat3();
-
-			return texture;
-		}
-
 		public void Save(string relativePath)
 		{
 			using FileWriter writer = new FileWriter(AssetsUtility.GetAssetsPath(relativePath));
@@ -78,6 +61,22 @@ namespace ForceRenderer.Textures
 			writer.Write(size);
 
 			for (int i = 0; i < length; i++) writer.Write(pixels[i]);
+		}
+
+		public static RenderTexture Load(string relativePath, IWrapper wrapper = null, IFilter filter = null)
+		{
+			using FileReader reader = new FileReader(AssetsUtility.GetAssetsPath(relativePath));
+
+			reader.ReadInt32();
+			reader.ReadInt32();
+
+			Int2 size = reader.ReadInt2();
+			RenderTexture texture = new RenderTexture(size, wrapper, filter);
+			Float3[] pixels = texture.pixels;
+
+			for (int i = 0; i < texture.length; i++) pixels[i] = reader.ReadFloat3();
+
+			return texture;
 		}
 	}
 }
