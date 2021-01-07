@@ -41,10 +41,16 @@ namespace ForceRenderer.Textures
 			for (int i = 0; i < pixels.Length; i++) function(ref pixels[i]);
 		}
 
+		public void ForEach(PixelPositionDelegate function)
+		{
+			for (int i = 0; i < pixels.Length; i++) function(ref pixels[i], ToPosition(i));
+		}
+
 		public IEnumerator<Float3> GetEnumerator() => ((IEnumerable<Float3>)pixels).GetEnumerator();
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		public delegate void PixelDelegate(ref Float3 pixel);
+		public delegate void PixelPositionDelegate(ref Float3 pixel, Int2 position);
 
 		public static RenderTexture Read(string relativePath, IWrapper wrapper = null, IFilter filter = null)
 		{

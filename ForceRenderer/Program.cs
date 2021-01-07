@@ -14,6 +14,14 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
+			RenderTexture texture = RenderTexture.Read("render.rdt");
+
+			float max = texture.Max(pixel => pixel.Average);
+			texture.ForEach((ref Float3 pixel) => pixel = (pixel / max).Power(0.5f));
+
+			new Texture2D(texture).Save("render.png");
+			return;
+
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
