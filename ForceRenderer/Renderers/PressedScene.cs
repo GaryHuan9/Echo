@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
 using ForceRenderer.IO;
@@ -221,6 +222,11 @@ namespace ForceRenderer.Renderers
 
 			ref PressedTriangle triangle = ref triangles[token];
 			return triangle.GetNormal(uv);
+		}
+
+		public void Write(FileWriter writer)
+		{
+//TODO: Not writing camera, directional light, and skybox right now
 		}
 	}
 }
