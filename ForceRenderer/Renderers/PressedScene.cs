@@ -226,7 +226,7 @@ namespace ForceRenderer.Renderers
 
 		public void Write(FileWriter writer)
 		{
-//TODO: Not writing camera, directional light, and skybox right now
+			//TODO: Not writing camera, directional light, and skybox right now
 		}
 	}
 }

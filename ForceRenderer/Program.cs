@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.Renderers;
@@ -44,11 +45,6 @@ namespace ForceRenderer
 
 			engine.Begin();
 			engine.WaitForRender();
-
-			//Alter buffer
-			// Float3 max = buffer.Aggregate(Float3.epsilon, (current, pixel) => current.Max(pixel));
-			// float max = buffer.Max(pixel => pixel.Average);
-			// buffer.ForEach((ref Float3 pixel) => pixel /= max);
 
 			//Copies render texture and saves as file
 			Texture2D output = new Texture2D(buffer);
