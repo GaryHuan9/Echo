@@ -78,5 +78,22 @@ namespace ForceRenderer.Textures
 
 			return texture;
 		}
+
+		public void Write(FileWriter writer)
+		{
+			writer.Write(size);
+			for (int i = 0; i < length; i++) writer.Write(pixels[i]);
+		}
+
+		public static RenderTexture Read(FileReader reader)
+		{
+			Int2 size = reader.ReadInt2();
+			RenderTexture texture = new RenderTexture(size);
+
+			for (int i = 0; i < texture.length; i++) texture.pixels[i] = reader.ReadFloat3();
+
+			texture.SetReadonly();
+			return texture;
+		}
 	}
 }
