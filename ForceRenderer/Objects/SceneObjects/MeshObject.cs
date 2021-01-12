@@ -8,10 +8,10 @@ namespace ForceRenderer.Objects.SceneObjects
 {
 	public class MeshObject : SceneObject
 	{
-		public MeshObject(Mesh mesh) : base(mesh.materialLibrary[0]) => Mesh = mesh;
+		public MeshObject(Mesh mesh) : base(mesh.materialTemplateLibrary[0]) => Mesh = mesh;
 
 		public Mesh Mesh { get; set; }
-		Material FirstMaterial => Mesh.materialLibrary[0];
+		Material FirstMaterial => Mesh.materialTemplateLibrary[0];
 
 		public override Material Material
 		{
@@ -26,7 +26,7 @@ namespace ForceRenderer.Objects.SceneObjects
 			for (int i = 0; i < Mesh.TriangleCount; i++)
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
-				Material material = hasMaterial ? Material : Mesh.materialLibrary[triangle.materialIndex];
+				Material material = hasMaterial ? Material : Mesh.materialTemplateLibrary[triangle.materialIndex];
 				int materialToken = materialConverter(material);
 
 				bool hasNormal = triangle.normalIndices.MinComponent >= 0;
