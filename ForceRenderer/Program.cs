@@ -2,10 +2,8 @@
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using ForceRenderer.IO;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
@@ -16,18 +14,6 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			PerformanceTest test = new PerformanceTest();
-
-			using (test.Start())
-			{
-				Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj"); //1800ms / 1650ms => 1000ms / 850ms (400 file, 50 vnt, 400 tri)
-				// Mesh bunny = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
-			}
-
-			DebugHelper.Log(test.ElapsedMilliseconds);
-
-			return;
-
 			Terminal terminal = new Terminal();
 
 			var commandsController = new CommandsController(terminal);
@@ -49,8 +35,8 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new LightedBMWScene(),
-											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
+											RenderBuffer = buffer, Scene = new SingleBMWScene(),
+											PixelSample = 128, AdaptiveSample = 12000, TileSize = 32
 										};
 
 			renderEngine = engine;
