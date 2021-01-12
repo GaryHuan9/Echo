@@ -29,44 +29,38 @@ namespace ForceRenderer.IO
 
 			int height = 0;
 
-			PerformanceTest test0 = new PerformanceTest();
-			PerformanceTest test1 = new PerformanceTest();
-			PerformanceTest test2 = new PerformanceTest();
 
-			using (test0.Start())
+			//First read all lines to split them into categories
+			using StreamReader reader = new StreamReader(File.OpenRead(path));
+
+			while (true)
 			{
-				//First read all lines to split them into categories
-				using StreamReader reader = new StreamReader(File.OpenRead(path));
+				string line = reader.ReadLine();
+				if (line == null) break;
 
-				while (true)
-				{
-					string line = reader.ReadLine();
-					if (line == null) break;
+				ReadOnlySpan<char> span = ((ReadOnlySpan<char>)line).TrimStart();
 
-					ReadOnlySpan<char> span = ((ReadOnlySpan<char>)line).TrimStart();
+				int index = span.IndexOf(' ');
+				if (index < 0) continue;
 
-					int index = span.IndexOf(' ');
-					if (index < 0) continue;
-
-					(span[0] switch
+				(span[0] switch
+						{
+							'v' => index switch
 							{
-								'v' => index switch
+								1 => vertexLines,
+								2 => span[1] switch
 								{
-									1 => vertexLines,
-									2 => span[1] switch
-									{
-										'n' => normalLines,
-										't' => texcoordLines,
-										_ => null
-									},
+									'n' => normalLines,
+									't' => texcoordLines,
 									_ => null
 								},
-								'f' when index == 1 => faceLines,
-								'u' when span.StartsWith("usemtl ") => usemtlLines,
-								'm' when span.StartsWith("mtllib ") => mtllibLines,
 								_ => null
-							})?.Add(new Line(line, height++, Range.StartAt(index + 1)));
-				}
+							},
+							'f' when index == 1 => faceLines,
+							'u' when span.StartsWith("usemtl ") => usemtlLines,
+							'm' when span.StartsWith("mtllib ") => mtllibLines,
+							_ => null
+						})?.Add(new Line(line, height++, Range.StartAt(index + 1)));
 			}
 
 			//Load material template library
@@ -96,17 +90,14 @@ namespace ForceRenderer.IO
 			}
 			else throw new Exception($"Invalid OBJ file at {path} because it has zero usemtl usage, meaning it does not use any material.");
 
-			using (test1.Start())
-			{
-				//Load supporting attributes (vertex, normal, texcoord)
-				vertices = new Float3[vertexLines.Count];
-				normals = new Float3[normalLines.Count];
-				texcoords = new Float2[texcoordLines.Count];
+			//Load supporting attributes (vertex, normal, texcoord)
+			vertices = new Float3[vertexLines.Count];
+			normals = new Float3[normalLines.Count];
+			texcoords = new Float2[texcoordLines.Count];
 
-				Parallel.For(0, vertexLines.Count, LoadVertex);
-				Parallel.For(0, normalLines.Count, LoadNormal);
-				Parallel.For(0, texcoordLines.Count, LoadTexcoord);
-			}
+			Parallel.For(0, vertexLines.Count, LoadVertex);
+			Parallel.For(0, normalLines.Count, LoadNormal);
+			Parallel.For(0, texcoordLines.Count, LoadTexcoord);
 
 			void LoadVertex(int index)
 			{
@@ -117,7 +108,7 @@ namespace ForceRenderer.IO
 
 				//Because .obj files are in a right-handed coordinate system while we have a left-handed coordinate system,
 				//We have to simply negate the x axis to convert all of our vertices into the correct space
-				vertices[index] = new Float3(-float.Parse(line[ranges[0]]), float.Parse(line[ranges[1]]), float.Parse(line[ranges[2]]));
+				vertices[index] = new Float3(-ParseSingle(line[ranges[0]]), ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
 			}
 
 			void LoadNormal(int index)
@@ -128,7 +119,7 @@ namespace ForceRenderer.IO
 				Split(line, ' ', ranges);
 
 				//Same reason as vertices need to negate the x axis, we also have to negate the y axis
-				normals[index] = new Float3(-float.Parse(line[ranges[0]]), float.Parse(line[ranges[1]]), float.Parse(line[ranges[2]]));
+				normals[index] = new Float3(-ParseSingle(line[ranges[0]]), ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
 			}
 
 			void LoadTexcoord(int index)
@@ -138,98 +129,75 @@ namespace ForceRenderer.IO
 
 				Split(line, ' ', ranges);
 
-				texcoords[index] = new Float2(float.Parse(line[ranges[0]]), float.Parse(line[ranges[1]]));
+				texcoords[index] = new Float2(ParseSingle(line[ranges[0]]), ParseSingle(line[ranges[1]]));
 			}
 
-			using (test2.Start())
+			//Load triangles/faces
+			triangles = new List<Triangle>();
+
+			Parallel.For(0, faceLines.Count, LoadFace);
+			lock (triangles) triangles.TrimExcess();
+
+			void LoadFace(int index)
 			{
-				//Load triangles/faces
-				triangles = new List<Triangle>();
-				object locker = new object();
+				Line line = faceLines[index];
+				ReadOnlySpan<char> span = line;
+				Span<Range> ranges = stackalloc Range[4];
 
-				Parallel.For(0, faceLines.Count, LoadFace);
-				lock (locker) triangles.TrimExcess();
+				Split(span, ' ', ranges);
 
-				void LoadFace(int index)
+				ReadOnlySpan<char> split0 = span[ranges[0]];
+				ReadOnlySpan<char> split1 = span[ranges[1]];
+				ReadOnlySpan<char> split2 = span[ranges[2]];
+				ReadOnlySpan<char> split3 = span[ranges[3]];
+
+				Span<Range> ranges0 = stackalloc Range[3];
+				Span<Range> ranges1 = stackalloc Range[3];
+				Span<Range> ranges2 = stackalloc Range[3];
+
+				Split(split0, '/', ranges0);
+				Split(split1, '/', ranges1);
+				Split(split2, '/', ranges2);
+
+				Int3 indices0 = ParseIndices(split0, ranges0);
+				Int3 indices1 = ParseIndices(split1, ranges1);
+				Int3 indices2 = ParseIndices(split2, ranges2);
+
+				int heightIndex = ~materialHeights.BinarySearch(line.height) - 1;
+				if (heightIndex < 0) throw new Exception("Assigning faces before using materials!");
+
+				int materialIndex = materialIndices[heightIndex];
+
+				//Each face part consists of vertex index, texture coordinate index, and normal index
+				//.obj uses counter-clockwise winding order while we use clockwise. So we have to reverse it
+
+				Triangle triangle0 = new Triangle
+				(
+					new Int3(indices2[0], indices1[0], indices0[0]),
+					new Int3(indices2[2], indices1[2], indices0[2]),
+					new Int3(indices2[1], indices1[1], indices0[1]),
+					materialIndex
+				);
+
+				lock (triangles) triangles.Add(triangle0);
+
+				if (split3.Length > 0) //We also support 4-vertex face aka quad
 				{
-					Line line = faceLines[index];
-					ReadOnlySpan<char> span = line;
-					Span<Range> ranges = stackalloc Range[4];
+					Span<Range> ranges3 = stackalloc Range[3];
+					Split(split3, '/', ranges3);
+					Int3 indices3 = ParseIndices(split3, ranges3);
 
-					Split(span, ' ', ranges);
-
-					ReadOnlySpan<char> split0 = span[ranges[0]];
-					ReadOnlySpan<char> split1 = span[ranges[1]];
-					ReadOnlySpan<char> split2 = span[ranges[2]];
-					ReadOnlySpan<char> split3 = span[ranges[3]];
-
-					Span<Range> ranges0 = stackalloc Range[3];
-					Span<Range> ranges1 = stackalloc Range[3];
-					Span<Range> ranges2 = stackalloc Range[3];
-
-					Split(split0, '/', ranges0);
-					Split(split1, '/', ranges1);
-					Split(split2, '/', ranges2);
-
-					Int3 indices0 = Parse(split0, ranges0);
-					Int3 indices1 = Parse(split1, ranges1);
-					Int3 indices2 = Parse(split2, ranges2);
-
-					int heightIndex = ~materialHeights.BinarySearch(line.height) - 1;
-					if (heightIndex < 0) throw new Exception("Assigning faces before using materials!");
-
-					int materialIndex = materialIndices[heightIndex];
-
-					//Each face part consists of vertex index, texture coordinate index, and normal index
-					//.obj uses counter-clockwise winding order while we use clockwise. So we have to reverse it
-
-					Triangle triangle0 = new Triangle
+					Triangle triangle1 = new Triangle
 					(
-						new Int3(indices2[0], indices1[0], indices0[0]),
-						new Int3(indices2[2], indices1[2], indices0[2]),
-						new Int3(indices2[1], indices1[1], indices0[1]),
+						new Int3(indices0[0], indices3[0], indices2[0]),
+						new Int3(indices0[2], indices3[2], indices2[2]),
+						new Int3(indices0[1], indices3[1], indices2[1]),
 						materialIndex
 					);
 
-					lock (locker) triangles.Add(triangle0);
-
-					if (split3.Length > 0) //We also support 4-vertex face aka quad
-					{
-						Span<Range> ranges3 = stackalloc Range[3];
-						Split(split3, '/', ranges3);
-						Int3 indices3 = Parse(split3, ranges3);
-
-						Triangle triangle1 = new Triangle
-						(
-							new Int3(indices0[0], indices3[0], indices2[0]),
-							new Int3(indices0[2], indices3[2], indices2[2]),
-							new Int3(indices0[1], indices3[1], indices2[1]),
-							materialIndex
-						);
-
-						lock (locker) triangles.Add(triangle1);
-					}
-
-					static Int3 Parse(ReadOnlySpan<char> span, ReadOnlySpan<Range> ranges)
-					{
-						Int3 result = default;
-
-						for (int i = 0; i < 3; i++)
-						{
-							int index = int.TryParse(span[ranges[i]], out int value) ? value : int.MaxValue;
-							if (index < 0) throw new Exception("Do not support OBJ negative indices!");
-
-							result = result.Replace(i, index == int.MaxValue ? -1 : index);
-						}
-
-						return result;
-					}
+					lock (triangles) triangles.Add(triangle1);
 				}
 			}
-
-			Console.WriteLine(test0.ElapsedMilliseconds);
-			Console.WriteLine(test1.ElapsedMilliseconds);
-			Console.WriteLine(test2.ElapsedMilliseconds);
 		}
 
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".obj"});
@@ -269,7 +237,7 @@ namespace ForceRenderer.IO
 			throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
 		}
 
-		public static void Split(ReadOnlySpan<char> span, char split, Span<Range> ranges)
+		static void Split(ReadOnlySpan<char> span, char split, Span<Range> ranges)
 		{
 			int index = 0;
 
@@ -291,6 +259,66 @@ namespace ForceRenderer.IO
 
 				index++;
 			}
+		}
+
+		static int ParseInt32(ReadOnlySpan<char> span)
+		{
+			bool isNegative = span[0] == '-';
+			int result = 0;
+
+			for (int i = isNegative ? 1 : 0; i < span.Length; i++)
+			{
+				result = result * 10 + span[i] - '0';
+			}
+
+			return isNegative ? -result : result;
+		}
+
+		static float ParseSingle(ReadOnlySpan<char> span)
+		{
+			bool isNegative = span[0] == '-';
+			int index = isNegative ? 1 : 0;
+
+			int integer = 0;
+			float fraction = 0f;
+
+			for (; index < span.Length; index++)
+			{
+				char current = span[index];
+				if (current == '.') break;
+
+				integer = integer * 10 + current - '0';
+			}
+
+			for (int i = span.Length - 1; i > index; i--)
+			{
+				char current = span[i];
+				if (current == '.') break;
+
+				fraction += current - '0';
+				fraction /= 10f;
+			}
+
+			float result = integer + fraction;
+			return isNegative ? -result : result;
+		}
+
+		static Int3 ParseIndices(ReadOnlySpan<char> span, ReadOnlySpan<Range> ranges)
+		{
+			Int3 result = Int3.negativeOne;
+
+			for (int i = 0; i < 3; i++)
+			{
+				ReadOnlySpan<char> slice = span[ranges[i]];
+
+				if (slice.Length <= 0) continue;
+				int index = ParseInt32(slice);
+
+				if (index >= 0) result = result.Replace(i, index);
+				else throw new Exception("Do not support OBJ negative indices!");
+			}
+
+			return result;
 		}
 	}
 
