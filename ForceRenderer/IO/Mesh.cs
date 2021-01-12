@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Collections;
@@ -35,31 +36,36 @@ namespace ForceRenderer.IO
 			using (test0.Start())
 			{
 				//First read all lines to split them into categories
-				foreach (string line in File.ReadLines(path))
+				using StreamReader reader = new StreamReader(File.OpenRead(path));
+
+				while (true)
 				{
-					ReadOnlySpan<char> span = ((ReadOnlySpan<char>)line).Trim();
+					string line = reader.ReadLine();
+					if (line == null) break;
+
+					ReadOnlySpan<char> span = ((ReadOnlySpan<char>)line).TrimStart();
 
 					int index = span.IndexOf(' ');
 					if (index < 0) continue;
 
 					(span[0] switch
-					 {
-						 'v' => index switch
+							{
+								'v' => index switch
 								{
 									1 => vertexLines,
 									2 => span[1] switch
-										 {
-											 'n' => normalLines,
-											 't' => texcoordLines,
-											 _ => null
-										 },
+									{
+										'n' => normalLines,
+										't' => texcoordLines,
+										_ => null
+									},
 									_ => null
 								},
-						 'f' when index == 1 => faceLines,
-						 'u' when span.StartsWith("usemtl ") => usemtlLines,
-						 'm' when span.StartsWith("mtllib ") => mtllibLines,
-						 _ => null
-					 })?.Add(new Line(line, height++, Range.StartAt(index + 1)));
+								'f' when index == 1 => faceLines,
+								'u' when span.StartsWith("usemtl ") => usemtlLines,
+								'm' when span.StartsWith("mtllib ") => mtllibLines,
+								_ => null
+							})?.Add(new Line(line, height++, Range.StartAt(index + 1)));
 				}
 			}
 
