@@ -1,14 +1,15 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
+using CodeHelpers.Threads;
 
 namespace ForceRenderer.IO
 {
@@ -29,7 +30,6 @@ namespace ForceRenderer.IO
 
 			int height = 0;
 
-
 			//First read all lines to split them into categories
 			using StreamReader reader = new StreamReader(File.OpenRead(path));
 
@@ -44,23 +44,23 @@ namespace ForceRenderer.IO
 				if (index < 0) continue;
 
 				(span[0] switch
-						{
-							'v' => index switch
+				 {
+					 'v' => index switch
 							{
 								1 => vertexLines,
 								2 => span[1] switch
-								{
-									'n' => normalLines,
-									't' => texcoordLines,
-									_ => null
-								},
+									 {
+										 'n' => normalLines,
+										 't' => texcoordLines,
+										 _ => null
+									 },
 								_ => null
 							},
-							'f' when index == 1 => faceLines,
-							'u' when span.StartsWith("usemtl ") => usemtlLines,
-							'm' when span.StartsWith("mtllib ") => mtllibLines,
-							_ => null
-						})?.Add(new Line(line, height++, Range.StartAt(index + 1)));
+					 'f' when index == 1 => faceLines,
+					 'u' when span.StartsWith("usemtl ") => usemtlLines,
+					 'm' when span.StartsWith("mtllib ") => mtllibLines,
+					 _ => null
+				 })?.Add(new Line(line, height++, Range.StartAt(index + 1)));
 			}
 
 			//Load material template library
@@ -133,10 +133,13 @@ namespace ForceRenderer.IO
 			}
 
 			//Load triangles/faces
-			triangles = new List<Triangle>();
+			triangles0 = new Triangle[faceLines.Count];
+			triangles1 = new Triangle[faceLines.Count];
+
+			int triangles1Index = 0;
 
 			Parallel.For(0, faceLines.Count, LoadFace);
-			lock (triangles) triangles.TrimExcess();
+			Array.Resize(ref triangles1, InterlockedHelper.Read(ref triangles1Index));
 
 			void LoadFace(int index)
 			{
@@ -171,7 +174,7 @@ namespace ForceRenderer.IO
 				//Each face part consists of vertex index, texture coordinate index, and normal index
 				//.obj uses counter-clockwise winding order while we use clockwise. So we have to reverse it
 
-				Triangle triangle0 = new Triangle
+				triangles0[index] = new Triangle
 				(
 					new Int3(indices2[0], indices1[0], indices0[0]),
 					new Int3(indices2[2], indices1[2], indices0[2]),
@@ -179,23 +182,19 @@ namespace ForceRenderer.IO
 					materialIndex
 				);
 
-				lock (triangles) triangles.Add(triangle0);
-
-				if (split3.Length > 0) //We also support 4-vertex face aka quad
+				if (split3.Length > 0) //If we need to add an extra triangle to support 4-vertex face aka quad
 				{
 					Span<Range> ranges3 = stackalloc Range[3];
 					Split(split3, '/', ranges3);
 					Int3 indices3 = ParseIndices(split3, ranges3);
 
-					Triangle triangle1 = new Triangle
+					triangles1[Interlocked.Increment(ref triangles1Index)] = new Triangle
 					(
 						new Int3(indices0[0], indices3[0], indices2[0]),
 						new Int3(indices0[2], indices3[2], indices2[2]),
 						new Int3(indices0[1], indices3[1], indices2[1]),
 						materialIndex
 					);
-
-					lock (triangles) triangles.Add(triangle1);
 				}
 			}
 		}
@@ -205,17 +204,21 @@ namespace ForceRenderer.IO
 
 		public readonly MaterialTemplateLibrary materialTemplateLibrary;
 
-		readonly List<Triangle> triangles;
+		readonly Triangle[] triangles0; //Triangles are stored in two different arrays to support loading quads
+		readonly Triangle[] triangles1;
 
 		readonly Float3[] vertices;
 		readonly Float3[] normals;
 		readonly Float2[] texcoords;
 
-		public int TriangleCount => triangles.Count;
+		public int TriangleCount => triangles0.Length + triangles1.Length;
 
 		public Triangle GetTriangle(int index)
 		{
-			if (triangles.IsIndexValid(index)) return triangles[index];
+			if (triangles0.IsIndexValid(index)) return triangles0[index];
+			index -= triangles0.Length;
+
+			if (triangles1.IsIndexValid(index)) return triangles1[index];
 			throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
 		}
 
@@ -314,8 +317,8 @@ namespace ForceRenderer.IO
 				if (slice.Length <= 0) continue;
 				int index = ParseInt32(slice);
 
-				if (index >= 0) result = result.Replace(i, index);
-				else throw new Exception("Do not support OBJ negative indices!");
+				if (index > 0) result = result.Replace(i, index - 1);
+				else throw new Exception("Do not support OBJ non-positive indices!");
 			}
 
 			return result;
