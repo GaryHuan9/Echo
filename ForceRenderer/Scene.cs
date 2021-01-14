@@ -1,5 +1,4 @@
-﻿using ForceRenderer.IO;
-using ForceRenderer.Textures;
+﻿using ForceRenderer.Textures;
 using Object = ForceRenderer.Objects.Object;
 
 namespace ForceRenderer

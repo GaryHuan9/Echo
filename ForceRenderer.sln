@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForceRenderer", "ForceRenderer\ForceRenderer.csproj", "{619F5156-12E9-489E-812D-06EDC7A9FFDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntrinsicsSIMD", "IntrinsicsSIMD\IntrinsicsSIMD.csproj", "{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{619F5156-12E9-489E-812D-06EDC7A9FFDA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

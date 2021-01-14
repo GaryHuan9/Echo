@@ -7,7 +7,6 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
-using ForceRenderer.IO;
 using ForceRenderer.Objects;
 using ForceRenderer.Textures;
 
