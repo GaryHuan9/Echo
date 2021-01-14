@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using ForceRenderer.IO;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Renderers
