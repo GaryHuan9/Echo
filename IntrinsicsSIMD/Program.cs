@@ -15,6 +15,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using CodeHelpers.Diagnostics;
 
 namespace IntrinsicsSIMD
 {
@@ -37,32 +38,36 @@ namespace IntrinsicsSIMD
 
 		static readonly Float4 float0 = new(x, y, z, w);
 		static readonly Float4 float1 = new(a, b, c, d);
-		static Float4 resultFloat;
 
 		static readonly Vector4 vector0 = new(x, y, z, w);
 		static readonly Vector4 vector1 = new(a, b, c, d);
-		static Vector4 resultVector;
 
 		[Benchmark]
-		public void DivideBase() => resultFloat = DivideBase(float0, float1);
+		public Vector4 SeeSharpDivide() => vector0 / vector1;
 
 		[Benchmark]
-		public void SeeSharpDivide() => resultVector = vector0 / vector1;
+		public Vector4 SeeSharpDivideBase() => SeeSharpDivideBase(vector0, vector1);
+
+		// [Benchmark]
+		// public Float4 DivideBase() => DivideBase(float0, float1);
+		//
+		// [Benchmark]
+		// public Float4 DividePointer() => DividePointer(float0, float1);
+		//
+		// [Benchmark]
+		// public Float4 DivideLoad() => DivideLoad(float0, float1);
+		//
+		// [Benchmark]
+		// public Float4 DividePointerX() => DividePointerX(float0, float1);
 
 		[Benchmark]
-		public void DividePointer() => resultFloat = DividePointer(float0, float1);
+		public Float4 DivideLoadX() => DivideLoadX(float0, float1);
 
 		[Benchmark]
-		public void DivideLoad() => resultFloat = DivideLoad(float0, float1);
+		public Float4 DivideFuse() => DivideFuse(float0, float1);
 
-		[Benchmark]
-		public void DividePointerX() => resultFloat = DividePointerX(float0, float1);
-
-		[Benchmark]
-		public void DivideLoadX() => resultFloat = DivideLoadX(float0, float1);
-
-		[Benchmark]
-		public void DivideWrapper() => resultFloat = DivideWrapper(float0, float1);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector4 SeeSharpDivideBase(Vector4 first, Vector4 second) => first / second;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Float4 DivideBase(in Float4 first, in Float4 second)
@@ -119,22 +124,43 @@ namespace IntrinsicsSIMD
 			Vector4 result = firstVector / secondVector;
 			return *(Float4*)&result;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe Float4 DivideFuse(Float4 first, Float4 second)
+		{
+			Vector128<float> result = Sse.Divide(first.vector, second.vector);
+			return *(Float4*)&result;
+		}
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Explicit, Size = 16)]
 	public readonly struct Float4
 	{
 		public Float4(float x, float y, float z, float w)
 		{
+			vector = default;
+
 			this.x = x;
 			this.y = y;
 			this.z = z;
 			this.w = w;
 		}
 
-		public readonly float x;
-		public readonly float y;
-		public readonly float z;
-		public readonly float w;
+		public Float4(Vector128<float> vector)
+		{
+			x = default;
+			y = default;
+			z = default;
+			w = default;
+
+			this.vector = vector;
+		}
+
+		[FieldOffset(0)] public readonly float x;
+		[FieldOffset(4)] public readonly float y;
+		[FieldOffset(8)] public readonly float z;
+		[FieldOffset(12)] public readonly float w;
+
+		[FieldOffset(0)] internal readonly Vector128<float> vector;
 	}
 }
