@@ -5,7 +5,6 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
@@ -37,7 +36,7 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new SingleBMWScene(),
+											RenderBuffer = buffer, Scene = new LightedBMWScene(),
 											PixelSample = 320, AdaptiveSample = 0, TileSize = 32
 										};
 
