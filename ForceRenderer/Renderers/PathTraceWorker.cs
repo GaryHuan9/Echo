@@ -22,12 +22,12 @@ namespace ForceRenderer.Renderers
 
 			int bounce;
 
-			for (bounce = 0; bounce <= profile.maxBounce && GetIntersection(ray, out float distance, out int token, out Float2 uv); bounce++)
+			for (bounce = 0; bounce <= profile.maxBounce && GetIntersection(ray, out Hit hit); bounce++)
 			{
-				PressedMaterial.Sample sample = profile.pressed.GetMaterialSample(token, uv);
+				PressedMaterial.Sample sample = profile.pressed.GetMaterialSample(hit);
 
-				Float3 position = ray.GetPoint(distance);
-				Float3 normal = profile.pressed.GetNormal(uv, token);
+				Float3 position = ray.GetPoint(hit.distance);
+				Float3 normal = profile.pressed.GetNormal(hit);
 
 				Float3 direction;
 				Float3 bsdf; //Bidirectional scattering distribution function

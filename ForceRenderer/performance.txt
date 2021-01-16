@@ -30,3 +30,7 @@ Adaptive Sampling (128 Full; 1000 Adaptive; looks identical): 139.74 seconds; 84
 
 Adaptive Sampling; BMW Lighting Scene; 128 Full; 12000 Adaptive; 900k triangles:
 Completed after 2597.26 seconds with 17,720,482,819 samples at 6,822,759 samples per second.
+
+Test v1 SIMD intrinsics (Lighted BMW 320spp 0aspp)
+Without: Completed after 39.37 seconds with 131,174,400 samples at 3,331,982 samples per second.
+With v1: Completed after 37.19 seconds with 131,174,400 samples at 3,527,609 samples per second.

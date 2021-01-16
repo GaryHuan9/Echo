@@ -165,34 +165,6 @@ namespace ForceRenderer.Renderers
 		public int SphereCount => spheres.Length;
 
 		/// <summary>
-		/// Returns the sampled <see cref="PressedMaterial"/> for object with <paramref name="token"/> at <paramref name="uv"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PressedMaterial.Sample GetMaterialSample(int token, Float2 uv)
-		{
-			int materialToken;
-			Float2 texcoord;
-
-			if (token < 0)
-			{
-				ref PressedSphere sphere = ref spheres[~token];
-
-				materialToken = sphere.materialToken;
-				texcoord = uv;
-			}
-			else
-			{
-				ref PressedTriangle triangle = ref triangles[token];
-
-				materialToken = triangle.materialToken;
-				texcoord = triangle.GetTexcoord(uv);
-			}
-
-			ref PressedMaterial material = ref materials[materialToken];
-			return material.GetSample(texcoord);
-		}
-
-		/// <summary>
 		/// Returns the intersection status with one object of <paramref name="token"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -209,19 +181,47 @@ namespace ForceRenderer.Renderers
 		}
 
 		/// <summary>
-		/// Gets the normal of <see cref="SceneObject"/> with <paramref name="token"/> at <paramref name="uv"/>.
+		/// Returns the sampled <see cref="PressedMaterial"/> for <see cref="SceneObject"/> intersection <paramref name="hit"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Float3 GetNormal(Float2 uv, int token)
+		public PressedMaterial.Sample GetMaterialSample(in Hit hit)
 		{
-			if (token < 0)
+			int materialToken;
+			Float2 texcoord;
+
+			if (hit.token < 0)
 			{
-				ref PressedSphere sphere = ref spheres[~token];
-				return sphere.GetNormal(uv);
+				ref PressedSphere sphere = ref spheres[~hit.token];
+
+				materialToken = sphere.materialToken;
+				texcoord = hit.uv;
+			}
+			else
+			{
+				ref PressedTriangle triangle = ref triangles[hit.token];
+
+				materialToken = triangle.materialToken;
+				texcoord = triangle.GetTexcoord(hit.uv);
 			}
 
-			ref PressedTriangle triangle = ref triangles[token];
-			return triangle.GetNormal(uv);
+			ref PressedMaterial material = ref materials[materialToken];
+			return material.GetSample(texcoord);
+		}
+
+		/// <summary>
+		/// Gets the normal of <see cref="SceneObject"/> intersected with <paramref name="hit"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Float3 GetNormal(in Hit hit)
+		{
+			if (hit.token < 0)
+			{
+				ref PressedSphere sphere = ref spheres[~hit.token];
+				return sphere.GetNormal(hit.uv);
+			}
+
+			ref PressedTriangle triangle = ref triangles[hit.token];
+			return triangle.GetNormal(hit.uv);
 		}
 
 		public void Write(FileWriter writer)
