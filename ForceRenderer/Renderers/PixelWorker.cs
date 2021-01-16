@@ -34,12 +34,12 @@ namespace ForceRenderer.Renderers
 		public abstract Float3 Render(Float2 screenUV);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected bool GetIntersection(in Ray ray, out float distance, out int token, out Float2 uv)
+		protected bool GetIntersection(in Ray ray, out Hit hit)
 		{
-			distance = profile.pressed.bvh.GetIntersection(ray, out token, out uv);
+			hit = profile.pressed.bvh.GetIntersection(ray);
 			Interlocked.Increment(ref _intersectionPerformed);
 
-			return float.IsFinite(distance);
+			return float.IsFinite(hit.distance);
 		}
 	}
 }

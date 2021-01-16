@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using ForceRenderer.Mathematics;
 using ForceRenderer.Renderers;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
@@ -36,13 +38,16 @@ namespace ForceRenderer
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new SingleBMWScene(),
-											PixelSample = 128, AdaptiveSample = 12000, TileSize = 32
+											PixelSample = 320, AdaptiveSample = 0, TileSize = 32
 										};
 
 			renderEngine = engine;
 			renderDisplay.Engine = engine;
 
-			engine.Begin();
+			PerformanceTest setupTest = new PerformanceTest();
+			using (setupTest.Start()) engine.Begin();
+
+			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
 
 			//Copies render texture and saves as file
@@ -50,7 +55,6 @@ namespace ForceRenderer
 
 			output.SetReadonly();
 			output.Save("render.png");
-
 			buffer.Save("render.rdt");
 
 			//Logs render stats

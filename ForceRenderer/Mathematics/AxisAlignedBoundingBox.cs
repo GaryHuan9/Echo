@@ -1,20 +1,28 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Mathematics
 {
-	[StructLayout(LayoutKind.Sequential)]
+	[StructLayout(LayoutKind.Explicit, Size = 28)]
 	public readonly struct AxisAlignedBoundingBox
 	{
 		public AxisAlignedBoundingBox(Float3 center, Float3 extend)
 		{
+			centerVector = default;
+			extendVector = default;
+
 			this.center = center;
 			this.extend = extend;
 		}
 
-		public readonly Float3 center; //The exact center of the box
-		public readonly Float3 extend; //Half the size of the box
+		[FieldOffset(0)] public readonly Float3 center;  //The exact center of the box
+		[FieldOffset(12)] public readonly Float3 extend; //Half the size of the box
+
+		[FieldOffset(0)] readonly Vector128<float> centerVector;
+		[FieldOffset(12)] readonly Vector128<float> extendVector;
 
 		public Float3 Max => center + extend;
 		public Float3 Min => center - extend;
@@ -27,13 +35,19 @@ namespace ForceRenderer.Mathematics
 		/// </summary>
 		public float Intersect(in Ray ray)
 		{
-			Float3 n = ray.inverseDirection * (center - ray.origin);
-			Float3 k = ray.inverseDirection.Absoluted * extend;
+			Vector128<float> n = Sse.Multiply(ray.inverseDirectionVector, Sse.Subtract(centerVector, ray.originVector));
+			Vector128<float> k = Sse.Multiply(ray.absolutedInverseDirectionVector, extendVector);
 
-			float near = (n - k).MaxComponent;
-			float far = (n + k).MinComponent;
+			Vector128<float> min = Sse.Add(n, k);
+			Vector128<float> max = Sse.Subtract(n, k);
 
-			return near > far || far < 0f ? float.PositiveInfinity : near;
+			unsafe
+			{
+				float far = (*(Float3*)&min).MinComponent;
+				float near = (*(Float3*)&max).MaxComponent;
+
+				return near > far || far < 0f ? float.PositiveInfinity : near;
+			}
 		}
 
 		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other)
