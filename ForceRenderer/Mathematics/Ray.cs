@@ -36,7 +36,7 @@ namespace ForceRenderer.Mathematics
 			this.origin = origin;
 			this.direction = direction;
 
-			Vector128<float> reciprocalVector = Sse.Reciprocal(directionVector);
+			Vector128<float> reciprocalVector = Sse.Divide(oneVector, directionVector); //Because _mm_rcp_ps is only an approximation, we cannot use it here
 			inverseDirectionVector = Sse.Min(maxValueVector, Sse.Max(minValueVector, reciprocalVector));
 
 			Vector128<float> negated = Sse.Subtract(Vector128<float>.Zero, inverseDirectionVector);
@@ -54,6 +54,7 @@ namespace ForceRenderer.Mathematics
 
 		static readonly Vector128<float> minValueVector = Vector128.Create(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
 		static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue);
+		static readonly Vector128<float> oneVector = Vector128.Create(1f, 1f, 1f, 1f);
 
 		public Float3 GetPoint(float distance) => origin + direction * distance;
 
