@@ -1,8 +1,12 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Mathematics
 {
+	[StructLayout(LayoutKind.Explicit, Size = 48)]
 	public readonly struct Ray
 	{
 		/// <summary>
@@ -26,15 +30,30 @@ namespace ForceRenderer.Mathematics
 		{
 			Debug.Assert(Scalars.AlmostEquals(direction.SquaredMagnitude, 1f));
 
+			originVector = default;
+			directionVector = default;
+
 			this.origin = origin;
 			this.direction = direction;
 
-			inverseDirection = (1f / direction).Clamp(Float3.minValue, Float3.maxValue);
+			Vector128<float> reciprocalVector = Sse.Reciprocal(directionVector);
+			inverseDirectionVector = Sse.Min(maxValueVector, Sse.Max(minValueVector, reciprocalVector));
+
+			Vector128<float> negated = Sse.Subtract(Vector128<float>.Zero, inverseDirectionVector);
+			absolutedInverseDirectionVector = Sse.Max(negated, inverseDirectionVector);
 		}
 
-		public readonly Float3 origin;
-		public readonly Float3 direction;
-		public readonly Float3 inverseDirection;
+		[FieldOffset(0)] public readonly Float3 origin;
+		[FieldOffset(12)] public readonly Float3 direction;
+
+		//NOTE: these fields have overlapping memory offsets to reduce footprint. Pay extra attention when assigning them.
+		[FieldOffset(0)] public readonly Vector128<float> originVector;
+		[FieldOffset(12)] public readonly Vector128<float> directionVector;
+		[FieldOffset(24)] public readonly Vector128<float> inverseDirectionVector;
+		[FieldOffset(36)] public readonly Vector128<float> absolutedInverseDirectionVector;
+
+		static readonly Vector128<float> minValueVector = Vector128.Create(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
+		static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue);
 
 		public Float3 GetPoint(float distance) => origin + direction * distance;
 

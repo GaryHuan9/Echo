@@ -81,37 +81,26 @@ namespace ForceRenderer.Mathematics
 
 		/// <summary>
 		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
-		/// Returns the distance of ths intersection if found. <see cref="float.PositiveInfinity"/> otherwise.
+		/// Returns the intersection hit if found. Otherwise a <see cref="Hit"/> with <see cref="float.PositiveInfinity"/> distance.
 		/// </summary>
-		public float GetIntersection(in Ray ray, out int token, out Float2 uv)
+		public Hit GetIntersection(in Ray ray)
 		{
-			token = default;
-			uv = default;
-
 			ref Node node = ref nodes[0]; //The root node
-			float hit = node.aabb.Intersect(ray);
+			float distance = node.aabb.Intersect(ray);
 
-			if (float.IsInfinity(hit)) return float.PositiveInfinity;
+			Hit hit = new Hit(float.PositiveInfinity);
+			if (float.IsFinite(distance)) IntersectNode(ref node, ray, ref hit);
 
-			float distance = float.PositiveInfinity;
-			IntersectNode(ref node, ray, ref distance, ref token, ref uv);
-
-			return distance;
+			return hit;
 		}
 
-		void IntersectNode(ref Node node, in Ray ray, ref float distance, ref int token, ref Float2 uv)
+		void IntersectNode(ref Node node, in Ray ray, ref Hit hit)
 		{
 			if (node.IsLeaf)
 			{
 				//Now we finally calculate the real intersection
-				float hit = pressed.GetIntersection(ray, node.token, out Float2 local);
-
-				if (hit < distance)
-				{
-					distance = hit;
-					token = node.token;
-					uv = local;
-				}
+				float distance = pressed.GetIntersection(ray, node.token, out Float2 uv);
+				if (distance < hit.distance) hit = new Hit(distance, node.token, uv);
 
 				return;
 			}
@@ -124,13 +113,13 @@ namespace ForceRenderer.Mathematics
 
 			if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
 			{
-				if (hit0 < distance) IntersectNode(ref child0, ray, ref distance, ref token, ref uv);
-				if (hit1 < distance) IntersectNode(ref child1, ray, ref distance, ref token, ref uv);
+				if (hit0 < hit.distance) IntersectNode(ref child0, ray, ref hit);
+				if (hit1 < hit.distance) IntersectNode(ref child1, ray, ref hit);
 			}
 			else
 			{
-				if (hit1 < distance) IntersectNode(ref child1, ray, ref distance, ref token, ref uv);
-				if (hit0 < distance) IntersectNode(ref child0, ray, ref distance, ref token, ref uv);
+				if (hit1 < hit.distance) IntersectNode(ref child1, ray, ref hit);
+				if (hit0 < hit.distance) IntersectNode(ref child0, ray, ref hit);
 			}
 		}
 
