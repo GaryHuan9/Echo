@@ -152,6 +152,27 @@ namespace ForceRenderer
 		}
 	}
 
+	public class SingleDragonScene : Scene
+	{
+		public SingleDragonScene()
+		{
+			Mesh dragon = new Mesh("Assets/Models/StanfordDragon/StanfordDragon.obj");
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
+
+			children.Add(new PlaneObject(new Material {Diffuse = (Float3)0.2f, Specular = new Float3(0.29f, 0.29f, 0.35f), Smoothness = 0.85f}, (Float2)24f));
+			children.Add(new MeshObject(dragon) {Position = Float3.zero, Rotation = new Float3(0f, 158f, 0f), Scale = (Float3)3.5f});
+
+			children.Add(new Camera(100f) {Position = new Float3(0f, 4f, -8f), Rotation = new Float3(10f, 0f, 0f)});
+
+			//Lights
+			children.Add(new SphereObject(new Material {Emission = new Float3(6f, 6f, 7f)}, 17f) {Position = new Float3(23f, 34f, -18f)});  //Bottom right
+			children.Add(new SphereObject(new Material {Emission = new Float3(6f, 5f, 6f)}, 19f) {Position = new Float3(-27f, 31f, -20f)}); //Bottom left
+
+			children.Add(new SphereObject(new Material {Emission = new Float3(0.6f, 0.1f, 0.3f)}, 1f) {Position = new Float3(-7f, 1f, 4f)});
+			children.Add(new SphereObject(new Material {Emission = new Float3(0.3f, 0.1f, 0.6f)}, 1f) {Position = new Float3(7f, 1f, 4f)});
+		}
+	}
+
 	public class RandomSpheresScene : StandardScene
 	{
 		public RandomSpheresScene(int count)

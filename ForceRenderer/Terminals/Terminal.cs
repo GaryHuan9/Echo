@@ -9,7 +9,7 @@ using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Terminals
 {
-	public class Terminal
+	public class Terminal : IDisposable
 	{
 		public Terminal()
 		{
@@ -37,14 +37,29 @@ namespace ForceRenderer.Terminals
 		readonly Thread displayThread;
 		readonly Stopwatch stopwatch;
 
+		int _disposed;
+		int _rewrite;
+
+		public bool Disposed
+		{
+			get => Interlocked.CompareExchange(ref _disposed, default, default) == 1;
+			set => Interlocked.Exchange(ref _disposed, value ? 1 : 0);
+		}
+
+		public bool Rewrite
+		{
+			get => Interlocked.CompareExchange(ref _rewrite, default, default) == 1;
+			set => Interlocked.Exchange(ref _rewrite, value ? 1 : 0);
+		}
+
 		void DisplayThread()
 		{
 			Console.Clear();
 
-			while (true)
+			while (!Disposed)
 			{
 				double startTime = AliveTime;
-				bool fullRewrite = false;
+				bool fullRewrite = Rewrite;
 
 				lock (sections)
 				{
@@ -65,6 +80,7 @@ namespace ForceRenderer.Terminals
 				}
 
 				Console.CursorTop = 0;
+				Rewrite = false;
 
 				double elapsed = AliveTime - startTime;
 				double remain = 1000d / UpdateFrequency - elapsed;
@@ -82,6 +98,14 @@ namespace ForceRenderer.Terminals
 				sections.Add(section);
 				heights.Add(-1); //Insert invalid number to cause full rewrite
 			}
+		}
+
+		void IDisposable.Dispose()
+		{
+			if (Disposed) return;
+
+			Disposed = true;
+			displayThread.Join();
 		}
 
 		public abstract class Section
@@ -340,6 +364,7 @@ namespace ForceRenderer.Terminals
 
 				/// <summary>
 				/// Returns the smallest power of two larger than <paramref name="largerThan"/>.
+				/// Source: https://stackoverflow.com/a/365068/9196958
 				/// </summary>
 				static int GetSmallestPowerOf2(int largerThan)
 				{

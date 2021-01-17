@@ -15,7 +15,8 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			Terminal terminal = new Terminal();
+			using Terminal terminal = new Terminal();
+			renderTerminal = terminal;
 
 			var commandsController = new CommandsController(terminal);
 			var renderDisplay = new RenderMonitor(terminal);
@@ -36,8 +37,8 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new LightedBMWScene(),
-											PixelSample = 320, AdaptiveSample = 0, TileSize = 32
+											RenderBuffer = buffer, Scene = new SingleDragonScene(),
+											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -68,6 +69,7 @@ namespace ForceRenderer
 		}
 
 		static RenderEngine renderEngine;
+		static Terminal renderTerminal;
 
 		[Command]
 		static CommandResult Pause()
@@ -103,6 +105,13 @@ namespace ForceRenderer
 			}
 
 			return new CommandResult("Cannot abort: not rendering.", false);
+		}
+
+		[Command]
+		static CommandResult RewriteTerminal()
+		{
+			renderTerminal.Rewrite = true;
+			return new CommandResult("Terminal rewrote.", true);
 		}
 	}
 }
