@@ -15,14 +15,15 @@ namespace ForceRenderer.Mathematics
 			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
 
 			this.pressed = pressed;
-
 			int currentIndex = 0;
-			nodes = new Node[aabbs.Count * 2 - 1]; //The number of nodes can be predetermined
+
+			nodes = new Node[aabbs.Count * 2 - 1];               //The number of nodes can be predetermined
+			MinMax3[] cutTailVolumes = new MinMax3[aabbs.Count]; //Array used to calculate SAH
 
 			var listPooler = new CollectionPoolerBase<List<int>, int>(int.MaxValue);
-			ConstructLayer(Enumerable.Range(0, aabbs.Count).ToList());
+			ConstructLayer(Enumerable.Range(0, aabbs.Count).ToList(), AxisAlignedBoundingBox.Construct(aabbs), -1);
 
-			int ConstructLayer(List<int> indices) //Returns an int, the index of the layer constructed
+			int ConstructLayer(List<int> indices, AxisAlignedBoundingBox aabb, int parentAxis) //Returns an int, the index of the layer constructed
 			{
 				if (indices.Count == 1) //If is leaf node
 				{
@@ -32,51 +33,70 @@ namespace ForceRenderer.Mathematics
 					return currentIndex++;
 				}
 
-				var aabb = AxisAlignedBoundingBox.Construct(aabbs, indices);
 				int axis = aabb.extend.MaxIndex; //The index this layer is going to split at
 
-				//Sorts the indices by splitting axis value. NOTE: That list is modified
-				indices.Sort((index0, index1) => aabbs[index0].center[axis].CompareTo(aabbs[index1].center[axis]));
+				//Sorts the indices by splitting axis if needed. NOTE that the list is modified
+				if (axis != parentAxis) indices.Sort((index0, index1) => aabbs[index0].center[axis].CompareTo(aabbs[index1].center[axis]));
 
-				//Cuts so that the item at cutIndex is the beginning of the second half
-				int cutIndex = 1;
-				float minCost = float.MaxValue;
+				//Calculate surface area heuristics and find optimal cut index
+				MinMax3 cutHeadVolume = new MinMax3(aabbs[indices[0]]);
+				MinMax3 cutTailVolume = new MinMax3(aabbs[indices[^1]]);
 
-				for (int i = 1; i < indices.Count; i += Math.Max(1, indices.Count / 7))
+				for (int i = indices.Count - 2; i >= 0; i--)
 				{
-					//Calculate cut cost between i-1 and i
-					float area0 = AxisAlignedBoundingBox.Construct(aabbs, indices, 0, i).Area;
-					float area1 = AxisAlignedBoundingBox.Construct(aabbs, indices, i, indices.Count - i).Area;
+					cutTailVolumes[i + 1] = cutTailVolume;
+					cutTailVolume = cutTailVolume.Encapsulate(aabbs[indices[i]]);
+				}
 
-					float cost = area0 * i + area1 * (indices.Count - i);
-					if (cost >= minCost) break;
+				MinMax3 minCutHeadVolume = default;
+				MinMax3 minCutTailVolume = default;
 
-					minCost = cost;
-					cutIndex = i;
+				float minCost = float.MaxValue;
+				int minIndex = -1;
+
+				for (int i = 1; i < indices.Count; i++)
+				{
+					cutTailVolume = cutTailVolumes[i];
+
+					float headArea = cutHeadVolume.Area;
+					float tailArea = cutTailVolume.Area;
+
+					float cost = headArea * i + tailArea * (indices.Count - i);
+
+					if (cost < minCost)
+					{
+						minCost = cost;
+						minIndex = i;
+
+						minCutHeadVolume = cutHeadVolume;
+						minCutTailVolume = cutTailVolume;
+					}
+
+					cutHeadVolume = cutHeadVolume.Encapsulate(aabbs[indices[i]]);
 				}
 
 				//Recursively construct deeper layers
 				int layerIndex = currentIndex++;
 
-				var indices0 = listPooler.GetObject();
-				var indices1 = listPooler.GetObject();
+				List<int> indicesHead = listPooler.GetObject();
+				List<int> indicesTail = listPooler.GetObject();
 
-				for (int i = 0; i < cutIndex; i++) indices0.Add(indices[i]);
-				for (int i = cutIndex; i < indices.Count; i++) indices1.Add(indices[i]);
+				for (int i = 0; i < minIndex; i++) indicesHead.Add(indices[i]);
+				for (int i = minIndex; i < indices.Count; i++) indicesTail.Add(indices[i]);
 
-				int childIndex0 = ConstructLayer(indices0);
-				int childIndex1 = ConstructLayer(indices1);
+				int childIndexHead = ConstructLayer(indicesHead, minCutHeadVolume.AABB, axis);
+				int childIndexTail = ConstructLayer(indicesTail, minCutTailVolume.AABB, axis);
 
-				listPooler.ReleaseObject(indices0);
-				listPooler.ReleaseObject(indices1);
+				listPooler.ReleaseObject(indicesHead);
+				listPooler.ReleaseObject(indicesTail);
 
 				//Store layer
-				nodes[layerIndex] = new Node(aabb, childIndex0, childIndex1);
+				nodes[layerIndex] = new Node(aabb, childIndexHead, childIndexTail);
 				return layerIndex;
 			}
 		}
 
-		public readonly PressedScene pressed;
+		readonly PressedScene pressed;
 		readonly Node[] nodes;
 
 		/// <summary>
@@ -152,6 +172,44 @@ namespace ForceRenderer.Mathematics
 			public readonly int childIndex1;
 
 			public bool IsLeaf => childIndex0 == 0;
+		}
+
+		readonly struct MinMax3
+		{
+			public MinMax3(AxisAlignedBoundingBox aabb)
+			{
+				min = aabb.Min;
+				max = aabb.Max;
+			}
+
+			public MinMax3(Float3 min, Float3 max)
+			{
+				this.min = min;
+				this.max = max;
+			}
+
+			public readonly Float3 min;
+			public readonly Float3 max;
+
+			public float Area
+			{
+				get
+				{
+					Float3 size = max - min;
+					return size.x * size.y + size.x * size.z + size.y * size.z;
+				}
+			}
+
+			public AxisAlignedBoundingBox AABB
+			{
+				get
+				{
+					Float3 extend = (max - min) / 2f;
+					return new AxisAlignedBoundingBox(min + extend, extend);
+				}
+			}
+
+			public MinMax3 Encapsulate(AxisAlignedBoundingBox aabb) => new MinMax3(min.Min(aabb.Min), max.Max(aabb.Max));
 		}
 
 		// AxisAlignedBoundingBox[] aabbs =
