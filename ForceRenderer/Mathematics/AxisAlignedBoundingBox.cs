@@ -62,38 +62,14 @@ namespace ForceRenderer.Mathematics
 		/// <summary>
 		/// Constructs a new <see cref="AxisAlignedBoundingBox"/> by bounding a selection of smaller bounding boxes.
 		/// </summary>
-		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes) => Construct(boxes, 0, boxes.Count);
-
-		/// <inheritdoc cref="Construct(System.Collections.Generic.IReadOnlyList{ForceRenderer.Mathematics.AxisAlignedBoundingBox})"/>
-		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, int start, int length)
+		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes)
 		{
 			Float3 max = Float3.negativeInfinity;
 			Float3 min = Float3.positiveInfinity;
 
-			for (int i = start; i < start + length; i++)
+			for (int i = 0; i < boxes.Count; i++)
 			{
 				AxisAlignedBoundingBox box = boxes[i];
-
-				max = box.Max.Max(max);
-				min = box.Min.Min(min);
-			}
-
-			Float3 extend = (max - min) / 2f;
-			return new AxisAlignedBoundingBox(min + extend, extend);
-		}
-
-		/// <inheritdoc cref="Construct(System.Collections.Generic.IReadOnlyList{ForceRenderer.Mathematics.AxisAlignedBoundingBox})"/>
-		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, IReadOnlyList<int> indices) => Construct(boxes, indices, 0, indices.Count);
-
-		/// <inheritdoc cref="Construct(System.Collections.Generic.IReadOnlyList{ForceRenderer.Mathematics.AxisAlignedBoundingBox})"/>
-		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes, IReadOnlyList<int> indices, int start, int length)
-		{
-			Float3 max = Float3.negativeInfinity;
-			Float3 min = Float3.positiveInfinity;
-
-			for (int i = start; i < start + length; i++)
-			{
-				AxisAlignedBoundingBox box = boxes[indices[i]];
 
 				max = box.Max.Max(max);
 				min = box.Min.Min(min);

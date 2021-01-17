@@ -270,6 +270,8 @@ namespace ForceRenderer.Renderers
 
 			stopwatch.Stop();
 			CurrentState = State.aborted;
+
+			renderCompleteEvent.Set();
 		}
 
 		/// <summary>
