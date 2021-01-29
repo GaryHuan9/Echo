@@ -118,12 +118,9 @@ namespace ForceRenderer
 	{
 		public LightedBMWScene()
 		{
+			Cubemap = new SolidCubemap((Color32)(Float3)0.21f);
 			Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
-			Cubemap = new SolidCubemap((Color32)(Float3)0.21f);
-
-			Material dark = new Material {Diffuse = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
 			children.Add(new MeshObject(bmw) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 
 			children.Add(new SphereObject(new Material {Emission = new Float3(7f, 4f, 8f)}, 8f) {Position = new Float3(24f, 15f, 18f)});   //Upper right purple

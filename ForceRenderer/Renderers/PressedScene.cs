@@ -139,7 +139,7 @@ namespace ForceRenderer.Renderers
 
 			bvh = new BoundingVolumeHierarchy(this, aabbs, indices);
 
-			//Release
+			//Release resources
 			CollectionPooler<PressedTriangle>.list.ReleaseObject(triangleList);
 			CollectionPooler<PressedSphere>.list.ReleaseObject(sphereList);
 

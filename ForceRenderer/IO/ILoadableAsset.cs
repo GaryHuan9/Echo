@@ -19,7 +19,7 @@ namespace ForceRenderer.IO
 			if (string.IsNullOrEmpty(extension))
 			{
 				//No provided extension, check through all acceptable extensions
-				string assetPath = AssetsUtility.GetAssetsPath(path);
+				string assetPath = FormAbsolute(path);
 
 				foreach (string fileExtension in asset.AcceptableFileExtensions)
 				{
@@ -29,12 +29,18 @@ namespace ForceRenderer.IO
 			}
 			else
 			{
-				if (asset.AcceptableFileExtensions.Contains(extension)) result = AssetsUtility.GetAssetsPath(path);
+				if (asset.AcceptableFileExtensions.Contains(extension)) result = FormAbsolute(path);
 				else throw new FileNotFoundException($"Incompatible file type at {path} for {asset.GetType()}");
 			}
 
 			if (!string.IsNullOrEmpty(result) && File.Exists(result)) return result;
-			throw new FileNotFoundException($"No file found at {path} for {asset.GetType()}");
+			throw new FileNotFoundException($"No file found at {result} for {asset.GetType()}");
+
+			static string FormAbsolute(string path)
+			{
+				if (Path.IsPathFullyQualified(path)) return path;
+				return AssetsUtility.GetAssetsPath(path);
+			}
 		}
 
 		public static string GetSiblingPath(this ILoadableAsset asset, string path, string sibling)

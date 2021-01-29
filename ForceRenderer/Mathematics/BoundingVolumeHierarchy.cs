@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
 using ForceRenderer.Renderers;
 
 namespace ForceRenderer.Mathematics
 {
+	//AMD Ryzen 3900x: 1.7 million triangles at 23 million intersections per second
+
 	public class BoundingVolumeHierarchy
 	{
 		public BoundingVolumeHierarchy(PressedScene pressed, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<int> tokens)
@@ -15,22 +16,22 @@ namespace ForceRenderer.Mathematics
 			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
 
 			this.pressed = pressed;
-			int currentIndex = 0;
+			int nodeIndex = 1;
 
-			nodes = new Node[aabbs.Count * 2 - 1];               //The number of nodes can be predetermined
 			MinMax3[] cutTailVolumes = new MinMax3[aabbs.Count]; //Array used to calculate SAH
 
-			var listPooler = new CollectionPoolerBase<List<int>, int>(int.MaxValue);
-			ConstructLayer(Enumerable.Range(0, aabbs.Count).ToList(), AxisAlignedBoundingBox.Construct(aabbs), -1);
+			var rootIndices = Enumerable.Range(0, aabbs.Count).ToList();
+			var rootAABB = AxisAlignedBoundingBox.Construct(aabbs);
 
-			int ConstructLayer(List<int> indices, AxisAlignedBoundingBox aabb, int parentAxis) //Returns an int, the index of the layer constructed
+			nodes = new Node[aabbs.Count * 2 - 1]; //The number of nodes can be predetermined
+			nodes[0] = ConstructNode(rootIndices, rootAABB);
+
+			Node ConstructNode(List<int> indices, AxisAlignedBoundingBox aabb, int parentAxis = -1)
 			{
 				if (indices.Count == 1) //If is leaf node
 				{
 					int leaf = indices[0];
-					nodes[currentIndex] = new Node(aabbs[leaf], tokens[leaf]);
-
-					return currentIndex++;
+					return Node.CreateLeaf(aabbs[leaf], tokens[leaf]);
 				}
 
 				int axis = aabb.extend.MaxIndex; //The index this layer is going to split at
@@ -76,23 +77,19 @@ namespace ForceRenderer.Mathematics
 				}
 
 				//Recursively construct deeper layers
-				int layerIndex = currentIndex++;
-
-				List<int> indicesHead = listPooler.GetObject();
-				List<int> indicesTail = listPooler.GetObject();
+				List<int> indicesHead = new List<int>(minIndex);
+				List<int> indicesTail = new List<int>(indices.Count - minIndex);
 
 				for (int i = 0; i < minIndex; i++) indicesHead.Add(indices[i]);
 				for (int i = minIndex; i < indices.Count; i++) indicesTail.Add(indices[i]);
 
-				int childIndexHead = ConstructLayer(indicesHead, minCutHeadVolume.AABB, axis);
-				int childIndexTail = ConstructLayer(indicesTail, minCutTailVolume.AABB, axis);
+				int children = nodeIndex;
+				nodeIndex += 2;
 
-				listPooler.ReleaseObject(indicesHead);
-				listPooler.ReleaseObject(indicesTail);
+				nodes[children] = ConstructNode(indicesHead, minCutHeadVolume.AABB, axis);
+				nodes[children + 1] = ConstructNode(indicesTail, minCutTailVolume.AABB, axis);
 
-				//Store layer
-				nodes[layerIndex] = new Node(aabb, childIndexHead, childIndexTail);
-				return layerIndex;
+				return Node.CreateNode(aabb, children);
 			}
 		}
 
@@ -125,8 +122,8 @@ namespace ForceRenderer.Mathematics
 				return;
 			}
 
-			ref Node child0 = ref nodes[node.childIndex0];
-			ref Node child1 = ref nodes[node.childIndex1];
+			ref Node child0 = ref nodes[node.children];
+			ref Node child1 = ref nodes[node.children + 1];
 
 			float hit0 = child0.aabb.Intersect(ray);
 			float hit1 = child1.aabb.Intersect(ray);
@@ -143,35 +140,28 @@ namespace ForceRenderer.Mathematics
 			}
 		}
 
+		[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
 		readonly struct Node
 		{
-			/// <summary>
-			/// Creates this node as a leaf node.
-			/// </summary>
-			public Node(AxisAlignedBoundingBox aabb, int token) : this()
+			Node(in AxisAlignedBoundingBox aabb, int token, int children)
 			{
+				this.aabb = aabb; //AABB is assigned before the last two fields
 				this.token = token;
-				this.aabb = aabb;
+				this.children = children;
 			}
 
-			/// <summary>
-			/// Creates this node as a layer node.
-			/// </summary>
-			public Node(AxisAlignedBoundingBox aabb, int childIndex0, int childIndex1) : this()
-			{
-				this.aabb = aabb;
+			[FieldOffset(0)] public readonly AxisAlignedBoundingBox aabb;
 
-				this.childIndex0 = childIndex0;
-				this.childIndex1 = childIndex1;
-			}
+			//NOTE: the AABB is 28 bytes large, but its last 4 bytes are not used and only occupied for SIMD loading
+			//So we can overlap the next four bytes onto the AABB and pay extra attention when first assigning the fields
 
-			public readonly int token; //Token will only be assigned if is leaf
-			public readonly AxisAlignedBoundingBox aabb;
+			[FieldOffset(24)] public readonly int token;    //Token will only be assigned if is leaf
+			[FieldOffset(28)] public readonly int children; //Index of first child, second child is right after first
 
-			public readonly int childIndex0;
-			public readonly int childIndex1;
+			public bool IsLeaf => children == 0;
 
-			public bool IsLeaf => childIndex0 == 0;
+			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, int token) => new Node(aabb, token, 0);
+			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int children) => new Node(aabb, 0, children);
 		}
 
 		readonly struct MinMax3
