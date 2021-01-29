@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -33,6 +34,7 @@ namespace ForceRenderer.Mathematics
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
 		/// NOTE: return can be negative, which means the ray origins inside box.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 		public float Intersect(in Ray ray)
 		{
 			Vector128<float> n = Sse.Multiply(ray.inverseDirectionVector, Sse.Subtract(centerVector, ray.originVector));
