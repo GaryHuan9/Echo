@@ -37,7 +37,7 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new SingleBMWScene(),
+											RenderBuffer = buffer, Scene = new GridSpheresScene(),
 											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 

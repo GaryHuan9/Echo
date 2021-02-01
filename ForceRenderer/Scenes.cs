@@ -232,14 +232,14 @@ namespace ForceRenderer
 			children.Add(new Camera(100f) {Position = new Float3(0f, 0f, -3f), Rotation = Float3.zero});
 
 			const int SmoothnessLevel = 10;
-			const int SpecularLevel = 4;
+			const int DiffuseLevel = 4;
 
 			for (float i = 0f; i <= SmoothnessLevel; i++)
 			{
-				for (float j = 0f; j <= SpecularLevel; j++)
+				for (float j = 0f; j <= DiffuseLevel; j++)
 				{
-					Material material = new Material {Specular = Float3.Lerp(Float3.one, new Float3(0.867f, 0.267f, 0.298f), j / SpecularLevel), Smoothness = i / SmoothnessLevel};
-					children.Add(new SphereObject(material, 0.45f) {Position = new Float3(i - SmoothnessLevel / 2f, j - SpecularLevel / 2f, 2f)});
+					Material material = new Material {Diffuse = (Float3)(i / DiffuseLevel), Specular = Float3.half, Smoothness = i / SmoothnessLevel};
+					children.Add(new SphereObject(material, 0.45f) {Position = new Float3(i - SmoothnessLevel / 2f, j - DiffuseLevel / 2f, 2f)});
 				}
 			}
 		}
