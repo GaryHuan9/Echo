@@ -102,7 +102,7 @@ namespace ForceRenderer.Renderers
 				ray = new Ray(position, direction, true);
 				energy *= bsdf;
 
-				if (energy.x <= profile.energyEpsilon && energy.y <= profile.energyEpsilon && energy.z <= profile.energyEpsilon) break;
+				if (energy <= profile.energyEpsilon) break;
 			}
 
 			// return (Float3)((float)bounce / profile.maxBounce);

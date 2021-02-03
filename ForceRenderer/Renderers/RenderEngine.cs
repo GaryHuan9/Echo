@@ -371,7 +371,7 @@ namespace ForceRenderer.Renderers
 				workerSize = engine.WorkerSize;
 
 				maxBounce = engine.MaxBounce;
-				energyEpsilon = engine.EnergyEpsilon;
+				energyEpsilon = (Float3)engine.EnergyEpsilon;
 			}
 
 			public readonly PressedScene pressed;
@@ -385,7 +385,7 @@ namespace ForceRenderer.Renderers
 			public readonly int workerSize;
 
 			public readonly int maxBounce;
-			public readonly float energyEpsilon;
+			public readonly Float3 energyEpsilon;
 		}
 	}
 }
