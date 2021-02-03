@@ -209,7 +209,7 @@ namespace ForceRenderer.Renderers
 		}
 
 		/// <summary>
-		/// Gets the normal of <see cref="SceneObject"/> intersected with <paramref name="hit"/>.
+		/// Gets the normal of intersection with <paramref name="hit"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Float3 GetNormal(in Hit hit)
@@ -222,6 +222,41 @@ namespace ForceRenderer.Renderers
 
 			ref PressedTriangle triangle = ref triangles[hit.token];
 			return triangle.GetNormal(hit.uv);
+		}
+
+		/// <summary>
+		/// Gets the texcoord of intersection with <paramref name="hit"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Float2 GetTexcoord(in Hit hit)
+		{
+			if (hit.token < 0) return hit.uv; //Sphere directly uses the uv as texcoord
+
+			ref PressedTriangle triangle = ref triangles[hit.token];
+			return triangle.GetTexcoord(hit.uv);
+		}
+
+		/// <summary>
+		/// Gets the material of intersection with <paramref name="hit"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public MaterialNew GetMaterial(in Hit hit)
+		{
+			int materialToken;
+
+			if (hit.token < 0)
+			{
+				ref PressedSphere sphere = ref spheres[~hit.token];
+				materialToken = sphere.materialToken;
+			}
+			else
+			{
+				ref PressedTriangle triangle = ref triangles[hit.token];
+				materialToken = triangle.materialToken;
+			}
+
+			throw new NotImplementedException();
+			// return materials[materialToken];
 		}
 
 		public void Write(FileWriter writer)

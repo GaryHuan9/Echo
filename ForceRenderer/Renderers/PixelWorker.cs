@@ -11,10 +11,10 @@ namespace ForceRenderer.Renderers
 		protected PixelWorker(RenderEngine.Profile profile)
 		{
 			this.profile = profile;
-			threadRandom = new ThreadLocal<Random>(() => new Random(Thread.CurrentThread.ManagedThreadId ^ Environment.TickCount));
+			threadRandom = new ThreadLocal<ExtendedRandom>(() => new ExtendedRandom());
 		}
 
-		readonly ThreadLocal<Random> threadRandom;
+		readonly ThreadLocal<ExtendedRandom> threadRandom;
 		protected readonly RenderEngine.Profile profile;
 
 		long _intersectionPerformed;
@@ -22,9 +22,14 @@ namespace ForceRenderer.Renderers
 		public long IntersectionPerformed => Interlocked.Read(ref _intersectionPerformed);
 
 		/// <summary>
+		/// Returns a thread-safe random number generator that can be used in the invoking thread.
+		/// </summary>
+		protected ExtendedRandom Random => threadRandom.Value;
+
+		/// <summary>
 		/// Returns a thread-safe random value larger than or equals zero, and smaller than one.
 		/// </summary>
-		protected float RandomValue => (float)threadRandom.Value.NextDouble();
+		protected float RandomValue => Random.NextFloat();
 
 		/// <summary>
 		/// Sample and render at a specific point.
