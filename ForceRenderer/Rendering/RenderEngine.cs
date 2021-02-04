@@ -10,7 +10,7 @@ using CodeHelpers.Threads;
 using ForceRenderer.Objects;
 using ForceRenderer.Textures;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.Rendering
 {
 	public class RenderEngine : IDisposable
 	{

@@ -5,7 +5,7 @@ using ForceRenderer;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects.SceneObjects;
-using ForceRenderer.Renderers;
+using ForceRenderer.Rendering;
 
 namespace IntrinsicsSIMD
 {
@@ -16,7 +16,7 @@ namespace IntrinsicsSIMD
 			Scene scene = new Scene();
 			Random random = new Random(42);
 
-			scene.children.Add(new MeshObject(new Mesh(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer\ForceRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj")));
+			// scene.children.Add(new MeshObject(new Mesh(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer\ForceRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj")));
 
 			bvh = new PressedScene(scene).bvh;
 			rays = new Ray[65536];

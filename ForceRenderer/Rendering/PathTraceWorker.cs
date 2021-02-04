@@ -1,35 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using CodeHelpers.Mathematics;
-using ForceRenderer.IO;
+﻿using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Rendering.Materials;
+using ForceRenderer.Textures;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.Rendering
 {
-	public class PathTraceWorkerNew : PixelWorker
+	public class PathTraceWorker : PixelWorker
 	{
-		public PathTraceWorkerNew(RenderEngine.Profile profile) : base(profile) { }
-
-		/// <summary>
-		/// Returns a random vector inside a unit sphere.
-		/// </summary>
-		Float3 RandomInSphere
-		{
-			get
-			{
-				Float3 random;
-
-				do random = new Float3(RandomValue * 2f - 1f, RandomValue * 2f - 1f, RandomValue * 2f - 1f);
-				while (random.SquaredMagnitude > 1f);
-
-				return random;
-			}
-		}
-
-		/// <summary>
-		/// Returns a random unit vector that is on a unit sphere.
-		/// </summary>
-		Float3 RandomOnSphere => RandomInSphere.Normalized;
+		public PathTraceWorker(RenderEngine.Profile profile) : base(profile) { }
 
 		public override Float3 Render(Float2 screenUV)
 		{
@@ -43,7 +21,7 @@ namespace ForceRenderer.Renderers
 				if (!GetIntersection(ray, out Hit hit)) break;
 
 				CalculatedHit calculated = new CalculatedHit(hit, ray, profile.pressed);
-				MaterialNew material = profile.pressed.GetMaterial(hit);
+				Material material = profile.pressed.GetMaterial(hit);
 
 				ExtendedRandom random = Random;
 
@@ -54,9 +32,13 @@ namespace ForceRenderer.Renderers
 				energy *= bsdf;
 
 				if (energy <= profile.energyEpsilon) break;
+				ray = new Ray(calculated.position, direction, true);
 			}
 
-			throw new NotImplementedException();
+			Cubemap skybox = profile.scene.Cubemap;
+			if (skybox != null) light += energy * skybox.Sample(ray.direction);
+
+			return light.Max(Float3.zero); //Do not clamp up, because emissive samples can go beyond 1f
 		}
 	}
 
@@ -68,7 +50,7 @@ namespace ForceRenderer.Renderers
 			direction = ray.direction;
 
 			normal = scene.GetNormal(hit);
-			uv = scene.GetTexcoord(hit);
+			texcoord = scene.GetTexcoord(hit);
 
 			distance = hit.distance;
 		}
@@ -77,7 +59,7 @@ namespace ForceRenderer.Renderers
 		public readonly Float3 direction;
 
 		public readonly Float3 normal;
-		public readonly Float2 uv;
+		public readonly Float2 texcoord;
 
 		public readonly float distance;
 	}

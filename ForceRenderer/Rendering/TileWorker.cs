@@ -6,7 +6,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.Textures;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.Rendering
 {
 	/// <summary>
 	/// A worker class that process/render on a specific tile.

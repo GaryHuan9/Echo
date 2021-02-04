@@ -7,11 +7,11 @@ using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Textures;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.Rendering
 {
-	public class PathTraceWorker : PixelWorker
+	public class PathTraceWorkerOld : PixelWorker
 	{
-		public PathTraceWorker(RenderEngine.Profile profile) : base(profile) { }
+		public PathTraceWorkerOld(RenderEngine.Profile profile) : base(profile) { }
 
 		public override Float3 Render(Float2 screenUV)
 		{

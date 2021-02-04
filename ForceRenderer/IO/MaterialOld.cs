@@ -5,9 +5,9 @@ using ForceRenderer.Textures;
 
 namespace ForceRenderer.IO
 {
-	public class Material
+	public class MaterialOld
 	{
-		public Material(Material source, bool isReadonly)
+		public MaterialOld(MaterialOld source, bool isReadonly)
 		{
 			this.isReadonly = isReadonly;
 
@@ -31,7 +31,7 @@ namespace ForceRenderer.IO
 			_transmissionTexture = source.TransmissionTexture;
 		}
 
-		public Material() => isReadonly = false;
+		public MaterialOld() => isReadonly = false;
 
 		public readonly bool isReadonly;
 
@@ -181,7 +181,7 @@ namespace ForceRenderer.IO
 
 	public readonly struct PressedMaterial
 	{
-		public PressedMaterial(Material material)
+		public PressedMaterial(MaterialOld material)
 		{
 			diffuse = new TexturePair(material.Diffuse, material.DiffuseTexture);
 			specular = new TexturePair(material.Specular, material.SpecularTexture);

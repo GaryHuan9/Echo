@@ -11,9 +11,10 @@ using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
+using ForceRenderer.Rendering.Materials;
 using Object = ForceRenderer.Objects.Object;
 
-namespace ForceRenderer.Renderers
+namespace ForceRenderer.Rendering
 {
 	/// <summary>
 	/// A flattened out/pressed down record version of a scene for fast iteration.
@@ -109,9 +110,8 @@ namespace ForceRenderer.Renderers
 			}
 
 			//Extract pressed data and construct BVH acceleration structure
-			materials = (from pair in materialObjects
-						 orderby pair.Value
-						 select new PressedMaterial(pair.Key)).ToArray();
+			materials = materialObjects.OrderBy(pair => pair.Value).Select(pair => pair.Key).ToArray();
+			for (int i = 0; i < materials.Length; i++) materials[i].Press();
 
 			triangles = new PressedTriangle[triangleList.Count];
 			spheres = new PressedSphere[sphereList.Count];
@@ -156,13 +156,13 @@ namespace ForceRenderer.Renderers
 		public readonly Camera camera;
 		public readonly PressedDirectionalLight directionalLight;
 
-		readonly PressedMaterial[] materials;
 		readonly PressedTriangle[] triangles;
 		readonly PressedSphere[] spheres;
+		readonly Material[] materials;
 
-		public int MaterialCount => materials.Length;
 		public int TriangleCount => triangles.Length;
 		public int SphereCount => spheres.Length;
+		public int MaterialCount => materials.Length;
 
 		/// <summary>
 		/// Returns the intersection status with one object of <paramref name="token"/>.
@@ -204,8 +204,10 @@ namespace ForceRenderer.Renderers
 				texcoord = triangle.GetTexcoord(hit.uv);
 			}
 
-			ref PressedMaterial material = ref materials[materialToken];
-			return material.GetSample(texcoord);
+			throw new NotImplementedException();
+
+			// ref PressedMaterial material = ref materials[materialToken];
+			// return material.GetSample(texcoord);
 		}
 
 		/// <summary>
@@ -240,7 +242,7 @@ namespace ForceRenderer.Renderers
 		/// Gets the material of intersection with <paramref name="hit"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MaterialNew GetMaterial(in Hit hit)
+		public Material GetMaterial(in Hit hit)
 		{
 			int materialToken;
 
@@ -255,8 +257,7 @@ namespace ForceRenderer.Renderers
 				materialToken = triangle.materialToken;
 			}
 
-			throw new NotImplementedException();
-			// return materials[materialToken];
+			return materials[materialToken];
 		}
 
 		public void Write(FileWriter writer)

@@ -14,7 +14,7 @@ namespace ForceRenderer.IO
 		{
 			path = this.GetAbsolutePath(path); //Formulate path
 
-			var loading = CollectionPooler<string, Material>.dictionary.GetObject();
+			var loading = CollectionPooler<string, MaterialOld>.dictionary.GetObject();
 			string currentMaterialName = null;
 
 			//Load all parameters from file
@@ -28,7 +28,7 @@ namespace ForceRenderer.IO
 					case "newmtl":
 					{
 						currentMaterialName = this.GetRemain(parts, 1);
-						loading[currentMaterialName] = new Material();
+						loading[currentMaterialName] = new MaterialOld();
 
 						break;
 					}
@@ -118,25 +118,25 @@ namespace ForceRenderer.IO
 			}
 
 			//Finalize materials
-			var materialsList = new List<Material>(loading.Count);
+			var materialsList = new List<MaterialOld>(loading.Count);
 			var namesDictionary = new Dictionary<string, int>(loading.Count);
 
 			int index = 0;
 
-			foreach ((string key, Material value) in loading)
+			foreach ((string key, MaterialOld value) in loading)
 			{
-				materialsList.Add(new Material(value, true));
+				materialsList.Add(new MaterialOld(value, true));
 				namesDictionary.Add(key, index++);
 			}
 
-			materials = new ReadOnlyCollection<Material>(materialsList);
+			materials = new ReadOnlyCollection<MaterialOld>(materialsList);
 			names = new ReadOnlyDictionary<string, int>(namesDictionary);
 
-			CollectionPooler<string, Material>.dictionary.ReleaseObject(loading);
+			CollectionPooler<string, MaterialOld>.dictionary.ReleaseObject(loading);
 
-			Material CheckMaterial()
+			MaterialOld CheckMaterial()
 			{
-				if (loading.TryGetValue(currentMaterialName ?? "", out Material material)) return material;
+				if (loading.TryGetValue(currentMaterialName ?? "", out MaterialOld material)) return material;
 				throw new Exception($"Invalid .mlt file at {path}! No material assigned before setting parameters!");
 			}
 		}
@@ -144,13 +144,13 @@ namespace ForceRenderer.IO
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".mtl"});
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
-		readonly ReadOnlyCollection<Material> materials;
+		readonly ReadOnlyCollection<MaterialOld> materials;
 		readonly ReadOnlyDictionary<string, int> names;
 
 		/// <summary>
 		/// Returns the material based on its index in this library.
 		/// </summary>
-		public Material this[int index] => materials[index];
+		public MaterialOld this[int index] => materials[index];
 
 		/// <summary>
 		/// Returns the index of a material in this library by its name.

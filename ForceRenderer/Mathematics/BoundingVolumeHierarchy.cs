@@ -3,7 +3,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
-using ForceRenderer.Renderers;
+using ForceRenderer.Rendering;
 
 namespace ForceRenderer.Mathematics
 {
