@@ -255,7 +255,8 @@ namespace ForceRenderer
 			children.Add(new Camera(90f) {Position = new Float3(0f, 1f, -2f)});
 
 			children.Add(new SphereObject(new Diffuse {Albedo = (Float3)0.9f}, 1f) {Position = new Float3(0f, 1f, 2f)});
-			children.Add(new SphereObject(new Metal {Albedo = (Float3)0.7f, Smoothness = 0.6f}, 1f) {Position = new Float3(2f, 1f, 2f)});
+			// children.Add(new SphereObject(new Metal {Albedo = (Float3)0.7f, Smoothness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
+			children.Add(new SphereObject(new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = 1.5f, Roughness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
 			children.Add(new SphereObject(new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = 1.5f}, 1f) {Position = new Float3(-2f, 1f, 2f)});
 
 			children.Add(new PlaneObject(new Diffuse {Albedo = (Float3)0.9f}, new Float2(24f, 16f)) {Position = new Float3(0f, 0f, 0f)});
