@@ -1,12 +1,11 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using ForceRenderer.Renderers;
+using ForceRenderer.Rendering;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
 

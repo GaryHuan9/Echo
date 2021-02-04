@@ -1,6 +1,6 @@
 using System;
 using CodeHelpers.Mathematics;
-using ForceRenderer.Renderers;
+using ForceRenderer.Rendering;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Terminals

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
+using ForceRenderer.Rendering.Materials;
 
 namespace ForceRenderer.Objects.SceneObjects
 {
