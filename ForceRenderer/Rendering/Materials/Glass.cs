@@ -10,16 +10,21 @@ namespace ForceRenderer.Rendering.Materials
 	{
 		public Float3 Transmission { get; set; }
 		public float IndexOfRefraction { get; set; }
+		public float Roughness { get; set; }
 
 		public Texture TransmissionTexture { get; set; } = Texture2D.white;
 		public Texture IndexOfRefractionTexture { get; set; } = Texture2D.white;
+		public Texture RoughnessTexture { get; set; } = Texture2D.white;
 
 		public override Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => Float3.zero;
 
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
-			Float3 innerNormal = hit.normal;
-			float cosI = hit.direction.Dot(hit.normal);
+			Float3 faceNormal = hit.normal;
+
+
+
+			float cosI = hit.direction.Dot(faceNormal);
 
 			float etaI = 1f;
 			float etaT = SampleTexture(IndexOfRefractionTexture, IndexOfRefraction, hit.texcoord);
@@ -28,7 +33,7 @@ namespace ForceRenderer.Rendering.Materials
 			{
 				//Hit backface
 				CodeHelper.Swap(ref etaI, ref etaT);
-				innerNormal = -innerNormal;
+				faceNormal = -faceNormal;
 			}
 			else cosI = -cosI; //Hit front face
 
@@ -57,8 +62,8 @@ namespace ForceRenderer.Rendering.Materials
 			}
 
 			//Randomly select between reflection or refraction
-			if (random.NextFloat() < reflectChance) direction = hit.direction.Reflect(innerNormal); //Reflection
-			else direction = (eta * hit.direction + (eta * cosI - cosT) * innerNormal).Normalized;  //Refraction
+			if (random.NextFloat() < reflectChance) direction = hit.direction.Reflect(faceNormal); //Reflection
+			else direction = (eta * hit.direction + (eta * cosI - cosT) * faceNormal).Normalized; //Refraction
 
 			return SampleTexture(TransmissionTexture, Transmission, hit.texcoord);
 		}

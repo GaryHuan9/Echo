@@ -18,7 +18,7 @@ namespace ForceRenderer.Rendering.Materials
 		public override void Press()
 		{
 			base.Press();
-			fuzziness = MathF.Pow(1f - Smoothness, 2.3f);
+			fuzziness = MathF.Pow(1f - Smoothness, 1.8f);
 		}
 
 		public override Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => Float3.zero;
@@ -28,7 +28,7 @@ namespace ForceRenderer.Rendering.Materials
 			Float3 fuzzy = random.NextInSphere(SampleTexture(SmoothnessTexture, fuzziness, hit.texcoord));
 			direction = (hit.direction.Reflect(hit.normal) + fuzzy).Normalized;
 
-			if (direction.Dot(hit.normal) <= 0f) return Float3.zero; //Absorbed
+			if (direction.Dot(hit.normal) < 0f) return Float3.zero; //Absorbed
 			return SampleTexture(AlbedoTexture, Albedo, hit.texcoord);
 		}
 	}
