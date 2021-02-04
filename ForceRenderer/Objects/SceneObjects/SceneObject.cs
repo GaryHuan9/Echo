@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CodeHelpers;
 using ForceRenderer.IO;
+using ForceRenderer.Rendering.Materials;
 
 namespace ForceRenderer.Objects.SceneObjects
 {
