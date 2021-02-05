@@ -12,9 +12,9 @@ namespace ForceRenderer.Rendering.Materials
 		public float IndexOfRefraction { get; set; }
 		public float Roughness { get; set; }
 
-		public Texture TransmissionTexture { get; set; } = Texture2D.white;
-		public Texture IndexOfRefractionTexture { get; set; } = Texture2D.white;
-		public Texture RoughnessTexture { get; set; } = Texture2D.white;
+		public Texture TransmissionMap { get; set; } = Texture2D.white;
+		public Texture IndexOfRefractionMap { get; set; } = Texture2D.white;
+		public Texture RoughnessMap { get; set; } = Texture2D.white;
 
 		public override Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => Float3.zero;
 
@@ -23,11 +23,10 @@ namespace ForceRenderer.Rendering.Materials
 			Float3 faceNormal = hit.normal;
 
 
-
 			float cosI = hit.direction.Dot(faceNormal);
 
 			float etaI = 1f;
-			float etaT = SampleTexture(IndexOfRefractionTexture, IndexOfRefraction, hit.texcoord);
+			float etaT = SampleTexture(IndexOfRefractionMap, IndexOfRefraction, hit.texcoord);
 
 			if (cosI > 0f)
 			{
@@ -63,9 +62,9 @@ namespace ForceRenderer.Rendering.Materials
 
 			//Randomly select between reflection or refraction
 			if (random.NextFloat() < reflectChance) direction = hit.direction.Reflect(faceNormal); //Reflection
-			else direction = (eta * hit.direction + (eta * cosI - cosT) * faceNormal).Normalized; //Refraction
+			else direction = (eta * hit.direction + (eta * cosI - cosT) * faceNormal).Normalized;  //Refraction
 
-			return SampleTexture(TransmissionTexture, Transmission, hit.texcoord);
+			return SampleTexture(TransmissionMap, Transmission, hit.texcoord);
 		}
 	}
 }
