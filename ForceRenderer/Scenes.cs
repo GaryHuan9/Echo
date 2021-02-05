@@ -76,22 +76,24 @@ namespace ForceRenderer
 		}
 	}
 
-	// public class KunaiScene : Scene
-	// {
-	// 	public KunaiScene()
-	// 	{
-	// 		Mesh kunai = new Mesh("Assets/Models/Kunai/wraith_kunai.obj");
-	// 		Cubemap = new SolidCubemap(Color32.white);
-	//
-	// 		var target = new MeshObject(kunai) {Rotation = new Float3(0f, 0f, -65f)};
-	// 		var camera = new Camera(80f) {Position = new Float3(-0.2f, 0.55f, 0.7f)};
-	//
-	// 		children.Add(target);
-	// 		children.Add(camera);
-	//
-	// 		camera.LookAt(target);
-	// 	}
-	// }
+	public class KunaiScene : Scene
+	{
+		public KunaiScene()
+		{
+			var kunai = new Mesh("Assets/Models/Kunai/wraith_kunai.obj");
+			var materials = new MaterialLibrary("Assets/Models/Kunai/wraith_kunai.mat");
+
+			Cubemap = new SolidCubemap(Color32.white);
+
+			var target = new MeshObject(kunai, materials) {Rotation = new Float3(0f, 0f, -65f)};
+			var camera = new Camera(80f) {Position = new Float3(-0.2f, 0.55f, 0.7f)};
+
+			children.Add(target);
+			children.Add(camera);
+
+			camera.LookAt(target);
+		}
+	}
 
 	// public class CornellBox : Scene
 	// {

@@ -30,6 +30,12 @@ namespace ForceRenderer.Textures
 
 		Texture2D(Color32 color) : base(Int2.one) => pixels = new[] {color};
 
+		static Texture2D()
+		{
+			white.SetReadonly();
+			black.SetReadonly();
+		}
+
 		readonly Color32[] pixels;
 
 		public static readonly Texture2D white = new Texture2D(Color32.white);

@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering.Materials;
+using ForceRenderer.Textures;
 
 namespace ForceRenderer.IO
 {
@@ -14,7 +18,7 @@ namespace ForceRenderer.IO
 			using StreamReader reader = new StreamReader(File.OpenRead(path));
 
 			materials = new Dictionary<string, Material>();
-			Material processingMaterial;
+			Material processing = null;
 
 			while (true)
 			{
@@ -34,21 +38,46 @@ namespace ForceRenderer.IO
 				{
 					//Declaring new material
 					string typeName = new string(Eat(ref line));
-					Type type = Type.GetType(typeName);
+					Type type = Type.GetType($"ForceRenderer.Rendering.Materials.{typeName}");
 
-					if (type == null) throw new Exception($"Invalid material type name: {typeName}");
-					processingMaterial = (Material)Activator.CreateInstance(type);
+					if (type != null) processing = (Material)Activator.CreateInstance(type);
+					else throw new Exception($"Invalid material type name: {typeName}");
 
 					string name = new string(Eat(ref line));
 
-					if (!materials.ContainsKey(name)) materials.Add(name, processingMaterial);
-					throw new Exception($"Duplicated material name: {name}");
+					if (!materials.ContainsKey(name)) materials.Add(name, processing);
+					else throw new Exception($"Duplicated material name: {name}");
 				}
 				else
 				{
 					//Assigning material attribute
+					if (processing == null) throw new Exception("Assigning attributes before declaring a material!");
+					PropertyInfo info = processing.GetType().GetProperty(new string(token));
 
+					object parsed = Parse(ref line);
+
+					if (info == null) throw new Exception($"No attribute named: {token.ToString()}!");
+					if (!info.PropertyType.IsInstanceOfType(parsed)) throw new Exception($"Invalid input type to attribute {info}!");
+
+					info.SetValue(processing, parsed);
 				}
+			}
+
+			first = materials.FirstOrDefault().Value;
+
+			object Parse(ref ReadOnlySpan<char> line)
+			{
+				ReadOnlySpan<char> piece0 = Eat(ref line);
+				ReadOnlySpan<char> piece1 = Eat(ref line);
+				ReadOnlySpan<char> piece2 = Eat(ref line);
+
+				if (piece0.IsEmpty) throw new Exception("Cannot set attribute with empty parameters!");
+				if (!float.TryParse(piece0, out float float0)) return Texture2D.Load(this.GetSiblingPath(path, new string(piece0)));
+
+				if (!float.TryParse(piece1, out float float1)) return float0;
+				if (!float.TryParse(piece2, out float float2)) return new Float2(float0, float1);
+
+				return new Float3(float0, float1, float2);
 			}
 		}
 
@@ -69,7 +98,20 @@ namespace ForceRenderer.IO
 
 		static ReadOnlySpan<char> Eat(ref ReadOnlySpan<char> line)
 		{
-			int index = line.IndexOf(' ');
+			int index = -1;
+			bool between = false; //Between quotes
+
+			for (int i = 0; i < line.Length; i++)
+			{
+				char current = line[i];
+				if (current == '"') between = !between;
+
+				if (current == ' ' && !between)
+				{
+					index = i;
+					break;
+				}
+			}
 
 			if (index < 0)
 			{
