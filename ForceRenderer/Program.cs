@@ -5,6 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using ForceRenderer.IO;
 using ForceRenderer.Rendering;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
@@ -15,6 +16,10 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
+			var bunnyMaterial = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
+
+			return;
+
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
 

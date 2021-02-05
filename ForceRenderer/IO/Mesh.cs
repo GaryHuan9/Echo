@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
@@ -18,14 +19,12 @@ namespace ForceRenderer.IO
 		{
 			path = this.GetAbsolutePath(path);
 
-			var usemtlLines = new List<Line>();
-			var mtllibLines = new List<Line>();
-
 			var vertexLines = new List<Line>();
 			var normalLines = new List<Line>();
 			var texcoordLines = new List<Line>();
 
 			var faceLines = new List<Line>();
+			var usemtlLines = new List<Line>();
 
 			int height = 0;
 
@@ -57,25 +56,16 @@ namespace ForceRenderer.IO
 							},
 					 'f' when index == 1 => faceLines,
 					 'u' when span.StartsWith("usemtl ") => usemtlLines,
-					 'm' when span.StartsWith("mtllib ") => mtllibLines,
 					 _ => null
 				 })?.Add(new Line(line, height++, Range.StartAt(index + 1)));
 			}
 
-			//Load material template library
-			if (mtllibLines.Count == 1)
-			{
-				string siblingPath = this.GetSiblingPath(path, mtllibLines[0]);
-				materialTemplateLibrary = new MaterialTemplateLibrary(siblingPath);
-			}
-			else throw new Exception($"Invalid OBJ file at {path} because it does not have exactly one ({mtllibLines.Count}) material template library.");
-
 			//Structure usemtl usages
 			using var heightHandles = CollectionPooler<int>.list.Fetch();
-			using var indexHandles = CollectionPooler<int>.list.Fetch();
+			using var nameHandles = CollectionPooler<string>.list.Fetch();
 
 			List<int> materialHeights = heightHandles.Target;
-			List<int> materialIndices = indexHandles.Target;
+			List<string> materialNames = nameHandles.Target;
 
 			if (usemtlLines.Count > 0)
 			{
@@ -84,7 +74,7 @@ namespace ForceRenderer.IO
 				foreach (Line line in usemtlLines)
 				{
 					materialHeights.Add(line.height);
-					materialIndices.Add(materialTemplateLibrary[line]);
+					materialNames.Add(line);
 				}
 			}
 			else throw new Exception($"Invalid OBJ file at {path} because it has zero usemtl usage, meaning it does not use any material.");
@@ -168,7 +158,7 @@ namespace ForceRenderer.IO
 				int heightIndex = ~materialHeights.BinarySearch(line.height) - 1;
 				if (heightIndex < 0) throw new Exception("Assigning faces before using materials!");
 
-				int materialIndex = materialIndices[heightIndex];
+				string materialName = materialNames[heightIndex];
 
 				//Each face part consists of vertex index, texture coordinate index, and normal index
 				//.obj uses counter-clockwise winding order while we use clockwise. So we have to reverse it
@@ -178,7 +168,7 @@ namespace ForceRenderer.IO
 					new Int3(indices2[0], indices1[0], indices0[0]),
 					new Int3(indices2[2], indices1[2], indices0[2]),
 					new Int3(indices2[1], indices1[1], indices0[1]),
-					materialIndex
+					materialName
 				);
 
 				if (split3.Length > 0) //If we need to add an extra triangle to support 4-vertex face aka quad
@@ -192,7 +182,7 @@ namespace ForceRenderer.IO
 						new Int3(indices0[0], indices3[0], indices2[0]),
 						new Int3(indices0[2], indices3[2], indices2[2]),
 						new Int3(indices0[1], indices3[1], indices2[1]),
-						materialIndex
+						materialName
 					);
 				}
 			}
@@ -200,8 +190,6 @@ namespace ForceRenderer.IO
 
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".obj"});
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
-
-		public readonly MaterialTemplateLibrary materialTemplateLibrary;
 
 		readonly Triangle[] triangles0; //Triangles are stored in two different arrays to support loading quads
 		readonly Triangle[] triangles1;
@@ -326,18 +314,18 @@ namespace ForceRenderer.IO
 
 	public readonly struct Triangle
 	{
-		public Triangle(Int3 vertexIndices, Int3 normalIndices, Int3 texcoordIndices, int materialIndex)
+		public Triangle(Int3 vertexIndices, Int3 normalIndices, Int3 texcoordIndices, string materialName)
 		{
 			this.vertexIndices = vertexIndices;
 			this.normalIndices = normalIndices;
 			this.texcoordIndices = texcoordIndices;
-			this.materialIndex = materialIndex;
+			this.materialName = materialName;
 		}
 
 		public readonly Int3 vertexIndices;
 		public readonly Int3 normalIndices;
 		public readonly Int3 texcoordIndices;
-		public readonly int materialIndex;
+		public readonly string materialName;
 	}
 
 	readonly struct Line
