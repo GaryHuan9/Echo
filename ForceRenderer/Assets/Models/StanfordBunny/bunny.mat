@@ -1,5 +1,6 @@
 ﻿# comment heheh
 # yeah ignore these
 
-declare Diffuse Material
-Albedo 0.6055 0.1863 0.2082
+declare Metal Material
+Albedo 1.000 0.766 0.336
+Smoothness 0.8

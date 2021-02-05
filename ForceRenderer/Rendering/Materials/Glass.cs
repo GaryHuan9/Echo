@@ -21,8 +21,6 @@ namespace ForceRenderer.Rendering.Materials
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
 			Float3 faceNormal = hit.normal;
-
-
 			float cosI = hit.direction.Dot(faceNormal);
 
 			float etaI = 1f;

@@ -16,10 +16,6 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			var bunnyMaterial = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
-
-			return;
-
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
 
@@ -42,7 +38,7 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new TestNewMaterialScene(),
+											RenderBuffer = buffer, Scene = new KunaiScene(),
 											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
