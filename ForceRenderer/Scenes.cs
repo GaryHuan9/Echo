@@ -1,4 +1,5 @@
-﻿using CodeHelpers;
+﻿using System;
+using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
@@ -8,73 +9,73 @@ using ForceRenderer.Textures;
 
 namespace ForceRenderer
 {
-	// public class StandardScene : Scene
-	// {
-	// 	public StandardScene(MaterialOld ground = null)
-	// 	{
-	// 		ground ??= new MaterialOld {Diffuse = (Float3)0.75f, Specular = (Float3)0.03f, Smoothness = 0.11f};
-	// 		children.Add(new PlaneObject(ground, new Float2(24f, 16f)));
-	//
-	// 		Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
-	//
-	// 		children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
-	// 	}
-	// }
-	//
-	// public class TestLighting : StandardScene
-	// {
-	// 	public TestLighting()
-	// 	{
-	// 		Cubemap = null;
-	//
-	// 		children.Add(new DirectionalLight {Intensity = Float3.one * 2f, Rotation = new Float3(45f, 45f, 0f)});
-	// 		// children.Add(new PlaneObject(new Material {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
-	// 		children.Add(new BoxObject(new MaterialOld {Diffuse = Float3.one}, Float3.one * 2f) {Position = Float3.up});
-	// 	}
-	// }
-	//
-	// public class TestTexture : StandardScene
-	// {
-	// 	public TestTexture()
-	// 	{
-	// 		Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
-	// 		MaterialOld material = new MaterialOld {Diffuse = Float3.one, DiffuseTexture = texture};
-	//
-	// 		Cubemap = new SolidCubemap(Color32.white);
-	// 		children.Add(new PlaneObject(material, Float2.one * 18f) {Position = new Float3(-9f, 2.5f, -5f), Rotation = new Float3(-90f, 0f, 0f)});
-	// 	}
-	// }
-	//
-	// public class TestTransparency : Scene
-	// {
-	// 	public TestTransparency()
-	// 	{
-	// 		// children.Add(new SphereObject(new Material {Diffuse = new Float3(0.8f, 0.8f, 0f)}, 100f) {Position = new Float3(0f, -100.5f, 0f)});
-	//
-	// 		MaterialOld material = new MaterialOld {Transparency = 1f, IndexOfRefraction = 1.5f, Transmission = (Float3)0.9f};
-	// 		children.Add(new BoxObject(material, new Float3(4f, 1f, 0.03f)) {Position = new Float3(0f, 0.5f, 0f)});
-	//
-	// 		children.Add(new SphereObject(new MaterialOld {Transparency = 1f, IndexOfRefraction = 1.5f, Transmission = Float3.one}, 0.5f) {Position = new Float3(-1f, 0f, 0f)});
-	// 		children.Add(new SphereObject(new MaterialOld {Diffuse = new Float3(0.8f, 0.6f, 0.2f)}, 0.5f) {Position = new Float3(1f, 0f, 0f)});
-	//
-	// 		var camera = new Camera(90f) {Position = new Float3(0.2f, 2f, -1f)};
-	//
-	// 		camera.LookAt(Float3.zero);
-	// 		children.Add(camera);
-	//
-	// 		Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
-	// 	}
-	// }
-	//
-	// public class BunnyScene : StandardScene
-	// {
-	// 	public BunnyScene()
-	// 	{
-	// 		Mesh bunny = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
-	// 		children.Add(new MeshObject(bunny) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f});
-	// 	}
-	// }
-	//
+	public class StandardScene : Scene
+	{
+		public StandardScene(Material ground = null)
+		{
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
+
+			children.Add(new PlaneObject(ground ?? new Diffuse {Albedo = (Float3)0.75f}, new Float2(24f, 16f)));
+			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
+		}
+	}
+
+	public class TestLighting : StandardScene
+	{
+		public TestLighting()
+		{
+			Cubemap = null;
+
+			children.Add(new DirectionalLight {Intensity = Float3.one * 2f, Rotation = new Float3(45f, 45f, 0f)});
+			// children.Add(new PlaneObject(new Material {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
+			children.Add(new BoxObject(new Diffuse {Albedo = Float3.one}, Float3.one * 2f) {Position = Float3.up});
+		}
+	}
+
+	public class TestTexture : StandardScene
+	{
+		public TestTexture()
+		{
+			Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
+			Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
+
+			Cubemap = new SolidCubemap(Color32.white);
+			children.Add(new PlaneObject(material, Float2.one * 18f) {Position = new Float3(-9f, 2.5f, -5f), Rotation = new Float3(-90f, 0f, 0f)});
+		}
+	}
+
+	public class TestTransparency : Scene
+	{
+		public TestTransparency()
+		{
+			// children.Add(new SphereObject(new Material {Diffuse = new Float3(0.8f, 0.8f, 0f)}, 100f) {Position = new Float3(0f, -100.5f, 0f)});
+
+			Material material = new Glass {IndexOfRefraction = 1.5f, Transmission = (Float3)0.9f};
+			children.Add(new BoxObject(material, new Float3(4f, 1f, 0.03f)) {Position = new Float3(0f, 0.5f, 0f)});
+
+			children.Add(new SphereObject(new Glass {IndexOfRefraction = 1.5f, Transmission = Float3.one}, 0.5f) {Position = new Float3(-1f, 0f, 0f)});
+			children.Add(new SphereObject(new Diffuse {Albedo = new Float3(0.8f, 0.6f, 0.2f)}, 0.5f) {Position = new Float3(1f, 0f, 0f)});
+
+			var camera = new Camera(90f) {Position = new Float3(0.2f, 2f, -1f)};
+
+			camera.LookAt(Float3.zero);
+			children.Add(camera);
+
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+		}
+	}
+
+	public class BunnyScene : StandardScene
+	{
+		public BunnyScene()
+		{
+			var bunnyMesh = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
+			var bunnyMaterial = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
+
+			children.Add(new MeshObject(bunnyMesh, bunnyMaterial) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f});
+		}
+	}
+
 	// public class KunaiScene : Scene
 	// {
 	// 	public KunaiScene()
@@ -91,7 +92,7 @@ namespace ForceRenderer
 	// 		camera.LookAt(target);
 	// 	}
 	// }
-	//
+
 	// public class CornellBox : Scene
 	// {
 	// 	public CornellBox()
@@ -170,60 +171,58 @@ namespace ForceRenderer
 	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(0.3f, 0.1f, 0.6f)}, 1f) {Position = new Float3(7f, 1f, 4f)});
 	// 	}
 	// }
-	//
-	// public class RandomSpheresScene : StandardScene
-	// {
-	// 	public RandomSpheresScene(int count)
-	// 	{
-	// 		MinMax radiusRange = new MinMax(0.22f, 0.58f);
-	// 		MinMax positionRange = new MinMax(0f, 4.5f);
-	//
-	// 		for (int i = 0; i < count; i++)
-	// 		{
-	// 			//Orientation
-	// 			float radius;
-	// 			Float3 position;
-	//
-	// 			do
-	// 			{
-	// 				radius = radiusRange.RandomValue;
-	// 				position = new Float3(positionRange.RandomValue, radius, 0f).RotateXZ(RandomHelper.Range(360f));
-	// 			}
-	// 			while (IntersectingOthers(radius, position));
-	//
-	// 			//Material
-	// 			Float3 color = new Float3((float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value);
-	// 			Float3 bright = new Float3(RandomHelper.Range(3f, 8f), RandomHelper.Range(3f, 8f), RandomHelper.Range(3f, 8f));
-	//
-	// 			bool metal = RandomHelper.Value < 0.5d;
-	// 			bool emissive = RandomHelper.Value < 0.1d;
-	//
-	// 			MaterialOld material = new MaterialOld
-	// 								   {
-	// 									   Diffuse = color,
-	// 									   Specular = metal ? color : Float3.one * 0.05f,
-	// 									   Emission = emissive ? bright : Float3.zero,
-	// 									   Smoothness = (float)RandomHelper.Value / 2f + (metal ? 0.5f : 0f)
-	// 								   };
-	//
-	// 			children.Add(new SphereObject(material, radius) {Position = position});
-	// 		}
-	// 	}
-	//
-	// 	bool IntersectingOthers(float radius, Float3 position)
-	// 	{
-	// 		for (int i = 0; i < children.Count; i++)
-	// 		{
-	// 			var sphere = children[i] as SphereObject;
-	// 			if (sphere == null) continue;
-	//
-	// 			float distance = sphere.Radius + radius;
-	// 			if ((sphere.Position - position).SquaredMagnitude <= distance * distance) return true;
-	// 		}
-	//
-	// 		return false;
-	// 	}
-	// }
+
+	public class RandomSpheresScene : StandardScene
+	{
+		public RandomSpheresScene(int count)
+		{
+			MinMax radiusRange = new MinMax(0.22f, 0.58f);
+			MinMax positionRange = new MinMax(0f, 4.5f);
+
+			for (int i = 0; i < count; i++)
+			{
+				//Orientation
+				float radius;
+				Float3 position;
+
+				do
+				{
+					radius = radiusRange.RandomValue;
+					position = new Float3(positionRange.RandomValue, radius, 0f).RotateXZ(RandomHelper.Range(360f));
+				}
+				while (IntersectingOthers(radius, position));
+
+				//Material
+				Float3 color = new Float3((float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value);
+				Float3 bright = new Float3(RandomHelper.Range(3f, 8f), RandomHelper.Range(3f, 8f), RandomHelper.Range(3f, 8f));
+
+				bool metal = RandomHelper.Value < 0.5d;
+				bool emissive = RandomHelper.Value < 0.1d;
+
+				Material material;
+
+				if (metal) material = new Metal {Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f};
+				else if (emissive) throw new NotImplementedException();
+				else material = new Diffuse {Albedo = color};
+
+				children.Add(new SphereObject(material, radius) {Position = position});
+			}
+		}
+
+		bool IntersectingOthers(float radius, Float3 position)
+		{
+			for (int i = 0; i < children.Count; i++)
+			{
+				var sphere = children[i] as SphereObject;
+				if (sphere == null) continue;
+
+				float distance = sphere.Radius + radius;
+				if ((sphere.Position - position).SquaredMagnitude <= distance * distance) return true;
+			}
+
+			return false;
+		}
+	}
 
 	public class GridSpheresScene : Scene
 	{
