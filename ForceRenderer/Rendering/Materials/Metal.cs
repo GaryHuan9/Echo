@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;
@@ -18,6 +19,10 @@ namespace ForceRenderer.Rendering.Materials
 		public override void Press()
 		{
 			base.Press();
+
+			AssertZeroOne(Smoothness);
+			AssertZeroOne(Albedo);
+
 			fuzziness = MathF.Pow(1f - Smoothness, 1.8f);
 		}
 

@@ -36,7 +36,7 @@ namespace ForceRenderer.IO
 				string line = reader.ReadLine();
 				if (line == null) break;
 
-				ReadOnlySpan<char> span = ((ReadOnlySpan<char>)line).TrimStart();
+				var span = ((ReadOnlySpan<char>)line).TrimStart();
 
 				int index = span.IndexOf(' ');
 				if (index < 0) continue;
@@ -125,10 +125,10 @@ namespace ForceRenderer.IO
 			triangles0 = new Triangle[faceLines.Count];
 			triangles1 = new Triangle[faceLines.Count];
 
-			int triangles1Index = 0;
+			int triangles1Length = 0;
 
 			Parallel.For(0, faceLines.Count, LoadFace);
-			Array.Resize(ref triangles1, InterlockedHelper.Read(ref triangles1Index));
+			Array.Resize(ref triangles1, InterlockedHelper.Read(ref triangles1Length));
 
 			void LoadFace(int index)
 			{
@@ -147,9 +147,9 @@ namespace ForceRenderer.IO
 				Span<Range> ranges1 = stackalloc Range[3];
 				Span<Range> ranges2 = stackalloc Range[3];
 
-				Split(split0, '/', ranges0);
-				Split(split1, '/', ranges1);
-				Split(split2, '/', ranges2);
+				Split(split0, '/', ranges0, false);
+				Split(split1, '/', ranges1, false);
+				Split(split2, '/', ranges2, false);
 
 				Int3 indices0 = ParseIndices(split0, ranges0);
 				Int3 indices1 = ParseIndices(split1, ranges1);
@@ -177,7 +177,7 @@ namespace ForceRenderer.IO
 					Split(split3, '/', ranges3);
 					Int3 indices3 = ParseIndices(split3, ranges3);
 
-					triangles1[Interlocked.Increment(ref triangles1Index)] = new Triangle
+					triangles1[Interlocked.Increment(ref triangles1Length) - 1] = new Triangle
 					(
 						new Int3(indices0[0], indices3[0], indices2[0]),
 						new Int3(indices0[2], indices3[2], indices2[2]),
@@ -227,12 +227,14 @@ namespace ForceRenderer.IO
 			throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
 		}
 
-		static void Split(ReadOnlySpan<char> span, char split, Span<Range> ranges)
+		static void Split(ReadOnlySpan<char> span, char split, Span<Range> ranges, bool removeEmpties = true)
 		{
 			int index = 0;
 
 			for (int i = 0; i < ranges.Length; i++)
 			{
+				while (removeEmpties && index < span.Length && span[index] == split) index++;
+
 				int start = index;
 				bool comment = false;
 
@@ -245,7 +247,7 @@ namespace ForceRenderer.IO
 				}
 
 				ranges[i] = index - start > 0 ? start..index : default;
-				if (comment) index = span.Length; //Ignore content behind # as comments
+				if (comment) break; //Ignore content behind # as comments
 
 				index++;
 			}

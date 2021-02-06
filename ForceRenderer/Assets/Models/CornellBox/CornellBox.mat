@@ -1,0 +1,26 @@
+﻿declare Diffuse leftWall
+Albedo 0.63 0.065 0.05 # Red
+
+declare Diffuse rightWall
+Albedo 0.14 0.45 0.091 # Green
+
+declare Diffuse floor
+Albedo 0.725 0.71 0.68 # White
+
+declare Diffuse ceiling
+Albedo 0.725 0.71 0.68 # White
+
+declare Diffuse backWall
+Albedo 0.725 0.71 0.68 # White
+
+declare Diffuse frontWall
+Albedo 0.725 0.71 0.68 # White
+
+declare Diffuse shortBox
+Albedo 0.725 0.71 0.68 # White
+
+declare Diffuse tallBox
+Albedo 0.725 0.71 0.68
+
+declare Emissive light
+Emission 60 60 60

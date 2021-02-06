@@ -38,7 +38,7 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new KunaiScene(),
+											RenderBuffer = buffer, Scene = new LightedBMWScene(),
 											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 

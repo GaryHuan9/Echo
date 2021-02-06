@@ -72,7 +72,12 @@ namespace ForceRenderer.IO
 				ReadOnlySpan<char> piece2 = Eat(ref line);
 
 				if (piece0.IsEmpty) throw new Exception("Cannot set attribute with empty parameters!");
-				if (!float.TryParse(piece0, out float float0)) return Texture2D.Load(this.GetSiblingPath(path, new string(piece0)));
+
+				if (!float.TryParse(piece0, out float float0))
+				{
+					string sibling = new string(piece0.Trim('"'));
+					return Texture2D.Load(this.GetSiblingPath(path, sibling));
+				}
 
 				if (!float.TryParse(piece1, out float float1)) return float0;
 				if (!float.TryParse(piece2, out float float2)) return new Float2(float0, float1);
@@ -99,14 +104,14 @@ namespace ForceRenderer.IO
 		static ReadOnlySpan<char> Eat(ref ReadOnlySpan<char> line)
 		{
 			int index = -1;
-			bool between = false; //Between quotes
+			int quote = 0; //Count of quotation characters
 
 			for (int i = 0; i < line.Length; i++)
 			{
 				char current = line[i];
-				if (current == '"') between = !between;
+				if (current == '"') quote++;
 
-				if (current == ' ' && !between)
+				if (current == ' ' && quote % 2 == 0)
 				{
 					index = i;
 					break;
