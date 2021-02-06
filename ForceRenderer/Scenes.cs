@@ -69,10 +69,10 @@ namespace ForceRenderer
 	{
 		public BunnyScene()
 		{
-			var bunnyMesh = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
-			var bunnyMaterial = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
+			var mesh = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
+			var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
 
-			children.Add(new MeshObject(bunnyMesh, bunnyMaterial) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f});
+			children.Add(new MeshObject(mesh, materials) {Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f});
 		}
 	}
 
@@ -95,92 +95,100 @@ namespace ForceRenderer
 		}
 	}
 
-	// public class CornellBox : Scene
-	// {
-	// 	public CornellBox()
-	// 	{
-	// 		Mesh box = new Mesh("Assets/Models/CornellBox/CornellBox.obj");
-	//
-	// 		children.Add(new MeshObject(box));
-	// 		children.Add(new Camera(90f) {Position = new Float3(0f, 1f, 2.2f), Rotation = Float3.up * 180f});
-	// 	}
-	// }
-	//
-	// public class SingleBMWScene : StandardScene
-	// {
-	// 	public SingleBMWScene() : base(new MaterialOld {Diffuse = (Float3)0.05f, Specular = (Float3)0.88f, Smoothness = 0.78f})
-	// 	{
-	// 		Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
-	// 		Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
-	//
-	// 		MaterialOld dark = new MaterialOld {Diffuse = new Float3(0.1f, 0.1f, 0.1f), Specular = Float3.half, Smoothness = 0.9f};
-	// 		children.Add(new MeshObject(bmw) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
-	// 	}
-	// }
-	//
-	// public class LightedBMWScene : StandardScene
-	// {
-	// 	public LightedBMWScene()
-	// 	{
-	// 		Cubemap = new SolidCubemap((Color32)(Float3)0.21f);
-	// 		Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
-	//
-	// 		children.Add(new MeshObject(bmw) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
-	//
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(7f, 4f, 8f)}, 8f) {Position = new Float3(24f, 15f, 18f)});   //Upper right purple
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(8f, 4f, 3f)}, 5f) {Position = new Float3(-16f, 19f, -12f)}); //Bottom left orange
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(2f, 7f, 4f)}, 7f) {Position = new Float3(10f, 24f, -12f)});  //Bottom right green
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(3f, 4f, 8f)}, 8f) {Position = new Float3(-19f, 19f, 13f)});  //Upper left blue
-	// 	}
-	// }
-	//
-	// public class MultipleBMWScene : StandardScene
-	// {
-	// 	public MultipleBMWScene() : base(new MaterialOld {Diffuse = (Float3)0.05f, Specular = (Float3)0.88f, Smoothness = 0.78f})
-	// 	{
-	// 		Mesh bmw = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
-	// 		Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
-	//
-	// 		MinMaxInt range = new MinMaxInt(-3, 1);
-	//
-	// 		foreach (int index in range.Loop())
-	// 		{
-	// 			MaterialOld material = new MaterialOld {Diffuse = Float3.one, Specular = (Float3)range.InverseLerp(index), Smoothness = 0.85f};
-	// 			Float3 position = new Float3(2.8f, 0f, -0.8f) * index + new Float3(1.7f, 0f, 0.2f);
-	//
-	// 			children.Add(new MeshObject(bmw) {Position = position, Rotation = new Float3(0f, 120f, 0f)});
-	// 		}
-	// 	}
-	// }
-	//
-	// public class SingleDragonScene : Scene
-	// {
-	// 	public SingleDragonScene()
-	// 	{
-	// 		Mesh dragon = new Mesh("Assets/Models/StanfordDragon/StanfordDragon.obj");
-	// 		Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
-	//
-	// 		children.Add(new PlaneObject(new MaterialOld {Diffuse = (Float3)0.2f, Specular = new Float3(0.29f, 0.29f, 0.35f), Smoothness = 0.85f}, (Float2)24f));
-	// 		children.Add(new MeshObject(dragon) {Position = Float3.zero, Rotation = new Float3(0f, 158f, 0f), Scale = (Float3)3.5f});
-	//
-	// 		children.Add(new Camera(100f) {Position = new Float3(0f, 4f, -8f), Rotation = new Float3(10f, 0f, 0f)});
-	//
-	// 		//Lights
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(6f, 6f, 7f)}, 17f) {Position = new Float3(23f, 34f, -18f)});  //Bottom right
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(6f, 5f, 6f)}, 19f) {Position = new Float3(-27f, 31f, -20f)}); //Bottom left
-	//
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(0.6f, 0.1f, 0.3f)}, 1f) {Position = new Float3(-7f, 1f, 4f)});
-	// 		children.Add(new SphereObject(new MaterialOld {Emission = new Float3(0.3f, 0.1f, 0.6f)}, 1f) {Position = new Float3(7f, 1f, 4f)});
-	// 	}
-	// }
+	public class CornellBox : Scene
+	{
+		public CornellBox()
+		{
+			var mesh = new Mesh("Assets/Models/CornellBox/CornellBox.obj");
+			var materials = new MaterialLibrary("Assets/Models/CornellBox/CornellBox.mat");
+
+			children.Add(new MeshObject(mesh, materials));
+			children.Add(new Camera(90f) {Position = new Float3(0f, 1f, 2.2f), Rotation = Float3.up * 180f});
+		}
+	}
+
+	public class SingleBMWScene : StandardScene
+	{
+		public SingleBMWScene() : base(new Metal {Albedo = (Float3)0.88f, Smoothness = 0.78f})
+		{
+			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+
+			Material dark = new Metal {Albedo = (Float3)0.3f, Smoothness = 0.9f};
+			children.Add(new MeshObject(mesh, dark) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
+		}
+	}
+
+	public class LightedBMWScene : StandardScene
+	{
+		public LightedBMWScene()
+		{
+			// var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
+			// var materials = new MaterialLibrary("Assets/Models/BlenderBMW/BlenderBMW.mat");
+
+			Cubemap = new SolidCubemap((Color32)(Float3)0.21f);
+
+			// children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
+
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(7f, 4f, 8f)}, 8f) {Position = new Float3(24f, 15f, 18f)});   //Upper right purple
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(8f, 4f, 3f)}, 5f) {Position = new Float3(-16f, 19f, -12f)}); //Bottom left orange
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(2f, 7f, 4f)}, 7f) {Position = new Float3(10f, 24f, -12f)});  //Bottom right green
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(3f, 4f, 8f)}, 8f) {Position = new Float3(-19f, 19f, 13f)});  //Upper left blue
+		}
+	}
+
+	public class MultipleBMWScene : StandardScene
+	{
+		public MultipleBMWScene() : base(new Metal {Albedo = (Float3)0.88f, Smoothness = 0.78f})
+		{
+			MinMaxInt range = new MinMaxInt(-3, 1);
+
+			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+
+			foreach (int index in range.Loop())
+			{
+				Material material = new Metal {Albedo = (Float3)range.InverseLerp(index), Smoothness = 0.85f};
+				Float3 position = new Float3(2.8f, 0f, -0.8f) * index + new Float3(1.7f, 0f, 0.2f);
+
+				children.Add(new MeshObject(mesh, material) {Position = position, Rotation = new Float3(0f, 120f, 0f)});
+			}
+		}
+	}
+
+	public class SingleDragonScene : Scene
+	{
+		public SingleDragonScene()
+		{
+			var mesh = new Mesh("Assets/Models/StanfordDragon/StanfordDragon.obj");
+			var materials = new MaterialLibrary("Assets/Models/StanfordDragon/StanfordDragon.mat");
+
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
+
+			children.Add(new PlaneObject(new Metal {Albedo = new Float3(0.29f, 0.29f, 0.35f), Smoothness = 0.85f}, (Float2)24f));
+			children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 158f, 0f), Scale = (Float3)3.5f});
+
+			children.Add(new Camera(100f) {Position = new Float3(0f, 4f, -8f), Rotation = new Float3(10f, 0f, 0f)});
+
+			//Lights
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(6f, 6f, 7f)}, 17f) {Position = new Float3(23f, 34f, -18f)});  //Bottom right
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(6f, 5f, 6f)}, 19f) {Position = new Float3(-27f, 31f, -20f)}); //Bottom left
+
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(0.6f, 0.1f, 0.3f)}, 1f) {Position = new Float3(-7f, 1f, 4f)});
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(0.3f, 0.1f, 0.6f)}, 1f) {Position = new Float3(7f, 1f, 4f)});
+		}
+	}
 
 	public class RandomSpheresScene : StandardScene
 	{
 		public RandomSpheresScene(int count)
 		{
-			MinMax radiusRange = new MinMax(0.22f, 0.58f);
-			MinMax positionRange = new MinMax(0f, 4.5f);
+			AddSpheres(new MinMax(0f, 7f), new MinMax(0.4f, 0.7f), count);
+			AddSpheres(new MinMax(0f, 7f), new MinMax(0.1f, 0.2f), count * 3);
+		}
 
+		void AddSpheres(MinMax positionRange, MinMax radiusRange, int count)
+		{
 			for (int i = 0; i < count; i++)
 			{
 				//Orientation
@@ -196,15 +204,14 @@ namespace ForceRenderer
 
 				//Material
 				Float3 color = new Float3((float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value);
-				Float3 bright = new Float3(RandomHelper.Range(3f, 8f), RandomHelper.Range(3f, 8f), RandomHelper.Range(3f, 8f));
 
-				bool metal = RandomHelper.Value < 0.5d;
-				bool emissive = RandomHelper.Value < 0.1d;
+				bool metal = RandomHelper.Value < 0.3d;
+				bool emissive = RandomHelper.Value < 0.05d;
 
 				Material material;
 
 				if (metal) material = new Metal {Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f};
-				else if (emissive) throw new NotImplementedException();
+				else if (emissive) material = new Emissive {Emission = color * 10f};
 				else material = new Diffuse {Albedo = color};
 
 				children.Add(new SphereObject(material, radius) {Position = position});

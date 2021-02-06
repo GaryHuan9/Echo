@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;
 
@@ -39,6 +40,42 @@ namespace ForceRenderer.Rendering.Materials
 		{
 			if (texture == Texture2D.white) return value;
 			return value * texture[texcoord];
+		}
+
+		protected static void AssertZeroOne(float value)
+		{
+			if (0f <= value && value <= 1f) return;
+			throw new Exception($"Invalid value outside of bounds 0 to 1: {value}");
+		}
+
+		protected static void AssertZeroOne(Float2 value)
+		{
+			if (0f <= value.MinComponent && value.MaxComponent <= 1f) return;
+			throw new Exception($"Invalid value outside of bounds 0 to 1: {value}");
+		}
+
+		protected static void AssertZeroOne(Float3 value)
+		{
+			if (0f <= value.MinComponent && value.MaxComponent <= 1f) return;
+			throw new Exception($"Invalid value outside of bounds 0 to 1: {value}");
+		}
+
+		protected static void AssertNonNegative(float value)
+		{
+			if (0f <= value) return;
+			throw new Exception($"Invalid negative value: {value}");
+		}
+
+		protected static void AssertNonNegative(Float2 value)
+		{
+			if (0f <= value.MinComponent) return;
+			throw new Exception($"Invalid negative value: {value}");
+		}
+
+		protected static void AssertNonNegative(Float3 value)
+		{
+			if (0f <= value.MinComponent) return;
+			throw new Exception($"Invalid negative value: {value}");
 		}
 	}
 }
