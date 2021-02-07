@@ -17,14 +17,14 @@ namespace ForceRenderer.Rendering
 			Float3 energy = Float3.one;
 			Float3 light = Float3.zero;
 
+			ExtendedRandom random = Random;
+
 			for (int bounce = 0; bounce < profile.maxBounce; bounce++)
 			{
 				if (!GetIntersection(ray, out Hit hit)) break;
 
 				CalculatedHit calculated = new CalculatedHit(hit, ray, profile.pressed);
 				Material material = profile.pressed.GetMaterial(hit);
-
-				ExtendedRandom random = Random;
 
 				Float3 emission = material.Emit(calculated, random);
 				Float3 bsdf = material.BidirectionalScatter(calculated, random, out Float3 direction);

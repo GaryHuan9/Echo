@@ -24,6 +24,17 @@ namespace ForceRenderer.Rendering.Materials
 		/// </summary>
 		public abstract Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction);
 
+		protected static float SmoothnessToRandomRadius(float smoothness) => RoughnessToRandomRadius(1f - smoothness);
+
+		protected static float RoughnessToRandomRadius(float roughness)
+		{
+			const float Alpha = 7.4f;
+			const float Beta = 1.8f;
+
+			float radius = MathF.Pow(Alpha, roughness) - 1f;
+			return MathF.Pow(radius / (Alpha - 1f), Beta);
+		}
+
 		protected static float SampleTexture(Texture texture, float value, Float2 texcoord)
 		{
 			if (texture == Texture2D.white) return value;

@@ -22,7 +22,7 @@ namespace ForceRenderer.Rendering
 		public int AdaptiveSample { get; set; } //The max number of samples applied to pixels that the engine deems necessary
 
 		public int TileSize { get; set; }
-		public int WorkerSize { get; set; } = Environment.ProcessorCount / 2;
+		public int WorkerSize { get; set; } = 1; //Environment.ProcessorCount / 2;
 
 		public int MaxBounce { get; set; } = 64;
 		public float EnergyEpsilon { get; set; } = 1E-3f; //Epsilon lower bound value to determine when an energy is essentially zero

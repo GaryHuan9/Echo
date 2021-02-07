@@ -1,3 +1,7 @@
-﻿declare Glass Material
-Transmission 0.450 0.920 0.680
-IndexOfRefraction 1.52
+﻿declare Glossy Core
+Albedo 0.9055 0.2863 0.3282
+Smoothness 0.720
+
+declare Glass Shell
+Transmission 0.840 0.860 0.820
+IndexOfRefraction 1.520

@@ -1,33 +1,33 @@
-﻿declare Metal BMWBlack
+﻿declare Glossy BMWBlack
 Albedo 0.100 0.100 0.100
 Smoothness 0.22500
 
 declare Diffuse BMWBlue
 Albedo 0.029557 0.191202 0.597202
 
-declare Metal BMWSilver
+declare Glossy BMWSilver
 Albedo 0.373969 0.373969 0.373969
 Smoothness 0.52500
 
 declare Diffuse BMWWhite
 Albedo 0.900 0.900 0.900
 
-declare Metal BlackPlastic
+declare Glossy BlackPlastic
 Albedo 0.253465 0.253465 0.253465
 Smoothness 0.22500
 
 declare Diffuse Brake
 Albedo 0.071850 0.071850 0.071850
 
-declare Metal CarShellNew
+declare Glossy CarShellNew
 Albedo 0.94467 0.614926 0.528900
 Smoothness 0.22500
 
-declare Metal Chrome
+declare Glossy Chrome
 Albedo 0.892533 0.892533 0.892533
 Smoothness 0.35500
 
-declare Metal ChromeMatte
+declare Glossy ChromeMatte
 Albedo 0.922966 0.922966 0.922966
 Smoothness 0.22500
 
@@ -44,7 +44,7 @@ declare Emissive HeadLightGlass
 Albedo 0.787412 0.861383 1.000000
 Emission 7.874120 8.613830 10.00000
 
-declare Metal HeadlightChrome
+declare Glossy HeadlightChrome
 Albedo 0.933105 0.933105 0.933105
 Smoothness 0.22500
 
@@ -59,7 +59,7 @@ Albedo 0.800 0.800 0.800
 declare Diffuse Interior
 Albedo 0.6055 0.1863 0.2082
 
-declare Metal Material
+declare Glossy Material
 Albedo 0.632868 0.509193 0.506072
 Smoothness 0.22500
 
