@@ -6,7 +6,7 @@ using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.Materials
 {
-	public class Metal : Material
+	public class Glossy : Material
 	{
 		public Float3 Albedo { get; set; }
 		public float Smoothness { get; set; }
@@ -14,7 +14,7 @@ namespace ForceRenderer.Rendering.Materials
 		public Texture AlbedoMap { get; set; } = Texture2D.white;
 		public Texture SmoothnessMap { get; set; } = Texture2D.white;
 
-		float fuzziness;
+		float randomRadius;
 
 		public override void Press()
 		{
@@ -23,15 +23,17 @@ namespace ForceRenderer.Rendering.Materials
 			AssertZeroOne(Smoothness);
 			AssertZeroOne(Albedo);
 
-			fuzziness = MathF.Pow(1f - Smoothness, 1.8f);
+			randomRadius = SmoothnessToRandomRadius(Smoothness);
 		}
 
 		public override Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => Float3.zero;
 
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
-			Float3 fuzzy = random.NextInSphere(SampleTexture(SmoothnessMap, fuzziness, hit.texcoord));
-			direction = (hit.direction.Reflect(hit.normal) + fuzzy).Normalized;
+			float radius = SampleTexture(SmoothnessMap, randomRadius, hit.texcoord);
+			Float3 normal = (hit.normal + random.NextInSphere(radius)).Normalized;
+
+			direction = hit.direction.Reflect(normal).Normalized;
 
 			if (direction.Dot(hit.normal) < 0f) return Float3.zero; //Absorbed
 			return SampleTexture(AlbedoMap, Albedo, hit.texcoord);

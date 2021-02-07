@@ -5,7 +5,7 @@ namespace ForceRenderer.Rendering.Materials
 {
 	public class Emissive : Diffuse
 	{
-		public Emissive() => Albedo = Float3.zero;
+		public Emissive() => Albedo = Float3.one;
 
 		public Float3 Emission { get; set; }
 

@@ -121,7 +121,7 @@ namespace ForceRenderer.Mathematics
 			if (node.IsLeaf)
 			{
 				//Now we finally calculate the real intersection
-				float distance = pressed.GetIntersection(ray, node.token, out Float2 uv);
+				float distance = pressed.Intersect(ray, node.token, out Float2 uv);
 				if (distance < hit.distance) hit = new Hit(distance, node.token, uv);
 
 				return;

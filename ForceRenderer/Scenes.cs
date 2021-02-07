@@ -21,7 +21,7 @@ namespace ForceRenderer
 
 	public class MaterialBallScene : StandardScene
 	{
-		public MaterialBallScene() : base(new Metal {Albedo = new Float3(0.78f, 0.76f, 0.79f), Smoothness = 0.74f})
+		public MaterialBallScene() : base(new Glossy {Albedo = new Float3(0.78f, 0.76f, 0.79f), Smoothness = 0.74f})
 		{
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.2f);
 
@@ -119,14 +119,37 @@ namespace ForceRenderer
 		}
 	}
 
+	public class SingleDragonScene : Scene
+	{
+		public SingleDragonScene()
+		{
+			var mesh = new Mesh("Assets/Models/StanfordDragon/StanfordDragon.obj");
+			var materials = new MaterialLibrary("Assets/Models/StanfordDragon/StanfordDragon.mat");
+
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea", (Float3)1.2f);
+
+			children.Add(new PlaneObject(new Glossy {Albedo = new Float3(0.29f, 0.29f, 0.35f), Smoothness = 0.85f}, (Float2)24f));
+			children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 158f, 0f), Scale = (Float3)3.5f});
+
+			children.Add(new Camera(100f) {Position = new Float3(0f, 4f, -8f), Rotation = new Float3(10f, 0f, 0f)});
+
+			//Lights
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(5f, 5f, 6f)}, 17f) {Position = new Float3(23f, 34f, -18f)});  //Bottom right
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(5f, 4f, 5f)}, 19f) {Position = new Float3(-27f, 31f, -20f)}); //Bottom left
+
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(0.6f, 0.1f, 0.3f)}, 1f) {Position = new Float3(-7f, 1f, 4f)});
+			children.Add(new SphereObject(new Emissive {Emission = new Float3(0.3f, 0.1f, 0.6f)}, 1f) {Position = new Float3(7f, 1f, 4f)});
+		}
+	}
+
 	public class SingleBMWScene : StandardScene
 	{
-		public SingleBMWScene() : base(new Metal {Albedo = (Float3)0.88f, Smoothness = 0.78f})
+		public SingleBMWScene() : base(new Glossy {Albedo = (Float3)0.88f, Smoothness = 0.78f})
 		{
 			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 
-			Material dark = new Metal {Albedo = (Float3)0.3f, Smoothness = 0.9f};
+			Material dark = new Glossy {Albedo = (Float3)0.3f, Smoothness = 0.9f};
 			children.Add(new MeshObject(mesh, dark) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 		}
 	}
@@ -151,7 +174,7 @@ namespace ForceRenderer
 
 	public class MultipleBMWScene : StandardScene
 	{
-		public MultipleBMWScene() : base(new Metal {Albedo = (Float3)0.88f, Smoothness = 0.78f})
+		public MultipleBMWScene() : base(new Glossy {Albedo = (Float3)0.88f, Smoothness = 0.78f})
 		{
 			MinMaxInt range = new MinMaxInt(-3, 1);
 
@@ -160,34 +183,11 @@ namespace ForceRenderer
 
 			foreach (int index in range.Loop())
 			{
-				Material material = new Metal {Albedo = (Float3)range.InverseLerp(index), Smoothness = 0.85f};
+				Material material = new Glossy {Albedo = (Float3)range.InverseLerp(index), Smoothness = 0.85f};
 				Float3 position = new Float3(2.8f, 0f, -0.8f) * index + new Float3(1.7f, 0f, 0.2f);
 
 				children.Add(new MeshObject(mesh, material) {Position = position, Rotation = new Float3(0f, 120f, 0f)});
 			}
-		}
-	}
-
-	public class SingleDragonScene : Scene
-	{
-		public SingleDragonScene()
-		{
-			var mesh = new Mesh("Assets/Models/StanfordDragon/StanfordDragon.obj");
-			var materials = new MaterialLibrary("Assets/Models/StanfordDragon/StanfordDragon.mat");
-
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
-
-			children.Add(new PlaneObject(new Metal {Albedo = new Float3(0.29f, 0.29f, 0.35f), Smoothness = 0.85f}, (Float2)24f));
-			children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 158f, 0f), Scale = (Float3)3.5f});
-
-			children.Add(new Camera(100f) {Position = new Float3(0f, 4f, -8f), Rotation = new Float3(10f, 0f, 0f)});
-
-			//Lights
-			children.Add(new SphereObject(new Emissive {Emission = new Float3(6f, 6f, 7f)}, 17f) {Position = new Float3(23f, 34f, -18f)});  //Bottom right
-			children.Add(new SphereObject(new Emissive {Emission = new Float3(6f, 5f, 6f)}, 19f) {Position = new Float3(-27f, 31f, -20f)}); //Bottom left
-
-			children.Add(new SphereObject(new Emissive {Emission = new Float3(0.6f, 0.1f, 0.3f)}, 1f) {Position = new Float3(-7f, 1f, 4f)});
-			children.Add(new SphereObject(new Emissive {Emission = new Float3(0.3f, 0.1f, 0.6f)}, 1f) {Position = new Float3(7f, 1f, 4f)});
 		}
 	}
 
@@ -222,7 +222,7 @@ namespace ForceRenderer
 
 				Material material;
 
-				if (metal) material = new Metal {Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f};
+				if (metal) material = new Glossy {Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f};
 				else if (emissive) material = new Emissive {Emission = color * 10f};
 				else material = new Diffuse {Albedo = color};
 
@@ -249,18 +249,20 @@ namespace ForceRenderer
 	{
 		public GridSpheresScene()
 		{
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 			children.Add(new Camera(100f) {Position = new Float3(0f, 0f, -3f), Rotation = Float3.zero});
 
-			const int SmoothnessLevel = 10;
-			const int SpecularLevel = 4;
+			const int Width = 10;
+			const int Height = 4;
 
-			for (float i = 0f; i <= SmoothnessLevel; i++)
+			for (float i = 0f; i <= Width; i++)
 			{
-				for (float j = 0f; j <= SpecularLevel; j++)
+				for (float j = 0f; j <= Height; j++)
 				{
-					var metal = new Metal {Albedo = Float3.Lerp((Float3)0.9f, new Float3(0.867f, 0.267f, 0.298f), j / SpecularLevel), Smoothness = i / SmoothnessLevel};
-					children.Add(new SphereObject(metal, 0.45f) {Position = new Float3(i - SmoothnessLevel / 2f, j - SpecularLevel / 2f, 2f)});
+					// var material = new Glossy {Albedo = Float3.Lerp((Float3)0.9f, new Float3(0.867f, 0.267f, 0.298f), j / Height), Smoothness = i / Width};
+					var material = new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = Scalars.Lerp(1.1f, 1.7f, j / Height), Roughness = i / Width};
+
+					children.Add(new SphereObject(material, 0.45f) {Position = new Float3(i - Width / 2f, j - Height / 2f, 2f)});
 				}
 			}
 		}
@@ -275,7 +277,7 @@ namespace ForceRenderer
 			children.Add(new Camera(90f) {Position = new Float3(0f, 1f, -2f)});
 
 			children.Add(new SphereObject(new Diffuse {Albedo = (Float3)0.9f}, 1f) {Position = new Float3(0f, 1f, 2f)});
-			// children.Add(new SphereObject(new Metal {Albedo = (Float3)0.7f, Smoothness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
+			// children.Add(new SphereObject(new Glossy {Albedo = (Float3)0.7f, Smoothness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
 			children.Add(new SphereObject(new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = 1.5f, Roughness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
 			children.Add(new SphereObject(new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = 1.5f}, 1f) {Position = new Float3(-2f, 1f, 2f)});
 
