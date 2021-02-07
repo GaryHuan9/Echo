@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using CodeHelpers;
@@ -22,6 +23,8 @@ namespace ForceRenderer.Mathematics
 
 			var rootIndices = Enumerable.Range(0, aabbs.Count).ToList();
 			var rootAABB = AxisAlignedBoundingBox.Construct(aabbs);
+
+			if (aabbs.Count == 0) return;
 
 			nodes = new Node[aabbs.Count * 2 - 1]; //The number of nodes can be predetermined
 			nodes[0] = ConstructNode(rootIndices, rootAABB);
@@ -102,6 +105,8 @@ namespace ForceRenderer.Mathematics
 		/// </summary>
 		public Hit GetIntersection(in Ray ray)
 		{
+			if (nodes == null) return new Hit(float.PositiveInfinity);
+
 			ref Node node = ref nodes[0]; //The root node
 			float distance = node.aabb.Intersect(ray);
 

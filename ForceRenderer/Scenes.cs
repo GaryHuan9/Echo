@@ -1,5 +1,4 @@
-﻿using System;
-using CodeHelpers;
+﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Objects;
@@ -20,6 +19,19 @@ namespace ForceRenderer
 		}
 	}
 
+	public class MaterialBallScene : StandardScene
+	{
+		public MaterialBallScene() : base(new Metal {Albedo = new Float3(0.78f, 0.76f, 0.79f), Smoothness = 0.74f})
+		{
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.2f);
+
+			var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
+			var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");
+
+			children.Add(new MeshObject(mesh, materials) {Position = new Float3(0f, 0f, -2.5f), Rotation = Float3.up * -75f, Scale = Float3.one * 2f});
+		}
+	}
+
 	public class TestLighting : StandardScene
 	{
 		public TestLighting()
@@ -27,7 +39,7 @@ namespace ForceRenderer
 			Cubemap = null;
 
 			children.Add(new DirectionalLight {Intensity = Float3.one * 2f, Rotation = new Float3(45f, 45f, 0f)});
-			// children.Add(new PlaneObject(new Material {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
+			children.Add(new PlaneObject(new Emissive {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
 			children.Add(new BoxObject(new Diffuse {Albedo = Float3.one}, Float3.one * 2f) {Position = Float3.up});
 		}
 	}
@@ -123,12 +135,12 @@ namespace ForceRenderer
 	{
 		public LightedBMWScene()
 		{
-			// var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
-			// var materials = new MaterialLibrary("Assets/Models/BlenderBMW/BlenderBMW.mat");
+			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
+			var materials = new MaterialLibrary("Assets/Models/BlenderBMW/BlenderBMW.mat");
 
 			Cubemap = new SolidCubemap((Color32)(Float3)0.21f);
 
-			// children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
+			children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 
 			children.Add(new SphereObject(new Emissive {Emission = new Float3(7f, 4f, 8f)}, 8f) {Position = new Float3(24f, 15f, 18f)});   //Upper right purple
 			children.Add(new SphereObject(new Emissive {Emission = new Float3(8f, 4f, 3f)}, 5f) {Position = new Float3(-16f, 19f, -12f)}); //Bottom left orange

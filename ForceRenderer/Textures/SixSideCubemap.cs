@@ -8,7 +8,9 @@ namespace ForceRenderer.Textures
 {
 	public class SixSideCubemap : Cubemap
 	{
-		public SixSideCubemap(string path)
+		public SixSideCubemap(string path) : this(path, Float3.one) { }
+
+		public SixSideCubemap(string path, Float3 multiplier)
 		{
 			var names = IndividualTextureNames;
 			Texture[] sources = new Texture[names.Count];
@@ -32,10 +34,13 @@ namespace ForceRenderer.Textures
 			);
 
 			if (error != null) throw error;
+
 			textures = new ReadOnlyCollection<Texture>(sources);
+			this.multiplier = multiplier;
 		}
 
 		readonly ReadOnlyCollection<Texture> textures;
+		readonly Float3 multiplier;
 
 		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new ReadOnlyCollection<string>(new[] {"px", "py", "pz", "nx", "ny", "nz"});
 
@@ -64,6 +69,6 @@ namespace ForceRenderer.Textures
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Float3 Sample(int index, Float2 uv) => textures[index][uv + Float2.half];
+		Float3 Sample(int index, Float2 uv) => textures[index][uv + Float2.half] * multiplier;
 	}
 }
