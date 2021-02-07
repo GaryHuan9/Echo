@@ -16,6 +16,8 @@ namespace ForceRenderer.Rendering.Materials
 		public Texture IndexOfRefractionMap { get; set; } = Texture2D.white;
 		public Texture RoughnessMap { get; set; } = Texture2D.white;
 
+		float randomRadius;
+
 		public override void Press()
 		{
 			base.Press();
@@ -23,25 +25,31 @@ namespace ForceRenderer.Rendering.Materials
 			AssertZeroOne(Transmission);
 			AssertNonNegative(IndexOfRefraction);
 			AssertZeroOne(Roughness);
+
+			randomRadius = RoughnessToRandomRadius(Roughness);
 		}
 
 		public override Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => Float3.zero;
 
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
-			Float3 faceNormal = hit.normal;
-			float cosI = hit.direction.Dot(faceNormal);
+			Float3 hitNormal = hit.normal;
 
 			float etaI = 1f;
 			float etaT = SampleTexture(IndexOfRefractionMap, IndexOfRefraction, hit.texcoord);
 
-			if (cosI > 0f)
+			if (hit.direction.Dot(hitNormal) > 0f)
 			{
 				//Hit backface
 				CodeHelper.Swap(ref etaI, ref etaT);
-				faceNormal = -faceNormal;
+				hitNormal = -hitNormal;
 			}
-			else cosI = -cosI; //Hit front face
+
+			float radius = SampleTexture(RoughnessMap, randomRadius, hit.texcoord);
+			Float3 faceNormal = (hitNormal + random.NextInSphere(radius)).Normalized;
+
+			float cosI = hit.direction.Dot(faceNormal);
+			if (cosI < 0f) cosI = -cosI;
 
 			float eta = etaI / etaT;
 			float cosT2 = 1f - eta * eta * (1f - cosI * cosI);

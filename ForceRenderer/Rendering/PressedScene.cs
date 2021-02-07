@@ -168,7 +168,7 @@ namespace ForceRenderer.Rendering
 		/// Returns the intersection status with one object of <paramref name="token"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public float GetIntersection(in Ray ray, int token, out Float2 uv)
+		public float Intersect(in Ray ray, int token, out Float2 uv)
 		{
 			if (token < 0)
 			{
