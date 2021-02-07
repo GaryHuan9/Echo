@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,7 +30,12 @@ namespace ForceRenderer.IO
 			int height = 0;
 
 			//First read all lines to split them into categories
-			using StreamReader reader = new StreamReader(File.OpenRead(path));
+			Stream stream;
+
+			if (Path.GetExtension(path) == ".obj") stream = File.OpenRead(path);
+			else stream = ZipFile.OpenRead(path).Entries[0].Open(); //Unzip zipped obj file
+
+			using StreamReader reader = new StreamReader(stream);
 
 			while (true)
 			{
@@ -188,7 +194,7 @@ namespace ForceRenderer.IO
 			}
 		}
 
-		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".obj"});
+		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".obj", ".zip"});
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
 		readonly Triangle[] triangles0; //Triangles are stored in two different arrays to support loading quads

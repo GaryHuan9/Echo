@@ -1,16 +1,16 @@
 ﻿declare Metal BMWBlack
-Albedo 0.300 0.3000 0.300
+Albedo 0.100 0.100 0.100
 Smoothness 0.22500
 
 declare Diffuse BMWBlue
-Albedo 0.059254 0.301319 0.787412
+Albedo 0.029557 0.191202 0.597202
 
 declare Metal BMWSilver
-Albedo 0.173969 0.173969 0.173969
+Albedo 0.373969 0.373969 0.373969
 Smoothness 0.52500
 
 declare Diffuse BMWWhite
-Albedo 1.000000 1.000000 1.000000
+Albedo 0.900 0.900 0.900
 
 declare Metal BlackPlastic
 Albedo 0.253465 0.253465 0.253465
@@ -57,7 +57,7 @@ declare Diffuse HeadlightMatte
 Albedo 0.800 0.800 0.800
 
 declare Diffuse Interior
-Albedo 0.318370 0.318370 0.318370
+Albedo 0.6055 0.1863 0.2082
 
 declare Metal Material
 Albedo 0.632868 0.509193 0.506072
