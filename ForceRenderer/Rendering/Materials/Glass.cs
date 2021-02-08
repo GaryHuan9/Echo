@@ -34,13 +34,13 @@ namespace ForceRenderer.Rendering.Materials
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
 			Float3 hitNormal = hit.normal;
+			bool backface = hit.direction.Dot(hitNormal) > 0f;
 
 			float etaI = 1f;
 			float etaT = SampleTexture(IndexOfRefractionMap, IndexOfRefraction, hit.texcoord);
 
-			if (hit.direction.Dot(hitNormal) > 0f)
+			if (backface) //If hit back face
 			{
-				//Hit backface
 				CodeHelper.Swap(ref etaI, ref etaT);
 				hitNormal = -hitNormal;
 			}
