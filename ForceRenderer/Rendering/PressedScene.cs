@@ -181,36 +181,6 @@ namespace ForceRenderer.Rendering
 		}
 
 		/// <summary>
-		/// Returns the sampled <see cref="PressedMaterial"/> for <see cref="SceneObject"/> intersection <paramref name="hit"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PressedMaterial.Sample GetMaterialSample(in Hit hit)
-		{
-			int materialToken;
-			Float2 texcoord;
-
-			if (hit.token < 0)
-			{
-				ref PressedSphere sphere = ref spheres[~hit.token];
-
-				materialToken = sphere.materialToken;
-				texcoord = hit.uv;
-			}
-			else
-			{
-				ref PressedTriangle triangle = ref triangles[hit.token];
-
-				materialToken = triangle.materialToken;
-				texcoord = triangle.GetTexcoord(hit.uv);
-			}
-
-			throw new NotImplementedException();
-
-			// ref PressedMaterial material = ref materials[materialToken];
-			// return material.GetSample(texcoord);
-		}
-
-		/// <summary>
 		/// Gets the normal of intersection with <paramref name="hit"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
