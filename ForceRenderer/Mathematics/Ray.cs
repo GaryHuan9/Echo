@@ -56,7 +56,18 @@ namespace ForceRenderer.Mathematics
 		static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue);
 		static readonly Vector128<float> oneVector = Vector128.Create(1f, 1f, 1f, 1f);
 
-		public Float3 GetPoint(float distance) => origin + direction * distance;
+		public unsafe Float3 GetPoint(float distance)
+		{
+			if (Avx.IsSupported)
+			{
+				Vector128<float> length = Sse.Multiply(directionVector, Avx.BroadcastScalarToVector128(&distance));
+				Vector128<float> result = Sse.Add(originVector, length);
+
+				return *(Float3*)&result;
+			}
+
+			return origin + direction * distance;
+		}
 
 		public override string ToString() => $"{nameof(origin)}: {origin}, {nameof(direction)}: {direction}";
 	}

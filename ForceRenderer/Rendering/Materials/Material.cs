@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;
@@ -7,11 +9,21 @@ namespace ForceRenderer.Rendering.Materials
 {
 	public abstract class Material
 	{
+		public Texture NormalMap { get; set; } = Texture2D.normal;
+		public float NormalIntensity { get; set; } = 1f;
+
+		Vector128<float> normalMultiplier;
+
+		static readonly Vector128<float> normalDefault = Vector128.Create(0.5f, 0.5f, 1f, 0f);
+
 		/// <summary>
 		/// This method is invoked before render begins during the preparation phase.
 		/// Materials can use this method to precalculate any value to be used during render.
 		/// </summary>
-		public virtual void Press() { }
+		public virtual void Press()
+		{
+			normalMultiplier = Vector128.Create(NormalIntensity, NormalIntensity, NormalIntensity, 0f);
+		}
 
 		/// <summary>
 		/// Returns the emission of this material.
@@ -23,6 +35,23 @@ namespace ForceRenderer.Rendering.Materials
 		/// this material and outputs the randomly scattered direction.
 		/// </summary>
 		public abstract Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction);
+
+		public void ApplyNormal(ref CalculatedHit hit)
+		{
+			if (NormalMap == Texture2D.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
+
+			Float3 sample = NormalMap[hit.texcoord];
+
+			unsafe
+			{
+				Vector128<float> normalVector = Sse.LoadVector128(&sample.x);
+
+				normalVector = Sse.Subtract(normalVector, normalDefault);
+				normalVector = Sse.Multiply(normalVector, normalMultiplier);
+			}
+
+			// if (sample)
+		}
 
 		protected static float SmoothnessToRandomRadius(float smoothness) => RoughnessToRandomRadius(1f - smoothness);
 
