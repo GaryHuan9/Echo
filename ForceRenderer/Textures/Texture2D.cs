@@ -40,6 +40,7 @@ namespace ForceRenderer.Textures
 
 		public static readonly Texture2D white = new Texture2D(Color32.white);
 		public static readonly Texture2D black = new Texture2D(Color32.black);
+		public static readonly Texture2D normal = new Texture2D(new Color32(0.5f, 0.5f, 1f));
 
 		public override Float3 this[int index]
 		{
