@@ -23,7 +23,7 @@ namespace ForceRenderer.Rendering
 	{
 		public PressedScene(Scene source)
 		{
-			ExceptionHelper.InvalidIfNotMainThread();
+			ExceptionHelper.AssertMainThread();
 			this.source = source;
 
 			List<PressedTriangle> triangleList = CollectionPooler<PressedTriangle>.list.GetObject();
@@ -230,7 +230,7 @@ namespace ForceRenderer.Rendering
 			return materials[materialToken];
 		}
 
-		public void Write(FileWriter writer)
+		public void Write(DataWriter writer)
 		{
 			//TODO: Not writing camera, directional light, and skybox right now
 		}

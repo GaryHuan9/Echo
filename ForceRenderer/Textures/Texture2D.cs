@@ -153,13 +153,13 @@ namespace ForceRenderer.Textures
 			return texture;
 		}
 
-		public void Write(FileWriter writer)
+		public void Write(DataWriter writer)
 		{
 			writer.Write(size);
 			for (int i = 0; i < length; i++) writer.Write(pixels[i]);
 		}
 
-		public static Texture2D Read(FileReader reader)
+		public static Texture2D Read(DataReader reader)
 		{
 			Int2 size = reader.ReadInt2();
 			Texture2D texture = new Texture2D(size);
