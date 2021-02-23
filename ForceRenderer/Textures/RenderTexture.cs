@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
@@ -53,7 +54,7 @@ namespace ForceRenderer.Textures
 
 		public void Save(string relativePath)
 		{
-			using FileWriter writer = new FileWriter(AssetsUtility.GetAssetsPath(relativePath));
+			using DataWriter writer = new DataWriter(File.OpenWrite(AssetsUtility.GetAssetsPath(relativePath)));
 
 			writer.Write(0);
 			writer.Write(0);
@@ -64,7 +65,7 @@ namespace ForceRenderer.Textures
 
 		public static RenderTexture Load(string relativePath, IWrapper wrapper = null, IFilter filter = null)
 		{
-			using FileReader reader = new FileReader(AssetsUtility.GetAssetsPath(relativePath));
+			using DataReader reader = new DataReader(File.OpenRead(AssetsUtility.GetAssetsPath(relativePath)));
 
 			reader.ReadInt32();
 			reader.ReadInt32();
@@ -78,13 +79,13 @@ namespace ForceRenderer.Textures
 			return texture;
 		}
 
-		public void Write(FileWriter writer)
+		public void Write(DataWriter writer)
 		{
 			writer.Write(size);
 			for (int i = 0; i < length; i++) writer.Write(pixels[i]);
 		}
 
-		public static RenderTexture Read(FileReader reader)
+		public static RenderTexture Read(DataReader reader)
 		{
 			Int2 size = reader.ReadInt2();
 			RenderTexture texture = new RenderTexture(size);

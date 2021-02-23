@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.ObjectPooling;
 using CodeHelpers.Threads;
 using ForceRenderer.Rendering;
 using ForceRenderer.Terminals;
@@ -49,6 +51,14 @@ namespace ForceRenderer
 
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
+
+			// buffer.ForEach //Gamma Space
+			// (
+			// 	delegate(ref Float3 pixel)
+			// 	{
+			// 		pixel = pixel.Power(0.5f);
+			// 	}
+			// );
 
 			//Copies render texture and saves as file
 			Texture2D output = new Texture2D(buffer);
