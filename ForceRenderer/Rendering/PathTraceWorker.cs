@@ -26,6 +26,8 @@ namespace ForceRenderer.Rendering
 				CalculatedHit calculated = new CalculatedHit(hit, ray, profile.pressed);
 				Material material = profile.pressed.GetMaterial(hit);
 
+				material.ApplyNormal(calculated);
+
 				Float3 emission = material.Emit(calculated, random);
 				Float3 bsdf = material.BidirectionalScatter(calculated, random, out Float3 direction);
 
