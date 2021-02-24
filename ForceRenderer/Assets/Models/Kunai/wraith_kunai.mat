@@ -3,5 +3,5 @@ Albedo 0.700 0.700 0.700
 AlbedoMap _images/0x321b95dec3c8a32f.png
 Smoothness 0.575
 
-# map_Bump _images/0xc34df917d05046c0.png
+# NormalMap _images/0xc34df917d05046c0.png
 # map_Kd _images/0xcc8e6fab22c01e3e.png
