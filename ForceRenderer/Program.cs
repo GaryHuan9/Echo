@@ -39,7 +39,7 @@ namespace ForceRenderer
 			RenderTexture buffer = new RenderTexture(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new MaterialBallScene(),
+											RenderBuffer = buffer, Scene = new TestTexture(),
 											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
@@ -51,14 +51,6 @@ namespace ForceRenderer
 
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
-
-			// buffer.ForEach //Gamma Space
-			// (
-			// 	delegate(ref Float3 pixel)
-			// 	{
-			// 		pixel = pixel.Power(0.5f);
-			// 	}
-			// );
 
 			//Copies render texture and saves as file
 			Texture2D output = new Texture2D(buffer);

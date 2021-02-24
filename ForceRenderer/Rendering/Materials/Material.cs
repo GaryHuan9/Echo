@@ -9,12 +9,9 @@ namespace ForceRenderer.Rendering.Materials
 {
 	public abstract class Material
 	{
-		public Texture NormalMap { get; set; } = Texture2D.normal;
 		public float NormalIntensity { get; set; } = 1f;
 
-		Vector128<float> normalMultiplier;
-
-		static readonly Vector128<float> normalDefault = Vector128.Create(0.5f, 0.5f, 1f, 0f);
+		public Texture NormalMap { get; set; } = Texture2D.normal;
 
 		/// <summary>
 		/// This method is invoked before render begins during the preparation phase.
@@ -22,7 +19,7 @@ namespace ForceRenderer.Rendering.Materials
 		/// </summary>
 		public virtual void Press()
 		{
-			normalMultiplier = Vector128.Create(NormalIntensity, NormalIntensity, NormalIntensity, 0f);
+			NormalIntensity = NormalIntensity.Clamp(-1f, 1f);
 		}
 
 		/// <summary>
@@ -36,21 +33,32 @@ namespace ForceRenderer.Rendering.Materials
 		/// </summary>
 		public abstract Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction);
 
-		public void ApplyNormal(ref CalculatedHit hit)
+		public unsafe void ApplyNormal(in CalculatedHit hit)
 		{
 			if (NormalMap == Texture2D.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
 
 			Float3 sample = NormalMap[hit.texcoord];
 
-			unsafe
-			{
-				Vector128<float> normalVector = Sse.LoadVector128(&sample.x);
+			float x = sample.x * 2f - 1f;
+			float y = sample.y * 2f - 1f;
+			float z = sample.z * 2f - 2f;
 
-				normalVector = Sse.Subtract(normalVector, normalDefault);
-				normalVector = Sse.Multiply(normalVector, normalMultiplier);
-			}
+			//Transform local direction to world space based on normal
+			Float3 normal = hit.normal;
+			Float3 helper = Math.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
 
-			// if (sample)
+			Float3 tangent = Float3.Cross(normal, helper).Normalized;
+			Float3 binormal = Float3.Cross(normal, tangent).Normalized;
+
+			//Transforms direction using 3x3 matrix multiplication
+			normal -= new Float3
+					  (
+						  x * tangent.x + y * binormal.x + z * normal.x,
+						  x * tangent.y + y * binormal.y + z * normal.y,
+						  x * tangent.z + y * binormal.z + z * normal.z
+					  ) * NormalIntensity;
+
+			fixed (Float3* pointer = &hit.normal) *pointer = normal;
 		}
 
 		protected static float SmoothnessToRandomRadius(float smoothness) => RoughnessToRandomRadius(1f - smoothness);
