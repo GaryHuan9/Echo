@@ -74,9 +74,11 @@ namespace ForceRenderer.Rendering
 
 		long _completedSample;
 		long _completedPixel;
+		long _rejectedSample;
 
 		public long CompletedSample => Interlocked.Read(ref _completedSample);
 		public long CompletedPixel => Interlocked.Read(ref _completedPixel);
+		public long RejectedSample => Interlocked.Read(ref _rejectedSample);
 
 		readonly Thread worker;
 
@@ -112,6 +114,7 @@ namespace ForceRenderer.Rendering
 
 			Interlocked.Exchange(ref _completedSample, 0);
 			Interlocked.Exchange(ref _completedPixel, 0);
+			Interlocked.Exchange(ref _rejectedSample, 0);
 		}
 
 		public void Dispatch()
@@ -162,8 +165,10 @@ namespace ForceRenderer.Rendering
 					Float3 color = PixelWorker.Render(new Float2(uv.x, uv.y / RenderBuffer.aspect));
 
 					//Write to pixel
-					pixel.Accumulate(color);
+					bool successful = pixel.Accumulate(color);
 					Interlocked.Increment(ref _completedSample);
+
+					if (!successful) Interlocked.Increment(ref _rejectedSample);
 				}
 
 				//Change to adaptive sampling
@@ -174,11 +179,7 @@ namespace ForceRenderer.Rendering
 			if (aborted) state.Break();
 
 			//Store pixel
-
-			// ((Float4)pixel.Color).Replace(3, 1f);
-			var a = pixel.Color;
-
-			RenderBuffer[position] = new Float4(a.x, a.y, a.z, 1f);
+			RenderBuffer[position] = ((Float4)pixel.Color).Replace(3, 1f);
 			Interlocked.Increment(ref _completedPixel);
 		}
 
@@ -245,7 +246,7 @@ namespace ForceRenderer.Rendering
 				average += (newValue - oldMean) / accumulation;
 				squared += (newValue - average) * (newValue - oldMean);
 
-				// return true;
+				return true;
 			}
 		}
 
