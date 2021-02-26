@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Files;
@@ -12,45 +14,16 @@ using ForceRenderer.IO;
 namespace ForceRenderer.Textures
 {
 	/// <summary>
-	/// The default texture; stores RGBA color information with 8 bits per channel.
+	/// The default texture; stores RGBA color information with 32 bits per channel.
 	/// Supports saving and loading from image files.
 	/// </summary>
 	public class Texture2D : Texture, ILoadableAsset
 	{
-		public Texture2D(Int2 size, IWrapper wrapper = null, IFilter filter = null) : base(size, wrapper, filter) => pixels = new Color32[size.Product];
+		public Texture2D(Int2 size, IWrapper wrapper = null, IFilter filter = null) : base(size, wrapper, filter) => pixels = new Vector128<float>[size.Product];
 
-		public Texture2D(Texture source, IWrapper wrapper = null, IFilter filter = null) : this(source.size, wrapper, filter)
-		{
-			if (source is Texture2D texture)
-			{
-				for (int i = 0; i < length; i++) pixels[i] = texture.pixels[i];
-			}
-			else CopyFrom(source);
-		}
+		readonly Vector128<float>[] pixels;
 
-		Texture2D(Color32 color) : base(Int2.one) => pixels = new[] {color};
-
-		static Texture2D()
-		{
-			white.SetReadonly();
-			black.SetReadonly();
-		}
-
-		readonly Color32[] pixels;
-
-		public static readonly Texture2D white = new Texture2D(Color32.white);
-		public static readonly Texture2D black = new Texture2D(Color32.black);
-		public static readonly Texture2D normal = new Texture2D(new Color32(0.5f, 0.5f, 1f));
-
-		public override Float3 this[int index]
-		{
-			get => (Float3)pixels[index];
-			set
-			{
-				CheckReadonly();
-				pixels[index] = (Color32)value;
-			}
-		}
+		public override ref Vector128<float> this[int index] => ref pixels[index];
 
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});
 		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new ReadOnlyCollection<ImageFormat>(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif});
@@ -89,12 +62,12 @@ namespace ForceRenderer.Textures
 
 				for (int i = 0; i < length; i++)
 				{
-					Color32 pixel = pixels[i];
+					Color32 color = (Color32)GetPixel(i);
 
-					pointer[0] = pixel.b;
-					pointer[1] = pixel.g;
-					pointer[2] = pixel.r;
-					pointer[3] = pixel.a;
+					pointer[0] = color.b;
+					pointer[1] = color.g;
+					pointer[2] = color.r;
+					pointer[3] = color.a;
 
 					pointer += 4;
 				}
@@ -106,13 +79,13 @@ namespace ForceRenderer.Textures
 
 		public static Texture2D Load(string path, IWrapper wrapper = null, IFilter filter = null)
 		{
-			using Bitmap source = new Bitmap(white.GetAbsolutePath(path), true);
+			path = ((Texture2D)white).GetAbsolutePath(path);
+			using Bitmap source = new Bitmap(path, true);
 
 			PixelFormat format = source.PixelFormat;
 			Int2 size = new Int2(source.Width, source.Height);
 
 			Texture2D texture = new Texture2D(size, wrapper, filter);
-			Color32[] pixels = texture.pixels;
 
 			Rectangle rectangle = new Rectangle(0, 0, texture.size.x, texture.size.y);
 			BitmapData data = source.LockBits(rectangle, ImageLockMode.ReadOnly, format);
@@ -126,9 +99,9 @@ namespace ForceRenderer.Textures
 				{
 					case 24:
 					{
-						for (int i = 0; i < pixels.Length; i++)
+						for (int i = 0; i < texture.length; i++)
 						{
-							pixels[i] = new Color32(pointer[2], pointer[1], pointer[0]);
+							texture.SetPixel(i, (Float4)new Color32(pointer[2], pointer[1], pointer[0]));
 							pointer += 3;
 						}
 
@@ -136,9 +109,9 @@ namespace ForceRenderer.Textures
 					}
 					case 32:
 					{
-						for (int i = 0; i < pixels.Length; i++)
+						for (int i = 0; i < texture.length; i++)
 						{
-							pixels[i] = new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
+							texture.SetPixel(i, (Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]));
 							pointer += 4;
 						}
 
@@ -149,15 +122,13 @@ namespace ForceRenderer.Textures
 			}
 
 			source.UnlockBits(data);
-			texture.SetReadonly();
-
 			return texture;
 		}
 
 		public void Write(DataWriter writer)
 		{
 			writer.Write(size);
-			for (int i = 0; i < length; i++) writer.Write(pixels[i]);
+			for (int i = 0; i < length; i++) writer.Write(GetPixel(i));
 		}
 
 		public static Texture2D Read(DataReader reader)
@@ -165,10 +136,30 @@ namespace ForceRenderer.Textures
 			Int2 size = reader.ReadInt2();
 			Texture2D texture = new Texture2D(size);
 
-			for (int i = 0; i < texture.length; i++) texture.pixels[i] = reader.ReadColor32();
+			for (int i = 0; i < texture.length; i++) texture.SetPixel(i, reader.ReadFloat4());
 
-			texture.SetReadonly();
 			return texture;
 		}
+
+		public override void CopyFrom(Texture texture)
+		{
+			if (texture is Texture2D texture2D)
+			{
+				unsafe
+				{
+					int count = sizeof(Vector128<float>) * length;
+					Buffer.BlockCopy(texture2D.pixels, 0, pixels, 0, count);
+				}
+			}
+			else base.CopyFrom(texture);
+		}
+
+		unsafe ref Float4 GetPixel(int index)
+		{
+			var data = this[index];
+			return ref *(Float4*)&data;
+		}
+
+		unsafe void SetPixel(int index, Float4 pixel) => this[index] = *(Vector128<float>*)&pixel;
 	}
 }

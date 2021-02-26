@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
 using CodeHelpers.Threads;
 using ForceRenderer.Rendering;
 using ForceRenderer.Terminals;
@@ -36,7 +33,7 @@ namespace ForceRenderer
 				new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
 			};
 
-			RenderTexture buffer = new RenderTexture(resolutions[1]);
+			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new TestTexture(),
@@ -52,18 +49,13 @@ namespace ForceRenderer
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
 
-			//Copies render texture and saves as file
-			Texture2D output = new Texture2D(buffer);
-
-			output.SetReadonly();
-			output.Save("render.png");
-			buffer.Save("render.rdt");
+			//Saves render as file
+			buffer.Save("render.png");
 
 			//Logs render stats
 			double elapsedSeconds = engine.Elapsed.TotalSeconds;
 			long completedSample = engine.CompletedSample;
 
-			commandsController.Log(new Float3(buffer.Max(pixel => pixel.x), buffer.Max(pixel => pixel.y), buffer.Max(pixel => pixel.z)).ToString());
 			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
 
 			renderEngine = null;
