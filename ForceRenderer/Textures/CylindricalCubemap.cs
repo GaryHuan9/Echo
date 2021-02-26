@@ -16,6 +16,6 @@ namespace ForceRenderer.Textures
 				(float)Math.Atan2(direction.x, -direction.z) / -Scalars.PI * 0.5f,
 				(float)Math.Acos(direction.y) / -Scalars.PI
 			)
-		];
+		].XYZ;
 	}
 }
