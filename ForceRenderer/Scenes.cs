@@ -53,12 +53,8 @@ namespace ForceRenderer
 
 			// Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
 			Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
-			// Material emissive = new Emissive {Emission = (Float3)12f};
 
 			Cubemap = new SolidCubemap(Color32.white);
-			// Cubemap = null;
-
-			// children.Add(new PlaneObject(emissive, (Float2)18f) {Position = new Float3(0f, 0f, 8f), Rotation = new Float3(-90f, 0f, 0f)});
 			children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
 		}
 	}
