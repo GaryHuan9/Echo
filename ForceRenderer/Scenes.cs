@@ -51,8 +51,8 @@ namespace ForceRenderer
 			Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
 			Texture2D normal = Texture2D.Load("Assets/Textures/WikiNormalMap.png");
 
-			// Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
-			Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
+			Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
+			// Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
 			// Material emissive = new Emissive {Emission = (Float3)12f};
 
 			Cubemap = new SolidCubemap(Color32.white);
