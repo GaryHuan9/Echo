@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.Textures;
@@ -173,7 +174,11 @@ namespace ForceRenderer.Rendering
 			if (aborted) state.Break();
 
 			//Store pixel
-			RenderBuffer[position] = pixel.Color;
+
+			// ((Float4)pixel.Color).Replace(3, 1f);
+			var a = pixel.Color;
+
+			RenderBuffer[position] = new Float4(a.x, a.y, a.z, 1f);
 			Interlocked.Increment(ref _completedPixel);
 		}
 
@@ -226,15 +231,11 @@ namespace ForceRenderer.Rendering
 
 			/// <summary>
 			/// Accumulates the color <paramref name="value"/> to pixel.
+			/// Returns false if the input was rejected because it was invalid.
 			/// </summary>
-			public void Accumulate(Float3 value)
+			public bool Accumulate(Float3 value)
 			{
-				value = new Float3 //NaN gate
-				(
-					float.IsNaN(value.x) ? 0f : value.x,
-					float.IsNaN(value.y) ? 0f : value.y,
-					float.IsNaN(value.z) ? 0f : value.z
-				);
+				if (float.IsNaN(value.x) || float.IsNaN(value.y) || float.IsNaN(value.z)) return false; //NaN gate
 
 				accumulation++;
 
@@ -243,6 +244,8 @@ namespace ForceRenderer.Rendering
 
 				average += (newValue - oldMean) / accumulation;
 				squared += (newValue - average) * (newValue - oldMean);
+
+				// return true;
 			}
 		}
 
