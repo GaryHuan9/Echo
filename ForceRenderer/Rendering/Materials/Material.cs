@@ -77,8 +77,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return 0f;
 
-			ref readonly Float4 color = ref texture[texcoord];
-			return value * color.x;
+			return value * texture[texcoord].x;
 		}
 
 		protected static Float2 SampleTexture(Texture texture, Float2 value, Float2 texcoord)
@@ -86,8 +85,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float2.zero;
 
-			ref readonly Float4 color = ref texture[texcoord];
-			return value * color.XY;
+			return value * texture[texcoord].XY;
 		}
 
 		protected static Float3 SampleTexture(Texture texture, in Float3 value, Float2 texcoord)
@@ -95,8 +93,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float3.zero;
 
-			ref readonly Float4 color = ref texture[texcoord];
-			return value * color.XYZ;
+			return value * texture[texcoord].XYZ;
 		}
 
 		protected static void AssertZeroOne(float value)

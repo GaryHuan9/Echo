@@ -84,6 +84,7 @@ namespace ForceRenderer.Terminals
 
 			long completedSample = Engine.CompletedSample;
 			long completedPixel = Engine.CompletedPixel;
+			long rejectedSample = Engine.RejectedSample;
 
 			int completedTile = Engine.CompletedTileCount;
 			long intersections = Engine.PixelWorker.IntersectionPerformed;
@@ -92,7 +93,7 @@ namespace ForceRenderer.Terminals
 			(
 				1,
 				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; Estimate {TimeSpan.FromSeconds((totalPixel / (completedPixel / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds)):hh\\:mm\\:ss\\:ff}; Complete% {100d * completedPixel / totalPixel:F2}; CompletedTile {completedTile:N0}; " +
-				$"TilePS {completedTile / second:F2}; CompletedSP {completedSample:N0}; SamplePS {completedSample / second:N0}; CompletedPX {completedPixel:N0}; PixelPS {completedPixel / second:N0}; CompletedIS {intersections:N0}; IntersectionPS {intersections / second:N0};"
+				$"TilePS {completedTile / second:F2}; CompletedSP {completedSample:N0}; RejectedSP {rejectedSample:N0}; SamplePS {completedSample / second:N0}; CompletedPX {completedPixel:N0}; PixelPS {completedPixel / second:N0}; CompletedIS {intersections:N0}; IntersectionPS {intersections / second:N0};"
 			);
 		}
 

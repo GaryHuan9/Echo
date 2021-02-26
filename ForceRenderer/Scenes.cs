@@ -52,12 +52,12 @@ namespace ForceRenderer
 			Texture2D normal = Texture2D.Load("Assets/Textures/WikiNormalMap.png");
 
 			// Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
-			Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = normal};
+			Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
 
 			Cubemap = new SolidCubemap(Color32.white);
 
-			// children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0, 2f, -5.5f), Rotation = new Float3(-90f, 0f, 0f)});
-			children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(-1f, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
+			// children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -5.5f), Rotation = new Float3(-90f, 0f, 0f)});
+			children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
 		}
 	}
 

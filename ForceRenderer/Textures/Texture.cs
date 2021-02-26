@@ -79,12 +79,12 @@ namespace ForceRenderer.Textures
 			}
 		}
 
-		public unsafe ref readonly Float4 this[Float2 uv]
+		public unsafe Float4 this[Float2 uv]
 		{
 			get
 			{
 				var data = GetPixel(uv);
-				return ref *(Float4*)&data;
+				return *(Float4*)&data;
 			}
 		}
 

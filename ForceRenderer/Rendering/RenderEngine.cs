@@ -69,6 +69,7 @@ namespace ForceRenderer.Rendering
 
 		long fullyCompletedSample; //Samples that are rendered in completed tiles
 		long fullyCompletedPixel;  //Pixels that are rendered in completed tiles
+		long fullyRejectedSample;  //Samples that are rejected in completed tiles
 
 		public long CompletedSample
 		{
@@ -83,6 +84,14 @@ namespace ForceRenderer.Rendering
 			get
 			{
 				lock (manageLocker) return fullyCompletedPixel + workers.Where(worker => worker.Working).Sum(worker => worker.CompletedPixel);
+			}
+		}
+
+		public long RejectedSample
+		{
+			get
+			{
+				lock (manageLocker) return fullyRejectedSample + workers.Where(worker => worker.Working).Sum(worker => worker.RejectedSample);
 			}
 		}
 
@@ -175,6 +184,7 @@ namespace ForceRenderer.Rendering
 
 				Interlocked.Add(ref fullyCompletedSample, worker.CompletedSample);
 				Interlocked.Add(ref fullyCompletedPixel, worker.CompletedPixel);
+				Interlocked.Add(ref fullyRejectedSample, worker.RejectedSample);
 
 				if (CompletedTileCount == TotalTileCount)
 				{
