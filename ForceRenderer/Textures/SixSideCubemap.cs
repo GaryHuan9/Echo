@@ -69,6 +69,6 @@ namespace ForceRenderer.Textures
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Float3 Sample(int index, Float2 uv) => textures[index][uv + Float2.half] * multiplier;
+		Float3 Sample(int index, Float2 uv) => textures[index][uv + Float2.half].XYZ * multiplier;
 	}
 }

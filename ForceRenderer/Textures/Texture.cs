@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Drawing;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 
@@ -7,7 +10,8 @@ namespace ForceRenderer.Textures
 {
 	/// <summary>
 	/// An asset object used to read or save an image. Pixels are stored raw for fast access but uses much more memory.
-	/// File operation handled by <see cref="Bitmap"/>. Can be offloaded to separate threads for faster loading.
+	/// Because most textures store data as 32 bit floats, they support the full range of a float.
+	/// File operations handled by <see cref="Bitmap"/>. Can be offloaded to separate threads for faster loading.
 	/// </summary>
 	public abstract class Texture
 	{
@@ -23,13 +27,22 @@ namespace ForceRenderer.Textures
 			_filter = filter ?? Textures.Filter.bilinear;
 		}
 
+		static Texture()
+		{
+			white = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = Float4.one};
+			black = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = Float4.ana};
+			normal = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = new Float4(0.5f, 0.5f, 1f, 1f)};
+		}
+
 		public readonly Int2 size;
 		public readonly Int2 oneLess;
 
 		public readonly float aspect; //Width over height
 		protected readonly int length;
 
-		public bool IsReadonly { get; protected set; }
+		public static readonly Texture white;
+		public static readonly Texture black;
+		public static readonly Texture normal;
 
 		IWrapper _wrapper;
 		IFilter _filter;
@@ -37,68 +50,73 @@ namespace ForceRenderer.Textures
 		public IWrapper Wrapper
 		{
 			get => _wrapper;
-			set
-			{
-				if (value == null) throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
-
-				CheckReadonly();
-				_wrapper = value;
-			}
+			set => _wrapper = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
 		}
 
 		public IFilter Filter
 		{
 			get => _filter;
+			set => _filter = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
+		}
+
+		/// <summary>
+		/// Retrieves and assigns the RGBA color of a pixel based on its index. Index based on <see cref="ToIndex"/> and <see cref="ToPosition"/>.
+		/// NOTE: this indexer returns a reference which can be used to both read and assign the actual value.
+		/// </summary>
+		public abstract ref Vector128<float> this[int index] { get; }
+
+		public unsafe Float4 this[Int2 position]
+		{
+			get
+			{
+				var data = GetPixel(position);
+				return *(Float4*)&data;
+			}
 			set
 			{
-				if (value == null) throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
-
-				CheckReadonly();
-				_filter = value;
+				ref var data = ref GetPixel(position);
+				data = *(Vector128<float>*)&value;
 			}
 		}
 
-		/// <summary>
-		/// Retrieves and assigns the RGB color of a pixel based on its index. Index based on <see cref="ToIndex"/> and <see cref="ToPosition"/>.
-		/// Should check for readonly on setter using the <see cref="CheckReadonly"/> method to ensure readonly correctness.
-		/// </summary>
-		public abstract Float3 this[int index] { get; set; }
-
-		public virtual Float3 this[Int2 position]
+		public unsafe ref readonly Float4 this[Float2 uv]
 		{
-			get => this[ToIndex(position)];
-			set => this[ToIndex(position)] = value;
+			get
+			{
+				var data = GetPixel(uv);
+				return ref *(Float4*)&data;
+			}
 		}
-
-		public virtual Float3 this[Float2 uv] => Filter.Convert(this, Wrapper.Convert(uv));
-
-		/// <summary>
-		/// Sets this <see cref="Texture"/> as readonly.
-		/// NOTE: This operation cannot be reverted.
-		/// </summary>
-		public void SetReadonly() => IsReadonly = true;
 
 		public virtual int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public virtual Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
 
-		protected void CheckReadonly()
-		{
-			if (IsReadonly) throw new Exception($"Operation cannot be completed when {this} is readonly.");
-		}
+		/// <summary>
+		/// NOTE: this method returns a reference which can be used to both read and assign the actual value.
+		/// </summary>
+		public ref Vector128<float> GetPixel(Int2 position) => ref this[ToIndex(position)];
+
+		public Vector128<float> GetPixel(Float2 uv) => Filter.Convert(this, Wrapper.Convert(uv));
 
 		/// <summary>
 		/// Copies the data of a <see cref="Texture"/> of the same size pixel by pixel.
 		/// An exception will be thrown if the sizes mismatch.
 		/// </summary>
-		public void CopyFrom(Texture texture)
+		public virtual void CopyFrom(Texture texture)
 		{
-			if (texture.size != size) throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
+			AssertAlignedSize(texture);
 
 			//Assigns the colors using positions instead of indices because the index converters can be overloaded
 			foreach (Int2 position in size.Loop()) this[position] = texture[position];
 		}
 
-		public override string ToString() => $"{(IsReadonly ? "Readonly" : "Read-write")} {GetType()} with size {size}";
+		protected void AssertAlignedSize(Texture texture)
+		{
+			if (texture.size == size) return;
+			throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
+		}
+
+		public override string ToString() => $"{GetType()} with size {size}";
 	}
 
 	public static class Wrapper
@@ -124,12 +142,12 @@ namespace ForceRenderer.Textures
 
 		class Point : IFilter
 		{
-			public Float3 Convert(Texture texture, Float2 uv) => texture[(uv * texture.size).Floored];
+			public Vector128<float> Convert(Texture texture, Float2 uv) => texture.GetPixel((uv * texture.size).Floored);
 		}
 
 		class Bilinear : IFilter
 		{
-			public Float3 Convert(Texture texture, Float2 uv)
+			public Vector128<float> Convert(Texture texture, Float2 uv)
 			{
 				uv *= texture.size;
 				Int2 rounded = uv.Rounded;
@@ -137,12 +155,46 @@ namespace ForceRenderer.Textures
 				Int2 upperRight = rounded.Min(texture.oneLess);
 				Int2 bottomLeft = rounded.Max(Int2.one) - Int2.one;
 
+				//Prefetch? color data
+				ref readonly Vector128<float> y0x0 = ref texture.GetPixel(bottomLeft);
+				ref readonly Vector128<float> y0x1 = ref texture.GetPixel(new Int2(upperRight.x, bottomLeft.y));
+
+				ref readonly Vector128<float> y1x0 = ref texture.GetPixel(new Int2(bottomLeft.x, upperRight.y));
+				ref readonly Vector128<float> y1x1 = ref texture.GetPixel(upperRight);
+
+				//Interpolate
 				Float2 t = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);
 
-				Float3 y0 = Float3.Lerp(texture[bottomLeft], texture[new Int2(upperRight.x, bottomLeft.y)], t.x);
-				Float3 y1 = Float3.Lerp(texture[new Int2(bottomLeft.x, upperRight.y)], texture[upperRight], t.x);
+				Vector128<float> timeX;
+				Vector128<float> timeY;
 
-				return Float3.Lerp(y0, y1, t.y);
+				if (Avx.IsSupported)
+				{
+					unsafe
+					{
+						timeX = Avx.BroadcastScalarToVector128(&t.x);
+						timeY = Avx.BroadcastScalarToVector128(&t.y);
+					}
+				}
+				else
+				{
+					timeX = Vector128.Create(t.x);
+					timeY = Vector128.Create(t.y);
+				}
+
+				Vector128<float> y0 = Lerp(y0x0, y0x1, timeX);
+				Vector128<float> y1 = Lerp(y1x0, y1x1, timeX);
+
+				return Lerp(y0, y1, timeY);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static Vector128<float> Lerp(in Vector128<float> left, in Vector128<float> right, in Vector128<float> time)
+			{
+				Vector128<float> length = Sse.Subtract(right, left);
+
+				if (Fma.IsSupported) return Fma.MultiplyAdd(length, time, left);
+				return Sse.Add(Sse.Multiply(length, time), left);
 			}
 		}
 	}
@@ -168,6 +220,6 @@ namespace ForceRenderer.Textures
 		/// </summary>
 		/// <param name="texture">The target texture to retrieve the color from.</param>
 		/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-		Float3 Convert(Texture texture, Float2 uv);
+		Vector128<float> Convert(Texture texture, Float2 uv);
 	}
 }

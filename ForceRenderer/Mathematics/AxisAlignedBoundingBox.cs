@@ -45,8 +45,11 @@ namespace ForceRenderer.Mathematics
 
 			unsafe
 			{
-				float far = (*(Float3*)&min).MinComponent;
-				float near = (*(Float3*)&max).MaxComponent;
+				ref Float3 far3 = ref *(Float3*)&min;
+				ref Float3 near3 = ref *(Float3*)&max;
+
+				float far = far3.MinComponent;
+				float near = near3.MaxComponent;
 
 				return near > far || far < 0f ? float.PositiveInfinity : near;
 			}

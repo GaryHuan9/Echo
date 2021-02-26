@@ -11,7 +11,7 @@ namespace ForceRenderer.Rendering.Materials
 	{
 		public float NormalIntensity { get; set; } = 1f;
 
-		public Texture NormalMap { get; set; } = Texture2D.normal;
+		public Texture NormalMap { get; set; } = Texture.normal;
 
 		/// <summary>
 		/// This method is invoked before render begins during the preparation phase.
@@ -35,9 +35,9 @@ namespace ForceRenderer.Rendering.Materials
 
 		public unsafe void ApplyNormal(in CalculatedHit hit)
 		{
-			if (NormalMap == Texture2D.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
+			if (NormalMap == Texture.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
 
-			Float3 sample = NormalMap[hit.texcoord];
+			Float3 sample = NormalMap[hit.texcoord].XYZ;
 
 			float x = sample.x * 2f - 1f;
 			float y = sample.y * 2f - 1f;
@@ -74,20 +74,29 @@ namespace ForceRenderer.Rendering.Materials
 
 		protected static float SampleTexture(Texture texture, float value, Float2 texcoord)
 		{
-			if (texture == Texture2D.white) return value;
-			return value * texture[texcoord].x;
+			if (texture == Texture.white) return value;
+			if (texture == Texture.black) return 0f;
+
+			ref readonly Float4 color = ref texture[texcoord];
+			return value * color.x;
 		}
 
 		protected static Float2 SampleTexture(Texture texture, Float2 value, Float2 texcoord)
 		{
-			if (texture == Texture2D.white) return value;
-			return value * texture[texcoord].XY;
+			if (texture == Texture.white) return value;
+			if (texture == Texture.black) return Float2.zero;
+
+			ref readonly Float4 color = ref texture[texcoord];
+			return value * color.XY;
 		}
 
 		protected static Float3 SampleTexture(Texture texture, in Float3 value, Float2 texcoord)
 		{
-			if (texture == Texture2D.white) return value;
-			return value * texture[texcoord];
+			if (texture == Texture.white) return value;
+			if (texture == Texture.black) return Float3.zero;
+
+			ref readonly Float4 color = ref texture[texcoord];
+			return value * color.XYZ;
 		}
 
 		protected static void AssertZeroOne(float value)
