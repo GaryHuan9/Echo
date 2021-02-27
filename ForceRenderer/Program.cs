@@ -5,6 +5,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.Rendering;
+using ForceRenderer.Rendering.PostProcessing;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
 
@@ -36,7 +37,7 @@ namespace ForceRenderer
 			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new TestTexture(),
+											RenderBuffer = buffer, Scene = new RandomSpheresScene(120),
 											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
@@ -48,6 +49,10 @@ namespace ForceRenderer
 
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
+
+			PerformanceTest blurTest = new PerformanceTest();
+			using (blurTest.Start()) new GaussianBlurWorker(buffer, 10f).Dispatch();
+			commandsController.Log($"Blur used {blurTest.ElapsedMilliseconds}ms");
 
 			//Saves render as file
 			buffer.Save("render.png");

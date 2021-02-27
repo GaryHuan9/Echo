@@ -94,9 +94,9 @@ namespace ForceRenderer.Rendering
 
 		/// <summary>
 		/// Invoked on worker thread when all rendered pixels are stored in the buffer.
-		/// Passes in <see cref="TileWorker"/> for easy identification.
+		/// Passes in the <see cref="TileWorker"/> for easy identification.
 		/// </summary>
-		public static event Action<TileWorker> OnWorkCompleted;
+		public event Action<TileWorker> OnWorkCompleted;
 
 		public void ResetParameters(Int2 renderOffset, Texture renderBuffer = null, PixelWorker pixelWorker = null)
 		{
@@ -195,7 +195,7 @@ namespace ForceRenderer.Rendering
 		public void Dispose()
 		{
 			if (!aborted) Abort();
-			dispatchEvent?.Dispose();
+			dispatchEvent.Dispose();
 		}
 
 		public override int GetHashCode() => id;

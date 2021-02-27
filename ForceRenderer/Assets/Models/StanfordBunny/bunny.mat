@@ -1,6 +1,6 @@
 ﻿# comment heheh
 # yeah ignore these
 
-declare Metal Material
+declare Glossy Material
 Albedo 1.000 0.766 0.336
 Smoothness 0.8

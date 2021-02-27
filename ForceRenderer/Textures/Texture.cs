@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
+using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Textures
@@ -91,6 +92,8 @@ namespace ForceRenderer.Textures
 		public virtual int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public virtual Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
 
+		public Int2 Restrict(Int2 position) => position.Clamp(Int2.zero, oneLess);
+
 		/// <summary>
 		/// NOTE: this method returns a reference which can be used to both read and assign the actual value.
 		/// </summary>
@@ -155,7 +158,7 @@ namespace ForceRenderer.Textures
 				Int2 upperRight = rounded.Min(texture.oneLess);
 				Int2 bottomLeft = rounded.Max(Int2.one) - Int2.one;
 
-				//Prefetch? color data
+				//Prefetch color data (273.6 ns => 194.6 ns)
 				ref readonly Vector128<float> y0x0 = ref texture.GetPixel(bottomLeft);
 				ref readonly Vector128<float> y0x1 = ref texture.GetPixel(new Int2(upperRight.x, bottomLeft.y));
 
@@ -165,22 +168,8 @@ namespace ForceRenderer.Textures
 				//Interpolate
 				Float2 t = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);
 
-				Vector128<float> timeX;
-				Vector128<float> timeY;
-
-				if (Avx.IsSupported)
-				{
-					unsafe
-					{
-						timeX = Avx.BroadcastScalarToVector128(&t.x);
-						timeY = Avx.BroadcastScalarToVector128(&t.y);
-					}
-				}
-				else
-				{
-					timeX = Vector128.Create(t.x);
-					timeY = Vector128.Create(t.y);
-				}
+				Vector128<float> timeX = Vector128.Create(t.x);
+				Vector128<float> timeY = Vector128.Create(t.y);
 
 				Vector128<float> y0 = Lerp(y0x0, y0x1, timeX);
 				Vector128<float> y1 = Lerp(y1x0, y1x1, timeX);
