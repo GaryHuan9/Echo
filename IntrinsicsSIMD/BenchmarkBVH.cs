@@ -2,9 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
 using ForceRenderer;
-using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Rendering;
 
 namespace IntrinsicsSIMD

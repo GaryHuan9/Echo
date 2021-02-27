@@ -143,15 +143,8 @@ namespace ForceRenderer.Textures
 
 		public override void CopyFrom(Texture texture)
 		{
-			if (texture is Texture2D texture2D)
-			{
-				unsafe
-				{
-					int count = sizeof(Vector128<float>) * length;
-					Buffer.BlockCopy(texture2D.pixels, 0, pixels, 0, count);
-				}
-			}
-			else base.CopyFrom(texture);
+			if (texture is not Texture2D texture2D) base.CopyFrom(texture);
+			else Array.Copy(texture2D.pixels, pixels, length);
 		}
 
 		unsafe ref Float4 GetPixel(int index)
