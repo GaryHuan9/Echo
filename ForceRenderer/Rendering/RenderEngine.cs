@@ -14,8 +14,6 @@ namespace ForceRenderer.Rendering
 {
 	public class RenderEngine : IDisposable
 	{
-		public RenderEngine() => TileWorker.OnWorkCompleted += OnTileWorkCompleted;
-
 		public Scene Scene { get; set; }
 
 		public int PixelSample { get; set; }    //The number of samples applied to every pixel; this is calculated first
@@ -45,7 +43,11 @@ namespace ForceRenderer.Rendering
 		public State CurrentState
 		{
 			get => (State)InterlockedHelper.Read(ref _currentState);
-			private set => Interlocked.Exchange(ref _currentState, (int)value);
+			private set
+			{
+				if (Interlocked.Exchange(ref _currentState, (int)value) == (int)value) return;
+				lock (signalLocker) Monitor.PulseAll(signalLocker);
+			}
 		}
 
 		public bool Completed => CurrentState == State.completed;
@@ -99,7 +101,7 @@ namespace ForceRenderer.Rendering
 		public int TotalTileCount => TotalTileSize.Product; //The number of processed tiles or tiles currently being processed
 
 		readonly object manageLocker = new object(); //Locker used when managing any of the workers
-		readonly ManualResetEvent renderCompleteEvent = new ManualResetEvent(false);
+		readonly object signalLocker = new object(); //Locker to signal when state changed
 
 		public void Begin()
 		{
@@ -152,7 +154,9 @@ namespace ForceRenderer.Rendering
 			{
 				TileWorker worker = workers[i] = new TileWorker(profile);
 
+				worker.OnWorkCompleted += OnTileWorkCompleted;
 				worker.ResetParameters(Int2.zero, RenderBuffer, PixelWorker);
+
 				DispatchWorker(worker);
 			}
 		}
@@ -189,9 +193,7 @@ namespace ForceRenderer.Rendering
 				if (CompletedTileCount == TotalTileCount)
 				{
 					stopwatch.Stop();
-
 					CurrentState = State.completed;
-					renderCompleteEvent.Set();
 
 					return;
 				}
@@ -280,8 +282,6 @@ namespace ForceRenderer.Rendering
 
 			stopwatch.Stop();
 			CurrentState = State.aborted;
-
-			renderCompleteEvent.Set();
 		}
 
 		/// <summary>
@@ -297,7 +297,6 @@ namespace ForceRenderer.Rendering
 				}
 
 				workers = null;
-				renderCompleteEvent.Reset();
 
 				tilePositions = null;
 				tileStatuses = null;
@@ -321,21 +320,30 @@ namespace ForceRenderer.Rendering
 
 		public void WaitForRender()
 		{
-			renderCompleteEvent.WaitOne(); //If multiple threads are waiting, the event
-			renderCompleteEvent.Reset();   //will get reset multiple times but it's fine
+			while (true)
+			{
+				State current = CurrentState;
+
+				if (current == State.aborted) return;
+				if (current == State.completed) return;
+
+				lock (signalLocker) Monitor.Wait(signalLocker);
+			}
 		}
 
 		public void Dispose()
 		{
-			if (workers != null)
+			if (workers == null) return;
+
+			for (int i = 0; i < workers.Length; i++)
 			{
-				for (int i = 0; i < workers.Length; i++) workers[i].Dispose();
+				TileWorker worker = workers[i];
+
+				worker.OnWorkCompleted -= OnTileWorkCompleted;
+				worker.Dispose();
 			}
 
 			workers = null;
-
-			TileWorker.OnWorkCompleted -= OnTileWorkCompleted;
-			renderCompleteEvent.Dispose();
 		}
 
 		public enum State
