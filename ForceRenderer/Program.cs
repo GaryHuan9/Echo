@@ -30,14 +30,14 @@ namespace ForceRenderer
 			//Render
 			Int2[] resolutions =
 			{
-				new Int2(320, 180), new Int2(854, 480), new Int2(1920, 1080),
-				new Int2(3840, 2160), new Int2(1024, 1024), new Int2(512, 512)
+				new(320, 180), new(854, 480), new(1920, 1080),
+				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new RandomSpheresScene(120),
+											RenderBuffer = buffer, Scene = new RandomSpheresScene(20),
 											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
@@ -51,8 +51,10 @@ namespace ForceRenderer
 			engine.WaitForRender();
 
 			PerformanceTest blurTest = new PerformanceTest();
-			using (blurTest.Start()) new GaussianBlurWorker(buffer, 10f).Dispatch();
+			using (blurTest.Start()) new BloomWorker(buffer, 12f).Dispatch();
 			commandsController.Log($"Blur used {blurTest.ElapsedMilliseconds}ms");
+
+			new ColorCorrectionWorker(buffer, 0.5f).Dispatch();
 
 			//Saves render as file
 			buffer.Save("render.png");
