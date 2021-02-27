@@ -3,13 +3,14 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
+using CodeHelpers.Threads;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
-	public class GaussianBlurWorker : PostProcessingWorker
+	public class BloomWorker : PostProcessingWorker
 	{
-		public GaussianBlurWorker(Texture renderBuffer, float deviation) : base(renderBuffer) => this.deviation = deviation;
+		public BloomWorker(Texture renderBuffer, float deviation) : base(renderBuffer) => this.deviation = deviation;
 
 		readonly float deviation;
 
@@ -44,11 +45,16 @@ namespace ForceRenderer.Rendering.PostProcessing
 
 		void ThresholdPass(Int2 position)
 		{
-			Float3 color = renderBuffer[position].XYZ;
-			float brightness = color.Dot(luminanceOption);
-
+			ref Vector128<float> source = ref renderBuffer.GetPixel(position);
 			ref Vector128<float> target = ref threshold.GetPixel(position);
-			target = brightness > 1f ? oneVector : zeroVector;
+
+			target = Sse.Max(Sse.Subtract(source, oneVector), zeroVector);
+
+			// Float3 color = renderBuffer[position].XYZ;
+			// float brightness = color.Dot(luminanceOption);
+			//
+			// ref Vector128<float> target = ref threshold.GetPixel(position);
+			// target = brightness > 1f ? oneVector : zeroVector;
 		}
 
 		void BlurPass(Int2 position)
@@ -60,6 +66,8 @@ namespace ForceRenderer.Rendering.PostProcessing
 				Vector128<float> color = threshold.GetPixel(threshold.Restrict(position + local));
 				sum = Fma.MultiplyAdd(color, kernel.GetPixel(local + radius), sum);
 			}
+
+			sum = Sse.Subtract(sum, threshold.GetPixel(position));
 		}
 	}
 }
