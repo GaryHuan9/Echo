@@ -4,7 +4,7 @@ namespace ForceRenderer.Textures
 {
 	public class SolidCubemap : Cubemap
 	{
-		public SolidCubemap(Color32 ambient) => this.ambient = (Float3)ambient;
+		public SolidCubemap(Float3 ambient) => this.ambient = ambient;
 
 		public readonly Float3 ambient;
 
