@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
@@ -8,13 +9,11 @@ namespace ForceRenderer.Rendering.Materials
 {
 	public class Glass : Material
 	{
-		public Float3 Transmission { get; set; }
 		public float IndexOfRefraction { get; set; }
 		public float Roughness { get; set; }
 
-		public Texture TransmissionMap { get; set; } = Texture2D.white;
-		public Texture IndexOfRefractionMap { get; set; } = Texture2D.white;
-		public Texture RoughnessMap { get; set; } = Texture2D.white;
+		public Texture IndexOfRefractionMap { get; set; } = Texture.white;
+		public Texture RoughnessMap { get; set; } = Texture.white;
 
 		float randomRadius;
 
@@ -22,7 +21,7 @@ namespace ForceRenderer.Rendering.Materials
 		{
 			base.Press();
 
-			AssertZeroOne(Transmission);
+			AssertZeroOne(Albedo);
 			AssertNonNegative(IndexOfRefraction);
 			AssertZeroOne(Roughness);
 
@@ -33,6 +32,9 @@ namespace ForceRenderer.Rendering.Materials
 
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
+			if (AlphaTest(hit, out Float3 color, out direction)) return Float3.one;
+
+			//Refraction and reflection
 			Float3 hitNormal = hit.normal;
 			bool backface = hit.direction.Dot(hitNormal) > 0f;
 
@@ -79,7 +81,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (random.NextFloat() < reflectChance) direction = hit.direction.Reflect(faceNormal); //Reflection
 			else direction = (eta * hit.direction + (eta * cosI - cosT) * faceNormal).Normalized;  //Refraction
 
-			return SampleTexture(TransmissionMap, Transmission, hit.texcoord);
+			return color;
 		}
 	}
 }

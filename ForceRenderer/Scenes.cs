@@ -50,11 +50,13 @@ namespace ForceRenderer
 		{
 			Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
 			Texture2D normal = Texture2D.Load("Assets/Textures/WikiNormalMap.png");
+			Texture2D chain = Texture2D.Load("Assets/Textures/SponzaChain.png");
 
 			// Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
-			Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
+			// Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
+			Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = chain};
 
-			Cubemap = new SolidCubemap(Color32.white);
+			Cubemap = new SolidCubemap(Float3.one);
 
 			// children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -5.5f), Rotation = new Float3(-90f, 0f, 0f)});
 			children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
@@ -67,10 +69,10 @@ namespace ForceRenderer
 		{
 			// children.Add(new SphereObject(new Material {Diffuse = new Float3(0.8f, 0.8f, 0f)}, 100f) {Position = new Float3(0f, -100.5f, 0f)});
 
-			Material material = new Glass {IndexOfRefraction = 1.5f, Transmission = (Float3)0.9f};
+			Material material = new Glass {IndexOfRefraction = 1.5f, Albedo = (Float3)0.9f};
 			children.Add(new BoxObject(material, new Float3(4f, 1f, 0.03f)) {Position = new Float3(0f, 0.5f, 0f)});
 
-			children.Add(new SphereObject(new Glass {IndexOfRefraction = 1.5f, Transmission = Float3.one}, 0.5f) {Position = new Float3(-1f, 0f, 0f)});
+			children.Add(new SphereObject(new Glass {IndexOfRefraction = 1.5f, Albedo = Float3.one}, 0.5f) {Position = new Float3(-1f, 0f, 0f)});
 			children.Add(new SphereObject(new Diffuse {Albedo = new Float3(0.8f, 0.6f, 0.2f)}, 0.5f) {Position = new Float3(1f, 0f, 0f)});
 
 			var camera = new Camera(90f) {Position = new Float3(0.2f, 2f, -1f)};
@@ -100,7 +102,7 @@ namespace ForceRenderer
 			var kunai = new Mesh("Assets/Models/Kunai/wraith_kunai.obj");
 			var materials = new MaterialLibrary("Assets/Models/Kunai/wraith_kunai.mat");
 
-			Cubemap = new SolidCubemap(Color32.white);
+			Cubemap = new SolidCubemap(Float3.one);
 
 			var target = new MeshObject(kunai, materials) {Rotation = new Float3(0f, 0f, -65f)};
 			var camera = new Camera(80f) {Position = new Float3(-0.2f, 0.55f, 0.7f)};
@@ -121,6 +123,21 @@ namespace ForceRenderer
 
 			children.Add(new MeshObject(mesh, materials));
 			children.Add(new Camera(90f) {Position = new Float3(0f, 1f, 2.2f), Rotation = Float3.up * 180f});
+		}
+	}
+
+	public class Sponza : Scene
+	{
+		public Sponza()
+		{
+			var mesh = new Mesh("Assets/Models/CrytekSponza/sponza.obj");
+			var materials = new MaterialLibrary("Assets/Models/CrytekSponza/sponza.mat");
+
+			children.Add(new MeshObject(mesh, materials) {Rotation = Float3.up * 90f});
+			Cubemap = new SolidCubemap(new Float3(10.3f, 8.9f, 6.3f));
+
+			// children.Add(new Camera(90f) {Position = new Float3(-9.4f, 16.1f, -4.6f), Rotation = new Float3(13.8f, 43.6f, 0f)});
+			children.Add(new Camera(90f) {Position = new Float3(2.8f, 7.5f, -1.7f), Rotation = new Float3(6.8f, -12.6f, 0f)});
 		}
 	}
 
@@ -166,7 +183,7 @@ namespace ForceRenderer
 			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			var materials = new MaterialLibrary("Assets/Models/BlenderBMW/BlenderBMW.mat");
 
-			Cubemap = new SolidCubemap((Color32)(Float3)0.21f);
+			Cubemap = new SolidCubemap((Float3)0.21f);
 
 			children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 
@@ -265,7 +282,7 @@ namespace ForceRenderer
 				for (float j = 0f; j <= Height; j++)
 				{
 					// var material = new Glossy {Albedo = Float3.Lerp((Float3)0.9f, new Float3(0.867f, 0.267f, 0.298f), j / Height), Smoothness = i / Width};
-					var material = new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = Scalars.Lerp(1.1f, 1.7f, j / Height), Roughness = i / Width};
+					var material = new Glass {Albedo = (Float3)0.9f, IndexOfRefraction = Scalars.Lerp(1.1f, 1.7f, j / Height), Roughness = i / Width};
 
 					children.Add(new SphereObject(material, 0.45f) {Position = new Float3(i - Width / 2f, j - Height / 2f, 2f)});
 				}
@@ -283,8 +300,8 @@ namespace ForceRenderer
 
 			children.Add(new SphereObject(new Diffuse {Albedo = (Float3)0.9f}, 1f) {Position = new Float3(0f, 1f, 2f)});
 			// children.Add(new SphereObject(new Glossy {Albedo = (Float3)0.7f, Smoothness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
-			children.Add(new SphereObject(new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = 1.5f, Roughness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
-			children.Add(new SphereObject(new Glass {Transmission = (Float3)0.9f, IndexOfRefraction = 1.5f}, 1f) {Position = new Float3(-2f, 1f, 2f)});
+			children.Add(new SphereObject(new Glass {Albedo = (Float3)0.9f, IndexOfRefraction = 1.5f, Roughness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
+			children.Add(new SphereObject(new Glass {Albedo = (Float3)0.9f, IndexOfRefraction = 1.5f}, 1f) {Position = new Float3(-2f, 1f, 2f)});
 
 			children.Add(new PlaneObject(new Diffuse {Albedo = (Float3)0.9f}, new Float2(24f, 16f)) {Position = new Float3(0f, 0f, 0f)});
 		}

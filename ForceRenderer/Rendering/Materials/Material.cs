@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net.Mime;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
@@ -9,9 +11,13 @@ namespace ForceRenderer.Rendering.Materials
 {
 	public abstract class Material
 	{
+		public Float3 Albedo { get; set; }
 		public float NormalIntensity { get; set; } = 1f;
 
+		public Texture AlbedoMap { get; set; } = Texture.white;
 		public Texture NormalMap { get; set; } = Texture.normal;
+
+		Float4 albedoColor;
 
 		/// <summary>
 		/// This method is invoked before render begins during the preparation phase.
@@ -19,7 +25,10 @@ namespace ForceRenderer.Rendering.Materials
 		/// </summary>
 		public virtual void Press()
 		{
+			AssertZeroOne(Albedo);
+
 			NormalIntensity = NormalIntensity.Clamp(-1f, 1f);
+			albedoColor = ToColor(Albedo);
 		}
 
 		/// <summary>
@@ -61,8 +70,26 @@ namespace ForceRenderer.Rendering.Materials
 			fixed (Float3* pointer = &hit.normal) *pointer = normal;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected bool AlphaTest(in CalculatedHit hit, out Float3 color, out Float3 direction)
+		{
+			Float4 sample = SampleTexture(AlbedoMap, albedoColor, hit.texcoord);
+			color = sample.XYZ;
+
+			if (Scalars.AlmostEquals(sample.w, 0f))
+			{
+				direction = hit.direction;
+				return true;
+			}
+
+			direction = Float3.zero;
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static float SmoothnessToRandomRadius(float smoothness) => RoughnessToRandomRadius(1f - smoothness);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static float RoughnessToRandomRadius(float roughness)
 		{
 			const float Alpha = 7.4f;
@@ -72,6 +99,7 @@ namespace ForceRenderer.Rendering.Materials
 			return MathF.Pow(radius / (Alpha - 1f), Beta);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static float SampleTexture(Texture texture, float value, Float2 texcoord)
 		{
 			if (texture == Texture.white) return value;
@@ -80,6 +108,7 @@ namespace ForceRenderer.Rendering.Materials
 			return value * texture[texcoord].x;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static Float2 SampleTexture(Texture texture, Float2 value, Float2 texcoord)
 		{
 			if (texture == Texture.white) return value;
@@ -88,13 +117,26 @@ namespace ForceRenderer.Rendering.Materials
 			return value * texture[texcoord].XY;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static Float3 SampleTexture(Texture texture, in Float3 value, Float2 texcoord)
 		{
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float3.zero;
 
-			return value * texture[texcoord].XYZ;
+			return value * texture[texcoord].w;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static Float4 SampleTexture(Texture texture, in Float4 value, Float2 texcoord)
+		{
+			if (texture == Texture.white) return value;
+			if (texture == Texture.black) return Float4.zero;
+
+			return value * texture[texcoord];
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected static Float4 ToColor(in Float3 value) => new(value.x, value.y, value.z, 1f);
 
 		protected static void AssertZeroOne(float value)
 		{
