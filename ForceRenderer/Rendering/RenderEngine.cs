@@ -131,13 +131,13 @@ namespace ForceRenderer.Rendering
 		{
 			TotalTileSize = RenderBuffer.size.CeiledDivide(profile.tileSize);
 
-			tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
-			tilePositions.Shuffle(); //Different methods of selection
+			// tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
+			// tilePositions.Shuffle(); //Different methods of selection
 
-			// tilePositions = (from position in new EnumerableSpiral2D(TotalTileSize.MaxComponent / 2)
-			// 				 let tile = position + TotalTileSize / 2
-			// 				 where tile.x >= 0 && tile.y >= 0 && tile.x < TotalTileSize.x && tile.y < TotalTileSize.y
-			// 				 select tile * profile.tileSize).ToArray();
+			tilePositions = (from position in new EnumerableSpiral2D(TotalTileSize.MaxComponent / 2)
+							 let tile = position + TotalTileSize / 2
+							 where tile.x >= 0 && tile.y >= 0 && tile.x < TotalTileSize.x && tile.y < TotalTileSize.y
+							 select tile * profile.tileSize).ToArray();
 
 			tileStatuses = tilePositions.ToDictionary
 			(
