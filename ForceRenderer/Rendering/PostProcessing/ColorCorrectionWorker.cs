@@ -1,6 +1,5 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Textures;
 

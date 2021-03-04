@@ -1,0 +1,137 @@
+# Blender MTL File: 'None'
+# Material Count: 25
+
+declare Glossy Material__25
+Albedo 1.000000 1.000000 1.000000
+Smoothness 0.3
+AlbedoMap textures/lion.png
+NormalMap textures/lion_ddn.png
+
+declare Glossy Material__298
+Albedo 1.000000 1.000000 1.000000
+Smoothness 0.35
+AlbedoMap textures/background.png
+NormalMap textures/background_ddn.png
+
+declare Emissive light
+# Emission 25.3 21.8 9.6
+
+declare Diffuse Material__47
+Albedo 1.000000 1.000000 1.000000
+
+declare Diffuse Material__57
+Albedo 1.000000 1.000000 1.000000
+# Ni 1.000000
+# d 1.000000
+AlbedoMap textures/vase_plant.png
+# map_d textures/vase_plant_mask.png
+
+declare Diffuse arch
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_arch_diff.png
+NormalMap textures/sponza_arch_ddn.png
+
+declare Diffuse bricks
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/spnza_bricks_a_diff.png
+NormalMap textures/spnza_bricks_a_ddn.png
+
+declare Diffuse ceiling
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_ceiling_a_diff.png
+NormalMap textures/sponza_ceiling_a_ddn.png
+
+declare Diffuse chain
+Albedo 1.000000 1.000000 1.000000
+# Ni 1.000000
+# d 1.000000
+AlbedoMap textures/chain_texture.png
+# map_d textures/chain_texture_mask.png
+NormalMap textures/chain_texture_ddn.png
+
+declare Diffuse column_a
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_column_a_diff.png
+NormalMap textures/sponza_column_a_ddn.png
+
+declare Diffuse column_b
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_column_b_diff.png
+NormalMap textures/sponza_column_b_ddn.png
+
+declare Diffuse column_c
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_column_c_diff.png
+NormalMap textures/sponza_column_c_ddn.png
+
+declare Diffuse details
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_details_diff.png
+NormalMap textures/sponza_details_ddn.png
+
+declare Diffuse fabric_a
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_fabric_diff.png
+NormalMap textures/sponza_fabric_ddn.png
+
+declare Diffuse fabric_c
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_curtain_diff.png
+NormalMap textures/sponza_curtain_ddn.png
+
+declare Diffuse fabric_d
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_fabric_blue_diff.png
+NormalMap textures/sponza_fabric_ddn.png
+
+declare Diffuse fabric_e
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_fabric_green_diff.png
+NormalMap textures/sponza_fabric_ddn.png
+
+declare Diffuse fabric_f
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_curtain_green_diff.png
+NormalMap textures/sponza_curtain_ddn.png
+
+declare Diffuse fabric_g
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_curtain_blue_diff.png
+NormalMap textures/sponza_curtain_ddn.png
+
+declare Diffuse flagpole
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_flagpole_diff.png
+NormalMap textures/sponza_flagpole_ddn.png
+
+declare Diffuse floor
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_floor_a_diff.png
+NormalMap textures/sponza_floor_a_ddn.png
+
+declare Diffuse leaf
+Albedo 1.000000 1.000000 1.000000
+# Ni 1.000000
+# d 1.000000
+AlbedoMap textures/sponza_thorn_diff.png
+# map_d textures/sponza_thorn_mask.png
+NormalMap textures/sponza_thorn_ddn.png
+
+declare Diffuse roof
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/sponza_roof_diff.png
+
+declare Diffuse vase
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/vase_dif.png
+NormalMap textures/vase_ddn.png
+
+declare Diffuse vase_hanging
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/vase_hanging.png
+NormalMap textures/vase_hanging_ddn.png
+
+declare Diffuse vase_round
+Albedo 1.000000 1.000000 1.000000
+AlbedoMap textures/vase_round.png
+NormalMap textures/vase_round_ddn.png

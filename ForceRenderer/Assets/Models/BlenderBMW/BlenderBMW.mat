@@ -32,7 +32,7 @@ Albedo 0.922966 0.922966 0.922966
 Smoothness 0.22500
 
 declare Glass Glass
-Transmission 0.850 0.850 0.850
+Albedo 0.850 0.850 0.850
 IndexOfRefraction 1.540000
 
 declare Emissive HeadLightAngelEye
@@ -51,7 +51,7 @@ Smoothness 0.22500
 # the covering glass
 declare Glass HeadlightGlass
 IndexOfRefraction 1.350000
-Transmission 0.950000 0.950000 0.950000
+Albedo 0.950000 0.950000 0.950000
 
 declare Diffuse HeadlightMatte
 Albedo 0.800 0.800 0.800

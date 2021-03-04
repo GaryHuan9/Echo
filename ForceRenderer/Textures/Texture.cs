@@ -32,7 +32,7 @@ namespace ForceRenderer.Textures
 		{
 			white = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = Float4.one};
 			black = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = Float4.ana};
-			normal = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = new Float4(0.5f, 0.5f, 1f, 1f)};
+			normal = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = new(0.5f, 0.5f, 1f, 1f)};
 		}
 
 		public readonly Int2 size;
@@ -145,7 +145,11 @@ namespace ForceRenderer.Textures
 
 		class Point : IFilter
 		{
-			public Vector128<float> Convert(Texture texture, Float2 uv) => texture.GetPixel((uv * texture.size).Floored);
+			public Vector128<float> Convert(Texture texture, Float2 uv)
+			{
+				Int2 position = (uv * texture.size).Floored;
+				return texture.GetPixel(position.Min(texture.oneLess));
+			}
 		}
 
 		class Bilinear : IFilter
