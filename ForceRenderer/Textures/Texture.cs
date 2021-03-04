@@ -24,7 +24,7 @@ namespace ForceRenderer.Textures
 			aspect = (float)size.x / size.y;
 			length = size.Product;
 
-			_wrapper = wrapper ?? Textures.Wrapper.clamp;
+			_wrapper = wrapper ?? Textures.Wrapper.repeat;
 			_filter = filter ?? Textures.Filter.bilinear;
 		}
 
