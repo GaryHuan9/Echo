@@ -34,11 +34,11 @@ namespace ForceRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[0]);
+			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new Sponza(),
-											PixelSample = 32, AdaptiveSample = 32, TileSize = 32
+											PixelSample = 64, AdaptiveSample = 2000, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -50,9 +50,9 @@ namespace ForceRenderer
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
 
-			// PerformanceTest blurTest = new PerformanceTest();
-			// using (blurTest.Start()) new BloomWorker(buffer, 12f).Dispatch();
-			// commandsController.Log($"Blur used {blurTest.ElapsedMilliseconds}ms");
+			PerformanceTest blurTest = new PerformanceTest();
+			using (blurTest.Start()) new BloomWorker(buffer, 12f).Dispatch();
+			commandsController.Log($"Bloom used {blurTest.ElapsedMilliseconds}ms");
 
 			new ColorCorrectionWorker(buffer, 1f).Dispatch();
 
