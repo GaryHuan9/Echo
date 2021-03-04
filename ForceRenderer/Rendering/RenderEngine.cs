@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
@@ -23,7 +24,7 @@ namespace ForceRenderer.Rendering
 		public int WorkerSize { get; set; } = Environment.ProcessorCount / 2;
 
 		public int MaxBounce { get; set; } = 64;
-		public float EnergyEpsilon { get; set; } = 1E-2f; //Epsilon lower bound value to determine when an energy is essentially zero
+		public float EnergyEpsilon { get; set; } = 5E-3f; //Epsilon lower bound value to determine when an energy is essentially zero
 
 		Profile profile;
 
@@ -130,13 +131,13 @@ namespace ForceRenderer.Rendering
 		{
 			TotalTileSize = RenderBuffer.size.CeiledDivide(profile.tileSize);
 
-			// tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
-			// tilePositions.Shuffle(); //Different methods of selection
+			tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
+			tilePositions.Shuffle(); //Different methods of selection
 
-			tilePositions = (from position in new EnumerableSpiral2D(TotalTileSize.MaxComponent / 2)
-							 let tile = position + TotalTileSize / 2
-							 where tile.x >= 0 && tile.y >= 0 && tile.x < TotalTileSize.x && tile.y < TotalTileSize.y
-							 select tile * profile.tileSize).ToArray();
+			// tilePositions = (from position in new EnumerableSpiral2D(TotalTileSize.MaxComponent / 2)
+			// 				 let tile = position + TotalTileSize / 2
+			// 				 where tile.x >= 0 && tile.y >= 0 && tile.x < TotalTileSize.x && tile.y < TotalTileSize.y
+			// 				 select tile * profile.tileSize).ToArray();
 
 			tileStatuses = tilePositions.ToDictionary
 			(
