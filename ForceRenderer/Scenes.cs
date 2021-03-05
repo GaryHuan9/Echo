@@ -200,7 +200,7 @@ namespace ForceRenderer
 			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			var materials = new MaterialLibrary("Assets/Models/BlenderBMW/BlenderBMW.mat");
 
-			Cubemap = new SolidCubemap((Float3)0.21f);
+			Cubemap = new SolidCubemap((Float3)0.2f);
 
 			children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 

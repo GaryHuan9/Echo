@@ -25,9 +25,10 @@ namespace ForceRenderer.Textures
 
 		public override ref Vector128<float> this[int index] => ref pixels[index];
 
-		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif"});
-		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new ReadOnlyCollection<ImageFormat>(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif});
+		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif", FloatingPointImageExtension});
+		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif, null});
 
+		const string FloatingPointImageExtension = ".fpi";
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
 		public void Save(string relativePath)
@@ -39,15 +40,23 @@ namespace ForceRenderer.Textures
 			if (string.IsNullOrEmpty(extension))
 			{
 				extensionIndex = 0;
-				relativePath = Path.ChangeExtension(relativePath, ((ILoadableAsset)this).AcceptableFileExtensions[extensionIndex]);
+				relativePath = Path.ChangeExtension(relativePath, _acceptableFileExtensions[0]);
 			}
 			else
 			{
-				extensionIndex = ((ILoadableAsset)this).AcceptableFileExtensions.IndexOf(extension);
+				extensionIndex = _acceptableFileExtensions.IndexOf(extension);
 				if (extensionIndex < 0) throw ExceptionHelper.Invalid(nameof(relativePath), relativePath, "does not have a compatible extension!");
 			}
 
 			string path = AssetsUtility.GetAssetsPath(relativePath);
+
+			if (extension == FloatingPointImageExtension)
+			{
+				using DataWriter writer = new DataWriter(File.OpenWrite(path));
+
+				Write(writer);
+				return;
+			}
 
 			//Export
 			using Bitmap bitmap = new Bitmap(size.x, size.y);
@@ -80,8 +89,14 @@ namespace ForceRenderer.Textures
 		public static Texture2D Load(string path, IWrapper wrapper = null, IFilter filter = null)
 		{
 			path = ((Texture2D)white).GetAbsolutePath(path);
-			using Bitmap source = new Bitmap(path, true);
 
+			if (Path.GetExtension(path) == FloatingPointImageExtension)
+			{
+				using DataReader reader = new DataReader(File.OpenRead(path));
+				return Read(reader);
+			}
+
+			using Bitmap source = new Bitmap(path, true);
 			PixelFormat format = source.PixelFormat;
 			Int2 size = new Int2(source.Width, source.Height);
 
