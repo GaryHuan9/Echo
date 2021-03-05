@@ -28,8 +28,6 @@ namespace ForceRenderer.Mathematics
 		public Float3 Max => center + extend;
 		public Float3 Min => center - extend;
 
-		public float Area => (extend.x * extend.y + extend.x * extend.z + extend.y * extend.z) * 8f;
-
 		/// <summary>
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
 		/// NOTE: return can be negative, which means the ray origins inside box.
@@ -45,8 +43,8 @@ namespace ForceRenderer.Mathematics
 
 			unsafe
 			{
-				ref Float3 far3 = ref *(Float3*)&min;
-				ref Float3 near3 = ref *(Float3*)&max;
+				ref readonly Float3 far3 = ref *(Float3*)&min;
+				ref readonly Float3 near3 = ref *(Float3*)&max;
 
 				float far = far3.MinComponent;
 				float near = near3.MaxComponent;

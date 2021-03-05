@@ -1,14 +1,12 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
-using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
 	public class ColorCorrectionWorker : PostProcessingWorker
 	{
-		public ColorCorrectionWorker(Texture renderBuffer, float smoothness) : base(renderBuffer) => smoothnessVector = Vector128.Create(smoothness);
+		public ColorCorrectionWorker(PostProcessingEngine engine, float smoothness) : base(engine) => smoothnessVector = Vector128.Create(smoothness);
 
 		readonly Vector128<float> smoothnessVector;
 
@@ -16,9 +14,9 @@ namespace ForceRenderer.Rendering.PostProcessing
 		static readonly Vector128<float> oneVector = Vector128.Create(1f);
 		static readonly Vector128<float> halfVector = Vector128.Create(0.5f);
 
-		protected override void Prepare()
+		public override void Dispatch()
 		{
-			AddPass(GammaCorrectPass);
+			RunPass(GammaCorrectPass);
 		}
 
 		unsafe void GammaCorrectPass(Int2 position) //https://www.desmos.com/calculator/v9a3uscr8c

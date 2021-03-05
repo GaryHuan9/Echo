@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering;
 
@@ -131,20 +132,24 @@ namespace ForceRenderer.Mathematics
 			ref readonly Node root = ref nodes[0];
 			Hit hit = new Hit(float.PositiveInfinity);
 
-			Intersect(root, ray, ref hit);
+			GetIntersection(root, ray, ref hit);
 			return hit;
 		}
 
-		unsafe void Intersect(in Node root, in Ray ray, ref Hit hit)
+		unsafe void GetIntersection(in Node root, in Ray ray, ref Hit hit)
 		{
 			Node* stack = stackalloc Node[maxDepth];
+			float* hits = stackalloc float[maxDepth];
 
-			var next = stack;
+			Node* next = stack;
+
 			*next++ = root;
+			*hits++ = root.aabb.Intersect(ray);
 
 			while (next != stack)
 			{
 				ref readonly Node node = ref *--next;
+				if (*--hits >= hit.distance) continue;
 
 				if (node.IsLeaf)
 				{
@@ -163,61 +168,32 @@ namespace ForceRenderer.Mathematics
 
 				if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
 				{
-					if (hit1 < hit.distance) *next++ = child1;
-					if (hit0 < hit.distance) *next++ = child0;
+					if (hit1 < hit.distance)
+					{
+						*next++ = child1;
+						*hits++ = hit1;
+					}
+
+					if (hit0 < hit.distance)
+					{
+						*next++ = child0;
+						*hits++ = hit0;
+					}
 				}
 				else
 				{
-					if (hit0 < hit.distance) *next++ = child0;
-					if (hit1 < hit.distance) *next++ = child1;
+					if (hit0 < hit.distance)
+					{
+						*next++ = child0;
+						*hits++ = hit0;
+					}
+
+					if (hit1 < hit.distance)
+					{
+						*next++ = child1;
+						*hits++ = hit1;
+					}
 				}
-			}
-		}
-
-		/// <summary>
-		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
-		/// Returns the intersection hit if found. Otherwise a <see cref="Hit"/> with <see cref="float.PositiveInfinity"/> distance.
-		/// </summary>
-		public Hit GetIntersectionOld(in Ray ray)
-		{
-			if (nodes == null) return new Hit(float.PositiveInfinity);
-
-			ref readonly Node root = ref nodes[0];
-			float distance = root.aabb.Intersect(ray);
-
-			Hit hit = new Hit(float.PositiveInfinity);
-			if (!float.IsFinite(distance)) return hit;
-
-			IntersectNode(root, ray, ref hit);
-			return hit;
-		}
-
-		void IntersectNode(in Node node, in Ray ray, ref Hit hit)
-		{
-			if (node.IsLeaf)
-			{
-				//Now we finally calculate the real intersection
-				float distance = pressed.Intersect(ray, node.token, out Float2 uv);
-				if (distance < hit.distance) hit = new Hit(distance, node.token, uv);
-
-				return;
-			}
-
-			ref readonly Node child0 = ref nodes[node.children];
-			ref readonly Node child1 = ref nodes[node.children + 1];
-
-			float hit0 = child0.aabb.Intersect(ray);
-			float hit1 = child1.aabb.Intersect(ray);
-
-			if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
-			{
-				if (hit0 < hit.distance) IntersectNode(child0, ray, ref hit);
-				if (hit1 < hit.distance) IntersectNode(child1, ray, ref hit);
-			}
-			else
-			{
-				if (hit1 < hit.distance) IntersectNode(child1, ray, ref hit);
-				if (hit0 < hit.distance) IntersectNode(child0, ray, ref hit);
 			}
 		}
 

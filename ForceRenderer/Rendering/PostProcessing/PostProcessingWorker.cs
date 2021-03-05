@@ -1,53 +1,40 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
+using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
 	public abstract class PostProcessingWorker
 	{
-		protected PostProcessingWorker(Texture renderBuffer) => this.renderBuffer = renderBuffer;
+		protected PostProcessingWorker(PostProcessingEngine engine)
+		{
+			this.engine = engine;
+			renderBuffer = engine.renderBuffer;
+		}
 
+		public readonly PostProcessingEngine engine;
 		protected readonly Texture renderBuffer;
 
-		readonly List<PassAction> passes = new List<PassAction>();
+		public bool Aborted => engine.Aborted;
 
-		bool aborted;
+		public abstract void Dispatch();
 
-		public void Dispatch()
+		protected void RunPass(PassAction passAction)
 		{
-			Prepare();
+			if (Aborted) return;
+			Parallel.For(0, renderBuffer.size.Product, WorkPixel);
 
-			int length = renderBuffer.size.Product;
-			foreach (PassAction passAction in passes)
+			void WorkPixel(int index, ParallelLoopState state)
 			{
-				Parallel.For(0, length, WorkPixel);
-
-				void WorkPixel(int index, ParallelLoopState state)
-				{
-					if (aborted) state.Break();
-					else passAction(renderBuffer.ToPosition(index));
-				}
-
-				if (aborted) break;
+				if (Aborted) state.Break();
+				else passAction(renderBuffer.ToPosition(index));
 			}
 		}
 
-		public void Abort()
-		{
-			aborted = true;
-		}
-
-		/// <summary>
-		/// This is where the worker should orderly add all of the passes.
-		/// The pass that is added first is executed first.
-		/// </summary>
-		protected abstract void Prepare();
-
-		protected void AddPass(PassAction passAction) => passes.Add(passAction);
-
-		protected void AddCopyPass(Texture from, Texture to) => AddPass
+		protected void RunCopyPass(Texture from, Texture to) => RunPass
 		(
 			position =>
 			{
@@ -56,6 +43,34 @@ namespace ForceRenderer.Rendering.PostProcessing
 			}
 		);
 
+		protected void RunPassHorizontal(PassActionHorizontal passAction)
+		{
+			if (Aborted) return;
+
+			Parallel.For(0, renderBuffer.size.y, WorkPixel);
+
+			void WorkPixel(int vertical, ParallelLoopState state)
+			{
+				if (Aborted) state.Break();
+				else passAction(vertical);
+			}
+		}
+
+		protected void RunPassVertical(PassActionVertical passAction)
+		{
+			if (Aborted) return;
+
+			Parallel.For(0, renderBuffer.size.x, WorkPixel);
+
+			void WorkPixel(int horizontal, ParallelLoopState state)
+			{
+				if (Aborted) state.Break();
+				else passAction(horizontal);
+			}
+		}
+
 		protected delegate void PassAction(Int2 position);
+		protected delegate void PassActionHorizontal(int vertical);
+		protected delegate void PassActionVertical(int horizontal);
 	}
 }
