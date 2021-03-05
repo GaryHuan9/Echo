@@ -14,7 +14,7 @@ AlbedoMap textures/background.png
 NormalMap textures/background_ddn.png
 
 declare Emissive light
-Emission 25.3 21.8 9.6
+Emission 42.5 15.9 0.82
 
 declare Diffuse Material__47
 Albedo 1.000000 1.000000 1.000000

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Net.Mime;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;

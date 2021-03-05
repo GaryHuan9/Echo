@@ -18,16 +18,27 @@ namespace ForceRenderer
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
 
-			var commandsController = new CommandsController(terminal);
-			var renderDisplay = new RenderMonitor(terminal);
+			commandsController = new CommandsController(terminal);
+			renderMonitor = new RenderMonitor(terminal);
 
 			terminal.AddSection(commandsController);
-			terminal.AddSection(renderDisplay);
+			terminal.AddSection(renderMonitor);
 
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
 
-			//Render
+			PerformRender();
+			Console.ReadKey();
+		}
+
+		static RenderEngine renderEngine;
+		static Terminal renderTerminal;
+
+		static CommandsController commandsController;
+		static RenderMonitor renderMonitor;
+
+		static void PerformRender()
+		{
 			Int2[] resolutions =
 			{
 				new(320, 180), new(854, 480), new(1920, 1080),
@@ -37,12 +48,12 @@ namespace ForceRenderer
 			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new Sponza(),
-											PixelSample = 64, AdaptiveSample = 2000, TileSize = 32
+											RenderBuffer = buffer, Scene = new SingleBMWScene(),
+											PixelSample = 32, AdaptiveSample = 32, TileSize = 32
 										};
 
 			renderEngine = engine;
-			renderDisplay.Engine = engine;
+			renderMonitor.Engine = engine;
 
 			PerformanceTest setupTest = new PerformanceTest();
 			using (setupTest.Start()) engine.Begin();
@@ -50,9 +61,9 @@ namespace ForceRenderer
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
 
-			PerformanceTest blurTest = new PerformanceTest();
-			using (blurTest.Start()) new BloomWorker(buffer, 12f).Dispatch();
-			commandsController.Log($"Bloom used {blurTest.ElapsedMilliseconds}ms");
+			PerformanceTest bloomTest = new PerformanceTest();
+			using (bloomTest.Start()) new BloomWorker(buffer).Dispatch();
+			commandsController.Log($"Bloom used {bloomTest.ElapsedMilliseconds}ms");
 
 			new ColorCorrectionWorker(buffer, 1f).Dispatch();
 
@@ -64,13 +75,8 @@ namespace ForceRenderer
 			long completedSample = engine.CompletedSample;
 
 			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
-
 			renderEngine = null;
-			Console.ReadKey();
 		}
-
-		static RenderEngine renderEngine;
-		static Terminal renderTerminal;
 
 		[Command]
 		static CommandResult Pause()

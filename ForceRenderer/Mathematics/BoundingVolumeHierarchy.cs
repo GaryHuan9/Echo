@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering;
 
@@ -27,9 +29,11 @@ namespace ForceRenderer.Mathematics
 			if (aabbs.Count == 0) return;
 
 			nodes = new Node[aabbs.Count * 2 - 1]; //The number of nodes can be predetermined
-			nodes[0] = ConstructNode(rootIndices, rootAABB);
+			nodes[0] = ConstructNode(rootIndices, rootAABB, -1);
 
-			Node ConstructNode(List<int> indices, AxisAlignedBoundingBox aabb, int parentAxis = -1)
+			maxDepth = GetMaxDepth(nodes[0]);
+
+			Node ConstructNode(List<int> indices, AxisAlignedBoundingBox aabb, int parentAxis)
 			{
 				if (indices.Count == 1) //If is leaf node
 				{
@@ -57,20 +61,20 @@ namespace ForceRenderer.Mathematics
 
 				float minCost = float.MaxValue;
 				int minIndex = -1;
+				float minTailCost = -1f;
 
 				for (int i = 1; i < indices.Count; i++)
 				{
 					cutTailVolume = cutTailVolumes[i];
 
-					float headArea = cutHeadVolume.Area;
-					float tailArea = cutTailVolume.Area;
-
-					float cost = headArea * i + tailArea * (indices.Count - i);
+					float tailCost = cutTailVolume.Area * (indices.Count - i);
+					float cost = cutHeadVolume.Area * i + tailCost;
 
 					if (cost < minCost)
 					{
 						minCost = cost;
 						minIndex = i;
+						minTailCost = tailCost;
 
 						minCutHeadVolume = cutHeadVolume;
 						minCutTailVolume = cutTailVolume;
@@ -86,6 +90,12 @@ namespace ForceRenderer.Mathematics
 				for (int i = 0; i < minIndex; i++) indicesHead.Add(indices[i]);
 				for (int i = minIndex; i < indices.Count; i++) indicesTail.Add(indices[i]);
 
+				if (minTailCost * 2f > minCost) //Orders the children so that the one with the higher SAH cost is first
+				{
+					CodeHelper.Swap(ref indicesHead, ref indicesTail);
+					CodeHelper.Swap(ref minCutHeadVolume, ref minCutTailVolume);
+				}
+
 				int children = nodeIndex;
 				nodeIndex += 2;
 
@@ -94,10 +104,21 @@ namespace ForceRenderer.Mathematics
 
 				return Node.CreateNode(aabb, children);
 			}
+
+			int GetMaxDepth(in Node node)
+			{
+				if (node.IsLeaf) return 1;
+
+				int child0 = GetMaxDepth(nodes[node.children]);
+				int child1 = GetMaxDepth(nodes[node.children + 1]);
+
+				return Math.Max(child0, child1) + 1;
+			}
 		}
 
 		readonly PressedScene pressed;
 		readonly Node[] nodes;
+		readonly int maxDepth;
 
 		/// <summary>
 		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
@@ -107,16 +128,71 @@ namespace ForceRenderer.Mathematics
 		{
 			if (nodes == null) return new Hit(float.PositiveInfinity);
 
-			ref Node node = ref nodes[0]; //The root node
-			float distance = node.aabb.Intersect(ray);
-
+			ref readonly Node root = ref nodes[0];
 			Hit hit = new Hit(float.PositiveInfinity);
-			if (float.IsFinite(distance)) IntersectNode(ref node, ray, ref hit);
 
+			Intersect(root, ray, ref hit);
 			return hit;
 		}
 
-		void IntersectNode(ref Node node, in Ray ray, ref Hit hit)
+		unsafe void Intersect(in Node root, in Ray ray, ref Hit hit)
+		{
+			Node* stack = stackalloc Node[maxDepth];
+
+			var next = stack;
+			*next++ = root;
+
+			while (next != stack)
+			{
+				ref readonly Node node = ref *--next;
+
+				if (node.IsLeaf)
+				{
+					//Now we finally calculate the real intersection
+					float distance = pressed.Intersect(ray, node.token, out Float2 uv);
+					if (distance < hit.distance) hit = new Hit(distance, node.token, uv);
+
+					continue;
+				}
+
+				ref readonly Node child0 = ref nodes[node.children];
+				ref readonly Node child1 = ref nodes[node.children + 1];
+
+				float hit0 = child0.aabb.Intersect(ray);
+				float hit1 = child1.aabb.Intersect(ray);
+
+				if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
+				{
+					if (hit1 < hit.distance) *next++ = child1;
+					if (hit0 < hit.distance) *next++ = child0;
+				}
+				else
+				{
+					if (hit0 < hit.distance) *next++ = child0;
+					if (hit1 < hit.distance) *next++ = child1;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
+		/// Returns the intersection hit if found. Otherwise a <see cref="Hit"/> with <see cref="float.PositiveInfinity"/> distance.
+		/// </summary>
+		public Hit GetIntersectionOld(in Ray ray)
+		{
+			if (nodes == null) return new Hit(float.PositiveInfinity);
+
+			ref readonly Node root = ref nodes[0];
+			float distance = root.aabb.Intersect(ray);
+
+			Hit hit = new Hit(float.PositiveInfinity);
+			if (!float.IsFinite(distance)) return hit;
+
+			IntersectNode(root, ray, ref hit);
+			return hit;
+		}
+
+		void IntersectNode(in Node node, in Ray ray, ref Hit hit)
 		{
 			if (node.IsLeaf)
 			{
@@ -127,21 +203,21 @@ namespace ForceRenderer.Mathematics
 				return;
 			}
 
-			ref Node child0 = ref nodes[node.children];
-			ref Node child1 = ref nodes[node.children + 1];
+			ref readonly Node child0 = ref nodes[node.children];
+			ref readonly Node child1 = ref nodes[node.children + 1];
 
 			float hit0 = child0.aabb.Intersect(ray);
 			float hit1 = child1.aabb.Intersect(ray);
 
 			if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
 			{
-				if (hit0 < hit.distance) IntersectNode(ref child0, ray, ref hit);
-				if (hit1 < hit.distance) IntersectNode(ref child1, ray, ref hit);
+				if (hit0 < hit.distance) IntersectNode(child0, ray, ref hit);
+				if (hit1 < hit.distance) IntersectNode(child1, ray, ref hit);
 			}
 			else
 			{
-				if (hit1 < hit.distance) IntersectNode(ref child1, ray, ref hit);
-				if (hit0 < hit.distance) IntersectNode(ref child0, ray, ref hit);
+				if (hit1 < hit.distance) IntersectNode(child1, ray, ref hit);
+				if (hit0 < hit.distance) IntersectNode(child0, ray, ref hit);
 			}
 		}
 

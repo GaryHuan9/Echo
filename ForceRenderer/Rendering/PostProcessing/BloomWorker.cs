@@ -3,24 +3,30 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
-using CodeHelpers.Threads;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
 	public class BloomWorker : PostProcessingWorker
 	{
-		public BloomWorker(Texture renderBuffer, float deviation) : base(renderBuffer) => this.deviation = deviation;
+		public BloomWorker(Texture renderBuffer, float strength = 1f, float threshold = 1f) : base(renderBuffer)
+		{
+			deviation = strength * renderBuffer.size.x / 60f;
+			this.threshold = threshold;
+		}
 
 		readonly float deviation;
+		readonly float threshold;
 
 		Int2 radius;
 
 		Texture kernel;
-		Texture threshold;
+		Texture bloom;
 
-		static readonly Float3 luminanceOption = new Float3(0.2126f, 0.7152f, 0.0722f);
-		static readonly Vector128<float> oneVector = Vector128.Create(1f);
+		// Texture source;
+		// Texture target;
+
+		static readonly Vector128<float> luminanceOption = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 		static readonly Vector128<float> zeroVector = Vector128.Create(0f, 0f, 0f, 1f);
 
 		protected override void Prepare()
@@ -37,24 +43,19 @@ namespace ForceRenderer.Rendering.PostProcessing
 				target = Vector128.Create(MathF.Exp(position.SquaredMagnitude * alpha) * beta);
 			}
 
-			threshold = new Texture2D(renderBuffer.size);
+			bloom = new Texture2D(renderBuffer.size);
 
-			AddPass(ThresholdPass);
+			AddPass(LuminancePass);
 			AddPass(BlurPass);
 		}
 
-		void ThresholdPass(Int2 position)
+		unsafe void LuminancePass(Int2 position)
 		{
 			ref Vector128<float> source = ref renderBuffer.GetPixel(position);
-			ref Vector128<float> target = ref threshold.GetPixel(position);
+			ref Vector128<float> target = ref bloom.GetPixel(position);
 
-			target = Sse.Max(Sse.Subtract(source, oneVector), zeroVector);
-
-			// Float3 color = renderBuffer[position].XYZ;
-			// float brightness = color.Dot(luminanceOption);
-			//
-			// ref Vector128<float> target = ref threshold.GetPixel(position);
-			// target = brightness > 1f ? oneVector : zeroVector;
+			Vector128<float> single = Sse41.DotProduct(source, luminanceOption, 0b1110_0001);
+			target = *(float*)&single < threshold ? zeroVector : source;
 		}
 
 		void BlurPass(Int2 position)
@@ -63,11 +64,9 @@ namespace ForceRenderer.Rendering.PostProcessing
 
 			foreach (Int2 local in new EnumerableSpace2D(-radius, radius))
 			{
-				Vector128<float> color = threshold.GetPixel(threshold.Restrict(position + local));
+				Vector128<float> color = bloom.GetPixel(bloom.Restrict(position + local));
 				sum = Fma.MultiplyAdd(color, kernel.GetPixel(local + radius), sum);
 			}
-
-			sum = Sse.Subtract(sum, threshold.GetPixel(position));
 		}
 	}
 }

@@ -7,7 +7,6 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
-using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
@@ -46,8 +45,8 @@ namespace ForceRenderer.Rendering
 					{
 						int triangleCount = triangleList.Count;
 
-						triangleList.AddRange(sceneObject.ExtractTriangles(ConvertMaterial));
-						sphereList.AddRange(sceneObject.ExtractSpheres(ConvertMaterial));
+						triangleList.AddRange(sceneObject.ExtractTriangles(ConvertMaterial).Where(triangle => triangle.materialToken >= 0));
+						sphereList.AddRange(sceneObject.ExtractSpheres(ConvertMaterial).Where(sphere => sphere.materialToken >= 0));
 
 						for (int i = triangleCount; i < triangleList.Count; i++) totalArea += triangleList[i].Area;
 
@@ -55,6 +54,8 @@ namespace ForceRenderer.Rendering
 
 						int ConvertMaterial(Material material) //Converts a material into its material token
 						{
+							if (material is Invisible) return -1; //Negative token used to omit invisible materials
+
 							if (!materialObjects.TryGetValue(material, out int materialToken))
 							{
 								materialToken = materialObjects.Count;
