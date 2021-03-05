@@ -1,6 +1,4 @@
-﻿using System;
-using CodeHelpers;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;
 

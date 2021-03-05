@@ -99,7 +99,11 @@ namespace ForceRenderer.IO
 		/// <summary>
 		/// Returns the material based on its name in this library.
 		/// </summary>
-		public Material this[string name] => materials[name];
+		public Material this[string name]
+		{
+			get => materials[name];
+			set => materials[name] = value;
+		}
 
 		static ReadOnlySpan<char> Eat(ref ReadOnlySpan<char> line)
 		{

@@ -2,8 +2,11 @@
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
 using ForceRenderer;
+using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Rendering;
+using ForceRenderer.Rendering.Materials;
 
 namespace IntrinsicsSIMD
 {
@@ -14,10 +17,11 @@ namespace IntrinsicsSIMD
 			Scene scene = new Scene();
 			Random random = new Random(42);
 
-			// scene.children.Add(new MeshObject(new Mesh(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer\ForceRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj")));
+			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer\ForceRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
+			scene.children.Add(new MeshObject(mesh, new Glossy()));
 
 			bvh = new PressedScene(scene).bvh;
-			rays = new Ray[65536];
+			rays = new Ray[1000];
 
 			const float Radius = 6f;
 			const float Height = 12f;
@@ -34,13 +38,27 @@ namespace IntrinsicsSIMD
 		readonly BoundingVolumeHierarchy bvh;
 		readonly Ray[] rays;
 
-		//V0: 69us per 128 intersections = 540ns per intersection
-		//V1:
+		//V0: 903.5us per 1000 intersections
+		//V1: 821.6us per 1000 intersections
 
 		[Benchmark]
-		public void GetIntersection()
+		public Hit GetIntersection()
 		{
-			for (int i = 0; i < rays.Length; i++) bvh.GetIntersection(rays[i]);
+			Hit hit = default;
+
+			for (int i = 0; i < rays.Length; i++) hit = bvh.GetIntersection(rays[i]);
+
+			return hit;
+		}
+
+		// [Benchmark]
+		public Hit GetIntersectionOld()
+		{
+			Hit hit = default;
+
+			for (int i = 0; i < rays.Length; i++) hit = bvh.GetIntersectionOld(rays[i]);
+
+			return hit;
 		}
 	}
 

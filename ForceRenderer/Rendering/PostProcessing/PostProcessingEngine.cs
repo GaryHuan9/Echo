@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
