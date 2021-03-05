@@ -2,7 +2,6 @@
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.Textures;
