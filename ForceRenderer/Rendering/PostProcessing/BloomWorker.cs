@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using ForceRenderer.Textures;
@@ -9,7 +10,7 @@ namespace ForceRenderer.Rendering.PostProcessing
 {
 	public class BloomWorker : PostProcessingWorker
 	{
-		public BloomWorker(Texture renderBuffer, float strength = 1f, float threshold = 1f) : base(renderBuffer)
+		public BloomWorker(PostProcessingEngine engine, float strength = 1f, float threshold = 1f) : base(engine)
 		{
 			deviation = strength * renderBuffer.size.x / 60f;
 			this.threshold = threshold;
@@ -29,7 +30,7 @@ namespace ForceRenderer.Rendering.PostProcessing
 		static readonly Vector128<float> luminanceOption = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 		static readonly Vector128<float> zeroVector = Vector128.Create(0f, 0f, 0f, 1f);
 
-		protected override void Prepare()
+		public override void Dispatch()
 		{
 			radius = Int2.one * (deviation * 3f).Ceil();
 			kernel = new Texture2D(radius * 2 + Int2.one);
@@ -45,8 +46,8 @@ namespace ForceRenderer.Rendering.PostProcessing
 
 			bloom = new Texture2D(renderBuffer.size);
 
-			AddPass(LuminancePass);
-			AddPass(BlurPass);
+			RunPass(LuminancePass);
+			RunPass(BlurPass);
 		}
 
 		unsafe void LuminancePass(Int2 position)
@@ -67,6 +68,26 @@ namespace ForceRenderer.Rendering.PostProcessing
 				Vector128<float> color = bloom.GetPixel(bloom.Restrict(position + local));
 				sum = Fma.MultiplyAdd(color, kernel.GetPixel(local + radius), sum);
 			}
+		}
+
+		/// <summary>
+		/// Fills <paramref name="sizes"/> with square convolution sizes to approximate Gaussian Blur.
+		/// Code based on: http://blog.ivank.net/fastest-gaussian-blur.html
+		/// </summary>
+		void FillGaussBoxSizes(Span<float> sizes)
+		{
+			float alpha = deviation * deviation;
+			float count = sizes.Length;
+
+			int beta = MathF.Sqrt(12f * alpha / count + 1f).Floor();
+			if (beta % 2 == 0) beta--;
+
+			float gamma = 12f * alpha - count * beta * beta - 4f * count * beta - 3f * count;
+
+			int delta = (gamma / (-4f * beta - 4f)).Round();
+			for (int i = 0; i < count; i++) sizes[i] = i < delta ? beta : beta + 2;
+
+			DebugHelper.Log(MathF.Sqrt((delta * beta * beta + (count - delta) * MathF.Pow(beta + 2, 2f) - count) / 12f));
 		}
 	}
 }

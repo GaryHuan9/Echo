@@ -15,6 +15,26 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
+			Texture2D texture = Texture2D.Load("render.fpi");
+			using var engine = new PostProcessingEngine(texture);
+
+			engine.AddWorker(new BloomWorker(engine));
+
+			PerformanceTest bloomTest = new PerformanceTest();
+
+			using (bloomTest.Start())
+			{
+				engine.Dispatch();
+				engine.WaitForProcess();
+			}
+
+			DebugHelper.Log($"Bloom used {bloomTest.ElapsedMilliseconds}ms");
+
+			//Bloom used 15408.4506ms
+			texture.Save("render.png");
+
+			return;
+
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
 
@@ -41,15 +61,15 @@ namespace ForceRenderer
 		{
 			Int2[] resolutions =
 			{
-				new(320, 180), new(854, 480), new(1920, 1080),
+				new(480, 270), new(960, 540), new(1920, 1080),
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new SingleBMWScene(),
-											PixelSample = 32, AdaptiveSample = 32, TileSize = 32
+											RenderBuffer = buffer, Scene = new RandomSpheresScene(40),
+											PixelSample = 48, AdaptiveSample = 400, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -61,13 +81,16 @@ namespace ForceRenderer
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender();
 
-			PerformanceTest bloomTest = new PerformanceTest();
-			using (bloomTest.Start()) new BloomWorker(buffer).Dispatch();
-			commandsController.Log($"Bloom used {bloomTest.ElapsedMilliseconds}ms");
+			buffer.Save("render.fpi");
 
-			new ColorCorrectionWorker(buffer, 1f).Dispatch();
+			using var postProcess = new PostProcessingEngine(buffer);
 
-			//Saves render as file
+			postProcess.AddWorker(new BloomWorker(postProcess));
+			postProcess.AddWorker(new ColorCorrectionWorker(postProcess, 1f));
+
+			postProcess.Dispatch();
+			postProcess.WaitForProcess();
+
 			buffer.Save("render.png");
 
 			//Logs render stats
