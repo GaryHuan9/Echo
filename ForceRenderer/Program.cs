@@ -15,26 +15,6 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			Texture2D texture = Texture2D.Load("render.fpi");
-			using var engine = new PostProcessingEngine(texture);
-
-			engine.AddWorker(new BloomWorker(engine));
-
-			PerformanceTest bloomTest = new PerformanceTest();
-
-			using (bloomTest.Start())
-			{
-				engine.Dispatch();
-				engine.WaitForProcess();
-			}
-
-			DebugHelper.Log($"Bloom used {bloomTest.ElapsedMilliseconds}ms");
-
-			//Bloom used 15408.4506ms
-			texture.Save("render.png");
-
-			return;
-
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
 
@@ -68,8 +48,8 @@ namespace ForceRenderer
 			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new RandomSpheresScene(40),
-											PixelSample = 48, AdaptiveSample = 400, TileSize = 32
+											RenderBuffer = buffer, Scene = new Sponza(),
+											PixelSample = 64, AdaptiveSample = 3200, TileSize = 32
 										};
 
 			renderEngine = engine;
