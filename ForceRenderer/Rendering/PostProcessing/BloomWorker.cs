@@ -120,7 +120,7 @@ namespace ForceRenderer.Rendering.PostProcessing
 			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
 
 			Vector128<float> result = Sse.Add(target, source);
-			*((float*)&result + 3) = 1f; //Reset alpha
+			*((float*)&result + 3) = 1f; //Assign alpha
 
 			target = result;
 		}
