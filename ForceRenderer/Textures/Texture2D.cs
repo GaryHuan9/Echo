@@ -19,7 +19,7 @@ namespace ForceRenderer.Textures
 	/// </summary>
 	public class Texture2D : Texture, ILoadableAsset
 	{
-		public Texture2D(Int2 size, IWrapper wrapper = null, IFilter filter = null) : base(size, wrapper, filter) => pixels = new Vector128<float>[size.Product];
+		public Texture2D(Int2 size) : base(size) => pixels = new Vector128<float>[size.Product];
 
 		readonly Vector128<float>[] pixels;
 
@@ -86,7 +86,7 @@ namespace ForceRenderer.Textures
 			bitmap.Save(path, compatibleFormats[extensionIndex]);
 		}
 
-		public static Texture2D Load(string path, IWrapper wrapper = null, IFilter filter = null)
+		public static Texture2D Load(string path)
 		{
 			path = ((Texture2D)white).GetAbsolutePath(path);
 
@@ -100,7 +100,7 @@ namespace ForceRenderer.Textures
 			PixelFormat format = source.PixelFormat;
 			Int2 size = new Int2(source.Width, source.Height);
 
-			Texture2D texture = new Texture2D(size, wrapper, filter);
+			Texture2D texture = new Texture2D(size);
 
 			Rectangle rectangle = new Rectangle(0, 0, texture.size.x, texture.size.y);
 			BitmapData data = source.LockBits(rectangle, ImageLockMode.ReadOnly, format);
