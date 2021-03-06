@@ -45,11 +45,11 @@ namespace ForceRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[1]);
+			Texture2D buffer = new Texture2D(resolutions[2]);
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new Sponza(),
-											PixelSample = 64, AdaptiveSample = 3200, TileSize = 32
+											PixelSample = 12, AdaptiveSample = 0, TileSize = 32
 										};
 
 			renderEngine = engine;
@@ -122,6 +122,18 @@ namespace ForceRenderer
 		{
 			renderTerminal.Rewrite = true;
 			return new CommandResult("Terminal rewrote.", true);
+		}
+
+		[Command]
+		static CommandResult SaveRenderBuffer()
+		{
+			Texture buffer = renderEngine.RenderBuffer;
+
+			if (buffer == null) return new CommandResult("No buffer assigned", false);
+			if (buffer is not Texture2D texture) return new CommandResult("Unsupported buffer type", false);
+
+			texture.Save("render.png");
+			return new CommandResult("Render buffer saved.", true);
 		}
 	}
 }
