@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;
@@ -15,6 +17,9 @@ namespace ForceRenderer.Rendering.Materials
 		public Texture NormalMap { get; set; } = Texture.normal;
 
 		Float4 albedoColor;
+
+		static readonly Vector128<float> normalMultiplier = Vector128.Create(2f);
+		static readonly Vector128<float> normalAdder = Vector128.Create(-1f, -1f, -2f, 0f);
 
 		/// <summary>
 		/// This method is invoked before render begins during the preparation phase.
@@ -43,11 +48,8 @@ namespace ForceRenderer.Rendering.Materials
 		{
 			if (NormalMap == Texture.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
 
-			Float3 sample = NormalMap[hit.texcoord].XYZ;
-
-			float x = sample.x * 2f - 1f;
-			float y = sample.y * 2f - 1f;
-			float z = sample.z * 2f - 2f;
+			Vector128<float> sample = NormalMap.GetPixel(hit.texcoord);
+			Vector128<float> local = Fma.MultiplyAdd(sample, normalMultiplier, normalAdder);
 
 			//Transform local direction to world space based on normal
 			Float3 normal = hit.normal;
@@ -56,12 +58,14 @@ namespace ForceRenderer.Rendering.Materials
 			Float3 tangent = Float3.Cross(normal, helper).Normalized;
 			Float3 binormal = Float3.Cross(normal, tangent).Normalized;
 
+			float* p = (float*)&local;
+
 			//Transforms direction using 3x3 matrix multiplication
 			normal -= new Float3
 					  (
-						  x * tangent.x + y * binormal.x + z * normal.x,
-						  x * tangent.y + y * binormal.y + z * normal.y,
-						  x * tangent.z + y * binormal.z + z * normal.z
+						  p[0] * tangent.x + p[1] * binormal.x + p[2] * normal.x,
+						  p[0] * tangent.y + p[1] * binormal.y + p[2] * normal.y,
+						  p[0] * tangent.z + p[1] * binormal.z + p[2] * normal.z
 					  ) * NormalIntensity;
 
 			fixed (Float3* pointer = &hit.normal) *pointer = normal;

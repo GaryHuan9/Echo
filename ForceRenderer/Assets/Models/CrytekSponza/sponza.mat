@@ -14,7 +14,12 @@ AlbedoMap textures/background.png
 NormalMap textures/background_ddn.png
 
 declare Emissive light
-Emission 42.5 15.9 2.83
+Emission 84.5 52.1 26.2
+
+declare Glass glass
+Albedo 0.960 0.930 0.920
+IndexOfRefraction 1.520
+Roughness 0.14
 
 declare Diffuse Material__47
 Albedo 1.000000 1.000000 1.000000

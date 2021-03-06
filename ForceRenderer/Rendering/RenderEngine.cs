@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
@@ -134,9 +135,11 @@ namespace ForceRenderer.Rendering
 			// tilePositions.Shuffle(); //Different methods of selection
 
 			tilePositions = (from position in new EnumerableSpiral2D(TotalTileSize.MaxComponent / 2)
-							 let tile = position + TotalTileSize / 2
+							 let tile = position + TotalTileSize / 2 - Int2.one
 							 where tile.x >= 0 && tile.y >= 0 && tile.x < TotalTileSize.x && tile.y < TotalTileSize.y
 							 select tile * profile.tileSize).ToArray();
+
+			for (int i = 0; i < tilePositions.Length / 2; i += 2) tilePositions.Swap(i, tilePositions.Length - i - 1);
 
 			tileStatuses = tilePositions.ToDictionary
 			(
@@ -147,7 +150,7 @@ namespace ForceRenderer.Rendering
 
 		void InitializeWorkers()
 		{
-			PixelWorker = new PathTraceWorker(profile);
+			PixelWorker = new AlbedoPixelWorker(profile);
 			workers = new TileWorker[profile.workerSize];
 
 			for (int i = 0; i < profile.workerSize; i++)
