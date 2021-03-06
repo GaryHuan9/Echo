@@ -16,7 +16,7 @@ namespace ForceRenderer.Textures
 	/// </summary>
 	public abstract class Texture
 	{
-		protected Texture(Int2 size, IWrapper wrapper = null, IFilter filter = null)
+		protected Texture(Int2 size)
 		{
 			this.size = size;
 			oneLess = size - Int2.one;
@@ -24,15 +24,15 @@ namespace ForceRenderer.Textures
 			aspect = (float)size.x / size.y;
 			length = size.Product;
 
-			_wrapper = wrapper ?? Textures.Wrapper.repeat;
-			_filter = filter ?? Textures.Filter.bilinear;
+			_wrapper = Textures.Wrapper.repeat;
+			_filter = Textures.Filter.bilinear;
 		}
 
 		static Texture()
 		{
-			white = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = Float4.one};
-			black = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = Float4.ana};
-			normal = new Texture2D(Int2.one, Textures.Wrapper.clamp, Textures.Filter.point) {[Int2.one] = new(0.5f, 0.5f, 1f, 1f)};
+			white = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = Float4.one};
+			black = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = Float4.ana};
+			normal = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = new(0.5f, 0.5f, 1f, 1f)};
 		}
 
 		public readonly Int2 size;
@@ -97,7 +97,11 @@ namespace ForceRenderer.Textures
 		/// <summary>
 		/// NOTE: this method returns a reference which can be used to both read and assign the actual value.
 		/// </summary>
-		public ref Vector128<float> GetPixel(Int2 position) => ref this[ToIndex(position)];
+		public ref Vector128<float> GetPixel(Int2 position)
+		{
+			position = Wrapper.Convert(this, position);
+			return ref this[ToIndex(position)];
+		}
 
 		public Vector128<float> GetPixel(Float2 uv) => Filter.Convert(this, Wrapper.Convert(uv));
 
@@ -130,11 +134,13 @@ namespace ForceRenderer.Textures
 		class Clamp : IWrapper
 		{
 			public Float2 Convert(Float2 uv) => uv.Clamp(0f, 1f);
+			public Int2 Convert(Texture texture, Int2 position) => position.Clamp(Int2.zero, texture.oneLess);
 		}
 
 		class Repeat : IWrapper
 		{
 			public Float2 Convert(Float2 uv) => uv.Repeat(1f);
+			public Int2 Convert(Texture texture, Int2 position) => position.Repeat(texture.size);
 		}
 	}
 
@@ -157,10 +163,9 @@ namespace ForceRenderer.Textures
 			public Vector128<float> Convert(Texture texture, Float2 uv)
 			{
 				uv *= texture.size;
-				Int2 rounded = uv.Rounded;
 
-				Int2 upperRight = rounded.Min(texture.oneLess);
-				Int2 bottomLeft = rounded.Max(Int2.one) - Int2.one;
+				Int2 upperRight = uv.Rounded;
+				Int2 bottomLeft = upperRight - Int2.one;
 
 				//Prefetch color data (273.6 ns => 194.6 ns)
 				ref readonly Vector128<float> y0x0 = ref texture.GetPixel(bottomLeft);
@@ -198,9 +203,14 @@ namespace ForceRenderer.Textures
 	public interface IWrapper
 	{
 		/// <summary>
-		/// Converts a uv into a texture coordinate that is between the bounds zero to one.
+		/// Converts a uv into a texture coordinate that is between the bounds zero and one.
 		/// </summary>
 		Float2 Convert(Float2 uv);
+
+		/// <summary>
+		/// Converts a position into a texture position that is between the bounds zero and oneLess.
+		/// </summary>
+		Int2 Convert(Texture texture, Int2 position);
 	}
 
 	/// <summary>
