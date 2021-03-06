@@ -150,7 +150,7 @@ namespace ForceRenderer.Rendering
 
 		void InitializeWorkers()
 		{
-			PixelWorker = new AlbedoPixelWorker(profile);
+			PixelWorker = new PathTraceWorker(profile);
 			workers = new TileWorker[profile.workerSize];
 
 			for (int i = 0; i < profile.workerSize; i++)
