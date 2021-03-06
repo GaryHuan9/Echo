@@ -133,7 +133,7 @@ namespace ForceRenderer
 			var mesh = new Mesh("Assets/Models/CrytekSponza/sponza.obj");
 			var materials = new MaterialLibrary("Assets/Models/CrytekSponza/sponza.mat");
 
-			materials["light"] = new Invisible();
+			// materials["light"] = new Invisible();
 
 			children.Add(new MeshObject(mesh, materials) {Rotation = Float3.up * 90f});
 			Cubemap = new SolidCubemap(new Float3(10.3f, 8.9f, 6.3f));
