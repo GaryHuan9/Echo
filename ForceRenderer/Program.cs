@@ -45,11 +45,11 @@ namespace ForceRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[2]);
+			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new Sponza(),
-											PixelSample = 12, AdaptiveSample = 0, TileSize = 32
+											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
 			renderEngine = engine;
