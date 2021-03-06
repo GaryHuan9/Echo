@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerables;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing
@@ -19,75 +17,112 @@ namespace ForceRenderer.Rendering.PostProcessing
 		readonly float deviation;
 		readonly float threshold;
 
-		Int2 radius;
-
-		Texture kernel;
-		Texture bloom;
-
-		// Texture source;
-		// Texture target;
+		Texture sourceBuffer;
+		Texture targetBuffer;
 
 		static readonly Vector128<float> luminanceOption = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 		static readonly Vector128<float> zeroVector = Vector128.Create(0f, 0f, 0f, 1f);
 
 		public override void Dispatch()
 		{
-			radius = Int2.one * (deviation * 3f).Ceil();
-			kernel = new Texture2D(radius * 2 + Int2.one);
+			//Allocate blur buffers; clamp is needed for outside pixels
+			sourceBuffer = new Texture2D(renderBuffer.size) {Wrapper = Wrapper.clamp};
+			targetBuffer = new Texture2D(renderBuffer.size) {Wrapper = Wrapper.clamp};
 
-			float alpha = -0.5f / (deviation * deviation);
-			float beta = 1f / (Scalars.TAU * deviation * deviation);
+			//Create luminance threshold buffer
+			RunPass(LuminancePass);
 
-			foreach (Int2 position in new EnumerableSpace2D(-radius, radius))
+			//Calculate Gaussian approximation convolution square size
+			//Code based on: http://blog.ivank.net/fastest-gaussian-blur.html
+			float alpha = deviation * deviation;
+			const float Pass = 6;
+
+			int beta = MathF.Sqrt(12f * alpha / Pass + 1f).Floor();
+			if (beta % 2 == 0) beta--;
+
+			float gamma = Pass * beta * beta - 4f * Pass * beta - 3f * Pass;
+			int delta = ((12f * alpha - gamma) / (-4f * beta - 4f)).Round();
+
+			//Run Gaussian blur passes
+			for (int i = 0; i < Pass; i++)
 			{
-				ref Vector128<float> target = ref kernel.GetPixel(position + radius);
-				target = Vector128.Create(MathF.Exp(position.SquaredMagnitude * alpha) * beta);
+				int size = i < delta ? beta : beta + 2;
+				int radius = (size - 1) / 2;
+
+				RunPassHorizontal(vertical => HorizontalBlurPass(vertical, radius));
+				RunPassVertical(horizontal => VerticalBlurPass(horizontal, radius));
 			}
 
-			bloom = new Texture2D(renderBuffer.size);
-
-			RunPass(LuminancePass);
-			RunPass(BlurPass);
+			//Final pass to combine blurred image with render buffer
+			RunPass(CombinePass);
 		}
 
 		unsafe void LuminancePass(Int2 position)
 		{
 			ref Vector128<float> source = ref renderBuffer.GetPixel(position);
-			ref Vector128<float> target = ref bloom.GetPixel(position);
+			ref Vector128<float> target = ref sourceBuffer.GetPixel(position);
 
 			Vector128<float> single = Sse41.DotProduct(source, luminanceOption, 0b1110_0001);
 			target = *(float*)&single < threshold ? zeroVector : source;
 		}
 
-		void BlurPass(Int2 position)
+		void HorizontalBlurPass(int vertical, int radius)
 		{
-			ref Vector128<float> sum = ref renderBuffer.GetPixel(position);
+			Vector128<float> accumulator = Vector128<float>.Zero;
+			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
 
-			foreach (Int2 local in new EnumerableSpace2D(-radius, radius))
+			for (int x = -radius; x < radius; x++)
 			{
-				Vector128<float> color = bloom.GetPixel(bloom.Restrict(position + local));
-				sum = Fma.MultiplyAdd(color, kernel.GetPixel(local + radius), sum);
+				ref readonly Vector128<float> source = ref sourceBuffer.GetPixel(new Int2(x, vertical));
+				accumulator = Sse.Add(accumulator, source);
+			}
+
+			for (int x = 0; x < renderBuffer.size.x; x++)
+			{
+				ref readonly Vector128<float> sourceHead = ref sourceBuffer.GetPixel(new Int2(x + radius, vertical));
+				ref readonly Vector128<float> sourceTail = ref sourceBuffer.GetPixel(new Int2(x - radius, vertical));
+
+				ref var target = ref targetBuffer.GetPixel(new Int2(x, vertical));
+
+				accumulator = Sse.Add(accumulator, sourceHead);
+				target = Sse.Multiply(accumulator, divisor);
+				accumulator = Sse.Subtract(accumulator, sourceTail);
 			}
 		}
 
-		/// <summary>
-		/// Fills <paramref name="sizes"/> with square convolution sizes to approximate Gaussian Blur.
-		/// Code based on: http://blog.ivank.net/fastest-gaussian-blur.html
-		/// </summary>
-		void FillGaussBoxSizes(Span<float> sizes)
+		void VerticalBlurPass(int horizontal, int radius)
 		{
-			float alpha = deviation * deviation;
-			float count = sizes.Length;
+			Vector128<float> accumulator = Vector128<float>.Zero;
+			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
 
-			int beta = MathF.Sqrt(12f * alpha / count + 1f).Floor();
-			if (beta % 2 == 0) beta--;
+			for (int y = -radius; y < radius; y++)
+			{
+				ref readonly Vector128<float> source = ref targetBuffer.GetPixel(new Int2(horizontal, y));
+				accumulator = Sse.Add(accumulator, source);
+			}
 
-			float gamma = 12f * alpha - count * beta * beta - 4f * count * beta - 3f * count;
+			for (int y = 0; y < renderBuffer.size.y; y++)
+			{
+				ref readonly Vector128<float> sourceHead = ref targetBuffer.GetPixel(new Int2(horizontal, y + radius));
+				ref readonly Vector128<float> sourceTail = ref targetBuffer.GetPixel(new Int2(horizontal, y - radius));
 
-			int delta = (gamma / (-4f * beta - 4f)).Round();
-			for (int i = 0; i < count; i++) sizes[i] = i < delta ? beta : beta + 2;
+				ref var target = ref sourceBuffer.GetPixel(new Int2(horizontal, y));
 
-			DebugHelper.Log(MathF.Sqrt((delta * beta * beta + (count - delta) * MathF.Pow(beta + 2, 2f) - count) / 12f));
+				accumulator = Sse.Add(accumulator, sourceHead);
+				target = Sse.Multiply(accumulator, divisor);
+				accumulator = Sse.Subtract(accumulator, sourceTail);
+			}
+		}
+
+		unsafe void CombinePass(Int2 position)
+		{
+			ref Vector128<float> source = ref sourceBuffer.GetPixel(position);
+			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
+
+			Vector128<float> result = Sse.Add(target, source);
+			*((float*)&result + 3) = 1f; //Reset alpha
+
+			target = result;
 		}
 	}
 }
