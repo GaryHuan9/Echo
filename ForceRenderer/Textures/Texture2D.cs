@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Collections;
@@ -52,9 +53,7 @@ namespace ForceRenderer.Textures
 
 			if (extension == FloatingPointImageExtension)
 			{
-				using DataWriter writer = new DataWriter(File.OpenWrite(path));
-
-				Write(writer);
+				SaveFloatingPointImage(path);
 				return;
 			}
 
@@ -90,11 +89,7 @@ namespace ForceRenderer.Textures
 		{
 			path = ((Texture2D)white).GetAbsolutePath(path);
 
-			if (Path.GetExtension(path) == FloatingPointImageExtension)
-			{
-				using DataReader reader = new DataReader(File.OpenRead(path));
-				return Read(reader);
-			}
+			if (Path.GetExtension(path) == FloatingPointImageExtension) return ReadFloatingPointImage(path);
 
 			using Bitmap source = new Bitmap(path, true);
 			PixelFormat format = source.PixelFormat;
@@ -138,6 +133,22 @@ namespace ForceRenderer.Textures
 
 			source.UnlockBits(data);
 			return texture;
+		}
+
+		void SaveFloatingPointImage(string path)
+		{
+			using DataWriter writer = new DataWriter(new GZipStream(File.OpenWrite(path), CompressionLevel.Optimal));
+
+			writer.Write(0); //Writes version number
+			Write(writer);
+		}
+
+		static Texture2D ReadFloatingPointImage(string path)
+		{
+			using DataReader reader = new DataReader(new GZipStream(File.OpenRead(path), CompressionMode.Decompress));
+
+			reader.ReadInt32(); //Reads version number
+			return Read(reader);
 		}
 
 		public void Write(DataWriter writer)

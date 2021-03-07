@@ -30,7 +30,7 @@ namespace ForceRenderer.Rendering
 					 };
 
 			spiralOffsets = new Float2[pixelSample];
-			randomOffsets = new Float2[adaptiveSample];
+			randomOffsets = new Float2[adaptiveSample * 3]; //Prepare more offsets than sample because adaptive sample might go beyond the setting
 
 			//Create golden ratio square spiral offsets
 			for (int i = 0; i < spiralOffsets.Length; i++)
@@ -49,11 +49,11 @@ namespace ForceRenderer.Rendering
 			for (int i = 0; i < randomOffsets.Length; i++) randomOffsets[i] = new Float2((float)random.NextDouble(), (float)random.NextDouble());
 		}
 
-		public readonly int id;
-		public readonly int size;
+		readonly int id;
+		readonly int size;
 
-		public readonly int pixelSample;
-		public readonly int adaptiveSample;
+		readonly int pixelSample;
+		readonly int adaptiveSample;
 
 		int _renderOffsetX;
 		int _renderOffsetY;
@@ -160,7 +160,7 @@ namespace ForceRenderer.Rendering
 					if (aborted) state.Break();
 
 					//Sample color
-					Float2 uv = (position + uvOffsets[i]) / RenderBuffer.size - Float2.half;
+					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / RenderBuffer.size - Float2.half;
 					Float3 color = PixelWorker.Render(new Float2(uv.x, uv.y / RenderBuffer.aspect));
 
 					//Write to pixel
@@ -171,7 +171,7 @@ namespace ForceRenderer.Rendering
 				}
 
 				//Change to adaptive sampling
-				sampleCount = (int)(Math.Min(1d, pixel.Deviation) * adaptiveSample);
+				sampleCount = (int)(pixel.Deviation * adaptiveSample);
 				uvOffsets = randomOffsets;
 			}
 
@@ -222,8 +222,8 @@ namespace ForceRenderer.Rendering
 			{
 				get
 				{
-					double deviation = Math.Sqrt(squared.Max / accumulation);
-					double max = Math.Max(average.Max, MinDeviationThreshold);
+					double deviation = Math.Sqrt(squared.Average / accumulation);
+					double max = Math.Max(average.Average, MinDeviationThreshold);
 
 					return deviation / max;
 				}
@@ -263,6 +263,7 @@ namespace ForceRenderer.Rendering
 			readonly double z;
 
 			public double Max => Math.Max(x, Math.Max(y, z));
+			public double Average => (x + y + z) / 3f;
 
 			public static Double3 operator +(Double3 first, Double3 second) => new Double3(first.x + second.x, first.y + second.y, first.z + second.z);
 			public static Double3 operator -(Double3 first, Double3 second) => new Double3(first.x - second.x, first.y - second.y, first.z - second.z);

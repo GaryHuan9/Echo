@@ -15,6 +15,20 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
+			// Texture2D noisy = Texture2D.Load("render_sponza_noisy.fpi");
+			// Texture2D albedo = Texture2D.Load("render_sponza_albedo.fpi");
+			//
+			// using var postProcess = new PostProcessingEngine(noisy);
+			//
+			// postProcess.AddWorker(new Denoiser(postProcess, albedo));
+			//
+			// postProcess.Dispatch();
+			// postProcess.WaitForProcess();
+			//
+			// noisy.Save("render.png");
+			//
+			// return;
+
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
 
@@ -49,7 +63,7 @@ namespace ForceRenderer
 			using RenderEngine engine = new RenderEngine
 										{
 											RenderBuffer = buffer, Scene = new Sponza(),
-											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
+											PixelSample = 48, AdaptiveSample = 400, TileSize = 32
 										};
 
 			renderEngine = engine;
