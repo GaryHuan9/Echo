@@ -17,7 +17,7 @@ namespace ForceRenderer.Rendering
 				CalculatedHit calculated = new CalculatedHit(hit, ray, profile.pressed);
 				Material material = profile.pressed.GetMaterial(hit);
 
-				Float4 sample = material.AlbedoMap[calculated.texcoord];
+				Float4 sample = material.AlbedoMap.GetPixel(calculated.texcoord);
 				if (!Scalars.AlmostEquals(sample.w, 0f)) return sample.XYZ * material.Albedo;
 
 				ray = new Ray(calculated.position, calculated.direction, true);
