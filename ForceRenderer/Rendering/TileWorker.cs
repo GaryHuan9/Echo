@@ -178,7 +178,7 @@ namespace ForceRenderer.Rendering
 			if (aborted) state.Break();
 
 			//Store pixel
-			RenderBuffer[position] = ((Float4)pixel.Color).Replace(3, 1f);
+			RenderBuffer.SetPixel(position, pixel.Color);
 			Interlocked.Increment(ref _completedPixel);
 		}
 

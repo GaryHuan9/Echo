@@ -30,9 +30,9 @@ namespace ForceRenderer.Textures
 
 		static Texture()
 		{
-			white = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = Float4.one};
-			black = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = Float4.ana};
-			normal = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = new(0.5f, 0.5f, 1f, 1f)};
+			white = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = Vector128.Create(1f, 1f, 1f, 1f)};
+			black = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = Vector128.Create(0f, 0f, 0f, 1f)};
+			normal = new Texture2D(Int2.one) {Wrapper = Textures.Wrapper.clamp, Filter = Textures.Filter.point, [Int2.one] = Vector128.Create(0.5f, 0.5f, 1f, 1f)};
 		}
 
 		public readonly Int2 size;
@@ -62,48 +62,41 @@ namespace ForceRenderer.Textures
 
 		/// <summary>
 		/// Retrieves and assigns the RGBA color of a pixel based on its index. Index based on <see cref="ToIndex"/> and <see cref="ToPosition"/>.
-		/// NOTE: this indexer returns a reference which can be used to both read and assign the actual value.
 		/// </summary>
-		public abstract ref Vector128<float> this[int index] { get; }
+		public abstract Vector128<float> this[int index] { get; set; }
 
-		public unsafe Float4 this[Int2 position]
+		public virtual Vector128<float> this[Int2 position]
 		{
-			get
-			{
-				var data = GetPixel(position);
-				return *(Float4*)&data;
-			}
-			set
-			{
-				ref var data = ref GetPixel(position);
-				data = *(Vector128<float>*)&value;
-			}
+			get => this[ToIndex(Wrapper.Convert(this, position))];
+			set => this[ToIndex(Wrapper.Convert(this, position))] = value;
 		}
 
-		public unsafe Float4 this[Float2 uv]
-		{
-			get
-			{
-				var data = GetPixel(uv);
-				return *(Float4*)&data;
-			}
-		}
+		public virtual Vector128<float> this[Float2 uv] => Filter.Convert(this, Wrapper.Convert(uv));
 
 		public virtual int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public virtual Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
 
 		public Int2 Restrict(Int2 position) => position.Clamp(Int2.zero, oneLess);
 
-		/// <summary>
-		/// NOTE: this method returns a reference which can be used to both read and assign the actual value.
-		/// </summary>
-		public ref Vector128<float> GetPixel(Int2 position)
+		public void SetPixel(Int2 position, Float4 pixel) => this[position] = Unsafe.As<Float4, Vector128<float>>(ref pixel);
+
+		public void SetPixel(Int2 position, Float3 pixel)
 		{
-			position = Wrapper.Convert(this, position);
-			return ref this[ToIndex(position)];
+			Float4 float4 = new Float4(pixel.x, pixel.y, pixel.z, 1f);
+			this[position] = Unsafe.As<Float4, Vector128<float>>(ref float4);
 		}
 
-		public Vector128<float> GetPixel(Float2 uv) => Filter.Convert(this, Wrapper.Convert(uv));
+		public Float4 GetPixel(Int2 position)
+		{
+			Vector128<float> pixel = this[position];
+			return Unsafe.As<Vector128<float>, Float4>(ref pixel);
+		}
+
+		public Float4 GetPixel(Float2 uv)
+		{
+			Vector128<float> pixel = this[uv];
+			return Unsafe.As<Vector128<float>, Float4>(ref pixel);
+		}
 
 		/// <summary>
 		/// Copies the data of a <see cref="Texture"/> of the same size pixel by pixel.
@@ -154,7 +147,7 @@ namespace ForceRenderer.Textures
 			public Vector128<float> Convert(Texture texture, Float2 uv)
 			{
 				Int2 position = (uv * texture.size).Floored;
-				return texture.GetPixel(position.Min(texture.oneLess));
+				return texture[position.Min(texture.oneLess)];
 			}
 		}
 
@@ -168,11 +161,11 @@ namespace ForceRenderer.Textures
 				Int2 bottomLeft = upperRight - Int2.one;
 
 				//Prefetch color data (273.6 ns => 194.6 ns)
-				ref readonly Vector128<float> y0x0 = ref texture.GetPixel(bottomLeft);
-				ref readonly Vector128<float> y0x1 = ref texture.GetPixel(new Int2(upperRight.x, bottomLeft.y));
+				Vector128<float> y0x0 = texture[bottomLeft];
+				Vector128<float> y0x1 = texture[new Int2(upperRight.x, bottomLeft.y)];
 
-				ref readonly Vector128<float> y1x0 = ref texture.GetPixel(new Int2(bottomLeft.x, upperRight.y));
-				ref readonly Vector128<float> y1x1 = ref texture.GetPixel(upperRight);
+				Vector128<float> y1x0 = texture[new Int2(bottomLeft.x, upperRight.y)];
+				Vector128<float> y1x1 = texture[upperRight];
 
 				//Interpolate
 				Float2 t = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);
