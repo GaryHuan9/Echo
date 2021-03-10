@@ -20,17 +20,17 @@ namespace ForceRenderer.Textures
 			Parallel.For
 			(
 				0, names.Count, (index, state) =>
-								{
-									try
-									{
-										sources[index] = Texture2D.Load(Path.Combine(path, names[index]));
-									}
-									catch (FileNotFoundException exception)
-									{
-										error = exception;
-										state.Break();
-									}
-								}
+				{
+					try
+					{
+						sources[index] = Texture2D.Load(Path.Combine(path, names[index]));
+					}
+					catch (FileNotFoundException exception)
+					{
+						error = exception;
+						state.Break();
+					}
+				}
 			);
 
 			if (error != null) throw error;
@@ -52,14 +52,14 @@ namespace ForceRenderer.Textures
 			if (direction[index] < 0f) index += 3;
 
 			Float2 uv = index switch
-						{
-							0 => new Float2(-direction.z, direction.y),
-							1 => new Float2(direction.x, -direction.z),
-							2 => direction.XY,
-							3 => direction.ZY,
-							4 => direction.XZ,
-							_ => new Float2(-direction.x, direction.y)
-						};
+			{
+				0 => new Float2(-direction.z, direction.y),
+				1 => new Float2(direction.x, -direction.z),
+				2 => direction.XY,
+				3 => direction.ZY,
+				4 => direction.XZ,
+				_ => new Float2(-direction.x, direction.y)
+			};
 
 			component = Math.Abs(component) * 2f;
 			return Sample(index, uv / component);
@@ -69,6 +69,6 @@ namespace ForceRenderer.Textures
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Float3 Sample(int index, Float2 uv) => textures[index][uv + Float2.half].XYZ * multiplier;
+		Float3 Sample(int index, Float2 uv) => textures[index].GetPixel(uv + Float2.half).XYZ * multiplier;
 	}
 }

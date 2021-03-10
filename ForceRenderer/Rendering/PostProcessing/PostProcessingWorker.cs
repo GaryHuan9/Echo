@@ -34,14 +34,7 @@ namespace ForceRenderer.Rendering.PostProcessing
 			}
 		}
 
-		protected void RunCopyPass(Texture from, Texture to) => RunPass
-		(
-			position =>
-			{
-				ref var target = ref to.GetPixel(position);
-				target = from.GetPixel(position);
-			}
-		);
+		protected void RunCopyPass(Texture from, Texture to) => RunPass(position => to[position] = from[position]);
 
 		protected void RunPassHorizontal(PassActionHorizontal passAction)
 		{
