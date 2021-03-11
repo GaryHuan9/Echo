@@ -45,9 +45,9 @@ namespace IntrinsicsSIMD
 		//BilinearOld:	20.67 ms per 65536 samples = 315.40ns per sample
 
 		[Benchmark]
-		public Vector128<float> Sample()
+		public Float4 Sample()
 		{
-			Vector128<float> result = default;
+			Float4 result = default;
 
 			for (int i = 0; i < uvs.Length; i++) result = texture[uvs[i]];
 
@@ -55,9 +55,9 @@ namespace IntrinsicsSIMD
 		}
 
 		[Benchmark]
-		public Vector128<float> SampleOld()
+		public Float4 SampleOld()
 		{
-			Vector128<float> result = default;
+			Float4 result = default;
 
 			for (int i = 0; i < uvs.Length; i++) result = textureOld[uvs[i]];
 
@@ -65,9 +65,9 @@ namespace IntrinsicsSIMD
 		}
 
 		[Benchmark]
-		public Vector128<float> SampleNoPrefetch()
+		public Float4 SampleNoPrefetch()
 		{
-			Vector128<float> result = default;
+			Float4 result = default;
 
 			for (int i = 0; i < uvs.Length; i++) result = textureNoPrefetch[uvs[i]];
 
@@ -75,9 +75,9 @@ namespace IntrinsicsSIMD
 		}
 
 		[Benchmark]
-		public Vector128<float> SampleSseOnly()
+		public Float4 SampleSseOnly()
 		{
-			Vector128<float> result = default;
+			Float4 result = default;
 
 			for (int i = 0; i < uvs.Length; i++) result = textureSseOnly[uvs[i]];
 
@@ -96,8 +96,8 @@ namespace IntrinsicsSIMD
 
 				Float2 t = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);
 
-				Float4 y0 = Float4.Lerp(texture.GetPixel(bottomLeft), texture.GetPixel(new Int2(upperRight.x, bottomLeft.y)), t.x);
-				Float4 y1 = Float4.Lerp(texture.GetPixel(new Int2(bottomLeft.x, upperRight.y)), texture.GetPixel(upperRight), t.x);
+				Float4 y0 = Float4.Lerp(texture[bottomLeft], texture[new Int2(upperRight.x, bottomLeft.y)], t.x);
+				Float4 y1 = Float4.Lerp(texture[new Int2(bottomLeft.x, upperRight.y)], texture[upperRight], t.x);
 
 				Float4 result = Float4.Lerp(y0, y1, t.y);
 				return *(Vector128<float>*)&result;
@@ -120,12 +120,12 @@ namespace IntrinsicsSIMD
 				Vector128<float> timeX = Vector128.Create(t.x);
 				Vector128<float> timeY = Vector128.Create(t.y);
 
-				Vector128<float> y0x0 = texture[bottomLeft];
-				Vector128<float> y0x1 = texture[new Int2(upperRight.x, bottomLeft.y)];
+				ref readonly Vector128<float> y0x0 = ref texture.GetPixel(bottomLeft);
+				ref readonly Vector128<float> y0x1 = ref texture.GetPixel(new Int2(upperRight.x, bottomLeft.y));
 				Vector128<float> y0 = Lerp(y0x0, y0x1, timeX);
 
-				Vector128<float> y1x0 = texture[new Int2(bottomLeft.x, upperRight.y)];
-				Vector128<float> y1x1 = texture[upperRight];
+				ref readonly Vector128<float> y1x0 = ref texture.GetPixel(new Int2(bottomLeft.x, upperRight.y));
+				ref readonly Vector128<float> y1x1 = ref texture.GetPixel(upperRight);
 				Vector128<float> y1 = Lerp(y1x0, y1x1, timeX);
 
 				return Lerp(y0, y1, timeY);
@@ -152,11 +152,11 @@ namespace IntrinsicsSIMD
 				Int2 bottomLeft = rounded.Max(Int2.one) - Int2.one;
 
 				//Prefetch color data
-				Vector128<float> y0x0 = texture[bottomLeft];
-				Vector128<float> y0x1 = texture[new Int2(upperRight.x, bottomLeft.y)];
+				ref readonly Vector128<float> y0x0 = ref texture.GetPixel(bottomLeft);
+				ref readonly Vector128<float> y0x1 = ref texture.GetPixel(new Int2(upperRight.x, bottomLeft.y));
 
-				Vector128<float> y1x0 = texture[new Int2(bottomLeft.x, upperRight.y)];
-				Vector128<float> y1x1 = texture[upperRight];
+				ref readonly Vector128<float> y1x0 = ref texture.GetPixel(new Int2(bottomLeft.x, upperRight.y));
+				ref readonly Vector128<float> y1x1 = ref texture.GetPixel(upperRight);
 
 				//Interpolate
 				Float2 t = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);

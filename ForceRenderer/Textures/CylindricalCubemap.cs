@@ -9,13 +9,13 @@ namespace ForceRenderer.Textures
 
 		readonly Texture2D texture;
 
-		public override Float3 Sample(Float3 direction) => texture.GetPixel
-		(
+		public override Float3 Sample(Float3 direction) => texture
+		[
 			new Float2
 			(
 				(float)Math.Atan2(direction.x, -direction.z) / -Scalars.PI * 0.5f,
 				(float)Math.Acos(direction.y) / -Scalars.PI
 			)
-		).XYZ;
+		].XYZ;
 	}
 }

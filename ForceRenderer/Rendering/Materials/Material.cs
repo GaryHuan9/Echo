@@ -48,7 +48,7 @@ namespace ForceRenderer.Rendering.Materials
 		{
 			if (NormalMap == Texture.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
 
-			Vector128<float> sample = NormalMap[hit.texcoord];
+			Vector128<float> sample = NormalMap.GetPixel(hit.texcoord);
 			Vector128<float> local = Fma.MultiplyAdd(sample, normalMultiplier, normalAdder);
 
 			//Transform local direction to world space based on normal
@@ -106,7 +106,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return 0f;
 
-			return value * texture.GetPixel(texcoord).x;
+			return value * texture[texcoord].x;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,7 +115,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float2.zero;
 
-			return value * texture.GetPixel(texcoord).XY;
+			return value * texture[texcoord].XY;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,7 +124,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float3.zero;
 
-			return value * texture.GetPixel(texcoord).w;
+			return value * texture[texcoord].w;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,7 +133,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float4.zero;
 
-			return value * texture.GetPixel(texcoord);
+			return value * texture[texcoord];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

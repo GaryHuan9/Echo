@@ -24,11 +24,7 @@ namespace ForceRenderer.Textures
 
 		readonly Vector128<float>[] pixels;
 
-		public override Vector128<float> this[int index]
-		{
-			get => pixels[index];
-			set => pixels[index] = value;
-		}
+		public override ref Vector128<float> this[int index] => ref pixels[index];
 
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif", FloatingPointImageExtension});
 		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif, null});
