@@ -16,9 +16,9 @@ namespace ForceRenderer
 		static void Main()
 		{
 			// DenoiserTesting();
-			SimplexNoise();
+			// SimplexNoise();
 
-			return;
+			// return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
