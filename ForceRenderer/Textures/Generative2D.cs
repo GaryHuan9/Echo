@@ -23,7 +23,7 @@ namespace ForceRenderer.Textures
 		public Float2 Tiling { get; set; } = Float2.one;
 		public Float2 Offset { get; set; } = Float2.zero;
 
-		protected virtual bool AsynchronousBaking => true;
+		protected virtual bool ParallelBaking => true;
 
 		readonly float inverseSize; //Used to calculate tiling
 
@@ -37,7 +37,7 @@ namespace ForceRenderer.Textures
 
 			// @formatter:off
 
-			if (AsynchronousBaking) Parallel.For(0, length, BakePixel);
+			if (ParallelBaking) Parallel.For(0, length, BakePixel);
 			else for (int i = 0; i < length; i++) BakePixel(i);
 
 			// @formatter:on
