@@ -15,19 +15,19 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			// Texture2D noisy = Texture2D.Load("render_sponza_noisy.fpi");
-			// Texture2D albedo = Texture2D.Load("render_sponza_albedo.fpi");
-			//
-			// using var postProcess = new PostProcessingEngine(noisy);
-			//
-			// postProcess.AddWorker(new Denoiser(postProcess, albedo));
-			//
-			// postProcess.Dispatch();
-			// postProcess.WaitForProcess();
-			//
-			// noisy.Save("render.png");
-			//
-			// return;
+			Texture2D noisy = Texture2D.Load("render_sponza_noisy.fpi");
+			Texture2D albedo = Texture2D.Load("render_sponza_albedo.fpi");
+
+			using var postProcess = new PostProcessingEngine(noisy);
+
+			postProcess.AddWorker(new Denoiser(postProcess, albedo));
+
+			postProcess.Dispatch();
+			postProcess.WaitForProcess();
+
+			noisy.Save("render.png");
+
+			return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
