@@ -6,6 +6,7 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
+using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Textures
 {
@@ -68,11 +69,11 @@ namespace ForceRenderer.Textures
 
 		public Float4 this[Int2 position]
 		{
-			get => ToFloat4(ref GetPixel(position));
-			set => GetPixel(position) = ToVector(ref value);
+			get => Utilities.ToFloat4(ref GetPixel(position));
+			set => GetPixel(position) = Utilities.ToVector(ref value);
 		}
 
-		public Float4 this[Float2 uv] => ToFloat4(GetPixel(uv));
+		public Float4 this[Float2 uv] => Utilities.ToFloat4(GetPixel(uv));
 
 		public virtual int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public virtual Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
@@ -105,12 +106,6 @@ namespace ForceRenderer.Textures
 			if (texture.size == size) return;
 			throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
 		}
-
-		protected static ref Float4 ToFloat4(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref pixel);
-		protected static ref Vector128<float> ToVector(ref Float4 pixel) => ref Unsafe.As<Float4, Vector128<float>>(ref pixel);
-
-		protected static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
-		protected static Vector128<float> ToVector(Float4 pixel) => Unsafe.As<Float4, Vector128<float>>(ref pixel);
 	}
 
 	public static class Wrapper

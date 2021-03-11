@@ -11,6 +11,7 @@ using CodeHelpers;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
+using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Textures
 {
@@ -70,7 +71,7 @@ namespace ForceRenderer.Textures
 
 				for (int i = 0; i < length; i++)
 				{
-					Color32 color = (Color32)ToFloat4(ref this[i]);
+					Color32 color = (Color32)Utilities.ToFloat4(ref this[i]);
 
 					pointer[0] = color.b;
 					pointer[1] = color.g;
@@ -113,7 +114,7 @@ namespace ForceRenderer.Textures
 						{
 							Float4 pixel = (Float4)new Color32(pointer[2], pointer[1], pointer[0]);
 
-							texture[i] = ToVector(pixel.Replace(3, 1f));
+							texture[i] = Utilities.ToVector(pixel.Replace(3, 1f));
 							pointer += 3;
 						}
 
@@ -123,7 +124,7 @@ namespace ForceRenderer.Textures
 					{
 						for (int i = 0; i < texture.length; i++)
 						{
-							texture[i] = ToVector((Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]));
+							texture[i] = Utilities.ToVector((Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]));
 							pointer += 4;
 						}
 
@@ -156,7 +157,7 @@ namespace ForceRenderer.Textures
 		public void Write(DataWriter writer)
 		{
 			writer.Write(size);
-			for (int i = 0; i < length; i++) writer.Write(ToFloat4(ref this[i]));
+			for (int i = 0; i < length; i++) writer.Write(Utilities.ToFloat4(ref this[i]));
 		}
 
 		public static Texture2D Read(DataReader reader)
@@ -164,7 +165,7 @@ namespace ForceRenderer.Textures
 			Int2 size = reader.ReadInt2();
 			Texture2D texture = new Texture2D(size);
 
-			for (int i = 0; i < texture.length; i++) texture[i] = ToVector(reader.ReadFloat4());
+			for (int i = 0; i < texture.length; i++) texture[i] = Utilities.ToVector(reader.ReadFloat4());
 
 			return texture;
 		}

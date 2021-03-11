@@ -1,60 +1,62 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
+using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Textures
 {
 	public class Simplex2D : Generative2D
 	{
-		public Simplex2D(Int2 size, int seed) : base(size)
+		public Simplex2D(Int2 size, int seed, int layer, float persistence = 0.5f) : base(size)
 		{
-			Random random = new Random(seed);
-			gradients = new Float2[GradientsCount];
+			this.persistence = persistence;
+			simplices = new Simplex[layer];
 
-			for (int i = 0; i < GradientsCount; i++)
+			float frequency = 1f;
+
+			for (int i = 0; i < layer; i++)
 			{
-				float angle = (float)random.NextDouble() * 360f;
-				gradients[i] = Float2.right.Rotate(angle);
+				simplices[i] = new Simplex(seed ^ i);
+
+				inverseScale += frequency;
+				frequency *= persistence;
 			}
+
+			inverseScale = 1f / inverseScale;
 		}
 
-		readonly Float2[] gradients;
+		readonly float persistence;
+		readonly float inverseScale;
 
-		const int GradientsCount = 1024;
-		const float SimplexScale = 2916f * Scalars.Sqrt2 / 125f;
-
-		const float SquareToTriangle = (3f - Scalars.Sqrt3) / 6f;
-		const float TriangleToSquare = (Scalars.Sqrt3 - 1f) / 2f;
+		readonly Simplex[] simplices;
 
 		protected override Vector128<float> Sample(Float2 position)
 		{
-			Float2 skewed = position + (Float2)(position.Sum * TriangleToSquare);
+			// Float2 q = new Float2(FractalBrownianMotion(position), FractalBrownianMotion(position + new Float2(5.2f, 1.3f)));
+			// Float2 r = new Float2(FractalBrownianMotion(position + 4f * q + new Float2(1.7f, 9.2f)), FractalBrownianMotion(position + 4f * q + new Float2(8.3f, 2.8f)));
+			//
+			// float v = FractalBrownianMotion(position + 4f * r);
 
-			Int2 cell = skewed.Floored;
-			Float2 difference = skewed - cell;
+			float v0 = FractalBrownianMotion(position);
 
-			float value = SamplePoint(position, cell) + SamplePoint(position, cell + Int2.one);
+			float v1 = FractalBrownianMotion(position + new Float2(v0 * 5.2f, v0 * 2.3f));
+			float v2 = FractalBrownianMotion(position + new Float2(v1 * 2.7f, v1 * 4.7f));
 
-			if (difference.x >= difference.y) value += SamplePoint(position, cell + Int2.right);
-			else value += SamplePoint(position, cell + Int2.up);
-
-			value *= SimplexScale;
-			value = value / 2f + 0.5f;
-
-			return ToVector(new Float4(value, value, value, 1f));
+			return Utilities.ToVector(Utilities.ToColor(new Float3(v1, v2, 1f)));
 		}
 
-		float SamplePoint(Float2 point, Int2 cell)
+		float FractalBrownianMotion(Float2 position)
 		{
-			float unskew = cell.Sum * SquareToTriangle;
-			Float2 part = point - cell + (Float2)unskew;
-			float f = 0.5f - part.SquaredMagnitude;
+			float sum = 0f;
+			float frequency = 1f;
 
-			if (f <= 0f) return 0f;
+			for (int i = 0; i < simplices.Length; i++)
+			{
+				sum += simplices[i].Sample(position / frequency) * frequency;
+				frequency *= persistence;
+			}
 
-			f *= f * f;
-
-			return f * gradients[cell.GetHashCode() & (GradientsCount - 1)].Dot(part);
+			return sum * inverseScale;
 		}
 	}
 }
