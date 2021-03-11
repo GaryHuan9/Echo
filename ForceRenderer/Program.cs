@@ -15,32 +15,8 @@ namespace ForceRenderer
 	{
 		static void Main()
 		{
-			// Texture2D noisy = Texture2D.Load("render_sponza_noisy.fpi");
-			// Texture2D albedo = Texture2D.Load("render_sponza_albedo.fpi");
-			//
-			// using var postProcess = new PostProcessingEngine(noisy);
-			//
-			// postProcess.AddWorker(new Denoiser(postProcess, albedo));
-			//
-			// postProcess.Dispatch();
-			// postProcess.WaitForProcess();
-			//
-			// noisy.Save("render.png");
-			//
-			// return;
-
-			Simplex2D simplex = new Simplex2D((Int2)1024, 42);
-			Texture2D texture = new Texture2D(simplex.size);
-
-			simplex.Tiling = (Float2)10f;
-			simplex.Offset = (Float2)(-3f);
-
-			PerformanceTest test = new PerformanceTest();
-			using (test.Start()) simplex.Bake();
-			DebugHelper.Log(test.ElapsedMilliseconds);
-
-			texture.CopyFrom(simplex);
-			texture.Save("simplex.png");
+			// DenoiserTesting();
+			SimplexNoise();
 
 			return;
 
@@ -108,6 +84,37 @@ namespace ForceRenderer
 
 			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
 			renderEngine = null;
+		}
+
+		static void DenoiserTesting()
+		{
+			Texture2D noisy = Texture2D.Load("render_sponza_noisy.fpi");
+			Texture2D albedo = Texture2D.Load("render_sponza_albedo.fpi");
+
+			using var postProcess = new PostProcessingEngine(noisy);
+
+			postProcess.AddWorker(new Denoiser(postProcess, albedo));
+
+			postProcess.Dispatch();
+			postProcess.WaitForProcess();
+
+			noisy.Save("render.png");
+		}
+
+		static void SimplexNoise()
+		{
+			Simplex2D simplex = new Simplex2D(new Int2(1920, 1080), 42, 4);
+			Texture2D texture = new Texture2D(simplex.size);
+
+			simplex.Tiling = (Float2)1f;
+			simplex.Offset = (Float2)1f;
+
+			PerformanceTest test = new PerformanceTest();
+			using (test.Start()) simplex.Bake();
+			DebugHelper.Log(test.ElapsedMilliseconds);
+
+			texture.CopyFrom(simplex);
+			texture.Save("simplex.png");
 		}
 
 		[Command]
