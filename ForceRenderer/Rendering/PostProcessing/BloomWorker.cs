@@ -59,10 +59,11 @@ namespace ForceRenderer.Rendering.PostProcessing
 
 		unsafe void LuminancePass(Int2 position)
 		{
-			Vector128<float> source = renderBuffer[position];
-			Vector128<float> single = Sse41.DotProduct(source, luminanceOption, 0b1110_0001);
+			ref Vector128<float> source = ref renderBuffer.GetPixel(position);
+			ref Vector128<float> target = ref sourceBuffer.GetPixel(position);
 
-			sourceBuffer[position] = *(float*)&single < threshold ? zeroVector : source;
+			Vector128<float> single = Sse41.DotProduct(source, luminanceOption, 0b1110_0001);
+			target = *(float*)&single < threshold ? zeroVector : source;
 		}
 
 		void HorizontalBlurPass(int vertical, int radius)
@@ -70,13 +71,22 @@ namespace ForceRenderer.Rendering.PostProcessing
 			Vector128<float> accumulator = Vector128<float>.Zero;
 			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
 
-			for (int x = -radius; x < radius; x++) accumulator = Sse.Add(accumulator, sourceBuffer[new Int2(x, vertical)]);
+			for (int x = -radius; x < radius; x++)
+			{
+				ref readonly Vector128<float> source = ref sourceBuffer.GetPixel(new Int2(x, vertical));
+				accumulator = Sse.Add(accumulator, source);
+			}
 
 			for (int x = 0; x < renderBuffer.size.x; x++)
 			{
-				accumulator = Sse.Add(accumulator, sourceBuffer[new Int2(x + radius, vertical)]);
-				targetBuffer[new Int2(x, vertical)] = Sse.Multiply(accumulator, divisor);
-				accumulator = Sse.Subtract(accumulator, sourceBuffer[new Int2(x - radius, vertical)]);
+				ref readonly Vector128<float> sourceHead = ref sourceBuffer.GetPixel(new Int2(x + radius, vertical));
+				ref readonly Vector128<float> sourceTail = ref sourceBuffer.GetPixel(new Int2(x - radius, vertical));
+
+				ref var target = ref targetBuffer.GetPixel(new Int2(x, vertical));
+
+				accumulator = Sse.Add(accumulator, sourceHead);
+				target = Sse.Multiply(accumulator, divisor);
+				accumulator = Sse.Subtract(accumulator, sourceTail);
 			}
 		}
 
@@ -85,22 +95,34 @@ namespace ForceRenderer.Rendering.PostProcessing
 			Vector128<float> accumulator = Vector128<float>.Zero;
 			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
 
-			for (int y = -radius; y < radius; y++) accumulator = Sse.Add(accumulator, sourceBuffer[new Int2(horizontal, y)]);
-
-			for (int y = 0; y < renderBuffer.size.x; y++)
+			for (int y = -radius; y < radius; y++)
 			{
-				accumulator = Sse.Add(accumulator, sourceBuffer[new Int2(horizontal, y + radius)]);
-				targetBuffer[new Int2(horizontal, y)] = Sse.Multiply(accumulator, divisor);
-				accumulator = Sse.Subtract(accumulator, sourceBuffer[new Int2(horizontal, y - radius)]);
+				ref readonly Vector128<float> source = ref targetBuffer.GetPixel(new Int2(horizontal, y));
+				accumulator = Sse.Add(accumulator, source);
+			}
+
+			for (int y = 0; y < renderBuffer.size.y; y++)
+			{
+				ref readonly Vector128<float> sourceHead = ref targetBuffer.GetPixel(new Int2(horizontal, y + radius));
+				ref readonly Vector128<float> sourceTail = ref targetBuffer.GetPixel(new Int2(horizontal, y - radius));
+
+				ref var target = ref sourceBuffer.GetPixel(new Int2(horizontal, y));
+
+				accumulator = Sse.Add(accumulator, sourceHead);
+				target = Sse.Multiply(accumulator, divisor);
+				accumulator = Sse.Subtract(accumulator, sourceTail);
 			}
 		}
 
 		unsafe void CombinePass(Int2 position)
 		{
-			Vector128<float> result = Sse.Add(renderBuffer[position], sourceBuffer[position]);
+			ref Vector128<float> source = ref sourceBuffer.GetPixel(position);
+			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
 
-			*((float*)&result + 3) = 1f; //Reset alpha
-			renderBuffer[position] = result;
+			Vector128<float> result = Sse.Add(target, source);
+			*((float*)&result + 3) = 1f; //Assign alpha
+
+			target = result;
 		}
 	}
 }
