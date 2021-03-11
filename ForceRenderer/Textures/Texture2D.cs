@@ -5,9 +5,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
@@ -70,7 +70,7 @@ namespace ForceRenderer.Textures
 
 				for (int i = 0; i < length; i++)
 				{
-					Color32 color = (Color32)GetPixel(i);
+					Color32 color = (Color32)ToFloat4(ref this[i]);
 
 					pointer[0] = color.b;
 					pointer[1] = color.g;
@@ -111,7 +111,9 @@ namespace ForceRenderer.Textures
 					{
 						for (int i = 0; i < texture.length; i++)
 						{
-							texture.SetPixel(i, (Float4)new Color32(pointer[2], pointer[1], pointer[0]));
+							Float4 pixel = (Float4)new Color32(pointer[2], pointer[1], pointer[0]);
+
+							texture[i] = ToVector(pixel.Replace(3, 1f));
 							pointer += 3;
 						}
 
@@ -121,7 +123,7 @@ namespace ForceRenderer.Textures
 					{
 						for (int i = 0; i < texture.length; i++)
 						{
-							texture.SetPixel(i, (Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]));
+							texture[i] = ToVector((Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]));
 							pointer += 4;
 						}
 
@@ -154,7 +156,7 @@ namespace ForceRenderer.Textures
 		public void Write(DataWriter writer)
 		{
 			writer.Write(size);
-			for (int i = 0; i < length; i++) writer.Write(GetPixel(i));
+			for (int i = 0; i < length; i++) writer.Write(ToFloat4(ref this[i]));
 		}
 
 		public static Texture2D Read(DataReader reader)
@@ -162,7 +164,7 @@ namespace ForceRenderer.Textures
 			Int2 size = reader.ReadInt2();
 			Texture2D texture = new Texture2D(size);
 
-			for (int i = 0; i < texture.length; i++) texture.SetPixel(i, reader.ReadFloat4());
+			for (int i = 0; i < texture.length; i++) texture[i] = ToVector(reader.ReadFloat4());
 
 			return texture;
 		}
@@ -172,13 +174,5 @@ namespace ForceRenderer.Textures
 			if (texture is not Texture2D texture2D) base.CopyFrom(texture);
 			else Array.Copy(texture2D.pixels, pixels, length);
 		}
-
-		unsafe ref Float4 GetPixel(int index)
-		{
-			var data = this[index];
-			return ref *(Float4*)&data;
-		}
-
-		unsafe void SetPixel(int index, Float4 pixel) => this[index] = *(Vector128<float>*)&pixel;
 	}
 }

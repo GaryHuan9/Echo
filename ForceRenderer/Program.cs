@@ -29,6 +29,21 @@ namespace ForceRenderer
 			//
 			// return;
 
+			Simplex2D simplex = new Simplex2D((Int2)1024, 42);
+			Texture2D texture = new Texture2D(simplex.size);
+
+			simplex.Tiling = (Float2)10f;
+			simplex.Offset = (Float2)(-3f);
+
+			PerformanceTest test = new PerformanceTest();
+			using (test.Start()) simplex.Bake();
+			DebugHelper.Log(test.ElapsedMilliseconds);
+
+			texture.CopyFrom(simplex);
+			texture.Save("simplex.png");
+
+			return;
+
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
 

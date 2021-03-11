@@ -66,28 +66,13 @@ namespace ForceRenderer.Textures
 		/// </summary>
 		public abstract ref Vector128<float> this[int index] { get; }
 
-		public unsafe Float4 this[Int2 position]
+		public Float4 this[Int2 position]
 		{
-			get
-			{
-				var data = GetPixel(position);
-				return *(Float4*)&data;
-			}
-			set
-			{
-				ref var data = ref GetPixel(position);
-				data = *(Vector128<float>*)&value;
-			}
+			get => ToFloat4(ref GetPixel(position));
+			set => GetPixel(position) = ToVector(ref value);
 		}
 
-		public unsafe Float4 this[Float2 uv]
-		{
-			get
-			{
-				var data = GetPixel(uv);
-				return *(Float4*)&data;
-			}
-		}
+		public Float4 this[Float2 uv] => ToFloat4(GetPixel(uv));
 
 		public virtual int ToIndex(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
 		public virtual Int2 ToPosition(int index) => new Int2(index % size.x, oneLess.y - index / size.x);
@@ -97,11 +82,7 @@ namespace ForceRenderer.Textures
 		/// <summary>
 		/// NOTE: this method returns a reference which can be used to both read and assign the actual value.
 		/// </summary>
-		public ref Vector128<float> GetPixel(Int2 position)
-		{
-			position = Wrapper.Convert(this, position);
-			return ref this[ToIndex(position)];
-		}
+		public ref Vector128<float> GetPixel(Int2 position) => ref this[ToIndex(Wrapper.Convert(this, position))];
 
 		public Vector128<float> GetPixel(Float2 uv) => Filter.Convert(this, Wrapper.Convert(uv));
 
@@ -117,13 +98,19 @@ namespace ForceRenderer.Textures
 			foreach (Int2 position in size.Loop()) this[position] = texture[position];
 		}
 
+		public override string ToString() => $"{GetType()} with size {size}";
+
 		protected void AssertAlignedSize(Texture texture)
 		{
 			if (texture.size == size) return;
 			throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
 		}
 
-		public override string ToString() => $"{GetType()} with size {size}";
+		protected static ref Float4 ToFloat4(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref pixel);
+		protected static ref Vector128<float> ToVector(ref Float4 pixel) => ref Unsafe.As<Float4, Vector128<float>>(ref pixel);
+
+		protected static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
+		protected static Vector128<float> ToVector(Float4 pixel) => Unsafe.As<Float4, Vector128<float>>(ref pixel);
 	}
 
 	public static class Wrapper
