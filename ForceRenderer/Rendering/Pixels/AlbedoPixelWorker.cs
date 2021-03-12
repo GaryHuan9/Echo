@@ -2,7 +2,7 @@
 using ForceRenderer.Mathematics;
 using ForceRenderer.Rendering.Materials;
 
-namespace ForceRenderer.Rendering
+namespace ForceRenderer.Rendering.Pixels
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{

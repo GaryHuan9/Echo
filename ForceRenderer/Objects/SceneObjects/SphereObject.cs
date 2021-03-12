@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Mathematics;
-using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Rendering.Materials;
 

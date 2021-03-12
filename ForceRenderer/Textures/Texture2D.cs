@@ -5,7 +5,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Files;
