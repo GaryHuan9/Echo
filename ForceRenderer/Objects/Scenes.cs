@@ -265,7 +265,7 @@ namespace ForceRenderer.Objects
 				Material material;
 
 				if (metal) material = new Glossy {Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f};
-				else if (emissive) material = new Emissive {Emission = color * 10f};
+				else if (emissive) material = new Emissive {Emission = color / color.MaxComponent * 3f};
 				else material = new Diffuse {Albedo = color};
 
 				children.Add(new SphereObject(material, radius) {Position = position});

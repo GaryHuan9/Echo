@@ -1,61 +1,89 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
+using ForceRenderer.Mathematics;
+using ForceRenderer.Objects.SceneObjects;
 
 namespace IntrinsicsSIMD
 {
 	public class BenchmarkAABB
 	{
-		readonly Ray ray = new(Float3.up, Float3.down);
-		readonly AxisAlignedBoundingBox aabb = new(Float3.zero, Float3.half);
-
-		[Benchmark]
-		public float IntersectOld() => aabb.IntersectOld(ray);
-
-		[Benchmark]
-		public float IntersectSIMD() => aabb.IntersectSIMD(ray);
-
-		[StructLayout(LayoutKind.Explicit, Size = 64)]
-		public readonly struct Ray
+		public BenchmarkAABB()
 		{
-			/// <summary>
-			/// Constructs a ray.
-			/// </summary>
-			/// <param name="origin">The origin of the ray</param>
-			/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
-			public Ray(Float3 origin, Float3 direction)
+			triangle = new PressedTriangle(new Float3(1f, 1f, 0f), new Float3(-1f, -1f, -1f), new Float3(0f, 1f, 1f), 0);
+
+			aabb = new AxisAlignedBoundingBox(triangle.AABB);
+			rays = new Ray[65536];
+
+			Random random = new Random(42);
+
+			for (int i = 0; i < rays.Length; i++)
 			{
-				originVector = default;
-				directionVector = default;
-				inverseDirection = default;
+				Float3 point0 = GetPoint();
+				Float3 point1 = GetPoint();
 
-				this.origin = origin;
-				this.direction = direction;
-
-				Vector128<float> reciprocalVector = Sse.Reciprocal(directionVector);
-				inverseDirectionVector = Sse.Min(maxValueVector, Sse.Max(minValueVector, reciprocalVector));
-
-				Vector128<float> negated = Sse.Subtract(Vector128<float>.Zero, inverseDirectionVector);
-				absolutedInverseDirectionVector = Sse.Max(negated, inverseDirectionVector);
+				rays[i] = new Ray(point0, (point1 - point0).Normalized);
 			}
 
-			[FieldOffset(0)] public readonly Float3 origin;
-			[FieldOffset(16)] public readonly Float3 direction;
-			[FieldOffset(32)] public readonly Float3 inverseDirection;
+			Float3 GetPoint()
+			{
+				Float3 scale = new Float3((float)random.NextDouble(), (float)random.NextDouble(), (float)random.NextDouble());
+				return aabb.center + (scale * 2f - Float3.one) * aabb.extend * 2f;
+			}
+		}
 
-			[FieldOffset(0)] public readonly Vector128<float> originVector;
-			[FieldOffset(16)] public readonly Vector128<float> directionVector;
-			[FieldOffset(32)] public readonly Vector128<float> inverseDirectionVector;
-			[FieldOffset(48)] public readonly Vector128<float> absolutedInverseDirectionVector;
+		readonly Ray[] rays;
 
-			static readonly Vector128<float> minValueVector = Vector128.Create(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
-			static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue);
+		readonly PressedTriangle triangle;
+		readonly AxisAlignedBoundingBox aabb;
 
-			public Float3 GetPoint(float distance) => origin + direction * distance;
+		//	     IntersectOld | 1.214 ms per 65536 = 20.8 ns
+		//	    IntersectSIMD | 1.133 ms per 65536 = 19.2 ns
+		//	IntersectPureSIMD | 0.739 ms per 65536 = 11.3 ns
+		//	IntersectTriangle | 1.724 ms per 65536 = 26.3 ns
 
-			public override string ToString() => $"{nameof(origin)}: {origin}, {nameof(direction)}: {direction}";
+		[Benchmark]
+		public float IntersectOld()
+		{
+			float result = 0f;
+
+			for (int i = 0; i < rays.Length; i++) result = aabb.IntersectOld(rays[i]);
+
+			return result;
+		}
+
+		[Benchmark]
+		public float IntersectSIMD()
+		{
+			float result = 0f;
+
+			for (int i = 0; i < rays.Length; i++) result = aabb.IntersectSIMD(rays[i]);
+
+			return result;
+		}
+
+		[Benchmark]
+		public float IntersectPureSIMD()
+		{
+			float result = 0f;
+
+			for (int i = 0; i < rays.Length; i++) result = aabb.IntersectPureSIMD(rays[i]);
+
+			return result;
+		}
+
+		[Benchmark]
+		public float IntersectTriangle()
+		{
+			float result = 0f;
+			Float2 uv = default;
+
+			for (int i = 0; i < rays.Length; i++) result = triangle.GetIntersection(rays[i], out uv);
+
+			return result + uv.x;
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = 28)]
@@ -70,6 +98,8 @@ namespace IntrinsicsSIMD
 				this.extend = extend;
 			}
 
+			public AxisAlignedBoundingBox(ForceRenderer.Mathematics.AxisAlignedBoundingBox aabb) : this(aabb.center, aabb.extend) { }
+
 			[FieldOffset(0)] public readonly Float3 center;  //The exact center of the box
 			[FieldOffset(12)] public readonly Float3 extend; //Half the size of the box
 
@@ -81,10 +111,6 @@ namespace IntrinsicsSIMD
 
 			public float Area => (extend.x * extend.y + extend.x * extend.z + extend.y * extend.z) * 8f;
 
-			/// <summary>
-			/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
-			/// NOTE: return can be negative, which means the ray origins inside box.
-			/// </summary>
 			public float IntersectSIMD(in Ray ray)
 			{
 				Vector128<float> n = Sse.Multiply(ray.inverseDirectionVector, Sse.Subtract(centerVector, ray.originVector));
@@ -100,6 +126,35 @@ namespace IntrinsicsSIMD
 
 					return near > far || far < 0f ? float.PositiveInfinity : near;
 				}
+			}
+
+			public unsafe float IntersectPureSIMD(in Ray ray)
+			{
+				Vector128<float> n = Sse.Multiply(ray.inverseDirectionVector, Sse.Subtract(centerVector, ray.originVector));
+				Vector128<float> k = Sse.Multiply(ray.absolutedInverseDirectionVector, extendVector);
+
+				Vector128<float> min = Sse.Add(n, k);
+				Vector128<float> max = Sse.Subtract(n, k);
+
+				//Permute vector for min max, ignores last component
+				Vector128<float> minPermute = Avx.Permute(min, 0b0100_1010);
+				Vector128<float> maxPermute = Avx.Permute(max, 0b0100_1010);
+
+				min = Sse.Min(min, minPermute);
+				max = Sse.Max(max, maxPermute);
+
+				//Second permute for min max
+				minPermute = Avx.Permute(min, 0b1011_0001);
+				maxPermute = Avx.Permute(max, 0b1011_0001);
+
+				min = Sse.Min(min, minPermute);
+				max = Sse.Max(max, maxPermute);
+
+				//Extract result
+				float far = *(float*)&min;
+				float near = *(float*)&max;
+
+				return near > far || far < 0f ? float.PositiveInfinity : near;
 			}
 
 			public float IntersectOld(in Ray ray)

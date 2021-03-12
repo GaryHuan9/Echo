@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Objects
 {
@@ -22,6 +23,12 @@ namespace ForceRenderer.Objects
 				fieldDistance = 0.5f / (float)Math.Tan(value / 2f * Scalars.DegreeToRadian);
 			}
 		}
+
+		/// <summary>
+		/// Returns a ray emitted from the camera at <paramref name="uv"/>.
+		/// </summary>
+		/// <param name="uv">X component from -0.5 to 0.5; Y component an aspect radio corrected version of X.</param>
+		public Ray GetRay(Float2 uv) => new Ray(Position, GetDirection(uv));
 
 		/// <summary>
 		/// Returns the direction of ray emitted from camera at <paramref name="uv"/>.
