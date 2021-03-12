@@ -1,8 +1,5 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
-using ForceRenderer.Mathematics;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing

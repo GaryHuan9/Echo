@@ -3,7 +3,7 @@ using System.Threading;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 
-namespace ForceRenderer.Rendering
+namespace ForceRenderer.Rendering.Pixels
 {
 	public abstract class PixelWorker
 	{

@@ -5,6 +5,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.Objects;
 using ForceRenderer.Rendering;
+using ForceRenderer.Rendering.Pixels;
 using ForceRenderer.Rendering.PostProcessing;
 using ForceRenderer.Rendering.Tiles;
 using ForceRenderer.Terminals;
@@ -93,6 +94,7 @@ namespace ForceRenderer
 			using var postProcess = new PostProcessingEngine(buffer);
 
 			postProcess.AddWorker(new BloomWorker(postProcess));
+			postProcess.AddWorker(new VignetteWorker(postProcess, 0.24f));
 			postProcess.AddWorker(new ColorCorrectionWorker(postProcess, 1f));
 
 			postProcess.Dispatch();

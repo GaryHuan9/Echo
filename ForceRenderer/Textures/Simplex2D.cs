@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 
