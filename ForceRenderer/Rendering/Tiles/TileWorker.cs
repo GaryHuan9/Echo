@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using ForceRenderer.Textures;
 
-namespace ForceRenderer.Rendering
+namespace ForceRenderer.Rendering.Tiles
 {
 	/// <summary>
 	/// A worker class that process/render on a specific tile.
@@ -15,10 +14,13 @@ namespace ForceRenderer.Rendering
 	/// </summary>
 	public class TileWorker : IDisposable
 	{
-		public TileWorker(RenderEngine.Profile profile)
+		public TileWorker(PressedRenderProfile profile)
 		{
 			id = Interlocked.Increment(ref workerIdAccumulator);
 			size = profile.tileSize;
+
+			renderBuffer = profile.renderBuffer;
+			pixelWorker = profile.worker;
 
 			pixelSample = profile.pixelSample;
 			adaptiveSample = profile.adaptiveSample;
@@ -52,6 +54,9 @@ namespace ForceRenderer.Rendering
 		readonly int id;
 		readonly int size;
 
+		readonly Texture renderBuffer;
+		readonly PixelWorker pixelWorker;
+
 		readonly int pixelSample;
 		readonly int adaptiveSample;
 
@@ -64,12 +69,6 @@ namespace ForceRenderer.Rendering
 
 		public Int2 RenderOffset => new Int2(RenderOffsetX, RenderOffsetY);
 		public long TotalPixel => Interlocked.Read(ref _totalPixel);
-
-		Texture _renderBuffer;
-		PixelWorker _pixelWorker;
-
-		public Texture RenderBuffer => InterlockedHelper.Read(ref _renderBuffer);
-		public PixelWorker PixelWorker => InterlockedHelper.Read(ref _pixelWorker);
 
 		long _completedSample;
 		long _completedPixel;
@@ -97,7 +96,7 @@ namespace ForceRenderer.Rendering
 		/// </summary>
 		public event Action<TileWorker> OnWorkCompleted;
 
-		public void ResetParameters(Int2 renderOffset, Texture renderBuffer = null, PixelWorker pixelWorker = null)
+		public void Reset(Int2 renderOffset)
 		{
 			if (aborted) throw new Exception("Worker already aborted! It should not be used anymore!");
 			if (Working) throw new Exception("Cannot reset when the worker is dispatched and already working!");
@@ -105,10 +104,7 @@ namespace ForceRenderer.Rendering
 			Interlocked.Exchange(ref _renderOffsetX, renderOffset.x);
 			Interlocked.Exchange(ref _renderOffsetY, renderOffset.y);
 
-			if (renderBuffer != null) Interlocked.Exchange(ref _renderBuffer, renderBuffer);
-			if (pixelWorker != null) Interlocked.Exchange(ref _pixelWorker, pixelWorker);
-
-			Int2 boarder = RenderBuffer.size.Min(RenderOffset + (Int2)size); //Get the furthest buffer position
+			Int2 boarder = renderBuffer.size.Min(RenderOffset + (Int2)size); //Get the furthest buffer position
 			Interlocked.Exchange(ref _totalPixel, (boarder - RenderOffset).Product);
 
 			Interlocked.Exchange(ref _completedSample, 0);
@@ -120,9 +116,6 @@ namespace ForceRenderer.Rendering
 		{
 			if (aborted) throw new Exception("Worker already aborted!");
 			if (Working) throw new Exception("Worker already dispatched!");
-
-			if (PixelWorker == null) throw ExceptionHelper.Invalid(nameof(PixelWorker), InvalidType.isNull);
-			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), InvalidType.isNull);
 
 			if (!worker.IsAlive) worker.Start();
 			dispatchEvent.Set();
@@ -145,7 +138,7 @@ namespace ForceRenderer.Rendering
 		void WorkPixel(int index, ParallelLoopState state)
 		{
 			Int2 position = new Int2(index % size + RenderOffsetX, index / size + RenderOffsetY);
-			if (!(position >= Int2.zero) || !(position < RenderBuffer.size)) return; //Reject pixels outside of buffer
+			if (!(position >= Int2.zero) || !(position < renderBuffer.size)) return; //Reject pixels outside of buffer
 
 			if (aborted) state.Break();
 			Pixel pixel = new Pixel();
@@ -160,8 +153,8 @@ namespace ForceRenderer.Rendering
 					if (aborted) state.Break();
 
 					//Sample color
-					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / RenderBuffer.size - Float2.half;
-					Float3 color = PixelWorker.Render(new Float2(uv.x, uv.y / RenderBuffer.aspect));
+					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / renderBuffer.size - Float2.half;
+					Float3 color = pixelWorker.Render(new Float2(uv.x, uv.y / renderBuffer.aspect));
 
 					//Write to pixel
 					bool successful = pixel.Accumulate(color);
@@ -178,7 +171,7 @@ namespace ForceRenderer.Rendering
 			if (aborted) state.Break();
 
 			//Store pixel
-			RenderBuffer[position] = ((Float4)pixel.Color).Replace(3, 1f);
+			renderBuffer[position] = ((Float4)pixel.Color).Replace(3, 1f);
 			Interlocked.Increment(ref _completedPixel);
 		}
 

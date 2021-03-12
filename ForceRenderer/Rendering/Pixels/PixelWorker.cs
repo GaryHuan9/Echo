@@ -7,14 +7,8 @@ namespace ForceRenderer.Rendering
 {
 	public abstract class PixelWorker
 	{
-		protected PixelWorker(RenderEngine.Profile profile)
-		{
-			this.profile = profile;
-			threadRandom = new ThreadLocal<ExtendedRandom>(() => new ExtendedRandom());
-		}
-
-		readonly ThreadLocal<ExtendedRandom> threadRandom;
-		protected readonly RenderEngine.Profile profile;
+		readonly ThreadLocal<ExtendedRandom> threadRandom = new(() => new ExtendedRandom());
+		protected PressedRenderProfile Profile { get; private set; }
 
 		long _intersectionPerformed;
 
@@ -30,6 +24,12 @@ namespace ForceRenderer.Rendering
 		/// </summary>
 		protected float RandomValue => Random.NextFloat();
 
+		public void AssignProfile(PressedRenderProfile profile)
+		{
+			Interlocked.Exchange(ref _intersectionPerformed, 0);
+			Profile = profile;
+		}
+
 		/// <summary>
 		/// Sample and render at a specific point.
 		/// </summary>
@@ -40,7 +40,7 @@ namespace ForceRenderer.Rendering
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected bool GetIntersection(in Ray ray, out Hit hit)
 		{
-			hit = profile.pressed.bvh.GetIntersection(ray);
+			hit = Profile.scene.bvh.GetIntersectionOld(ray);
 			Interlocked.Increment(ref _intersectionPerformed);
 
 			return float.IsFinite(hit.distance);

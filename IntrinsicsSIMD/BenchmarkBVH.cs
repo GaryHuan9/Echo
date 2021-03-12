@@ -22,7 +22,7 @@ namespace IntrinsicsSIMD
 			scene.children.Add(new MeshObject(mesh, new Glossy()));
 
 			bvh = new PressedScene(scene).bvh;
-			rays = new Ray[1000];
+			rays = new Ray[65536];
 
 			const float Radius = 10f;
 			const float Height = 12f;
@@ -44,15 +44,21 @@ namespace IntrinsicsSIMD
 		//V1: 821.6us per 1000 intersections (iterative unsafe)
 		//V2: 761.2us per 1000 intersections (iterative cached hit)
 
-		// [Benchmark]
-		// public Hit GetIntersectionNew()
-		// {
-		// 	Hit hit = default;
-		//
-		// 	for (int i = 0; i < rays.Length; i++) hit = bvh.GetIntersectionNew(rays[i]);
-		//
-		// 	return hit;
-		// }
+		// |             Method |     Mean |    Error |   StdDev |
+		// |------------------- |---------:|---------:|---------:|
+		// | GetIntersectionNew | 57.62 ms | 0.301 ms | 0.235 ms |
+		// |    GetIntersection | 54.92 ms | 0.207 ms | 0.193 ms |
+		// | GetIntersectionOld | 60.06 ms | 0.526 ms | 0.439 ms |
+
+		[Benchmark]
+		public Hit GetIntersectionNew()
+		{
+			Hit hit = default;
+
+			for (int i = 0; i < rays.Length; i++) hit = bvh.GetIntersectionNew(rays[i]);
+
+			return hit;
+		}
 
 		[Benchmark]
 		public Hit GetIntersection()
@@ -64,15 +70,15 @@ namespace IntrinsicsSIMD
 			return hit;
 		}
 
-		// [Benchmark]
-		// public Hit GetIntersectionOld()
-		// {
-		// 	Hit hit = default;
-		//
-		// 	for (int i = 0; i < rays.Length; i++) hit = bvh.GetIntersectionOld(rays[i]);
-		//
-		// 	return hit;
-		// }
+		[Benchmark]
+		public Hit GetIntersectionOld()
+		{
+			Hit hit = default;
+
+			for (int i = 0; i < rays.Length; i++) hit = bvh.GetIntersectionOld(rays[i]);
+
+			return hit;
+		}
 	}
 
 }

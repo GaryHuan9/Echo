@@ -9,35 +9,23 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
 using ForceRenderer.Objects;
+using ForceRenderer.Rendering.Tiles;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering
 {
 	public class RenderEngine : IDisposable
 	{
-		public Scene Scene { get; set; }
-
-		public int PixelSample { get; set; }    //The number of samples applied to every pixel; this is calculated first
-		public int AdaptiveSample { get; set; } //The max number of samples applied to pixels that the engine deems necessary
-
-		public int TileSize { get; set; }
-		public int WorkerSize { get; set; } = Environment.ProcessorCount / 2;
-
-		public int MaxBounce { get; set; } = 64;
-		public float EnergyEpsilon { get; set; } = 5E-3f; //Epsilon lower bound value to determine when an energy is essentially zero
-
-		Profile profile;
-
-		Texture _renderBuffer;
+		RenderProfile _profile;
 		int _currentState;
 
-		public Texture RenderBuffer
+		public RenderProfile Profile
 		{
-			get => InterlockedHelper.Read(ref _renderBuffer);
+			get => InterlockedHelper.Read(ref _profile);
 			set
 			{
-				if (Rendering) throw new Exception("Cannot modify buffer when rendering!");
-				Interlocked.Exchange(ref _renderBuffer, value);
+				if (!Rendering) Interlocked.Exchange(ref _profile, value);
+				else throw new Exception("Cannot modify profile when rendering!");
 			}
 		}
 
@@ -53,10 +41,9 @@ namespace ForceRenderer.Rendering
 
 		public bool Completed => CurrentState == State.completed;
 		public bool Rendering => CurrentState == State.rendering || CurrentState == State.paused;
-		public Profile CurrentProfile => profile;
 
-		public PixelWorker PixelWorker { get; private set; }
 		public TimeSpan Elapsed => stopwatch.Elapsed;
+		public PressedRenderProfile CurrentProfile { get; private set; }
 
 		TileWorker[] workers; //All of the workers that should process the tiles
 		Int2[] tilePositions; //Positions of tiles. Processed from 0 to length. Positions can be in any order.
@@ -106,17 +93,11 @@ namespace ForceRenderer.Rendering
 
 		public void Begin()
 		{
-			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), this, InvalidType.isNull);
+			if (Profile == null) throw ExceptionHelper.Invalid(nameof(Profile), this, InvalidType.isNull);
 			if (CurrentState != State.waiting) throw new Exception("Incorrect state! Must reset before rendering!");
 
-			PressedScene pressed = new PressedScene(Scene);
-			profile = new Profile(pressed, this);
-
-			if (pressed.camera == null) throw new Exception("No camera in scene! Cannot render without a camera!");
-			if (PixelSample <= 0) throw ExceptionHelper.Invalid(nameof(PixelSample), PixelSample, "must be positive!");
-			if (TileSize <= 0) throw ExceptionHelper.Invalid(nameof(TileSize), TileSize, "must be positive!");
-			if (MaxBounce < 0) throw ExceptionHelper.Invalid(nameof(MaxBounce), MaxBounce, "cannot be negative!");
-			if (EnergyEpsilon < 0f) throw ExceptionHelper.Invalid(nameof(EnergyEpsilon), EnergyEpsilon, "cannot be negative!");
+			CurrentProfile = new PressedRenderProfile(Profile);
+			CurrentProfile.worker.AssignProfile(CurrentProfile);
 
 			lock (manageLocker)
 			{
@@ -132,37 +113,27 @@ namespace ForceRenderer.Rendering
 
 		void CreateTilePositions()
 		{
-			TotalTileSize = RenderBuffer.size.CeiledDivide(profile.tileSize);
+			TotalTileSize = CurrentProfile.renderBuffer.size.CeiledDivide(CurrentProfile.tileSize);
+			tilePositions = CurrentProfile.tilePattern.GetPattern(TotalTileSize);
 
-			// tilePositions = TotalTileSize.Loop().Select(position => position * profile.tileSize).ToArray();
-			// tilePositions.Shuffle(); //Different methods of selection
-
-			tilePositions = (from position in new EnumerableSpiral2D(TotalTileSize.MaxComponent.CeiledDivide(2))
-							 let tile = position + TotalTileSize / 2 - Int2.one
-							 where tile.x >= 0 && tile.y >= 0 && tile.x < TotalTileSize.x && tile.y < TotalTileSize.y
-							 select tile * profile.tileSize).ToArray();
-
-			for (int i = 0; i < tilePositions.Length / 2; i += 2) tilePositions.Swap(i, tilePositions.Length - i - 1);
+			for (int i = 0; i < tilePositions.Length; i++) tilePositions[i] *= CurrentProfile.tileSize;
 
 			tileStatuses = tilePositions.ToDictionary
 			(
-				position => position / profile.tileSize,
+				position => position / CurrentProfile.tileSize,
 				position => new TileStatus(position)
 			);
 		}
 
 		void InitializeWorkers()
 		{
-			PixelWorker = new PathTraceWorker(profile);
-			workers = new TileWorker[profile.workerSize];
+			workers = new TileWorker[CurrentProfile.workerSize];
 
-			for (int i = 0; i < profile.workerSize; i++)
+			for (int i = 0; i < workers.Length; i++)
 			{
-				TileWorker worker = workers[i] = new TileWorker(profile);
+				TileWorker worker = workers[i] = new TileWorker(CurrentProfile);
 
 				worker.OnWorkCompleted += OnTileWorkCompleted;
-				worker.ResetParameters(Int2.zero, RenderBuffer, PixelWorker);
-
 				DispatchWorker(worker);
 			}
 		}
@@ -175,10 +146,10 @@ namespace ForceRenderer.Rendering
 				if (count == TotalTileCount) return;
 
 				Int2 renderPosition = tilePositions[count];
-				Int2 statusPosition = renderPosition / profile.tileSize;
+				Int2 statusPosition = renderPosition / CurrentProfile.tileSize;
 				TileStatus status = tileStatuses[statusPosition];
 
-				worker.ResetParameters(renderPosition);
+				worker.Reset(renderPosition);
 				worker.Dispatch();
 
 				Interlocked.Increment(ref dispatchedTileCount);
@@ -265,7 +236,7 @@ namespace ForceRenderer.Rendering
 
 			lock (manageLocker)
 			{
-				for (int i = 0; i < profile.workerSize; i++)
+				for (int i = 0; i < CurrentProfile.workerSize; i++)
 				{
 					TileWorker worker = workers[i];
 					if (worker.Working) continue;
@@ -314,10 +285,9 @@ namespace ForceRenderer.Rendering
 			fullyCompletedSample = 0;
 			fullyCompletedPixel = 0;
 
-			profile = default;
+			CurrentProfile = default;
 			TotalTileSize = default;
 
-			PixelWorker = null;
 			stopwatch.Reset();
 
 			GC.Collect();
@@ -374,42 +344,6 @@ namespace ForceRenderer.Rendering
 
 			public readonly Int2 position;
 			public readonly int worker;
-		}
-
-		/// <summary>
-		/// An immutable structure that is stores a copy of the renderer's settings/profile.
-		/// This ensures that the renderer never changes its settings when all threads are running.
-		/// </summary>
-		public readonly struct Profile
-		{
-			public Profile(PressedScene pressed, RenderEngine engine)
-			{
-				this.pressed = pressed;
-				scene = pressed.source;
-				camera = pressed.camera;
-
-				pixelSample = engine.PixelSample;
-				adaptiveSample = engine.AdaptiveSample;
-
-				tileSize = engine.TileSize;
-				workerSize = engine.WorkerSize;
-
-				maxBounce = engine.MaxBounce;
-				energyEpsilon = (Float3)engine.EnergyEpsilon;
-			}
-
-			public readonly PressedScene pressed;
-			public readonly Scene scene;
-			public readonly Camera camera;
-
-			public readonly int pixelSample;
-			public readonly int adaptiveSample;
-
-			public readonly int tileSize;
-			public readonly int workerSize;
-
-			public readonly int maxBounce;
-			public readonly Float3 energyEpsilon;
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering;
+using ForceRenderer.Rendering.Tiles;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Terminals
@@ -62,9 +63,9 @@ namespace ForceRenderer.Terminals
 
 		void DisplayMonitoredStatus()
 		{
-			RenderEngine.Profile profile = Engine.CurrentProfile;
-			Texture buffer = Engine.RenderBuffer;
-			PressedScene pressed = profile.pressed;
+			PressedRenderProfile profile = Engine.CurrentProfile;
+			PressedScene pressed = profile.scene;
+			Texture buffer = profile.renderBuffer;
 
 			//TODO: Use a string builder or something more organized, This is too messy!
 
@@ -75,7 +76,7 @@ namespace ForceRenderer.Terminals
 			(
 				0,
 				$"Worker {profile.workerSize}; Resolution {buffer.size}; TotalPX {totalPixel:N0}; PixelSP {profile.pixelSample:N0}; AdaptiveSP {profile.adaptiveSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.TriangleCount:N0}; " +
-				$"Sphere {pressed.SphereCount:N0}; Light {pressed.lights.Count:N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {Engine.PixelWorker};"
+				$"Sphere {pressed.SphereCount:N0}; Light {pressed.lights.Count:N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {profile.worker};"
 			);
 
 			//Display dynamic information
@@ -87,7 +88,7 @@ namespace ForceRenderer.Terminals
 			long rejectedSample = Engine.RejectedSample;
 
 			int completedTile = Engine.CompletedTileCount;
-			long intersections = Engine.PixelWorker.IntersectionPerformed;
+			long intersections = profile.worker.IntersectionPerformed;
 
 			builders.SetLine
 			(
