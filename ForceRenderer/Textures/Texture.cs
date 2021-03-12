@@ -1,10 +1,8 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
-using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 

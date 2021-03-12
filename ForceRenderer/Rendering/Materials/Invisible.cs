@@ -1,5 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Rendering.Pixels;
 
 namespace ForceRenderer.Rendering.Materials
 {

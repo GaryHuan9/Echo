@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Files;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing

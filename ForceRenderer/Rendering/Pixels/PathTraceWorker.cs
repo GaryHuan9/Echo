@@ -3,7 +3,7 @@ using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Rendering.Materials;
 
-namespace ForceRenderer.Rendering
+namespace ForceRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{

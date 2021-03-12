@@ -1,5 +1,4 @@
 ﻿using CodeHelpers.Mathematics;
-using ForceRenderer.Mathematics;
 
 namespace ForceRenderer.Rendering.Materials
 {

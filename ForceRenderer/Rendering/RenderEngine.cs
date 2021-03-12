@@ -4,13 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerables;
 using CodeHelpers.Threads;
-using ForceRenderer.Objects;
 using ForceRenderer.Rendering.Tiles;
-using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering
 {

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using ForceRenderer.Rendering.Pixels;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.Tiles
