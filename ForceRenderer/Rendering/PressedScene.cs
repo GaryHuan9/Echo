@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
@@ -27,6 +28,7 @@ namespace ForceRenderer.Rendering
 
 			List<PressedTriangle> triangleList = CollectionPooler<PressedTriangle>.list.GetObject();
 			List<PressedSphere> sphereList = CollectionPooler<PressedSphere>.list.GetObject();
+			List<PressedLight> lightList = CollectionPooler<PressedLight>.list.GetObject();
 
 			Dictionary<Material, int> materialObjects = CollectionPooler<Material, int>.dictionary.GetObject();
 			Queue<Object> frontier = CollectionPooler<Object>.queue.GetObject();
@@ -72,11 +74,9 @@ namespace ForceRenderer.Rendering
 
 						break;
 					}
-					case DirectionalLight value:
+					case Light value:
 					{
-						if (directionalLight.direction == default) directionalLight = new PressedDirectionalLight(value);
-						else DebugHelper.Log($"Multiple {nameof(DirectionalLight)} found! Only the first one will be used.");
-
+						lightList.Add(new PressedLight(value));
 						break;
 					}
 				}
@@ -110,13 +110,15 @@ namespace ForceRenderer.Rendering
 				}
 			}
 
-			//Extract pressed data and construct BVH acceleration structure
+			//Extract pressed data
 			materials = materialObjects.OrderBy(pair => pair.Value).Select(pair => pair.Key).ToArray();
 			for (int i = 0; i < materials.Length; i++) materials[i].Press();
 
 			triangles = new PressedTriangle[triangleList.Count];
 			spheres = new PressedSphere[sphereList.Count];
+			lights = new ReadOnlyCollection<PressedLight>(lightList);
 
+			//Construct bounding volume hierarchy acceleration structure
 			var aabbs = CollectionPooler<AxisAlignedBoundingBox>.list.GetObject();
 			var indices = CollectionPooler<int>.list.GetObject();
 
@@ -143,6 +145,7 @@ namespace ForceRenderer.Rendering
 			//Release resources
 			CollectionPooler<PressedTriangle>.list.ReleaseObject(triangleList);
 			CollectionPooler<PressedSphere>.list.ReleaseObject(sphereList);
+			CollectionPooler<PressedLight>.list.ReleaseObject(lightList);
 
 			CollectionPooler<Material, int>.dictionary.ReleaseObject(materialObjects);
 			CollectionPooler<Object>.queue.ReleaseObject(frontier);
@@ -152,10 +155,8 @@ namespace ForceRenderer.Rendering
 		}
 
 		public readonly Scene source;
-		public readonly BoundingVolumeHierarchy bvh;
-
 		public readonly Camera camera;
-		public readonly PressedDirectionalLight directionalLight;
+		public readonly BoundingVolumeHierarchy bvh;
 
 		readonly PressedTriangle[] triangles;
 		readonly PressedSphere[] spheres;
@@ -164,6 +165,8 @@ namespace ForceRenderer.Rendering
 		public int TriangleCount => triangles.Length;
 		public int SphereCount => spheres.Length;
 		public int MaterialCount => materials.Length;
+
+		public readonly ReadOnlyCollection<PressedLight> lights;
 
 		/// <summary>
 		/// Returns the intersection status with one object of <paramref name="token"/>.

@@ -1,7 +1,6 @@
 ﻿using ForceRenderer.Textures;
-using Object = ForceRenderer.Objects.Object;
 
-namespace ForceRenderer
+namespace ForceRenderer.Objects
 {
 	public class Scene : Object
 	{

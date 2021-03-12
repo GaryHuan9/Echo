@@ -1,12 +1,11 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
-using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Rendering.Materials;
 using ForceRenderer.Textures;
 
-namespace ForceRenderer
+namespace ForceRenderer.Objects
 {
 	public class StandardScene : Scene
 	{
@@ -32,15 +31,15 @@ namespace ForceRenderer
 		}
 	}
 
-	public class TestLighting : StandardScene
+	public class TestLighting : Scene
 	{
 		public TestLighting()
 		{
-			Cubemap = null;
+			Cubemap = new SolidCubemap(1f);
 
-			children.Add(new DirectionalLight {Intensity = Float3.one * 2f, Rotation = new Float3(45f, 45f, 0f)});
-			children.Add(new PlaneObject(new Emissive {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
-			children.Add(new BoxObject(new Diffuse {Albedo = Float3.one}, Float3.one * 2f) {Position = Float3.up});
+			// children.Add(new DirectionalLight {Intensity = Float3.one * 2f, Rotation = new Float3(45f, 45f, 0f)});
+			// children.Add(new PlaneObject(new Emissive {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
+			// children.Add(new BoxObject(new Diffuse {Albedo = Float3.one}, Float3.one * 2f) {Position = Float3.up});
 		}
 	}
 

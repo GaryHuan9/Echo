@@ -4,7 +4,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
+using CodeHelpers.ObjectPooling;
 using ForceRenderer.Rendering.Materials;
 using ForceRenderer.Textures;
 
@@ -15,9 +17,13 @@ namespace ForceRenderer.IO
 		public MaterialLibrary(string path)
 		{
 			path = this.GetAbsolutePath(path); //Formulate path
+
 			using StreamReader reader = new StreamReader(File.OpenRead(path));
+			using var operationsHandle = CollectionPooler<TextureLoadOperation>.list.Fetch();
 
 			materials = new Dictionary<string, Material>();
+			List<TextureLoadOperation> operations = operationsHandle;
+
 			Material processing = null;
 
 			while (true)
@@ -56,6 +62,15 @@ namespace ForceRenderer.IO
 
 					object parsed = Parse(ref line);
 
+					if (parsed is TextureLoadOperation operation)
+					{
+						operation.Property = info;
+						operation.Target = processing;
+
+						operations.Add(operation);
+						parsed = Texture.white;
+					}
+
 					if (info == null) throw new Exception($"No attribute named: {token.ToString()}!");
 					if (!info.PropertyType.IsInstanceOfType(parsed)) throw new Exception($"Invalid input type to attribute {info}!");
 
@@ -63,6 +78,7 @@ namespace ForceRenderer.IO
 				}
 			}
 
+			Parallel.ForEach(operations, operation => operation.Operate());
 			first = materials.FirstOrDefault().Value;
 
 			object Parse(ref ReadOnlySpan<char> line)
@@ -72,12 +88,7 @@ namespace ForceRenderer.IO
 				ReadOnlySpan<char> piece2 = Eat(ref line);
 
 				if (piece0.IsEmpty) throw new Exception("Cannot set attribute with empty parameters!");
-
-				if (!float.TryParse(piece0, out float float0))
-				{
-					string sibling = new string(piece0.Trim('"'));
-					return Texture2D.Load(this.GetSiblingPath(path, sibling));
-				}
+				if (!float.TryParse(piece0, out float float0)) return new TextureLoadOperation(this.GetSiblingPath(path, new string(piece0.Trim('"'))));
 
 				if (!float.TryParse(piece1, out float float1)) return float0;
 				if (!float.TryParse(piece2, out float float2)) return new Float2(float0, float1);
@@ -86,7 +97,7 @@ namespace ForceRenderer.IO
 			}
 		}
 
-		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".mat"});
+		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new(new[] {".mat"});
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
 		readonly Dictionary<string, Material> materials;
@@ -134,6 +145,18 @@ namespace ForceRenderer.IO
 				line = line[index..].Trim();
 				return piece;
 			}
+		}
+
+		class TextureLoadOperation
+		{
+			public TextureLoadOperation(string path) => this.path = path;
+
+			readonly string path;
+
+			public PropertyInfo Property { get; set; }
+			public Material Target { get; set; }
+
+			public void Operate() => Property.SetValue(Target, Texture2D.Load(path));
 		}
 	}
 }

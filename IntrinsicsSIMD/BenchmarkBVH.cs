@@ -4,6 +4,7 @@ using CodeHelpers.Mathematics;
 using ForceRenderer;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Rendering;
 using ForceRenderer.Rendering.Materials;
