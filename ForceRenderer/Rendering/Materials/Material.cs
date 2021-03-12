@@ -39,7 +39,7 @@ namespace ForceRenderer.Rendering.Materials
 		/// <summary>
 		/// Returns the emission of this material.
 		/// </summary>
-		public abstract Float3 Emit(in CalculatedHit hit, ExtendedRandom random);
+		public virtual Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => SampleTexture(EmissionMap, Emission, hit.texcoord);
 
 		/// <summary>
 		/// Returns the bidirectional scattering distribution function value of

@@ -1,5 +1,7 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Objects;
 using ForceRenderer.Rendering.Materials;
 using ForceRenderer.Textures;
 
@@ -13,12 +15,13 @@ namespace ForceRenderer.Rendering
 		{
 			Ray ray = new Ray(profile.camera.Position, profile.camera.GetDirection(screenUV));
 
-			Float3 energy = Float3.one;
-			Float3 light = Float3.zero;
+			Float3 waves = Float3.one; //AKA energy
+			Float3 color = Float3.zero;
 
 			ExtendedRandom random = Random;
+			int bounce = 0;
 
-			for (int bounce = 0; bounce < profile.maxBounce; bounce++)
+			for (; bounce < profile.maxBounce; bounce++)
 			{
 				if (!GetIntersection(ray, out Hit hit)) break;
 
@@ -30,17 +33,28 @@ namespace ForceRenderer.Rendering
 				Float3 emission = material.Emit(calculated, random);
 				Float3 bsdf = material.BidirectionalScatter(calculated, random, out Float3 direction);
 
-				light += energy * emission;
-				energy *= bsdf;
+				color += waves * emission;
+				waves *= bsdf;
 
-				if (energy <= profile.energyEpsilon) break;
+				if (waves <= profile.energyEpsilon) break;
 				ray = new Ray(calculated.position, direction, true);
 			}
 
-			Cubemap skybox = profile.scene.Cubemap;
-			if (skybox != null) light += energy * skybox.Sample(ray.direction);
+			var cubemap = profile.scene.Cubemap;
+			var lights = profile.pressed.lights;
 
-			return light.Max(Float3.zero); //Do not clamp up, because emissive samples can go beyond 1f
+			if (bounce == 0) return color + cubemap?.Sample(ray.direction) ?? Float3.zero;
+			if (cubemap != null) color += waves * cubemap.Sample(ray.direction);
+
+			for (int i = 0; i < lights.Count; i++)
+			{
+				PressedLight light = lights[i];
+
+				float weight = -light.direction.Dot(ray.direction);
+				if (weight > light.threshold) color += waves * light.intensity * weight;
+			}
+
+			return color.Max(Float3.zero); //Do not clamp up, because emissive samples can go beyond 1f
 		}
 	}
 

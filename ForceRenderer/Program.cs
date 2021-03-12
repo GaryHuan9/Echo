@@ -54,8 +54,8 @@ namespace ForceRenderer
 			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new RandomSpheresScene(120),
-											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
+											RenderBuffer = buffer, Scene = new TestLighting(),
+											PixelSample = 32, AdaptiveSample = 100, TileSize = 32
 										};
 
 			renderEngine = engine;

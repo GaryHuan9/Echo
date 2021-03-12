@@ -22,4 +22,8 @@
       <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Assets\Models\Excluded\Decorator C4D Interior 004\tex\Marble_V017_Normal.jpg" />
+    </ItemGroup>
+
 </Project>
