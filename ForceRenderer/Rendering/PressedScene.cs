@@ -28,7 +28,7 @@ namespace ForceRenderer.Rendering
 
 			List<PressedTriangle> triangleList = CollectionPooler<PressedTriangle>.list.GetObject();
 			List<PressedSphere> sphereList = CollectionPooler<PressedSphere>.list.GetObject();
-			List<PressedLight> lightList = CollectionPooler<PressedLight>.list.GetObject();
+			List<PressedLight> lightList = new List<PressedLight>();
 
 			Dictionary<Material, int> materialObjects = CollectionPooler<Material, int>.dictionary.GetObject();
 			Queue<Object> frontier = CollectionPooler<Object>.queue.GetObject();
@@ -116,6 +116,8 @@ namespace ForceRenderer.Rendering
 
 			triangles = new PressedTriangle[triangleList.Count];
 			spheres = new PressedSphere[sphereList.Count];
+
+			lightList.TrimExcess();
 			lights = new ReadOnlyCollection<PressedLight>(lightList);
 
 			//Construct bounding volume hierarchy acceleration structure
@@ -145,7 +147,6 @@ namespace ForceRenderer.Rendering
 			//Release resources
 			CollectionPooler<PressedTriangle>.list.ReleaseObject(triangleList);
 			CollectionPooler<PressedSphere>.list.ReleaseObject(sphereList);
-			CollectionPooler<PressedLight>.list.ReleaseObject(lightList);
 
 			CollectionPooler<Material, int>.dictionary.ReleaseObject(materialObjects);
 			CollectionPooler<Object>.queue.ReleaseObject(frontier);
