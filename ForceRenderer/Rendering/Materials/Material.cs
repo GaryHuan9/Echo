@@ -11,9 +11,12 @@ namespace ForceRenderer.Rendering.Materials
 	public abstract class Material
 	{
 		public Float3 Albedo { get; set; }
-		public float NormalIntensity { get; set; } = 1f;
+		public Float3 Emission { get; set; }
 
 		public Texture AlbedoMap { get; set; } = Texture.white;
+		public Texture EmissionMap { get; set; } = Texture.white;
+
+		public float NormalIntensity { get; set; } = 1f;
 		public Texture NormalMap { get; set; } = Texture.normal;
 
 		Float4 albedoColor;
@@ -106,7 +109,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return 0f;
 
-			return value * texture[texcoord].x;
+			return Scalars.AlmostEquals(value, 0f) ? 0f : value * texture[texcoord].x;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,7 +118,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float2.zero;
 
-			return value * texture[texcoord].XY;
+			return value == Float2.zero ? Float2.zero : value * texture[texcoord].XY;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -124,7 +127,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float3.zero;
 
-			return value * texture[texcoord].w;
+			return value == Float3.zero ? Float3.zero : value * texture[texcoord].w;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -133,7 +136,7 @@ namespace ForceRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float4.zero;
 
-			return value * texture[texcoord];
+			return value == Float4.zero ? Float4.zero : value * texture[texcoord];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

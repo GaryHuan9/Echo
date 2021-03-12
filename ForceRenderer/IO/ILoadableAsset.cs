@@ -50,8 +50,5 @@ namespace ForceRenderer.IO
 			var directory = Path.GetDirectoryName(path);
 			return Path.Combine(directory ?? "", sibling);
 		}
-
-		//Might move, temporary; returns a string constructed from multiple parts separated by spaces
-		public static string GetRemain(this ILoadableAsset asset, IEnumerable<string> parts, int start) => string.Join(' ', parts.Skip(start));
 	}
 }

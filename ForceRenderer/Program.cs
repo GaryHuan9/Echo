@@ -4,6 +4,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using ForceRenderer.Objects;
 using ForceRenderer.Rendering;
 using ForceRenderer.Rendering.PostProcessing;
 using ForceRenderer.Terminals;
@@ -33,7 +34,7 @@ namespace ForceRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			Console.ReadKey();
+			// Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
@@ -53,12 +54,14 @@ namespace ForceRenderer
 			Texture2D buffer = new Texture2D(resolutions[1]);
 			using RenderEngine engine = new RenderEngine
 										{
-											RenderBuffer = buffer, Scene = new Sponza(),
-											PixelSample = 48, AdaptiveSample = 400, TileSize = 32
+											RenderBuffer = buffer, Scene = new RandomSpheresScene(120),
+											PixelSample = 32, AdaptiveSample = 400, TileSize = 32
 										};
 
 			renderEngine = engine;
 			renderMonitor.Engine = engine;
+
+			commandsController.Log($"Assets loaded");
 
 			PerformanceTest setupTest = new PerformanceTest();
 			using (setupTest.Start()) engine.Begin();
