@@ -1,6 +1,7 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
+using ForceRenderer.Mathematics;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Rendering.Materials;
 using ForceRenderer.Textures;
@@ -31,15 +32,16 @@ namespace ForceRenderer.Objects
 		}
 	}
 
-	public class TestLighting : Scene
+	public class TestLighting : StandardScene
 	{
 		public TestLighting()
 		{
-			Cubemap = new SolidCubemap(1f);
+			children.Add(new Light {Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(45f, 90f, 0f)});
 
-			// children.Add(new DirectionalLight {Intensity = Float3.one * 2f, Rotation = new Float3(45f, 45f, 0f)});
-			// children.Add(new PlaneObject(new Emissive {Emission = Float3.one * 5f}, new Float2(10f, 10f)) {Position = Float3.forward * 5f, Rotation = Float3.right * -90f});
-			// children.Add(new BoxObject(new Diffuse {Albedo = Float3.one}, Float3.one * 2f) {Position = Float3.up});
+			children.Add(new SphereObject(new Diffuse {Albedo = Float3.forward}, 0.5f) {Position = new Float3(2f, 0.5f, -2f)});
+			children.Add(new SphereObject(new Diffuse {Albedo = Float3.up}, 0.5f) {Position = new Float3(-2f, 0.5f, 2f)});
+			children.Add(new BoxObject(new Diffuse {Albedo = Float3.right}, Float3.one) {Position = new Float3(-3f, 0.5f, -3f)});
+			children.Add(new BoxObject(new Diffuse {Albedo = Float3.one * 0.9f}, Float3.one) {Position = new Float3(3f, 0.5f, 3f)});
 		}
 	}
 
@@ -135,10 +137,12 @@ namespace ForceRenderer.Objects
 			// materials["light"] = new Invisible();
 
 			children.Add(new MeshObject(mesh, materials) {Rotation = Float3.up * 90f});
-			Cubemap = new SolidCubemap(new Float3(10.3f, 8.9f, 6.3f));
 
-			children.Add(new Camera(90f) {Position = new Float3(-9.4f, 16.1f, -4.5f), Rotation = new Float3(13.8f, 43.6f, 0f)});
-			// children.Add(new Camera(90f) {Position = new Float3(2.8f, 7.5f, -1.7f), Rotation = new Float3(6.8f, -12.6f, 0f)});
+			// Cubemap = new SolidCubemap(new Float3(10.3f, 8.9f, 6.3f));
+			Cubemap = new SolidCubemap(new Float3(2.3f, 1.9f, 1.3f));
+
+			// children.Add(new Camera(90f) {Position = new Float3(-9.4f, 16.1f, -4.5f), Rotation = new Float3(13.8f, 43.6f, 0f)});
+			children.Add(new Camera(90f) {Position = new Float3(2.8f, 7.5f, -1.7f), Rotation = new Float3(6.8f, -12.6f, 0f)});
 		}
 	}
 

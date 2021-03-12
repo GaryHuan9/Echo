@@ -9,13 +9,13 @@ namespace ForceRenderer.Objects
 	{
 		public InteriorScene()
 		{
-			Cubemap = new SolidCubemap(1f);
+			Cubemap = new SolidCubemap(3f);
 
 			var mesh = new Mesh("Assets/Models/Excluded/Decorator C4D Interior 004/interior.obj");
 			var materials = new MaterialLibrary("Assets/Models/Excluded/Decorator C4D Interior 004/interior.mat");
 
 			children.Add(new MeshObject(mesh, materials) {Rotation = Float3.up * 180f});
-			children.Add(new Camera(120f) {Position = new Float3(2f, 3f, 7f), Rotation = new Float3(5f, 42f, 0f)});
+			children.Add(new Camera(120f) {Position = new Float3(-1f, 3f, 5f), Rotation = new Float3(3f, 74f, 0f)});
 		}
 	}
 }
