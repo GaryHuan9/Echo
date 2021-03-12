@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering;
 
@@ -125,18 +122,18 @@ namespace ForceRenderer.Mathematics
 		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
 		/// Returns the intersection hit if found. Otherwise a <see cref="Hit"/> with <see cref="float.PositiveInfinity"/> distance.
 		/// </summary>
-		public Hit GetIntersection(in Ray ray)
+		public Hit GetIntersectionOld(in Ray ray)
 		{
 			if (nodes == null) return new Hit(float.PositiveInfinity);
 
 			ref readonly Node root = ref nodes[0];
 			Hit hit = new Hit(float.PositiveInfinity);
 
-			GetIntersection(root, ray, ref hit);
+			GetIntersectionOld(root, ray, ref hit);
 			return hit;
 		}
 
-		unsafe void GetIntersection(in Node root, in Ray ray, ref Hit hit)
+		unsafe void GetIntersectionOld(in Node root, in Ray ray, ref Hit hit)
 		{
 			Node* stack = stackalloc Node[maxDepth];
 			float* hits = stackalloc float[maxDepth];
@@ -197,6 +194,204 @@ namespace ForceRenderer.Mathematics
 			}
 		}
 
+		public Hit GetIntersection(in Ray ray)
+		{
+			if (nodes == null) return new Hit(float.PositiveInfinity);
+
+			ref readonly Node root = ref nodes[0];
+			float first = root.aabb.Intersect(ray);
+
+			Hit hit = new Hit(float.PositiveInfinity);
+			if (first >= hit.distance) return hit;
+
+			//TODO: If root is leaf too
+			GetIntersection(ray, ref hit);
+
+			return hit;
+		}
+
+		unsafe void GetIntersection(in Ray ray, ref Hit hit)
+		{
+			int* stack = stackalloc int[maxDepth];
+			float* hits = stackalloc float[maxDepth];
+
+			int* next = stack;
+
+			*next++ = 1; //The root's first children is always at one
+
+			while (next != stack)
+			{
+				int index = *--next;
+				if (*--hits >= hit.distance) continue;
+
+				ref readonly Node child0 = ref nodes[index];
+				ref readonly Node child1 = ref nodes[index + 1];
+
+				float hit0 = child0.aabb.Intersect(ray);
+				float hit1 = child1.aabb.Intersect(ray);
+
+				if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
+				{
+					if (hit1 < hit.distance)
+					{
+						if (child1.IsLeaf) //TODO: Leaf calculation currently in wrong order, fix it
+						{
+							float distance = pressed.Intersect(ray, child1.token, out Float2 uv);
+							if (distance < hit.distance) hit = new Hit(distance, child1.token, uv);
+						}
+						else
+						{
+							*next++ = child1.children;
+							*hits++ = hit1;
+						}
+					}
+
+					if (hit0 < hit.distance)
+					{
+						if (child0.IsLeaf)
+						{
+							float distance = pressed.Intersect(ray, child0.token, out Float2 uv);
+							if (distance < hit.distance) hit = new Hit(distance, child0.token, uv);
+						}
+						else
+						{
+							*next++ = child0.children;
+							*hits++ = hit0;
+						}
+					}
+				}
+				else
+				{
+					if (hit0 < hit.distance)
+					{
+						if (child0.IsLeaf)
+						{
+							float distance = pressed.Intersect(ray, child0.token, out Float2 uv);
+							if (distance < hit.distance) hit = new Hit(distance, child0.token, uv);
+						}
+						else
+						{
+							*next++ = child0.children;
+							*hits++ = hit0;
+						}
+					}
+
+					if (hit1 < hit.distance)
+					{
+						if (child1.IsLeaf)
+						{
+							float distance = pressed.Intersect(ray, child1.token, out Float2 uv);
+							if (distance < hit.distance) hit = new Hit(distance, child1.token, uv);
+						}
+						else
+						{
+							*next++ = child1.children;
+							*hits++ = hit1;
+						}
+					}
+				}
+			}
+		}
+
+		public Hit GetIntersectionNew(in Ray ray)
+		{
+			if (nodes == null) return new Hit(float.PositiveInfinity);
+
+			ref readonly Node root = ref nodes[0];
+			float first = root.aabb.Intersect(ray);
+
+			Hit hit = new Hit(float.PositiveInfinity);
+			if (first >= hit.distance) return hit;
+
+			//TODO: If root is leaf too
+			GetIntersectionNew(ray, ref hit);
+
+			return hit;
+		}
+
+		unsafe void GetIntersectionNew(in Ray ray, ref Hit hit)
+		{
+			int* stack = stackalloc int[maxDepth];
+			float* hits = stackalloc float[maxDepth];
+
+			int* next = stack;
+
+			*next++ = 1; //The root's first children is always at one
+
+			while (next != stack)
+			{
+				int index = *--next;
+				if (*--hits >= hit.distance) continue;
+
+				ref readonly Node child0 = ref nodes[index];
+				ref readonly Node child1 = ref nodes[index + 1];
+
+				float hit0 = child0.aabb.Intersect(ray);
+				float hit1 = child1.aabb.Intersect(ray);
+
+				if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
+				{
+					bool leaf = child0.IsLeaf;
+
+					if (hit0 < hit.distance && leaf)
+					{
+						float distance = pressed.Intersect(ray, child0.token, out Float2 uv);
+						if (distance < hit.distance) hit = new Hit(distance, child0.token, uv);
+					}
+
+					if (hit1 < hit.distance)
+					{
+						if (child1.IsLeaf)
+						{
+							float distance = pressed.Intersect(ray, child1.token, out Float2 uv);
+							if (distance < hit.distance) hit = new Hit(distance, child1.token, uv);
+						}
+						else
+						{
+							*next++ = child1.children;
+							*hits++ = hit1;
+						}
+					}
+
+					if (hit0 < hit.distance && !leaf)
+					{
+						*next++ = child0.children;
+						*hits++ = hit0;
+					}
+				}
+				else
+				{
+					bool leaf = child1.IsLeaf;
+
+					if (hit1 < hit.distance && leaf)
+					{
+						float distance = pressed.Intersect(ray, child1.token, out Float2 uv);
+						if (distance < hit.distance) hit = new Hit(distance, child1.token, uv);
+					}
+
+					if (hit0 < hit.distance)
+					{
+						if (child0.IsLeaf)
+						{
+							float distance = pressed.Intersect(ray, child0.token, out Float2 uv);
+							if (distance < hit.distance) hit = new Hit(distance, child0.token, uv);
+						}
+						else
+						{
+							*next++ = child0.children;
+							*hits++ = hit0;
+						}
+					}
+
+					if (hit1 < hit.distance && !leaf)
+					{
+						*next++ = child1.children;
+						*hits++ = hit1;
+					}
+				}
+			}
+		}
+
 		[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
 		readonly struct Node
 		{
@@ -207,7 +402,8 @@ namespace ForceRenderer.Mathematics
 				this.children = children;
 			}
 
-			[FieldOffset(0)] public readonly AxisAlignedBoundingBox aabb;
+			[FieldOffset(0)]
+			public readonly AxisAlignedBoundingBox aabb;
 
 			//NOTE: the AABB is 28 bytes large, but its last 4 bytes are not used and only occupied for SIMD loading
 			//So we can overlap the next four bytes onto the AABB and pay extra attention when first assigning the fields
@@ -274,4 +470,5 @@ namespace ForceRenderer.Mathematics
 		//
 		// DebugHelper.Log(aabb.Intersect(ray));
 	}
+
 }

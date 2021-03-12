@@ -12,6 +12,7 @@ using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
 using ForceRenderer.Rendering.Materials;
+using ForceRenderer.Textures;
 using Object = ForceRenderer.Objects.Object;
 
 namespace ForceRenderer.Rendering
@@ -24,7 +25,9 @@ namespace ForceRenderer.Rendering
 		public PressedScene(Scene source)
 		{
 			ExceptionHelper.AssertMainThread();
+
 			this.source = source;
+			cubemap = source.Cubemap;
 
 			List<PressedTriangle> triangleList = CollectionPooler<PressedTriangle>.list.GetObject();
 			List<PressedSphere> sphereList = CollectionPooler<PressedSphere>.list.GetObject();
@@ -157,6 +160,8 @@ namespace ForceRenderer.Rendering
 
 		public readonly Scene source;
 		public readonly Camera camera;
+		public readonly Cubemap cubemap;
+
 		public readonly BoundingVolumeHierarchy bvh;
 
 		readonly PressedTriangle[] triangles;

@@ -32,8 +32,8 @@ namespace ForceRenderer.Mathematics
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
 		/// NOTE: return can be negative, which means the ray origins inside box.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		public float Intersect(in Ray ray)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public unsafe float Intersect(in Ray ray)
 		{
 			Vector128<float> n = Sse.Multiply(ray.inverseDirectionVector, Sse.Subtract(centerVector, ray.originVector));
 			Vector128<float> k = Sse.Multiply(ray.absolutedInverseDirectionVector, extendVector);
@@ -41,16 +41,25 @@ namespace ForceRenderer.Mathematics
 			Vector128<float> min = Sse.Add(n, k);
 			Vector128<float> max = Sse.Subtract(n, k);
 
-			unsafe
-			{
-				ref readonly Float3 far3 = ref *(Float3*)&min;
-				ref readonly Float3 near3 = ref *(Float3*)&max;
+			//Permute vector for min max, ignores last component
+			Vector128<float> minPermute = Avx.Permute(min, 0b0100_1010);
+			Vector128<float> maxPermute = Avx.Permute(max, 0b0100_1010);
 
-				float far = far3.MinComponent;
-				float near = near3.MaxComponent;
+			min = Sse.Min(min, minPermute);
+			max = Sse.Max(max, maxPermute);
 
-				return near > far || far < 0f ? float.PositiveInfinity : near;
-			}
+			//Second permute for min max
+			minPermute = Avx.Permute(min, 0b1011_0001);
+			maxPermute = Avx.Permute(max, 0b1011_0001);
+
+			min = Sse.Min(min, minPermute);
+			max = Sse.Max(max, maxPermute);
+
+			//Extract result
+			float far = *(float*)&min;
+			float near = *(float*)&max;
+
+			return near > far || far < 0f ? float.PositiveInfinity : near;
 		}
 
 		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other)

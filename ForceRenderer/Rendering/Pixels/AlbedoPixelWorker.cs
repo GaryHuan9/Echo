@@ -6,16 +6,15 @@ namespace ForceRenderer.Rendering
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{
-		public AlbedoPixelWorker(RenderEngine.Profile profile) : base(profile) { }
-
 		public override Float3 Render(Float2 screenUV)
 		{
-			Ray ray = new Ray(profile.camera.Position, profile.camera.GetDirection(screenUV));
+			PressedScene scene = Profile.scene;
+			Ray ray = scene.camera.GetRay(screenUV);
 
 			while (GetIntersection(ray, out Hit hit))
 			{
-				CalculatedHit calculated = new CalculatedHit(hit, ray, profile.pressed);
-				Material material = profile.pressed.GetMaterial(hit);
+				CalculatedHit calculated = new CalculatedHit(hit, ray, Profile.scene);
+				Material material = Profile.scene.GetMaterial(hit);
 
 				Float4 sample = material.AlbedoMap[calculated.texcoord];
 				if (!Scalars.AlmostEquals(sample.w, 0f)) return sample.XYZ * material.Albedo;
@@ -23,7 +22,7 @@ namespace ForceRenderer.Rendering
 				ray = new Ray(calculated.position, calculated.direction, true);
 			}
 
-			return profile.scene.Cubemap?.Sample(ray.direction) ?? Float3.zero;
+			return scene.cubemap?.Sample(ray.direction) ?? Float3.zero;
 		}
 	}
 }

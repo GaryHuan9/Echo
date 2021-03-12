@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -7,6 +6,7 @@ using CodeHelpers.Threads;
 using ForceRenderer.Objects;
 using ForceRenderer.Rendering;
 using ForceRenderer.Rendering.PostProcessing;
+using ForceRenderer.Rendering.Tiles;
 using ForceRenderer.Terminals;
 using ForceRenderer.Textures;
 
@@ -43,6 +43,24 @@ namespace ForceRenderer
 		static CommandsController commandsController;
 		static RenderMonitor renderMonitor;
 
+		static readonly RenderProfile pathTraceProfile = new()
+														 {
+															 Method = new PathTraceWorker(), TilePattern = new SpiralPattern(),
+															 PixelSample = 32, AdaptiveSample = 400
+														 };
+
+		static readonly RenderProfile pathTraceExportProfile = new()
+															   {
+																   Method = new PathTraceWorker(), TilePattern = new CheckerboardPattern(),
+																   PixelSample = 64, AdaptiveSample = 1200
+															   };
+
+		static readonly RenderProfile albedoProfile = new()
+													  {
+														  Method = new AlbedoPixelWorker(), TilePattern = new ScrambledPattern(),
+														  PixelSample = 12, AdaptiveSample = 200
+													  };
+
 		static void PerformRender()
 		{
 			Int2[] resolutions =
@@ -52,16 +70,17 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			using RenderEngine engine = new RenderEngine
-										{
-											RenderBuffer = buffer, Scene = new TestLighting(),
-											PixelSample = 32, AdaptiveSample = 100, TileSize = 32
-										};
+			RenderProfile profile = albedoProfile;
+
+			profile.Scene = new RandomSpheresScene(120);
+			profile.RenderBuffer = buffer;
+
+			using RenderEngine engine = new RenderEngine {Profile = profile};
 
 			renderEngine = engine;
 			renderMonitor.Engine = engine;
 
-			commandsController.Log($"Assets loaded");
+			commandsController.Log("Assets loaded");
 
 			PerformanceTest setupTest = new PerformanceTest();
 			using (setupTest.Start()) engine.Begin();
@@ -166,7 +185,7 @@ namespace ForceRenderer
 		[Command]
 		static CommandResult SaveRenderBuffer()
 		{
-			Texture buffer = renderEngine.RenderBuffer;
+			Texture buffer = renderEngine.Profile.RenderBuffer;
 
 			if (buffer == null) return new CommandResult("No buffer assigned", false);
 			if (buffer is not Texture2D texture) return new CommandResult("Unsupported buffer type", false);

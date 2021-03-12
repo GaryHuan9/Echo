@@ -32,6 +32,7 @@ namespace ForceRenderer.Mathematics
 
 			originVector = default;
 			directionVector = default;
+			inverseDirection = default;
 
 			this.origin = origin;
 			this.direction = direction;
@@ -45,6 +46,7 @@ namespace ForceRenderer.Mathematics
 
 		[FieldOffset(0)] public readonly Float3 origin;
 		[FieldOffset(12)] public readonly Float3 direction;
+		[FieldOffset(24)] public readonly Float3 inverseDirection;
 
 		//NOTE: these fields have overlapping memory offsets to reduce footprint. Pay extra attention when assigning them.
 		[FieldOffset(0)] public readonly Vector128<float> originVector;
