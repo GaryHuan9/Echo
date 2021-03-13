@@ -161,6 +161,8 @@ namespace ForceRenderer.Objects.SceneObjects
 			}
 		}
 
+		const float Margin = 0f; //Used to easily differentiate adjacent triangles
+
 		/// <summary>
 		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
 		/// Uses the famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf.
@@ -177,12 +179,12 @@ namespace ForceRenderer.Objects.SceneObjects
 			Float3 offset = ray.origin - vertex0;
 			float u = offset.Dot(cross2) * inverse;
 
-			if (u < 0f || u > 1f) goto noIntersection; //Outside barycentric bounds
+			if (u < Margin || u > 1f - Margin) goto noIntersection; //Outside barycentric bounds
 
 			Float3 cross1 = Float3.Cross(offset, edge1);
 			float v = ray.direction.Dot(cross1) * inverse;
 
-			if (v < 0f || u + v > 1f) goto noIntersection; //Outside barycentric bounds
+			if (v < Margin || u + v > 1f - Margin) goto noIntersection; //Outside barycentric bounds
 
 			float distance = edge2.Dot(cross1) * inverse;
 			if (distance < 0f) goto noIntersection; //Ray pointing away from triangle = negative distance

@@ -24,7 +24,11 @@ namespace ForceRenderer.Rendering.Pixels
 		/// </summary>
 		protected float RandomValue => Random.NextFloat();
 
-		public void AssignProfile(PressedRenderProfile profile)
+		/// <summary>
+		/// Assigns the render profile before a render session begins.
+		/// NOTE: This can be used as a "reset" point for the worker.
+		/// </summary>
+		public virtual void AssignProfile(PressedRenderProfile profile)
 		{
 			Interlocked.Exchange(ref _intersectionPerformed, 0);
 			Profile = profile;
