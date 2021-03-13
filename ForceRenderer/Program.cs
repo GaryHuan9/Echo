@@ -86,7 +86,7 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = bvhQualityProfile;
+			RenderProfile profile = pathTraceProfile;
 
 			profile.Scene = new Sponza();
 			profile.RenderBuffer = buffer;
