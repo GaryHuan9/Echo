@@ -122,81 +122,15 @@ namespace ForceRenderer.Mathematics
 		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
 		/// Returns the intersection hit if found. Otherwise a <see cref="Hit"/> with <see cref="float.PositiveInfinity"/> distance.
 		/// </summary>
-		public Hit GetIntersectionOld(in Ray ray)
-		{
-			if (nodes == null) return new Hit(float.PositiveInfinity);
-
-			ref readonly Node root = ref nodes[0];
-			Hit hit = new Hit(float.PositiveInfinity);
-
-			GetIntersectionOld(root, ray, ref hit);
-			return hit;
-		}
-
-		unsafe void GetIntersectionOld(in Node root, in Ray ray, ref Hit hit)
-		{
-			Node* stack = stackalloc Node[maxDepth];
-			float* hits = stackalloc float[maxDepth];
-
-			Node* next = stack;
-
-			*next++ = root;
-			*hits++ = root.aabb.Intersect(ray);
-
-			while (next != stack)
-			{
-				ref readonly Node node = ref *--next;
-				if (*--hits >= hit.distance) continue;
-
-				if (node.IsLeaf)
-				{
-					//Now we finally calculate the real intersection
-					float distance = pressed.Intersect(ray, node.token, out Float2 uv);
-					if (distance < hit.distance) hit = new Hit(distance, node.token, uv);
-
-					continue;
-				}
-
-				ref readonly Node child0 = ref nodes[node.children];
-				ref readonly Node child1 = ref nodes[node.children + 1];
-
-				float hit0 = child0.aabb.Intersect(ray);
-				float hit1 = child1.aabb.Intersect(ray);
-
-				if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
-				{
-					if (hit1 < hit.distance)
-					{
-						*next++ = child1;
-						*hits++ = hit1;
-					}
-
-					if (hit0 < hit.distance)
-					{
-						*next++ = child0;
-						*hits++ = hit0;
-					}
-				}
-				else
-				{
-					if (hit0 < hit.distance)
-					{
-						*next++ = child0;
-						*hits++ = hit0;
-					}
-
-					if (hit1 < hit.distance)
-					{
-						*next++ = child1;
-						*hits++ = hit1;
-					}
-				}
-			}
-		}
-
 		public Hit GetIntersection(in Ray ray)
 		{
 			if (nodes == null) return new Hit(float.PositiveInfinity);
+
+			if (nodes.Length == 1)
+			{
+				int token = nodes[0].token; //If root is the only node/leaf
+				return new Hit(pressed.Intersect(ray, token, out Float2 uv), token, uv);
+			}
 
 			ref readonly Node root = ref nodes[0];
 			float first = root.aabb.Intersect(ray);
@@ -204,9 +138,7 @@ namespace ForceRenderer.Mathematics
 			Hit hit = new Hit(float.PositiveInfinity);
 			if (first >= hit.distance) return hit;
 
-			//TODO: If root is leaf too
 			GetIntersection(ray, ref hit);
-
 			return hit;
 		}
 
@@ -216,7 +148,6 @@ namespace ForceRenderer.Mathematics
 			float* hits = stackalloc float[maxDepth];
 
 			int* next = stack;
-
 			*next++ = 1; //The root's first children is always at one
 
 			while (next != stack)
@@ -230,11 +161,14 @@ namespace ForceRenderer.Mathematics
 				float hit0 = child0.aabb.Intersect(ray);
 				float hit1 = child1.aabb.Intersect(ray);
 
-				if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
+				//Orderly intersects the two children so that there is a higher chance of intersection on the first child.
+				//Although the order of leaf intersection is wrong, the performance is actually better than reversing to correct it.
+
+				if (hit0 < hit1)
 				{
 					if (hit1 < hit.distance)
 					{
-						if (child1.IsLeaf) //TODO: Leaf calculation currently in wrong order, fix it
+						if (child1.IsLeaf)
 						{
 							float distance = pressed.Intersect(ray, child1.token, out Float2 uv);
 							if (distance < hit.distance) hit = new Hit(distance, child1.token, uv);
@@ -288,105 +222,6 @@ namespace ForceRenderer.Mathematics
 							*next++ = child1.children;
 							*hits++ = hit1;
 						}
-					}
-				}
-			}
-		}
-
-		public Hit GetIntersectionNew(in Ray ray)
-		{
-			if (nodes == null) return new Hit(float.PositiveInfinity);
-
-			ref readonly Node root = ref nodes[0];
-			float first = root.aabb.Intersect(ray);
-
-			Hit hit = new Hit(float.PositiveInfinity);
-			if (first >= hit.distance) return hit;
-
-			//TODO: If root is leaf too
-			GetIntersectionNew(ray, ref hit);
-
-			return hit;
-		}
-
-		unsafe void GetIntersectionNew(in Ray ray, ref Hit hit)
-		{
-			int* stack = stackalloc int[maxDepth];
-			float* hits = stackalloc float[maxDepth];
-
-			int* next = stack;
-
-			*next++ = 1; //The root's first children is always at one
-
-			while (next != stack)
-			{
-				int index = *--next;
-				if (*--hits >= hit.distance) continue;
-
-				ref readonly Node child0 = ref nodes[index];
-				ref readonly Node child1 = ref nodes[index + 1];
-
-				float hit0 = child0.aabb.Intersect(ray);
-				float hit1 = child1.aabb.Intersect(ray);
-
-				if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
-				{
-					bool leaf = child0.IsLeaf;
-
-					if (hit0 < hit.distance && leaf)
-					{
-						float distance = pressed.Intersect(ray, child0.token, out Float2 uv);
-						if (distance < hit.distance) hit = new Hit(distance, child0.token, uv);
-					}
-
-					if (hit1 < hit.distance)
-					{
-						if (child1.IsLeaf)
-						{
-							float distance = pressed.Intersect(ray, child1.token, out Float2 uv);
-							if (distance < hit.distance) hit = new Hit(distance, child1.token, uv);
-						}
-						else
-						{
-							*next++ = child1.children;
-							*hits++ = hit1;
-						}
-					}
-
-					if (hit0 < hit.distance && !leaf)
-					{
-						*next++ = child0.children;
-						*hits++ = hit0;
-					}
-				}
-				else
-				{
-					bool leaf = child1.IsLeaf;
-
-					if (hit1 < hit.distance && leaf)
-					{
-						float distance = pressed.Intersect(ray, child1.token, out Float2 uv);
-						if (distance < hit.distance) hit = new Hit(distance, child1.token, uv);
-					}
-
-					if (hit0 < hit.distance)
-					{
-						if (child0.IsLeaf)
-						{
-							float distance = pressed.Intersect(ray, child0.token, out Float2 uv);
-							if (distance < hit.distance) hit = new Hit(distance, child0.token, uv);
-						}
-						else
-						{
-							*next++ = child0.children;
-							*hits++ = hit0;
-						}
-					}
-
-					if (hit1 < hit.distance && !leaf)
-					{
-						*next++ = child1.children;
-						*hits++ = hit1;
 					}
 				}
 			}
