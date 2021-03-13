@@ -44,7 +44,7 @@ namespace ForceRenderer.Rendering.Pixels
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected bool GetIntersection(in Ray ray, out Hit hit)
 		{
-			hit = Profile.scene.bvh.GetIntersectionOld(ray);
+			hit = Profile.scene.bvh.GetIntersection(ray);
 			Interlocked.Increment(ref _intersectionPerformed);
 
 			return float.IsFinite(hit.distance);
