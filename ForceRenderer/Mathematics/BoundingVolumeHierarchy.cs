@@ -392,6 +392,53 @@ namespace ForceRenderer.Mathematics
 			}
 		}
 
+		/// <summary>
+		/// Returns the number of AABB intersection calculated before a result it determined.
+		/// </summary>
+		public int GetIntersectionCost(in Ray ray)
+		{
+			if (nodes == null) return 0;
+
+			ref readonly Node root = ref nodes[0];
+			float hit = root.aabb.Intersect(ray);
+
+			if (float.IsPositiveInfinity(hit)) return 1;
+
+			hit = float.PositiveInfinity;
+			return GetIntersectionCost(root, ray, ref hit) + 1;
+		}
+
+		int GetIntersectionCost(in Node node, in Ray ray, ref float hit)
+		{
+			if (node.IsLeaf)
+			{
+				//Now we finally calculate the real intersection
+				hit = Math.Min(pressed.Intersect(ray, node.token, out Float2 _), hit);
+				return 0;
+			}
+
+			ref Node child0 = ref nodes[node.children];
+			ref Node child1 = ref nodes[node.children + 1];
+
+			float hit0 = child0.aabb.Intersect(ray);
+			float hit1 = child1.aabb.Intersect(ray);
+
+			int cost = 2;
+
+			if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
+			{
+				if (hit0 < hit) cost += GetIntersectionCost(in child0, ray, ref hit);
+				if (hit1 < hit) cost += GetIntersectionCost(in child1, ray, ref hit);
+			}
+			else
+			{
+				if (hit1 < hit) cost += GetIntersectionCost(in child1, ray, ref hit);
+				if (hit0 < hit) cost += GetIntersectionCost(in child0, ray, ref hit);
+			}
+
+			return cost;
+		}
+
 		[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
 		readonly struct Node
 		{

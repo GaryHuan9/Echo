@@ -25,8 +25,6 @@ namespace ForceRenderer.Rendering
 		public PressedScene(Scene source)
 		{
 			ExceptionHelper.AssertMainThread();
-
-			this.source = source;
 			cubemap = source.Cubemap;
 
 			List<PressedTriangle> triangleList = CollectionPooler<PressedTriangle>.list.GetObject();
@@ -89,12 +87,13 @@ namespace ForceRenderer.Rendering
 			}
 
 			//Divide large triangles for better BVH space partitioning
-			const float DivideThresholdMultiplier = 4.8f;
-			const int DivideMaxIteration = 3;
+			const float DivideThresholdMultiplier = 4.8f; //How many times does an area has to be over the average to trigger a fragmentation
+			const int DivideMaxIteration = 3;             //The maximum number of fragmentation that can happen to one source triangle
 
 			float fragmentThreshold = (float)(totalArea / triangleList.Count * DivideThresholdMultiplier);
+			int triangleListCount = triangleList.Count; //Cache list count so fragmented triangles are not fragmented again
 
-			for (int i = 0; i < triangleList.Count; i++)
+			for (int i = 0; i < triangleListCount; i++)
 			{
 				float multiplier = triangleList[i].Area / fragmentThreshold;
 				if (multiplier > 0f) Fragment(MathF.Log2(multiplier).Ceil());
@@ -158,7 +157,6 @@ namespace ForceRenderer.Rendering
 			CollectionPooler<int>.list.ReleaseObject(indices);
 		}
 
-		public readonly Scene source;
 		public readonly Camera camera;
 		public readonly Cubemap cubemap;
 

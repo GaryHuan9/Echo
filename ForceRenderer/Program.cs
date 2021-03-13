@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -35,7 +36,7 @@ namespace ForceRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			// Console.ReadKey();
+			Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
@@ -46,21 +47,35 @@ namespace ForceRenderer
 
 		static readonly RenderProfile pathTraceProfile = new()
 														 {
-															 Method = new PathTraceWorker(), TilePattern = new SpiralPattern(),
-															 PixelSample = 32, AdaptiveSample = 400
+															 Method = new PathTraceWorker(),
+															 TilePattern = new SpiralPattern(),
+															 PixelSample = 32,
+															 AdaptiveSample = 400
 														 };
 
 		static readonly RenderProfile pathTraceExportProfile = new()
 															   {
-																   Method = new PathTraceWorker(), TilePattern = new CheckerboardPattern(),
-																   PixelSample = 64, AdaptiveSample = 1200
+																   Method = new PathTraceWorker(),
+																   TilePattern = new CheckerboardPattern(),
+																   PixelSample = 64,
+																   AdaptiveSample = 1200
 															   };
 
 		static readonly RenderProfile albedoProfile = new()
 													  {
-														  Method = new AlbedoPixelWorker(), TilePattern = new ScrambledPattern(),
-														  PixelSample = 12, AdaptiveSample = 200
+														  Method = new AlbedoPixelWorker(),
+														  TilePattern = new ScrambledPattern(),
+														  PixelSample = 12,
+														  AdaptiveSample = 200
 													  };
+
+		static readonly RenderProfile bvhQualityProfile = new()
+														  {
+															  Method = new BVHQualityWorker(),
+															  TilePattern = new OrderedPattern(),
+															  PixelSample = 1,
+															  AdaptiveSample = 0
+														  };
 
 		static void PerformRender()
 		{
@@ -71,9 +86,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = albedoProfile;
+			RenderProfile profile = bvhQualityProfile;
 
-			profile.Scene = new RandomSpheresScene(120);
+			profile.Scene = new Sponza();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
@@ -107,6 +122,8 @@ namespace ForceRenderer
 			long completedSample = engine.CompletedSample;
 
 			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
+			if (profile.Method is BVHQualityWorker qualityWorker) commandsController.Log(qualityWorker.GetQualityText());
+
 			renderEngine = null;
 		}
 
