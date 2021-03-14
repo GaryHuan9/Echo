@@ -17,26 +17,24 @@ namespace ForceRenderer.Textures
 
 			Exception error = null;
 
-			Parallel.For
-			(
-				0, names.Count, (index, state) =>
-								{
-									try
-									{
-										sources[index] = Texture2D.Load(Path.Combine(path, names[index]));
-									}
-									catch (FileNotFoundException exception)
-									{
-										error = exception;
-										state.Break();
-									}
-								}
-			);
-
+			Parallel.For(0, names.Count, Load);
 			if (error != null) throw error;
 
 			textures = new ReadOnlyCollection<Texture>(sources);
 			this.multiplier = multiplier;
+
+			void Load(int index, ParallelLoopState state)
+			{
+				try
+				{
+					sources[index] = Texture2D.Load(Path.Combine(path, names[index]));
+				}
+				catch (FileNotFoundException exception)
+				{
+					error = exception;
+					state.Stop();
+				}
+			}
 		}
 
 		readonly ReadOnlyCollection<Texture> textures;
@@ -61,8 +59,8 @@ namespace ForceRenderer.Textures
 							_ => new Float2(-direction.x, direction.y)
 						};
 
-			component = Math.Abs(component) * 2f;
-			return Sample(index, uv / component);
+			component = 0.5f / Math.Abs(component);
+			return Sample(index, uv * component);
 		}
 
 		/// <summary>

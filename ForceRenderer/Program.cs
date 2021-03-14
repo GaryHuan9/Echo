@@ -45,6 +45,14 @@ namespace ForceRenderer
 		static CommandsController commandsController;
 		static RenderMonitor renderMonitor;
 
+		static readonly RenderProfile pathTraceFastProfile = new()
+															 {
+																 Method = new PathTraceWorker(),
+																 TilePattern = new CheckerboardPattern(),
+																 PixelSample = 24,
+																 AdaptiveSample = 180
+															 };
+
 		static readonly RenderProfile pathTraceProfile = new()
 														 {
 															 Method = new PathTraceWorker(),
@@ -66,7 +74,7 @@ namespace ForceRenderer
 														  Method = new AlbedoPixelWorker(),
 														  TilePattern = new ScrambledPattern(),
 														  PixelSample = 12,
-														  AdaptiveSample = 200
+														  AdaptiveSample = 150
 													  };
 
 		static readonly RenderProfile bvhQualityProfile = new()
@@ -86,7 +94,7 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceProfile;
+			RenderProfile profile = bvhQualityProfile;
 
 			profile.Scene = new Sponza();
 			profile.RenderBuffer = buffer;
