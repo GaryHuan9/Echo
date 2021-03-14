@@ -95,6 +95,8 @@ namespace ForceRenderer.Rendering
 			CurrentProfile = new PressedRenderProfile(Profile);
 			CurrentProfile.worker.AssignProfile(CurrentProfile);
 
+			GC.Collect();
+
 			lock (manageLocker)
 			{
 				CurrentState = State.initialization;

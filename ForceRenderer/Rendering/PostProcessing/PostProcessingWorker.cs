@@ -26,7 +26,7 @@ namespace ForceRenderer.Rendering.PostProcessing
 
 			void WorkPixel(int index, ParallelLoopState state)
 			{
-				if (Aborted) state.Break();
+				if (Aborted) state.Stop();
 				else passAction(renderBuffer.ToPosition(index));
 			}
 		}
@@ -48,7 +48,7 @@ namespace ForceRenderer.Rendering.PostProcessing
 
 			void WorkPixel(int vertical, ParallelLoopState state)
 			{
-				if (Aborted) state.Break();
+				if (Aborted) state.Stop();
 				else passAction(vertical);
 			}
 		}
@@ -61,7 +61,7 @@ namespace ForceRenderer.Rendering.PostProcessing
 
 			void WorkPixel(int horizontal, ParallelLoopState state)
 			{
-				if (Aborted) state.Break();
+				if (Aborted) state.Stop();
 				else passAction(horizontal);
 			}
 		}
