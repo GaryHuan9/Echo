@@ -4,9 +4,9 @@ using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
-	public class ColorCorrectionWorker : PostProcessingWorker
+	public class ColorCorrection : PostProcessingWorker
 	{
-		public ColorCorrectionWorker(PostProcessingEngine engine, float smoothness) : base(engine) => smoothnessVector = Vector128.Create(smoothness);
+		public ColorCorrection(PostProcessingEngine engine, float smoothness) : base(engine) => smoothnessVector = Vector128.Create(smoothness);
 
 		readonly Vector128<float> smoothnessVector;
 

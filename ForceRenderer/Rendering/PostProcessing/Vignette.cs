@@ -4,9 +4,9 @@ using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
-	public class VignetteWorker : PostProcessingWorker
+	public class Vignette : PostProcessingWorker
 	{
-		public VignetteWorker(PostProcessingEngine engine, float intensity) : base(engine) => this.intensity = intensity;
+		public Vignette(PostProcessingEngine engine, float intensity) : base(engine) => this.intensity = intensity;
 
 		readonly float intensity;
 		Float2 half;
