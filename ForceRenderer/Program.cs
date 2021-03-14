@@ -94,9 +94,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceFastProfile;
+			RenderProfile profile = bvhQualityProfile;
 
-			profile.Scene = new MaterialBallScene();
+			profile.Scene = new Sponza();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
@@ -116,9 +116,16 @@ namespace ForceRenderer
 
 			using var postProcess = new PostProcessingEngine(buffer);
 
-			postProcess.AddWorker(new BloomWorker(postProcess));
-			postProcess.AddWorker(new VignetteWorker(postProcess, 0.24f));
-			postProcess.AddWorker(new ColorCorrectionWorker(postProcess, 1f));
+			if (profile.Method is BVHQualityWorker)
+			{
+				postProcess.AddWorker(new BVHQualityVisualizer(postProcess));
+			}
+			else
+			{
+				postProcess.AddWorker(new Bloom(postProcess));
+				postProcess.AddWorker(new Vignette(postProcess, 0.24f));
+				postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
+			}
 
 			postProcess.Dispatch();
 			postProcess.WaitForProcess();
@@ -130,8 +137,6 @@ namespace ForceRenderer
 			long completedSample = engine.CompletedSample;
 
 			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
-			if (profile.Method is BVHQualityWorker qualityWorker) commandsController.Log(qualityWorker.GetQualityText());
-
 			renderEngine = null;
 		}
 

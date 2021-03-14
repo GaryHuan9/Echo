@@ -6,9 +6,9 @@ using ForceRenderer.Textures;
 
 namespace ForceRenderer.Rendering.PostProcessing
 {
-	public class BloomWorker : PostProcessingWorker
+	public class Bloom : PostProcessingWorker
 	{
-		public BloomWorker(PostProcessingEngine engine, float strength = 1f, float threshold = 1f) : base(engine)
+		public Bloom(PostProcessingEngine engine, float strength = 1f, float threshold = 1f) : base(engine)
 		{
 			deviation = strength * renderBuffer.size.x / 60f;
 			this.threshold = threshold;

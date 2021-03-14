@@ -55,13 +55,19 @@ namespace ForceRenderer.Terminals
 			cursorChar = builders[Cursor];
 
 			//Add logs
-			for (int i = 0; i < logs.Length; i++) builders.SetLine(i + 1, logs[i]);
+			lock (logs)
+			{
+				for (int i = 0; i < logs.Length; i++) builders.SetLine(i + 1, logs[i]);
+			}
 
 			//Replace cursor character when blinking
 			if ((terminal.AliveTime - blinkOffset) % (BlinkPeriod * 2d) < BlinkPeriod) builders[Cursor] = CursorCharacter;
 		}
 
-		public void Log(string log) => logs.Insert(0, log);
+		public void Log(string log)
+		{
+			lock (logs) logs.Insert(0, log);
+		}
 
 		public void ProcessCommand(string input)
 		{
