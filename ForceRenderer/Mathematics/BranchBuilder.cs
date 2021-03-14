@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
 
 namespace ForceRenderer.Mathematics
@@ -24,19 +25,17 @@ namespace ForceRenderer.Mathematics
 		readonly AxisAlignedBoundingBox[] cutTailVolumes;
 
 		int _nodeCount;
-		int parallelDepthRemain;
 
 		public int NodeCount => InterlockedHelper.Read(ref _nodeCount);
+		const int ParallelBuildThreshold = 4096;
 
 		/// <summary>
 		/// Initialize build on the root builder.
 		/// </summary>
-		public Node Build(int parallel)
+		public Node Build()
 		{
 			if (NodeCount != 0) throw new Exception("Branch already built!");
 			if (aabbs.Count != sourceIndices.Length) throw new Exception("Non-root builder!");
-
-			parallelDepthRemain = parallel;
 
 			if (sourceIndices.Length > 1)
 			{
@@ -63,40 +62,37 @@ namespace ForceRenderer.Mathematics
 			Node child0;
 			Node child1;
 
-			if (parallelDepthRemain > 0)
-			{
-				int[] headIndices = indices[..minIndex].ToArray();
-				int parallel = --parallelDepthRemain;
-
-				child0 = null;
-
-				Thread thread = new Thread
-								(
-									() =>
-									{
-										BranchBuilder builder = new BranchBuilder(aabbs, headIndices) {parallelDepthRemain = parallel};
-
-										child0 = builder.BuildChild(headIndices, headVolume, axis);
-										Interlocked.Add(ref _nodeCount, builder.NodeCount);
-									}
-								)
-								{
-									Priority = ThreadPriority.Normal,
-									Name = $"{nameof(BranchBuilder)} Worker"
-								};
-
-				thread.Start();
-				child1 = BuildChild(indices[minIndex..], tailVolume, axis);
-				thread.Join();
-			}
-			else
+			if (indices.Length < ParallelBuildThreshold)
 			{
 				child0 = BuildChild(indices[..minIndex], headVolume, axis);
 				child1 = BuildChild(indices[minIndex..], tailVolume, axis);
 			}
+			else if (minIndex > indices.Length / 2)
+			{
+				var builder = BuildChildParallel(indices[..minIndex], headVolume, axis);
+				child0 = BuildChild(indices[minIndex..], tailVolume, axis);
+				child1 = builder.Wait();
+			}
+			else
+			{
+				var builder = BuildChildParallel(indices[minIndex..], tailVolume, axis);
+				child0 = BuildChild(indices[..minIndex], headVolume, axis);
+				child1 = builder.Wait();
+			}
 
 			Interlocked.Increment(ref _nodeCount);
 			return new Node(child0, child1, aabb);
+		}
+
+		NodeBuilder BuildChildParallel(ReadOnlySpan<int> indices, in AxisAlignedBoundingBox aabb, int parentAxis)
+		{
+			int axis = aabb.extend.MaxIndex;
+			int[] childIndices = indices.ToArray();
+
+			if (axis == parentAxis) return new NodeBuilder(this, childIndices);
+
+			SortIndices(childIndices, axis);
+			return new NodeBuilder(this, childIndices);
 		}
 
 		Node BuildChild(ReadOnlySpan<int> indices, in AxisAlignedBoundingBox aabb, int parentAxis)
@@ -205,6 +201,38 @@ namespace ForceRenderer.Mathematics
 			public readonly int index;
 
 			public bool IsLeaf => child0 == null || child1 == null;
+		}
+
+		class NodeBuilder
+		{
+			public NodeBuilder(BranchBuilder source, int[] indices)
+			{
+				this.source = source;
+				this.indices = indices;
+
+				thread = new Thread(Build);
+				thread.Start();
+			}
+
+			Node result;
+
+			readonly BranchBuilder source;
+			readonly int[] indices;
+			readonly Thread thread;
+
+			public Node Wait()
+			{
+				thread.Join();
+				return InterlockedHelper.Read(ref result);
+			}
+
+			void Build()
+			{
+				BranchBuilder builder = new BranchBuilder(source.aabbs, indices);
+
+				Interlocked.Exchange(ref result, builder.BuildLayer(indices));
+				Interlocked.Add(ref source._nodeCount, builder.NodeCount);
+			}
 		}
 	}
 }

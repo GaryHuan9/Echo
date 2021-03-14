@@ -22,11 +22,10 @@ namespace ForceRenderer.Mathematics
 			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
 			if (aabbs.Count == 0) return;
 
-			int parallel = MathF.Log2(Environment.ProcessorCount).Ceil() + 1; //How many layers of parallel processes to build the bvh
 			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
 
 			BranchBuilder builder = new BranchBuilder(aabbs, indices); //Parallel building reduces build time by about 4 folds on very large scenes
-			BranchBuilder.Node root = builder.Build(parallel);         //NOTE: parallel is the number/depth of layers, not the number of processes
+			BranchBuilder.Node root = builder.Build();                 //NOTE: parallel is the number/depth of layers, not the number of processes
 
 			int index = 1;
 

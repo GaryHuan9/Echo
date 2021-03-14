@@ -1,5 +1,7 @@
 ﻿using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Mathematics.Enumerables;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects.SceneObjects;
@@ -15,6 +17,8 @@ namespace ForceRenderer.Objects
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
 
 			children.Add(new PlaneObject(ground ?? new Diffuse {Albedo = (Float3)0.75f}, new Float2(24f, 16f)));
+			children.Add(new Light {Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 30f, 0f)});
+
 			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
 		}
 	}
@@ -36,8 +40,6 @@ namespace ForceRenderer.Objects
 	{
 		public TestLighting()
 		{
-			children.Add(new Light {Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(45f, 90f, 0f)});
-
 			children.Add(new SphereObject(new Diffuse {Albedo = Float3.forward}, 0.5f) {Position = new Float3(2f, 0.5f, -2f)});
 			children.Add(new SphereObject(new Diffuse {Albedo = Float3.up}, 0.5f) {Position = new Float3(-2f, 0.5f, 2f)});
 			children.Add(new BoxObject(new Diffuse {Albedo = Float3.right}, Float3.one) {Position = new Float3(-3f, 0.5f, -3f)});
@@ -213,19 +215,25 @@ namespace ForceRenderer.Objects
 		}
 	}
 
-	public class MultipleBMWScene : StandardScene
+	public class MultipleBMWScene : StandardScene //Large scene, stress test (42 million triangles)
 	{
 		public MultipleBMWScene() : base(new Glossy {Albedo = (Float3)0.88f, Smoothness = 0.78f})
 		{
-			MinMaxInt range = new MinMaxInt(-3, 1);
+			Int2 min = new Int2(-4, -1);
+			Int2 max = new Int2(2, 2);
 
 			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 
-			foreach (int index in range.Loop())
+			Gradient gradientX = new Gradient {{0f, Float4.one}, {1f, Utilities.ToColor(0.2f)}};
+			Gradient gradientY = new Gradient {{0f, Utilities.ToColor("DD444C")}, {1f, Utilities.ToColor("EEE")}};
+
+			foreach (Int2 xz in new EnumerableSpace2D(min, max))
 			{
-				Material material = new Glossy {Albedo = (Float3)range.InverseLerp(index), Smoothness = 0.85f};
-				Float3 position = new Float3(2.8f, 0f, -0.8f) * index + new Float3(1.7f, 0f, 0.2f);
+				Float2 percent = Float2.InverseLerp(min, max, xz);
+
+				Material material = new Glossy {Albedo = (gradientX[percent.x] * gradientY[percent.y]).XYZ, Smoothness = 0.85f};
+				Float3 position = new Float3(2.8f, 0f, -0.8f) * xz.x + new Float3(1.7f, 0f, 0.2f + xz.y * 6.1f);
 
 				children.Add(new MeshObject(mesh, material) {Position = position, Rotation = new Float3(0f, 120f, 0f)});
 			}
