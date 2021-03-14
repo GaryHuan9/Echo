@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -10,7 +9,6 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
-using CodeHelpers.Threads;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
@@ -30,8 +28,8 @@ namespace ForceRenderer.Rendering
 			ExceptionHelper.AssertMainThread();
 			cubemap = source.Cubemap;
 
-			List<PressedTriangle> triangleList = CollectionPooler<PressedTriangle>.list.GetObject();
-			List<PressedSphere> sphereList = CollectionPooler<PressedSphere>.list.GetObject();
+			List<PressedTriangle> triangleList = new List<PressedTriangle>();
+			List<PressedSphere> sphereList = new List<PressedSphere>();
 			List<PressedLight> lightList = new List<PressedLight>();
 
 			Dictionary<Material, int> materialObjects = CollectionPooler<Material, int>.dictionary.GetObject();
@@ -150,13 +148,13 @@ namespace ForceRenderer.Rendering
 				tokens[triangles.Length + index] = ~index;
 			}
 
+			triangleList = null; //Un-references large intermediate lists for GC
+			sphereList = null;
+
 			Program.commandsController.Log("Extracted scene");
 			bvh = new BoundingVolumeHierarchy(this, aabbs, tokens);
 
 			//Release resources
-			CollectionPooler<PressedTriangle>.list.ReleaseObject(triangleList);
-			CollectionPooler<PressedSphere>.list.ReleaseObject(sphereList);
-
 			CollectionPooler<Material, int>.dictionary.ReleaseObject(materialObjects);
 			CollectionPooler<Object>.queue.ReleaseObject(frontier);
 		}

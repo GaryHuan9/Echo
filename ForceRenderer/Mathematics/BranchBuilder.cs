@@ -10,18 +10,16 @@ namespace ForceRenderer.Mathematics
 	/// </summary>
 	public class BranchBuilder
 	{
-		public BranchBuilder(IReadOnlyList<AxisAlignedBoundingBox> aabbs, int[] sourceIndices, AxisAlignedBoundingBox sourceAABB)
+		public BranchBuilder(IReadOnlyList<AxisAlignedBoundingBox> aabbs, int[] sourceIndices)
 		{
 			this.aabbs = aabbs;
 			this.sourceIndices = sourceIndices;
-			this.sourceAABB = sourceAABB;
 
 			cutTailVolumes = new AxisAlignedBoundingBox[sourceIndices.Length];
 		}
 
 		readonly IReadOnlyList<AxisAlignedBoundingBox> aabbs;
 		readonly int[] sourceIndices;
-		readonly AxisAlignedBoundingBox sourceAABB;
 
 		readonly AxisAlignedBoundingBox[] cutTailVolumes;
 
@@ -30,15 +28,19 @@ namespace ForceRenderer.Mathematics
 
 		public int NodeCount => InterlockedHelper.Read(ref _nodeCount);
 
+		/// <summary>
+		/// Initialize build on the root builder.
+		/// </summary>
 		public Node Build(int parallel)
 		{
 			if (NodeCount != 0) throw new Exception("Branch already built!");
+			if (aabbs.Count != sourceIndices.Length) throw new Exception("Non-root builder!");
 
 			parallelDepthRemain = parallel;
 
 			if (sourceIndices.Length > 1)
 			{
-				int axis = sourceAABB.extend.MaxIndex;
+				int axis = new AxisAlignedBoundingBox(aabbs).extend.MaxIndex;
 
 				SortIndices(sourceIndices, axis);
 				return BuildLayer(sourceIndices);
@@ -72,9 +74,9 @@ namespace ForceRenderer.Mathematics
 								(
 									() =>
 									{
-										BranchBuilder builder = new BranchBuilder(aabbs, headIndices, headVolume);
+										BranchBuilder builder = new BranchBuilder(aabbs, headIndices) {parallelDepthRemain = parallel};
 
-										child0 = builder.Build(parallel);
+										child0 = builder.BuildChild(headIndices, headVolume, axis);
 										Interlocked.Add(ref _nodeCount, builder.NodeCount);
 									}
 								)

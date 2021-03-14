@@ -95,9 +95,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceExportProfile;
+			RenderProfile profile = bvhQualityProfile;
 
-			profile.Scene = new GridSpheresScene();
+			profile.Scene = new Sponza();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};

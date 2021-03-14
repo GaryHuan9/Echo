@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Runtime.Remoting;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering;
 
@@ -21,10 +23,10 @@ namespace ForceRenderer.Mathematics
 			if (aabbs.Count == 0) return;
 
 			int parallel = MathF.Log2(Environment.ProcessorCount).Ceil() + 1; //How many layers of parallel processes to build the bvh
-			AxisAlignedBoundingBox aabb = new AxisAlignedBoundingBox(aabbs);  //Parallel building reduced build time by about 4 folds on large scenes
+			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
 
-			BranchBuilder builder = new BranchBuilder(aabbs, Enumerable.Range(0, aabbs.Count).ToArray(), aabb);
-			BranchBuilder.Node root = builder.Build(parallel); //NOTE: parallel is the number/depth of layers, not the number of processes
+			BranchBuilder builder = new BranchBuilder(aabbs, indices); //Parallel building reduces build time by about 4 folds on very large scenes
+			BranchBuilder.Node root = builder.Build(parallel);         //NOTE: parallel is the number/depth of layers, not the number of processes
 
 			int index = 1;
 
@@ -47,33 +49,6 @@ namespace ForceRenderer.Mathematics
 
 				depth = Math.Max(depth0, depth1) + 1;
 				return Node.CreateNode(node.aabb, children);
-			}
-		}
-
-		public BoundingVolumeHierarchy(PressedScene pressed, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<int> tokens, bool no)
-		{
-			this.pressed = pressed;
-
-			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
-			if (aabbs.Count == 0) return;
-
-			BinaryHeap<BuildNode> source = new BinaryHeap<BuildNode>(aabbs.Count);
-
-			for (int i = 0; i < aabbs.Count; i++)
-			{
-				var node = new BuildNode(tokens[i], aabbs[i]);
-				source.Enqueue(node, node.priority);
-			}
-
-			while (source.Count > 1)
-			{
-				BuildNode target = source.Dequeue();
-				BuildNode other = null;
-
-				foreach (BuildNode node in source)
-				{
-
-				}
 			}
 		}
 
@@ -260,37 +235,6 @@ namespace ForceRenderer.Mathematics
 
 			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, int token) => new Node(aabb, token, 0);
 			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int children) => new Node(aabb, 0, children);
-		}
-
-		class BuildNode
-		{
-			public BuildNode(BuildNode child0, BuildNode child1, AxisAlignedBoundingBox aabb)
-			{
-				this.child0 = child0;
-				this.child1 = child1;
-				this.aabb = aabb;
-
-				count = child0.count + child1.count + 1;
-				priority = Scalars.SingleToInt32Bits(aabb.Area);
-			}
-
-			public BuildNode(int token, AxisAlignedBoundingBox aabb)
-			{
-				this.token = token;
-				this.aabb = aabb;
-
-				count = 1;
-				priority = Scalars.SingleToInt32Bits(aabb.Area);
-			}
-
-			public readonly BuildNode child0;
-			public readonly BuildNode child1;
-
-			public readonly int token;
-			public readonly int count;
-
-			public readonly AxisAlignedBoundingBox aabb;
-			public readonly int priority;
 		}
 	}
 }
