@@ -141,7 +141,7 @@ namespace ForceRenderer.Rendering.Tiles
 			Int2 position = new Int2(index % size + RenderOffsetX, index / size + RenderOffsetY);
 			if (!(position >= Int2.zero) || !(position < renderBuffer.size)) return; //Reject pixels outside of buffer
 
-			if (aborted) state.Break();
+			if (aborted) state.Stop();
 			Pixel pixel = new Pixel();
 
 			int sampleCount = pixelSample;
@@ -151,7 +151,7 @@ namespace ForceRenderer.Rendering.Tiles
 			{
 				for (int i = 0; i < sampleCount; i++)
 				{
-					if (aborted) state.Break();
+					if (aborted) state.Stop();
 
 					//Sample color
 					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / renderBuffer.size - Float2.half;
@@ -169,7 +169,7 @@ namespace ForceRenderer.Rendering.Tiles
 				uvOffsets = randomOffsets;
 			}
 
-			if (aborted) state.Break();
+			if (aborted) state.Stop();
 
 			//Store pixel
 			renderBuffer[position] = ((Float4)pixel.Color).Replace(3, 1f);

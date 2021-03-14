@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Rendering.Materials;
@@ -110,7 +111,7 @@ namespace ForceRenderer.Objects.SceneObjects
 		}
 
 		public readonly Float3 vertex0; //NOTE: Vertex one and two are actually not needed for intersection
-		public readonly Float3 edge1;   //but we can easily add them back if needed
+		public readonly Float3 edge1;
 		public readonly Float3 edge2;
 
 		public readonly Float3 normal0;
@@ -161,8 +162,6 @@ namespace ForceRenderer.Objects.SceneObjects
 			}
 		}
 
-		const float Margin = 0f; //Used to easily differentiate adjacent triangles
-
 		/// <summary>
 		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
 		/// Uses the famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf.
@@ -170,6 +169,8 @@ namespace ForceRenderer.Objects.SceneObjects
 		/// </summary>
 		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
+			const float Margin = 0f; //Used to easily differentiate adjacent triangles
+
 			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
 			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
 
@@ -197,6 +198,7 @@ namespace ForceRenderer.Objects.SceneObjects
 			return float.PositiveInfinity;
 		}
 
+		public Float3 GetVertex(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
 		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
 		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
 
@@ -212,6 +214,8 @@ namespace ForceRenderer.Objects.SceneObjects
 			else throw ExceptionHelper.Invalid(nameof(triangles), triangles.Length, $"is not long enough! Need at least {requiredLength}!");
 		}
 
+		public override string ToString() => $"<{nameof(vertex0)}: {vertex0}, {nameof(Vertex1)}: {Vertex1}, {nameof(Vertex2)}: {Vertex2}>";
+
 		//The uv locations right in the middle of two vertices
 		static readonly Float2 uv01 = new Float2(0.5f, 0f);
 		static readonly Float2 uv02 = new Float2(0f, 0.5f);
@@ -222,9 +226,9 @@ namespace ForceRenderer.Objects.SceneObjects
 			if (triangles.Length <= 1) return;
 			PressedTriangle triangle = triangles[0];
 
-			Float3 vertex01 = triangle.vertex0 + triangle.edge1 / 2f;
-			Float3 vertex02 = triangle.vertex0 + triangle.edge2 / 2f;
-			Float3 vertex12 = triangle.vertex0 + triangle.edge1 / 2f + triangle.edge2 / 2f;
+			Float3 vertex01 = triangle.GetVertex(uv01);
+			Float3 vertex02 = triangle.GetVertex(uv02);
+			Float3 vertex12 = triangle.GetVertex(uv12);
 
 			Float3 normal01 = GetInterpolatedNormal(uv01);
 			Float3 normal02 = GetInterpolatedNormal(uv02);

@@ -19,14 +19,36 @@ namespace ForceRenderer.Mathematics
 			this.extend = extend;
 		}
 
+		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabb)
+		{
+			centerVector = default;
+			extendVector = default;
+
+			Float3 min = Float3.positiveInfinity;
+			Float3 max = Float3.negativeInfinity;
+
+			for (int i = 0; i < aabb.Count; i++)
+			{
+				AxisAlignedBoundingBox box = aabb[i];
+
+				min = box.Min.Min(min);
+				max = box.Max.Max(max);
+			}
+
+			extend = (max - min) / 2f;
+			center = min + extend;
+		}
+
 		[FieldOffset(0)] public readonly Float3 center;  //The exact center of the box
 		[FieldOffset(12)] public readonly Float3 extend; //Half the size of the box
 
 		[FieldOffset(0)] readonly Vector128<float> centerVector;
 		[FieldOffset(12)] readonly Vector128<float> extendVector;
 
-		public Float3 Max => center + extend;
 		public Float3 Min => center - extend;
+		public Float3 Max => center + extend;
+
+		public float Area => extend.x * extend.y + extend.x * extend.z + extend.y * extend.z;
 
 		/// <summary>
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
@@ -64,31 +86,11 @@ namespace ForceRenderer.Mathematics
 
 		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other)
 		{
-			Float3 max = Max.Max(other.Max);
 			Float3 min = Min.Min(other.Min);
+			Float3 max = Max.Max(other.Max);
 
 			Float3 extends = (max - min) / 2f;
 			return new AxisAlignedBoundingBox(min + extends, extends);
-		}
-
-		/// <summary>
-		/// Constructs a new <see cref="AxisAlignedBoundingBox"/> by bounding a selection of smaller bounding boxes.
-		/// </summary>
-		public static AxisAlignedBoundingBox Construct(IReadOnlyList<AxisAlignedBoundingBox> boxes)
-		{
-			Float3 max = Float3.negativeInfinity;
-			Float3 min = Float3.positiveInfinity;
-
-			for (int i = 0; i < boxes.Count; i++)
-			{
-				AxisAlignedBoundingBox box = boxes[i];
-
-				max = box.Max.Max(max);
-				min = box.Min.Min(min);
-			}
-
-			Float3 extend = (max - min) / 2f;
-			return new AxisAlignedBoundingBox(min + extend, extend);
 		}
 	}
 }

@@ -2,115 +2,150 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering;
 
 namespace ForceRenderer.Mathematics
 {
-	//AMD Ryzen 3900x: 1.7 million triangles at 23 million intersections per second
-
 	public class BoundingVolumeHierarchy
 	{
+		// public BoundingVolumeHierarchy(PressedScene pressed, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<int> tokens)
+		// {
+		// 	if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
+		//
+		// 	this.pressed = pressed;
+		// 	if (aabbs.Count == 0) return;
+		//
+		// 	int nodeIndex = 1;
+		//
+		// 	AxisAlignedBoundingBox[] cutTailVolumes = new AxisAlignedBoundingBox[aabbs.Count]; //Array used to calculate SAH
+		//
+		// 	var rootIndices = Enumerable.Range(0, aabbs.Count).ToList();
+		// 	var rootAABB = AxisAlignedBoundingBox.Construct(aabbs);
+		//
+		// 	nodes = new Node[aabbs.Count * 2 - 1]; //The number of nodes can be predetermined
+		// 	nodes[0] = ConstructNode(rootIndices, rootAABB, -1);
+		//
+		// 	maxDepth = GetMaxDepth(nodes[0]);
+		//
+		// 	Node ConstructNode(List<int> indices, AxisAlignedBoundingBox aabb, int parentAxis)
+		// 	{
+		// 		if (indices.Count == 1) //If is leaf node
+		// 		{
+		// 			int leaf = indices[0];
+		// 			return Node.CreateLeaf(aabbs[leaf], tokens[leaf]);
+		// 		}
+		//
+		// 		int axis = aabb.extend.MaxIndex; //The index this layer is going to split at
+		//
+		// 		//Sorts the indices by splitting axis if needed. NOTE that the list is modified
+		// 		if (axis != parentAxis) indices.Sort((index0, index1) => aabbs[index0].center[axis].CompareTo(aabbs[index1].center[axis]));
+		//
+		// 		//Calculate surface area heuristics and find optimal cut index
+		// 		AxisAlignedBoundingBox cutHeadVolume = aabbs[indices[0]];
+		// 		AxisAlignedBoundingBox cutTailVolume = aabbs[indices[^1]];
+		//
+		// 		for (int i = indices.Count - 2; i >= 0; i--)
+		// 		{
+		// 			cutTailVolumes[i + 1] = cutTailVolume;
+		// 			cutTailVolume = cutTailVolume.Encapsulate(aabbs[indices[i]]);
+		// 		}
+		//
+		// 		AxisAlignedBoundingBox minCutHeadVolume = default;
+		// 		AxisAlignedBoundingBox minCutTailVolume = default;
+		//
+		// 		float minCost = float.MaxValue;
+		// 		int minIndex = -1;
+		// 		float minTailCost = -1f;
+		//
+		// 		for (int i = 1; i < indices.Count; i++)
+		// 		{
+		// 			cutTailVolume = cutTailVolumes[i];
+		//
+		// 			float tailCost = cutTailVolume.Area * (indices.Count - i);
+		// 			float cost = cutHeadVolume.Area * i + tailCost;
+		//
+		// 			if (cost < minCost)
+		// 			{
+		// 				minCost = cost;
+		// 				minIndex = i;
+		// 				minTailCost = tailCost;
+		//
+		// 				minCutHeadVolume = cutHeadVolume;
+		// 				minCutTailVolume = cutTailVolume;
+		// 			}
+		//
+		// 			cutHeadVolume = cutHeadVolume.Encapsulate(aabbs[indices[i]]);
+		// 		}
+		//
+		// 		//Recursively construct deeper layers
+		// 		List<int> indicesHead = new List<int>(minIndex);
+		// 		List<int> indicesTail = new List<int>(indices.Count - minIndex);
+		//
+		// 		for (int i = 0; i < minIndex; i++) indicesHead.Add(indices[i]);
+		// 		for (int i = minIndex; i < indices.Count; i++) indicesTail.Add(indices[i]);
+		//
+		// 		if (minTailCost * 2f > minCost) //Orders the children so that the one with the higher SAH cost is first
+		// 		{
+		// 			CodeHelper.Swap(ref indicesHead, ref indicesTail);
+		// 			CodeHelper.Swap(ref minCutHeadVolume, ref minCutTailVolume);
+		// 		}
+		//
+		// 		int children = nodeIndex;
+		// 		nodeIndex += 2;
+		//
+		// 		nodes[children] = ConstructNode(indicesHead, minCutHeadVolume, axis);
+		// 		nodes[children + 1] = ConstructNode(indicesTail, minCutTailVolume, axis);
+		//
+		// 		return Node.CreateNode(aabb, children);
+		// 	}
+		//
+		// 	int GetMaxDepth(in Node node)
+		// 	{
+		// 		if (node.IsLeaf) return 1;
+		//
+		// 		int child0 = GetMaxDepth(nodes[node.children]);
+		// 		int child1 = GetMaxDepth(nodes[node.children + 1]);
+		//
+		// 		return Math.Max(child0, child1) + 1;
+		// 	}
+		// }
+
 		public BoundingVolumeHierarchy(PressedScene pressed, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<int> tokens)
 		{
-			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
-
 			this.pressed = pressed;
-			int nodeIndex = 1;
 
-			MinMax3[] cutTailVolumes = new MinMax3[aabbs.Count]; //Array used to calculate SAH
-
-			var rootIndices = Enumerable.Range(0, aabbs.Count).ToList();
-			var rootAABB = AxisAlignedBoundingBox.Construct(aabbs);
-
+			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
 			if (aabbs.Count == 0) return;
 
-			nodes = new Node[aabbs.Count * 2 - 1]; //The number of nodes can be predetermined
-			nodes[0] = ConstructNode(rootIndices, rootAABB, -1);
+			int parallel = 2 << MathF.ILogB(Environment.ProcessorCount + 1); //How many parallel processes to start building the bvh
 
-			maxDepth = GetMaxDepth(nodes[0]);
+			BranchBuilder builder = new BranchBuilder(aabbs, Enumerable.Range(0, aabbs.Count).ToArray());
+			BranchBuilder.Node root = builder.Build();
 
-			Node ConstructNode(List<int> indices, AxisAlignedBoundingBox aabb, int parentAxis)
+			int index = 1;
+
+			nodes = new Node[builder.NodeCount];
+			nodes[0] = CreateNode(root, out maxDepth);
+
+			Node CreateNode(BranchBuilder.Node node, out int depth)
 			{
-				if (indices.Count == 1) //If is leaf node
+				if (node.IsLeaf)
 				{
-					int leaf = indices[0];
-					return Node.CreateLeaf(aabbs[leaf], tokens[leaf]);
+					depth = 1;
+					return Node.CreateLeaf(node.aabb, tokens[node.index]);
 				}
 
-				int axis = aabb.extend.MaxIndex; //The index this layer is going to split at
+				int children = index;
+				index += 2;
 
-				//Sorts the indices by splitting axis if needed. NOTE that the list is modified
-				if (axis != parentAxis) indices.Sort((index0, index1) => aabbs[index0].center[axis].CompareTo(aabbs[index1].center[axis]));
+				nodes[children] = CreateNode(node.child0, out int depth0);
+				nodes[children + 1] = CreateNode(node.child1, out int depth1);
 
-				//Calculate surface area heuristics and find optimal cut index
-				MinMax3 cutHeadVolume = new MinMax3(aabbs[indices[0]]);
-				MinMax3 cutTailVolume = new MinMax3(aabbs[indices[^1]]);
-
-				for (int i = indices.Count - 2; i >= 0; i--)
-				{
-					cutTailVolumes[i + 1] = cutTailVolume;
-					cutTailVolume = cutTailVolume.Encapsulate(aabbs[indices[i]]);
-				}
-
-				MinMax3 minCutHeadVolume = default;
-				MinMax3 minCutTailVolume = default;
-
-				float minCost = float.MaxValue;
-				int minIndex = -1;
-				float minTailCost = -1f;
-
-				for (int i = 1; i < indices.Count; i++)
-				{
-					cutTailVolume = cutTailVolumes[i];
-
-					float tailCost = cutTailVolume.Area * (indices.Count - i);
-					float cost = cutHeadVolume.Area * i + tailCost;
-
-					if (cost < minCost)
-					{
-						minCost = cost;
-						minIndex = i;
-						minTailCost = tailCost;
-
-						minCutHeadVolume = cutHeadVolume;
-						minCutTailVolume = cutTailVolume;
-					}
-
-					cutHeadVolume = cutHeadVolume.Encapsulate(aabbs[indices[i]]);
-				}
-
-				//Recursively construct deeper layers
-				List<int> indicesHead = new List<int>(minIndex);
-				List<int> indicesTail = new List<int>(indices.Count - minIndex);
-
-				for (int i = 0; i < minIndex; i++) indicesHead.Add(indices[i]);
-				for (int i = minIndex; i < indices.Count; i++) indicesTail.Add(indices[i]);
-
-				if (minTailCost * 2f > minCost) //Orders the children so that the one with the higher SAH cost is first
-				{
-					CodeHelper.Swap(ref indicesHead, ref indicesTail);
-					CodeHelper.Swap(ref minCutHeadVolume, ref minCutTailVolume);
-				}
-
-				int children = nodeIndex;
-				nodeIndex += 2;
-
-				nodes[children] = ConstructNode(indicesHead, minCutHeadVolume.AABB, axis);
-				nodes[children + 1] = ConstructNode(indicesTail, minCutTailVolume.AABB, axis);
-
-				return Node.CreateNode(aabb, children);
-			}
-
-			int GetMaxDepth(in Node node)
-			{
-				if (node.IsLeaf) return 1;
-
-				int child0 = GetMaxDepth(nodes[node.children]);
-				int child1 = GetMaxDepth(nodes[node.children + 1]);
-
-				return Math.Max(child0, child1) + 1;
+				depth = Math.Max(depth0, depth1) + 1;
+				return Node.CreateNode(node.aabb, children);
 			}
 		}
 
@@ -297,44 +332,6 @@ namespace ForceRenderer.Mathematics
 
 			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, int token) => new Node(aabb, token, 0);
 			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int children) => new Node(aabb, 0, children);
-		}
-
-		readonly struct MinMax3
-		{
-			public MinMax3(AxisAlignedBoundingBox aabb)
-			{
-				min = aabb.Min;
-				max = aabb.Max;
-			}
-
-			public MinMax3(Float3 min, Float3 max)
-			{
-				this.min = min;
-				this.max = max;
-			}
-
-			public readonly Float3 min;
-			public readonly Float3 max;
-
-			public float Area
-			{
-				get
-				{
-					Float3 size = max - min;
-					return size.x * size.y + size.x * size.z + size.y * size.z;
-				}
-			}
-
-			public AxisAlignedBoundingBox AABB
-			{
-				get
-				{
-					Float3 extend = (max - min) / 2f;
-					return new AxisAlignedBoundingBox(min + extend, extend);
-				}
-			}
-
-			public MinMax3 Encapsulate(AxisAlignedBoundingBox aabb) => new MinMax3(min.Min(aabb.Min), max.Max(aabb.Max));
 		}
 
 		// AxisAlignedBoundingBox[] aabbs =
