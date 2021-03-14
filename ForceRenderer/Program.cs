@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
@@ -67,7 +66,7 @@ namespace ForceRenderer
 																   Method = new PathTraceWorker(),
 																   TilePattern = new CheckerboardPattern(),
 																   PixelSample = 64,
-																   AdaptiveSample = 1200
+																   AdaptiveSample = 1600
 															   };
 
 		static readonly RenderProfile albedoProfile = new()
@@ -75,7 +74,7 @@ namespace ForceRenderer
 														  Method = new AlbedoPixelWorker(),
 														  TilePattern = new ScrambledPattern(),
 														  PixelSample = 12,
-														  AdaptiveSample = 150
+														  AdaptiveSample = 100
 													  };
 
 		static readonly RenderProfile bvhQualityProfile = new()
@@ -95,9 +94,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = bvhQualityProfile;
+			RenderProfile profile = pathTraceFastProfile;
 
-			profile.Scene = new Sponza();
+			profile.Scene = new MaterialBallScene();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};

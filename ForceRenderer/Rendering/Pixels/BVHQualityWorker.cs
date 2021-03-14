@@ -12,14 +12,14 @@ namespace ForceRenderer.Rendering.Pixels
 
 			const float Level = 32f;
 
-			costGradient.AddAnchor(Level * 0f, Utilities.ToColor("#000000"));
-			costGradient.AddAnchor(Level * 1f, Utilities.ToColor("#FF00FF"));
-			costGradient.AddAnchor(Level * 2f, Utilities.ToColor("#0000FF"));
-			costGradient.AddAnchor(Level * 3f, Utilities.ToColor("#00FFFF"));
-			costGradient.AddAnchor(Level * 4f, Utilities.ToColor("#00FF00"));
-			costGradient.AddAnchor(Level * 5f, Utilities.ToColor("#FFFF00"));
-			costGradient.AddAnchor(Level * 6f, Utilities.ToColor("#FF0000"));
-			costGradient.AddAnchor(Level * 7f, Utilities.ToColor("#FFFFFF"));
+			costGradient.Add(Level * 0f, Utilities.ToColor("#000000"));
+			costGradient.Add(Level * 1f, Utilities.ToColor("#FF00FF"));
+			costGradient.Add(Level * 2f, Utilities.ToColor("#0000FF"));
+			costGradient.Add(Level * 3f, Utilities.ToColor("#00FFFF"));
+			costGradient.Add(Level * 4f, Utilities.ToColor("#00FF00"));
+			costGradient.Add(Level * 5f, Utilities.ToColor("#FFFF00"));
+			costGradient.Add(Level * 6f, Utilities.ToColor("#FF0000"));
+			costGradient.Add(Level * 7f, Utilities.ToColor("#FFFFFF"));
 		}
 
 		readonly Gradient costGradient;
@@ -45,7 +45,7 @@ namespace ForceRenderer.Rendering.Pixels
 			Interlocked.Add(ref totalCost, cost);
 			Interlocked.Increment(ref totalSample);
 
-			return (Float3)costGradient.Sample(cost);
+			return (Float3)costGradient[cost];
 		}
 
 		public string GetQualityText()
