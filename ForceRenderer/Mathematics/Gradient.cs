@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Threading.Tasks;
@@ -9,11 +11,13 @@ using ForceRenderer.Textures;
 
 namespace ForceRenderer.Mathematics
 {
-	public class Gradient
+	public class Gradient : IEnumerable<float>
 	{
 		readonly List<Anchor> anchors = new List<Anchor>();
 
-		public void AddAnchor(float percent, Float4 color)
+		public Float4 this[float percent] => Utilities.ToFloat4(SampleVector(percent));
+
+		public void Add(float percent, Float4 color)
 		{
 			int index = anchors.BinarySearch(percent, Comparer.instance);
 			Anchor anchor = new Anchor(percent, color);
@@ -22,19 +26,13 @@ namespace ForceRenderer.Mathematics
 			else anchors.Insert(~index, anchor);
 		}
 
-		public bool RemoveAnchor(float percent)
+		public bool Remove(float percent)
 		{
 			int index = anchors.BinarySearch(percent, Comparer.instance);
 			if (index < 0) return false;
 
 			anchors.RemoveAt(index);
 			return true;
-		}
-
-		public Float4 Sample(float percent)
-		{
-			Vector128<float> vector = SampleVector(percent);
-			return Unsafe.As<Vector128<float>, Float4>(ref vector);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,6 +64,9 @@ namespace ForceRenderer.Mathematics
 				texture[index] = SampleVector(percent);
 			}
 		}
+
+		public IEnumerator<float> GetEnumerator() => anchors.Select(anchor => anchor.percent).GetEnumerator();
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 		class Comparer : IDoubleComparer<Anchor, float>
 		{

@@ -18,9 +18,9 @@ namespace ForceRenderer.Rendering.Pixels
 			ExtendedRandom random = Random;
 			int bounce = 0;
 
-			for (; bounce < Profile.bounceLimit; bounce++)
+			while (bounce < Profile.bounceLimit && GetIntersection(ray, out Hit hit))
 			{
-				if (!GetIntersection(ray, out Hit hit)) break;
+				bounce++;
 
 				CalculatedHit calculated = new CalculatedHit(hit, ray, scene);
 				Material material = scene.GetMaterial(hit);
