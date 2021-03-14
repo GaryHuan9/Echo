@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
+using CodeHelpers.Threads;
 
 namespace ForceRenderer.Mathematics
 {
@@ -8,34 +10,42 @@ namespace ForceRenderer.Mathematics
 	/// </summary>
 	public class BranchBuilder
 	{
-		public BranchBuilder(IReadOnlyList<AxisAlignedBoundingBox> aabbs, int[] sourceIndices)
+		public BranchBuilder(IReadOnlyList<AxisAlignedBoundingBox> aabbs, int[] sourceIndices, AxisAlignedBoundingBox sourceAABB)
 		{
 			this.aabbs = aabbs;
 			this.sourceIndices = sourceIndices;
+			this.sourceAABB = sourceAABB;
 
 			cutTailVolumes = new AxisAlignedBoundingBox[sourceIndices.Length];
 		}
 
 		readonly IReadOnlyList<AxisAlignedBoundingBox> aabbs;
 		readonly int[] sourceIndices;
+		readonly AxisAlignedBoundingBox sourceAABB;
 
 		readonly AxisAlignedBoundingBox[] cutTailVolumes;
-		public int NodeCount { get; private set; }
 
-		public Node Build()
+		int _nodeCount;
+		int parallelDepthRemain;
+
+		public int NodeCount => InterlockedHelper.Read(ref _nodeCount);
+
+		public Node Build(int parallel)
 		{
 			if (NodeCount != 0) throw new Exception("Branch already built!");
 
+			parallelDepthRemain = parallel;
+
 			if (sourceIndices.Length > 1)
 			{
-				int axis = new AxisAlignedBoundingBox(aabbs).extend.MaxIndex;
+				int axis = sourceAABB.extend.MaxIndex;
 
 				SortIndices(sourceIndices, axis);
 				return BuildLayer(sourceIndices);
 			}
 
-			NodeCount++;
-			return new Node(aabbs[0], sourceIndices[0]);
+			Interlocked.Increment(ref _nodeCount);
+			return new Node(aabbs[sourceIndices[0]], sourceIndices[0]);
 		}
 
 		Node BuildLayer(ReadOnlySpan<int> indices)
@@ -48,10 +58,42 @@ namespace ForceRenderer.Mathematics
 			int axis = aabb.extend.MaxIndex;
 
 			//Recursively construct deeper layers
-			Node child0 = BuildChild(indices[..minIndex], headVolume, axis);
-			Node child1 = BuildChild(indices[minIndex..], tailVolume, axis);
+			Node child0;
+			Node child1;
 
-			NodeCount++;
+			if (parallelDepthRemain > 0)
+			{
+				int[] headIndices = indices[..minIndex].ToArray();
+				int parallel = --parallelDepthRemain;
+
+				child0 = null;
+
+				Thread thread = new Thread
+								(
+									() =>
+									{
+										BranchBuilder builder = new BranchBuilder(aabbs, headIndices, headVolume);
+
+										child0 = builder.Build(parallel);
+										Interlocked.Add(ref _nodeCount, builder.NodeCount);
+									}
+								)
+								{
+									Priority = ThreadPriority.Normal,
+									Name = $"{nameof(BranchBuilder)} Worker"
+								};
+
+				thread.Start();
+				child1 = BuildChild(indices[minIndex..], tailVolume, axis);
+				thread.Join();
+			}
+			else
+			{
+				child0 = BuildChild(indices[..minIndex], headVolume, axis);
+				child1 = BuildChild(indices[minIndex..], tailVolume, axis);
+			}
+
+			Interlocked.Increment(ref _nodeCount);
 			return new Node(child0, child1, aabb);
 		}
 
@@ -59,7 +101,7 @@ namespace ForceRenderer.Mathematics
 		{
 			if (indices.Length == 1)
 			{
-				NodeCount++;
+				Interlocked.Increment(ref _nodeCount);
 				return new Node(aabb, indices[0]);
 			}
 

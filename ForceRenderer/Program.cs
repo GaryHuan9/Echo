@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
@@ -42,8 +43,8 @@ namespace ForceRenderer
 		static RenderEngine renderEngine;
 		static Terminal renderTerminal;
 
-		static CommandsController commandsController;
-		static RenderMonitor renderMonitor;
+		public static CommandsController commandsController;
+		public static RenderMonitor renderMonitor;
 
 		static readonly RenderProfile pathTraceFastProfile = new()
 															 {
@@ -94,9 +95,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = bvhQualityProfile;
+			RenderProfile profile = pathTraceExportProfile;
 
-			profile.Scene = new Sponza();
+			profile.Scene = new GridSpheresScene();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};

@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
+using CodeHelpers.Threads;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.SceneObjects;
@@ -123,28 +126,32 @@ namespace ForceRenderer.Rendering
 			lights = new ReadOnlyCollection<PressedLight>(lightList);
 
 			//Construct bounding volume hierarchy acceleration structure
-			var aabbs = CollectionPooler<AxisAlignedBoundingBox>.list.GetObject();
-			var indices = CollectionPooler<int>.list.GetObject();
+			int[] tokens = new int[triangles.Length + spheres.Length];
+			var aabbs = new AxisAlignedBoundingBox[tokens.Length];
 
-			aabbs.Capacity = indices.Capacity = triangles.Length + spheres.Length;
+			Parallel.For(0, triangles.Length, FillTriangles);
+			Parallel.For(0, spheres.Length, FillSpheres);
 
-			for (int i = 0; i < triangles.Length; i++)
+			void FillTriangles(int index)
 			{
-				var triangle = triangles[i] = triangleList[i];
+				var triangle = triangleList[index];
+				triangles[index] = triangle;
 
-				aabbs.Add(triangle.AABB);
-				indices.Add(i);
+				aabbs[index] = triangle.AABB;
+				tokens[index] = index;
 			}
 
-			for (int i = 0; i < spheres.Length; i++)
+			void FillSpheres(int index)
 			{
-				var sphere = spheres[i] = sphereList[i];
+				var sphere = sphereList[index];
+				spheres[index] = sphere;
 
-				aabbs.Add(sphere.AABB);
-				indices.Add(~i);
+				aabbs[triangles.Length + index] = sphere.AABB;
+				tokens[triangles.Length + index] = ~index;
 			}
 
-			bvh = new BoundingVolumeHierarchy(this, aabbs, indices);
+			Program.commandsController.Log("Extracted scene");
+			bvh = new BoundingVolumeHierarchy(this, aabbs, tokens);
 
 			//Release resources
 			CollectionPooler<PressedTriangle>.list.ReleaseObject(triangleList);
@@ -152,9 +159,6 @@ namespace ForceRenderer.Rendering
 
 			CollectionPooler<Material, int>.dictionary.ReleaseObject(materialObjects);
 			CollectionPooler<Object>.queue.ReleaseObject(frontier);
-
-			CollectionPooler<AxisAlignedBoundingBox>.list.ReleaseObject(aabbs);
-			CollectionPooler<int>.list.ReleaseObject(indices);
 		}
 
 		public readonly Camera camera;
