@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Rendering.Materials;
@@ -20,7 +21,7 @@ namespace ForceRenderer.Rendering.Pixels
 
 			while (bounce < Profile.bounceLimit && GetIntersection(ray, out Hit hit))
 			{
-				bounce++;
+				++bounce;
 
 				CalculatedHit calculated = new CalculatedHit(hit, ray, scene);
 				Material material = scene.GetMaterial(hit);
