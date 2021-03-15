@@ -1,5 +1,4 @@
 ﻿using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using ForceRenderer.IO;
@@ -102,8 +101,8 @@ namespace ForceRenderer.Objects
 	{
 		public KunaiScene()
 		{
-			var kunai = new Mesh("Assets/Models/Kunai/wraith_kunai.obj");
-			var materials = new MaterialLibrary("Assets/Models/Kunai/wraith_kunai.mat");
+			var kunai = new Mesh("Assets/Models/Excluded/Kunai/wraith_kunai.obj");
+			var materials = new MaterialLibrary("Assets/Models/Excluded/Kunai/wraith_kunai.mat");
 
 			Cubemap = new SolidCubemap(Float3.one);
 
