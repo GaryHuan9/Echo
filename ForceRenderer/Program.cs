@@ -49,8 +49,8 @@ namespace ForceRenderer
 															 {
 																 Method = new PathTraceWorker(),
 																 TilePattern = new CheckerboardPattern(),
-																 PixelSample = 24,
-																 AdaptiveSample = 180
+																 PixelSample = 16,
+																 AdaptiveSample = 120
 															 };
 
 		static readonly RenderProfile pathTraceProfile = new()
@@ -74,7 +74,7 @@ namespace ForceRenderer
 														  Method = new AlbedoPixelWorker(),
 														  TilePattern = new ScrambledPattern(),
 														  PixelSample = 12,
-														  AdaptiveSample = 100
+														  AdaptiveSample = 80
 													  };
 
 		static readonly RenderProfile bvhQualityProfile = new()
@@ -94,9 +94,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = bvhQualityProfile;
+			RenderProfile profile = pathTraceFastProfile;
 
-			profile.Scene = new Sponza();
+			profile.Scene = new BugattiScene();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
@@ -123,7 +123,7 @@ namespace ForceRenderer
 			else
 			{
 				postProcess.AddWorker(new Bloom(postProcess));
-				postProcess.AddWorker(new Vignette(postProcess, 0.24f));
+				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
 				postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
 			}
 

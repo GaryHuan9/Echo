@@ -34,7 +34,7 @@ namespace ForceRenderer.Rendering.Materials
 			AssertZeroOne(Albedo);
 
 			NormalIntensity = NormalIntensity.Clamp(-1f, 1f);
-			albedoColor = ToColor(Albedo);
+			albedoColor = Utilities.ToColor(Albedo);
 		}
 
 		/// <summary>
@@ -139,9 +139,6 @@ namespace ForceRenderer.Rendering.Materials
 
 			return value == Float4.zero ? Float4.zero : value * texture[texcoord];
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static Float4 ToColor(in Float3 value) => new(value.x, value.y, value.z, 1f);
 
 		protected static void AssertZeroOne(float value)
 		{
