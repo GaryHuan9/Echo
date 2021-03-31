@@ -55,24 +55,4 @@ namespace ForceRenderer.Rendering.Pixels
 			return color.Max(Float3.zero); //Do not clamp up, because emissive samples can go beyond 1f
 		}
 	}
-
-	public readonly struct CalculatedHit
-	{
-		public CalculatedHit(in Hit hit, in Ray ray, PressedScene scene)
-		{
-			position = ray.GetPoint(hit.distance);
-			direction = ray.direction;
-
-			normal = scene.GetNormal(hit);
-			texcoord = scene.GetTexcoord(hit);
-		}
-
-		public readonly Float3 position;
-		public readonly Float3 direction;
-
-		public readonly Float3 normal;
-		public readonly Float2 texcoord;
-
-		// public readonly float distance;
-	}
 }
