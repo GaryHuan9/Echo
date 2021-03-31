@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
@@ -129,6 +130,8 @@ namespace ForceRenderer.Rendering
 
 			Parallel.For(0, triangles.Length, FillTriangles);
 			Parallel.For(0, spheres.Length, FillSpheres);
+
+			Thread.MemoryBarrier();
 
 			void FillTriangles(int index)
 			{
