@@ -51,7 +51,7 @@ namespace ForceRenderer.Mathematics
 			}
 		}
 
-		readonly PressedScene pressed;
+		readonly GeometryPack pack;
 		readonly Node[] nodes;
 		readonly int maxDepth;
 
