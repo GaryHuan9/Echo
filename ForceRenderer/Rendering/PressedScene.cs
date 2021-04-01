@@ -11,8 +11,9 @@ using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Mathematics.Intersections;
 using ForceRenderer.Objects;
-using ForceRenderer.Objects.SceneObjects;
+using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Rendering.Materials;
 using ForceRenderer.Textures;
 using Object = ForceRenderer.Objects.Object;
@@ -46,7 +47,7 @@ namespace ForceRenderer.Rendering
 
 				switch (target)
 				{
-					case SceneObject sceneObject:
+					case GeometryObject sceneObject:
 					{
 						int triangleCount = triangleList.Count;
 
@@ -176,76 +177,5 @@ namespace ForceRenderer.Rendering
 		public int MaterialCount => materials.Length;
 
 		public readonly ReadOnlyCollection<PressedLight> lights;
-
-		/// <summary>
-		/// Returns the intersection status with one object of <paramref name="token"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public float Intersect(in Ray ray, int token, out Float2 uv)
-		{
-			if (token < 0)
-			{
-				ref PressedSphere sphere = ref spheres[~token];
-				return sphere.GetIntersection(ray, out uv);
-			}
-
-			ref PressedTriangle triangle = ref triangles[token];
-			return triangle.GetIntersection(ray, out uv);
-		}
-
-		/// <summary>
-		/// Gets the normal of intersection with <paramref name="hit"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Float3 GetNormal(in Hit hit)
-		{
-			if (hit.token < 0)
-			{
-				ref PressedSphere sphere = ref spheres[~hit.token];
-				return sphere.GetNormal(hit.uv);
-			}
-
-			ref PressedTriangle triangle = ref triangles[hit.token];
-			return triangle.GetNormal(hit.uv);
-		}
-
-		/// <summary>
-		/// Gets the texcoord of intersection with <paramref name="hit"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Float2 GetTexcoord(in Hit hit)
-		{
-			if (hit.token < 0) return hit.uv; //Sphere directly uses the uv as texcoord
-
-			ref PressedTriangle triangle = ref triangles[hit.token];
-			return triangle.GetTexcoord(hit.uv);
-		}
-
-		/// <summary>
-		/// Gets the material of intersection with <paramref name="hit"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Material GetMaterial(in Hit hit)
-		{
-			int materialToken;
-
-			if (hit.token < 0)
-			{
-				ref PressedSphere sphere = ref spheres[~hit.token];
-				materialToken = sphere.materialToken;
-			}
-			else
-			{
-				ref PressedTriangle triangle = ref triangles[hit.token];
-				materialToken = triangle.materialToken;
-			}
-
-			return materials[materialToken];
-		}
-
-		public void Write(DataWriter writer)
-		{
-			//TODO: Not writing camera, directional light, and skybox right now
-		}
 	}
 }

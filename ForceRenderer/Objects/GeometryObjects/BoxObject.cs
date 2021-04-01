@@ -4,9 +4,9 @@ using System.Linq;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Rendering.Materials;
 
-namespace ForceRenderer.Objects.SceneObjects
+namespace ForceRenderer.Objects.GeometryObjects
 {
-	public class BoxObject : SceneObject
+	public class BoxObject : GeometryObject
 	{
 		public BoxObject(Material material, Float3 size) : base(material) => Size = size;
 

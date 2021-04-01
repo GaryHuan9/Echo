@@ -1,6 +1,7 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Mathematics.Intersections;
 using ForceRenderer.Objects;
 using ForceRenderer.Rendering.Materials;
 

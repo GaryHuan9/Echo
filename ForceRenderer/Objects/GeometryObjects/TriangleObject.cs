@@ -5,11 +5,12 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Mathematics.Intersections;
 using ForceRenderer.Rendering.Materials;
 
-namespace ForceRenderer.Objects.SceneObjects
+namespace ForceRenderer.Objects.GeometryObjects
 {
-	public class TriangleObject : SceneObject
+	public class TriangleObject : GeometryObject
 	{
 		public TriangleObject(Material material, Float3 vertex0, Float3 vertex1, Float3 vertex2) : base(material)
 		{

@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Mathematics.Intersections;
 using ForceRenderer.Rendering.Materials;
 
-namespace ForceRenderer.Objects.SceneObjects
+namespace ForceRenderer.Objects.GeometryObjects
 {
-	public class SphereObject : SceneObject
+	public class SphereObject : GeometryObject
 	{
 		public SphereObject(Material material, float radius) : base(material) => Radius = radius;
 

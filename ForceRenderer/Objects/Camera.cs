@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Mathematics.Intersections;
 
 namespace ForceRenderer.Objects
 {

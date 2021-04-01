@@ -1,7 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Objects.SceneObjects;
+using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Objects

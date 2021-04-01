@@ -5,9 +5,9 @@ using CodeHelpers.Mathematics;
 using ForceRenderer.IO;
 using ForceRenderer.Rendering.Materials;
 
-namespace ForceRenderer.Objects.SceneObjects
+namespace ForceRenderer.Objects.GeometryObjects
 {
-	public class MeshObject : SceneObject
+	public class MeshObject : GeometryObject
 	{
 		public MeshObject(Mesh mesh, Material material) : base(material) => Mesh = mesh;
 
