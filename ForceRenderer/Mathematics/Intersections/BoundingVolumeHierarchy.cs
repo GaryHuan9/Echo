@@ -9,7 +9,7 @@ namespace ForceRenderer.Mathematics.Intersections
 {
 	public class BoundingVolumeHierarchy
 	{
-		public BoundingVolumeHierarchy(GeometryPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
+		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
 		{
 			this.pack = pack;
 
@@ -45,7 +45,7 @@ namespace ForceRenderer.Mathematics.Intersections
 			}
 		}
 
-		readonly GeometryPack pack;
+		readonly PressedPack pack;
 		readonly Node[] nodes;
 		readonly int maxDepth;
 
@@ -144,26 +144,25 @@ namespace ForceRenderer.Mathematics.Intersections
 		/// <summary>
 		/// Returns the number of AABB intersection calculated before a result it determined.
 		/// </summary>
-		public int GetIntersectionCost(in Ray ray)
+		public int GetIntersectionCost(in Ray ray, ref float distance)
 		{
 			if (nodes == null) return 0;
 
 			ref readonly Node root = ref nodes[0];
 			float hit = root.aabb.Intersect(ray);
 
-			if (float.IsPositiveInfinity(hit)) return 1;
+			if (hit >= distance) return 1;
+			distance = hit;
 
-			hit = float.PositiveInfinity;
-			return GetIntersectionCost(root, ray, ref hit) + 1;
+			return GetIntersectionCost(root, ray, ref distance) + 1;
 		}
 
-		int GetIntersectionCost(in Node node, in Ray ray, ref float hit)
+		int GetIntersectionCost(in Node node, in Ray ray, ref float distance)
 		{
 			if (node.IsLeaf)
 			{
 				//Now we finally calculate the real intersection
-				hit = Math.Min(pressed.Intersect(ray, node.token, out Float2 _), hit);
-				return 0;
+				return pack.GetIntersectionCost(ray, ref distance, node.token);
 			}
 
 			ref Node child0 = ref nodes[node.children];
@@ -176,13 +175,13 @@ namespace ForceRenderer.Mathematics.Intersections
 
 			if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
 			{
-				if (hit0 < hit) cost += GetIntersectionCost(in child0, ray, ref hit);
-				if (hit1 < hit) cost += GetIntersectionCost(in child1, ray, ref hit);
+				if (hit0 < distance) cost += GetIntersectionCost(in child0, ray, ref distance);
+				if (hit1 < distance) cost += GetIntersectionCost(in child1, ray, ref distance);
 			}
 			else
 			{
-				if (hit1 < hit) cost += GetIntersectionCost(in child1, ray, ref hit);
-				if (hit0 < hit) cost += GetIntersectionCost(in child0, ray, ref hit);
+				if (hit1 < distance) cost += GetIntersectionCost(in child1, ray, ref distance);
+				if (hit0 < distance) cost += GetIntersectionCost(in child0, ray, ref distance);
 			}
 
 			return cost;
@@ -198,8 +197,7 @@ namespace ForceRenderer.Mathematics.Intersections
 				this.children = children;
 			}
 
-			[FieldOffset(0)]
-			public readonly AxisAlignedBoundingBox aabb;
+			[FieldOffset(0)] public readonly AxisAlignedBoundingBox aabb;
 
 			//NOTE: the AABB is 28 bytes large, but its last 4 bytes are not used and only occupied for SIMD loading
 			//So we can overlap the next four bytes onto the AABB and pay extra attention when first assigning the fields
