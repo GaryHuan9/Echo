@@ -6,22 +6,17 @@ namespace ForceRenderer.Mathematics.Intersections
 	/// <summary>
 	/// Mutable struct used during intersection tests to distribute hit information.
 	/// </summary>
-	public readonly struct Hit
+	public struct Hit
 	{
-		public Hit(GeometryPackInstance instance, float distance, uint token, Float2 uv)
-		{
-			this.instance = instance;
-			this.distance = distance;
-			this.token = token;
-			this.uv = uv;
-		}
-
-		public readonly GeometryPackInstance instance;
-		public readonly float distance;
-		public readonly uint token;
-		public readonly Float2 uv;
+		public PressedPackInstance instance;
+		public float distance;
+		public uint token;
+		public Float2 uv;
 	}
 
+	/// <summary>
+	/// A formally-sealed hit information.
+	/// </summary>
 	public readonly struct CalculatedHit
 	{
 		public CalculatedHit(in Float3 position, in Float3 direction, float distance, Material material, in Float3 normal, Float2 texcoord)
