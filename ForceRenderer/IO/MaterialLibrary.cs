@@ -54,6 +54,7 @@ namespace ForceRenderer.IO
 					if (!materials.ContainsKey(name)) materials.Add(name, processing);
 					else throw new Exception($"Duplicated material name: {name}");
 				}
+				else if (token.SequenceEqual("define")) { }
 				else
 				{
 					//Assigning material attribute
@@ -95,6 +96,12 @@ namespace ForceRenderer.IO
 
 				return new Float3(float0, float1, float2);
 			}
+		}
+
+		public MaterialLibrary(Material first = null)
+		{
+			this.first = first;
+			materials = new Dictionary<string, Material>();
 		}
 
 		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new(new[] {".mat"});

@@ -2,6 +2,7 @@
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Mathematics.Intersections;
 using ForceRenderer.Rendering.Pixels;
 using ForceRenderer.Textures;
 
@@ -9,7 +10,7 @@ namespace ForceRenderer.Rendering.Materials
 {
 	public class Glass : Material
 	{
-		public float IndexOfRefraction { get; set; }
+		public float IndexOfRefraction { get; set; } = 1f;
 		public float Roughness { get; set; }
 
 		public Texture IndexOfRefractionMap { get; set; } = Texture.white;

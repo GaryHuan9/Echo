@@ -4,6 +4,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
+using ForceRenderer.Mathematics.Intersections;
 using ForceRenderer.Rendering.Pixels;
 using ForceRenderer.Textures;
 

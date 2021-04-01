@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
 
-namespace ForceRenderer.Mathematics
+namespace ForceRenderer.Mathematics.Intersections
 {
 	/// <summary>
 	/// Builds the branch of a <see cref="BoundingVolumeHierarchy"/>.

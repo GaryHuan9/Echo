@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using ForceRenderer.IO;
+using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
+using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Rendering;
 using ForceRenderer.Rendering.Pixels;
 using ForceRenderer.Rendering.PostProcessing;
@@ -94,9 +99,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceFastProfile;
+			RenderProfile profile = pathTraceProfile;
 
-			profile.Scene = new BugattiScene();
+			profile.Scene = new MaterialBallScene();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};

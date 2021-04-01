@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 
@@ -13,7 +14,7 @@ namespace ForceRenderer.Objects
 		Float3 _rotation;
 		Float3 _scale = Float3.one;
 
-		public Float3 Position
+		public virtual Float3 Position
 		{
 			get => _position;
 			set
@@ -26,7 +27,7 @@ namespace ForceRenderer.Objects
 			}
 		}
 
-		public Float3 Rotation
+		public virtual Float3 Rotation
 		{
 			get => _rotation;
 			set
@@ -39,7 +40,7 @@ namespace ForceRenderer.Objects
 			}
 		}
 
-		public Float3 Scale
+		public virtual Float3 Scale
 		{
 			get => _scale;
 			set
@@ -115,6 +116,8 @@ namespace ForceRenderer.Objects
 
 				DisconnectChild(child);
 			}
+
+			public T FindFirst<T>() where T : Object => (T)children.FirstOrDefault(target => target is T);
 
 			void ConnectChild(Object child, int index)
 			{

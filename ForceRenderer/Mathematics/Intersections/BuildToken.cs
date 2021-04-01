@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 
-namespace ForceRenderer.Mathematics
+namespace ForceRenderer.Mathematics.Intersections
 {
 	public readonly struct BuildToken
 	{

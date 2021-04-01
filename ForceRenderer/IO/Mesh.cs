@@ -19,6 +19,7 @@ namespace ForceRenderer.IO
 		{
 			path = this.GetAbsolutePath(path);
 
+			//These lists will become too large to pool
 			var vertexLines = new List<Line>();
 			var normalLines = new List<Line>();
 			var texcoordLines = new List<Line>();
@@ -333,22 +334,5 @@ namespace ForceRenderer.IO
 		public readonly Int3 normalIndices;
 		public readonly Int3 texcoordIndices;
 		public readonly string materialName;
-	}
-
-	readonly struct Line
-	{
-		public Line(string source, int height, Range range)
-		{
-			this.height = height;
-			this.source = source;
-			this.range = range;
-		}
-
-		public readonly string source;
-		public readonly int height;
-		public readonly Range range;
-
-		public static implicit operator ReadOnlySpan<char>(Line line) => ((ReadOnlySpan<char>)line.source)[line.range];
-		public static implicit operator string(Line line) => line.source[line.range];
 	}
 }
