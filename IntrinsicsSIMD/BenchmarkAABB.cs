@@ -5,7 +5,8 @@ using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Objects.SceneObjects;
+using ForceRenderer.Mathematics.Intersections;
+using ForceRenderer.Objects.GeometryObjects;
 
 namespace IntrinsicsSIMD
 {
@@ -98,7 +99,7 @@ namespace IntrinsicsSIMD
 				this.extend = extend;
 			}
 
-			public AxisAlignedBoundingBox(ForceRenderer.Mathematics.AxisAlignedBoundingBox aabb) : this(aabb.center, aabb.extend) { }
+			public AxisAlignedBoundingBox(ForceRenderer.Mathematics.Intersections.AxisAlignedBoundingBox aabb) : this(aabb.center, aabb.extend) { }
 
 			[FieldOffset(0)] public readonly Float3 center;  //The exact center of the box
 			[FieldOffset(12)] public readonly Float3 extend; //Half the size of the box

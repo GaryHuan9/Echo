@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using BenchmarkDotNet.Running;
-using CodeHelpers.Diagnostics;
+﻿using BenchmarkDotNet.Running;
 
 namespace IntrinsicsSIMD
 {
@@ -12,8 +9,8 @@ namespace IntrinsicsSIMD
 			// BenchmarkRunner.Run<TestSIMD>();
 			// BenchmarkRunner.Run<BenchmarkAABB>();
 			// BenchmarkRunner.Run<BenchmarkBVH>();
-			// BenchmarkRunner.Run<BenchmarkTexture>();
-			BenchmarkRunner.Run<BenchmarkRadixSort>();
+			BenchmarkRunner.Run<BenchmarkTexture>();
+			// BenchmarkRunner.Run<BenchmarkRadixSort>();
 		}
 	}
 }

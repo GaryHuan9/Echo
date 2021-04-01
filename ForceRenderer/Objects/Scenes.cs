@@ -3,25 +3,12 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Objects.SceneObjects;
+using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Rendering.Materials;
 using ForceRenderer.Textures;
 
 namespace ForceRenderer.Objects
 {
-	public class StandardScene : Scene
-	{
-		public StandardScene(Material ground = null)
-		{
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
-
-			children.Add(new PlaneObject(ground ?? new Diffuse {Albedo = (Float3)0.75f}, new Float2(24f, 16f)));
-			children.Add(new Light {Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 30f, 0f)});
-
-			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
-		}
-	}
-
 	public class MaterialBallScene : StandardScene
 	{
 		public MaterialBallScene() : base(new Glossy {Albedo = new Float3(0.78f, 0.76f, 0.79f), Smoothness = 0.74f})
@@ -32,57 +19,6 @@ namespace ForceRenderer.Objects
 			var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");
 
 			children.Add(new MeshObject(mesh, materials) {Position = new Float3(0f, 0f, -2.5f), Rotation = Float3.up * -75f, Scale = Float3.one * 2f});
-		}
-	}
-
-	public class TestLighting : StandardScene
-	{
-		public TestLighting()
-		{
-			children.Add(new SphereObject(new Diffuse {Albedo = Float3.forward}, 0.5f) {Position = new Float3(2f, 0.5f, -2f)});
-			children.Add(new SphereObject(new Diffuse {Albedo = Float3.up}, 0.5f) {Position = new Float3(-2f, 0.5f, 2f)});
-			children.Add(new BoxObject(new Diffuse {Albedo = Float3.right}, Float3.one) {Position = new Float3(-3f, 0.5f, -3f)});
-			children.Add(new BoxObject(new Diffuse {Albedo = Float3.one * 0.9f}, Float3.one) {Position = new Float3(3f, 0.5f, 3f)});
-		}
-	}
-
-	public class TestTexture : StandardScene
-	{
-		public TestTexture()
-		{
-			Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
-			Texture2D normal = Texture2D.Load("Assets/Textures/WikiNormalMap.png");
-			Texture2D chain = Texture2D.Load("Assets/Textures/SponzaChain.png");
-
-			// Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
-			// Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
-			Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = chain};
-
-			Cubemap = new SolidCubemap(Float3.one);
-
-			// children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -5.5f), Rotation = new Float3(-90f, 0f, 0f)});
-			children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
-		}
-	}
-
-	public class TestTransparency : Scene
-	{
-		public TestTransparency()
-		{
-			// children.Add(new SphereObject(new Material {Diffuse = new Float3(0.8f, 0.8f, 0f)}, 100f) {Position = new Float3(0f, -100.5f, 0f)});
-
-			Material material = new Glass {IndexOfRefraction = 1.5f, Albedo = (Float3)0.9f};
-			children.Add(new BoxObject(material, new Float3(4f, 1f, 0.03f)) {Position = new Float3(0f, 0.5f, 0f)});
-
-			children.Add(new SphereObject(new Glass {IndexOfRefraction = 1.5f, Albedo = Float3.one}, 0.5f) {Position = new Float3(-1f, 0f, 0f)});
-			children.Add(new SphereObject(new Diffuse {Albedo = new Float3(0.8f, 0.6f, 0.2f)}, 0.5f) {Position = new Float3(1f, 0f, 0f)});
-
-			var camera = new Camera(90f) {Position = new Float3(0.2f, 2f, -1f)};
-
-			camera.LookAt(Float3.zero);
-			children.Add(camera);
-
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 		}
 	}
 

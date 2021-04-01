@@ -60,5 +60,42 @@ namespace ForceRenderer.Mathematics
 			if (Fma.IsSupported) return Fma.MultiplyAdd(length, time, left);
 			return Sse.Add(Sse.Multiply(length, time), left);
 		}
+
+		public static int Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
+		public static Int2 Morton(int index) => new Int2(Unsaw(index), Unsaw(index >> 1));
+
+		/// <summary>
+		/// Transforms a number into a saw blade shape:
+		/// _ _ _ _ _ _ _ _ 7 6 5 4 3 2 1 0
+		/// _ 7 _ 6 _ 5 _ 4 _ 3 _ 2 _ 1 _ 0
+		/// </summary>
+		static int Saw(short number)
+		{
+			int x = number;
+
+			x = (x | (x << 08)) & 0b0000_0000_1111_1111_0000_0000_1111_1111; // _ _ _ _ 7 6 5 4 _ _ _ _ 3 2 1 0
+			x = (x | (x << 04)) & 0b0000_1111_0000_1111_0000_1111_0000_1111; // _ _ 7 6 _ _ 5 4 _ _ 3 2 _ _ 1 0
+			x = (x | (x << 02)) & 0b0011_0011_0011_0011_0011_0011_0011_0011; // _ 7 _ 6 _ 5 _ 4 _ 3 _ 2 _ 1 _ 0
+			x = (x | (x << 01)) & 0b0101_0101_0101_0101_0101_0101_0101_0101; // Final step not representable in 8 bit version
+
+			return x;
+		}
+
+		/// <summary>
+		/// Transforms a saw blade shape number back:
+		/// _ 7 _ 6 _ 5 _ 4 _ 3 _ 2 _ 1 _ 0
+		/// _ _ _ _ _ _ _ _ 7 6 5 4 3 2 1 0
+		/// </summary>
+		static short Unsaw(int number)
+		{
+			int x = number;
+
+			x = (x | (x >> 00)) & 0b0101_0101_0101_0101_0101_0101_0101_0101; // _ 7 _ 6 _ 5 _ 4 _ 3 _ 2 _ 1 _ 0
+			x = (x | (x >> 01)) & 0b0011_0011_0011_0011_0011_0011_0011_0011; // _ _ 7 6 _ _ 5 4 _ _ 3 2 _ _ 1 0
+			x = (x | (x >> 02)) & 0b0000_1111_0000_1111_0000_1111_0000_1111; // _ _ _ _ 7 6 5 4 _ _ _ _ 3 2 1 0
+			x = (x | (x >> 04)) & 0b0000_0000_1111_1111_0000_0000_1111_1111; // _ _ _ _ _ _ _ _ 7 6 5 4 3 2 1 0
+
+			return (short)(x | (x >> 08));
+		}
 	}
 }

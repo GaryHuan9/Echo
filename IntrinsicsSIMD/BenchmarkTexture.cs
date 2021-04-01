@@ -25,9 +25,6 @@ namespace IntrinsicsSIMD
 			textureNoPrefetch = Texture2D.Load(Path);
 			textureNoPrefetch.Filter = new NoPrefetch();
 
-			textureSseOnly = Texture2D.Load(Path);
-			textureSseOnly.Filter = new SseOnly();
-
 			for (int i = 0; i < uvs.Length; i++)
 			{
 				uvs[i] = new Float2((float)random.NextDouble(), (float)random.NextDouble());
@@ -37,7 +34,6 @@ namespace IntrinsicsSIMD
 		readonly Texture texture;
 		readonly Texture textureOld;
 		readonly Texture textureNoPrefetch;
-		readonly Texture textureSseOnly;
 
 		readonly Float2[] uvs;
 
@@ -54,35 +50,25 @@ namespace IntrinsicsSIMD
 			return result;
 		}
 
-		[Benchmark]
-		public Float4 SampleOld()
-		{
-			Float4 result = default;
-
-			for (int i = 0; i < uvs.Length; i++) result = textureOld[uvs[i]];
-
-			return result;
-		}
-
-		[Benchmark]
-		public Float4 SampleNoPrefetch()
-		{
-			Float4 result = default;
-
-			for (int i = 0; i < uvs.Length; i++) result = textureNoPrefetch[uvs[i]];
-
-			return result;
-		}
-
-		[Benchmark]
-		public Float4 SampleSseOnly()
-		{
-			Float4 result = default;
-
-			for (int i = 0; i < uvs.Length; i++) result = textureSseOnly[uvs[i]];
-
-			return result;
-		}
+		// [Benchmark]
+		// public Float4 SampleOld()
+		// {
+		// 	Float4 result = default;
+		//
+		// 	for (int i = 0; i < uvs.Length; i++) result = textureOld[uvs[i]];
+		//
+		// 	return result;
+		// }
+		//
+		// [Benchmark]
+		// public Float4 SampleNoPrefetch()
+		// {
+		// 	Float4 result = default;
+		//
+		// 	for (int i = 0; i < uvs.Length; i++) result = textureNoPrefetch[uvs[i]];
+		//
+		// 	return result;
+		// }
 
 		class Old : IFilter
 		{
@@ -137,43 +123,6 @@ namespace IntrinsicsSIMD
 				Vector128<float> length = Sse.Subtract(right, left);
 
 				if (Fma.IsSupported) return Fma.MultiplyAdd(length, time, left);
-				return Sse.Add(Sse.Multiply(length, time), left);
-			}
-		}
-
-		class SseOnly : IFilter
-		{
-			public Vector128<float> Convert(Texture texture, Float2 uv)
-			{
-				uv *= texture.size;
-				Int2 rounded = uv.Rounded;
-
-				Int2 upperRight = rounded.Min(texture.oneLess);
-				Int2 bottomLeft = rounded.Max(Int2.one) - Int2.one;
-
-				//Prefetch color data
-				ref readonly Vector128<float> y0x0 = ref texture.GetPixel(bottomLeft);
-				ref readonly Vector128<float> y0x1 = ref texture.GetPixel(new Int2(upperRight.x, bottomLeft.y));
-
-				ref readonly Vector128<float> y1x0 = ref texture.GetPixel(new Int2(bottomLeft.x, upperRight.y));
-				ref readonly Vector128<float> y1x1 = ref texture.GetPixel(upperRight);
-
-				//Interpolate
-				Float2 t = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);
-
-				Vector128<float> timeX = Vector128.Create(t.x);
-				Vector128<float> timeY = Vector128.Create(t.y);
-
-				Vector128<float> y0 = Lerp(y0x0, y0x1, timeX);
-				Vector128<float> y1 = Lerp(y1x0, y1x1, timeX);
-
-				return Lerp(y0, y1, timeY);
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static Vector128<float> Lerp(in Vector128<float> left, in Vector128<float> right, in Vector128<float> time)
-			{
-				Vector128<float> length = Sse.Subtract(right, left);
 				return Sse.Add(Sse.Multiply(length, time), left);
 			}
 		}
