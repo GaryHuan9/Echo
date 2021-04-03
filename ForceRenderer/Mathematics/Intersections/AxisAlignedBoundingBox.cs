@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Mathematics.Intersections
@@ -17,6 +18,8 @@ namespace ForceRenderer.Mathematics.Intersections
 
 			this.center = center;
 			this.extend = extend;
+
+			Assert.IsFalse(extend.MinComponent >= 0f);
 		}
 
 		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabb)

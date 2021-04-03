@@ -4,7 +4,7 @@ using ForceRenderer.Mathematics;
 using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Textures;
 
-namespace ForceRenderer.Objects
+namespace ForceRenderer.Objects.Scenes
 {
 	public class BugattiScene : Scene
 	{
