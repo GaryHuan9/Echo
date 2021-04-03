@@ -4,11 +4,13 @@ using ForceRenderer.Rendering.Materials;
 namespace ForceRenderer.Mathematics.Intersections
 {
 	/// <summary>
-	/// Mutable struct used during intersection tests to distribute hit information.
+	/// Mutable data struct used during intersection tests to distribute hit information.
 	/// </summary>
 	public struct Hit
 	{
 		public PressedPackInstance instance;
+		public Float3 normal;
+
 		public float distance;
 		public uint token;
 		public Float2 uv;

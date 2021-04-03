@@ -1,5 +1,4 @@
 ﻿using CodeHelpers.Mathematics;
-using ForceRenderer.Mathematics;
 using ForceRenderer.Mathematics.Intersections;
 using ForceRenderer.Rendering.Materials;
 
@@ -12,15 +11,13 @@ namespace ForceRenderer.Rendering.Pixels
 			PressedScene scene = Profile.scene;
 			Ray ray = scene.camera.GetRay(screenUV);
 
-			while (GetIntersection(ray, out Hit hit))
+			while (scene.GetIntersection(ray, out CalculatedHit hit))
 			{
-				CalculatedHit calculated = new CalculatedHit(hit, ray, Profile.scene);
-				Material material = Profile.scene.GetMaterial(hit);
+				Material material = hit.material;
+				Float4 sample = material.AlbedoMap[hit.texcoord];
 
-				Float4 sample = material.AlbedoMap[calculated.texcoord];
 				if (!Scalars.AlmostEquals(sample.w, 0f)) return sample.XYZ * material.Albedo;
-
-				ray = new Ray(calculated.position, calculated.direction, true);
+				ray = new Ray(hit.position, hit.direction, true);
 			}
 
 			return scene.cubemap?.Sample(ray.direction) ?? Float3.zero;

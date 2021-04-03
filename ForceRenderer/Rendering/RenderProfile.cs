@@ -2,6 +2,7 @@
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Objects;
+using ForceRenderer.Objects.Scenes;
 using ForceRenderer.Rendering.Pixels;
 using ForceRenderer.Rendering.Tiles;
 using ForceRenderer.Textures;

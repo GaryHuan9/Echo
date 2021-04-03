@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using CodeHelpers;
-using CodeHelpers.Mathematics;
 
 namespace ForceRenderer.Mathematics.Intersections
 {
@@ -12,19 +11,22 @@ namespace ForceRenderer.Mathematics.Intersections
 		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
 		{
 			this.pack = pack;
+			rootAABB = default;
 
 			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
 			if (aabbs.Count == 0) return;
 
 			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
 
-			BranchBuilder builder = new BranchBuilder(aabbs, indices); //Parallel building reduces build time by about 4 folds on very large scenes
-			BranchBuilder.Node root = builder.Build();                 //NOTE: parallel is the number/depth of layers, not the number of processes
+			BranchBuilder builder = new BranchBuilder(aabbs, indices);
+			BranchBuilder.Node root = builder.Build(); //Parallel building reduces build time by about 4 folds on very large scenes
 
 			int index = 1;
 
 			nodes = new Node[builder.NodeCount];
 			nodes[0] = CreateNode(root, out maxDepth);
+
+			rootAABB = root.aabb;
 
 			Node CreateNode(BranchBuilder.Node node, out int depth)
 			{
@@ -44,6 +46,8 @@ namespace ForceRenderer.Mathematics.Intersections
 				return Node.CreateNode(node.aabb, children);
 			}
 		}
+
+		public readonly AxisAlignedBoundingBox rootAABB;
 
 		readonly PressedPack pack;
 		readonly Node[] nodes;

@@ -11,10 +11,6 @@ namespace ForceRenderer.Rendering.Pixels
 		readonly ThreadLocal<ExtendedRandom> threadRandom = new(() => new ExtendedRandom());
 		protected PressedRenderProfile Profile { get; private set; }
 
-		long _intersectionPerformed;
-
-		public long IntersectionPerformed => Interlocked.Read(ref _intersectionPerformed);
-
 		/// <summary>
 		/// Returns a thread-safe random number generator that can be used in the invoking thread.
 		/// </summary>
@@ -29,11 +25,7 @@ namespace ForceRenderer.Rendering.Pixels
 		/// Assigns the render profile before a render session begins.
 		/// NOTE: This can be used as a "reset" point for the worker.
 		/// </summary>
-		public virtual void AssignProfile(PressedRenderProfile profile)
-		{
-			Interlocked.Exchange(ref _intersectionPerformed, 0);
-			Profile = profile;
-		}
+		public virtual void AssignProfile(PressedRenderProfile profile) => Profile = profile;
 
 		/// <summary>
 		/// Sample and render at a specific point.
@@ -41,14 +33,5 @@ namespace ForceRenderer.Rendering.Pixels
 		/// <param name="screenUV">The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
 		/// Y should have the same scale as X and it would depend on the aspect ratio.</param>
 		public abstract Float3 Render(Float2 screenUV);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected bool GetIntersection(in Ray ray, out Hit hit)
-		{
-			hit = Profile.scene.bvh.GetIntersection(ray);
-			Interlocked.Increment(ref _intersectionPerformed);
-
-			return float.IsFinite(hit.distance);
-		}
 	}
 }

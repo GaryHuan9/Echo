@@ -75,8 +75,8 @@ namespace ForceRenderer.Terminals
 			builders.SetLine
 			(
 				0,
-				$"Worker {profile.workerSize}; Resolution {buffer.size}; TotalPX {totalPixel:N0}; PixelSP {profile.pixelSample:N0}; AdaptiveSP {profile.adaptiveSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.TriangleCount:N0}; " +
-				$"Sphere {pressed.SphereCount:N0}; Light {pressed.lights.Count:N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {profile.worker};"
+				$"Worker {profile.workerSize}; Resolution {buffer.size}; TotalPX {totalPixel:N0}; PixelSP {profile.pixelSample:N0}; AdaptiveSP {profile.adaptiveSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.InstancedCounts.triangle:N0}; " +
+				$"Sphere {pressed.InstancedCounts.sphere:N0}; Light {pressed.lights.Count:N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {profile.worker};"
 			);
 
 			//Display dynamic information
@@ -88,7 +88,7 @@ namespace ForceRenderer.Terminals
 			long rejectedSample = Engine.RejectedSample;
 
 			int completedTile = Engine.CompletedTileCount;
-			long intersections = profile.worker.IntersectionPerformed;
+			long intersections = profile.scene.IntersectionPerformed;
 
 			builders.SetLine
 			(

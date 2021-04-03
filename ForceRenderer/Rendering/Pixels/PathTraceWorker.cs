@@ -20,23 +20,21 @@ namespace ForceRenderer.Rendering.Pixels
 			ExtendedRandom random = Random;
 			int bounce = 0;
 
-			while (bounce < Profile.bounceLimit && GetIntersection(ray, out Hit hit))
+			while (bounce < Profile.bounceLimit && scene.GetIntersection(ray, out CalculatedHit hit))
 			{
 				++bounce;
 
-				CalculatedHit calculated = new CalculatedHit(hit, ray, scene);
-				Material material = scene.GetMaterial(hit);
+				Material material = hit.material;
+				material.ApplyNormal(hit);
 
-				material.ApplyNormal(calculated);
-
-				Float3 emission = material.Emit(calculated, random);
-				Float3 bsdf = material.BidirectionalScatter(calculated, random, out Float3 direction);
+				Float3 emission = material.Emit(hit, random);
+				Float3 bsdf = material.BidirectionalScatter(hit, random, out Float3 direction);
 
 				color += energy * emission;
 				energy *= bsdf;
 
 				if (energy <= Profile.energyEpsilon) break;
-				ray = new Ray(calculated.position, direction, true);
+				ray = new Ray(hit.position, direction, true);
 			}
 
 			var cubemap = scene.cubemap;
