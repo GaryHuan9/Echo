@@ -4,9 +4,9 @@ using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Rendering.Materials;
 using ForceRenderer.Textures;
 
-namespace ForceRenderer.Objects
+namespace ForceRenderer.Objects.Scenes
 {
-	public class Scene : Object
+	public class Scene : ObjectPack
 	{
 		public Cubemap Cubemap { get; set; }
 	}

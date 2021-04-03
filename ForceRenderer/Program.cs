@@ -10,6 +10,7 @@ using ForceRenderer.IO;
 using ForceRenderer.Mathematics;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.GeometryObjects;
+using ForceRenderer.Objects.Scenes;
 using ForceRenderer.Rendering;
 using ForceRenderer.Rendering.Pixels;
 using ForceRenderer.Rendering.PostProcessing;
@@ -99,9 +100,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceProfile;
+			RenderProfile profile = pathTraceFastProfile;
 
-			profile.Scene = new MaterialBallScene();
+			profile.Scene = new BunnyScene();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};

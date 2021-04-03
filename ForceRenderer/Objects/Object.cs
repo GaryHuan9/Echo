@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using CodeHelpers.ObjectPooling;
 
 namespace ForceRenderer.Objects
 {
@@ -63,6 +64,27 @@ namespace ForceRenderer.Objects
 
 		public Object Parent { get; private set; }
 		public int ParentIndex { get; private set; }
+
+		public IEnumerable<Object> LoopChildren(bool all)
+		{
+			ExceptionHelper.AssertMainThread();
+			if (children.Count == 0) yield break;
+
+			Queue<Object> frontier = CollectionPooler<Object>.queue.GetObject();
+			for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
+
+			while (frontier.Count > 0)
+			{
+				Object child = frontier.Dequeue();
+
+				yield return child;
+				if (!all) continue;
+
+				for (int i = 0; i < child.children.Count; i++) frontier.Enqueue(child.children[i]);
+			}
+
+			CollectionPooler<Object>.queue.ReleaseObject(frontier);
+		}
 
 		void RecalculateTransformations()
 		{

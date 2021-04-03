@@ -5,84 +5,53 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.GeometryObjects;
-using ForceRenderer.Rendering.Materials;
+using ForceRenderer.Objects.Scenes;
 using Object = ForceRenderer.Objects.Object;
 
 namespace ForceRenderer.Mathematics.Intersections
 {
 	public class PressedPack
 	{
-		public PressedPack(ObjectPack source, PressedPackCollection collection)
+		public PressedPack(ObjectPack source, ScenePresser presser)
 		{
 			List<PressedTriangle> trianglesList = new List<PressedTriangle>();
 			List<PressedSphere> spheresList = new List<PressedSphere>();
 			List<PressedPackInstance> instancesList = new List<PressedPackInstance>();
 
-			using var materialsHandle = CollectionPooler<Material, int>.dictionary.Fetch();
-			using var frontierHandle = CollectionPooler<Object>.queue.Fetch();
-
-			Dictionary<Material, int> materialObjects = materialsHandle.Target;
-			Queue<Object> frontier = frontierHandle.Target;
-
-			//Find all rendering-related objects
-			frontier.Enqueue(source);
-
-			while (frontier.Count > 0)
+			foreach (Object child in source.LoopChildren(true))
 			{
-				Object target = frontier.Dequeue();
-
-				switch (target)
+				switch (child)
 				{
 					case GeometryObject geometry:
 					{
-						trianglesList.AddRange(geometry.ExtractTriangles(ConvertMaterial).Where(triangle => triangle.materialToken >= 0));
-						spheresList.AddRange(geometry.ExtractSpheres(ConvertMaterial).Where(sphere => sphere.materialToken >= 0));
+						trianglesList.AddRange(geometry.ExtractTriangles(presser.GetMaterialToken).Where(triangle => triangle.materialToken >= 0));
+						spheresList.AddRange(geometry.ExtractSpheres(presser.GetMaterialToken).Where(sphere => sphere.materialToken >= 0));
 
 						break;
 					}
 					case ObjectPackInstance packInstance:
 					{
-						ObjectPack pack = packInstance.ObjectPack;
-
-						if (pack == null) { }
-
+						instancesList.Add(new PressedPackInstance(packInstance, presser));
 						break;
 					}
-				}
-
-				Object.Children children = target.children;
-				for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
-
-				int ConvertMaterial(Material material) //Converts a material into its material token
-				{
-					if (material is Invisible) return -1; //Negative token used to omit invisible materials
-
-					if (!materialObjects.TryGetValue(material, out int materialToken))
-					{
-						materialToken = materialObjects.Count;
-						materialObjects.Add(material, materialToken);
-					}
-
-					return materialToken;
 				}
 			}
 
 			SubdivideTriangles(trianglesList);
+			materials = presser.materials;
 
 			//Extract pressed data
-			materials = materialObjects.OrderBy(pair => pair.Value).Select(pair => pair.Key).ToArray();
-			for (int i = 0; i < materials.Length; i++) materials[i].Press(); //Materials might be pressed multiple times if they are in multiple packs
-
 			triangles = new PressedTriangle[trianglesList.Count];
 			spheres = new PressedSphere[spheresList.Count];
 			instances = new PressedPackInstance[instancesList.Count];
 
+			geometryCounts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
+
 			//Construct bounding volume hierarchy acceleration structure
-			uint[] tokens = new uint[triangles.Length + spheres.Length + instances.Length];
-			AxisAlignedBoundingBox[] aabbs = new AxisAlignedBoundingBox[tokens.Length];
+			uint[] tokens = new uint[geometryCounts.Total];
+			var aabbs = new AxisAlignedBoundingBox[tokens.Length];
 
 			Parallel.For(0, triangles.Length, FillTriangles);
 			Parallel.For(0, spheres.Length, FillSpheres);
@@ -130,12 +99,13 @@ namespace ForceRenderer.Mathematics.Intersections
 		}
 
 		public readonly BoundingVolumeHierarchy bvh;
+		public readonly GeometryCounts geometryCounts;
+
+		readonly ScenePresser.Materials materials;
 
 		readonly PressedTriangle[] triangles;     //Indices: [0x8000_0000 to 0xFFFF_FFFF)
 		readonly PressedSphere[] spheres;         //Indices: [0x4000_0000 to 0x8000_0000)
 		readonly PressedPackInstance[] instances; //Indices: [0 to 0x4000_0000)
-
-		readonly Material[] materials;
 
 		const uint TrianglesTreshold = 0x8000_0000u;
 		const uint SpheresTreshold = 0x4000_0000u;
@@ -154,12 +124,14 @@ namespace ForceRenderer.Mathematics.Intersections
 					ref PressedTriangle triangle = ref triangles[token - TrianglesTreshold];
 					float distance = triangle.GetIntersection(ray, out Float2 uv);
 
-					if (distance >= hit.distance) return;
+					if (distance < hit.distance)
+					{
+						hit.instance = null;
+						hit.distance = distance;
 
-					hit.instance = null;
-					hit.distance = distance;
-					hit.token = token;
-					hit.uv = uv;
+						hit.token = token;
+						hit.uv = uv;
+					}
 
 					break;
 				}
@@ -168,12 +140,14 @@ namespace ForceRenderer.Mathematics.Intersections
 					ref PressedSphere sphere = ref spheres[token - SpheresTreshold];
 					float distance = sphere.GetIntersection(ray, out Float2 uv);
 
-					if (distance >= hit.distance) return;
+					if (distance < hit.distance)
+					{
+						hit.instance = null;
+						hit.distance = distance;
 
-					hit.instance = null;
-					hit.distance = distance;
-					hit.token = token;
-					hit.uv = uv;
+						hit.token = token;
+						hit.uv = uv;
+					}
 
 					break;
 				}
@@ -213,14 +187,36 @@ namespace ForceRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
+		/// Calculates the normal of <paramref name="hit"/> and assigns it back to <paramref name="hit.normal"/>.
+		/// </summary>
+		public void GetNormal(ref Hit hit)
+		{
+			switch (hit.token)
+			{
+				case >= TrianglesTreshold:
+				{
+					ref PressedTriangle triangle = ref triangles[hit.token - TrianglesTreshold];
+					hit.normal = triangle.GetNormal(hit.uv);
+
+					break;
+				}
+				case >= SpheresTreshold:
+				{
+					ref PressedSphere sphere = ref spheres[hit.token - SpheresTreshold];
+					hit.normal = sphere.GetNormal(hit.uv);
+
+					break;
+				}
+				default: throw new Exception($"{nameof(GetNormal)} cannot be used to get the normal of a {nameof(PressedPackInstance)}!");
+			}
+		}
+
+		/// <summary>
 		/// Creates a <see cref="CalculatedHit"/> from <paramref name="hit"/> and <paramref name="ray"/> of this pack.
-		/// NOTE: The method operates in this <see cref="PressedPack"/>'s local coordinate space, which means that
-		/// both the input <paramref name="ray"/> and the output hit must be converted.
 		/// </summary>
 		public CalculatedHit CreateHit(in Hit hit, in Ray ray)
 		{
 			int materialToken;
-			Float3 normal;
 			Float2 texcoord;
 
 			switch (hit.token)
@@ -230,7 +226,6 @@ namespace ForceRenderer.Mathematics.Intersections
 					ref PressedTriangle triangle = ref triangles[hit.token - TrianglesTreshold];
 
 					materialToken = triangle.materialToken;
-					normal = triangle.GetNormal(hit.uv);
 					texcoord = triangle.GetTexcoord(hit.uv);
 
 					break;
@@ -240,7 +235,6 @@ namespace ForceRenderer.Mathematics.Intersections
 					ref PressedSphere sphere = ref spheres[hit.token - SpheresTreshold];
 
 					materialToken = sphere.materialToken;
-					normal = sphere.GetNormal(hit.uv);
 					texcoord = hit.uv; //Sphere directly uses the uv as texcoord
 
 					break;
@@ -251,7 +245,7 @@ namespace ForceRenderer.Mathematics.Intersections
 			return new CalculatedHit
 			(
 				ray.GetPoint(hit.distance), ray.direction, hit.distance,
-				materials[materialToken], normal, texcoord
+				materials[materialToken], hit.normal, texcoord
 			);
 		}
 

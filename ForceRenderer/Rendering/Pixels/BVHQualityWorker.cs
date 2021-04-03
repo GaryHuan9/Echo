@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using CodeHelpers.Mathematics;
-using ForceRenderer.Mathematics;
 using ForceRenderer.Mathematics.Intersections;
 
 namespace ForceRenderer.Rendering.Pixels
@@ -23,7 +22,7 @@ namespace ForceRenderer.Rendering.Pixels
 			PressedScene scene = Profile.scene;
 			Ray ray = scene.camera.GetRay(screenUV);
 
-			int cost = scene.bvh.GetIntersectionCost(ray);
+			int cost = scene.GetIntersectionCost(ray);
 
 			long currentCost = Interlocked.Add(ref totalCost, cost);
 			long currentSample = Interlocked.Increment(ref totalSample);
