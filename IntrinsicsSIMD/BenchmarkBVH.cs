@@ -1,15 +1,15 @@
 ﻿// using System;
 // using BenchmarkDotNet.Attributes;
 // using CodeHelpers.Mathematics;
-// using ForceRenderer;
-// using ForceRenderer.IO;
-// using ForceRenderer.Mathematics;
-// using ForceRenderer.Mathematics.Intersections;
-// using ForceRenderer.Objects;
-// using ForceRenderer.Objects.GeometryObjects;
-// using ForceRenderer.Objects.Scenes;
-// using ForceRenderer.Rendering;
-// using ForceRenderer.Rendering.Materials;
+// using EchoRenderer;
+// using EchoRenderer.IO;
+// using EchoRenderer.Mathematics;
+// using EchoRenderer.Mathematics.Intersections;
+// using EchoRenderer.Objects;
+// using EchoRenderer.Objects.GeometryObjects;
+// using EchoRenderer.Objects.Scenes;
+// using EchoRenderer.Rendering;
+// using EchoRenderer.Rendering.Materials;
 //
 // namespace IntrinsicsSIMD
 // {
@@ -20,7 +20,7 @@
 // 			Scene scene = new Scene();
 // 			Random random = new Random(42);
 //
-// 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer\ForceRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
+// 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
 // 			scene.children.Add(new MeshObject(mesh, new Glossy()));
 //
 // 			bvh = new PressedScene(scene).bvh;
