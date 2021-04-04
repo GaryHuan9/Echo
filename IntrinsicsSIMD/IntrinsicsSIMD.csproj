@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ForceRenderer\ForceRenderer.csproj" />
+      <ProjectReference Include="..\EchoRenderer\EchoRenderer.csproj" />
     </ItemGroup>
 
 </Project>

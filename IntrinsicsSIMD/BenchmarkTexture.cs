@@ -4,7 +4,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
-using ForceRenderer.Textures;
+using EchoRenderer.Textures;
 
 namespace IntrinsicsSIMD
 {
@@ -14,7 +14,7 @@ namespace IntrinsicsSIMD
 		{
 			Random random = new Random(42);
 
-			const string Path = @"C:\Users\MMXXXVIII\Things\CodingStuff\C#\ForceRenderer\ForceRenderer\Assets\Textures\WikiNormalMap.png";
+			const string Path = @"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Textures\WikiNormalMap.png";
 
 			texture = Texture2D.Load(Path);
 			uvs = new Float2[65536];
