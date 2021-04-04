@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -19,7 +20,7 @@ namespace ForceRenderer.Mathematics.Intersections
 			this.center = center;
 			this.extend = extend;
 
-			Assert.IsFalse(extend.MinComponent >= 0f);
+			Assert.IsTrue(extend.MinComponent >= 0f);
 		}
 
 		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabb)
@@ -40,6 +41,30 @@ namespace ForceRenderer.Mathematics.Intersections
 
 			extend = (max - min) / 2f;
 			center = min + extend;
+
+			Assert.IsTrue(extend.MinComponent >= 0f);
+		}
+
+		public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
+		{
+			centerVector = default;
+			extendVector = default;
+
+			Float3 min = Float3.positiveInfinity;
+			Float3 max = Float3.negativeInfinity;
+
+			for (int i = 0; i < points.Length; i++)
+			{
+				Float3 point = points[i];
+
+				min = min.Min(point);
+				max = max.Max(point);
+			}
+
+			extend = (max - min) / 2f;
+			center = min + extend;
+
+			Assert.IsTrue(extend.MinComponent >= 0f);
 		}
 
 		[FieldOffset(0)] public readonly Float3 center;  //The exact center of the box

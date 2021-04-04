@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using ForceRenderer.IO;
-using ForceRenderer.Mathematics;
-using ForceRenderer.Objects;
-using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Objects.Scenes;
 using ForceRenderer.Rendering;
 using ForceRenderer.Rendering.Pixels;
@@ -99,10 +93,10 @@ namespace ForceRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceFastProfile;
+			Texture2D buffer = new Texture2D(resolutions[0]);
+			RenderProfile profile = albedoProfile;
 
-			profile.Scene = new BunnyScene();
+			profile.Scene = new Sponza();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
