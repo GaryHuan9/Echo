@@ -1,0 +1,11 @@
+﻿declare Diffuse Core
+Albedo 0.9055 0.2863 0.3282
+
+declare Glass Solid
+Albedo 0.940 0.940 0.960
+IndexOfRefraction 1.520
+# Roughness 0.5
+
+# declare Glossy Solid
+# Albedo 0.940 0.940 0.960
+# Smoothness 0.75

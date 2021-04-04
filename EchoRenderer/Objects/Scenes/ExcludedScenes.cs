@@ -1,0 +1,1 @@
+﻿namespace EchoRenderer.Objects.Scenes { }

@@ -1,0 +1,41 @@
+﻿3900x 12 Core 24 Threads:
+Release Mode:
+
+Performance Before Rewrite:
+80 Spheres:
+	(854, 480), PixelSample = 128, TileSize = 64: 4.5M SPPS; 13000ms
+	(1920, 1080), PixelSample = 64, TileSize = 128: 4.6M SPPS; 32800ms
+	(1920, 1080), PixelSample = 1024, TileSize = 128: 4.6M SPPS; 525400ms
+
+Performance After Matrix Rewrite:
+80 Spheres:
+	(854, 480), PixelSample = 128, TileSize = 64: 9.4M SPPS; 6300ms
+	(1920, 1080), PixelSample = 64, TileSize = 128: 9.5M SPPS; 15500ms
+	(1920, 1080), PixelSample = 1024, TileSize = 128: 10.3M SPPS; 245000ms
+
+Average Time With Float3 Ray-Triangle Intersection Calculation: 49500ms (88200ms Debug Mode 1/4 sample)
+Average Time With float Ray-Triangle Intersection Calculation: 50000ms (37000ms Debug Mode 1/4 sample)
+
+Bounding Volume Hierarchy Implementation Tests (Stanford Bunny (854, 480) 256 SP 506 tris Release Mode):
+Brute Force Linear Intersection (SPPS: 2.4M; 50000ms)
+BVH Acceleration Structure Intersection (SPPS: 9.3M; 14000ms)
+
+BVH Cut Along Median (SPPS: 8.7M; 255000ms)
+BVH Cut SAH V1 (SPPS: 10.3M; 210000ms)
+
+1920x1080; 1128 Pixel Sample; Single BMW
+Full Pixel Sampling: 249.74 seconds; 2,339,020,800 samples; 9,365,686 SPPS
+Adaptive Sampling (128 Full; 1000 Adaptive; looks identical): 139.74 seconds; 842,905,684 samples; 6,031,913 SPPS
+
+Adaptive Sampling; BMW Lighting Scene; 128 Full; 12000 Adaptive; 900k triangles:
+Completed after 2597.26 seconds with 17,720,482,819 samples at 6,822,759 samples per second.
+
+Test v1 SIMD intrinsics (Lighted BMW 854x480 320spp 0aspp)
+Without: Completed after 39.37 seconds with 131,174,400 samples at 3,331,982 samples per second.
+With v1: Completed after 33.80 seconds with 131,174,400 samples at 3,880,441 samples per second.
+
+Iterative Unsafe BVH V2: Completed after 25.71 seconds with 131,174,400 samples at 5,102,216 samples per second.
+
+Bloom Post Process (960x540)
+Brute Force: 14427ms
+Optimized:
