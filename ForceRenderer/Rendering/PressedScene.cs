@@ -75,6 +75,8 @@ namespace ForceRenderer.Rendering
 			Hit hit = new Hit();
 			PressedPack pack;
 
+			hit.distance = float.PositiveInfinity;
+
 			rootPack.bvh.GetIntersection(ray, ref hit);
 			Interlocked.Increment(ref intersectionPerformed);
 

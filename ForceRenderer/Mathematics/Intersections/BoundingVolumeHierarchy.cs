@@ -82,7 +82,9 @@ namespace ForceRenderer.Mathematics.Intersections
 			float* hits = stackalloc float[maxDepth];
 
 			int* next = stack;
-			*next++ = 1; //The root's first children is always at one
+
+			*next++ = 1;  //The root's first children is always at one
+			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
 
 			while (next != stack)
 			{
@@ -165,7 +167,7 @@ namespace ForceRenderer.Mathematics.Intersections
 		{
 			if (node.IsLeaf)
 			{
-				//Now we finally calculate the real intersection
+				//Now we finally calculate the intersection cost on the leaf
 				return pack.GetIntersectionCost(ray, ref distance, node.token);
 			}
 

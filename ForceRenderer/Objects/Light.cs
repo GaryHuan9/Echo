@@ -20,7 +20,7 @@ namespace ForceRenderer.Objects
 	{
 		public PressedLight(Light light)
 		{
-			direction = light.LocalToWorld.MultiplyDirection(Float3.forward);
+			direction = light.LocalToWorld.MultiplyDirection(Float3.forward).Normalized;
 			intensity = light.Intensity.Max(Float3.zero);
 
 			threshold = 1f - light.Coverage.Clamp(0f, 1f);
