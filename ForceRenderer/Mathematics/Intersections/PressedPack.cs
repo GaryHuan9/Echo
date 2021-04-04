@@ -4,7 +4,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Threads;
 using ForceRenderer.Objects;
 using ForceRenderer.Objects.GeometryObjects;
 using ForceRenderer.Objects.Scenes;
@@ -256,7 +258,7 @@ namespace ForceRenderer.Mathematics.Intersections
 		{
 			double totalArea = 0d;
 
-			Parallel.ForEach(triangles, triangle => totalArea += triangle.Area);
+			Parallel.ForEach(triangles, triangle => InterlockedHelper.Add(ref totalArea, triangle.Area));
 
 			const float ThresholdMultiplier = 4.8f; //How many times does an area has to be over the average to trigger a fragmentation
 			const int MaxIteration = 3;             //The maximum number of fragmentation that can happen to one source triangle

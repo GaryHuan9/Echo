@@ -1,8 +1,6 @@
-﻿using System.Runtime.CompilerServices;
-using System.Threading;
+﻿using System.Threading;
 using CodeHelpers.Mathematics;
 using ForceRenderer.Mathematics;
-using ForceRenderer.Mathematics.Intersections;
 
 namespace ForceRenderer.Rendering.Pixels
 {

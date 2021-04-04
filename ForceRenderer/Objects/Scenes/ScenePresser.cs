@@ -74,6 +74,8 @@ namespace ForceRenderer.Objects.Scenes
 			foreach (Node child in node) PressPacks(child);
 			node.AssignPack(new PressedPack(node.objectPack, this));
 
+			//Head recursion to make sure that all children is pressed before the parent
+
 			return node.PressedPack;
 		}
 
