@@ -76,6 +76,79 @@ namespace ForceRenderer.Mathematics.Intersections
 			}
 		}
 
+		/// <summary>
+		/// Returns the number of AABB intersection calculated before a result it determined.
+		/// </summary>
+		public int GetIntersectionCost(in Ray ray, ref float distance)
+		{
+			if (nodes == null) return 0;
+
+			ref readonly Node root = ref nodes[0];
+			float hit = root.aabb.Intersect(ray);
+
+			if (hit >= distance) return 1;
+			return GetIntersectionCost(root, ray, ref distance) + 1;
+		}
+
+		/// <summary>
+		/// Fills <paramref name="span"/> with the aabbs of nodes in this bvh at <paramref name="depth"/>.
+		/// The root node has a <paramref name="depth"/> of 1. Returns the actual length of <paramref name="span"/>
+		/// used to store the aabbs. NOTE: <paramref name="span"/> should not be shorter than 2 ^ (depth - 1).
+		/// </summary>
+		public unsafe int FillAABB(int depth, Span<AxisAlignedBoundingBox> span)
+		{
+			int length = 1 << (depth - 1);
+			if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
+
+			int* stack0 = stackalloc int[length];
+			int* stack1 = stackalloc int[length];
+
+			int* next0 = stack0;
+			int* next1 = stack1;
+
+			*next0++ = 0; //Root at 0
+
+			for (int i = 1; i < depth; i++)
+			{
+				while (next0 != stack0)
+				{
+					int index = *--next0;
+					ref readonly Node node = ref nodes[index];
+
+					if (node.IsLeaf) //If leaf then we just continue with this node
+					{
+						*next1++ = index;
+					}
+					else
+					{
+						*next1++ = node.children;
+						*next1++ = node.children + 1;
+					}
+				}
+
+				//Swap the two stacks
+				int* next = next0;
+				int* stack = stack0;
+
+				next0 = next1;
+				next1 = next;
+
+				stack0 = stack1;
+				stack1 = stack;
+			}
+
+			//Export results
+			int current = 0;
+
+			while (next0 != stack0)
+			{
+				ref readonly Node node = ref nodes[*--next0];
+				span[current++] = node.aabb;
+			}
+
+			return current;
+		}
+
 		unsafe void Traverse(in Ray ray, ref Hit hit)
 		{
 			int* stack = stackalloc int[maxDepth];
@@ -145,22 +218,6 @@ namespace ForceRenderer.Mathematics.Intersections
 					}
 				}
 			}
-		}
-
-		/// <summary>
-		/// Returns the number of AABB intersection calculated before a result it determined.
-		/// </summary>
-		public int GetIntersectionCost(in Ray ray, ref float distance)
-		{
-			if (nodes == null) return 0;
-
-			ref readonly Node root = ref nodes[0];
-			float hit = root.aabb.Intersect(ray);
-
-			if (hit >= distance) return 1;
-			distance = hit;
-
-			return GetIntersectionCost(root, ray, ref distance) + 1;
 		}
 
 		int GetIntersectionCost(in Node node, in Ray ray, ref float distance)

@@ -33,29 +33,29 @@ namespace ForceRenderer.Mathematics.Intersections
 		{
 			get
 			{
-				// const int FetchIteration = 5; //How deep do we go into the bvh to get the vertices of its AABBs
-				// Span<Float3> points = stackalloc Float3[(1 << FetchIteration) * 8];
+				const int FetchDepth = 5; //How deep do we go into the bvh to get the AABB of the nodes
+				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (FetchDepth - 1)];
 
-				AxisAlignedBoundingBox root = pack.bvh.rootAABB;
-				Span<Float3> points = stackalloc Float3[8];
+				int count = pack.bvh.FillAABB(FetchDepth, aabbs);
+				Float4x4 absoluteTransform = backwardTransform.Absoluted;
 
-				//TODO: test these two methods and try fetch deeper layers
+				Float3 min = Float3.positiveInfinity;
+				Float3 max = Float3.negativeInfinity;
 
-				// Float3 center = backwardTransform.MultiplyPoint(root.center);
-				// Float3 extend = backwardTransform.Absoluted.MultiplyDirection(root.extend);
-				//
-				// return new AxisAlignedBoundingBox(center, extend);
+				//Find a small AABB by encapsulating children nodes of the bvh instead of the full bvh
+				for (int i = 0; i < count; i++)
+				{
+					ref readonly var aabb = ref aabbs[i];
 
-				points[0] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(01f, 01f, 01f));
-				points[1] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(01f, 01f, -1f));
-				points[2] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(01f, -1f, 01f));
-				points[3] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(01f, -1f, -1f));
-				points[4] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(-1f, 01f, 01f));
-				points[5] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(-1f, 01f, -1f));
-				points[6] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(-1f, -1f, 01f));
-				points[7] = backwardTransform.MultiplyPoint(root.center + root.extend * new Float3(-1f, -1f, -1f));
+					Float3 center = backwardTransform.MultiplyPoint(aabb.center);
+					Float3 extend = absoluteTransform.MultiplyDirection(aabb.extend);
 
-				return new AxisAlignedBoundingBox(points);
+					min = min.Min(center - extend);
+					max = max.Max(center + extend);
+				}
+
+				Float3 newExtend = (max - min) / 2f;
+				return new AxisAlignedBoundingBox(min + newExtend, newExtend);
 			}
 		}
 
@@ -105,6 +105,9 @@ namespace ForceRenderer.Mathematics.Intersections
 			return cost;
 		}
 
+		/// <summary>
+		/// Transforms <paramref name="ray"/> from parent to local space and returns the new ray.
+		/// </summary>
 		Ray TransformForward(in Ray ray)
 		{
 			Float3 origin = forwardTransform.MultiplyPoint(ray.origin);
