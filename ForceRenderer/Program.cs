@@ -94,9 +94,9 @@ namespace ForceRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[0]);
-			RenderProfile profile = albedoProfile;
+			RenderProfile profile = pathTraceProfile;
 
-			profile.Scene = new Sponza();
+			profile.Scene = new TestInstancing();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
