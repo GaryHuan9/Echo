@@ -93,7 +93,7 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[0]);
+			Texture2D buffer = new Texture2D(resolutions[1]);
 			RenderProfile profile = pathTraceProfile;
 
 			profile.Scene = new TestInstancing();
