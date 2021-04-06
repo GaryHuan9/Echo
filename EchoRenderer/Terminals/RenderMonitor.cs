@@ -1,5 +1,6 @@
 using System;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Tiles;
 using EchoRenderer.Textures;
@@ -10,8 +11,8 @@ namespace EchoRenderer.Terminals
 	{
 		public RenderMonitor(Terminal terminal) : base(terminal)
 		{
-			statusGrid = new string[3][]; //3 rows; 5 columns: Name, Tile, Pixel, Sample, Intersection
-			for (int i = 0; i < statusGrid.Length; i++) statusGrid[i] = new string[5];
+			statusGrid = new string[gridSize.y][];
+			for (int i = 0; i < statusGrid.Length; i++) statusGrid[i] = new string[gridSize.x];
 
 			statusGrid[0][0] = "";
 			statusGrid[0][1] = "Tile";
@@ -25,13 +26,15 @@ namespace EchoRenderer.Terminals
 
 		public RenderEngine Engine { get; set; }
 
-		int monitorHeight;          //Will be zero if the render engine is not ready, only includes the height of the tiles
-		const int StatusHeight = 6; //Lines of text used to display the current status
+		int monitorHeight; //Will be zero if the render engine is not ready, only includes the height of the tiles
 
 		public override int Height => monitorHeight + StatusHeight;
 		bool EngineReady => monitorHeight > 0;
 
 		readonly string[][] statusGrid;
+
+		const int StatusHeight = 7;              //Lines of text used to display the current status
+		readonly Int2 gridSize = new Int2(5, 3); //3 rows; 5 columns: Name, Tile, Pixel, Sample, Intersection
 
 		public override void Update()
 		{
@@ -82,58 +85,88 @@ namespace EchoRenderer.Terminals
 			PressedScene pressed = profile.scene;
 			Texture buffer = profile.renderBuffer;
 
-			//TODO: Use a string builder or something more organized, This is too messy!
-
 			//Display configuration information
 			int totalPixel = buffer.size.Product;
+			GeometryCounts instanced = pressed.InstancedCounts;
+			GeometryCounts unique = pressed.UniqueCounts;
 
-			builders.SetLine
-			(
-				0,
-				$"Worker {profile.workerSize}; Resolution {buffer.size}; TotalPX {totalPixel:N0}; PixelSP {profile.pixelSample:N0}; AdaptiveSP {profile.adaptiveSample:N0}; Material {pressed.MaterialCount:N0}; Triangle {pressed.InstancedCounts.triangle:N0}; " +
-				$"Sphere {pressed.InstancedCounts.sphere:N0}; Light {pressed.lights.Count:N0}; W/H {buffer.aspect:F2}; Tile {Engine.TotalTileCount:N0}; TileSize {profile.tileSize:N0}; Method {profile.worker};"
-			);
+			builders.SetLine(0, $" / Worker {profile.workerSize} / Resolution {buffer.size} / Total Pixel {totalPixel:N0} / Total Tile {Engine.TotalTileCount:N0} / Method {profile.worker} / Pixel Sample {profile.pixelSample:N0} / Adaptive Sample {profile.adaptiveSample:N0} / Tile Size {profile.tileSize:N0} /");
+			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.pack:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.pack:N0} / Light {pressed.lights.Count:N0} /");
 
 			//Display dynamic information
-			TimeSpan elapsed = Engine.Elapsed;
-			double second = elapsed.TotalSeconds;
+			DrawDynamicLabels();
+			DrawStatusGrid();
+		}
 
-			long completedSample = Engine.CompletedSample;
+		void DrawDynamicLabels()
+		{
+			TimeSpan elapsed = Engine.Elapsed;
+			double seconds = elapsed.TotalSeconds;
+
 			long completedPixel = Engine.CompletedPixel;
 			long rejectedSample = Engine.RejectedSample;
 
-			int completedTile = Engine.CompletedTileCount;
-			long intersections = profile.scene.IntersectionPerformed;
+			double fraction = (double)completedPixel / Engine.CurrentProfile.renderBuffer.size.Product;
+			TimeSpan remain = TimeSpan.FromSeconds(seconds / fraction - seconds);
 
-			builders.SetLine
-			(
-				1,
-				$"Elapsed {elapsed:hh\\:mm\\:ss\\:ff}; Estimate {TimeSpan.FromSeconds((totalPixel / (completedPixel / second) - second).Clamp(0d, TimeSpan.MaxValue.TotalSeconds)):hh\\:mm\\:ss\\:ff}; Complete% {100d * completedPixel / totalPixel:F2}; CompletedTile {completedTile:N0}; " +
-				$"TilePS {completedTile / second:F2}; CompletedSP {completedSample:N0}; RejectedSP {rejectedSample:N0}; SamplePS {completedSample / second:N0}; CompletedPX {completedPixel:N0}; PixelPS {completedPixel / second:N0}; CompletedIS {intersections:N0}; IntersectionPS {intersections / second:N0};"
-			);
+			builders.SetLine(3, $" | Time Elapsed {elapsed:hh\\:mm\\:ss\\:ff} | Time Remain {remain:hh\\:mm\\:ss\\:ff} | Complete Percent {fraction * 100d:F2}% | Rejected Sample {rejectedSample:N0} |");
 		}
 
 		void DrawStatusGrid()
 		{
-			TimeSpan elapsed = Engine.Elapsed;
-			double second = elapsed.TotalSeconds;
-
-			Span<long> numbers = stackalloc long[4];
+			//Fill the numbers
+			Span<long> numbers = stackalloc long[gridSize.x - 1];
+			double seconds = Engine.Elapsed.TotalSeconds;
 
 			numbers[0] = Engine.CompletedTileCount;
 			numbers[1] = Engine.CompletedPixel;
 			numbers[2] = Engine.CompletedSample;
 			numbers[3] = Engine.CurrentProfile.scene.IntersectionPerformed;
 
-			for (int i = 1; i <= numbers.Length; i++)
+			for (int x = 1; x < gridSize.x; x++)
 			{
-				long number = numbers[i - 1];
+				long number = numbers[x - 1];
+				double rate = number / seconds;
 
-				statusGrid[2][i] = number.ToString("N0");
-				statusGrid[3][i] = (number / second).ToString("F2");
+				statusGrid[1][x] = rate.ToString("N2");
+				statusGrid[2][x] = $"{number:N0}   ";
 			}
 
+			//Find max widths for each column
+			Span<int> widths = stackalloc int[gridSize.x];
 
+			for (int x = 0; x < gridSize.x; x++)
+			{
+				ref int width = ref widths[x];
+				width = 0;
+
+				for (int y = 0; y < gridSize.y; y++)
+				{
+					int length = statusGrid[y][x].Length;
+					width = Math.Max(width, length);
+				}
+			}
+
+			//Draw grid to console
+			for (int y = 0; y < gridSize.y; y++)
+			{
+				Int2 cursor = new Int2(0, y + 4);
+				builders.Clear(cursor.y);
+
+				for (int x = 0; x < gridSize.x; x++)
+				{
+					builders.SetSlice(cursor, " | ");
+					cursor += Int2.right * 3;
+
+					string label = statusGrid[y][x];
+					int width = widths[x];
+
+					builders.SetSlice(cursor + new Int2(width - label.Length, 0), label);
+					cursor += new Int2(width, 0);
+				}
+
+				builders.SetSlice(cursor, " | ");
+			}
 		}
 
 		void DisplayRenderMonitor()
