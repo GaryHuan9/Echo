@@ -91,7 +91,7 @@ namespace EchoRenderer.Terminals
 			GeometryCounts unique = pressed.UniqueCounts;
 
 			builders.SetLine(0, $" / Worker {profile.workerSize} / Resolution {buffer.size} / Total Pixel {totalPixel:N0} / Total Tile {Engine.TotalTileCount:N0} / Method {profile.worker} / Pixel Sample {profile.pixelSample:N0} / Adaptive Sample {profile.adaptiveSample:N0} / Tile Size {profile.tileSize:N0} /");
-			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.pack:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.pack:N0} / Light {pressed.lights.Count:N0} /");
+			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.pack:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.pack:N0} / Material {pressed.MaterialCount:N0} / Light {pressed.lights.Count:N0} /");
 
 			//Display dynamic information
 			DrawDynamicLabels();
@@ -107,9 +107,9 @@ namespace EchoRenderer.Terminals
 			long rejectedSample = Engine.RejectedSample;
 
 			double fraction = (double)completedPixel / Engine.CurrentProfile.renderBuffer.size.Product;
-			TimeSpan remain = TimeSpan.FromSeconds(seconds / fraction - seconds);
+			TimeSpan remain = TimeSpan.FromSeconds(seconds / Math.Max(fraction, Scalars.Epsilon) - seconds);
 
-			builders.SetLine(3, $" | Time Elapsed {elapsed:hh\\:mm\\:ss\\:ff} | Time Remain {remain:hh\\:mm\\:ss\\:ff} | Complete Percent {fraction * 100d:F2}% | Rejected Sample {rejectedSample:N0} |");
+			builders.SetLine(2, $" | Time Elapsed {elapsed:hh\\:mm\\:ss\\:ff} | Time Remain {remain:hh\\:mm\\:ss\\:ff} | Complete Percent {fraction * 100d:F2}% | Rejected Sample {rejectedSample:N0} |");
 		}
 
 		void DrawStatusGrid()
@@ -150,7 +150,7 @@ namespace EchoRenderer.Terminals
 			//Draw grid to console
 			for (int y = 0; y < gridSize.y; y++)
 			{
-				Int2 cursor = new Int2(0, y + 4);
+				Int2 cursor = new Int2(0, y + 3);
 				builders.Clear(cursor.y);
 
 				for (int x = 0; x < gridSize.x; x++)

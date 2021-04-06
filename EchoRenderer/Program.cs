@@ -96,7 +96,7 @@ namespace EchoRenderer
 			Texture2D buffer = new Texture2D(resolutions[2]);
 			RenderProfile profile = pathTraceFastProfile;
 
-			profile.Scene = new GridMaterialBallScene();
+			profile.Scene = new BunnyScene();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
