@@ -83,10 +83,13 @@ namespace EchoRenderer.Objects.Scenes
 			var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
 			var material = new Diffuse {Albedo = Utilities.ToColor("DEADBEEF").XYZ};
 
+			// var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
+			// var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");
+
 			ObjectPack bunny = new ObjectPack();
 			ObjectPack bunnyWall = new ObjectPack();
 
-			bunny.children.Add(new MeshObject(mesh, material) {Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f});
+			bunny.children.Add(new MeshObject(mesh, materials) {Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f});
 			bunny.children.Add(new SphereObject(materials.first, 0.1f) {Position = new Float3(-0.3f, 0.2f, -0.3f)});
 
 			foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))
@@ -100,6 +103,7 @@ namespace EchoRenderer.Objects.Scenes
 			}
 
 			bunnyWall.children.Add(new PlaneObject(materials.first, Float2.one) {Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f)});
+			// bunnyWall.children.Add(new ObjectPackInstance(bunnyWall)); //Tests recursive instancing
 
 			children.Add(new BoxObject(materials.first, Float3.one));
 			children.Add(new PlaneObject(material, Float2.one * 0.9f) {Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f)});

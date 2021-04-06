@@ -5,6 +5,7 @@ using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.ObjectPooling;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Materials;
 
@@ -51,13 +52,18 @@ namespace EchoRenderer.Objects.Scenes
 
 		Node CreateNode(ObjectPack pack, Node parent)
 		{
-			if (objectPacks.TryGetValue(pack, out Node node)) return node;
+			if (objectPacks.TryGetValue(pack, out Node node))
+			{
+				node.AddParent(parent);
+				return node;
+			}
 
 			node = new Node(pack, parent);
 			objectPacks.Add(pack, node);
 
 			foreach (Object child in pack.LoopChildren(true))
 			{
+				if (child is ObjectPack) throw new Exception($"Cannot directly assign {child} as a child!");
 				if (child is not ObjectPackInstance instance || instance.ObjectPack == null) continue;
 
 				Node childNode = CreateNode(instance.ObjectPack, node);
@@ -107,7 +113,7 @@ namespace EchoRenderer.Objects.Scenes
 			public Node(ObjectPack objectPack, Node parent)
 			{
 				this.objectPack = objectPack;
-				this.parent = parent;
+				if (parent != null) parents.Add(parent);
 			}
 
 			public readonly ObjectPack objectPack;
@@ -116,11 +122,11 @@ namespace EchoRenderer.Objects.Scenes
 			public GeometryCounts InstancedCounts { get; private set; }
 			public GeometryCounts UniqueCounts { get; private set; }
 
-			readonly Node parent;
+			readonly HashSet<Node> parents = new HashSet<Node>();
 			readonly Dictionary<Node, int> children = new(); //Maps child to the number of duplicated instances
 
 			/// <summary>
-			/// Tries to add <paramref name="child"/>, returns if the child is unique.
+			/// Tries to add <paramref name="child"/>, returns true if the child has not been added before.
 			/// </summary>
 			public bool AddChild(Node child)
 			{
@@ -130,17 +136,35 @@ namespace EchoRenderer.Objects.Scenes
 				return number == 0; //TryGetValue defaults to zero if does not exist
 			}
 
+			/// <summary>
+			/// Tries to add <paramref name="parent"/>, returns true if the parent has not been added before.
+			/// </summary>
+			public bool AddParent(Node parent) => parents.Add(parent);
+
+			/// <summary>
+			/// Expensive method, searches the entire parent inheritance tree for <paramref name="node"/>.
+			/// Returns true if <paramref name="node"/> is either a direct or indirect parent of this node.
+			/// NOTE: This also returns true if <paramref name="node"/> is exactly just this node.
+			/// </summary>
 			public bool HasParent(Node node)
 			{
-				Node current = parent;
+				if (node == this) return true;
+				ExceptionHelper.AssertMainThread();
 
-				while (current != null)
+				using ReleaseHandle<HashSet<Node>> searched = CollectionPooler<Node>.hashSet.Fetch();
+
+				return Search(this);
+
+				bool Search(Node current)
 				{
-					if (current == node) return true;
-					current = current.parent;
-				}
+					foreach (Node parent in current.parents)
+					{
+						if (!searched.Target.Add(parent)) continue;
+						if (parent == node || Search(parent)) return true;
+					}
 
-				return false;
+					return false;
+				}
 			}
 
 			public void AssignPack(PressedPack pressedPack)

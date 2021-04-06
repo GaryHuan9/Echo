@@ -56,7 +56,7 @@ namespace EchoRenderer
 		static readonly RenderProfile pathTraceProfile = new()
 														 {
 															 Method = new PathTraceWorker(),
-															 TilePattern = new SpiralPattern(),
+															 TilePattern = new CheckerboardPattern(),
 															 PixelSample = 32,
 															 AdaptiveSample = 400
 														 };
@@ -93,10 +93,10 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceProfile;
+			Texture2D buffer = new Texture2D(resolutions[2]);
+			RenderProfile profile = pathTraceFastProfile;
 
-			profile.Scene = new TestInstancing();
+			profile.Scene = new GridMaterialBallScene();
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
