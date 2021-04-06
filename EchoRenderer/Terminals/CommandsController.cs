@@ -157,7 +157,10 @@ namespace EchoRenderer.Terminals
 				}
 				default:
 				{
-					builders.Insert(Cursor, keyInfo.KeyChar);
+					char current = keyInfo.KeyChar;
+
+					if (char.IsControl(current)) break;
+					builders.Insert(Cursor, current);
 
 					inputLength++;
 					cursorPosition++;

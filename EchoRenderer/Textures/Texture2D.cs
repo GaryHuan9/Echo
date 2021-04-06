@@ -139,7 +139,7 @@ namespace EchoRenderer.Textures
 
 		void SaveFloatingPointImage(string path)
 		{
-			using DataWriter writer = new DataWriter(new GZipStream(File.OpenWrite(path), CompressionLevel.Optimal));
+			using DataWriter writer = new DataWriter(new GZipStream(File.Open(path, FileMode.Create), CompressionLevel.Optimal));
 
 			writer.Write(0); //Writes version number
 			Write(writer);
@@ -147,7 +147,7 @@ namespace EchoRenderer.Textures
 
 		static Texture2D ReadFloatingPointImage(string path)
 		{
-			using DataReader reader = new DataReader(new GZipStream(File.OpenRead(path), CompressionMode.Decompress));
+			using DataReader reader = new DataReader(new GZipStream(File.Open(path, FileMode.Open), CompressionMode.Decompress));
 
 			reader.ReadInt32(); //Reads version number
 			return Read(reader);
