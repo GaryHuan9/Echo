@@ -168,7 +168,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// </summary>
 		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
-			const float Margin = 0f; //Used to easily differentiate adjacent triangles
+			const float Margin = 0f; //Used to easily differentiate adjacent triangles to create an outline effect
 
 			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
 			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle

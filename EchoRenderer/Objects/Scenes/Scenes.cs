@@ -22,6 +22,30 @@ namespace EchoRenderer.Objects.Scenes
 		}
 	}
 
+	public class GridMaterialBallScene : Scene
+	{
+		public GridMaterialBallScene() //3.1 billion triangles
+		{
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.2f);
+
+			children.Add(new Light {Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 60f, 0f)});
+			children.Add(new Camera(100f) {Position = new Float3(0f, 0.6f, -4.8f), Rotation = Float3.zero});
+
+			var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
+			var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");
+
+			ObjectPack ball = new ObjectPack();
+			Int3 gridSize = new Int3(10, 4, 7);
+
+			ball.children.Add(new MeshObject(mesh, materials) {Rotation = Float3.up * -75f, Scale = (Float3)0.45f});
+
+			foreach (Int3 position in new EnumerableSpace3D(-gridSize.XY_, gridSize))
+			{
+				children.Add(new ObjectPackInstance(ball) {Position = position.XYZ});
+			}
+		}
+	}
+
 	public class BunnyScene : StandardScene
 	{
 		public BunnyScene()
