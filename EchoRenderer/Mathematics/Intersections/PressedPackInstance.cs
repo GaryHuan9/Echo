@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -103,6 +104,15 @@ namespace EchoRenderer.Mathematics.Intersections
 			//Transforms distance back to parent space
 			distance *= backwardScale;
 			return cost;
+		}
+
+		/// <summary>
+		/// Returns the material from the indicated <paramref name="token"/>.
+		/// The method might map
+		/// </summary>
+		public Material GetMaterial(int token)
+		{
+
 		}
 
 		/// <summary>

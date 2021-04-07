@@ -246,7 +246,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			return new CalculatedHit
 			(
 				ray.GetPoint(hit.distance), ray.direction, hit.distance,
-				materials[materialToken], hit.normal, texcoord
+				hit.instance.GetMaterial(materialToken), hit.normal, texcoord
 			);
 		}
 
