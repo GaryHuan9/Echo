@@ -22,6 +22,7 @@ namespace EchoRenderer.Terminals
 
 			statusGrid[1][0] = "Per Second";
 			statusGrid[2][0] = "Total Done";
+			statusGrid[3][0] = "Average Ratio";
 		}
 
 		public RenderEngine Engine { get; set; }
@@ -34,7 +35,7 @@ namespace EchoRenderer.Terminals
 		readonly string[][] statusGrid;
 
 		const int StatusHeight = 7;              //Lines of text used to display the current status
-		readonly Int2 gridSize = new Int2(5, 3); //3 rows; 5 columns: Name, Tile, Pixel, Sample, Intersection
+		readonly Int2 gridSize = new Int2(5, 4); //4 rows; 5 columns: Name, Tile, Pixel, Sample, Intersection
 
 		public override void Update()
 		{
@@ -130,6 +131,15 @@ namespace EchoRenderer.Terminals
 
 				statusGrid[1][x] = rate.ToString("N2");
 				statusGrid[2][x] = $"{number:N0}   ";
+
+				if (x != 1)
+				{
+					double last = numbers[x - 2];
+					double ratio = number / last;
+
+					statusGrid[3][x] = ratio.ToString("N2");
+				}
+				else statusGrid[3][x] = "";
 			}
 
 			//Find max widths for each column
