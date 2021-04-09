@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Linq;
+using System.Runtime.Intrinsics;
 using System.Threading;
+using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.IO;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Pixels;
@@ -20,8 +24,9 @@ namespace EchoRenderer
 		{
 			// DenoiserTesting();
 			// SimplexNoise();
+			FontTesting();
 
-			// return;
+			return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -169,6 +174,26 @@ namespace EchoRenderer
 
 			texture.CopyFrom(simplex);
 			texture.Save("simplex.png");
+		}
+
+		static void FontTesting()
+		{
+			Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
+			Texture2D output = new Texture2D(font.texture.size);
+
+			Parallel.For
+			(
+				0, output.size.Product, index =>
+				{
+					Float2 uv = output.ToPosition(index) / (Float2)output.size;
+					Font.Glyph first = font.glyphs.FirstOrDefault(glyph => glyph.Contains(uv));
+
+					if (first.origin == Float2.zero) output[index] = Vector128.Create(0f);
+					else output[index] = Vector128.Create(first.origin.Distance(uv) * 20f, 1f, 1f, 1f);
+				}
+			);
+
+			output.Save("fonts.png");
 		}
 
 		[Command]
