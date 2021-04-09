@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.GeometryObjects
@@ -13,11 +14,11 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public float Radius { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter) => Enumerable.Empty<PressedTriangle>();
+		public override IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser) => Enumerable.Empty<PressedTriangle>();
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter)
+		public override IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser)
 		{
-			int materialToken = materialConverter(Material);
+			int materialToken = presser.GetToken(Material);
 			yield return new PressedSphere(this, materialToken);
 		}
 	}

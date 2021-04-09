@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.GeometryObjects
@@ -17,10 +18,10 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float2 Texcoord10 { get; set; } = Float2.up;
 		public Float2 Texcoord11 { get; set; } = Float2.one;
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter)
+		public override IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser)
 		{
 			Float3 extend = Size / 2f;
-			int materialToken = materialConverter(Material);
+			int materialToken = presser.GetToken(Material);
 
 			Float3 nnn = GetVertex(-1, -1, -1);
 			Float3 nnp = GetVertex(-1, -1, 1);
@@ -56,6 +57,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float3 GetVertex(int x, int y, int z) => LocalToWorld.MultiplyPoint(new Float3(x, y, z) * extend);
 		}
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter) => Enumerable.Empty<PressedSphere>();
+		public override IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser) => Enumerable.Empty<PressedSphere>();
 	}
 }

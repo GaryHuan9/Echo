@@ -16,27 +16,13 @@ namespace EchoRenderer.Objects.Scenes
 		public ScenePresser(Scene scene)
 		{
 			root = CreateNode(scene, null);
-			materials = new Materials(this);
+			materials = new MaterialPresser();
 		}
 
-		public readonly Materials materials;
+		public readonly MaterialPresser materials;
 		public readonly Node root;
 
-		readonly Dictionary<Material, int> materialTokens = new Dictionary<Material, int>();
 		readonly Dictionary<ObjectPack, Node> objectPacks = new Dictionary<ObjectPack, Node>();
-
-		public int GetMaterialToken(Material material)
-		{
-			if (material is Invisible) return -1; //Negative token used to omit invisible materials
-
-			if (!materialTokens.TryGetValue(material, out int materialToken))
-			{
-				materialToken = materialTokens.Count;
-				materialTokens.Add(material, materialToken);
-			}
-
-			return materialToken;
-		}
 
 		public PressedPack GetPressedPack(ObjectPack pack)
 		{
@@ -92,9 +78,9 @@ namespace EchoRenderer.Objects.Scenes
 			readonly ScenePresser presser;
 			Material[] materials;
 
-			public int Length => materials.Length;
+			public int Count => materials.Length;
 
-			public Material this[int index] => materials[index] ?? throw new Exception($"{nameof(Materials)} not pressed!");
+			public Material this[int token] => materials[token] ?? throw new Exception($"{nameof(Materials)} not pressed!");
 
 			public void Press()
 			{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
+using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.GeometryObjects
@@ -16,7 +17,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Mesh Mesh { get; set; }
 		public MaterialLibrary MaterialLibrary { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter)
+		public override IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser)
 		{
 			if (Mesh == null) yield break;
 
@@ -24,7 +25,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
 				Material material = MaterialLibrary?[triangle.materialName] ?? Material;
-				int materialToken = materialConverter(material);
+				int materialToken = presser.GetToken(material);
 
 				bool hasNormal = triangle.normalIndices.MinComponent >= 0;
 				bool hasTexcoord = triangle.texcoordIndices.MinComponent >= 0;
@@ -84,6 +85,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 		}
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter) => Enumerable.Empty<PressedSphere>();
+		public override IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser) => Enumerable.Empty<PressedSphere>();
 	}
 }
