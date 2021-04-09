@@ -48,7 +48,7 @@ namespace EchoRenderer.Rendering.Materials
 		/// </summary>
 		public abstract Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction);
 
-		public unsafe void ApplyNormal(in CalculatedHit hit)
+		public unsafe void ApplyTangentNormal(in CalculatedHit hit, ref Float3 normal)
 		{
 			if (NormalMap == Texture.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
 
@@ -56,7 +56,6 @@ namespace EchoRenderer.Rendering.Materials
 			Vector128<float> local = Fma.MultiplyAdd(sample, normalMultiplier, normalAdder);
 
 			//Transform local direction to world space based on normal
-			Float3 normal = hit.normal;
 			Float3 helper = Math.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
 
 			Float3 tangent = Float3.Cross(normal, helper).Normalized;
@@ -72,7 +71,7 @@ namespace EchoRenderer.Rendering.Materials
 						  p[0] * tangent.z + p[1] * binormal.z + p[2] * normal.z
 					  ) * NormalIntensity;
 
-			fixed (Float3* pointer = &hit.normal) *pointer = normal;
+			normal = normal.Normalized;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

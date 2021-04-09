@@ -23,11 +23,8 @@ namespace EchoRenderer.Rendering.Pixels
 			{
 				++bounce;
 
-				Material material = hit.material;
-				material.ApplyNormal(hit);
-
-				Float3 emission = material.Emit(hit, random);
-				Float3 bsdf = material.BidirectionalScatter(hit, random, out Float3 direction);
+				Float3 emission = hit.material.Emit(hit, random);
+				Float3 bsdf = hit.material.BidirectionalScatter(hit, random, out Float3 direction);
 
 				color += energy * emission;
 				energy *= bsdf;

@@ -34,6 +34,8 @@ namespace EchoRenderer.Mathematics.Intersections
 			this.material = material;
 			this.normal = normal;
 			this.texcoord = texcoord;
+
+			material.ApplyTangentNormal(this, ref this.normal);
 		}
 
 		public readonly Float3 position;

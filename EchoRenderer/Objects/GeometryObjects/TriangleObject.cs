@@ -4,6 +4,7 @@ using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.GeometryObjects
@@ -25,9 +26,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float3 Normal1 { get; set; }
 		public Float3 Normal2 { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter)
+		public override IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser)
 		{
-			int materialToken = materialConverter(Material);
+			int materialToken = presser.GetToken(Material);
 
 			if (Normal0 == Float3.zero || Normal1 == Float3.zero || Normal2 == Float3.zero)
 			{
@@ -48,7 +49,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 		}
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter) => Enumerable.Empty<PressedSphere>();
+		public override IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser) => Enumerable.Empty<PressedSphere>();
 	}
 
 	public readonly struct PressedTriangle //Winding order for triangles is CLOCKWISE

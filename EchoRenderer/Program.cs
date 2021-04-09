@@ -94,7 +94,7 @@ namespace EchoRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceExportProfile;
+			RenderProfile profile = pathTraceFastProfile;
 
 			profile.Scene = new GridMaterialBallScene();
 			profile.RenderBuffer = buffer;

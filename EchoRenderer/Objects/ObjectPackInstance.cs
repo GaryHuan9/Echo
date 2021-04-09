@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects
 {
@@ -18,5 +21,6 @@ namespace EchoRenderer.Objects
 		}
 
 		public ObjectPack ObjectPack { get; set; }
+		public MaterialMapper Mapper { get; set; }
 	}
 }
