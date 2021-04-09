@@ -108,7 +108,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		/// <summary>
 		/// Returns the material from the indicated <paramref name="token"/>.
-		/// The method might map
+		/// The method might maps
 		/// </summary>
 		public Material GetMaterial(int token)
 		{

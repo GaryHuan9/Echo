@@ -62,7 +62,7 @@ namespace EchoRenderer.Rendering
 		public GeometryCounts InstancedCounts => presser.root.InstancedCounts;
 		public GeometryCounts UniqueCounts => presser.root.UniqueCounts;
 
-		public int MaterialCount => presser.materials.Length;
+		public int MaterialCount => presser.materials.Count;
 		public long IntersectionPerformed => Interlocked.Read(ref intersectionPerformed);
 
 		long intersectionPerformed;

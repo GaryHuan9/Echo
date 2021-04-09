@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using CodeHelpers;
+using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.GeometryObjects
@@ -21,12 +22,12 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// Enumerates through all of the triangles that can be extracted from this <see cref="GeometryObject"/>.
 		/// NOTE: Can simply return empty enumerable if this object does not have any triangle.
 		/// </summary>
-		public abstract IEnumerable<PressedTriangle> ExtractTriangles(Func<Material, int> materialConverter);
+		public abstract IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser);
 
 		/// <summary>
 		/// Enumerates through all of the spheres that can be extracted from this <see cref="GeometryObject"/>.
 		/// NOTE: Can simply return empty enumerable if this object does not have any sphere.
 		/// </summary>
-		public abstract IEnumerable<PressedSphere> ExtractSpheres(Func<Material, int> materialConverter);
+		public abstract IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser);
 	}
 }

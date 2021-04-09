@@ -27,8 +27,8 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					case GeometryObject geometry:
 					{
-						trianglesList.AddRange(geometry.ExtractTriangles(presser.GetMaterialToken).Where(triangle => triangle.materialToken >= 0));
-						spheresList.AddRange(geometry.ExtractSpheres(presser.GetMaterialToken).Where(sphere => sphere.materialToken >= 0));
+						trianglesList.AddRange(geometry.ExtractTriangles(presser.materials).Where(triangle => triangle.materialToken >= 0));
+						spheresList.AddRange(geometry.ExtractSpheres(presser.materials).Where(sphere => sphere.materialToken >= 0));
 
 						break;
 					}
@@ -41,7 +41,6 @@ namespace EchoRenderer.Mathematics.Intersections
 			}
 
 			SubdivideTriangles(trianglesList);
-			materials = presser.materials;
 
 			//Extract pressed data
 			triangles = new PressedTriangle[trianglesList.Count];
@@ -101,8 +100,6 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public readonly BoundingVolumeHierarchy bvh;
 		public readonly GeometryCounts geometryCounts;
-
-		readonly ScenePresser.Materials materials;
 
 		readonly PressedTriangle[] triangles;     //Indices: [0x8000_0000 to 0xFFFF_FFFF)
 		readonly PressedSphere[] spheres;         //Indices: [0x4000_0000 to 0x8000_0000)
@@ -215,9 +212,9 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <summary>
 		/// Creates a <see cref="CalculatedHit"/> from <paramref name="hit"/> and <paramref name="ray"/> of this pack.
 		/// </summary>
-		public CalculatedHit CreateHit(in Hit hit, in Ray ray)
+		public CalculatedHit CreateHit(in Hit hit, in Ray ray) //TODO: Test ref vs in performance
 		{
-			int materialToken;
+			int material;
 			Float2 texcoord;
 
 			switch (hit.token)
@@ -226,7 +223,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					ref PressedTriangle triangle = ref triangles[hit.token - TrianglesTreshold];
 
-					materialToken = triangle.materialToken;
+					material = triangle.materialToken;
 					texcoord = triangle.GetTexcoord(hit.uv);
 
 					break;
@@ -235,7 +232,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					ref PressedSphere sphere = ref spheres[hit.token - SpheresTreshold];
 
-					materialToken = sphere.materialToken;
+					material = sphere.materialToken;
 					texcoord = hit.uv; //Sphere directly uses the uv as texcoord
 
 					break;
@@ -246,7 +243,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			return new CalculatedHit
 			(
 				ray.GetPoint(hit.distance), ray.direction, hit.distance,
-				hit.instance.GetMaterial(materialToken), hit.normal, texcoord
+				hit.instance.GetMaterial(material), hit.normal, texcoord
 			);
 		}
 
