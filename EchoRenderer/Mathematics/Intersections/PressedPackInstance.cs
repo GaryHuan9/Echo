@@ -112,7 +112,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		public Material GetMaterial(int token)
 		{
-
+			throw new NotImplementedException();
 		}
 
 		/// <summary>
