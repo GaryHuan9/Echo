@@ -51,7 +51,9 @@ namespace EchoRenderer.Rendering
 			presser = new ScenePresser(source); //Second pass create presser
 			rootPack = presser.PressPacks();    //Third pass create bounding volume hierarchies
 
-			presser.materials.Press(); //Press materials
+			materials = presser.materials.GetMapper(null); //Get default material mapper
+			presser.materials.Press();                     //Press materials and mappers
+
 			Program.commandsController.Log("Pressed scene");
 		}
 
@@ -69,13 +71,11 @@ namespace EchoRenderer.Rendering
 
 		readonly ScenePresser presser;
 		readonly PressedPack rootPack;
+		readonly MaterialPresser.Mapper materials;
 
 		public bool GetIntersection(in Ray ray, out CalculatedHit calculated)
 		{
-			Hit hit = new Hit();
-			PressedPack pack;
-
-			hit.distance = float.PositiveInfinity;
+			Hit hit = new Hit {distance = float.PositiveInfinity};
 
 			rootPack.bvh.GetIntersection(ray, ref hit);
 			Interlocked.Increment(ref intersectionPerformed);
@@ -86,14 +86,22 @@ namespace EchoRenderer.Rendering
 				return false;
 			}
 
+			PressedPack pack;
+			MaterialPresser.Mapper mapper;
+
 			if (hit.instance == null)
 			{
 				pack = rootPack;
+				mapper = materials;
 				pack.GetNormal(ref hit);
 			}
-			else pack = hit.instance.pack;
+			else
+			{
+				pack = hit.instance.pack;
+				mapper = hit.instance.materials;
+			}
 
-			calculated = pack.CreateHit(hit, ray);
+			calculated = pack.CreateHit(hit, ray, mapper);
 			return true;
 		}
 

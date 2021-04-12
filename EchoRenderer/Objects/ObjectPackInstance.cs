@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects
 {

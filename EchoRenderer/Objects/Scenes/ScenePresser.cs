@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.ObjectPooling;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.Scenes
 {
@@ -69,29 +67,6 @@ namespace EchoRenderer.Objects.Scenes
 			//Head recursion to make sure that all children is pressed before the parent
 
 			return node.PressedPack;
-		}
-
-		public class Materials
-		{
-			public Materials(ScenePresser presser) => this.presser = presser;
-
-			readonly ScenePresser presser;
-			Material[] materials;
-
-			public int Count => materials.Length;
-
-			public Material this[int token] => materials[token] ?? throw new Exception($"{nameof(Materials)} not pressed!");
-
-			public void Press()
-			{
-				if (materials != null) throw new Exception($"{nameof(Materials)} already pressed!");
-
-				materials = (from pair in presser.materialTokens
-							 orderby pair.Value
-							 select pair.Key).ToArray();
-
-				for (int i = 0; i < materials.Length; i++) materials[i].Press();
-			}
 		}
 
 		public class Node : IEnumerable<Node>
