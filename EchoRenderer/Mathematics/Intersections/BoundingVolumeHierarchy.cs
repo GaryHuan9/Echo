@@ -11,7 +11,6 @@ namespace EchoRenderer.Mathematics.Intersections
 		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
 		{
 			this.pack = pack;
-			rootAABB = default;
 
 			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
 			if (aabbs.Count == 0) return;
@@ -25,8 +24,6 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			nodes = new Node[builder.NodeCount];
 			nodes[0] = CreateNode(root, out maxDepth);
-
-			rootAABB = root.aabb;
 
 			Node CreateNode(BranchBuilder.Node node, out int depth)
 			{
@@ -46,8 +43,6 @@ namespace EchoRenderer.Mathematics.Intersections
 				return Node.CreateNode(node.aabb, children);
 			}
 		}
-
-		public readonly AxisAlignedBoundingBox rootAABB;
 
 		readonly PressedPack pack;
 		readonly Node[] nodes;
