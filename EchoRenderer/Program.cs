@@ -24,9 +24,9 @@ namespace EchoRenderer
 		{
 			// DenoiserTesting();
 			// SimplexNoise();
-			FontTesting();
+			// FontTesting();
 
-			return;
+			// return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -55,7 +55,7 @@ namespace EchoRenderer
 																 Method = new PathTraceWorker(),
 																 TilePattern = new CheckerboardPattern(),
 																 PixelSample = 16,
-																 AdaptiveSample = 120
+																 AdaptiveSample = 80
 															 };
 
 		static readonly RenderProfile pathTraceProfile = new()
@@ -92,16 +92,16 @@ namespace EchoRenderer
 
 		static void PerformRender()
 		{
-			Int2[] resolutions =
+			Int2[] resolutions = //Different resolutions for easy selection
 			{
 				new(480, 270), new(960, 540), new(1920, 1080),
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[1]);
-			RenderProfile profile = pathTraceFastProfile;
+			Texture2D buffer = new Texture2D(resolutions[1]); //Selects resolution and create buffer
+			RenderProfile profile = pathTraceExportProfile;   //Selects or creates render profile
 
-			profile.Scene = new GridMaterialBallScene();
+			profile.Scene = new GridMaterialBallScene(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
@@ -112,30 +112,30 @@ namespace EchoRenderer
 			commandsController.Log("Assets loaded");
 
 			PerformanceTest setupTest = new PerformanceTest();
-			using (setupTest.Start()) engine.Begin();
+			using (setupTest.Start()) engine.Begin(); //Initializes render
 
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
-			engine.WaitForRender();
+			engine.WaitForRender(); //Main thread wait for engine to complete render
 
-			buffer.Save("render.fpi");
+			buffer.Save("render.fpi"); //Save floating point image before post processing
 
 			using var postProcess = new PostProcessingEngine(buffer);
 
-			if (profile.Method is BVHQualityWorker)
+			if (profile.Method is BVHQualityWorker) //Creates different post processing workers based on render method
 			{
-				postProcess.AddWorker(new BVHQualityVisualizer(postProcess));
+				postProcess.AddWorker(new BVHQualityVisualizer(postProcess)); //Only used for BVH quality testing
 			}
 			else
 			{
-				postProcess.AddWorker(new Bloom(postProcess));
+				postProcess.AddWorker(new Bloom(postProcess)); //Standard render post processing layers
 				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
 				postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
 			}
 
 			postProcess.Dispatch();
-			postProcess.WaitForProcess();
+			postProcess.WaitForProcess(); //Wait for post processing to finish
 
-			buffer.Save("render.png");
+			buffer.Save("render.png"); //Save final image
 
 			//Logs render stats
 			double elapsedSeconds = engine.Elapsed.TotalSeconds;
@@ -184,13 +184,13 @@ namespace EchoRenderer
 			Parallel.For
 			(
 				0, output.size.Product, index =>
-				{
-					Float2 uv = output.ToPosition(index) / (Float2)output.size;
-					Font.Glyph first = font.glyphs.FirstOrDefault(glyph => glyph.Contains(uv));
+										{
+											Float2 uv = output.ToPosition(index) / (Float2)output.size;
+											Font.Glyph first = font.glyphs.FirstOrDefault(glyph => glyph.Contains(uv));
 
-					if (first.origin == Float2.zero) output[index] = Vector128.Create(0f);
-					else output[index] = Vector128.Create(first.origin.Distance(uv) * 20f, 1f, 1f, 1f);
-				}
+											if (first.origin == Float2.zero) output[index] = Vector128.Create(0f);
+											else output[index] = Vector128.Create(first.origin.Distance(uv) * 20f, 1f, 1f, 1f);
+										}
 			);
 
 			output.Save("fonts.png");
