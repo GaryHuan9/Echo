@@ -24,9 +24,9 @@ namespace EchoRenderer
 		{
 			// DenoiserTesting();
 			// SimplexNoise();
-			// FontTesting();
+			FontTesting();
 
-			// return;
+			return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -179,21 +179,13 @@ namespace EchoRenderer
 		static void FontTesting()
 		{
 			Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
-			Texture2D output = new Texture2D(font.texture.size);
+			Texture2D output = new Texture2D(new Int2(2048, 2048));
 
-			Parallel.For
-			(
-				0, output.size.Product, index =>
-										{
-											Float2 uv = output.ToPosition(index) / (Float2)output.size;
-											Font.Glyph first = font.glyphs.FirstOrDefault(glyph => glyph.Contains(uv));
+			foreach (Int2 position in output.size.Loop()) output[position] = new Float4(0f, 0f, 1f, 1f);
 
-											if (first.origin == Float2.zero) output[index] = Vector128.Create(0f);
-											else output[index] = Vector128.Create(first.origin.Distance(uv) * 20f, 1f, 1f, 1f);
-										}
-			);
+			font.Draw(output, "Hello Abe how are you", new Font.Style(new Float2(1024f, 1024f), 100f, Float4.one));
 
-			output.Save("fonts.png");
+			output.Save("render.png");
 		}
 
 		[Command]
