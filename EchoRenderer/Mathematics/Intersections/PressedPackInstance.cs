@@ -2,7 +2,6 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -11,6 +10,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		public PressedPackInstance(ObjectPackInstance instance, ScenePresser presser)
 		{
 			pack = presser.GetPressedPack(instance.ObjectPack);
+			materials = presser.materials.GetMapper(instance.Mapper);
 
 			backwardTransform = instance.LocalToWorld;
 			forwardTransform = instance.WorldToLocal;
@@ -61,6 +61,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		public readonly PressedPack pack;
+		public readonly MaterialPresser.Mapper materials;
 
 		readonly Float4x4 forwardTransform;  //The parent to local transform matrix
 		readonly Float4x4 backwardTransform; //The local to parent transform matrix
@@ -104,15 +105,6 @@ namespace EchoRenderer.Mathematics.Intersections
 			//Transforms distance back to parent space
 			distance *= backwardScale;
 			return cost;
-		}
-
-		/// <summary>
-		/// Returns the material from the indicated <paramref name="token"/>.
-		/// The method might maps
-		/// </summary>
-		public Material GetMaterial(int token)
-		{
-			throw new NotImplementedException();
 		}
 
 		/// <summary>

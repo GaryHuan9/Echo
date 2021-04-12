@@ -212,7 +212,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <summary>
 		/// Creates a <see cref="CalculatedHit"/> from <paramref name="hit"/> and <paramref name="ray"/> of this pack.
 		/// </summary>
-		public CalculatedHit CreateHit(in Hit hit, in Ray ray) //TODO: Test ref vs in performance
+		public CalculatedHit CreateHit(in Hit hit, in Ray ray, MaterialPresser.Mapper mapper)
 		{
 			int material;
 			Float2 texcoord;
@@ -240,10 +240,12 @@ namespace EchoRenderer.Mathematics.Intersections
 				default: throw new Exception($"{nameof(CreateHit)} should be invoked on the base {nameof(PressedPack)}, which is {hit.instance}!");
 			}
 
+			Float3 point = ray.GetPoint(hit.distance);
+
 			return new CalculatedHit
 			(
-				ray.GetPoint(hit.distance), ray.direction, hit.distance,
-				hit.instance.GetMaterial(material), hit.normal, texcoord
+				point, ray.direction, hit.distance,
+				mapper[material], hit.normal, texcoord
 			);
 		}
 

@@ -89,7 +89,7 @@ namespace EchoRenderer.Objects.Scenes
 			ObjectPack bunny = new ObjectPack();
 			ObjectPack bunnyWall = new ObjectPack();
 
-			bunny.children.Add(new MeshObject(mesh, materials) {Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f});
+			bunny.children.Add(new MeshObject(mesh, material) {Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f});
 			bunny.children.Add(new SphereObject(materials.first, 0.1f) {Position = new Float3(-0.3f, 0.2f, -0.3f)});
 
 			foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))

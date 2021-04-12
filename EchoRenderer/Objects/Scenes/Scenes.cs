@@ -1,4 +1,6 @@
-﻿using CodeHelpers;
+﻿using System.Collections.Generic;
+using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using EchoRenderer.IO;
@@ -36,13 +38,24 @@ namespace EchoRenderer.Objects.Scenes
 
 			ball.children.Add(new MeshObject(mesh, materials) {Rotation = Float3.up * -75f, Scale = (Float3)0.45f});
 
+			Diffuse coreSource = (Diffuse)materials["Core"];
+			Glass solidSource = (Glass)materials["Solid"];
+
+			Dictionary<Int2, Material> cores = new Dictionary<Int2, Material>();
+			Dictionary<int, Material> solids = new Dictionary<int, Material>();
+
 			foreach (Int3 position in new EnumerableSpace3D(-gridSize, gridSize))
 			{
-				children.Add(new ObjectPackInstance(ball) {Position = position.XYZ});
+				Float3 percent = Float3.InverseLerp(-gridSize, gridSize, position);
+
+				Material core = cores.TryGetValue(position.YZ) ?? (cores[position.YZ] = new Diffuse {Albedo = Float3.Lerp(Float3.one, Float3.Lerp(coreSource.Albedo, Float3.zero, percent.z), percent.y)});
+				Material solid = solids.TryGetValue(position.x) ?? (solids[position.x] = new Glass {Albedo = solidSource.Albedo, IndexOfRefraction = solidSource.IndexOfRefraction, Roughness = percent.x});
+
+				MaterialMapper mapper = new MaterialMapper {[coreSource] = core, [solidSource] = solid};
+				children.Add(new ObjectPackInstance(ball) {Position = position.XYZ, Mapper = mapper});
 			}
 
 			children.Add(new Light {Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 60f, 0f)});
-			// children.Add(new Camera(100f) {Position = new Float3(0f, 0.6f, -4.8f), Rotation = Float3.zero});
 
 			Camera camera = new Camera(100f) {Position = new Float3(-5f, 6f, -10f)};
 
