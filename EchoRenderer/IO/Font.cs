@@ -117,6 +117,15 @@ namespace EchoRenderer.IO
 			}
 		}
 
+		/// <summary>
+		/// Calculates the drawing region size of string with <paramref name="length"/> using <paramref name="style"/>.
+		/// </summary>
+		public Float2 GetDrawArea(int length, in Style style)
+		{
+			float width = (length / 2f + 0.5f) * GlyphAspect;
+			return new Float2(width, 1f) * style.height;
+		}
+
 		static int GetIndex(char character)
 		{
 			const int LetterCount = 'Z' - 'A' + 1;
