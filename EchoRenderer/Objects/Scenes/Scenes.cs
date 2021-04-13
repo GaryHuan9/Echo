@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
@@ -79,11 +80,32 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public CornellBox()
 		{
-			var mesh = new Mesh("Assets/Models/CornellBox/CornellBox.obj");
-			var materials = new MaterialLibrary("Assets/Models/CornellBox/CornellBox.mat");
+			Diffuse white = new Diffuse {Albedo = Utilities.ToColor("EEEEEE").XYZ};
+			Diffuse green = new Diffuse {Albedo = Utilities.ToColor("00BC00").XYZ};
+			Diffuse red = new Diffuse {Albedo = Utilities.ToColor("BC0000").XYZ};
+			Emissive light = new Emissive {Emission = Utilities.ToColor("#FFFAF4").XYZ * 3.4f};
 
-			children.Add(new MeshObject(mesh, materials));
-			children.Add(new Camera(90f) {Position = new Float3(0f, 1f, 2.2f), Rotation = Float3.up * 180f});
+			const float Width = 10f;
+			const float Size = Width / 10f * 3f;
+
+			children.Add(new PlaneObject(white, (Float2)Width) {Position = Float3.zero, Rotation = Float3.zero});                                         //Floor
+			children.Add(new PlaneObject(white, (Float2)Width) {Position = new Float3(0f, Width, 0f), Rotation = new Float3(180f, 0f, 0f)});              //Roof
+			children.Add(new PlaneObject(white, (Float2)Width) {Position = new Float3(0f, Width / 2f, Width / 2f), Rotation = new Float3(-90f, 0f, 0f)}); //Back
+			children.Add(new PlaneObject(white, (Float2)Width) {Position = new Float3(0f, Width / 2f, -Width / 2f), Rotation = new Float3(90f, 0f, 0f)}); //Front
+
+			children.Add(new PlaneObject(green, (Float2)Width) {Position = new Float3(Width / 2f, Width / 2f, 0f), Rotation = new Float3(0f, 0f, 90f)});              //Right
+			children.Add(new PlaneObject(red, (Float2)Width) {Position = new Float3(-Width / 2f, Width / 2f, 0f), Rotation = new Float3(0f, 0f, -90f)});              //Left
+			children.Add(new PlaneObject(light, (Float2)(Width / 2f)) {Position = new Float3(0f, Width - Scalars.Epsilon, 0f), Rotation = new Float3(180f, 0f, 0f)}); //Light
+
+			children.Add(new BoxObject(white, new Float3(Size, Size, Size)) {Position = new Float3(Size / 1.5f, Size / 2f, -Size / 1.5f), Rotation = Float3.up * 21f});
+			children.Add(new BoxObject(white, new Float3(Size, Size * 2f, Size)) {Position = new Float3(-Size / 1.5f, Size, Size / 1.5f), Rotation = Float3.up * -21f});
+
+			Camera camera = new Camera(42f) {Position = new Float3(0f, Width / 2f, -Width / 2f)};
+
+			float radian = camera.FieldOfView / 2f * Scalars.DegreeToRadian;
+			camera.Position += Float3.backward * (Width / 2f / MathF.Tan(radian));
+
+			children.Add(camera);
 		}
 	}
 
