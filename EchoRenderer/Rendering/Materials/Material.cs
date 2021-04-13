@@ -86,7 +86,22 @@ namespace EchoRenderer.Rendering.Materials
 				return true;
 			}
 
-			direction = Float3.zero;
+			direction = default;
+			return false;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected bool CullBackface(in CalculatedHit hit, out Float3 direction)
+		{
+			float dot = hit.direction.Dot(hit.normal);
+
+			if (dot > 0f)
+			{
+				direction = hit.direction;
+				return true;
+			}
+
+			direction = default;
 			return false;
 		}
 

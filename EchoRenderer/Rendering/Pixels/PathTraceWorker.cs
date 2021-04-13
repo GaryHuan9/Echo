@@ -2,7 +2,6 @@
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
-using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Rendering.Pixels
 {
