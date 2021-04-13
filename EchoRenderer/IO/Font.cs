@@ -127,12 +127,14 @@ namespace EchoRenderer.IO
 			const int LetterCount = 'Z' - 'A' + 1;
 
 			int order = character switch
-						{
-							>= 'A' and <= 'Z' => character - 'A',
-							>= 'a' and <= 'z' => character - 'a' + LetterCount,
-							>= '0' and <= '9' => character - '0' + LetterCount * 2,
-							_ => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
-						};
+			{
+				>= 'A' and <= 'Z' => character - 'A',
+				>= 'a' and <= 'z' => character - 'a' + LetterCount,
+				>= '0' and <= '9' => character - '0' + LetterCount * 2,
+				'.' => LetterCount * 2 + 10,
+				',' => LetterCount * 2 + 11,
+				_ => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
+			};
 
 			Int2 position = new Int2(order % MapSize, order / MapSize);
 			position = new Int2(position.x, MapSize - position.y - 1);

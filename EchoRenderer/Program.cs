@@ -23,6 +23,20 @@ namespace EchoRenderer
 			// SimplexNoise();
 			// FontTesting();
 
+			// Texture2D texture = Texture2D.Load("render.fpi");
+			//
+			// using var postProcess = new PostProcessingEngine(texture);
+			//
+			// postProcess.AddWorker(new Bloom(postProcess));
+			// postProcess.AddWorker(new Watermark(postProcess));
+			// postProcess.AddWorker(new Vignette(postProcess, 0.18f));
+			// // postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
+			//
+			// postProcess.Dispatch();
+			// postProcess.WaitForProcess(); //Wait for post processing to finish
+			//
+			// texture.Save("renderRaw.png");
+
 			// return;
 
 			using Terminal terminal = new Terminal();
