@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Textures;
 
@@ -19,32 +20,40 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		public abstract void Dispatch();
 
-		protected void RunPass(PassAction passAction)
+		public void RunPass(PassAction passAction, Texture buffer = null)
 		{
 			if (Aborted) return;
-			Parallel.For(0, renderBuffer.size.Product, WorkPixel);
+
+			buffer ??= renderBuffer;
+			Parallel.For(0, buffer.size.Product, WorkPixel);
 
 			void WorkPixel(int index, ParallelLoopState state)
 			{
 				if (Aborted) state.Stop();
-				else passAction(renderBuffer.ToPosition(index));
+				else passAction(buffer.ToPosition(index));
 			}
 		}
 
-		protected void RunCopyPass(Texture from, Texture to) => RunPass
-		(
-			position =>
-			{
-				ref var target = ref to.GetPixel(position);
-				target = from.GetPixel(position);
-			}
-		);
+		public void RunCopyPass(Texture from, Texture to)
+		{
+			Assert.AreEqual(from.size, to.size);
 
-		protected void RunPassHorizontal(PassActionHorizontal passAction)
+			RunPass
+			(
+				position =>
+				{
+					ref var target = ref to.GetPixel(position);
+					target = from.GetPixel(position);
+				}
+			);
+		}
+
+		public void RunPassHorizontal(PassActionHorizontal passAction, Texture buffer = null)
 		{
 			if (Aborted) return;
 
-			Parallel.For(0, renderBuffer.size.y, WorkPixel);
+			buffer ??= renderBuffer;
+			Parallel.For(0, buffer.size.y, WorkPixel);
 
 			void WorkPixel(int vertical, ParallelLoopState state)
 			{
@@ -53,11 +62,12 @@ namespace EchoRenderer.Rendering.PostProcessing
 			}
 		}
 
-		protected void RunPassVertical(PassActionVertical passAction)
+		public void RunPassVertical(PassActionVertical passAction, Texture buffer = null)
 		{
 			if (Aborted) return;
 
-			Parallel.For(0, renderBuffer.size.x, WorkPixel);
+			buffer ??= renderBuffer;
+			Parallel.For(0, buffer.size.x, WorkPixel);
 
 			void WorkPixel(int horizontal, ParallelLoopState state)
 			{
@@ -66,8 +76,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 			}
 		}
 
-		protected delegate void PassAction(Int2 position);
-		protected delegate void PassActionHorizontal(int vertical);
-		protected delegate void PassActionVertical(int horizontal);
+		public delegate void PassAction(Int2 position);
+		public delegate void PassActionHorizontal(int vertical);
+		public delegate void PassActionVertical(int horizontal);
 	}
 }

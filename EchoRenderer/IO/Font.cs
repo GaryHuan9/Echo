@@ -118,25 +118,21 @@ namespace EchoRenderer.IO
 		}
 
 		/// <summary>
-		/// Calculates the drawing region size of string with <paramref name="length"/> using <paramref name="style"/>.
+		/// Calculates the drawing region width of string with <paramref name="length"/> and <paramref name="height"/>.
 		/// </summary>
-		public Float2 GetDrawArea(int length, in Style style)
-		{
-			float width = (length / 2f + 0.5f) * GlyphAspect;
-			return new Float2(width, 1f) * style.height;
-		}
+		public float GetWidth(int length, float height) => length * GlyphAspect * height;
 
 		static int GetIndex(char character)
 		{
 			const int LetterCount = 'Z' - 'A' + 1;
 
 			int order = character switch
-			{
-				>= 'A' and <= 'Z' => character - 'A',
-				>= 'a' and <= 'z' => character - 'a' + LetterCount,
-				>= '0' and <= '9' => character - '0' + LetterCount * 2,
-				_ => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
-			};
+						{
+							>= 'A' and <= 'Z' => character - 'A',
+							>= 'a' and <= 'z' => character - 'a' + LetterCount,
+							>= '0' and <= '9' => character - '0' + LetterCount * 2,
+							_ => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
+						};
 
 			Int2 position = new Int2(order % MapSize, order / MapSize);
 			position = new Int2(position.x, MapSize - position.y - 1);
@@ -152,6 +148,8 @@ namespace EchoRenderer.IO
 				this.height = height;
 				this.color = color;
 			}
+
+			public Style(float height, Float4 color) : this(default, height, color) { }
 
 			public readonly Float2 center;
 			public readonly float height;

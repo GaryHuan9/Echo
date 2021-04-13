@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Linq;
-using System.Runtime.Intrinsics;
 using System.Threading;
-using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -24,9 +21,9 @@ namespace EchoRenderer
 		{
 			// DenoiserTesting();
 			// SimplexNoise();
-			FontTesting();
+			// FontTesting();
 
-			return;
+			// return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -98,10 +95,10 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[1]); //Selects resolution and create buffer
+			Texture2D buffer = new Texture2D(resolutions[5]); //Selects resolution and create buffer
 			RenderProfile profile = pathTraceExportProfile;   //Selects or creates render profile
 
-			profile.Scene = new GridMaterialBallScene(); //Creates/loads scene to render
+			profile.Scene = new CornellBox(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
@@ -127,7 +124,8 @@ namespace EchoRenderer
 			}
 			else
 			{
-				postProcess.AddWorker(new Bloom(postProcess)); //Standard render post processing layers
+				postProcess.AddWorker(new Bloom(postProcess));     //Standard render post processing layers
+				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
 				postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
 			}

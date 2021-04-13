@@ -81,7 +81,7 @@ namespace EchoRenderer.Textures
 		/// <summary>
 		/// NOTE: this method returns a reference which can be used to both read and assign the actual value.
 		/// </summary>
-		public ref Vector128<float> GetPixel(Int2 position) => ref this[ToIndex(Wrapper.Convert(this, position))];
+		public virtual ref Vector128<float> GetPixel(Int2 position) => ref this[ToIndex(Wrapper.Convert(this, position))];
 
 		public Vector128<float> GetPixel(Float2 uv) => Filter.Convert(this, Wrapper.Convert(uv));
 
