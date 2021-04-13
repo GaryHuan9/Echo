@@ -1,5 +1,7 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.PostProcessing
@@ -8,7 +10,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 	{
 		public BVHQualityVisualizer(PostProcessingEngine engine) : base(engine)
 		{
-			Float4[] colors =
+			ReadOnlySpan<Float4> colors = stackalloc Float4[]
 			{
 				Utilities.ToColor("#000000"),
 				Utilities.ToColor("#0000FF"),
@@ -34,6 +36,10 @@ namespace EchoRenderer.Rendering.PostProcessing
 		float totalCost;
 		float totalSample;
 
+		static readonly Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
+
+		const float Scale = 0.03f;
+
 		public override void Dispatch()
 		{
 			RunPass(GatherPass);
@@ -43,7 +49,24 @@ namespace EchoRenderer.Rendering.PostProcessing
 			float cost = InterlockedHelper.Read(ref totalCost);
 			float sample = InterlockedHelper.Read(ref totalSample);
 
-			Program.commandsController.Log($"Intersected {cost:N0} AABBs with an average of {cost / sample:F2} intersection per sample and a max intersection of {max:N0}.");
+			string[] labels =
+			{
+				$"Total {cost:N0}",
+				$"Average {cost / sample:F2}",
+				$"Max {max:N0}"
+			};
+
+			float height = renderBuffer.size.y * Scale;
+			var style = new Font.Style(height, Float4.one);
+
+			for (int i = 0; i < labels.Length; i++)
+			{
+				string label = labels[i];
+				float width = font.GetWidth(label.Length, height);
+
+				Float2 position = new Float2(height + width / 2f, height * (i + 1.5f));
+				font.Draw(renderBuffer, label, style.ReplaceCenter(position));
+			}
 		}
 
 		void GatherPass(Int2 position)
