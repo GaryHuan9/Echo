@@ -1,7 +1,9 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
@@ -9,9 +11,7 @@ using EchoRenderer.Mathematics;
 namespace EchoRenderer.Textures
 {
 	/// <summary>
-	/// An asset object used to read or save an image. Pixels are stored raw for fast access but uses much more memory.
-	/// Because most textures store data as 32 bit floats, they support the full range of a float.
-	/// File operations handled by <see cref="Bitmap"/>. Can be offloaded to separate threads for faster loading.
+	/// A rectangular grid of RGBA four channeled pixel colors.
 	/// </summary>
 	public abstract class Texture
 	{
@@ -97,6 +97,24 @@ namespace EchoRenderer.Textures
 			foreach (Int2 position in size.Loop()) this[position] = texture[position];
 		}
 
+		public void Foreach(PixelAction action, bool parallel = true)
+		{
+			if (parallel) Parallel.ForEach(size.Loop(), position => action(ref GetPixel(position)));
+			else
+			{
+				foreach (Int2 position in size.Loop()) action(ref GetPixel(position));
+			}
+		}
+
+		public void Foreach(PixelActionPosition action, bool parallel = true)
+		{
+			if (parallel) Parallel.ForEach(size.Loop(), position => action(position));
+			else
+			{
+				foreach (Int2 position in size.Loop()) action(position);
+			}
+		}
+
 		public override string ToString() => $"{GetType()} with size {size}";
 
 		protected void AssertAlignedSize(Texture texture)
@@ -104,6 +122,9 @@ namespace EchoRenderer.Textures
 			if (texture.size == size) return;
 			throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
 		}
+
+		public delegate void PixelAction(ref Vector128<float> pixel);
+		public delegate void PixelActionPosition(Int2 position);
 	}
 
 	public static class Wrapper
