@@ -9,6 +9,9 @@ namespace EchoRenderer.Mathematics
 {
 	public static class Utilities
 	{
+		public static readonly Float3 luminanceOption = new Float3(0.2126f, 0.7152f, 0.0722f);
+		public static readonly Vector128<float> luminanceVector = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
+
 		public static ref Float4 ToFloat4(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref pixel);
 		public static ref Vector128<float> ToVector(ref Float4 pixel) => ref Unsafe.As<Float4, Vector128<float>>(ref pixel);
 
@@ -60,6 +63,16 @@ namespace EchoRenderer.Mathematics
 			if (Fma.IsSupported) return Fma.MultiplyAdd(length, time, left);
 			return Sse.Add(Sse.Multiply(length, time), left);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static unsafe float GetLuminance(in Vector128<float> color)
+		{
+			var vector = Sse41.DotProduct(color, luminanceVector, 0b1110_0001);
+			return *(float*)&vector;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static float GetLuminance(in Float3 color) => color.Dot(luminanceOption);
 
 		public static int Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
 		public static Int2 Morton(int index) => new Int2(Unsaw(index), Unsaw(index >> 1));

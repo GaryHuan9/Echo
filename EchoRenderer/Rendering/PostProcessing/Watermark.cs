@@ -14,7 +14,6 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public Watermark(PostProcessingEngine engine) : base(engine) { }
 
 		static readonly Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
-		static readonly Vector128<float> luminanceOption = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 
 		Texture sourceBuffer;
 		double luminance;
@@ -74,12 +73,10 @@ namespace EchoRenderer.Rendering.PostProcessing
 			font.Draw(renderBuffer, Label, style);
 		}
 
-		unsafe void LuminancePass(Int2 position)
+		void LuminancePass(Int2 position)
 		{
 			ref Vector128<float> source = ref cropSource.GetPixel(position);
-
-			var single = Sse41.DotProduct(source, luminanceOption, 0b1110_0001);
-			InterlockedHelper.Add(ref luminance, *(float*)&single);
+			InterlockedHelper.Add(ref luminance, Utilities.GetLuminance(source));
 		}
 
 		void TintPass(Int2 position)
