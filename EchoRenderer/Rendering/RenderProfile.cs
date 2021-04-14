@@ -60,7 +60,7 @@ namespace EchoRenderer.Rendering
 		/// <summary>
 		/// Epsilon lower bound value to determine when an energy is essentially zero.
 		/// </summary>
-		public Float3 EnergyEpsilon { get; set; } = (Float3)5E-3f;
+		public Float3 EnergyEpsilon { get; set; } = (Float3)9E-3f;
 	}
 
 	/// <summary>

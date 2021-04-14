@@ -1,7 +1,7 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
@@ -19,7 +19,6 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		Texture sourceBuffer;
 
-		static readonly Vector128<float> luminanceOption = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 		static readonly Vector128<float> zeroVector = Vector128.Create(0f, 0f, 0f, 1f);
 
 		public override void Dispatch()
@@ -42,13 +41,13 @@ namespace EchoRenderer.Rendering.PostProcessing
 			RunPass(CombinePass);
 		}
 
-		unsafe void LuminancePass(Int2 position)
+		void LuminancePass(Int2 position)
 		{
 			ref Vector128<float> source = ref renderBuffer.GetPixel(position);
 			ref Vector128<float> target = ref sourceBuffer.GetPixel(position);
 
-			Vector128<float> single = Sse41.DotProduct(source, luminanceOption, 0b1110_0001);
-			target = *(float*)&single < threshold ? zeroVector : source;
+			float luminance = Utilities.GetLuminance(source);
+			target = luminance < threshold ? zeroVector : source;
 		}
 
 		unsafe void CombinePass(Int2 position)
