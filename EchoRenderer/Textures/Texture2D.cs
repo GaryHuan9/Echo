@@ -15,8 +15,8 @@ using EchoRenderer.Mathematics;
 namespace EchoRenderer.Textures
 {
 	/// <summary>
-	/// The default texture; stores RGBA color information with 32 bits per channel.
-	/// Supports saving and loading from image files.
+	/// The default texture; stores RGBA color information with 32 bits per channel, supports full float range.
+	/// Saving and loading from image files handled by <see cref="Bitmap"/>. Can be offloaded to separate threads.
 	/// </summary>
 	public class Texture2D : Texture, ILoadableAsset
 	{
