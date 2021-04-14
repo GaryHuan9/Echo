@@ -25,7 +25,7 @@ namespace EchoRenderer
 			// SimplexNoise();
 			// FontTesting();
 
-			return;
+			// return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -98,7 +98,11 @@ namespace EchoRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[5]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceExportProfile;   //Selects or creates render profile
+			RenderProfile profile = pathTraceFastProfile;     //Selects or creates render profile
+
+			profile.PixelSample = 128;
+			profile.AdaptiveSample = 20000;
+			profile.EnergyEpsilon = (Float3)3E-2f;
 
 			profile.Scene = new CornellBox(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
