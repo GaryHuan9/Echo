@@ -17,7 +17,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		static readonly Vector128<float> luminanceOption = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 
 		Texture sourceBuffer;
-		float luminance;
+		double luminance;
 
 		Crop2D cropSource;
 		Crop2D cropTarget;
@@ -53,9 +53,9 @@ namespace EchoRenderer.Rendering.PostProcessing
 			cropSource = new Crop2D(sourceBuffer, min, max);
 			cropTarget = new Crop2D(renderBuffer, min, max);
 
-			RunCopyPass(renderBuffer, sourceBuffer);
+			RunCopyPass(renderBuffer, sourceBuffer); //Copies buffer
+			RunPass(LuminancePass, cropSource);      //Grabs luminance
 
-			RunPass(LuminancePass, cropSource); //Grabs luminance
 			luminance /= cropSource.size.Product;
 
 			blur.Run(); //Run Gaussian blur
@@ -79,7 +79,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 			ref Vector128<float> source = ref cropSource.GetPixel(position);
 
 			var single = Sse41.DotProduct(source, luminanceOption, 0b1110_0001);
-			luminance = InterlockedHelper.Add(ref luminance, *(float*)&single);
+			InterlockedHelper.Add(ref luminance, *(float*)&single);
 		}
 
 		void TintPass(Int2 position)
