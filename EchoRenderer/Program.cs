@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -99,10 +97,6 @@ namespace EchoRenderer
 
 			Texture2D buffer = new Texture2D(resolutions[5]); //Selects resolution and create buffer
 			RenderProfile profile = pathTraceFastProfile;     //Selects or creates render profile
-
-			profile.PixelSample = 128;
-			profile.AdaptiveSample = 20000;
-			profile.EnergyEpsilon = (Float3)3E-2f;
 
 			profile.Scene = new CornellBox(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
