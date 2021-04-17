@@ -38,7 +38,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			// Console.ReadKey();
+			Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
@@ -96,9 +96,9 @@ namespace EchoRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceFastProfile;     //Selects or creates render profile
+			RenderProfile profile = pathTraceFastProfile;   //Selects or creates render profile
 
-			profile.Scene = new TestLightBleed(); //Creates/loads scene to render
+			profile.Scene = new LightedBMWScene(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
