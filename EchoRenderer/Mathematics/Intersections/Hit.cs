@@ -31,8 +31,10 @@ namespace EchoRenderer.Mathematics.Intersections
 			this.direction = direction;
 			this.distance = distance;
 
-			this.material = material;
 			this.normal = normal;
+			normalRaw = normal;
+
+			this.material = material;
 			this.texcoord = texcoord;
 
 			material.ApplyTangentNormal(this, ref this.normal);
@@ -42,8 +44,10 @@ namespace EchoRenderer.Mathematics.Intersections
 		public readonly Float3 direction;
 		public readonly float distance;
 
-		public readonly Material material;
 		public readonly Float3 normal;
+		public readonly Float3 normalRaw; //The raw, geometric normal
+
+		public readonly Material material;
 		public readonly Float2 texcoord;
 	}
 }

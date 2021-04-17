@@ -48,11 +48,10 @@ NormalMap textures/sponza_ceiling_a_ddn.png
 
 declare Diffuse chain
 Albedo 1.000000 1.000000 1.000000
-# Ni 1.000000
-# d 1.000000
 AlbedoMap textures/chain_texture.png
 # map_d textures/chain_texture_mask.png
 NormalMap textures/chain_texture_ddn.png
+BackfaceCulling false
 
 declare Diffuse column_a
 Albedo 1.000000 1.000000 1.000000
