@@ -20,6 +20,8 @@ namespace EchoRenderer.Rendering.Materials
 		public float NormalIntensity { get; set; } = 1f;
 		public Texture NormalMap { get; set; } = Texture.normal;
 
+		public bool BackfaceCulling { get; set; } = true;
+
 		Float4 albedoColor;
 
 		static readonly Vector128<float> normalMultiplier = Vector128.Create(2f);
@@ -93,7 +95,7 @@ namespace EchoRenderer.Rendering.Materials
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected bool CullBackface(in CalculatedHit hit, out Float3 direction)
 		{
-			float dot = hit.direction.Dot(hit.normal);
+			float dot = hit.direction.Dot(hit.normalRaw);
 
 			if (dot > 0f)
 			{
