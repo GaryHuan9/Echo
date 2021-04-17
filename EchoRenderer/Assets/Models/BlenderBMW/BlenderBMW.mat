@@ -21,7 +21,7 @@ Albedo 0.071850 0.071850 0.071850
 
 declare Glossy CarShellNew
 Albedo 0.94467 0.614926 0.528900
-Smoothness 0.22500
+Smoothness 0.27500
 
 declare Glossy Chrome
 Albedo 0.892533 0.892533 0.892533
