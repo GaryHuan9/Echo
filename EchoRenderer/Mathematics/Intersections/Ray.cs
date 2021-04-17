@@ -14,18 +14,6 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		/// <param name="origin">The origin of the ray</param>
 		/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
-		/// <param name="forwardShift">Whether you want to create the ray so it is shifted a bit forward to avoid intersection with itself.</param>
-		public Ray(Float3 origin, Float3 direction, bool forwardShift) : this
-		(
-			forwardShift ? origin + direction * 5E-4f : origin,
-			direction
-		) { }
-
-		/// <summary>
-		/// Constructs a ray.
-		/// </summary>
-		/// <param name="origin">The origin of the ray</param>
-		/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
 		public Ray(Float3 origin, Float3 direction)
 		{
 			Debug.Assert(Scalars.AlmostEquals(direction.SquaredMagnitude, 1f));
@@ -54,9 +42,9 @@ namespace EchoRenderer.Mathematics.Intersections
 		[FieldOffset(24)] public readonly Vector128<float> inverseDirectionVector;
 		[FieldOffset(36)] public readonly Vector128<float> absolutedInverseDirectionVector;
 
-		static readonly Vector128<float> minValueVector = Vector128.Create(float.MinValue, float.MinValue, float.MinValue, float.MinValue);
-		static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue, float.MaxValue, float.MaxValue, float.MaxValue);
-		static readonly Vector128<float> oneVector = Vector128.Create(1f, 1f, 1f, 1f);
+		static readonly Vector128<float> minValueVector = Vector128.Create(float.MinValue);
+		static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue);
+		static readonly Vector128<float> oneVector = Vector128.Create(1f);
 
 		public unsafe Float3 GetPoint(float distance)
 		{

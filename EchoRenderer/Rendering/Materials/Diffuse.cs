@@ -8,7 +8,7 @@ namespace EchoRenderer.Rendering.Materials
 	{
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
-			if (CullBackface(hit, out direction)) return Float3.one;
+			if (BackfaceCulling && CullBackface(hit, out direction)) return Float3.one;
 			if (AlphaTest(hit, out Float3 color, out direction)) return Float3.one;
 
 			direction = (hit.normal + random.NextOnSphere()).Normalized;

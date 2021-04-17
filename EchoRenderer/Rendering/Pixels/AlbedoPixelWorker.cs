@@ -17,7 +17,7 @@ namespace EchoRenderer.Rendering.Pixels
 				Float4 sample = material.AlbedoMap[hit.texcoord];
 
 				if (!Scalars.AlmostEquals(sample.w, 0f)) return sample.XYZ * material.Albedo;
-				ray = new Ray(hit.position, hit.direction, true);
+				ray = CreateBiasedRay(ray.direction, hit);
 			}
 
 			return scene.cubemap?.Sample(ray.direction) ?? Float3.zero;

@@ -181,8 +181,11 @@ namespace EchoRenderer.Rendering.Tiles
 			if (aborted) throw new Exception("Worker already aborted!");
 			aborted = true;
 
-			dispatchEvent.Set(); //Release the wait block
-			worker.Join();
+			if (worker.IsAlive)
+			{
+				dispatchEvent.Set(); //Release the wait block
+				worker.Join();
+			}
 		}
 
 		public void Dispose()

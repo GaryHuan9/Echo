@@ -73,7 +73,26 @@ namespace EchoRenderer.Objects.Scenes
 		}
 	}
 
-	public class TestMaterials { }
+	public class TestLightBleed : Scene
+	{
+		public TestLightBleed()
+		{
+			Diffuse diffuse = new Diffuse {Albedo = (Float3)0.6f};
+			Emissive light = new Emissive {Emission = (Float3)6000f};
+
+			const float Size = 1f; //Try different scales to test for floating point errors (1 -> 2000)
+
+			children.Add(new PlaneObject(diffuse, (Float2)4f * Size));
+			children.Add(new PlaneObject(diffuse, (Float2)4f * Size) {Position = new Float3(0f, 2f, 2f) * Size, Rotation = new Float3(-90f, 0f, 0f)});
+
+			children.Add(new PlaneObject(light, (Float2)3f * Size) {Position = new Float3(0f, -1f, 3f) * Size, Rotation = new Float3(-45f, 0f, 0f)});
+
+			children.Add(new Camera(60f) {Position = new Float3(0f, 1f, 1f) * Size, Rotation = new Float3(40f, 0f, 0f)});
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+		}
+	}
+
+	public class TestMaterials : Scene { }
 
 	public class TestInstancing : Scene
 	{
