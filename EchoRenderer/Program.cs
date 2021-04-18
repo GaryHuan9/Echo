@@ -19,11 +19,11 @@ namespace EchoRenderer
 	{
 		static void Main()
 		{
-			// DenoiserTesting();
+			DenoiserTesting();
 			// SimplexNoise();
 			// FontTesting();
 
-			// return;
+			return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -38,7 +38,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			Console.ReadKey();
+			// Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
@@ -96,10 +96,13 @@ namespace EchoRenderer
 			};
 
 			Texture2D buffer = new Texture2D(resolutions[1]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceFastProfile;   //Selects or creates render profile
+			RenderProfile profile = albedoProfile;            //Selects or creates render profile
 
 			profile.Scene = new LightedBMWScene(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
+
+			profile.AdaptiveSample = 0;
+			profile.PixelSample = 1;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
 
@@ -124,10 +127,10 @@ namespace EchoRenderer
 			}
 			else
 			{
-				postProcess.AddWorker(new Bloom(postProcess));     //Standard render post processing layers
-				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
-				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
-				postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
+				// postProcess.AddWorker(new Bloom(postProcess));     //Standard render post processing layers
+				// postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
+				// postProcess.AddWorker(new Vignette(postProcess, 0.18f));
+				// postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
 			}
 
 			postProcess.Dispatch();
@@ -145,17 +148,18 @@ namespace EchoRenderer
 
 		static void DenoiserTesting()
 		{
-			Texture2D noisy = Texture2D.Load("render_sponza_noisy.fpi");
-			Texture2D albedo = Texture2D.Load("render_sponza_albedo.fpi");
+			Texture2D color = Texture2D.Load("render_bmw_color.fpi");
+			Texture2D normal = Texture2D.Load("render_bmw_normal.fpi");
+			Texture2D position = Texture2D.Load("render_bmw_position.fpi");
 
-			using var postProcess = new PostProcessingEngine(noisy);
+			using var postProcess = new PostProcessingEngine(color);
 
-			postProcess.AddWorker(new Denoiser(postProcess, albedo));
+			postProcess.AddWorker(new Denoiser(postProcess, normal, position));
 
 			postProcess.Dispatch();
 			postProcess.WaitForProcess();
 
-			noisy.Save("render.png");
+			color.Save("render.png");
 		}
 
 		static void SimplexNoise()

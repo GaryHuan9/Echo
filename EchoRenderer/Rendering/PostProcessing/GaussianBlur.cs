@@ -56,8 +56,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		{
 			BuildRadii();
 
-			var wrapper = sourceBuffer.Wrapper;
-			sourceBuffer.Wrapper = Wrapper;
+			using var _ = new ScopedWrapper(sourceBuffer, Wrapper);
 
 			//Run Gaussian blur passes
 			for (int i = 0; i < Quality; i++)
@@ -67,8 +66,6 @@ namespace EchoRenderer.Rendering.PostProcessing
 				worker.RunPassHorizontal(vertical => HorizontalBlurPass(vertical, radius), workerBuffer);
 				worker.RunPassVertical(horizontal => VerticalBlurPass(horizontal, radius), sourceBuffer);
 			}
-
-			sourceBuffer.Wrapper = wrapper;
 		}
 
 		void BuildRadii()
