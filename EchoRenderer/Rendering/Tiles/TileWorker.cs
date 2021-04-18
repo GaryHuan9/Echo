@@ -55,7 +55,7 @@ namespace EchoRenderer.Rendering.Tiles
 		readonly int id;
 		readonly int size;
 
-		readonly Texture renderBuffer;
+		readonly RenderBuffer renderBuffer;
 		readonly PixelWorker pixelWorker;
 
 		readonly int pixelSample;
