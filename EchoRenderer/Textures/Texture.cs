@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
@@ -97,6 +98,9 @@ namespace EchoRenderer.Textures
 			foreach (Int2 position in size.Loop()) this[position] = texture[position];
 		}
 
+		/// <summary>
+		/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
+		/// </summary>
 		public void Foreach(PixelAction action, bool parallel = true)
 		{
 			if (parallel) Parallel.ForEach(size.Loop(), position => action(ref GetPixel(position)));
@@ -106,6 +110,9 @@ namespace EchoRenderer.Textures
 			}
 		}
 
+		/// <summary>
+		/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
+		/// </summary>
 		public void Foreach(PixelActionPosition action, bool parallel = true)
 		{
 			if (parallel) Parallel.ForEach(size.Loop(), position => action(position));
