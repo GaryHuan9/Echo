@@ -18,7 +18,7 @@ namespace EchoRenderer.Rendering
 		/// <summary>
 		/// The texture buffer to render onto.
 		/// </summary>
-		public Texture RenderBuffer { get; set; }
+		public RenderBuffer RenderBuffer { get; set; }
 
 		/// <summary>
 		/// The fundamental rendering method used for each pixel.
@@ -101,7 +101,7 @@ namespace EchoRenderer.Rendering
 		}
 
 		public readonly PressedScene scene;
-		public readonly Texture renderBuffer;
+		public readonly RenderBuffer renderBuffer;
 
 		public readonly PixelWorker worker;
 		public readonly ITilePattern tilePattern;

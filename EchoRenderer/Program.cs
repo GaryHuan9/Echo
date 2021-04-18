@@ -95,14 +95,11 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			Texture2D buffer = new Texture2D(resolutions[1]); //Selects resolution and create buffer
-			RenderProfile profile = albedoProfile;            //Selects or creates render profile
+			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
+			RenderProfile profile = pathTraceFastProfile;           //Selects or creates render profile
 
 			profile.Scene = new LightedBMWScene(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
-
-			profile.AdaptiveSample = 0;
-			profile.PixelSample = 1;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
 
@@ -127,10 +124,10 @@ namespace EchoRenderer
 			}
 			else
 			{
-				// postProcess.AddWorker(new Bloom(postProcess));     //Standard render post processing layers
-				// postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
-				// postProcess.AddWorker(new Vignette(postProcess, 0.18f));
-				// postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
+				postProcess.AddWorker(new Bloom(postProcess));     //Standard render post processing layers
+				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
+				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
+				postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
 			}
 
 			postProcess.Dispatch();
@@ -149,17 +146,23 @@ namespace EchoRenderer
 		static void DenoiserTesting()
 		{
 			Texture2D color = Texture2D.Load("render_bmw_color.fpi");
+			Texture2D albedo = Texture2D.Load("render_bmw_albedo.fpi");
 			Texture2D normal = Texture2D.Load("render_bmw_normal.fpi");
-			Texture2D position = Texture2D.Load("render_bmw_position.fpi");
 
 			using var postProcess = new PostProcessingEngine(color);
 
-			postProcess.AddWorker(new Denoiser(postProcess, normal, position));
+			postProcess.AddWorker(new DenoiseOidn(postProcess, albedo, normal));
 
-			postProcess.Dispatch();
-			postProcess.WaitForProcess();
+			PerformanceTest test = new PerformanceTest();
+
+			using (test.Start())
+			{
+				postProcess.Dispatch();
+				postProcess.WaitForProcess();
+			}
 
 			color.Save("render.png");
+			DebugHelper.Log(test);
 		}
 
 		static void SimplexNoise()
