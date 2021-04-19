@@ -65,9 +65,9 @@ namespace EchoRenderer.Rendering
 		public GeometryCounts UniqueCounts => presser.root.UniqueCounts;
 
 		public int MaterialCount => presser.materials.Count;
-		public long IntersectionPerformed => Interlocked.Read(ref intersectionPerformed);
+		public long Intersections => Interlocked.Read(ref intersections);
 
-		long intersectionPerformed;
+		long intersections; //Intersection count
 
 		readonly ScenePresser presser;
 		readonly PressedPack rootPack;
@@ -78,7 +78,7 @@ namespace EchoRenderer.Rendering
 			Hit hit = new Hit {distance = float.PositiveInfinity};
 
 			rootPack.bvh.GetIntersection(ray, ref hit);
-			Interlocked.Increment(ref intersectionPerformed);
+			Interlocked.Increment(ref intersections);
 
 			if (float.IsInfinity(hit.distance))
 			{

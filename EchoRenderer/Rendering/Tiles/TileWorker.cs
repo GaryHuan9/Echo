@@ -155,10 +155,10 @@ namespace EchoRenderer.Rendering.Tiles
 
 					//Sample color
 					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / renderBuffer.size - Float2.half;
-					Float3 color = pixelWorker.Render(new Float2(uv.x, uv.y / renderBuffer.aspect));
+					PixelWorker.Sample sample = pixelWorker.Render(new Float2(uv.x, uv.y / renderBuffer.aspect));
 
 					//Write to pixel
-					bool successful = pixel.Accumulate(color);
+					bool successful = pixel.Accumulate(sample);
 					Interlocked.Increment(ref _completedSample);
 
 					if (!successful) Interlocked.Increment(ref _rejectedSample);
@@ -172,7 +172,7 @@ namespace EchoRenderer.Rendering.Tiles
 			if (aborted) state.Stop();
 
 			//Store pixel
-			renderBuffer[position] = ((Float4)pixel.Color).Replace(3, 1f);
+			pixel.Store(renderBuffer, position);
 			Interlocked.Increment(ref _completedPixel);
 		}
 
@@ -199,12 +199,17 @@ namespace EchoRenderer.Rendering.Tiles
 
 		struct Pixel
 		{
+			//The color data
 			Double3 average;
 			Double3 squared;
 
+			//The auxiliary data
+			Double3 albedo;
+			Double3 normal;
+
 			int accumulation;
 
-			public const double MinDeviationThreshold = 0.3d;
+			const double MinDeviationThreshold = 0.3d;
 
 			/// <summary>
 			/// Returns the color average.
@@ -227,22 +232,34 @@ namespace EchoRenderer.Rendering.Tiles
 			}
 
 			/// <summary>
-			/// Accumulates the color <paramref name="value"/> to pixel.
+			/// Accumulates the sample <paramref name="value"/> to pixel.
 			/// Returns false if the input was rejected because it was invalid.
 			/// </summary>
-			public bool Accumulate(Float3 value)
+			public bool Accumulate(in PixelWorker.Sample value)
 			{
-				if (float.IsNaN(value.x) || float.IsNaN(value.y) || float.IsNaN(value.z)) return false; //NaN gate
+				if (value.IsNaN) return false; //NaN gate
 
 				accumulation++;
 
 				Double3 oldMean = average;
-				Double3 newValue = value;
+				Double3 newValue = value.colour;
 
 				average += (newValue - oldMean) / accumulation;
 				squared += (newValue - average) * (newValue - oldMean);
 
+				albedo += value.albedo;
+				normal += value.normal;
+
 				return true;
+			}
+
+			public void Store(RenderBuffer buffer, Int2 position)
+			{
+				Float4 color = (Float4)(Float3)average;
+				buffer[position] = color.Replace(3, 1f);
+
+				buffer.SetAlbedo(position, (Float3)(albedo / accumulation));
+				buffer.SetNormal(position, (Float3)normal.Normalized);
 			}
 		}
 
@@ -261,6 +278,15 @@ namespace EchoRenderer.Rendering.Tiles
 
 			public double Max => Math.Max(x, Math.Max(y, z));
 			public double Average => (x + y + z) / 3f;
+
+			public Double3 Normalized
+			{
+				get
+				{
+					double length = Math.Sqrt(x * x + y * y + z * z);
+					return this / Math.Max(length, double.Epsilon);
+				}
+			}
 
 			public static Double3 operator +(Double3 first, Double3 second) => new Double3(first.x + second.x, first.y + second.y, first.z + second.z);
 			public static Double3 operator -(Double3 first, Double3 second) => new Double3(first.x - second.x, first.y - second.y, first.z - second.z);
