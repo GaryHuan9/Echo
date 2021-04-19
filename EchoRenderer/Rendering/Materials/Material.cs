@@ -45,8 +45,9 @@ namespace EchoRenderer.Rendering.Materials
 		public virtual Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => SampleTexture(EmissionMap, Emission, hit.texcoord);
 
 		/// <summary>
-		/// Returns the bidirectional scattering distribution function value of
-		/// this material and outputs the randomly scattered direction.
+		/// Returns the bidirectional scattering distribution function value of this material and outputs the randomly scattered direction.
+		/// NOTE: The returned value/color is (?) the albedo. If <paramref name="direction"/> is zero then the scatter is absorbed,
+		/// and if <paramref name="direction"/> is unchanged from <paramref name="hit.direction"/> then the scatter is passed through.
 		/// </summary>
 		public abstract Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction);
 

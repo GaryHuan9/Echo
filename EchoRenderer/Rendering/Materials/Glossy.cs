@@ -29,7 +29,7 @@ namespace EchoRenderer.Rendering.Materials
 			Float3 normal = (hit.normal + random.NextInSphere(radius)).Normalized;
 
 			direction = hit.direction.Reflect(normal).Normalized;
-			if (direction.Dot(hit.normal) < 0f) return Float3.zero; //Absorbed
+			if (direction.Dot(hit.normal) < 0f) direction = Float3.zero; //Absorbed
 
 			return color;
 		}

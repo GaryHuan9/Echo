@@ -19,11 +19,10 @@ namespace EchoRenderer
 	{
 		static void Main()
 		{
-			DenoiserTesting();
 			// SimplexNoise();
 			// FontTesting();
 
-			return;
+			// return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -38,7 +37,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			// Console.ReadKey();
+			Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
@@ -124,7 +123,13 @@ namespace EchoRenderer
 			}
 			else
 			{
-				postProcess.AddWorker(new Bloom(postProcess));     //Standard render post processing layers
+				if (profile.Method is PathTraceWorker)
+				{
+					postProcess.AddWorker(new DenoiseOidn(postProcess));
+				}
+
+				//Standard render post processing layers
+				postProcess.AddWorker(new Bloom(postProcess));
 				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
 				postProcess.AddWorker(new ColorCorrection(postProcess, 1f));
@@ -141,28 +146,6 @@ namespace EchoRenderer
 
 			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
 			renderEngine = null;
-		}
-
-		static void DenoiserTesting()
-		{
-			Texture2D color = Texture2D.Load("render_bmw_color.fpi");
-			Texture2D albedo = Texture2D.Load("render_bmw_albedo.fpi");
-			Texture2D normal = Texture2D.Load("render_bmw_normal.fpi");
-
-			using var postProcess = new PostProcessingEngine(color);
-
-			postProcess.AddWorker(new DenoiseOidn(postProcess, albedo, normal));
-
-			PerformanceTest test = new PerformanceTest();
-
-			using (test.Start())
-			{
-				postProcess.Dispatch();
-				postProcess.WaitForProcess();
-			}
-
-			color.Save("render.png");
-			DebugHelper.Log(test);
 		}
 
 		static void SimplexNoise()

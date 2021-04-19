@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerables;
-using EchoRenderer.Mathematics;
-using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -16,18 +12,9 @@ namespace EchoRenderer.Rendering.PostProcessing
 	/// </summary>
 	public class DenoiseOidn : PostProcessingWorker
 	{
-		public DenoiseOidn(PostProcessingEngine engine, Texture albedoBuffer, Texture normalBuffer) : base(engine)
-		{
-			this.albedoBuffer = albedoBuffer;
-			this.normalBuffer = normalBuffer;
-		}
+		public DenoiseOidn(PostProcessingEngine engine) : base(engine) { }
 
-		readonly Texture albedoBuffer;
-		readonly Texture normalBuffer;
-
-		Float3[] unmanagedColours; //We use the British spelling here so that all the names line up :D
-		Float3[] unmanagedAlbedos;
-		Float3[] unmanagedNormals;
+		Float3[] colors; //Unmanaged buffer for Oidn
 
 		const string DllPath = "Oidn/bin/OpenImageDenoise.dll";
 
@@ -37,15 +24,11 @@ namespace EchoRenderer.Rendering.PostProcessing
 			using OidnFilter filter = OidnFilter.CreateNew(device);
 
 			Int2 size = renderBuffer.size;
-			int length = size.Product;
+			colors = new Float3[size.Product];
 
-			unmanagedColours = new Float3[length];
-			unmanagedAlbedos = new Float3[length];
-			unmanagedNormals = new Float3[length];
+			RunPass(ForwardPass); //Copies color to unmanaged buffer
 
-			RunPass(ForwardPass); //Copies data to unmanaged buffers
-
-			fixed (Float3* colourPointer = unmanagedColours, albedoPointer = unmanagedAlbedos, normalPointer = unmanagedNormals)
+			fixed (Float3* colourPointer = colors, albedoPointer = renderBuffer.albedos, normalPointer = renderBuffer.normals)
 			{
 				filter.Set("color", colourPointer, size);
 				filter.Set("albedo", albedoPointer, size);
@@ -65,21 +48,14 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void ForwardPass(Int2 position)
 		{
-			Assign(unmanagedColours, renderBuffer);
-			Assign(unmanagedAlbedos, albedoBuffer);
-			Assign(unmanagedNormals, normalBuffer);
-
-			void Assign(Float3[] buffer, Texture texture)
-			{
-				int index = texture.ToIndex(position);
-				buffer[index] = texture[position].XYZ;
-			}
+			int index = renderBuffer.ToIndex(position);
+			colors[index] = renderBuffer[position].XYZ;
 		}
 
 		void BackwardPass(Int2 position)
 		{
 			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
-			Float3 data = unmanagedColours[renderBuffer.ToIndex(position)];
+			Float3 data = colors[renderBuffer.ToIndex(position)];
 
 			target = Vector128.Create(data.x, data.y, data.z, 1f);
 		}

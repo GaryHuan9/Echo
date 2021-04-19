@@ -8,7 +8,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 {
 	public class PostProcessingEngine : IDisposable
 	{
-		public PostProcessingEngine(Texture renderBuffer)
+		public PostProcessingEngine(RenderBuffer renderBuffer)
 		{
 			workThread = new Thread(Work);
 			this.renderBuffer = renderBuffer;
@@ -19,7 +19,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		readonly Thread workThread;
 		readonly object processLocker = new object();
 
-		public readonly Texture renderBuffer;
+		public readonly RenderBuffer renderBuffer;
 		public bool Aborted { get; private set; }
 
 		public void AddWorker(PostProcessingWorker worker)

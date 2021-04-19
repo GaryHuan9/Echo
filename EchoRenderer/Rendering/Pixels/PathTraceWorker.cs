@@ -1,5 +1,4 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
@@ -8,26 +7,47 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public override Float3 Render(Float2 screenUV)
+		public override Sample Render(Float2 screenUV)
 		{
 			PressedScene scene = Profile.scene;
 			Ray ray = scene.camera.GetRay(screenUV);
 
+			ExtendedRandom random = Random;
+			int bounce = 0;
+
 			Float3 energy = Float3.one;
 			Float3 colors = Float3.zero;
 
-			ExtendedRandom random = Random;
-			int bounce = 0;
+			//Auxiliary data
+			Float3 firstAlbedo = Float3.zero;
+			Float3 firstNormal = Float3.zero;
+			bool missingAuxiliary = true;
 
 			while (bounce < Profile.bounceLimit && scene.GetIntersection(ray, out CalculatedHit hit))
 			{
 				++bounce;
 
 				Float3 emission = hit.material.Emit(hit, random);
-				Float3 bsdf = hit.material.BidirectionalScatter(hit, random, out Float3 direction);
+				Float3 albedo = hit.material.BidirectionalScatter(hit, random, out Float3 direction);
+
+				if (HitPassThrough(hit, albedo, direction))
+				{
+					ray = CreateBiasedRay(ray.direction, hit);
+					continue;
+				}
+
+				if (missingAuxiliary)
+				{
+					firstAlbedo = albedo;
+					firstNormal = hit.normal;
+
+					missingAuxiliary = false;
+				}
+
+				if (direction == Float3.zero) albedo = Float3.zero;
 
 				colors += energy * emission;
-				energy *= bsdf;
+				energy *= albedo;
 
 				if (energy <= Profile.energyEpsilon) break;
 				ray = CreateBiasedRay(direction, hit);
@@ -41,18 +61,23 @@ namespace EchoRenderer.Rendering.Pixels
 			var cubemap = scene.cubemap;
 			var lights = scene.lights;
 
-			if (bounce == 0) return colors + cubemap?.Sample(ray.direction) ?? Float3.zero;
 			if (cubemap != null) colors += energy * cubemap.Sample(ray.direction);
 
-			for (int i = 0; i < lights.Count; i++)
+			if (bounce > 0)
 			{
-				PressedLight light = lights[i];
+				//Add light colors if we actually hit some geometry
 
-				float weight = -light.direction.Dot(ray.direction);
-				if (weight > light.threshold) colors += energy * light.intensity * weight;
+				for (int i = 0; i < lights.Count; i++)
+				{
+					PressedLight light = lights[i];
+
+					float weight = -light.direction.Dot(ray.direction);
+					if (weight > light.threshold) colors += energy * light.intensity * weight;
+				}
 			}
+			else firstAlbedo = colors; //No bounce sample do not have albedo so we just use the skybox
 
-			return colors.Max(Float3.zero); //Do not clamp up, because emissive samples can go beyond 1f
+			return new Sample(colors.Max(Float3.zero), firstAlbedo, firstNormal);
 		}
 	}
 }
