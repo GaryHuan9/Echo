@@ -222,12 +222,10 @@ namespace EchoRenderer
 		[Command]
 		static CommandResult SaveRenderBuffer()
 		{
-			Texture buffer = renderEngine.Profile.RenderBuffer;
-
+			RenderBuffer buffer = renderEngine.Profile.RenderBuffer;
 			if (buffer == null) return new CommandResult("No buffer assigned", false);
-			if (buffer is not Texture2D texture) return new CommandResult("Unsupported buffer type", false);
 
-			texture.Save("render.png");
+			buffer.Save("render.png");
 			return new CommandResult("Render buffer saved.", true);
 		}
 	}
