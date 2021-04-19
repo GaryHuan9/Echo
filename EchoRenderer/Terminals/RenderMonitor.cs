@@ -122,7 +122,7 @@ namespace EchoRenderer.Terminals
 			numbers[0] = Engine.CompletedTileCount;
 			numbers[1] = Engine.CompletedPixel;
 			numbers[2] = Engine.CompletedSample;
-			numbers[3] = Engine.CurrentProfile.scene.IntersectionPerformed;
+			numbers[3] = Engine.CurrentProfile.scene.Intersections;
 
 			for (int x = 1; x < gridSize.x; x++)
 			{

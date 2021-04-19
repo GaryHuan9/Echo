@@ -2,6 +2,9 @@
 
 namespace EchoRenderer.Textures
 {
+	/// <summary>
+	/// A regular <see cref="Texture2D"/> with albedo and normal auxiliary data.
+	/// </summary>
 	public class RenderBuffer : Texture2D
 	{
 		public RenderBuffer(Int2 size) : base(size)
