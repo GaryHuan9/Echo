@@ -17,7 +17,7 @@ namespace EchoRenderer.Rendering.Pixels
 			Interlocked.Exchange(ref totalSample, 0);
 		}
 
-		public override Float3 Render(Float2 screenUV)
+		public override Sample Render(Float2 screenUV)
 		{
 			PressedScene scene = Profile.scene;
 			Ray ray = scene.camera.GetRay(screenUV);

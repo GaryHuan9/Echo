@@ -14,7 +14,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		}
 
 		public readonly PostProcessingEngine engine;
-		protected readonly Texture renderBuffer;
+		protected readonly RenderBuffer renderBuffer;
 
 		public bool Aborted => engine.Aborted;
 
