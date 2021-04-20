@@ -95,9 +95,9 @@ namespace EchoRenderer
 			};
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceFastProfile;           //Selects or creates render profile
+			RenderProfile profile = pathTraceExportProfile;           //Selects or creates render profile
 
-			profile.Scene = new LightedBMWScene(); //Creates/loads scene to render
+			profile.Scene = new TestMaterials(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
@@ -125,7 +125,7 @@ namespace EchoRenderer
 			{
 				if (profile.Method is PathTraceWorker)
 				{
-					postProcess.AddWorker(new DenoiseOidn(postProcess));
+					// postProcess.AddWorker(new DenoiseOidn(postProcess));
 				}
 
 				//Standard render post processing layers
