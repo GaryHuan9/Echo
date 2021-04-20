@@ -1,4 +1,6 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System.Runtime.Intrinsics;
+using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Textures
 {
@@ -21,6 +23,24 @@ namespace EchoRenderer.Textures
 
 		public void SetAlbedo(Int2 position, Float3 value) => albedos[ToIndex(position)] = value;
 		public void SetNormal(Int2 position, Float3 value) => normals[ToIndex(position)] = value;
+
+		public Texture2D CreateAlbedoTexture() => CreateTexture(albedos);
+
+		public Texture2D CreateNormalTexture() => CreateTexture(normals);
+
+		Texture2D CreateTexture(Float3[] data)
+		{
+			Texture2D texture = new Texture2D(size);
+			texture.Foreach(SetPixel);
+
+			return texture;
+
+			void SetPixel(Int2 position)
+			{
+				ref Vector128<float> target = ref texture.GetPixel(position);
+				target = Utilities.ToVector(Utilities.ToColor(data[ToIndex(position)]));
+			}
+		}
 
 		//TODO: add serialization methods
 	}
