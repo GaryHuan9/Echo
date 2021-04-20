@@ -92,7 +92,34 @@ namespace EchoRenderer.Objects.Scenes
 		}
 	}
 
-	public class TestMaterials : Scene { }
+
+	public class TestMaterials : Scene
+	{
+		public TestMaterials()
+		{
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+			children.Add(new Camera(90f) {Position = new Float3(0f, 3f, -5f), Rotation = new Float3(15f, 0f, 0f)});
+
+			Simplex2D simplex = new Simplex2D((Int2)2048, 42, 4)
+								{
+									Tiling = (Float2)1f,
+									Offset = (Float2)1f
+								};
+
+			simplex.Bake();
+
+			Material floor = new Glossy {Albedo = Float3.one, AlbedoMap = simplex, Smoothness = 0.2f, SmoothnessMap = simplex};
+
+			children.Add(new BoxObject(floor, new Float3(24f, 0.01f, 16f)));
+
+			children.Add(new SphereObject(new Diffuse {Albedo = (Float3)0.9f}, 1f) {Position = new Float3(0f, 1f, 2f)});
+			// children.Add(new SphereObject(new Glossy {Albedo = (Float3)0.7f, Smoothness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
+			children.Add(new SphereObject(new Glass {Albedo = (Float3)0.9f, IndexOfRefraction = 1.5f, Roughness = 0.5f}, 1f) {Position = new Float3(2f, 1f, 2f)});
+			children.Add(new SphereObject(new Glass {Albedo = (Float3)0.9f, IndexOfRefraction = 1.5f}, 1f) {Position = new Float3(-2f, 1f, 2f)});
+
+			// children.Add(new PlaneObject(new Diffuse {Albedo = (Float3)0.9f}, new Float2(24f, 16f)) {Position = new Float3(0f, 0f, 0f)});
+		}
+	}
 
 	public class TestInstancing : Scene
 	{
