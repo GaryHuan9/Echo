@@ -10,7 +10,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 	{
 		public Bloom(PostProcessingEngine engine, float strength = 1f, float threshold = 1f) : base(engine)
 		{
-			deviation = strength * renderBuffer.size.x / 60f;
+			deviation = strength * renderBuffer.size.x / 64f;
 			this.threshold = threshold;
 		}
 

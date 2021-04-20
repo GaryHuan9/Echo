@@ -18,6 +18,10 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		public bool Aborted => engine.Aborted;
 
+		/// <summary>
+		/// Executes this worker's passes on <see cref="renderBuffer"/>. The worker should not assume the alpha
+		/// channel on<see cref="renderBuffer"/> is 1f and also do not have to assign 1f to the final buffer.
+		/// </summary>
 		public abstract void Dispatch();
 
 		public void RunPass(PassAction passAction, Texture buffer = null)
