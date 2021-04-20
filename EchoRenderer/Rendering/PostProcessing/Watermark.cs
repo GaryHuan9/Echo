@@ -9,6 +9,9 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
+	/// <summary>
+	/// Stamps a <see cref="EchoRenderer"/> watermark on the bottom right corner of the image.
+	/// </summary>
 	public class Watermark : PostProcessingWorker
 	{
 		public Watermark(PostProcessingEngine engine) : base(engine) { }
