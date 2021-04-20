@@ -37,7 +37,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			Console.ReadKey();
+			// Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
@@ -94,8 +94,8 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceExportProfile;           //Selects or creates render profile
+			RenderBuffer buffer = new RenderBuffer(resolutions[2]); //Selects resolution and create buffer
+			RenderProfile profile = pathTraceProfile;               //Selects or creates render profile
 
 			profile.Scene = new TestMaterials(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
@@ -125,7 +125,7 @@ namespace EchoRenderer
 			{
 				if (profile.Method is PathTraceWorker)
 				{
-					// postProcess.AddWorker(new DenoiseOidn(postProcess));
+					postProcess.AddWorker(new DenoiseOidn(postProcess));
 				}
 
 				//Standard render post processing layers
