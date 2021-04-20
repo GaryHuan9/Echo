@@ -4,9 +4,9 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
-	public class ColorCorrection : PostProcessingWorker
+	public class ToneMapping : PostProcessingWorker
 	{
-		public ColorCorrection(PostProcessingEngine engine, float smoothness) : base(engine) => smoothnessVector = Vector128.Create(smoothness);
+		public ToneMapping(PostProcessingEngine engine, float smoothness) : base(engine) => smoothnessVector = Vector128.Create(smoothness);
 
 		readonly Vector128<float> smoothnessVector;
 
@@ -14,12 +14,9 @@ namespace EchoRenderer.Rendering.PostProcessing
 		static readonly Vector128<float> oneVector = Vector128.Create(1f);
 		static readonly Vector128<float> halfVector = Vector128.Create(0.5f);
 
-		public override void Dispatch()
-		{
-			RunPass(GammaCorrectPass);
-		}
+		public override void Dispatch() => RunPass(MainPass);
 
-		unsafe void GammaCorrectPass(Int2 position) //https://www.desmos.com/calculator/v9a3uscr8c
+		void MainPass(Int2 position) //https://www.desmos.com/calculator/v9a3uscr8c
 		{
 			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
 
@@ -29,10 +26,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 			h = Sse.Min(Sse.Max(h, zeroVector), oneVector);
 
 			Vector128<float> b = Sse.Subtract(Sse.Subtract(target, oneVector), smoothnessVector);
-			Vector128<float> result = Sse.Add(Sse.Multiply(Sse.Add(b, Sse.Multiply(smoothnessVector, h)), h), oneVector);
-
-			*((float*)&result + 3) = 1f; //Set alpha to one
-			target = result;
+			target = Sse.Add(Sse.Multiply(Sse.Add(b, Sse.Multiply(smoothnessVector, h)), h), oneVector);
 		}
 	}
 }
