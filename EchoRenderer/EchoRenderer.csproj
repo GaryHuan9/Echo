@@ -23,10 +23,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="Oidn\bin\tbb12.dll">
+      <None Update="Oidn\OpenImageDenoise.dll">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Oidn\bin\OpenImageDenoise.dll">
+      <None Update="Oidn\tbb12.dll">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
     </ItemGroup>
