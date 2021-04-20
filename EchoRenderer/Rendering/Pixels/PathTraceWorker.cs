@@ -55,7 +55,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 #if DEBUG
 			//The bounce limit is supposed to be significantly higher than the average bounce count
-			if (bounce >= Profile.bounceLimit) DebugHelper.Log("Bounce limit reached!");
+			if (bounce >= Profile.bounceLimit) CodeHelpers.Diagnostics.DebugHelper.Log("Bounce limit reached!");
 #endif
 
 			var cubemap = scene.cubemap;

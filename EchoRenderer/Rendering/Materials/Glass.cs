@@ -28,6 +28,8 @@ namespace EchoRenderer.Rendering.Materials
 			randomRadius = RoughnessToRandomRadius(Roughness);
 		}
 
+		//Equations based from: https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
+
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
 			if (AlphaTest(hit, out Float3 color, out direction)) return Float3.one;
