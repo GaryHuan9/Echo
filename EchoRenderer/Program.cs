@@ -97,7 +97,7 @@ namespace EchoRenderer
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
 			RenderProfile profile = pathTraceFastProfile;           //Selects or creates render profile
 
-			profile.Scene = new GridMaterialBallScene(); //Creates/loads scene to render
+			profile.Scene = new BallRoom(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};

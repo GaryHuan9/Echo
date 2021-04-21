@@ -26,13 +26,8 @@ namespace EchoRenderer.Textures.Cubemaps
 
 		float GetPercent(in Float3 direction)
 		{
-			if (Angular)
-			{
-				float angle = Float3.Angle(Float3.down, direction);
-				return angle * Scalars.RadianToDegree / 180f;
-			}
-
-			return direction.y / 2f + 0.5f;
+			if (!Angular) return direction.y / 2f + 0.5f;
+			return Float3.Angle(Float3.down, direction) / 180f;
 		}
 	}
 }
