@@ -54,6 +54,8 @@ namespace EchoRenderer.Objects
 				return new Ray(Position, direction.Normalized);
 			}
 
+			//With randomized origin to add depth of field
+
 			Float3 origin = random.NextFloat2(-Aperture, Aperture).XY_;
 			direction = direction.Normalized * FocalLength - origin;
 
