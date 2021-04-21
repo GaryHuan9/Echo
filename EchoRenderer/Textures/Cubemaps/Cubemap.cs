@@ -1,6 +1,6 @@
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.Cubemaps
 {
 	public abstract class Cubemap
 	{
@@ -8,6 +8,6 @@ namespace EchoRenderer.Textures
 		/// Samples the <see cref="Cubemap"/> at a particular <paramref name="direction"/>.
 		/// NOTE: <paramref name="direction"/> should be normalized.
 		/// </summary>
-		public abstract Float3 Sample(Float3 direction);
+		public abstract Float3 Sample(in Float3 direction);
 	}
 }

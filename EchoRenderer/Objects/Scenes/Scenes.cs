@@ -9,6 +9,7 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.Cubemaps;
 
 namespace EchoRenderer.Objects.Scenes
 {
@@ -62,6 +63,9 @@ namespace EchoRenderer.Objects.Scenes
 
 			camera.LookAt(Float3.zero);
 			children.Add(camera);
+
+			camera.Aperture = 0.05f;
+			camera.FocalLength = 9f;
 		}
 	}
 
@@ -187,7 +191,7 @@ namespace EchoRenderer.Objects.Scenes
 			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			var materials = new MaterialLibrary("Assets/Models/BlenderBMW/BlenderBMW.mat");
 
-			Cubemap = new SolidCubemap((Float3)0.2f);
+			Cubemap = new GradientCubemap(new Gradient {{0f, Utilities.ToColor(0.15f)}, {1f, Utilities.ToColor(0.25f)}});
 
 			children.Add(new MeshObject(mesh, materials) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 
