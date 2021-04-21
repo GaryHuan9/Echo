@@ -27,6 +27,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 			Vector128<float> b = Sse.Subtract(Sse.Subtract(target, oneVector), smoothnessVector);
 			target = Sse.Add(Sse.Multiply(Sse.Add(b, Sse.Multiply(smoothnessVector, h)), h), oneVector);
+
+			// target = Sse.Sqrt(target);
 		}
 	}
 }

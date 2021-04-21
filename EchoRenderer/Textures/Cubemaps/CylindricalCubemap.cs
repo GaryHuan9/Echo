@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.Cubemaps
 {
 	public class CylindricalCubemap : Cubemap
 	{
@@ -9,12 +9,12 @@ namespace EchoRenderer.Textures
 
 		readonly Texture2D texture;
 
-		public override Float3 Sample(Float3 direction) => texture
+		public override Float3 Sample(in Float3 direction) => texture
 		[
 			new Float2
 			(
-				(float)Math.Atan2(direction.x, -direction.z) / -Scalars.PI * 0.5f,
-				(float)Math.Acos(direction.y) / -Scalars.PI
+				MathF.Atan2(direction.x, -direction.z) / -Scalars.PI * 0.5f,
+				MathF.Acos(direction.y) / -Scalars.PI
 			)
 		].XYZ;
 	}

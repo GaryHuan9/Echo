@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.Cubemaps
 {
 	public class SolidCubemap : Cubemap
 	{
@@ -9,6 +9,6 @@ namespace EchoRenderer.Textures
 
 		public readonly Float3 ambient;
 
-		public override Float3 Sample(Float3 direction) => ambient;
+		public override Float3 Sample(in Float3 direction) => ambient;
 	}
 }

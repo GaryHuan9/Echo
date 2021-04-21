@@ -3,6 +3,7 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.Cubemaps;
 
 namespace EchoRenderer.Objects.Scenes
 {

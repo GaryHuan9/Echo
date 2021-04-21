@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Objects
@@ -20,21 +21,47 @@ namespace EchoRenderer.Objects
 			set
 			{
 				fieldOfView = value;
-				fieldDistance = 0.5f / (float)Math.Tan(value / 2f * Scalars.DegreeToRadian);
+				fieldDistance = 0.5f / MathF.Tan(value / 2f * Scalars.DegreeToRadian);
 			}
 		}
+
+		/// <summary>
+		/// The distance at which the image should be fully sharp.
+		/// NOTE: This only affects depth of field.
+		/// </summary>
+		public float FocalLength { get; set; } = 12f;
+
+		/// <summary>
+		/// The intensity of the depth of field blur.
+		/// NOTE: This only affects depth of field.
+		/// </summary>
+		public float Aperture { get; set; } = 0f;
 
 		/// <summary>
 		/// Returns a ray emitted from the camera at <paramref name="uv"/>.
 		/// </summary>
 		/// <param name="uv">X component from -0.5 to 0.5; Y component an aspect radio corrected version of X.</param>
-		public Ray GetRay(Float2 uv) => new Ray(Position, GetDirection(uv));
+		/// <param name="random">An RNG used for depth of field. Can be null if no DoF is wanted.</param>
+		public Ray GetRay(Float2 uv, ExtendedRandom random = null)
+		{
+			Float3 direction = uv.CreateXY(fieldDistance);
 
-		/// <summary>
-		/// Returns the direction of ray emitted from camera at <paramref name="uv"/>.
-		/// </summary>
-		/// <param name="uv">X component from -0.5 to 0.5; Y component an aspect radio corrected version of X.</param>
-		public Float3 GetDirection(Float2 uv) => LocalToWorld.MultiplyDirection(uv.CreateXY(fieldDistance)).Normalized;
+			if (Scalars.AlmostEquals(Aperture, 0f) || random == null)
+			{
+				//No depth of field
+
+				direction = LocalToWorld.MultiplyDirection(direction);
+				return new Ray(Position, direction.Normalized);
+			}
+
+			Float3 origin = random.NextFloat2(-Aperture, Aperture).XY_;
+			direction = direction.Normalized * FocalLength - origin;
+
+			origin = LocalToWorld.MultiplyPoint(origin);
+			direction = LocalToWorld.MultiplyDirection(direction);
+
+			return new Ray(origin, direction.Normalized);
+		}
 
 		public void LookAt(Object target) => LookAt(target.Position);
 
