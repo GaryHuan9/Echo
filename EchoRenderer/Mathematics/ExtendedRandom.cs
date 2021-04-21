@@ -12,6 +12,10 @@ namespace EchoRenderer.Mathematics
 		public float NextFloat(float max) => NextFloat() * max;
 		public float NextFloat(float min, float max) => NextFloat(max - min) + min;
 
+		public Float2 NextFloat2() => new Float2(NextFloat(), NextFloat());
+		public Float2 NextFloat2(float max) => new Float2(NextFloat(max), NextFloat(max));
+		public Float2 NextFloat2(float min, float max) => new Float2(NextFloat(min, max), NextFloat(min, max));
+
 		public Float3 NextFloat3() => new Float3(NextFloat(), NextFloat(), NextFloat());
 		public Float3 NextFloat3(float max) => new Float3(NextFloat(max), NextFloat(max), NextFloat(max));
 		public Float3 NextFloat3(float min, float max) => new Float3(NextFloat(min, max), NextFloat(min, max), NextFloat(min, max));
