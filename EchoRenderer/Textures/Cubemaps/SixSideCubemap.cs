@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.Cubemaps
 {
 	public class SixSideCubemap : Cubemap
 	{
@@ -42,7 +42,7 @@ namespace EchoRenderer.Textures
 
 		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new ReadOnlyCollection<string>(new[] {"px", "py", "pz", "nx", "ny", "nz"});
 
-		public override Float3 Sample(Float3 direction)
+		public override Float3 Sample(in Float3 direction)
 		{
 			int index = direction.Absoluted.MaxIndex;
 

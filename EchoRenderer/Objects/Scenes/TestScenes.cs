@@ -5,9 +5,19 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.Cubemaps;
 
 namespace EchoRenderer.Objects.Scenes
 {
+	public class TestScene : Scene
+	{
+		public TestScene()
+		{
+			children.Add(new SphereObject(new Diffuse {Albedo = Float3.one}, 1f));
+			children.Add(new Camera(90f) {Position = new Float3(0f, 0f, -3f)});
+		}
+	}
+
 	public class TestLighting : StandardScene
 	{
 		public TestLighting()
