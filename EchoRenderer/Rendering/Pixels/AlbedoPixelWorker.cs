@@ -16,10 +16,9 @@ namespace EchoRenderer.Rendering.Pixels
 			while (scene.GetIntersection(ray, out CalculatedHit hit))
 			{
 				Float3 albedo = hit.material.BidirectionalScatter(hit, random, out Float3 direction);
-				if (HitPassThrough(hit, albedo, direction)) return new Sample(albedo, albedo, hit.normal);
 
-				//Continue forward if material did not alter direction
-				ray = CreateBiasedRay(ray.direction, hit);
+				if (HitPassThrough(hit, albedo, direction)) ray = CreateBiasedRay(ray.direction, hit);
+				else return new Sample(albedo, albedo, hit.normal); //Return intersected albedo color
 			}
 
 			return scene.cubemap?.Sample(ray.direction) ?? Float3.zero;
