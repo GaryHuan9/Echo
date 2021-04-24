@@ -95,7 +95,7 @@ namespace EchoRenderer
 			};
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceFastProfile;           //Selects or creates render profile
+			RenderProfile profile = pathTraceExportProfile;         //Selects or creates render profile
 
 			profile.Scene = new BallRoom(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
@@ -129,10 +129,10 @@ namespace EchoRenderer
 				}
 
 				//Standard render post processing layers
-				postProcess.AddWorker(new Bloom(postProcess, 0.5f, 1f));
-				postProcess.AddWorker(new ToneMapping(postProcess, 1f, 1f));
-				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
+				postProcess.AddWorker(new Bloom(postProcess, 0.01f, 1f));
+				postProcess.AddWorker(new ToneMapping(postProcess, 2.2f, 1f));
 				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
+				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 			}
 
 			postProcess.AddWorker(new OutputBarrier(postProcess));

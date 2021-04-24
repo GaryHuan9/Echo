@@ -18,10 +18,10 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		static readonly Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
 
-		Texture sourceBuffer;
+		Texture2D workerBuffer;
 		double luminance;
 
-		Crop2D cropSource;
+		Crop2D cropWorker;
 		Crop2D cropTarget;
 
 		Vector128<float> tintVector;
@@ -38,8 +38,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public override void Dispatch()
 		{
 			//Allocate resources for full buffer Gaussian blur
-			sourceBuffer = new Texture2D(renderBuffer.size) {Wrapper = Wrapper.clamp};
-			var blur = new GaussianBlur(this, sourceBuffer) {Deviation = BlurDeviation};
+			workerBuffer = new Texture2D(renderBuffer.size) {Wrapper = Wrapper.clamp};
+			var blur = new GaussianBlur(this, workerBuffer) {Deviation = BlurDeviation};
 
 			//Find size and position
 			float height = GetHeight();
@@ -52,22 +52,21 @@ namespace EchoRenderer.Rendering.PostProcessing
 			Int2 max = (position + size / 2f).Ceiled + Int2.one;
 
 			//Run watermark stamping passes
-			cropSource = new Crop2D(sourceBuffer, min, max);
+			cropWorker = new Crop2D(workerBuffer, min, max);
 			cropTarget = new Crop2D(renderBuffer, min, max);
 
-			RunCopyPass(renderBuffer, sourceBuffer); //Copies buffer
-			RunPass(LuminancePass, cropSource);      //Grabs luminance
+			RunCopyPass(renderBuffer, workerBuffer); //Copies buffer
+			RunPass(LuminancePass, cropWorker);      //Grabs luminance
 
-			luminance /= cropSource.size.Product;
+			luminance /= cropWorker.size.Product;
 
 			blur.Run(); //Run Gaussian blur
 
 			bool lightMode = luminance > LuminanceThreshold;
-			float tint = lightMode ? BackgroundTint : -BackgroundTint;
+			float tint = lightMode ? 1f + BackgroundTint : 1f - BackgroundTint;
 
-			tintVector = Vector128.Create(tint, tint, tint, 0f);
-
-			RunPass(TintPass, cropSource); //Copies buffer
+			tintVector = Vector128.Create(tint);
+			RunPass(TintPass, cropWorker); //Copies buffer
 
 			//Write label
 			Float4 fontColor = Utilities.ToColor(lightMode ? 0f : 1f);
@@ -78,16 +77,16 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void LuminancePass(Int2 position)
 		{
-			ref Vector128<float> source = ref cropSource.GetPixel(position);
+			ref Vector128<float> source = ref cropWorker.GetPixel(position);
 			InterlockedHelper.Add(ref luminance, Utilities.GetLuminance(source));
 		}
 
 		void TintPass(Int2 position)
 		{
-			ref Vector128<float> source = ref cropSource.GetPixel(position);
+			ref Vector128<float> source = ref cropWorker.GetPixel(position);
 			ref Vector128<float> target = ref cropTarget.GetPixel(position);
 
-			target = Sse.Add(source, tintVector);
+			target = Sse.Multiply(source, tintVector);
 		}
 
 		float GetHeight()
