@@ -4,6 +4,8 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
@@ -167,7 +169,11 @@ namespace EchoRenderer.IO
 			public PropertyInfo Property { get; set; }
 			public Material Target { get; set; }
 
-			public void Operate() => Property.SetValue(Target, Texture2D.Load(path));
+			public void Operate()
+			{
+				bool normal = Property.Name.Contains("normal", StringComparison.InvariantCultureIgnoreCase);
+				Property.SetValue(Target, Texture2D.Load(path, !normal)); //Special case for normal maps to not use sRGB
+			}
 		}
 	}
 }

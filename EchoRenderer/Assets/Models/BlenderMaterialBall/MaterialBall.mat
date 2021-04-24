@@ -1,5 +1,5 @@
 ﻿declare Diffuse Core
-Albedo 0.9055 0.2863 0.3282
+Albedo 0.0250 0.1416 0.3736
 
 declare Glass Solid
 Albedo 0.940 0.940 0.960

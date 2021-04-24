@@ -2,5 +2,5 @@
 # yeah ignore these
 
 declare Glossy Material
-Albedo 1.000 0.766 0.336
-Smoothness 0.8
+Albedo 0.800 0.566 0.136
+Smoothness 0.85

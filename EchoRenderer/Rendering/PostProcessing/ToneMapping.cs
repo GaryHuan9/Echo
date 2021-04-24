@@ -6,8 +6,13 @@ namespace EchoRenderer.Rendering.PostProcessing
 {
 	public class ToneMapping : PostProcessingWorker
 	{
-		public ToneMapping(PostProcessingEngine engine, float smoothness) : base(engine) => smoothnessVector = Vector128.Create(smoothness);
+		public ToneMapping(PostProcessingEngine engine, float exposure, float smoothness) : base(engine)
+		{
+			exposureVector = Vector128.Create(exposure);
+			smoothnessVector = Vector128.Create(smoothness);
+		}
 
+		readonly Vector128<float> exposureVector;
 		readonly Vector128<float> smoothnessVector;
 
 		static readonly Vector128<float> zeroVector = Vector128.Create(0f);
@@ -20,6 +25,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 		{
 			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
 
+			target = Sse.Multiply(target, exposureVector);
+
 			Vector128<float> a = Sse.Divide(Sse.Subtract(target, oneVector), smoothnessVector);
 			Vector128<float> h = Sse.Subtract(halfVector, Sse.Multiply(halfVector, a));
 
@@ -27,8 +34,6 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 			Vector128<float> b = Sse.Subtract(Sse.Subtract(target, oneVector), smoothnessVector);
 			target = Sse.Add(Sse.Multiply(Sse.Add(b, Sse.Multiply(smoothnessVector, h)), h), oneVector);
-
-			// target = Sse.Sqrt(target);
 		}
 	}
 }

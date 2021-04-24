@@ -129,8 +129,8 @@ namespace EchoRenderer
 				}
 
 				//Standard render post processing layers
-				postProcess.AddWorker(new Bloom(postProcess));
-				postProcess.AddWorker(new ToneMapping(postProcess, 1f));
+				postProcess.AddWorker(new Bloom(postProcess, 0.5f, 1f));
+				postProcess.AddWorker(new ToneMapping(postProcess, 1f, 1f));
 				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
 			}

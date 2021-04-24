@@ -6,6 +6,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
@@ -32,7 +34,7 @@ namespace EchoRenderer.Textures
 		const string FloatingPointImageExtension = ".fpi";
 		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
 
-		public void Save(string relativePath)
+		public void Save(string relativePath, bool sRGB = true)
 		{
 			//Get path
 			string extension = Path.GetExtension(relativePath);
@@ -65,19 +67,21 @@ namespace EchoRenderer.Textures
 
 			unsafe
 			{
-				byte* pointer = (byte*)bits.Scan0;
-				if (pointer == null) throw ExceptionHelper.NotPossible;
+				byte* origin = (byte*)bits.Scan0;
+				Parallel.For(0, length, SaveARGB);
 
-				for (int i = 0; i < length; i++)
+				void SaveARGB(int index)
 				{
-					Color32 color = (Color32)Utilities.ToFloat4(ref this[i]);
+					Vector128<float> vector = this[index];
+					if (sRGB) vector = Sse.Sqrt(vector);
+
+					byte* pointer = origin + index * 4;
+					Color32 color = (Color32)Utilities.ToFloat4(ref vector);
 
 					pointer[0] = color.b;
 					pointer[1] = color.g;
 					pointer[2] = color.r;
 					pointer[3] = color.a;
-
-					pointer += 4;
 				}
 			}
 
@@ -85,7 +89,7 @@ namespace EchoRenderer.Textures
 			bitmap.Save(path, compatibleFormats[extensionIndex]);
 		}
 
-		public static Texture2D Load(string path)
+		public static Texture2D Load(string path, bool sRGB = true)
 		{
 			path = ((Texture2D)white).GetAbsolutePath(path);
 
@@ -102,34 +106,43 @@ namespace EchoRenderer.Textures
 
 			unsafe
 			{
-				byte* pointer = (byte*)data.Scan0;
-				if (pointer == null) throw ExceptionHelper.NotPossible;
+				byte* origin = (byte*)data.Scan0;
 
 				switch (Image.GetPixelFormatSize(format))
 				{
 					case 24:
 					{
-						for (int i = 0; i < texture.length; i++)
-						{
-							Float4 pixel = (Float4)new Color32(pointer[2], pointer[1], pointer[0]);
-
-							texture[i] = Utilities.ToVector(pixel.Replace(3, 1f));
-							pointer += 3;
-						}
-
+						Parallel.For(0, texture.length, LoadRGB);
 						break;
 					}
 					case 32:
 					{
-						for (int i = 0; i < texture.length; i++)
-						{
-							texture[i] = Utilities.ToVector((Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]));
-							pointer += 4;
-						}
-
+						Parallel.For(0, texture.length, LoadARGB);
 						break;
 					}
 					default: throw ExceptionHelper.Invalid(nameof(format), format, "is not an acceptable format!");
+				}
+
+				void LoadRGB(int index)
+				{
+					ref var target = ref texture[index];
+					byte* pointer = origin + 3 * index;
+
+					Color32 pixel = new Color32(pointer[2], pointer[1], pointer[0]);
+					Vector128<float> vector = Utilities.ToVector((Float4)pixel);
+
+					target = sRGB ? Sse.Multiply(vector, vector) : vector;
+				}
+
+				void LoadARGB(int index)
+				{
+					ref var target = ref texture[index];
+					byte* pointer = origin + 4 * index;
+
+					Color32 pixel = new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
+					Vector128<float> vector = Utilities.ToVector((Float4)pixel);
+
+					target = sRGB ? Sse.Multiply(vector, vector) : vector;
 				}
 			}
 

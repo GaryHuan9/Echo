@@ -13,14 +13,15 @@ declare Diffuse BMWWhite
 Albedo 0.900 0.900 0.900
 
 declare Glossy BlackPlastic
-Albedo 0.253465 0.253465 0.253465
-Smoothness 0.22500
+Albedo 0.153465 0.153465 0.153465
+Smoothness 0.205
 
-declare Diffuse Brake
-Albedo 0.071850 0.071850 0.071850
+declare Glossy Brake
+Albedo 0.171850 0.171850 0.171850
+Smoothness 0.1
 
 declare Glossy CarShellNew
-Albedo 0.94467 0.614926 0.528900
+Albedo 0.77467 0.364926 0.298900
 Smoothness 0.27500
 
 declare Glossy Chrome
@@ -28,36 +29,35 @@ Albedo 0.892533 0.892533 0.892533
 Smoothness 0.35500
 
 declare Glossy ChromeMatte
-Albedo 0.922966 0.922966 0.922966
-Smoothness 0.22500
+Albedo 0.622966 0.622966 0.622966
+Smoothness 0.82500
 
 declare Glass Glass
 Albedo 0.850 0.850 0.850
 IndexOfRefraction 1.540000
 
 declare Emissive HeadLightAngelEye
-Albedo 1.000000 0.746625 0.500000
 Emission 1.000000 0.746625 0.500000
 
 # the emissive glass light
 declare Emissive HeadLightGlass
-Albedo 0.787412 0.861383 1.000000
 Emission 7.874120 8.613830 10.00000
 
 declare Glossy HeadlightChrome
-Albedo 0.933105 0.933105 0.933105
-Smoothness 0.22500
+Albedo 0.733105 0.733105 0.733105
+Smoothness 0.31500
 
 # the covering glass
 declare Glass HeadlightGlass
 IndexOfRefraction 1.350000
-Albedo 0.950000 0.950000 0.950000
+Roughness 0.1
+Albedo 0.90 0.90 0.90
 
 declare Diffuse HeadlightMatte
 Albedo 0.800 0.800 0.800
 
 declare Diffuse Interior
-Albedo 0.6055 0.1863 0.2082
+Albedo 0.011 0.11 0.12
 
 declare Glossy Material
 Albedo 0.632868 0.509193 0.506072
@@ -73,4 +73,4 @@ declare Diffuse Tailight
 Albedo 0.100000 0.208831 0.200000
 
 declare Diffuse TireRubber
-Albedo 0.133105 0.133105 0.156232
+Albedo 0.033105 0.033105 0.046232
