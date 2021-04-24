@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Textures;
@@ -8,24 +9,25 @@ namespace EchoRenderer.Rendering.PostProcessing
 {
 	public class Bloom : PostProcessingWorker
 	{
-		public Bloom(PostProcessingEngine engine, float strength = 1f, float threshold = 1f) : base(engine)
+		public Bloom(PostProcessingEngine engine, float intensity, float threshold) : base(engine)
 		{
-			deviation = strength * renderBuffer.size.x / 64f;
+			intensityVector = Vector128.Create(intensity);
+			deviation = renderBuffer.size.x / 64f;
 			this.threshold = threshold;
 		}
+
+		readonly Vector128<float> intensityVector;
 
 		readonly float deviation;
 		readonly float threshold;
 
-		Texture sourceBuffer;
-
-		static readonly Vector128<float> zeroVector = Vector128.Create(0f, 0f, 0f, 1f);
+		Texture2D workerBuffer;
 
 		public override void Dispatch()
 		{
 			//Allocate blur resources
-			sourceBuffer = new Texture2D(renderBuffer.size);
-			var blur = new GaussianBlur(this, sourceBuffer)
+			workerBuffer = new Texture2D(renderBuffer.size);
+			var blur = new GaussianBlur(this, workerBuffer)
 					   {
 						   Quality = 6,
 						   Deviation = deviation
@@ -44,21 +46,20 @@ namespace EchoRenderer.Rendering.PostProcessing
 		void LuminancePass(Int2 position)
 		{
 			ref Vector128<float> source = ref renderBuffer.GetPixel(position);
-			ref Vector128<float> target = ref sourceBuffer.GetPixel(position);
+			ref Vector128<float> target = ref workerBuffer.GetPixel(position);
 
 			float luminance = Utilities.GetLuminance(source);
-			target = luminance < threshold ? zeroVector : source;
+
+			if (luminance < threshold) target = Vector128<float>.Zero;
+			else target = Sse.Multiply(source, intensityVector);
 		}
 
-		unsafe void CombinePass(Int2 position)
+		void CombinePass(Int2 position)
 		{
-			ref Vector128<float> source = ref sourceBuffer.GetPixel(position);
+			ref Vector128<float> source = ref workerBuffer.GetPixel(position);
 			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
 
-			Vector128<float> result = Sse.Add(target, source);
-			*((float*)&result + 3) = 1f; //Assign alpha
-
-			target = result;
+			target = Sse.Add(target, source);
 		}
 	}
 }
