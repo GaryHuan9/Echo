@@ -9,14 +9,14 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public BallRoom()
 		{
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)16f);
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)0.15f);
 
 			var mesh = new Mesh("Assets/Models/Excluded/BallRoom/ballRoom.obj");
 			var materials = new MaterialLibrary("Assets/Models/Excluded/BallRoom/ballRoom.mat");
 
 			children.Add(new MeshObject(mesh, materials));
 
-			children.Add(new Camera(90f) {Position = new Float3(3f, 2f, -10f), Rotation = new Float3(10f, 0f, 0f)});
+			children.Add(new Camera(90f) {Position = new Float3(2.2f, 1.7f, -6.9f), Rotation = new Float3(-2f, 76f, 0f)});
 		}
 	}
 }

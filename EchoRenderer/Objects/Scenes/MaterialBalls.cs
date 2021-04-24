@@ -14,7 +14,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public SingleMaterialBall() : base(new Glossy {Albedo = new Float3(0.78f, 0.76f, 0.79f), Smoothness = 0.74f})
 		{
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.2f);
+			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 
 			var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
 			var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");
