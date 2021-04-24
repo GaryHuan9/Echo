@@ -1,4 +1,5 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System;
+using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
@@ -27,6 +28,16 @@ namespace EchoRenderer.Textures
 		public Texture2D CreateAlbedoTexture() => CreateTexture(albedos);
 
 		public Texture2D CreateNormalTexture() => CreateTexture(normals);
+
+		public override void CopyFrom(Texture texture)
+		{
+			base.CopyFrom(texture);
+
+			if (texture is not RenderBuffer buffer) return;
+
+			Array.Copy(buffer.albedos, albedos, length);
+			Array.Copy(buffer.normals, normals, length);
+		}
 
 		Texture2D CreateTexture(Float3[] data)
 		{
