@@ -111,7 +111,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		/// <summary>
 		/// Calculates the intersection between <paramref name="ray"/> and object with <paramref name="token"/>.
-		/// If the intersection occurs before the original <paramref name="ray.distance"/>, then the intersection is recorded.
+		/// If the intersection occurs before the original <paramref name="hit.distance"/>, then the intersection is recorded.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void GetIntersection(in Ray ray, ref Hit hit, uint token)
@@ -153,6 +153,37 @@ namespace EchoRenderer.Mathematics.Intersections
 				default:
 				{
 					instances[token].GetIntersection(ray, ref hit);
+					break;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Calculates the intersection between <paramref name="ray"/> and object with <paramref name="token"/>.
+		/// If the intersection occurs before the original <paramref name="distance"/>, then the intersection is replaced.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void GetIntersection(in Ray ray, ref float distance, uint token)
+		{
+			switch (token)
+			{
+				case >= TrianglesTreshold:
+				{
+					ref PressedTriangle triangle = ref triangles[token - TrianglesTreshold];
+					distance = Math.Min(distance, triangle.GetIntersection(ray, out Float2 _));
+
+					break;
+				}
+				case >= SpheresTreshold:
+				{
+					ref PressedSphere sphere = ref spheres[token - SpheresTreshold];
+					distance = Math.Min(distance, sphere.GetIntersection(ray, out Float2 _));
+
+					break;
+				}
+				default:
+				{
+					instances[token].GetIntersection(ray, ref distance);
 					break;
 				}
 			}
