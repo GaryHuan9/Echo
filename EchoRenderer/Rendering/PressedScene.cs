@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
@@ -74,6 +75,7 @@ namespace EchoRenderer.Rendering
 		readonly PressedPack rootPack;
 		readonly MaterialPresser.Mapper materials;
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool GetIntersection(in Ray ray, out CalculatedHit calculated)
 		{
 			Hit hit = new Hit {distance = float.PositiveInfinity};
@@ -104,6 +106,17 @@ namespace EchoRenderer.Rendering
 
 			calculated = pack.CreateHit(hit, ray, mapper);
 			return true;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public bool GetIntersection(in Ray ray)
+		{
+			float distance = float.PositiveInfinity;
+
+			rootPack.bvh.GetIntersection(ray, ref distance);
+			Interlocked.Increment(ref intersections);
+
+			return float.IsFinite(distance);
 		}
 
 		public int GetIntersectionCost(in Ray ray)

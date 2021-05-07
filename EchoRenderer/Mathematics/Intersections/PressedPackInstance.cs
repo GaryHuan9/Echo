@@ -72,13 +72,13 @@ namespace EchoRenderer.Mathematics.Intersections
 		public void GetIntersection(in Ray ray, ref Hit hit)
 		{
 			hit.distance *= forwardScale;
-			float distance = hit.distance;
+			float old = hit.distance;
 
 			//Gets intersection from bvh, calculation done in local space
 			pack.bvh.GetIntersection(TransformForward(ray), ref hit);
 
-			bool skip = distance == hit.distance; //Must use exact comparison to check for modification
-			hit.distance *= backwardScale;        //Compare before multiplication to avoid float math issues
+			bool skip = old == hit.distance; //Must use exact comparison to check for modification
+			hit.distance *= backwardScale;   //Compare before multiplication to avoid float math issues
 
 			//If the distance did not change, it means no intersection made thus we can skip
 			if (skip) return;
@@ -92,6 +92,16 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			//We have to transform the normal from local to parent space
 			hit.normal = backwardTransform.MultiplyDirection(hit.normal) * forwardScale;
+		}
+
+		public void GetIntersection(in Ray ray, ref float distance)
+		{
+			distance *= forwardScale;
+
+			//Gets intersection from bvh, calculation done in local space
+			pack.bvh.GetIntersection(TransformForward(ray), ref distance);
+
+			distance *= backwardScale;
 		}
 
 		public int GetIntersectionCost(in Ray ray, ref float distance)
