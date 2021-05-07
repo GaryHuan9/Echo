@@ -51,7 +51,7 @@ namespace EchoRenderer.Mathematics
 			return Utilities.Lerp(head.vector, tail.vector, Vector128.Create(time));
 		}
 
-		public void Apply(Texture texture, Float2 point0, Float2 point1)
+		public void Draw(Texture texture, Float2 point0, Float2 point1)
 		{
 			Segment2 segment = new Segment2(point0, point1);
 			Parallel.For(0, texture.size.Product, SamplePixel);

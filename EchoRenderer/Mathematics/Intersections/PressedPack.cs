@@ -9,6 +9,7 @@ using CodeHelpers.Threads;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Textures;
 using Object = EchoRenderer.Objects.Object;
 
 namespace EchoRenderer.Mathematics.Intersections
