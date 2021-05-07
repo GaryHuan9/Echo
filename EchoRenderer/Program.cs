@@ -37,7 +37,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			// Console.ReadKey();
+			Console.ReadKey();
 		}
 
 		static RenderEngine renderEngine;
@@ -94,10 +94,10 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
+			RenderBuffer buffer = new RenderBuffer(resolutions[4]); //Selects resolution and create buffer
 			RenderProfile profile = pathTraceExportProfile;         //Selects or creates render profile
 
-			profile.Scene = new BallRoom(); //Creates/loads scene to render
+			profile.Scene = new CornellBox(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			using RenderEngine engine = new RenderEngine {Profile = profile};
