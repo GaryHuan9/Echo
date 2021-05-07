@@ -24,7 +24,7 @@ namespace EchoRenderer.Terminals
 			displayThread.Start();
 
 			Console.CursorVisible = false;
-			Console.Title = "Render Engine";
+			Console.Title = nameof(EchoRenderer);
 			Console.OutputEncoding = Encoding.UTF8;
 		}
 
