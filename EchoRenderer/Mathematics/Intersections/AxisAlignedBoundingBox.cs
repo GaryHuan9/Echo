@@ -80,7 +80,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		/// <summary>
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
-		/// NOTE: return can be negative, which means the ray origins inside box.
+		/// NOTE: return can be negative, which means the ray origins inside this box.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe float Intersect(in Ray ray)
