@@ -56,7 +56,7 @@ namespace EchoRenderer.Rendering
 			materials = presser.materials.GetMapper(null); //Get default material mapper
 			presser.materials.Press();                     //Press materials and mappers
 
-			Program.commandsController.Log("Pressed scene");
+			Program.commandsController?.Log("Pressed scene");
 		}
 
 		public readonly Camera camera;
@@ -85,7 +85,7 @@ namespace EchoRenderer.Rendering
 
 			if (float.IsInfinity(hit.distance))
 			{
-				calculated = default;
+				Unsafe.SkipInit(out calculated);
 				return false;
 			}
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.Scenes;
@@ -51,7 +52,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		/// <summary>
 		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.
-		/// <paramref name="uv"/> contains the barycentric position of the intersection; if intersection does not exist, infinity is returned.
+		/// <paramref name="uv"/> contains the barycentric position of the intersection.
+		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
 		/// </summary>
 		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
@@ -79,8 +81,30 @@ namespace EchoRenderer.Objects.GeometryObjects
 			return result;
 
 			noIntersection:
-			uv = default;
+			Unsafe.SkipInit(out uv);
 			return float.PositiveInfinity;
+		}
+
+		/// <summary>
+		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.
+		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
+		/// </summary>
+		public float GetIntersection(in Ray ray)
+		{
+			Float3 offset = ray.origin - position;
+
+			float point1 = -offset.Dot(ray.direction);
+			float point2Squared = point1 * point1 - offset.SquaredMagnitude + radiusSquared;
+
+			if (point2Squared < 0f) return float.PositiveInfinity;
+
+			float point2 = MathF.Sqrt(point2Squared);
+			float result = point1 - point2;
+
+			if (result < 0f) result = point1 + point2;
+			if (result < 0f) return float.PositiveInfinity;
+
+			return result;
 		}
 
 		public Float3 GetNormal(Float2 uv)
