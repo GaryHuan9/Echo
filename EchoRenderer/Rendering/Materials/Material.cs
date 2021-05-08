@@ -78,35 +78,16 @@ namespace EchoRenderer.Rendering.Materials
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected bool AlphaTest(in CalculatedHit hit, out Float3 color, out Float3 direction)
+		protected bool AlphaTest(in CalculatedHit hit, out Float3 color)
 		{
 			Float4 sample = SampleTexture(AlbedoMap, albedoColor, hit.texcoord);
 			color = sample.XYZ;
 
-			if (Scalars.AlmostEquals(sample.w, 0f))
-			{
-				direction = hit.direction;
-				return true;
-			}
-
-			direction = default;
-			return false;
+			return Scalars.AlmostEquals(sample.w, 0f);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected bool CullBackface(in CalculatedHit hit, out Float3 direction)
-		{
-			float dot = hit.direction.Dot(hit.normalRaw);
-
-			if (dot > 0f)
-			{
-				direction = hit.direction;
-				return true;
-			}
-
-			direction = default;
-			return false;
-		}
+		protected bool CullBackface(in CalculatedHit hit) => BackfaceCulling && hit.direction.Dot(hit.normalRaw) > 0f;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static float SmoothnessToRandomRadius(float smoothness) => RoughnessToRandomRadius(1f - smoothness);

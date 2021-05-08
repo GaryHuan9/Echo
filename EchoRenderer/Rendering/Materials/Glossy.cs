@@ -22,8 +22,11 @@ namespace EchoRenderer.Rendering.Materials
 
 		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
 		{
-			if (BackfaceCulling && CullBackface(hit, out direction)) return Float3.one;
-			if (AlphaTest(hit, out Float3 color, out direction)) return Float3.one;
+			if (CullBackface(hit) || AlphaTest(hit, out Float3 color))
+			{
+				direction = hit.direction;
+				return Float3.one;
+			}
 
 			float radius = SampleTexture(SmoothnessMap, randomRadius, hit.texcoord);
 			Float3 normal = (hit.normal + random.NextInSphere(radius)).Normalized;

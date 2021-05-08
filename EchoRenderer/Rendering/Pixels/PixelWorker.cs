@@ -54,8 +54,8 @@ namespace EchoRenderer.Rendering.Pixels
 		}
 
 		/// <summary>
-		/// Returns whether <paramref name="hit"/> is on an invisible surface and we should just continue through, ignoring this hit?
-		/// NOTE: this works with 1 ior white <see cref="Glass"/> materials as well because they are essentially invisible too.
+		/// Returns whether <paramref name="hit"/> is on an invisible surface and we should just continue through, ignoring this hit
+		/// NOTE: this works with 1 IOR white <see cref="Glass"/> materials as well because they are essentially invisible too.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static bool HitPassThrough(in CalculatedHit hit, in Float3 albedo, in Float3 direction) => hit.direction == direction && albedo == Float3.one;
