@@ -170,14 +170,14 @@ namespace EchoRenderer.Mathematics.Intersections
 				case >= TrianglesTreshold:
 				{
 					ref PressedTriangle triangle = ref triangles[token - TrianglesTreshold];
-					distance = Math.Min(distance, triangle.GetIntersection(ray, out Float2 _));
+					distance = Math.Min(distance, triangle.GetIntersection(ray));
 
 					break;
 				}
 				case >= SpheresTreshold:
 				{
 					ref PressedSphere sphere = ref spheres[token - SpheresTreshold];
-					distance = Math.Min(distance, sphere.GetIntersection(ray, out Float2 _));
+					distance = Math.Min(distance, sphere.GetIntersection(ray));
 
 					break;
 				}

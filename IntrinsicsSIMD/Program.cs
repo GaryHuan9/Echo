@@ -8,8 +8,8 @@ namespace IntrinsicsSIMD
 		{
 			// BenchmarkRunner.Run<TestSIMD>();
 			// BenchmarkRunner.Run<BenchmarkAABB>();
-			// BenchmarkRunner.Run<BenchmarkBVH>();
-			BenchmarkRunner.Run<BenchmarkTexture>();
+			BenchmarkRunner.Run<BenchmarkBVH>();
+			// BenchmarkRunner.Run<BenchmarkTexture>();
 			// BenchmarkRunner.Run<BenchmarkRadixSort>();
 		}
 	}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
@@ -124,8 +125,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public readonly int materialToken;
 
-		public const float Epsilon = 1E-7f;
-
 		public Float3 Vertex1 => vertex0 + edge1;
 		public Float3 Vertex2 => vertex0 + edge2;
 
@@ -162,15 +161,17 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 		}
 
+		const float Epsilon = 1E-7f; //Tiny number used to check for zero
+		const float Margin = 0f;     //Used to easily differentiate adjacent triangles to create an outline effect
+
 		/// <summary>
 		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
 		/// Uses the famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf.
-		/// <paramref name="uv"/> contains the barycentric position of the intersection; if intersection does not exist, infinity is returned.
+		/// <paramref name="uv"/> contains the barycentric position of the intersection.
+		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
 		/// </summary>
 		public float GetIntersection(in Ray ray, out Float2 uv)
 		{
-			const float Margin = 0f; //Used to easily differentiate adjacent triangles to create an outline effect
-
 			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
 			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
 
@@ -194,8 +195,36 @@ namespace EchoRenderer.Objects.GeometryObjects
 			return distance;
 
 			noIntersection:
-			uv = default;
+			Unsafe.SkipInit(out uv);
 			return float.PositiveInfinity;
+		}
+
+		/// <summary>
+		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
+		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
+		/// </summary>
+		public float GetIntersection(in Ray ray)
+		{
+			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
+			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
+
+			if (determinant > -Epsilon && determinant < Epsilon) return float.PositiveInfinity;
+			float inverse = 1f / determinant;
+
+			Float3 offset = ray.origin - vertex0;
+			float u = offset.Dot(cross2) * inverse;
+
+			if (u < Margin || u > 1f - Margin) return float.PositiveInfinity; //Outside barycentric bounds
+
+			Float3 cross1 = Float3.Cross(offset, edge1);
+			float v = ray.direction.Dot(cross1) * inverse;
+
+			if (v < Margin || u + v > 1f - Margin) return float.PositiveInfinity; //Outside barycentric bounds
+
+			float distance = edge2.Dot(cross1) * inverse;
+			if (distance < 0f) return float.PositiveInfinity; //Ray pointing away from triangle = negative distance
+
+			return distance;
 		}
 
 		public Float3 GetVertex(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;

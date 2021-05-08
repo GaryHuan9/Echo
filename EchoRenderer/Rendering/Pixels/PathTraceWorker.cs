@@ -44,8 +44,6 @@ namespace EchoRenderer.Rendering.Pixels
 					missingAuxiliary = false;
 				}
 
-				if (direction == Float3.zero) albedo = Float3.zero;
-
 				colors += energy * emission;
 				energy *= albedo;
 
