@@ -14,8 +14,8 @@ namespace EchoRenderer.Mathematics.Intersections
 	{
 		public AxisAlignedBoundingBox(Float3 center, Float3 extend)
 		{
-			centerVector = default;
-			extendVector = default;
+			Unsafe.SkipInit(out centerVector);
+			Unsafe.SkipInit(out extendVector);
 
 			this.center = center;
 			this.extend = extend;
@@ -25,8 +25,8 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabb)
 		{
-			centerVector = default;
-			extendVector = default;
+			Unsafe.SkipInit(out centerVector);
+			Unsafe.SkipInit(out extendVector);
 
 			Float3 min = Float3.positiveInfinity;
 			Float3 max = Float3.negativeInfinity;
@@ -47,8 +47,8 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
 		{
-			centerVector = default;
-			extendVector = default;
+			Unsafe.SkipInit(out centerVector);
+			Unsafe.SkipInit(out extendVector);
 
 			Float3 min = Float3.positiveInfinity;
 			Float3 max = Float3.negativeInfinity;

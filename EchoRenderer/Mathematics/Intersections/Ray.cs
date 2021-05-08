@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -18,9 +19,9 @@ namespace EchoRenderer.Mathematics.Intersections
 		{
 			Debug.Assert(Scalars.AlmostEquals(direction.SquaredMagnitude, 1f));
 
-			originVector = default;
-			directionVector = default;
-			inverseDirection = default;
+			Unsafe.SkipInit(out originVector);
+			Unsafe.SkipInit(out directionVector);
+			Unsafe.SkipInit(out inverseDirection);
 
 			this.origin = origin;
 			this.direction = direction;
