@@ -2,7 +2,7 @@
 Albedo 0.0250 0.1416 0.3736
 
 declare Glass Solid
-Albedo 0.940 0.940 0.960
+Albedo 0.840 0.840 0.860
 IndexOfRefraction 1.520
 # Roughness 0.5
 
