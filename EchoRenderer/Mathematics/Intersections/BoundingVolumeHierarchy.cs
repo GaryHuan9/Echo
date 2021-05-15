@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CodeHelpers;
-using EchoRenderer.Textures;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -68,9 +67,9 @@ namespace EchoRenderer.Mathematics.Intersections
 			else
 			{
 				ref readonly Node root = ref nodes[0];
-				float distance = root.aabb.Intersect(ray);
+				float local = root.aabb.Intersect(ray);
 
-				if (distance < hit.distance) Traverse(ray, ref hit);
+				if (local < hit.distance) Traverse(ray, ref hit);
 			}
 		}
 
