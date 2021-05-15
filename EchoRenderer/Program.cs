@@ -168,7 +168,7 @@ namespace EchoRenderer
 
 		static void FontTesting()
 		{
-			Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
+			Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
 			Texture2D output = new Texture2D(new Int2(2048, 2048));
 
 			foreach (Int2 position in output.size.Loop()) output[position] = new Float4(0f, 0f, 1f, 1f);

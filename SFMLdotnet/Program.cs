@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using System;
+using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 
@@ -20,9 +21,11 @@ namespace SFMLdotnet
 					{
 						window.Close();
 					}
+
+					Console.WriteLine(e);
 				};
 
-			Font font = new Font("C:/Windows/Fonts/arial.ttf");
+			Font font = new Font("EchoRenderer/Assets/Cubemaps/Fonts/JetBrainsMono/JetBrainsMono-Bold.tff");
 			Text text = new Text("Hello World!", font);
 			text.CharacterSize = 40;
 			float textWidth = text.GetLocalBounds().Width;

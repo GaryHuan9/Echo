@@ -29,6 +29,9 @@
       <None Update="Oidn\tbb12.dll">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+      <None Update="Assets\Fonts\JetBrainsMono\JetBrainsMono-Bold.ttf">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

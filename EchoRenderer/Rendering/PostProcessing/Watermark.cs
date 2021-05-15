@@ -16,7 +16,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 	{
 		public Watermark(PostProcessingEngine engine) : base(engine) { }
 
-		static readonly Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
+		static readonly Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
 
 		Texture2D workerBuffer;
 		double luminance;

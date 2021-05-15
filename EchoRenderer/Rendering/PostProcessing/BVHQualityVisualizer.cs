@@ -36,7 +36,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		float totalCost;
 		float totalSample;
 
-		static readonly Font font = new Font("Assets/Fonts/JetbrainsMono/FontMap.png");
+		static readonly Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
 
 		const float Scale = 0.03f;
 
