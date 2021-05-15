@@ -16,34 +16,41 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		Float3[] colors; //Unmanaged buffer for Oidn
 
-		const string DllPath = "Oidn/OpenImageDenoise.dll";
+		const string DllPath = "Oidn/OpenImageDenoise";
 
 		public override unsafe void Dispatch()
 		{
-			using OidnDevice device = OidnDevice.CreateNew(OidnDevice.Type.automatic);
-			using OidnFilter filter = OidnFilter.CreateNew(device);
-
-			Int2 size = renderBuffer.size;
-			colors = new Float3[size.Product];
-
-			RunPass(ForwardPass); //Copies color to unmanaged buffer
-
-			fixed (Float3* colourPointer = colors, albedoPointer = renderBuffer.albedos, normalPointer = renderBuffer.normals)
+			try
 			{
-				filter.Set("color", colourPointer, size);
-				filter.Set("albedo", albedoPointer, size);
-				filter.Set("normal", normalPointer, size);
+				using OidnDevice device = OidnDevice.CreateNew(OidnDevice.Type.automatic);
+				using OidnFilter filter = OidnFilter.CreateNew(device);
 
-				//Output to the same buffer
-				filter.Set("output", colourPointer, size);
+				Int2 size = renderBuffer.size;
+				colors = new Float3[size.Product];
 
-				filter.Set("hdr", true);
-				filter.Commit();
+				RunPass(ForwardPass); //Copies color to unmanaged buffer
 
-				filter.Execute();
+				fixed (Float3* colourPointer = colors, albedoPointer = renderBuffer.albedos, normalPointer = renderBuffer.normals)
+				{
+					filter.Set("color", colourPointer, size);
+					filter.Set("albedo", albedoPointer, size);
+					filter.Set("normal", normalPointer, size);
+
+					//Output to the same buffer
+					filter.Set("output", colourPointer, size);
+
+					filter.Set("hdr", true);
+					filter.Commit();
+
+					filter.Execute();
+				}
+
+				RunPass(BackwardPass); //Copies denoised data back to renderBuffer
 			}
-
-			RunPass(BackwardPass); //Copies denoised data back to renderBuffer
+			catch (DllNotFoundException exception)
+			{
+				Console.WriteLine($"Oidn libraries not found: {exception}");
+			}
 		}
 
 		void ForwardPass(Int2 position)
