@@ -23,12 +23,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Oidn\**\*.*">
+        <Content Include="Assets/**/">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-        <Content Include="Assets\**\*.*">
+        <ContentWithTargetPath Include="Oidn/**/">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
+            <TargetPath>%(Filename)%(Extension)</TargetPath>
+        </ContentWithTargetPath>
     </ItemGroup>
 
 </Project>

@@ -16,7 +16,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		Float3[] colors; //Unmanaged buffer for Oidn
 
-		const string DllPath = "Oidn/OpenImageDenoise";
+		const string DllPath = "OpenImageDenoise";
 
 		public override unsafe void Dispatch()
 		{

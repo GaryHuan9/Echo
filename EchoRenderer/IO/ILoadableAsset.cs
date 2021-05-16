@@ -38,8 +38,6 @@ namespace EchoRenderer.IO
 
 			static string FormAbsolute(string path)
 			{
-				path = Path.GetFullPath(path);
-
 				if (Path.IsPathFullyQualified(path)) return path;
 				return AssetsUtility.GetAssetsPath(path);
 			}
