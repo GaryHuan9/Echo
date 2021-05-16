@@ -3,7 +3,7 @@ using SFML.Graphics;
 using SFML.System;
 using SFML.Window;
 
-namespace SFMLdotnet
+namespace EchoRenderer.GUI
 {
 	class Program
 	{
@@ -25,7 +25,7 @@ namespace SFMLdotnet
 					Console.WriteLine(e);
 				};
 
-			Font font = new Font("EchoRenderer/Assets/Cubemaps/Fonts/JetBrainsMono/JetBrainsMono-Bold.tff");
+			Font font = new Font("Assets/Fonts/JetBrainsMono/JetBrainsMono-Bold.ttf");
 			Text text = new Text("Hello World!", font);
 			text.CharacterSize = 40;
 			float textWidth = text.GetLocalBounds().Width;
