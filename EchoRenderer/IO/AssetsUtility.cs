@@ -1,10 +1,11 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace EchoRenderer.IO
 {
 	public static class AssetsUtility
 	{
-		public static string WorkingDirectory { get; set; } = Directory.GetCurrentDirectory();
+		//TODO: Differentiate between published and editor
 
 		/// <summary>
 		/// Returns the absolute path to a path relative to the project folder.
@@ -16,7 +17,7 @@ namespace EchoRenderer.IO
 			string[] parts = path.Split('/', '\\');
 			string[] splits = new string[parts.Length + 1];
 
-			splits[0] = WorkingDirectory;
+			splits[0] = AppContext.BaseDirectory; //Environment.CurrentDirectory;
 			for (int i = 0; i < parts.Length; i++) splits[i + 1] = parts[i];
 
 			return Path.GetFullPath(Path.Combine(splits));
