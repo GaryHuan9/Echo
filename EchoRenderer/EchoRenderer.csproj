@@ -10,28 +10,25 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DefineConstants>TRACE; UNSAFE_CODE_ENABLED</DefineConstants>
-      <Optimize>false</Optimize>
+        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED</DefineConstants>
+        <Optimize>false</Optimize>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DefineConstants>TRACE; UNSAFE_CODE_ENABLED</DefineConstants>
+        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="Oidn\OpenImageDenoise.dll">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Oidn\tbb12.dll">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Assets\Fonts\JetBrainsMono\JetBrainsMono-Bold.ttf">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <Content Include="Oidn\**\*.*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Assets\**\*.*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
 </Project>
