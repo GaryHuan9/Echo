@@ -50,7 +50,7 @@ namespace EchoRenderer.Rendering
 		/// <summary>
 		/// The number of concurrent tiles being worked on.
 		/// </summary>
-		public int WorkerSize { get; set; } = Math.Max(1, Environment.ProcessorCount / 2);
+		public int WorkerSize { get; set; } = Environment.ProcessorCount;
 
 		/// <summary>
 		/// The maximum number of bounce allowed for one sample.

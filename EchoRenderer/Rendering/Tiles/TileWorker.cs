@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
 
@@ -10,8 +11,8 @@ namespace EchoRenderer.Rendering.Tiles
 {
 	/// <summary>
 	/// A worker class that process/render on a specific tile.
-	/// Required resources should be provided to the worker first, then the worker is dispatched.
-	/// After the work is done, the worker will wait for the resources and completed work to be swapped out and restart processing.
+	/// Required parameters should be provided to the worker first, then the worker is dispatched.
+	/// After the work is done, the worker will wait for parameters and completed work to be swapped out and restart processing.
 	/// </summary>
 	public class TileWorker : IDisposable
 	{
@@ -127,32 +128,42 @@ namespace EchoRenderer.Rendering.Tiles
 			while (!aborted)
 			{
 				dispatchEvent.Wait();
-				if (aborted) break;
+				if (aborted) goto end;
 
-				try { Parallel.For(0, size * size, WorkPixel); }
+				try
+				{
+					for (int x = 0; x < size; x++)
+					{
+						for (int y = 0; y < size; y++)
+						{
+							if (aborted) goto end;
+							WorkPixel(new Int2(x, y));
+						}
+					}
+				}
 				finally { dispatchEvent.Reset(); }
 
 				if (!aborted) OnWorkCompleted?.Invoke(this);
 			}
+
+			end:
+			{ }
 		}
 
-		void WorkPixel(int index, ParallelLoopState state)
+		void WorkPixel(Int2 localPosition)
 		{
-			Int2 position = new Int2(index % size + RenderOffsetX, index / size + RenderOffsetY);
-			if (!(position >= Int2.zero) || !(position < renderBuffer.size)) return; //Reject pixels outside of buffer
+			Int2 position = localPosition + RenderOffset;
+			if (renderBuffer.Restrict(position) != position) return; //Ignore pixels outside of buffer
 
-			if (aborted) state.Stop();
 			Pixel pixel = new Pixel();
 
 			int sampleCount = pixelSample;
 			Float2[] uvOffsets = spiralOffsets;
 
-			for (int m = 0; m < 2; m++)
+			for (int method = 0; method < 2; method++)
 			{
 				for (int i = 0; i < sampleCount; i++)
 				{
-					if (aborted) state.Stop();
-
 					//Sample color
 					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / renderBuffer.size - Float2.half;
 					PixelWorker.Sample sample = pixelWorker.Render(new Float2(uv.x, uv.y / renderBuffer.aspect));
@@ -168,8 +179,6 @@ namespace EchoRenderer.Rendering.Tiles
 				sampleCount = (int)(pixel.Deviation * adaptiveSample);
 				uvOffsets = randomOffsets;
 			}
-
-			if (aborted) state.Stop();
 
 			//Store pixel
 			pixel.Store(renderBuffer, position);
@@ -255,8 +264,7 @@ namespace EchoRenderer.Rendering.Tiles
 
 			public void Store(RenderBuffer buffer, Int2 position)
 			{
-				Float4 color = (Float4)(Float3)average;
-				buffer[position] = color.Replace(3, 1f);
+				buffer[position] = Utilities.ToColor(Color);
 
 				buffer.SetAlbedo(position, (Float3)(albedo / accumulation));
 				buffer.SetNormal(position, (Float3)normal.Normalized);
