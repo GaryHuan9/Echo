@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -94,8 +93,8 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[0]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceFastProfile;           //Selects or creates render profile
+			RenderBuffer buffer = new RenderBuffer(resolutions[2]); //Selects resolution and create buffer
+			RenderProfile profile = pathTraceExportProfile;         //Selects or creates render profile
 
 			profile.Scene = new SingleMaterialBall(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
