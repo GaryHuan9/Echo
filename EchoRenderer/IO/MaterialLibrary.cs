@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -91,14 +92,14 @@ namespace EchoRenderer.IO
 				ReadOnlySpan<char> piece2 = Eat(ref line);
 
 				if (piece0.IsEmpty) throw new Exception("Cannot set attribute with empty parameters!");
-				if (!float.TryParse(piece0, out float float0))
+				if (!float.TryParse(piece0, NumberStyles.Any, CultureInfo.InvariantCulture, out float float0))
 				{
 					if (bool.TryParse(piece0, out bool boolean)) return boolean;
 					return new TextureLoadOperation(this.GetSiblingPath(path, new string(piece0.Trim('"'))));
 				}
 
-				if (!float.TryParse(piece1, out float float1)) return float0;
-				if (!float.TryParse(piece2, out float float2)) return new Float2(float0, float1);
+				if (!float.TryParse(piece1, NumberStyles.Any, CultureInfo.InvariantCulture, out float float1)) return float0;
+				if (!float.TryParse(piece2, NumberStyles.Any, CultureInfo.InvariantCulture, out float float2)) return new Float2(float0, float1);
 
 				return new Float3(float0, float1, float2);
 			}
