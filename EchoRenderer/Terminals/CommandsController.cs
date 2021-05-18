@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using CodeHelpers;
@@ -98,8 +99,8 @@ namespace EchoRenderer.Terminals
 				object parameter;
 
 				if (bool.TryParse(part, out bool boolValue)) parameter = boolValue;
-				else if (int.TryParse(part, out int intValue)) parameter = intValue;
-				else if (float.TryParse(part, out float floatValue)) parameter = floatValue;
+				else if (int.TryParse(part, NumberStyles.Any, CultureInfo.InvariantCulture, out int intValue)) parameter = intValue;
+				else if (float.TryParse(part, NumberStyles.Any, CultureInfo.InvariantCulture, out float floatValue)) parameter = floatValue;
 				else parameter = part;
 
 				parameters[i] = parameter;
