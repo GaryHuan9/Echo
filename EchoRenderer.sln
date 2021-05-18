@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoRenderer", "EchoRendere
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntrinsicsSIMD", "IntrinsicsSIMD\IntrinsicsSIMD.csproj", "{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoRenderer.GUI", "EchoRenderer.GUI\EchoRenderer.GUI.csproj", "{C96DB829-6A96-477B-BCAB-FE643AD3FA3E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoRenderer.UI", "EchoRenderer.UI\EchoRenderer.UI.csproj", "{C96DB829-6A96-477B-BCAB-FE643AD3FA3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
