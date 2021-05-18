@@ -34,7 +34,7 @@ namespace EchoRenderer.UI
 
 			RenderProfile profile = pathTraceProfile; //Selects or creates render profile
 
-			profile.Scene = new GridMaterialBall(); //Creates/loads scene to render
+			profile.Scene = new SingleMaterialBall(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			engine.Profile = profile;
@@ -100,7 +100,7 @@ namespace EchoRenderer.UI
 			{
 				case RenderEngine.State.waiting:
 				{
-					// engine.Begin();
+					engine.Begin();
 					break;
 				}
 			}
