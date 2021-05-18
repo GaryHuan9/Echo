@@ -139,7 +139,7 @@ namespace EchoRenderer.IO
 				char current = line[i];
 				if (current == '"') quote++;
 
-				if (current == ' ' && quote % 2 == 0)
+				if (char.IsWhiteSpace(current) && quote % 2 == 0)
 				{
 					index = i;
 					break;

@@ -40,16 +40,23 @@ namespace EchoRenderer.UI
 			engine.Profile = profile;
 
 			//Test
-			root = new RootUI(this)
-				   {
-					   new AreaUI() {transform = {RightPercent = 0.8f, UniformMargin = 10f}},
-					   new AreaUI() {transform = {LeftPercent = 0.8f, UniformMargin = 10f}},
-					   new RenderPreviewUI
-					   {
-						   transform = {LeftPercent = 0.2f, RightPercent = 0.2f, UniformMargin = 10f},
-						   RenderBuffer = buffer
-					   }
-				   };
+			root = (RootUI)new RootUI(this).Add
+			(
+				new AreaUI {transform = {LeftPercent = 0.8f, UniformMargin = 10f}}
+			).Add
+			(
+				new AreaUI {transform = {RightPercent = 0.8f, UniformMargin = 10f}}.Add
+				(
+					new LabelUI {transform = {BottomPercent = 1f, BottomMargin = -100f}}
+				)
+			).Add
+			(
+				new RenderPreviewUI
+				{
+					transform = {LeftPercent = 0.2f, RightPercent = 0.2f, UniformMargin = 10f},
+					RenderBuffer = buffer
+				}
+			);
 		}
 
 		public readonly RenderEngine engine;
@@ -93,7 +100,7 @@ namespace EchoRenderer.UI
 			{
 				case RenderEngine.State.waiting:
 				{
-					engine.Begin();
+					// engine.Begin();
 					break;
 				}
 			}
