@@ -7,14 +7,16 @@ using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.Tiles;
 using EchoRenderer.Textures;
+using EchoRenderer.UI.Core;
+using EchoRenderer.UI.Core.Areas;
+using EchoRenderer.UI.Interface;
 using SFML.Graphics;
-using SFML.System;
 using SFML.Window;
 using Texture = SFML.Graphics.Texture;
 
-namespace EchoRenderer.GUI
+namespace EchoRenderer.UI
 {
-	class Application : RenderWindow
+	public class Application : RenderWindow
 	{
 		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer))
 		{
@@ -31,28 +33,30 @@ namespace EchoRenderer.GUI
 			engine = new RenderEngine();
 			buffer = new RenderBuffer(resolutions[1]);
 
-			RenderProfile profile = pathTraceProfile; //Selects or creates render profile
+			RenderProfile profile = pathTraceFastProfile; //Selects or creates render profile
 
-			profile.Scene = new SingleMaterialBall(); //Creates/loads scene to render
+			profile.Scene = new SingleBunny(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			engine.Profile = profile;
 
-			//Assign drawing sprite
-			uint width = (uint)buffer.size.x;
-			uint height = (uint)buffer.size.y;
-
-			pixels = new byte[width * height * 4];
-			textureGUI = new Texture(width, height);
-			spriteGUI = new Sprite(textureGUI);
+			//Test
+			root = new RootUI(this)
+				   {
+					   new AreaUI() {transform = {RightPercent = 0.8f, UniformMargin = 10f}},
+					   new AreaUI() {transform = {LeftPercent = 0.8f, UniformMargin = 10f}},
+					   new RenderPreviewUI
+					   {
+						   transform = {LeftPercent = 0.2f, RightPercent = 0.2f, UniformMargin = 10f},
+						   RenderBuffer = buffer
+					   }
+				   };
 		}
 
 		public readonly RenderEngine engine;
 		public readonly RenderBuffer buffer;
 
-		readonly byte[] pixels;
-		readonly Texture textureGUI;
-		readonly Sprite spriteGUI;
+		readonly RootUI root;
 
 		static readonly RenderProfile pathTraceFastProfile = new()
 															 {
@@ -78,6 +82,12 @@ namespace EchoRenderer.GUI
 																   AdaptiveSample = 1600
 															   };
 
+		public void Start()
+		{
+			SetVerticalSyncEnabled(true);
+			root.Resize(Size.Cast());
+		}
+
 		public void Update()
 		{
 			switch (engine.CurrentState)
@@ -87,28 +97,10 @@ namespace EchoRenderer.GUI
 					engine.Begin();
 					break;
 				}
-				case RenderEngine.State.rendering:
-				case RenderEngine.State.paused:
-				case RenderEngine.State.completed:
-				case RenderEngine.State.aborted:
-				{
-					foreach (Int2 position in buffer.size.Loop())
-					{
-						Color32 pixel = (Color32)buffer[position];
-						int index = buffer.ToIndex(position) * 4;
-
-						pixels[index + 0] = pixel.r;
-						pixels[index + 1] = pixel.g;
-						pixels[index + 2] = pixel.b;
-						pixels[index + 3] = pixel.a;
-					}
-
-					textureGUI.Update(pixels);
-					Draw(spriteGUI);
-
-					break;
-				}
 			}
+
+			root.Update();
+			root.Draw(this);
 		}
 
 		void OnKeyPressed(object sender, KeyEventArgs argument) { }
@@ -120,6 +112,8 @@ namespace EchoRenderer.GUI
 
 			Application application = new Application();
 
+			application.Start();
+
 			while (application.IsOpen)
 			{
 				application.DispatchEvents();
@@ -128,18 +122,6 @@ namespace EchoRenderer.GUI
 				application.Update();
 				application.Display();
 			}
-
-			application.buffer.Save("renderGUI.png");
-
-			// Font font = new Font("Assets/Fonts/JetBrainsMono/JetBrainsMono-Bold.ttf");
-			// Text text = new Text("Hello World!", font);
-			// text.CharacterSize = 40;
-			// float textWidth = text.GetLocalBounds().Width;
-			// float textHeight = text.GetLocalBounds().Height;
-			// float xOffset = text.GetLocalBounds().Left;
-			// float yOffset = text.GetLocalBounds().Top;
-			// text.Origin = new Vector2f(textWidth / 2f + xOffset, textHeight / 2f + yOffset);
-			// text.Position = new Vector2f(window.Size.X / 2f, window.Size.Y / 2f);
 		}
 	}
 }
