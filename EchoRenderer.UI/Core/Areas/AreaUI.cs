@@ -39,15 +39,17 @@ namespace EchoRenderer.UI.Core.Areas
 		public AreaUI this[int index] => children[index];
 		public int ChildCount => children.Count;
 
-		public void Add(AreaUI child)
+		public AreaUI Add(AreaUI child)
 		{
-			if (Contains(child)) return;
+			if (Contains(child)) return this;
 
 			child.Parent?.Remove(child);
 			child.transform.MarkDirty();
 
 			children.Add(child);
 			child.Parent = this;
+
+			return this;
 		}
 
 		public bool Remove(AreaUI child)
@@ -96,9 +98,9 @@ namespace EchoRenderer.UI.Core.Areas
 			readonly AreaUI areaUI;
 
 			float _rightPercent;
-			float _downPercent;
+			float _bottomPercent;
 			float _leftPercent;
-			float _upPercent;
+			float _topPercent;
 
 			public float RightPercent
 			{
@@ -106,10 +108,10 @@ namespace EchoRenderer.UI.Core.Areas
 				set => Assign(ref _rightPercent, value);
 			}
 
-			public float DownPercent
+			public float BottomPercent
 			{
-				get => _downPercent;
-				set => Assign(ref _downPercent, value);
+				get => _bottomPercent;
+				set => Assign(ref _bottomPercent, value);
 			}
 
 			public float LeftPercent
@@ -118,16 +120,16 @@ namespace EchoRenderer.UI.Core.Areas
 				set => Assign(ref _leftPercent, value);
 			}
 
-			public float UpPercent
+			public float TopPercent
 			{
-				get => _upPercent;
-				set => Assign(ref _upPercent, value);
+				get => _topPercent;
+				set => Assign(ref _topPercent, value);
 			}
 
 			float _rightMargin;
-			float _downMargin;
+			float _bottomMargin;
 			float _leftMargin;
-			float _upMargin;
+			float _topMargin;
 
 			public float RightMargin
 			{
@@ -135,10 +137,10 @@ namespace EchoRenderer.UI.Core.Areas
 				set => Assign(ref _rightMargin, value);
 			}
 
-			public float DownMargin
+			public float BottomMargin
 			{
-				get => _downMargin;
-				set => Assign(ref _downMargin, value);
+				get => _bottomMargin;
+				set => Assign(ref _bottomMargin, value);
 			}
 
 			public float LeftMargin
@@ -147,22 +149,22 @@ namespace EchoRenderer.UI.Core.Areas
 				set => Assign(ref _leftMargin, value);
 			}
 
-			public float UpMargin
+			public float TopMargin
 			{
-				get => _upMargin;
-				set => Assign(ref _upMargin, value);
+				get => _topMargin;
+				set => Assign(ref _topMargin, value);
 			}
 
 			public float UniformPercent
 			{
-				get => (RightPercent + DownPercent + LeftPercent + UpPercent) / 4f;
-				set => RightPercent = DownPercent = LeftPercent = UpPercent = value;
+				get => (RightPercent + BottomPercent + LeftPercent + TopPercent) / 4f;
+				set => RightPercent = BottomPercent = LeftPercent = TopPercent = value;
 			}
 
 			public float UniformMargin
 			{
-				get => (RightMargin + DownMargin + LeftMargin + UpMargin) / 4f;
-				set => RightMargin = DownMargin = LeftMargin = UpMargin = value;
+				get => (RightMargin + BottomMargin + LeftMargin + TopMargin) / 4f;
+				set => RightMargin = BottomMargin = LeftMargin = TopMargin = value;
 			}
 
 			bool _dirtied;
@@ -198,21 +200,21 @@ namespace EchoRenderer.UI.Core.Areas
 					Float2 position = parentPosition + parentSize * new Float2
 									  (
 										  LeftPercent,
-										  UpPercent
+										  TopPercent
 									  ) + new Float2
 									  (
 										  LeftMargin,
-										  UpMargin
+										  TopMargin
 									  );
 
 					Float2 size = parentSize * new Float2
 								  (
 									  1f - RightPercent - LeftPercent,
-									  1f - UpPercent - DownPercent
+									  1f - TopPercent - BottomPercent
 								  ) - new Float2
 								  (
 									  RightMargin + LeftMargin,
-									  UpMargin + DownMargin
+									  TopMargin + BottomMargin
 								  );
 
 					areaUI.Reorient(position, size);
