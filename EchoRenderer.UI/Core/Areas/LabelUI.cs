@@ -23,7 +23,7 @@ namespace EchoRenderer.UI.Core.Areas
 			base.Paint(renderTarget);
 			renderTarget.Draw(display);
 
-			DebugHelper.Log(display.GetLocalBounds());
+			// DebugHelper.Log(display.GetLocalBounds());
 		}
 	}
 }
