@@ -15,15 +15,19 @@ namespace EchoRenderer.UI.Core.Areas
 			base.Reorient(position, size);
 
 			display.CharacterSize = (uint)size.y;
-			display.Position = position.As();
+			// float height = display.GetLocalBounds().
+
+			// display.Position = position.As();
+			//
+			// FloatRect bounds = display.GetLocalBounds();
+			//
+			// DebugHelper.Log(bounds, size);
 		}
 
 		protected override void Paint(RenderTarget renderTarget)
 		{
 			base.Paint(renderTarget);
 			renderTarget.Draw(display);
-
-			// DebugHelper.Log(display.GetLocalBounds());
 		}
 	}
 }
