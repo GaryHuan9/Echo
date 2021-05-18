@@ -1,7 +1,10 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Textures;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
+using SFML.Graphics;
 using Texture = SFML.Graphics.Texture;
 
 namespace EchoRenderer.UI.Interface
@@ -10,7 +13,8 @@ namespace EchoRenderer.UI.Interface
 	{
 		public RenderPreviewUI()
 		{
-			imageUI = new ImageUI();
+			imageUI = new ImageUI {Shader = Shader.FromString(null, null, GammaCorrectShader)};
+
 			Add(imageUI);
 		}
 
@@ -36,33 +40,59 @@ namespace EchoRenderer.UI.Interface
 					uint height = (uint)value.size.y;
 
 					imageUI.Texture = new Texture(width, height);
-					bytesArray = new byte[width * height * 9];
+					pixelsBuffer = new byte[width * height * 4];
 				}
 
 				_renderBuffer = value;
 			}
 		}
 
+		public bool sRGB { get; set; } = true;
+
 		readonly ImageUI imageUI;
-		byte[] bytesArray;
+		byte[] pixelsBuffer;
+
+		const string GammaCorrectShader = @"
+
+uniform sampler2D texture;
+uniform bool sRGB;
+
+void main()
+{
+    //Fetch pixel color data
+    vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
+
+	//Clean up data & sRGB
+	pixel = clamp(pixel, 0.0, 1.0);
+	if (sRGB) pixel = sqrt(pixel);
+
+    //Output
+    gl_FragColor = gl_Color * pixel;
+}
+
+";
 
 		public override void Update()
 		{
 			base.Update();
 			if (RenderBuffer == null) return;
 
-			foreach (Int2 position in RenderBuffer.size.Loop())
-			{
-				Color32 pixel = (Color32)RenderBuffer[position];
-				int index = RenderBuffer.ToIndex(position) * 4;
+			int length = RenderBuffer.size.Product;
 
-				bytesArray[index + 0] = pixel.r;
-				bytesArray[index + 1] = pixel.g;
-				bytesArray[index + 2] = pixel.b;
-				bytesArray[index + 3] = byte.MaxValue;
+			for (int i = 0; i < length; i++)
+			{
+				Color32 color = (Color32)Utilities.ToFloat4(RenderBuffer[i]);
+
+				int index = i * 4;
+
+				pixelsBuffer[index + 0] = color.r;
+				pixelsBuffer[index + 1] = color.g;
+				pixelsBuffer[index + 2] = color.b;
+				pixelsBuffer[index + 3] = byte.MaxValue;
 			}
 
-			imageUI.Texture.Update(bytesArray);
+			imageUI.Shader.SetUniform("sRGB", sRGB);
+			imageUI.Texture.Update(pixelsBuffer);
 		}
 	}
 }

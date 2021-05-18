@@ -12,7 +12,6 @@ using EchoRenderer.UI.Core.Areas;
 using EchoRenderer.UI.Interface;
 using SFML.Graphics;
 using SFML.Window;
-using Texture = SFML.Graphics.Texture;
 
 namespace EchoRenderer.UI
 {
@@ -33,9 +32,9 @@ namespace EchoRenderer.UI
 			engine = new RenderEngine();
 			buffer = new RenderBuffer(resolutions[1]);
 
-			RenderProfile profile = pathTraceFastProfile; //Selects or creates render profile
+			RenderProfile profile = pathTraceProfile; //Selects or creates render profile
 
-			profile.Scene = new SingleBunny(); //Creates/loads scene to render
+			profile.Scene = new GridMaterialBall(); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			engine.Profile = profile;

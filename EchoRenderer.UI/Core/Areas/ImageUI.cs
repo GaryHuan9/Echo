@@ -6,7 +6,9 @@ namespace EchoRenderer.UI.Core.Areas
 	public class ImageUI : AreaUI
 	{
 		public bool KeepAspect { get; set; } = true;
+
 		public Texture Texture { get; set; }
+		public Shader Shader { get; set; }
 
 		readonly RectangleShape display = new RectangleShape();
 
@@ -39,7 +41,13 @@ namespace EchoRenderer.UI.Core.Areas
 			if (Texture == null) return;
 
 			display.Texture = Texture;
-			renderTarget.Draw(display);
+
+			if (Shader != null && Shader.IsAvailable)
+			{
+				Shader.SetUniform("texture", Shader.CurrentTexture);
+				renderTarget.Draw(display, new RenderStates(Shader));
+			}
+			else renderTarget.Draw(display);
 		}
 	}
 }
