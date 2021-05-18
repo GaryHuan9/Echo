@@ -91,23 +91,35 @@ namespace EchoRenderer.Mathematics.Intersections
 			Vector128<float> min = Sse.Add(n, k);
 			Vector128<float> max = Sse.Subtract(n, k);
 
-			//Permute vector for min max, ignores last component
-			Vector128<float> minPermute = Avx.Permute(min, 0b0100_1010);
-			Vector128<float> maxPermute = Avx.Permute(max, 0b0100_1010);
+			float far;
+			float near;
 
-			min = Sse.Min(min, minPermute);
-			max = Sse.Max(max, maxPermute);
+			if (Avx.IsSupported)
+			{
+				//Permute vector for min max, ignores last component
+				Vector128<float> minPermute = Avx.Permute(min, 0b0100_1010);
+				Vector128<float> maxPermute = Avx.Permute(max, 0b0100_1010);
 
-			//Second permute for min max
-			minPermute = Avx.Permute(min, 0b1011_0001);
-			maxPermute = Avx.Permute(max, 0b1011_0001);
+				min = Sse.Min(min, minPermute);
+				max = Sse.Max(max, maxPermute);
 
-			min = Sse.Min(min, minPermute);
-			max = Sse.Max(max, maxPermute);
+				//Second permute for min max
+				minPermute = Avx.Permute(min, 0b1011_0001);
+				maxPermute = Avx.Permute(max, 0b1011_0001);
 
-			//Extract result
-			float far = *(float*)&min;
-			float near = *(float*)&max;
+				min = Sse.Min(min, minPermute);
+				max = Sse.Max(max, maxPermute);
+
+				//Extract result
+				far = *(float*)&min;
+				near = *(float*)&max;
+			}
+			else
+			{
+				//Software implementation
+				far = (*(Float3*)&min).MinComponent;
+				near = (*(Float3*)&max).MaxComponent;
+			}
 
 			return near > far || far < 0f ? float.PositiveInfinity : near;
 		}

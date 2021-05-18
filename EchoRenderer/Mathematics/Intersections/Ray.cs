@@ -49,15 +49,17 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public unsafe Float3 GetPoint(float distance)
 		{
-			if (Avx.IsSupported)
-			{
-				Vector128<float> length = Sse.Multiply(directionVector, Avx.BroadcastScalarToVector128(&distance));
-				Vector128<float> result = Sse.Add(originVector, length);
+			Vector128<float> length = Vector128.Create(distance);
+			Vector128<float> result;
 
-				return *(Float3*)&result;
+			if (Fma.IsSupported) result = Fma.MultiplyAdd(directionVector, length, originVector);
+			else
+			{
+				result = Sse.Multiply(directionVector, length);
+				result = Sse.Add(originVector, result);
 			}
 
-			return origin + direction * distance;
+			return *(Float3*)&result;
 		}
 
 		public override string ToString() => $"{nameof(origin)}: {origin}, {nameof(direction)}: {direction}";
