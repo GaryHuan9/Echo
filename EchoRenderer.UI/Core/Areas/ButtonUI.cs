@@ -11,11 +11,11 @@ namespace EchoRenderer.UI.Core.Areas
 		}
 
 		public readonly LabelUI label;
-		public event Action OnPressed;
+		public event Action OnPressedMethods;
 
 		protected override void OnMousePressed()
 		{
-			OnPressed?.Invoke();
+			OnPressedMethods?.Invoke();
 		}
 	}
 }
