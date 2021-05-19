@@ -10,7 +10,7 @@ namespace EchoRenderer.UI.Core.Areas
 		public Texture Texture { get; set; }
 		public Shader Shader { get; set; }
 
-		public override Color FillColor
+		public Color ImageColor
 		{
 			get => display.FillColor;
 			set => display.FillColor = value;

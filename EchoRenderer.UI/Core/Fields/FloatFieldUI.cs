@@ -52,8 +52,12 @@ namespace EchoRenderer.UI.Core.Fields
 
 				_value = value;
 				ResetText();
+
+				OnValueChangedMethods?.Invoke(this);
 			}
 		}
+
+		public event Action<FloatFieldUI> OnValueChangedMethods;
 
 		string format;
 
