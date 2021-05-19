@@ -85,7 +85,10 @@ namespace EchoRenderer.UI
 						}
 					).Add
 					(
-						new TextFieldUI { }
+						new TextFieldUI {Text = "Test Field Hehe"}
+					).Add
+					(
+						new FloatFieldUI { }
 					)
 				)
 			).Add

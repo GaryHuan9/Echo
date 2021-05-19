@@ -1,4 +1,5 @@
-﻿using EchoRenderer.UI.Core.Interactions;
+﻿using CodeHelpers.Mathematics;
+using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
 
 namespace EchoRenderer.UI.Core.Areas
@@ -25,6 +26,8 @@ namespace EchoRenderer.UI.Core.Areas
 
 			if (IsPressing) OnMousePressed();
 		}
+
+		public virtual void OnMouseScrolled(Float2 delta) { }
 
 		protected abstract void OnMousePressed();
 	}

@@ -11,13 +11,12 @@ namespace EchoRenderer.UI.Core.Fields
 	{
 		public TextFieldUI()
 		{
-			display = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}};
 			cursor = new CursorUI(this) {FillColor = Theme.SpecialColor};
 
-			Add(display);
+			Add(currentDisplay);
+			Add(editingDisplay);
 
-			display.Add(cursor);
-			UpdateAlignment();
+			editingDisplay.Add(cursor);
 		}
 
 		public ReadOnlySpan<char> Text
@@ -28,10 +27,9 @@ namespace EchoRenderer.UI.Core.Fields
 				if (value.SequenceEqual(Text)) return;
 
 				currentBuffer.Value = value;
-				cursor.ClampPosition();
+				currentDisplay.Text = value;
 
 				OnTextChangedMethods?.Invoke(this);
-				if (!Editing) display.Text = value;
 			}
 		}
 
@@ -39,7 +37,9 @@ namespace EchoRenderer.UI.Core.Fields
 
 		public event Action<TextFieldUI> OnTextChangedMethods;
 
-		readonly LabelUI display;
+		readonly LabelUI currentDisplay = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.center};
+		readonly LabelUI editingDisplay = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.left};
+
 		readonly CursorUI cursor;
 
 		readonly CharBuffer currentBuffer = new CharBuffer();
@@ -57,10 +57,17 @@ namespace EchoRenderer.UI.Core.Fields
 				_editing = value;
 				cursor.Enabled = value;
 
-				UpdateAlignment();
+				currentDisplay.Visible = !value;
+				editingDisplay.Visible = value;
 
-				if (!value) Text = editingBuffer.Value;
-				else editingBuffer.Value = currentBuffer.Value;
+				if (value)
+				{
+					editingBuffer.Value = currentBuffer.Value;
+					editingDisplay.Text = currentBuffer.Value;
+
+					cursor.ClampPosition();
+				}
+				else Text = editingBuffer.Value;
 			}
 		}
 
@@ -76,8 +83,8 @@ namespace EchoRenderer.UI.Core.Fields
 		{
 			base.OnMousePressed(mouse);
 
-			float x = (mouse.point / display.transform).x;
-			cursor.Position = display.GetIndex(x);
+			float x = (mouse.point / editingDisplay.transform).x;
+			cursor.Position = editingDisplay.GetIndex(x);
 		}
 
 		protected override void OnMousePressed() => Editing = true;
@@ -90,7 +97,7 @@ namespace EchoRenderer.UI.Core.Fields
 			if (!char.IsControl(code))
 			{
 				editingBuffer.Insert(cursor.Position, code);
-				display.Text = editingBuffer.Value;
+				editingDisplay.Text = editingBuffer.Value;
 
 				++cursor.Position;
 			}
@@ -111,7 +118,7 @@ namespace EchoRenderer.UI.Core.Fields
 					if (cursor.Position == 0) break;
 
 					editingBuffer.Remove(--cursor.Position);
-					display.Text = editingBuffer.Value;
+					editingDisplay.Text = editingBuffer.Value;
 
 					break;
 				}
@@ -120,7 +127,7 @@ namespace EchoRenderer.UI.Core.Fields
 					if (cursor.Position == editingBuffer.Length) break;
 
 					editingBuffer.Remove(cursor.Position);
-					display.Text = editingBuffer.Value;
+					editingDisplay.Text = editingBuffer.Value;
 
 					break;
 				}
@@ -154,8 +161,6 @@ namespace EchoRenderer.UI.Core.Fields
 			}
 		}
 
-		void UpdateAlignment() => display.Align = Editing ? LabelUI.Alignment.left : LabelUI.Alignment.center;
-
 		class CharBuffer
 		{
 			public int Length { get; private set; }
@@ -176,8 +181,10 @@ namespace EchoRenderer.UI.Core.Fields
 
 			public void Insert(int index, char value)
 			{
-				EnsureCapacity(++Length);
+				EnsureCapacity(Length + 1);
 				array.Insert(index, value);
+
+				++Length;
 			}
 
 			public void Remove(int index)
@@ -254,7 +261,7 @@ namespace EchoRenderer.UI.Core.Fields
 					transform.LeftPercent = 0f;
 					transform.RightPercent = 1f;
 
-					float x = field.display.GetPosition(Position);
+					float x = field.editingDisplay.GetPosition(Position);
 
 					transform.LeftMargin = -Thickness + x;
 					transform.RightMargin = -Thickness - x;
