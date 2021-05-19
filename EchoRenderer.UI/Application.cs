@@ -9,6 +9,7 @@ using EchoRenderer.Rendering.Tiles;
 using EchoRenderer.Textures;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
+using EchoRenderer.UI.Core.Fields;
 using EchoRenderer.UI.Interface;
 using SFML.Graphics;
 using SFML.Window;
@@ -17,7 +18,7 @@ namespace EchoRenderer.UI
 {
 	public class Application : RenderWindow
 	{
-		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer))
+		public Application() : base(new VideoMode(1920, 1080) /*VideoMode.DesktopMode*/, nameof(EchoRenderer))
 		{
 			Closed += (_, _) => Close();
 			KeyPressed += OnKeyPressed;
@@ -44,7 +45,7 @@ namespace EchoRenderer.UI
 			(
 				new AreaUI {transform = {LeftPercent = 0.8f, UniformMargins = 10f}}.Add
 				(
-					new AutoLayoutAreaUI {}.Add
+					new AutoLayoutAreaUI { }.Add
 					(
 						new LabelUI
 						{
@@ -74,6 +75,9 @@ namespace EchoRenderer.UI
 						{
 							label = {Text = "Button 3"}
 						}
+					).Add
+					(
+						new TextFieldUI { }
 					)
 				)
 			).Add

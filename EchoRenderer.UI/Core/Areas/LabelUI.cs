@@ -6,16 +6,33 @@ namespace EchoRenderer.UI.Core.Areas
 {
 	public class LabelUI : AreaUI
 	{
+		string _text;
+		Text.Styles _styles;
+
 		public string Text
 		{
-			get => display.DisplayedString;
-			set => display.DisplayedString = value;
+			get => _text;
+			set
+			{
+				if (_text == value) return;
+				_text = value;
+
+				display.DisplayedString = value;
+				transform.MarkDirty();
+			}
 		}
 
 		public Text.Styles Styles
 		{
-			get => display.Style;
-			set => display.Style = value;
+			get => _styles;
+			set
+			{
+				if (_styles == value) return;
+				_styles = value;
+
+				display.Style = value;
+				transform.MarkDirty();
+			}
 		}
 
 		public override Color FillColor
@@ -26,6 +43,8 @@ namespace EchoRenderer.UI.Core.Areas
 
 		readonly Text display = new Text {Font = mono, FillColor = Theme.Current.ContrastColor};
 		static readonly Font mono = new Font("Assets/Fonts/JetBrainsMono/JetBrainsMono-Bold.ttf");
+
+		public float GetPosition(int index) => display.FindCharacterPos((uint)index).X;
 
 		protected override void Reorient(Float2 position, Float2 size)
 		{

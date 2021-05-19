@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using CodeHelpers;
+using CodeHelpers.Events;
 using CodeHelpers.Mathematics;
 using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
@@ -15,18 +14,38 @@ namespace EchoRenderer.UI.Core.Areas
 			transform = new Transform(this);
 			panel.FillColor = Color.Transparent;
 
-			Random random = RandomHelper.CurrentRandom;
-			Span<byte> bytes = stackalloc byte[3];
+			if (this is RootUI root) Root = root;
 
-			random.NextBytes(bytes);
-
-			panel.FillColor = new Color(bytes[0], bytes[1], bytes[2]);
+			// Random random = RandomHelper.CurrentRandom;
+			// Span<byte> bytes = stackalloc byte[3];
+			//
+			// random.NextBytes(bytes);
+			//
+			// panel.FillColor = new Color(bytes[0], bytes[1], bytes[2]);
 		}
 
 		public readonly Transform transform;
 
 		public AreaUI Parent { get; private set; }
 		public bool Visible { get; set; } = true;
+
+		RootUI _root;
+
+		protected RootUI Root
+		{
+			get => _root;
+			private set
+			{
+				if (_root == value) return;
+
+				var old = _root;
+				_root = value;
+
+				foreach (AreaUI child in this) child.Root = value;
+
+				OnRootChanged(old);
+			}
+		}
 
 		public virtual Color FillColor
 		{
@@ -46,13 +65,14 @@ namespace EchoRenderer.UI.Core.Areas
 
 		public AreaUI Add(AreaUI child)
 		{
-			if (Contains(child)) return this;
+			if (Contains(child) || HasAncestor(child) || child is RootUI) return this;
 
 			child.Parent?.Remove(child);
 			child.transform.MarkDirty();
 
 			children.Add(child);
 			child.Parent = this;
+			child.Root = Root;
 
 			return this;
 		}
@@ -62,6 +82,8 @@ namespace EchoRenderer.UI.Core.Areas
 			if (!children.Remove(child)) return false;
 
 			child.Parent = null;
+			child.Root = null;
+
 			return true;
 		}
 
@@ -91,6 +113,8 @@ namespace EchoRenderer.UI.Core.Areas
 			if (FillColor.A > 0) renderTarget.Draw(panel);
 		}
 
+		protected virtual void OnRootChanged(RootUI previous) { }
+
 		protected IHoverable Find(Float2 point)
 		{
 			Float2 min = panel.Position.As();
@@ -106,10 +130,23 @@ namespace EchoRenderer.UI.Core.Areas
 					if (found != null) return found;
 				}
 
-				return this is IHoverable {Hoverable: true} touchable ? touchable : null;
+				return Visible && this is IHoverable {Hoverable: true} touchable ? touchable : null;
 			}
 
 			return null;
+		}
+
+		bool HasAncestor(AreaUI ancestor)
+		{
+			AreaUI current = Parent;
+
+			while (current != null)
+			{
+				if (current == ancestor) return true;
+				current = current.Parent;
+			}
+
+			return false;
 		}
 
 		List<AreaUI>.Enumerator GetEnumerator() => children.GetEnumerator();
