@@ -6,7 +6,7 @@ using SFML.Window;
 
 namespace EchoRenderer.UI.Core.Areas
 {
-	public class RootUI : AreaUI
+	public class RootUI : AreaUI, IHoverable
 	{
 		public RootUI(Application application)
 		{
@@ -18,10 +18,10 @@ namespace EchoRenderer.UI.Core.Areas
 			application.MouseButtonReleased += OnMouseButtonReleased;
 		}
 
-		readonly Application application;
+		public readonly Application application;
 
-		IHoverable mouseHovering;
-		IHoverable mousePressing;
+		public IHoverable MouseHovering { get; private set; }
+		public IHoverable MousePressing { get; private set; }
 
 		public void Resize(Float2 size)
 		{
@@ -41,28 +41,28 @@ namespace EchoRenderer.UI.Core.Areas
 		{
 			IHoverable touching = Find(args.As());
 
-			if (mouseHovering != touching)
+			if (MouseHovering != touching)
 			{
 				touching?.OnMouseHovered(new MouseHover(args, MouseHover.Type.enter));
-				mouseHovering?.OnMouseHovered(new MouseHover(args, MouseHover.Type.exit));
+				MouseHovering?.OnMouseHovered(new MouseHover(args, MouseHover.Type.exit));
 
-				mouseHovering = touching;
+				MouseHovering = touching;
 			}
-			else mouseHovering?.OnMouseHovered(new MouseHover(args, MouseHover.Type.roam));
+			else MouseHovering?.OnMouseHovered(new MouseHover(args, MouseHover.Type.roam));
 		}
 
 		void OnMouseButtonPressed(object sender, MouseButtonEventArgs args)
 		{
-			if (mouseHovering == null) return;
-			mousePressing = mouseHovering;
+			if (MouseHovering == null) return;
+			MousePressing = MouseHovering;
 
-			mousePressing.OnMousePressed(new MousePress(args, MousePress.Type.down));
+			MousePressing.OnMousePressed(new MousePress(args, MousePress.Type.down));
 		}
 
 		void OnMouseButtonReleased(object sender, MouseButtonEventArgs args)
 		{
-			mousePressing?.OnMousePressed(new MousePress(args, MousePress.Type.up));
-			mousePressing = null;
+			MousePressing?.OnMousePressed(new MousePress(args, MousePress.Type.up));
+			MousePressing = null;
 		}
 	}
 }
