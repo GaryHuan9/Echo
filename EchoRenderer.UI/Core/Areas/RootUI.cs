@@ -1,4 +1,6 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers;
+using CodeHelpers.Mathematics;
 using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
 using SFML.System;
@@ -13,9 +15,12 @@ namespace EchoRenderer.UI.Core.Areas
 			this.application = application;
 
 			application.Resized += OnResize;
+
 			application.MouseMoved += OnMouseMoved;
 			application.MouseButtonPressed += OnMouseButtonPressed;
 			application.MouseButtonReleased += OnMouseButtonReleased;
+
+			application.MouseWheelScrolled += OnMouseWheelScrolled;
 		}
 
 		public readonly Application application;
@@ -63,6 +68,18 @@ namespace EchoRenderer.UI.Core.Areas
 		{
 			MousePressing?.OnMousePressed(new MousePress(args, MousePress.Type.up));
 			MousePressing = null;
+		}
+
+		void OnMouseWheelScrolled(object sender, MouseWheelScrollEventArgs args)
+		{
+			int axis = args.Wheel switch
+					   {
+						   Mouse.Wheel.HorizontalWheel => 0,
+						   Mouse.Wheel.VerticalWheel => 1,
+						   _ => throw ExceptionHelper.Invalid(nameof(args.Wheel), args.Wheel, InvalidType.unexpected)
+					   };
+
+			MouseHovering?.OnMouseScrolled(Float2.Create(axis, args.Delta));
 		}
 	}
 }
