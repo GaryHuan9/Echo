@@ -9,7 +9,7 @@ namespace EchoRenderer.UI.Core
 													 ContrastColor = new Color(250, 250, 252),
 													 BackgroundColor = new Color(26, 26, 30),
 													 PanelColor = new Color(55, 55, 59),
-													 SpecialColor = new Color(40, 96, 156),
+													 SpecialColor = new Color(60, 144, 234),
 
 													 HoverColor = new Color(50, 50, 54),
 													 PressColor = new Color(42, 42, 45),
