@@ -11,7 +11,7 @@ namespace EchoRenderer.UI.Core.Fields
 	{
 		public TextFieldUI()
 		{
-			cursor = new CursorUI(this) {FillColor = Theme.SpecialColor};
+			cursor = new CursorUI(this) {PanelColor = Theme.SpecialColor};
 
 			Add(currentDisplay);
 			Add(editingDisplay);

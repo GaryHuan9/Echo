@@ -6,7 +6,7 @@ namespace EchoRenderer.UI.Core.Areas
 {
 	public abstract class PressableUI : AreaUI, IHoverable
 	{
-		public PressableUI() => base.FillColor = Theme.PanelColor;
+		public PressableUI() => PanelColor = Theme.PanelColor;
 
 		public bool IsHovering { get; private set; }
 		public bool IsPressing { get; private set; }
@@ -16,13 +16,13 @@ namespace EchoRenderer.UI.Core.Areas
 		public virtual void OnMouseHovered(MouseHover mouse)
 		{
 			IsHovering = mouse.type != MouseHover.Type.exit;
-			if (!IsPressing) FillColor = HoverColor;
+			if (!IsPressing) PanelColor = HoverColor;
 		}
 
 		public virtual void OnMousePressed(MousePress mouse)
 		{
 			IsPressing = mouse.type == MousePress.Type.down;
-			FillColor = IsPressing ? Theme.PressColor : HoverColor;
+			PanelColor = IsPressing ? Theme.PressColor : HoverColor;
 
 			if (IsPressing) OnMousePressed();
 		}

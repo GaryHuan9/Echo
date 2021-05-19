@@ -24,6 +24,12 @@ namespace EchoRenderer.UI.Core.Areas
 			}
 		}
 
+		public Color TextColor
+		{
+			get => display.FillColor;
+			set => display.FillColor = value;
+		}
+
 		public Text.Styles Styles
 		{
 			get => _styles;
@@ -47,12 +53,6 @@ namespace EchoRenderer.UI.Core.Areas
 
 				transform.MarkDirty();
 			}
-		}
-
-		public override Color FillColor
-		{
-			get => display.FillColor;
-			set => display.FillColor = value;
 		}
 
 		float LeftPadding

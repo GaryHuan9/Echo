@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using CodeHelpers;
-using CodeHelpers.Events;
 using CodeHelpers.Mathematics;
+using EchoRenderer.UI.Core.Fields;
 using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
 
@@ -49,7 +47,7 @@ namespace EchoRenderer.UI.Core.Areas
 			}
 		}
 
-		public virtual Color FillColor
+		public Color PanelColor
 		{
 			get => panel.FillColor;
 			set => panel.FillColor = value;
@@ -104,6 +102,8 @@ namespace EchoRenderer.UI.Core.Areas
 			foreach (AreaUI child in this) child.Draw(renderTarget);
 		}
 
+		public LabeledAreaUI Label(string label) => new() {label = {Text = label}, Area = this};
+
 		protected virtual void Reorient(Float2 position, Float2 size)
 		{
 			panel.Position = position.As();
@@ -112,7 +112,7 @@ namespace EchoRenderer.UI.Core.Areas
 
 		protected virtual void Paint(RenderTarget renderTarget)
 		{
-			if (FillColor.A > 0) renderTarget.Draw(panel);
+			if (PanelColor.A > 0) renderTarget.Draw(panel);
 		}
 
 		protected virtual void OnRootChanged(RootUI previous) { }
