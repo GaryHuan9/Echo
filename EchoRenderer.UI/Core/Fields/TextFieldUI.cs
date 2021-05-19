@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Text;
+using CodeHelpers.Collections;
+using CodeHelpers.Mathematics;
 using EchoRenderer.UI.Core.Areas;
 using EchoRenderer.UI.Core.Interactions;
 using SFML.Window;
@@ -10,22 +11,42 @@ namespace EchoRenderer.UI.Core.Fields
 	{
 		public TextFieldUI()
 		{
-			label = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}};
-			cursor = new AreaUI {FillColor = Theme.SpecialColor};
+			display = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}};
+			cursor = new CursorUI(this) {FillColor = Theme.SpecialColor};
 
-			Add(label);
-			label.Add(cursor);
+			Add(display);
 
-			UpdateCursorTransform();
+			display.Add(cursor);
+			UpdateAlignment();
 		}
 
-		readonly LabelUI label;
-		readonly AreaUI cursor;
+		public ReadOnlySpan<char> Text
+		{
+			get => currentBuffer.Value;
+			set
+			{
+				if (value.SequenceEqual(Text)) return;
 
-		readonly StringBuilder builder = new StringBuilder();
+				currentBuffer.Value = value;
+				cursor.ClampPosition();
+
+				OnTextChanged?.Invoke(this);
+
+				if (!Editing) display.Text = value;
+			}
+		}
+
+		public int Length => currentBuffer.Length;
+
+		public event Action<TextFieldUI> OnTextChanged;
+
+		readonly LabelUI display;
+		readonly CursorUI cursor;
+
+		readonly CharBuffer currentBuffer = new CharBuffer();
+		readonly CharBuffer editingBuffer = new CharBuffer();
 
 		bool _editing;
-		int _cursorPosition;
 
 		bool Editing
 		{
@@ -33,21 +54,14 @@ namespace EchoRenderer.UI.Core.Fields
 			set
 			{
 				if (_editing == value) return;
+
 				_editing = value;
+				cursor.Enabled = value;
 
-				//TODO: update cursor
-			}
-		}
+				UpdateAlignment();
 
-		int CursorPosition
-		{
-			get => _cursorPosition;
-			set
-			{
-				if (_cursorPosition == value) return;
-
-				_cursorPosition = value;
-				UpdateCursorTransform();
+				if (!value) Text = editingBuffer.Value;
+				else editingBuffer.Value = currentBuffer.Value;
 			}
 		}
 
@@ -59,10 +73,15 @@ namespace EchoRenderer.UI.Core.Fields
 			if (pressing != null && pressing != this) Editing = false;
 		}
 
-		protected override void OnMousePressed()
+		public override void OnMousePressed(MousePress mouse)
 		{
-			Editing = true;
+			base.OnMousePressed(mouse);
+
+			float x = (mouse.point / display.transform).x;
+			cursor.Position = display.GetIndex(x);
 		}
+
+		protected override void OnMousePressed() => Editing = true;
 
 		void OnTextEntered(object sender, TextEventArgs args)
 		{
@@ -71,8 +90,10 @@ namespace EchoRenderer.UI.Core.Fields
 
 			if (!char.IsControl(code))
 			{
-				builder.Insert(CursorPosition++, code);
-				label.Text = builder.ToString();
+				editingBuffer.Insert(cursor.Position, code);
+				display.Text = editingBuffer.Value;
+
+				++cursor.Position;
 			}
 		}
 
@@ -88,48 +109,33 @@ namespace EchoRenderer.UI.Core.Fields
 				}
 				case Keyboard.Key.Backspace:
 				{
-					if (CursorPosition == 0) break;
+					if (cursor.Position == 0) break;
 
-					builder.Remove(--CursorPosition, 1);
-					label.Text = builder.ToString();
+					editingBuffer.Remove(--cursor.Position);
+					display.Text = editingBuffer.Value;
 
 					break;
 				}
 				case Keyboard.Key.Delete:
 				{
-					if (CursorPosition == builder.Length) break;
+					if (cursor.Position == editingBuffer.Length) break;
 
-					builder.Remove(CursorPosition, 1);
-					label.Text = builder.ToString();
+					editingBuffer.Remove(cursor.Position);
+					display.Text = editingBuffer.Value;
 
 					break;
 				}
 				case Keyboard.Key.Left:
 				{
-					CursorPosition = Math.Max(CursorPosition - 1, 0);
+					--cursor.Position;
 					break;
 				}
 				case Keyboard.Key.Right:
 				{
-					CursorPosition = Math.Min(CursorPosition + 1, builder.Length);
+					++cursor.Position;
 					break;
 				}
 			}
-		}
-
-		void UpdateCursorTransform()
-		{
-			float position = label.GetPosition(CursorPosition);
-			const float Thickness = 1f;
-
-			cursor.transform.VerticalPercents = 0f;
-			cursor.transform.VerticalMargins = 0f;
-
-			cursor.transform.LeftPercent = 0f;
-			cursor.transform.RightPercent = 1f;
-
-			cursor.transform.LeftMargin = -Thickness + position;
-			cursor.transform.RightMargin = -Thickness - position;
 		}
 
 		protected override void OnRootChanged(RootUI previous)
@@ -147,6 +153,129 @@ namespace EchoRenderer.UI.Core.Fields
 				Root.application.TextEntered += OnTextEntered;
 				Root.application.KeyPressed += OnKeyPressed;
 			}
+		}
+
+		void UpdateAlignment() => display.Align = Editing ? LabelUI.Alignment.left : LabelUI.Alignment.center;
+
+		class CharBuffer
+		{
+			public int Length { get; private set; }
+
+			public ReadOnlySpan<char> Value
+			{
+				get => new(array, 0, Length);
+				set
+				{
+					EnsureCapacity(value.Length);
+
+					Length = value.Length;
+					value.CopyTo(array);
+				}
+			}
+
+			char[] array = new char[16];
+
+			public void Insert(int index, char value)
+			{
+				EnsureCapacity(++Length);
+				array.Insert(index, value);
+			}
+
+			public void Remove(int index)
+			{
+				--Length;
+				for (int i = index; i < Length; i++) array[i] = array[i + 1];
+			}
+
+			void EnsureCapacity(int length)
+			{
+				int resize = array.Length;
+				if (length <= resize) return;
+
+				while (resize < length) resize *= 2;
+
+				char[] newArray = new char[resize];
+				Array.Copy(array, newArray, Length);
+
+				array = newArray;
+			}
+		}
+
+		class CursorUI : AreaUI
+		{
+			public CursorUI(TextFieldUI field) => this.field = field;
+
+			readonly TextFieldUI field;
+
+			double blinkStart;
+
+			int _position;
+			bool _enabled;
+
+			public int Position
+			{
+				get => _position;
+				set
+				{
+					if (_position == value) return;
+
+					_position = value;
+					transform.MarkDirty();
+
+					ResetBlink();
+					ClampPosition();
+				}
+			}
+
+			public bool Enabled
+			{
+				get => _enabled;
+				set
+				{
+					if (_enabled == value) return;
+
+					_enabled = value;
+					transform.MarkDirty();
+					ResetBlink();
+				}
+			}
+
+			const float BlinkDelay = 0.53f;
+			const float Thickness = 1f;
+
+			public override void Update()
+			{
+				base.Update();
+
+				if (transform.Dirtied)
+				{
+					transform.VerticalPercents = 0f;
+					transform.VerticalMargins = 0f;
+
+					transform.LeftPercent = 0f;
+					transform.RightPercent = 1f;
+
+					float x = field.display.GetPosition(Position);
+
+					transform.LeftMargin = -Thickness + x;
+					transform.RightMargin = -Thickness - x;
+				}
+
+				double delay = Root.application.TotalTime - blinkStart;
+				bool visible = (int)(delay / BlinkDelay) % 2 == 0;
+
+				Visible = visible && Enabled;
+			}
+
+			public void ClampPosition() => Position = Position.Clamp(0, field.editingBuffer.Length);
+
+			protected override void OnRootChanged(RootUI previous)
+			{
+				base.OnRootChanged(previous);
+				if (Root != null) ResetBlink();
+			}
+
+			void ResetBlink() => blinkStart = Root.application.TotalTime;
 		}
 	}
 }
