@@ -43,7 +43,7 @@ namespace EchoRenderer.UI
 			//Test
 			root = (RootUI)new RootUI(this).Add
 			(
-				new AreaUI {transform = {LeftPercent = 0.8f, UniformMargins = 10f}}.Add
+				new AreaUI { transform = { LeftPercent = 0.8f, UniformMargins = 10f } }.Add
 				(
 					new AutoLayoutAreaUI { }.Add
 					(
@@ -55,7 +55,8 @@ namespace EchoRenderer.UI
 					(
 						new ButtonUI
 						{
-							label = {Text = "Button 1"}
+							label = { Text = "Button 1",
+									  Centered = false }
 						}
 					).Add
 					(
@@ -67,13 +68,13 @@ namespace EchoRenderer.UI
 					(
 						new ButtonUI
 						{
-							label = {Text = "Button 2"}
+							label = { Text = "Button 2" }
 						}
 					).Add
 					(
 						new ButtonUI
 						{
-							label = {Text = "Button 3"}
+							label = { Text = "Button 3" }
 						}
 					).Add
 					(

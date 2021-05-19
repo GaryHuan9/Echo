@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using SFML.Graphics;
+using SFML.System;
 
 namespace EchoRenderer.UI.Core.Areas
 {
@@ -8,6 +9,7 @@ namespace EchoRenderer.UI.Core.Areas
 	{
 		string _text;
 		Text.Styles _styles;
+		bool _centered = true;
 
 		public string Text
 		{
@@ -35,6 +37,12 @@ namespace EchoRenderer.UI.Core.Areas
 			}
 		}
 
+		public bool Centered
+		{
+			get => _centered;
+			set => _centered = value;
+		}
+
 		public override Color FillColor
 		{
 			get => display.FillColor;
@@ -53,7 +61,9 @@ namespace EchoRenderer.UI.Core.Areas
 			display.CharacterSize = (uint)Math.Max(0, size.y);
 
 			var bounds = display.GetLocalBounds();
-			Float2 center = position + size / 2f;
+
+            Float2 center = position + (Centered ? (size / 2f) : new Float2((Text.Length / 2f) * (display.CharacterSize / 2f) + display.CharacterSize * Text.Length / 20f, 
+																			size.y / 2f));
 
 			Float2 offset = new Float2(bounds.Left, bounds.Top);
 			Float2 extend = new Float2(bounds.Width, bounds.Height) / 2f;

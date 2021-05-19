@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EchoRenderer.UI": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\Clemens\\Documents\\EchoRenderer\\EchoRenderer"
+    }
+  }
+}
