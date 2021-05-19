@@ -5,18 +5,11 @@ using SFML.System;
 
 namespace EchoRenderer.UI.Core.Areas
 {
-    public enum LabelAlignments
-    {
-		Centered,
-		LeftAligned,
-		RightAligned
-    }
-
 	public class LabelUI : AreaUI
 	{
 		string _text;
 		Text.Styles _styles;
-		LabelAlignments _alignment = LabelAlignments.Centered;
+		Alignment _align;
 
 		public string Text
 		{
@@ -44,10 +37,16 @@ namespace EchoRenderer.UI.Core.Areas
 			}
 		}
 
-		public LabelAlignments Alignment
+		public Alignment Align
 		{
-			get => _alignment;
-			set => _alignment = value;
+			get => _align;
+			set
+			{
+				if (_align == value) return;
+				_align = value;
+
+				transform.MarkDirty();
+			}
 		}
 
 		public override Color FillColor
@@ -66,30 +65,56 @@ namespace EchoRenderer.UI.Core.Areas
 			base.Reorient(position, size);
 
 			display.CharacterSize = (uint)Math.Max(0, size.y);
+			FloatRect bounds = display.GetLocalBounds();
 
-			var bounds = display.GetLocalBounds();
-			Float2 center = Float2.zero;
+			float margin = bounds.Left;
+			float extend = bounds.Width / 2f;
 
-			if (Alignment == LabelAlignments.Centered) {
-				center = position + size / 2f;
-			}
-			else if (Alignment == LabelAlignments.LeftAligned) {
-				center = position + new Float2(Text.Length / 2f * (display.CharacterSize / 2f) + display.CharacterSize * Text.Length / 20f, size.y / 2f);
-			}
-			else if (Alignment == LabelAlignments.RightAligned) {
-				center = position + new Float2(size.x - (Text.Length / 2f * (display.CharacterSize / 2f) + display.CharacterSize * Text.Length / 20f) , size.y / 2f);
-			}
-			Float2 offset = new Float2(bounds.Left, bounds.Top);
-			Float2 extend = new Float2(bounds.Width, bounds.Height) / 2f;
+			float xOrigin = 0f;
+			float xPosition = 0f;
 
-			display.Origin = (offset + extend).As();
-			display.Position = center.As();
+			switch (Align)
+			{
+				case Alignment.center:
+				{
+					xOrigin = margin + extend;
+					xPosition = position.x + size.x / 2f;
+
+					break;
+				}
+				case Alignment.left:
+				{
+					xOrigin = margin;
+					xPosition = position.x + Theme.SmallMargin;
+
+					break;
+				}
+				case Alignment.right:
+				{
+					xOrigin = margin + extend * 2f;
+					xPosition = position.x + size.x - Theme.SmallMargin;
+
+					break;
+				}
+			}
+
+			float y = position.y - size.y * 0.16f;
+
+			display.Origin = new Vector2f(xOrigin, 0f);
+			display.Position = new Vector2f(xPosition, y);
 		}
 
 		protected override void Paint(RenderTarget renderTarget)
 		{
 			base.Paint(renderTarget);
 			renderTarget.Draw(display);
+		}
+
+		public enum Alignment
+		{
+			center,
+			left,
+			right
 		}
 	}
 }
