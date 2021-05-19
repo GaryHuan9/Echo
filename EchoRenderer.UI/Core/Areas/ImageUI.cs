@@ -10,6 +10,12 @@ namespace EchoRenderer.UI.Core.Areas
 		public Texture Texture { get; set; }
 		public Shader Shader { get; set; }
 
+		public override Color FillColor
+		{
+			get => display.FillColor;
+			set => display.FillColor = value;
+		}
+
 		readonly RectangleShape display = new RectangleShape();
 
 		protected override void Reorient(Float2 position, Float2 size)
