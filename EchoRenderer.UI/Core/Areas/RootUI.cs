@@ -1,5 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
+using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
+using SFML.System;
 using SFML.Window;
 
 namespace EchoRenderer.UI.Core.Areas
@@ -11,9 +13,15 @@ namespace EchoRenderer.UI.Core.Areas
 			this.application = application;
 
 			application.Resized += OnResize;
+			application.MouseMoved += OnMouseMoved;
+			application.MouseButtonPressed += OnMouseButtonPressed;
+			application.MouseButtonReleased += OnMouseButtonReleased;
 		}
 
 		readonly Application application;
+
+		IHoverable mouseHovering;
+		IHoverable mousePressing;
 
 		public void Resize(Float2 size)
 		{
@@ -21,12 +29,40 @@ namespace EchoRenderer.UI.Core.Areas
 			transform.MarkDirty();
 		}
 
-		void OnResize(object sender, SizeEventArgs argument)
+		void OnResize(object sender, SizeEventArgs args)
 		{
-			Float2 size = new Float2(argument.Width, argument.Height);
-			application.SetView(new View(size.As() / 2f, size.As()));
+			var size = new Vector2f(args.Width, args.Height);
+			application.SetView(new View(size / 2f, size));
 
-			Resize(size);
+			Resize(size.As());
+		}
+
+		void OnMouseMoved(object sender, MouseMoveEventArgs args)
+		{
+			IHoverable touching = Find(args.As());
+
+			if (mouseHovering != touching)
+			{
+				touching?.OnMouseHovered(new MouseHover(args, MouseHover.Type.enter));
+				mouseHovering?.OnMouseHovered(new MouseHover(args, MouseHover.Type.exit));
+
+				mouseHovering = touching;
+			}
+			else mouseHovering?.OnMouseHovered(new MouseHover(args, MouseHover.Type.roam));
+		}
+
+		void OnMouseButtonPressed(object sender, MouseButtonEventArgs args)
+		{
+			if (mouseHovering == null) return;
+			mousePressing = mouseHovering;
+
+			mousePressing.OnMousePressed(new MousePress(args, MousePress.Type.down));
+		}
+
+		void OnMouseButtonReleased(object sender, MouseButtonEventArgs args)
+		{
+			mousePressing?.OnMousePressed(new MousePress(args, MousePress.Type.up));
+			mousePressing = null;
 		}
 	}
 }
