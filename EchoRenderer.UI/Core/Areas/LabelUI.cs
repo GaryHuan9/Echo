@@ -7,19 +7,19 @@ namespace EchoRenderer.UI.Core.Areas
 {
 	public class LabelUI : AreaUI
 	{
-		string _text;
+		string _text = "";
 		Text.Styles _styles;
 		Alignment _align;
 
-		public string Text
+		public ReadOnlySpan<char> Text
 		{
 			get => _text;
 			set
 			{
 				if (_text == value) return;
-				_text = value;
+				_text = new string(value);
 
-				display.DisplayedString = value;
+				display.DisplayedString = _text;
 				transform.MarkDirty();
 			}
 		}
@@ -55,10 +55,64 @@ namespace EchoRenderer.UI.Core.Areas
 			set => display.FillColor = value;
 		}
 
+		float LeftPadding
+		{
+			get
+			{
+				if (Align == Alignment.left) return Margin;
+				FloatRect bounds = display.GetLocalBounds();
+
+				float width = bounds.Width;
+				float area = Size.x;
+
+				switch (Align)
+				{
+					case Alignment.center: return area / 2f - width / 2f;
+					case Alignment.right:  return area - width - Margin;
+				}
+
+				return 0f;
+			}
+		}
+
+		static float Margin => Theme.SmallMargin;
+
 		readonly Text display = new Text {Font = mono, FillColor = Theme.Current.ContrastColor};
 		static readonly Font mono = new Font("Assets/Fonts/JetBrainsMono/JetBrainsMono-Bold.ttf");
 
-		public float GetPosition(int index) => display.FindCharacterPos((uint)index).X;
+		public float GetPosition(int index) => display.FindCharacterPos((uint)index).X + LeftPadding;
+
+		public int GetIndex(float position)
+		{
+			position -= LeftPadding;
+			int count = Text.Length;
+
+			//Estimate index based on width
+			float width = display.GetLocalBounds().Width;
+			int index = (position / width * count).Round();
+
+			//Shift index to correct position
+			float head = GetDistance(index + 1);
+			float tail = GetDistance(index - 1);
+
+			int direction = head < tail ? 1 : -1;
+
+			float current = GetDistance(index);
+			float search = direction > 0 ? head : tail;
+
+			//Continuously lower distance
+			while (search < current)
+			{
+				index += direction;
+
+				current = search;
+				search = GetDistance(index + direction);
+			}
+
+			return index;
+
+			float GetDistance(int target) => Math.Abs(display.FindCharacterPos((uint)target).X - position);
+		}
 
 		protected override void Reorient(Float2 position, Float2 size)
 		{
@@ -85,14 +139,14 @@ namespace EchoRenderer.UI.Core.Areas
 				case Alignment.left:
 				{
 					xOrigin = margin;
-					xPosition = position.x + Theme.SmallMargin;
+					xPosition = position.x + Margin;
 
 					break;
 				}
 				case Alignment.right:
 				{
 					xOrigin = margin + extend * 2f;
-					xPosition = position.x + size.x - Theme.SmallMargin;
+					xPosition = position.x + size.x - Margin;
 
 					break;
 				}

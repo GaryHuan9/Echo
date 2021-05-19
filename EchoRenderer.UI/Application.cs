@@ -1,5 +1,7 @@
-﻿using System.Threading;
+﻿using System.Diagnostics;
+using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Objects.Scenes;
@@ -21,7 +23,6 @@ namespace EchoRenderer.UI
 		public Application() : base(new VideoMode(1920, 1080) /*VideoMode.DesktopMode*/, nameof(EchoRenderer))
 		{
 			Closed += (_, _) => Close();
-			KeyPressed += OnKeyPressed;
 
 			//Create render environment
 			Int2[] resolutions =
@@ -39,6 +40,8 @@ namespace EchoRenderer.UI
 			profile.RenderBuffer = buffer;
 
 			engine.Profile = profile;
+
+			stopwatch = Stopwatch.StartNew();
 
 			//Test
 			root = (RootUI)new RootUI(this).Add
@@ -121,7 +124,11 @@ namespace EchoRenderer.UI
 		public readonly RenderEngine engine;
 		public readonly RenderBuffer buffer;
 
+		public double TotalTime { get; private set; }
+		public double DeltaTime { get; private set; }
+
 		readonly RootUI root;
+		readonly Stopwatch stopwatch;
 
 		static readonly RenderProfile pathTraceFastProfile = new()
 															 {
@@ -149,12 +156,16 @@ namespace EchoRenderer.UI
 
 		public void Start()
 		{
+			UpdateTime();
+
 			SetVerticalSyncEnabled(true);
 			root.Resize(Size.Cast());
 		}
 
 		public void Update()
 		{
+			UpdateTime();
+
 			switch (engine.CurrentState)
 			{
 				case RenderEngine.State.waiting:
@@ -168,7 +179,13 @@ namespace EchoRenderer.UI
 			root.Draw(this);
 		}
 
-		void OnKeyPressed(object sender, KeyEventArgs argument) { }
+		void UpdateTime()
+		{
+			double time = stopwatch.Elapsed.TotalSeconds;
+
+			DeltaTime = time - TotalTime;
+			TotalTime = time;
+		}
 
 		static void Main()
 		{
