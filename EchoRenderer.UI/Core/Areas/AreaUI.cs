@@ -100,7 +100,7 @@ namespace EchoRenderer.UI.Core.Areas
 		{
 			transform.Reorient();
 
-			if (panel.Size.As() > Float2.zero && Visible) Paint(renderTarget);
+			if (Size > Float2.zero && Visible) Paint(renderTarget);
 			foreach (AreaUI child in this) child.Draw(renderTarget);
 		}
 
@@ -258,10 +258,10 @@ namespace EchoRenderer.UI.Core.Areas
 
 			bool _dirtied;
 
-			bool Dirtied
+			public bool Dirtied
 			{
 				get => _dirtied;
-				set
+				private set
 				{
 					if (value && !_dirtied)
 					{
@@ -279,37 +279,38 @@ namespace EchoRenderer.UI.Core.Areas
 
 			public void Reorient()
 			{
-				if (Dirtied && areaUI.Parent != null)
-				{
-					RectangleShape parent = areaUI.Parent.panel;
-
-					Float2 parentPosition = parent.Position.As();
-					Float2 parentSize = parent.Size.As();
-
-					Float2 position = parentPosition + parentSize * new Float2
-									  (
-										  LeftPercent,
-										  TopPercent
-									  ) + new Float2
-									  (
-										  LeftMargin,
-										  TopMargin
-									  );
-
-					Float2 size = parentSize * new Float2
-								  (
-									  1f - RightPercent - LeftPercent,
-									  1f - TopPercent - BottomPercent
-								  ) - new Float2
-								  (
-									  RightMargin + LeftMargin,
-									  TopMargin + BottomMargin
-								  );
-
-					areaUI.Reorient(position, size);
-				}
+				if (!Dirtied) return;
 
 				Dirtied = false;
+
+				if (areaUI.Parent == null) return;
+
+				RectangleShape parent = areaUI.Parent.panel;
+
+				Float2 parentPosition = parent.Position.As();
+				Float2 parentSize = parent.Size.As();
+
+				Float2 position = parentPosition + parentSize * new Float2
+								  (
+									  LeftPercent,
+									  TopPercent
+								  ) + new Float2
+								  (
+									  LeftMargin,
+									  TopMargin
+								  );
+
+				Float2 size = parentSize * new Float2
+							  (
+								  1f - RightPercent - LeftPercent,
+								  1f - TopPercent - BottomPercent
+							  ) - new Float2
+							  (
+								  RightMargin + LeftMargin,
+								  TopMargin + BottomMargin
+							  );
+
+				areaUI.Reorient(position, size);
 			}
 
 			public void MarkDirty() => Dirtied = true;
@@ -319,6 +320,9 @@ namespace EchoRenderer.UI.Core.Areas
 				if (!Scalars.AlmostEquals(original, value)) MarkDirty();
 				original = value;
 			}
+
+			public static Float2 operator *(Float2 value, Transform transform) => transform.areaUI.panel.Transform.TransformPoint(value.As()).As();
+			public static Float2 operator /(Float2 value, Transform transform) => transform.areaUI.panel.InverseTransform.TransformPoint(value.As()).As();
 		}
 	}
 }
