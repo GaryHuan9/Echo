@@ -131,7 +131,7 @@ namespace EchoRenderer.Rendering
 			{
 				TileWorker worker = workers[i] = new TileWorker(CurrentProfile);
 
-				worker.OnWorkCompleted += OnTileWorkCompleted;
+				worker.OnWorkCompletedMethods += OnTileWorkCompleted;
 				DispatchWorker(worker);
 			}
 		}
@@ -313,7 +313,7 @@ namespace EchoRenderer.Rendering
 			{
 				TileWorker worker = workers[i];
 
-				worker.OnWorkCompleted -= OnTileWorkCompleted;
+				worker.OnWorkCompletedMethods -= OnTileWorkCompleted;
 				worker.Dispose();
 			}
 

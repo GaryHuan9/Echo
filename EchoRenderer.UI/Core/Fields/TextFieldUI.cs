@@ -30,15 +30,14 @@ namespace EchoRenderer.UI.Core.Fields
 				currentBuffer.Value = value;
 				cursor.ClampPosition();
 
-				OnTextChanged?.Invoke(this);
-
+				OnTextChangedMethods?.Invoke(this);
 				if (!Editing) display.Text = value;
 			}
 		}
 
 		public int Length => currentBuffer.Length;
 
-		public event Action<TextFieldUI> OnTextChanged;
+		public event Action<TextFieldUI> OnTextChangedMethods;
 
 		readonly LabelUI display;
 		readonly CursorUI cursor;

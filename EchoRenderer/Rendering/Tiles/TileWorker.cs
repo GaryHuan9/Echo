@@ -96,7 +96,7 @@ namespace EchoRenderer.Rendering.Tiles
 		/// Invoked on worker thread when all rendered pixels are stored in the buffer.
 		/// Passes in the <see cref="TileWorker"/> for easy identification.
 		/// </summary>
-		public event Action<TileWorker> OnWorkCompleted;
+		public event Action<TileWorker> OnWorkCompletedMethods;
 
 		public void Reset(Int2 renderOffset)
 		{
@@ -143,7 +143,7 @@ namespace EchoRenderer.Rendering.Tiles
 				}
 				finally { dispatchEvent.Reset(); }
 
-				if (!aborted) OnWorkCompleted?.Invoke(this);
+				if (!aborted) OnWorkCompletedMethods?.Invoke(this);
 			}
 
 			end:
