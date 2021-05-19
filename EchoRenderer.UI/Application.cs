@@ -49,14 +49,15 @@ namespace EchoRenderer.UI
 					(
 						new LabelUI
 						{
-							Text = "Hello World 1"
+							Text = "Hello World 1",
+							Alignment = LabelAlignments.LeftAligned
 						}
 					).Add
 					(
 						new ButtonUI
 						{
 							label = { Text = "Button 1",
-									  Centered = false }
+									  Alignment = LabelAlignments.RightAligned }
 						}
 					).Add
 					(

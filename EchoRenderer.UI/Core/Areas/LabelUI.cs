@@ -5,11 +5,18 @@ using SFML.System;
 
 namespace EchoRenderer.UI.Core.Areas
 {
+    public enum LabelAlignments
+    {
+		Centered,
+		LeftAligned,
+		RightAligned
+    }
+
 	public class LabelUI : AreaUI
 	{
 		string _text;
 		Text.Styles _styles;
-		bool _centered = true;
+		LabelAlignments _alignment = LabelAlignments.Centered;
 
 		public string Text
 		{
@@ -37,10 +44,10 @@ namespace EchoRenderer.UI.Core.Areas
 			}
 		}
 
-		public bool Centered
+		public LabelAlignments Alignment
 		{
-			get => _centered;
-			set => _centered = value;
+			get => _alignment;
+			set => _alignment = value;
 		}
 
 		public override Color FillColor
@@ -61,10 +68,17 @@ namespace EchoRenderer.UI.Core.Areas
 			display.CharacterSize = (uint)Math.Max(0, size.y);
 
 			var bounds = display.GetLocalBounds();
+			Float2 center = Float2.zero;
 
-            Float2 center = position + (Centered ? (size / 2f) : new Float2((Text.Length / 2f) * (display.CharacterSize / 2f) + display.CharacterSize * Text.Length / 20f, 
-																			size.y / 2f));
-
+			if (Alignment == LabelAlignments.Centered) {
+				center = position + size / 2f;
+			}
+			else if (Alignment == LabelAlignments.LeftAligned) {
+				center = position + new Float2(Text.Length / 2f * (display.CharacterSize / 2f) + display.CharacterSize * Text.Length / 20f, size.y / 2f);
+			}
+			else if (Alignment == LabelAlignments.RightAligned) {
+				center = position + new Float2(size.x - (Text.Length / 2f * (display.CharacterSize / 2f) + display.CharacterSize * Text.Length / 20f) , size.y / 2f);
+			}
 			Float2 offset = new Float2(bounds.Left, bounds.Top);
 			Float2 extend = new Float2(bounds.Width, bounds.Height) / 2f;
 
