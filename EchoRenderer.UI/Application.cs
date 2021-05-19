@@ -34,7 +34,7 @@ namespace EchoRenderer.UI
 
 			RenderProfile profile = pathTraceFastProfile; //Selects or creates render profile
 
-			profile.Scene = new RandomSpheres(40); //Creates/loads scene to render
+			profile.Scene = new RandomSpheres(120); //Creates/loads scene to render
 			profile.RenderBuffer = buffer;
 
 			engine.Profile = profile;
@@ -42,18 +42,68 @@ namespace EchoRenderer.UI
 			//Test
 			root = (RootUI)new RootUI(this).Add
 			(
-				new AreaUI {transform = {LeftPercent = 0.8f, UniformMargin = 10f}}
+				new AreaUI {transform = {LeftPercent = 0.8f, UniformMargins = 10f}}.Add
+				(
+					new AutoLayoutAreaUI {}.Add
+					(
+						new LabelUI
+						{
+							Text = "Hello World 1"
+						}
+					).Add
+					(
+						new ButtonUI
+						{
+							label = {Text = "Button 1"}
+						}
+					).Add
+					(
+						new LabelUI
+						{
+							Text = "Hello World 2"
+						}
+					).Add
+					(
+						new ButtonUI
+						{
+							label = {Text = "Button 2"}
+						}
+					).Add
+					(
+						new ButtonUI
+						{
+							label = {Text = "Button 3"}
+						}
+					)
+				)
 			).Add
 			(
-				new AreaUI {transform = {RightPercent = 0.8f, UniformMargin = 10f}}.Add
+				new AreaUI {transform = {RightPercent = 0.8f, UniformMargins = 10f}}.Add
 				(
-					new LabelUI {transform = {BottomPercent = 1f, BottomMargin = -100f}}
+					new LabelUI
+					{
+						transform = {BottomPercent = 1f, BottomMargin = -20f},
+						Text = "Hello World"
+					}
+				).Add
+				(
+					new ButtonUI
+					{
+						transform = {BottomPercent = 1f, TopMargin = 30f, BottomMargin = -50f},
+						label = {Text = "Button"}
+					}
+				).Add
+				(
+					new SliderUI
+					{
+						transform = {BottomPercent = 1f, TopMargin = 60f, BottomMargin = -80f}
+					}
 				)
 			).Add
 			(
 				new RenderPreviewUI
 				{
-					transform = {LeftPercent = 0.2f, RightPercent = 0.2f, UniformMargin = 10f},
+					transform = {LeftPercent = 0.2f, RightPercent = 0.2f, UniformMargins = 10f},
 					RenderBuffer = buffer
 				}
 			);
@@ -100,7 +150,7 @@ namespace EchoRenderer.UI
 			{
 				case RenderEngine.State.waiting:
 				{
-					engine.Begin();
+					// engine.Begin();
 					break;
 				}
 			}
