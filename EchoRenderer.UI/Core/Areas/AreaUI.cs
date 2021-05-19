@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
 
 namespace EchoRenderer.UI.Core.Areas
@@ -12,14 +13,14 @@ namespace EchoRenderer.UI.Core.Areas
 		public AreaUI()
 		{
 			transform = new Transform(this);
+			panel.FillColor = Color.Transparent;
 
 			Random random = RandomHelper.CurrentRandom;
 			Span<byte> bytes = stackalloc byte[3];
 
 			random.NextBytes(bytes);
 
-			// FillColor = Color.Transparent;
-			FillColor = new Color(bytes[0], bytes[1], bytes[2]);
+			panel.FillColor = new Color(bytes[0], bytes[1], bytes[2]);
 		}
 
 		public readonly Transform transform;
@@ -27,7 +28,7 @@ namespace EchoRenderer.UI.Core.Areas
 		public AreaUI Parent { get; private set; }
 		public bool Visible { get; set; } = true;
 
-		public Color FillColor
+		public virtual Color FillColor
 		{
 			get => panel.FillColor;
 			set => panel.FillColor = value;
@@ -37,7 +38,11 @@ namespace EchoRenderer.UI.Core.Areas
 		readonly List<AreaUI> children = new List<AreaUI>();
 
 		public AreaUI this[int index] => children[index];
+
 		public int ChildCount => children.Count;
+		protected Float2 Size => panel.Size.As();
+
+		protected static Theme Theme => Theme.Current;
 
 		public AreaUI Add(AreaUI child)
 		{
@@ -84,6 +89,27 @@ namespace EchoRenderer.UI.Core.Areas
 		protected virtual void Paint(RenderTarget renderTarget)
 		{
 			if (FillColor.A > 0) renderTarget.Draw(panel);
+		}
+
+		protected IHoverable Find(Float2 point)
+		{
+			Float2 min = panel.Position.As();
+			Float2 max = min + panel.Size.As();
+
+			if (min <= point && point <= max)
+			{
+				//Must iterate in reverse so that the layering is correct
+
+				for (int i = ChildCount - 1; i >= 0; i--)
+				{
+					var found = this[i].Find(point);
+					if (found != null) return found;
+				}
+
+				return this is IHoverable {Hoverable: true} touchable ? touchable : null;
+			}
+
+			return null;
 		}
 
 		List<AreaUI>.Enumerator GetEnumerator() => children.GetEnumerator();
@@ -155,13 +181,37 @@ namespace EchoRenderer.UI.Core.Areas
 				set => Assign(ref _topMargin, value);
 			}
 
-			public float UniformPercent
+			public float VerticalPercents
+			{
+				get => (BottomPercent + TopPercent) / 2f;
+				set => BottomPercent = TopPercent = value;
+			}
+
+			public float VerticalMargins
+			{
+				get => (BottomMargin + TopMargin) / 2f;
+				set => BottomMargin = TopMargin = value;
+			}
+
+			public float HorizontalPercents
+			{
+				get => (RightPercent + LeftPercent) / 2f;
+				set => RightPercent = LeftPercent = value;
+			}
+
+			public float HorizontalMargins
+			{
+				get => (RightMargin + LeftMargin) / 2f;
+				set => RightMargin = LeftMargin = value;
+			}
+
+			public float UniformPercents
 			{
 				get => (RightPercent + BottomPercent + LeftPercent + TopPercent) / 4f;
 				set => RightPercent = BottomPercent = LeftPercent = TopPercent = value;
 			}
 
-			public float UniformMargin
+			public float UniformMargins
 			{
 				get => (RightMargin + BottomMargin + LeftMargin + TopMargin) / 4f;
 				set => RightMargin = BottomMargin = LeftMargin = TopMargin = value;
