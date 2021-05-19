@@ -89,30 +89,31 @@ namespace EchoRenderer.UI
 					).Add
 					(
 						new FloatFieldUI { }
+					).Add
+					(
+						new Float3FieldUI { }
 					)
 				)
 			).Add
 			(
 				new AreaUI {transform = {RightPercent = 0.8f, UniformMargins = 10f}}.Add
 				(
-					new LabelUI
-					{
-						transform = {BottomPercent = 1f, BottomMargin = -20f},
-						Text = "Hello World"
-					}
-				).Add
-				(
-					new ButtonUI
-					{
-						transform = {BottomPercent = 1f, TopMargin = 30f, BottomMargin = -50f},
-						label = {Text = "Button"}
-					}
-				).Add
-				(
-					new SliderUI
-					{
-						transform = {BottomPercent = 1f, TopMargin = 60f, BottomMargin = -80f}
-					}
+					new AutoLayoutAreaUI { }.Add
+					(
+						new ButtonUI
+						{
+							label = {Text = "Button"}
+						}.Label("Click Me")
+					).Add
+					(
+						new TextFieldUI {Text = "Test Field Here"}.Label("Type me")
+					).Add
+					(
+						new FloatFieldUI { }.Label("Sample Count")
+					).Add
+					(
+						new Float3FieldUI { }.Label("Camera Position")
+					)
 				)
 			).Add
 			(
