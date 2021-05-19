@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using System.Globalization;
+using SFML.Graphics;
 
 namespace EchoRenderer.UI.Core
 {
@@ -16,7 +17,9 @@ namespace EchoRenderer.UI.Core
 
 													 SmallMargin = 2f,
 													 LargeMargin = 7f,
-													 LayoutHeight = 24f
+													 LayoutHeight = 24f,
+
+													 Culture = CultureInfo.InvariantCulture
 												 };
 
 		//TODO: Add light theme (eww)
@@ -34,5 +37,7 @@ namespace EchoRenderer.UI.Core
 		public float SmallMargin { get; set; }
 		public float LargeMargin { get; set; }
 		public float LayoutHeight { get; set; }
+
+		public CultureInfo Culture { get; set; }
 	}
 }

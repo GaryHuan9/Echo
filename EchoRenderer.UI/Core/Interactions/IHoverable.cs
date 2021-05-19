@@ -1,4 +1,6 @@
-﻿namespace EchoRenderer.UI.Core.Interactions
+﻿using CodeHelpers.Mathematics;
+
+namespace EchoRenderer.UI.Core.Interactions
 {
 	public interface IHoverable
 	{
@@ -6,5 +8,6 @@
 
 		void OnMouseHovered(MouseHover mouse) { }
 		void OnMousePressed(MousePress mouse) { }
+		void OnMouseScrolled(Float2 delta) { }
 	}
 }
