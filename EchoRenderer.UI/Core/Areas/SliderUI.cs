@@ -10,7 +10,7 @@ namespace EchoRenderer.UI.Core.Areas
 			Add(label);
 		}
 
-		public event Action<float> OnSlide;
+		public event Action<float> OnSlideMethods;
 
 		readonly LabelUI label;
 

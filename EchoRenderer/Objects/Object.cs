@@ -24,7 +24,7 @@ namespace EchoRenderer.Objects
 				_position = value;
 
 				RecalculateTransformations();
-				OnTransformationChanged?.Invoke();
+				OnTransformationChangedMethods?.Invoke();
 			}
 		}
 
@@ -37,7 +37,7 @@ namespace EchoRenderer.Objects
 				_rotation = value;
 
 				RecalculateTransformations();
-				OnTransformationChanged?.Invoke();
+				OnTransformationChangedMethods?.Invoke();
 			}
 		}
 
@@ -50,14 +50,14 @@ namespace EchoRenderer.Objects
 				_scale = value;
 
 				RecalculateTransformations();
-				OnTransformationChanged?.Invoke();
+				OnTransformationChangedMethods?.Invoke();
 			}
 		}
 
 		public Float4x4 LocalToWorld { get; private set; } = Float4x4.identity;
 		public Float4x4 WorldToLocal { get; private set; } = Float4x4.identity;
 
-		public event Action OnTransformationChanged;
+		public event Action OnTransformationChangedMethods;
 
 		//TODO: Currently child/parent relationship does not affect transformation
 		public readonly Children children;
