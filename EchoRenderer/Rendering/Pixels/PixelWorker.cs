@@ -4,6 +4,7 @@ using System.Threading;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Rendering.Pixels
@@ -11,7 +12,7 @@ namespace EchoRenderer.Rendering.Pixels
 	public abstract class PixelWorker
 	{
 		readonly ThreadLocal<ExtendedRandom> threadRandom = new(() => new ExtendedRandom());
-		protected PressedRenderProfile Profile { get; private set; }
+		protected RenderProfile Profile { get; private set; }
 
 		/// <summary>
 		/// Returns a thread-safe random number generator that can be used in the invoking thread.
@@ -27,7 +28,7 @@ namespace EchoRenderer.Rendering.Pixels
 		/// Assigns the render profile before a render session begins.
 		/// NOTE: This can be used as a "reset" point for the worker.
 		/// </summary>
-		public virtual void AssignProfile(PressedRenderProfile profile) => Profile = profile;
+		public virtual void AssignProfile(RenderProfile profile) => Profile = profile;
 
 		/// <summary>
 		/// Renders a <see cref="Sample"/> at <paramref name="screenUV"/>.

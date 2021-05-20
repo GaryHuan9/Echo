@@ -9,7 +9,7 @@ namespace EchoRenderer.Rendering.Pixels
 	{
 		public override Sample Render(Float2 screenUV)
 		{
-			PressedScene scene = Profile.scene;
+			PressedScene scene = Profile.Scene;
 			ExtendedRandom random = Random;
 
 			Ray ray = scene.camera.GetRay(screenUV, random);
@@ -23,7 +23,7 @@ namespace EchoRenderer.Rendering.Pixels
 			Float3 firstNormal = Float3.zero;
 			bool missingAuxiliary = true;
 
-			while (bounce < Profile.bounceLimit && scene.GetIntersection(ray, out CalculatedHit hit))
+			while (bounce < Profile.BounceLimit && scene.GetIntersection(ray, out CalculatedHit hit))
 			{
 				++bounce;
 
@@ -47,13 +47,13 @@ namespace EchoRenderer.Rendering.Pixels
 				colors += energy * emission;
 				energy *= albedo;
 
-				if (energy <= Profile.energyEpsilon) break;
+				if (energy <= Profile.EnergyEpsilon) break;
 				ray = CreateBiasedRay(direction, hit);
 			}
 
 #if DEBUG
 			//The bounce limit is supposed to be significantly higher than the average bounce count
-			if (bounce >= Profile.bounceLimit) CodeHelpers.Diagnostics.DebugHelper.Log("Bounce limit reached!");
+			if (bounce >= Profile.BounceLimit) CodeHelpers.Diagnostics.DebugHelper.Log("Bounce limit reached!");
 #endif
 
 			var cubemap = scene.cubemap;

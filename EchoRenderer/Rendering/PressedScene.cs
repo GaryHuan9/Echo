@@ -15,7 +15,7 @@ using Object = EchoRenderer.Objects.Object;
 namespace EchoRenderer.Rendering
 {
 	/// <summary>
-	/// A flattened out/pressed down record version of a scene for fast iteration.
+	/// A flattened out/pressed down record version of a scene for fast interactions.
 	/// </summary>
 	public class PressedScene
 	{
