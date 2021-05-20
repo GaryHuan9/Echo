@@ -2,7 +2,7 @@
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 
-namespace EchoRenderer.Rendering.Tiles
+namespace EchoRenderer.Rendering.Engines.Tiles
 {
 	public class SpiralPattern : ITilePattern
 	{

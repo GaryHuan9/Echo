@@ -2,7 +2,8 @@ using System;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
-using EchoRenderer.Rendering.Tiles;
+using EchoRenderer.Rendering.Engines;
+using EchoRenderer.Rendering.Engines.Tiles;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Terminals
@@ -25,7 +26,7 @@ namespace EchoRenderer.Terminals
 			statusGrid[3][0] = "Average Ratio";
 		}
 
-		public RenderEngine Engine { get; set; }
+		public TiledRenderEngine Engine { get; set; }
 
 		int monitorHeight; //Will be zero if the render engine is not ready, only includes the height of the tiles
 
@@ -82,16 +83,16 @@ namespace EchoRenderer.Terminals
 
 		void DisplayMonitoredStatus()
 		{
-			PressedRenderProfile profile = Engine.CurrentProfile;
-			PressedScene pressed = profile.scene;
-			Texture buffer = profile.renderBuffer;
+			TiledRenderProfile profile = Engine.CurrentProfile;
+			PressedScene pressed = profile.Scene;
+			Texture buffer = profile.RenderBuffer;
 
 			//Display configuration information
 			int totalPixel = buffer.size.Product;
 			GeometryCounts instanced = pressed.InstancedCounts;
 			GeometryCounts unique = pressed.UniqueCounts;
 
-			builders.SetLine(0, $" / Worker {profile.workerSize} / Resolution {buffer.size} / Total Pixel {totalPixel:N0} / Total Tile {Engine.TotalTileCount:N0} / Method {profile.worker} / Pixel Sample {profile.pixelSample:N0} / Adaptive Sample {profile.adaptiveSample:N0} / Tile Size {profile.tileSize:N0} /");
+			builders.SetLine(0, $" / Worker {profile.WorkerSize} / Resolution {buffer.size} / Total Pixel {totalPixel:N0} / Total Tile {Engine.TotalTileCount:N0} / Method {profile.Method} / Pixel Sample {profile.PixelSample:N0} / Adaptive Sample {profile.AdaptiveSample:N0} / Tile Size {profile.TileSize:N0} /");
 			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.pack:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.pack:N0} / Material {pressed.MaterialCount:N0} / Light {pressed.lights.Count:N0} /");
 
 			//Display dynamic information
@@ -107,7 +108,7 @@ namespace EchoRenderer.Terminals
 			long completedPixel = Engine.CompletedPixel;
 			long rejectedSample = Engine.RejectedSample;
 
-			double fraction = (double)completedPixel / Engine.CurrentProfile.renderBuffer.size.Product;
+			double fraction = (double)completedPixel / Engine.CurrentProfile.RenderBuffer.size.Product;
 			TimeSpan remain = TimeSpan.FromSeconds(seconds / Math.Max(fraction, Scalars.Epsilon) - seconds);
 
 			builders.SetLine(2, $" | Time Elapsed {elapsed:hh\\:mm\\:ss\\:ff} | Time Remain {remain:hh\\:mm\\:ss\\:ff} | Complete Percent {fraction * 100d:F2}% | Rejected Sample {rejectedSample:N0} |");
@@ -122,7 +123,7 @@ namespace EchoRenderer.Terminals
 			numbers[0] = Engine.CompletedTileCount;
 			numbers[1] = Engine.CompletedPixel;
 			numbers[2] = Engine.CompletedSample;
-			numbers[3] = Engine.CurrentProfile.scene.Intersections;
+			numbers[3] = Engine.CurrentProfile.Scene.Intersections;
 
 			for (int x = 1; x < gridSize.x; x++)
 			{

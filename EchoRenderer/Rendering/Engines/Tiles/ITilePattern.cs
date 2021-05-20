@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Rendering.Tiles
+namespace EchoRenderer.Rendering.Engines.Tiles
 {
 	public interface ITilePattern
 	{
