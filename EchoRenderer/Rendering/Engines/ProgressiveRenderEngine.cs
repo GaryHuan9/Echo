@@ -4,8 +4,10 @@ using CodeHelpers.Threads;
 
 namespace EchoRenderer.Rendering.Engines
 {
-	public class ProgressiveRenderEngine
+	public class ProgressiveRenderEngine : IDisposable
 	{
+		public ProgressiveRenderEngine() => workThread = new Thread(WorkThread);
+
 		public ProgressiveRenderProfile CurrentProfile { get; private set; }
 
 		int _currentState;
@@ -15,6 +17,10 @@ namespace EchoRenderer.Rendering.Engines
 			get => (State)InterlockedHelper.Read(ref _currentState);
 			private set => Interlocked.Exchange(ref _currentState, (int)value);
 		}
+
+		readonly Thread workThread;
+
+
 
 		public void Begin(ProgressiveRenderProfile profile)
 		{
@@ -30,6 +36,16 @@ namespace EchoRenderer.Rendering.Engines
 		{
 			CurrentState = State.waiting;
 			CurrentProfile = null;
+		}
+
+		public void Dispose()
+		{
+
+		}
+
+		void WorkThread()
+		{
+
 		}
 
 		public enum State
