@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Rendering.Engines;
 
 namespace EchoRenderer.Rendering.Pixels
 {
@@ -9,7 +10,7 @@ namespace EchoRenderer.Rendering.Pixels
 		long totalCost;
 		long totalSample;
 
-		public override void AssignProfile(PressedRenderProfile profile)
+		public override void AssignProfile(RenderProfile profile)
 		{
 			base.AssignProfile(profile);
 
@@ -19,7 +20,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 		public override Sample Render(Float2 screenUV)
 		{
-			PressedScene scene = Profile.scene;
+			PressedScene scene = Profile.Scene;
 			Ray ray = scene.camera.GetRay(screenUV);
 
 			int cost = scene.GetIntersectionCost(ray);

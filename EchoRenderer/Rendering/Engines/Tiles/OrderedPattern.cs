@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Rendering.Tiles
+namespace EchoRenderer.Rendering.Engines.Tiles
 {
 	public class OrderedPattern : ITilePattern
 	{

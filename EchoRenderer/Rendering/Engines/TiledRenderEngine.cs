@@ -6,16 +6,16 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Rendering.Tiles;
+using EchoRenderer.Rendering.Engines.Tiles;
 
-namespace EchoRenderer.Rendering
+namespace EchoRenderer.Rendering.Engines
 {
-	public class RenderEngine : IDisposable
+	public class TiledRenderEngine : IDisposable
 	{
-		RenderProfile _profile;
+		TiledRenderProfile _profile;
 		int _currentState;
 
-		public RenderProfile Profile
+		public TiledRenderProfile Profile
 		{
 			get => InterlockedHelper.Read(ref _profile);
 			set
@@ -39,7 +39,7 @@ namespace EchoRenderer.Rendering
 		public bool Rendering => CurrentState == State.rendering || CurrentState == State.paused;
 
 		public TimeSpan Elapsed => stopwatch.Elapsed;
-		public PressedRenderProfile CurrentProfile { get; private set; }
+		public TiledRenderProfile CurrentProfile { get; private set; }
 
 		TileWorker[] workers; //All of the workers that should process the tiles
 		Int2[] tilePositions; //Positions of tiles. Processed from 0 to length. Positions can be in any order.
@@ -92,10 +92,8 @@ namespace EchoRenderer.Rendering
 			if (Profile == null) throw ExceptionHelper.Invalid(nameof(Profile), this, InvalidType.isNull);
 			if (CurrentState != State.waiting) throw new Exception("Incorrect state! Must reset before rendering!");
 
-			CurrentProfile = new PressedRenderProfile(Profile);
-			CurrentProfile.worker.AssignProfile(CurrentProfile);
-
-			GC.Collect();
+			CurrentProfile = Profile;
+			CurrentProfile.Method.AssignProfile(CurrentProfile);
 
 			lock (manageLocker)
 			{
@@ -111,21 +109,21 @@ namespace EchoRenderer.Rendering
 
 		void CreateTilePositions()
 		{
-			TotalTileSize = CurrentProfile.renderBuffer.size.CeiledDivide(CurrentProfile.tileSize);
-			tilePositions = CurrentProfile.tilePattern.GetPattern(TotalTileSize);
+			TotalTileSize = CurrentProfile.RenderBuffer.size.CeiledDivide(CurrentProfile.TileSize);
+			tilePositions = CurrentProfile.TilePattern.GetPattern(TotalTileSize);
 
-			for (int i = 0; i < tilePositions.Length; i++) tilePositions[i] *= CurrentProfile.tileSize;
+			for (int i = 0; i < tilePositions.Length; i++) tilePositions[i] *= CurrentProfile.TileSize;
 
 			tileStatuses = tilePositions.ToDictionary
 			(
-				position => position / CurrentProfile.tileSize,
+				position => position / CurrentProfile.TileSize,
 				position => new TileStatus(position)
 			);
 		}
 
 		void InitializeWorkers()
 		{
-			workers = new TileWorker[CurrentProfile.workerSize];
+			workers = new TileWorker[CurrentProfile.WorkerSize];
 
 			for (int i = 0; i < workers.Length; i++)
 			{
@@ -144,7 +142,7 @@ namespace EchoRenderer.Rendering
 				if (count == TotalTileCount) return;
 
 				Int2 renderPosition = tilePositions[count];
-				Int2 statusPosition = renderPosition / CurrentProfile.tileSize;
+				Int2 statusPosition = renderPosition / CurrentProfile.TileSize;
 				TileStatus status = tileStatuses[statusPosition];
 
 				worker.Reset(renderPosition);
@@ -234,7 +232,7 @@ namespace EchoRenderer.Rendering
 
 			lock (manageLocker)
 			{
-				for (int i = 0; i < CurrentProfile.workerSize; i++)
+				for (int i = 0; i < CurrentProfile.WorkerSize; i++)
 				{
 					TileWorker worker = workers[i];
 					if (worker.Working) continue;

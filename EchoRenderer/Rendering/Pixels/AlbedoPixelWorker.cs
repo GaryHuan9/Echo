@@ -8,7 +8,7 @@ namespace EchoRenderer.Rendering.Pixels
 	{
 		public override Sample Render(Float2 screenUV)
 		{
-			PressedScene scene = Profile.scene;
+			PressedScene scene = Profile.Scene;
 			ExtendedRandom random = Random;
 
 			Ray ray = scene.camera.GetRay(screenUV, random);
