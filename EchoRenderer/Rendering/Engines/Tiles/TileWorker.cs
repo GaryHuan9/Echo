@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
 
-namespace EchoRenderer.Rendering.Tiles
+namespace EchoRenderer.Rendering.Engines.Tiles
 {
 	/// <summary>
 	/// A worker class that process/render on a specific tile.
@@ -16,16 +15,16 @@ namespace EchoRenderer.Rendering.Tiles
 	/// </summary>
 	public class TileWorker : IDisposable
 	{
-		public TileWorker(PressedRenderProfile profile)
+		public TileWorker(TiledRenderProfile profile)
 		{
 			id = Interlocked.Increment(ref workerIdAccumulator);
-			size = profile.tileSize;
+			size = profile.TileSize;
 
-			renderBuffer = profile.renderBuffer;
-			pixelWorker = profile.worker;
+			renderBuffer = profile.RenderBuffer;
+			pixelWorker = profile.Method;
 
-			pixelSample = profile.pixelSample;
-			adaptiveSample = profile.adaptiveSample;
+			pixelSample = profile.PixelSample;
+			adaptiveSample = profile.AdaptiveSample;
 
 			worker = new Thread(WorkThread)
 					 {

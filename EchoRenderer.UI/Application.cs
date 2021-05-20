@@ -6,8 +6,9 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
+using EchoRenderer.Rendering.Engines;
+using EchoRenderer.Rendering.Engines.Tiles;
 using EchoRenderer.Rendering.Pixels;
-using EchoRenderer.Rendering.Tiles;
 using EchoRenderer.Textures;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
@@ -31,16 +32,19 @@ namespace EchoRenderer.UI
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			engine = new RenderEngine();
+			engine = new TiledRenderEngine();
 			buffer = new RenderBuffer(resolutions[1]);
 
-			RenderProfile profile = pathTraceFastProfile; //Selects or creates render profile
+			TiledRenderProfile profile = pathTraceFastProfile; //Selects or creates render profile
+			Scene scene = new RandomSpheres(120);              //Creates/loads scene to render
 
-			profile.Scene = new RandomSpheres(120); //Creates/loads scene to render
-			profile.RenderBuffer = buffer;
+			profile = profile with
+					  {
+						  RenderBuffer = buffer,
+						  Scene = new PressedScene(scene)
+					  };
 
 			engine.Profile = profile;
-
 			stopwatch = Stopwatch.StartNew();
 
 			//Test
@@ -125,7 +129,7 @@ namespace EchoRenderer.UI
 			);
 		}
 
-		public readonly RenderEngine engine;
+		public readonly TiledRenderEngine engine;
 		public readonly RenderBuffer buffer;
 
 		public double TotalTime { get; private set; }
@@ -134,29 +138,29 @@ namespace EchoRenderer.UI
 		readonly RootUI root;
 		readonly Stopwatch stopwatch;
 
-		static readonly RenderProfile pathTraceFastProfile = new()
-															 {
-																 Method = new PathTraceWorker(),
-																 TilePattern = new CheckerboardPattern(),
-																 PixelSample = 16,
-																 AdaptiveSample = 80
-															 };
+		static readonly TiledRenderProfile pathTraceFastProfile = new()
+																  {
+																	  Method = new PathTraceWorker(),
+																	  TilePattern = new CheckerboardPattern(),
+																	  PixelSample = 16,
+																	  AdaptiveSample = 80
+																  };
 
-		static readonly RenderProfile pathTraceProfile = new()
-														 {
-															 Method = new PathTraceWorker(),
-															 TilePattern = new CheckerboardPattern(),
-															 PixelSample = 32,
-															 AdaptiveSample = 400
-														 };
+		static readonly TiledRenderProfile pathTraceProfile = new()
+															  {
+																  Method = new PathTraceWorker(),
+																  TilePattern = new CheckerboardPattern(),
+																  PixelSample = 32,
+																  AdaptiveSample = 400
+															  };
 
-		static readonly RenderProfile pathTraceExportProfile = new()
-															   {
-																   Method = new PathTraceWorker(),
-																   TilePattern = new CheckerboardPattern(),
-																   PixelSample = 64,
-																   AdaptiveSample = 1600
-															   };
+		static readonly TiledRenderProfile pathTraceExportProfile = new()
+																	{
+																		Method = new PathTraceWorker(),
+																		TilePattern = new CheckerboardPattern(),
+																		PixelSample = 64,
+																		AdaptiveSample = 1600
+																	};
 
 		public void Start()
 		{
@@ -172,9 +176,9 @@ namespace EchoRenderer.UI
 
 			switch (engine.CurrentState)
 			{
-				case RenderEngine.State.waiting:
+				case TiledRenderEngine.State.waiting:
 				{
-					// engine.Begin();
+					engine.Begin();
 					break;
 				}
 			}

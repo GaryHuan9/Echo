@@ -7,9 +7,10 @@ using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
+using EchoRenderer.Rendering.Engines;
+using EchoRenderer.Rendering.Engines.Tiles;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.PostProcessing;
-using EchoRenderer.Rendering.Tiles;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures;
 
@@ -40,51 +41,51 @@ namespace EchoRenderer
 			// Console.ReadKey();
 		}
 
-		static RenderEngine renderEngine;
+		static TiledRenderEngine renderEngine;
 		static Terminal renderTerminal;
 
 		public static CommandsController commandsController;
 		public static RenderMonitor renderMonitor;
 
-		static readonly RenderProfile pathTraceFastProfile = new()
-															 {
-																 Method = new PathTraceWorker(),
-																 TilePattern = new CheckerboardPattern(),
-																 PixelSample = 16,
-																 AdaptiveSample = 80
-															 };
+		static readonly TiledRenderProfile pathTraceFastProfile = new()
+																  {
+																	  Method = new PathTraceWorker(),
+																	  TilePattern = new CheckerboardPattern(),
+																	  PixelSample = 16,
+																	  AdaptiveSample = 80
+																  };
 
-		static readonly RenderProfile pathTraceProfile = new()
-														 {
-															 Method = new PathTraceWorker(),
-															 TilePattern = new CheckerboardPattern(),
-															 PixelSample = 32,
-															 AdaptiveSample = 400
-														 };
+		static readonly TiledRenderProfile pathTraceProfile = new()
+															  {
+																  Method = new PathTraceWorker(),
+																  TilePattern = new CheckerboardPattern(),
+																  PixelSample = 32,
+																  AdaptiveSample = 400
+															  };
 
-		static readonly RenderProfile pathTraceExportProfile = new()
+		static readonly TiledRenderProfile pathTraceExportProfile = new()
+																	{
+																		Method = new PathTraceWorker(),
+																		TilePattern = new CheckerboardPattern(),
+																		PixelSample = 64,
+																		AdaptiveSample = 1600
+																	};
+
+		static readonly TiledRenderProfile albedoProfile = new()
+														   {
+															   Method = new AlbedoPixelWorker(),
+															   TilePattern = new ScrambledPattern(),
+															   PixelSample = 12,
+															   AdaptiveSample = 80
+														   };
+
+		static readonly TiledRenderProfile bvhQualityProfile = new()
 															   {
-																   Method = new PathTraceWorker(),
-																   TilePattern = new CheckerboardPattern(),
-																   PixelSample = 64,
-																   AdaptiveSample = 1600
+																   Method = new BVHQualityWorker(),
+																   TilePattern = new OrderedPattern(),
+																   PixelSample = 1,
+																   AdaptiveSample = 0
 															   };
-
-		static readonly RenderProfile albedoProfile = new()
-													  {
-														  Method = new AlbedoPixelWorker(),
-														  TilePattern = new ScrambledPattern(),
-														  PixelSample = 12,
-														  AdaptiveSample = 80
-													  };
-
-		static readonly RenderProfile bvhQualityProfile = new()
-														  {
-															  Method = new BVHQualityWorker(),
-															  TilePattern = new OrderedPattern(),
-															  PixelSample = 1,
-															  AdaptiveSample = 0
-														  };
 
 		static void PerformRender()
 		{
@@ -94,18 +95,22 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			RenderProfile profile = pathTraceFastProfile;           //Selects or creates render profile
+			RenderBuffer buffer = new RenderBuffer(resolutions[2]); //Selects resolution and create buffer
+			TiledRenderProfile profile = pathTraceProfile;          //Selects or creates render profile
+			Scene scene = new Sponza();                             //Selects or creates scene
 
-			profile.Scene = new SingleMaterialBall(); //Creates/loads scene to render
-			profile.RenderBuffer = buffer;
+			commandsController.Log("Assets loaded");
 
-			using RenderEngine engine = new RenderEngine {Profile = profile};
+			profile = profile with
+					  {
+						  RenderBuffer = buffer,
+						  Scene = new PressedScene(scene)
+					  };
+
+			using TiledRenderEngine engine = new TiledRenderEngine {Profile = profile};
 
 			renderEngine = engine;
 			renderMonitor.Engine = engine;
-
-			commandsController.Log("Assets loaded");
 
 			PerformanceTest setupTest = new PerformanceTest();
 			using (setupTest.Start()) engine.Begin(); //Initializes render
@@ -181,7 +186,7 @@ namespace EchoRenderer
 		[Command]
 		static CommandResult Pause()
 		{
-			if (renderEngine.CurrentState == RenderEngine.State.rendering)
+			if (renderEngine.CurrentState == TiledRenderEngine.State.rendering)
 			{
 				renderEngine.Pause();
 				return new CommandResult("Render pausing...", true);
@@ -193,7 +198,7 @@ namespace EchoRenderer
 		[Command]
 		static CommandResult Resume()
 		{
-			if (renderEngine.CurrentState == RenderEngine.State.paused)
+			if (renderEngine.CurrentState == TiledRenderEngine.State.paused)
 			{
 				renderEngine.Resume();
 				return new CommandResult("Render resumed.", true);
