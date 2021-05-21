@@ -1,13 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Rendering.Engines.Tiles;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
 using EchoRenderer.UI.Core;
@@ -21,7 +20,7 @@ namespace EchoRenderer.UI
 {
 	public class Application : RenderWindow
 	{
-		public Application() : base(new VideoMode(1920, 1080) /*VideoMode.DesktopMode*/, nameof(EchoRenderer))
+		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer))
 		{
 			Closed += (_, _) => Close();
 
@@ -32,19 +31,20 @@ namespace EchoRenderer.UI
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			engine = new TiledRenderEngine();
+			engine = new ProgressiveRenderEngine();
 			buffer = new RenderBuffer(resolutions[1]);
 
-			TiledRenderProfile profile = pathTraceFastProfile; //Selects or creates render profile
-			Scene scene = new RandomSpheres(120);              //Creates/loads scene to render
+			Scene scene = new GridSpheres(); //Creates/loads scene to render
 
-			profile = profile with
+			profile = new ProgressiveRenderProfile
 					  {
 						  RenderBuffer = buffer,
-						  Scene = new PressedScene(scene)
+						  Scene = new PressedScene(scene),
+						  Method = new PathTraceWorker(),
+						  WorkerSize = 20,
+						  EpochSample = 6
 					  };
 
-			engine.Profile = profile;
 			stopwatch = Stopwatch.StartNew();
 
 			//Test
@@ -116,7 +116,7 @@ namespace EchoRenderer.UI
 						new FloatFieldUI { }.Label("Sample Count")
 					).Add
 					(
-						new Float3FieldUI { }.Label("Camera Position")
+						(tempField = new Float3FieldUI { }).Label("Camera Position")
 					)
 				)
 			).Add
@@ -129,7 +129,8 @@ namespace EchoRenderer.UI
 			);
 		}
 
-		public readonly TiledRenderEngine engine;
+		public readonly ProgressiveRenderEngine engine;
+		public readonly ProgressiveRenderProfile profile;
 		public readonly RenderBuffer buffer;
 
 		public double TotalTime { get; private set; }
@@ -138,29 +139,7 @@ namespace EchoRenderer.UI
 		readonly RootUI root;
 		readonly Stopwatch stopwatch;
 
-		static readonly TiledRenderProfile pathTraceFastProfile = new()
-																  {
-																	  Method = new PathTraceWorker(),
-																	  TilePattern = new CheckerboardPattern(),
-																	  PixelSample = 16,
-																	  AdaptiveSample = 80
-																  };
-
-		static readonly TiledRenderProfile pathTraceProfile = new()
-															  {
-																  Method = new PathTraceWorker(),
-																  TilePattern = new CheckerboardPattern(),
-																  PixelSample = 32,
-																  AdaptiveSample = 400
-															  };
-
-		static readonly TiledRenderProfile pathTraceExportProfile = new()
-																	{
-																		Method = new PathTraceWorker(),
-																		TilePattern = new CheckerboardPattern(),
-																		PixelSample = 64,
-																		AdaptiveSample = 1600
-																	};
+		readonly Float3FieldUI tempField;
 
 		public void Start()
 		{
@@ -168,17 +147,30 @@ namespace EchoRenderer.UI
 
 			SetVerticalSyncEnabled(true);
 			root.Resize(Size.Cast());
+
+			tempField.Value = profile.Scene.camera.Position;
 		}
 
 		public void Update()
 		{
 			UpdateTime();
 
+			Camera camera = profile.Scene.camera;
+
+			Float3 old = camera.Position;
+			Float3 newValue = tempField.Value;
+
+			if (old != newValue)
+			{
+				camera.Position = newValue;
+				engine.Stop();
+			}
+
 			switch (engine.CurrentState)
 			{
-				case TiledRenderEngine.State.waiting:
+				case ProgressiveRenderEngine.State.waiting:
 				{
-					engine.Begin();
+					engine.Begin(profile);
 					break;
 				}
 			}
@@ -212,6 +204,9 @@ namespace EchoRenderer.UI
 				application.Update();
 				application.Display();
 			}
+
+			application.engine.Stop();
+			application.engine.Dispose();
 		}
 	}
 }
