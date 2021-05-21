@@ -47,5 +47,30 @@ namespace EchoRenderer.Mathematics
 		/// Returns a random vector that is on a sphere with <paramref name="radius"/>.
 		/// </summary>
 		public Float3 NextOnSphere(float radius) => NextInSphere().Normalized * radius;
+
+		/// <summary>
+		/// Returns a random value on the gaussian distribution curve. Implementation based on the
+		/// Box-Muller transform with a standard deviation of 1 and mean of 0.
+		/// </summary>
+		/// <returns></returns>
+		public float NextGaussian()
+		{
+			float u0 = 1f - NextFloat();
+			float u1 = 1f - NextFloat();
+
+			return MathF.Sqrt(-2f * MathF.Log(u0)) * MathF.Sin(2f * Scalars.PI * u1);
+		}
+
+		/// <summary>
+		/// Returns a randomly gaussian distributed point with mean
+		/// at (0.5, 0.5) and clamped between (0, 0) and (1, 1).
+		/// </summary>
+		public Float2 NextSample()
+		{
+			return Float2.half;
+
+			Float2 position = new Float2(NextGaussian(), NextGaussian()) / 6f;
+			return position.Clamp(Float2.negativeHalf, Float2.half) + Float2.half;
+		}
 	}
 }

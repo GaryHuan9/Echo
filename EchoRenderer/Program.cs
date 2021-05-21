@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
@@ -23,6 +27,25 @@ namespace EchoRenderer
 			// SimplexNoise();
 			// FontTesting();
 
+			// ExtendedRandom random = new ExtendedRandom();
+			// Dictionary<int, int> buckets = new Dictionary<int, int>();
+			//
+			// for (int i = 0; i < 10000; i++)
+			// {
+			// 	float value = random.NextGaussian() / 6f;
+			// 	int bucket = (value * 20f).Round();
+			//
+			// 	buckets[bucket] = buckets.TryGetValue(bucket) + 1;
+			// }
+			//
+			// foreach (var pair in buckets.OrderBy(pair => pair.Key))
+			// {
+			// 	Console.Write(pair.Key);
+			// 	Console.Write('\t');
+			//
+			// 	Console.WriteLine(new string('X', pair.Value / 10));
+			// }
+			//
 			// return;
 
 			using Terminal terminal = new Terminal();
@@ -95,9 +118,9 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[2]); //Selects resolution and create buffer
-			TiledRenderProfile profile = pathTraceProfile;          //Selects or creates render profile
-			Scene scene = new Sponza();                             //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
+			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
+			Scene scene = new GridSpheres();                        //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 

@@ -1,4 +1,6 @@
-﻿namespace EchoRenderer.Rendering.Engines
+﻿using CodeHelpers;
+
+namespace EchoRenderer.Rendering.Engines
 {
 	public record ProgressiveRenderProfile : RenderProfile
 	{
@@ -8,5 +10,12 @@
 		/// return back to this pixel and resume its progress for another indicated number of samples.
 		/// </summary>
 		public int EpochSample { get; init; }
+
+		public override void Validate()
+		{
+			base.Validate();
+
+			if (EpochSample <= 0) throw ExceptionHelper.Invalid(nameof(EpochSample), EpochSample, InvalidType.outOfBounds);
+		}
 	}
 }
