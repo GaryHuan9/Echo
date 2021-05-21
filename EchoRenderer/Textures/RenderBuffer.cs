@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
@@ -37,6 +38,14 @@ namespace EchoRenderer.Textures
 
 			Array.Copy(buffer.albedos, albedos, length);
 			Array.Copy(buffer.normals, normals, length);
+		}
+
+		public void Clear()
+		{
+			for (int i = 0; i < length; i++) this[i] = default;
+
+			Array.Clear(albedos, 0, length);
+			Array.Clear(normals, 0, length);
 		}
 
 		Texture2D CreateTexture(Float3[] data)
