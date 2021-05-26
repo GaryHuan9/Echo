@@ -38,7 +38,7 @@ namespace EchoRenderer.IO
 					float strength = texture[local].x;
 					texture[local] = (Float4)strength;
 
-					if (Scalars.AlmostEquals(strength, 0f)) continue;
+					if (strength.AlmostEquals(0f)) continue;
 
 					min = min.Min(local);
 					max = max.Max(local);

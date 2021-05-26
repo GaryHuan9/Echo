@@ -17,7 +17,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
 		public Ray(Float3 origin, Float3 direction)
 		{
-			Debug.Assert(Scalars.AlmostEquals(direction.SquaredMagnitude, 1f));
+			Debug.Assert(direction.SquaredMagnitude.AlmostEquals(1f));
 
 			Unsafe.SkipInit(out originVector);
 			Unsafe.SkipInit(out directionVector);
