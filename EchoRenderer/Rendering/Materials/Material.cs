@@ -53,7 +53,7 @@ namespace EchoRenderer.Rendering.Materials
 
 		public unsafe void ApplyTangentNormal(in CalculatedHit hit, ref Float3 normal)
 		{
-			if (NormalMap == Texture.normal || Scalars.AlmostEquals(NormalIntensity, 0f)) return;
+			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals(0f)) return;
 
 			Vector128<float> sample = NormalMap.GetPixel(hit.texcoord);
 			Vector128<float> local = Fma.MultiplyAdd(sample, normalMultiplier, normalAdder);
@@ -83,7 +83,7 @@ namespace EchoRenderer.Rendering.Materials
 			Float4 sample = SampleTexture(AlbedoMap, albedoColor, hit.texcoord);
 			color = sample.XYZ;
 
-			return Scalars.AlmostEquals(sample.w, 0f);
+			return sample.w.AlmostEquals(0f);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -108,7 +108,7 @@ namespace EchoRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return 0f;
 
-			return Scalars.AlmostEquals(value, 0f) ? 0f : value * texture[texcoord].x;
+			return value.AlmostEquals(0f) ? 0f : value * texture[texcoord].x;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

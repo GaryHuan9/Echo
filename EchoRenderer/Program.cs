@@ -27,26 +27,19 @@ namespace EchoRenderer
 			// SimplexNoise();
 			// FontTesting();
 
-			// ExtendedRandom random = new ExtendedRandom();
-			// Dictionary<int, int> buckets = new Dictionary<int, int>();
-			//
-			// for (int i = 0; i < 10000; i++)
-			// {
-			// 	float value = random.NextGaussian() / 6f;
-			// 	int bucket = (value * 20f).Round();
-			//
-			// 	buckets[bucket] = buckets.TryGetValue(bucket) + 1;
-			// }
-			//
-			// foreach (var pair in buckets.OrderBy(pair => pair.Key))
-			// {
-			// 	Console.Write(pair.Key);
-			// 	Console.Write('\t');
-			//
-			// 	Console.WriteLine(new string('X', pair.Value / 10));
-			// }
-			//
-			// return;
+			for (int i = 0; i <= 20; ++i)
+			{
+				float start = (float)(i / 10d);
+
+				uint value = Scalars.SingleToUInt32Bits(start);
+				uint reduced = value & ~0b11_1111u;
+
+				float final = Scalars.UInt32ToSingleBits(reduced);
+
+				DebugHelper.Log(value.ToStringBinary(), reduced.ToStringBinary(), start, final, start.AlmostEquals(final));
+			}
+
+			return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
