@@ -24,8 +24,8 @@ namespace EchoRenderer.Mathematics.Intersections
 	{
 		public CalculatedHit(in Float3 position, in Float3 direction, float distance, Material material, in Float3 normal, Float2 texcoord)
 		{
-			Assert.IsTrue(Scalars.AlmostEquals(direction.SquaredMagnitude, 1f));
-			Assert.IsTrue(Scalars.AlmostEquals(normal.SquaredMagnitude, 1f));
+			Assert.IsTrue(direction.SquaredMagnitude.AlmostEquals(1f));
+			Assert.IsTrue(normal.SquaredMagnitude.AlmostEquals(1f));
 
 			this.position = position;
 			this.direction = direction;

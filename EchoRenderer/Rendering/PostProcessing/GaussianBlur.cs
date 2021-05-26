@@ -70,7 +70,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void BuildRadii()
 		{
-			if (radii.Length == Quality && Scalars.AlmostEquals(builtDeviation, Deviation)) return;
+			if (radii.Length == Quality && builtDeviation.AlmostEquals(Deviation)) return;
 
 			Array.Resize(ref radii, Quality);
 			builtDeviation = Deviation;

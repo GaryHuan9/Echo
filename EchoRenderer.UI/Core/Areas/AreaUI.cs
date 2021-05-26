@@ -317,7 +317,7 @@ namespace EchoRenderer.UI.Core.Areas
 
 			void Assign(ref float original, float value)
 			{
-				if (!Scalars.AlmostEquals(original, value)) MarkDirty();
+				if (!original.AlmostEquals(value)) MarkDirty();
 				original = value;
 			}
 

@@ -74,7 +74,7 @@ namespace EchoRenderer.Mathematics
 
 			public int CompareTo(Anchor first, float second)
 			{
-				if (Scalars.AlmostEquals(first.percent, second)) return 0;
+				if (first.percent.AlmostEquals(second)) return 0;
 				return first.percent.CompareTo(second);
 			}
 		}
