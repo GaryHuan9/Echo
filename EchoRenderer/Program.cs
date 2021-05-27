@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
@@ -27,17 +31,9 @@ namespace EchoRenderer
 			// SimplexNoise();
 			// FontTesting();
 
-			for (int i = 0; i <= 20; ++i)
-			{
-				float start = (float)(i / 10d);
+			Texture2D texture = Texture2D.Load("render.fpi");
 
-				uint value = Scalars.SingleToUInt32Bits(start);
-				uint reduced = value & ~0b11_1111u;
-
-				float final = Scalars.UInt32ToSingleBits(reduced);
-
-				DebugHelper.Log(value.ToStringBinary(), reduced.ToStringBinary(), start, final, start.AlmostEquals(final));
-			}
+			texture.Save("render.png");
 
 			return;
 

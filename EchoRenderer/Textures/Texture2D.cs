@@ -152,27 +152,76 @@ namespace EchoRenderer.Textures
 
 		void SaveFloatingPointImage(string path)
 		{
-			using DataWriter writer = new DataWriter(new GZipStream(File.Open(path, FileMode.Create), CompressionLevel.Optimal));
+			using Stream stream = new GZipStream(File.Open(path, FileMode.Create), CompressionLevel.Optimal);
+			using DataWriter writer = new DataWriter(stream);
 
-			writer.Write(0); //Writes version number
+			writer.Write(1); //Writes version number
 			Write(writer);
 		}
 
 		static Texture2D ReadFloatingPointImage(string path)
 		{
-			using DataReader reader = new DataReader(new GZipStream(File.Open(path, FileMode.Open), CompressionMode.Decompress));
+			using Stream stream = new GZipStream(File.Open(path, FileMode.Open), CompressionMode.Decompress);
+			using DataReader reader = new DataReader(stream);
 
-			reader.ReadInt32(); //Reads version number
+			int version = reader.ReadInt32(); //Reads version number
+			if (version == 0) return ReadRaw(reader);
+
 			return Read(reader);
 		}
 
-		public void Write(DataWriter writer)
+		public unsafe void Write(DataWriter writer)
 		{
-			writer.Write(size);
-			for (int i = 0; i < length; i++) writer.Write(Utilities.ToFloat4(ref this[i]));
+			writer.WriteCompact(size);
+
+			var sequence = Vector128<uint>.Zero;
+
+			for (int i = 0; i < length; i++)
+			{
+				Vector128<uint> current = this[i].AsUInt32();
+				Vector128<uint> xor = Sse2.Xor(sequence, current);
+
+				//Write the xor difference as variable length quantity for lossless compression
+
+				sequence = current;
+				uint* pointer = (uint*)&xor;
+
+				for (int j = 0; j < 4; j++)
+				{
+					uint bits = pointer[j];
+					writer.WriteCompact(bits);
+				}
+			}
 		}
 
-		public static Texture2D Read(DataReader reader)
+		public static unsafe Texture2D Read(DataReader reader)
+		{
+			Int2 size = reader.ReadInt2Compact();
+			Texture2D texture = new Texture2D(size);
+
+			var sequence = Vector128<uint>.Zero;
+			uint* read = stackalloc uint[4];
+
+			//Read the xor difference sequence
+
+			for (int i = 0; i < texture.length; i++)
+			{
+				for (int j = 0; j < 4; j++)
+				{
+					read[j] = reader.ReadUInt32Compact();
+				}
+
+				Vector128<uint> xor = *(Vector128<uint>*)read;
+				Vector128<uint> current = Sse2.Xor(sequence, xor);
+
+				texture[i] = current.AsSingle();
+				sequence = current;
+			}
+
+			return texture;
+		}
+
+		static Texture2D ReadRaw(DataReader reader)
 		{
 			Int2 size = reader.ReadInt2();
 			Texture2D texture = new Texture2D(size);
