@@ -31,9 +31,24 @@ namespace EchoRenderer
 			// SimplexNoise();
 			// FontTesting();
 
-			Texture2D texture = Texture2D.Load("render.fpi");
+			for (int i = 3; i < 10; i++)
+			{
+				for (int j = 1; j < 10; j++)
+				{
+					int sum = 0;
+					int value = i;
+					int count = 0;
 
-			texture.Save("render.png");
+					while (sum < 100)
+					{
+						sum += value;
+						value += j;
+						count++;
+					}
+
+					if (sum == 100) DebugHelper.Log(i, j, count);
+				}
+			}
 
 			return;
 

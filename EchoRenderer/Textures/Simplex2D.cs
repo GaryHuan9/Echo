@@ -15,7 +15,7 @@ namespace EchoRenderer.Textures
 
 			for (int i = 0; i < layer; i++)
 			{
-				simplices[i] = new Simplex(seed ^ i);
+				simplices[i] = new Simplex(seed ^ i, 1024);
 
 				inverseScale += frequency;
 				frequency *= persistence;
