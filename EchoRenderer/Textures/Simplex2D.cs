@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Mathematics.Noises;
 using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Textures
