@@ -13,6 +13,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
+using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
@@ -31,26 +32,7 @@ namespace EchoRenderer
 			// SimplexNoise();
 			// FontTesting();
 
-			for (int i = 3; i < 10; i++)
-			{
-				for (int j = 1; j < 10; j++)
-				{
-					int sum = 0;
-					int value = i;
-					int count = 0;
-
-					while (sum < 100)
-					{
-						sum += value;
-						value += j;
-						count++;
-					}
-
-					if (sum == 100) DebugHelper.Log(i, j, count);
-				}
-			}
-
-			return;
+			// return;
 
 			using Terminal terminal = new Terminal();
 			renderTerminal = terminal;
@@ -65,7 +47,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			// Console.ReadKey();
+			Console.ReadKey();
 		}
 
 		static TiledRenderEngine renderEngine;
@@ -124,7 +106,7 @@ namespace EchoRenderer
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
 			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new GridSpheres();                        //Selects or creates scene
+			Scene scene = new GridMaterialBall();                   //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
