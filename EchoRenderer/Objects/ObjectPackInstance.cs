@@ -13,8 +13,8 @@ namespace EchoRenderer.Objects
 			get => base.Scale;
 			set
 			{
-				if (value.x.AlmostEquals(value.y) && value.y.AlmostEquals(value.z)) base.Scale = (Float3)value.Average;
-				else throw new Exception($"Cannot using none uniformed scale of '{value}' for {nameof(ObjectPackInstance)}!");
+				if (value.x.AlmostEquals(value.y) && value.x.AlmostEquals(value.z)) base.Scale = (Float3)value.Average;
+				else throw new Exception($"Cannot use none uniformed scale of '{value}' for {nameof(ObjectPackInstance)}!");
 			}
 		}
 

@@ -55,7 +55,7 @@ namespace EchoRenderer.Rendering.Materials
 		{
 			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals(0f)) return;
 
-			Vector128<float> sample = NormalMap.GetPixel(hit.texcoord);
+			Vector128<float> sample = NormalMap[hit.texcoord];
 			Vector128<float> local = Fma.MultiplyAdd(sample, normalMultiplier, normalAdder);
 
 			//Transform local direction to world space based on normal
@@ -69,9 +69,9 @@ namespace EchoRenderer.Rendering.Materials
 			//Transforms direction using 3x3 matrix multiplication
 			normal -= new Float3
 					  (
-						  p[0] * tangent.x + p[1] * binormal.x + p[2] * normal.x,
-						  p[0] * tangent.y + p[1] * binormal.y + p[2] * normal.y,
-						  p[0] * tangent.z + p[1] * binormal.z + p[2] * normal.z
+						  tangent.x * p[0] + binormal.x * p[1] + normal.x * p[2],
+						  tangent.y * p[0] + binormal.y * p[1] + normal.y * p[2],
+						  tangent.z * p[0] + binormal.z * p[1] + normal.z * p[2]
 					  ) * NormalIntensity;
 
 			normal = normal.Normalized;
@@ -108,7 +108,7 @@ namespace EchoRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return 0f;
 
-			return value.AlmostEquals(0f) ? 0f : value * texture[texcoord].x;
+			return value.AlmostEquals(0f) ? 0f : value * texture[texcoord].GetElement(0);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -117,7 +117,7 @@ namespace EchoRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float2.zero;
 
-			return value == Float2.zero ? Float2.zero : value * texture[texcoord].XY;
+			return value == Float2.zero ? Float2.zero : value * Utilities.ToFloat4(texture[texcoord]).XY;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -126,7 +126,7 @@ namespace EchoRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float3.zero;
 
-			return value == Float3.zero ? Float3.zero : value * texture[texcoord].w;
+			return value == Float3.zero ? Float3.zero : value * texture[texcoord].GetElement(3);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -135,7 +135,7 @@ namespace EchoRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return Float4.zero;
 
-			return value == Float4.zero ? Float4.zero : value * texture[texcoord];
+			return value == Float4.zero ? Float4.zero : value * Utilities.ToFloat4(texture[texcoord]);
 		}
 
 		protected static void AssertZeroOne(float value)

@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Textures;
 
@@ -20,39 +19,27 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		/// <summary>
 		/// Executes this worker's passes on <see cref="renderBuffer"/>. The worker should not assume the alpha
-		/// channel on<see cref="renderBuffer"/> is 1f and also do not have to assign 1f to the final buffer.
+		/// channel on <see cref="renderBuffer"/> is 1f and also do not have to assign 1f to the final buffer.
 		/// </summary>
 		public abstract void Dispatch();
 
-		public void RunPass(PassAction passAction, Texture buffer = null)
+		public void RunPass(PassAction passAction, Texture2D buffer = null)
 		{
 			if (Aborted) return;
 
 			buffer ??= renderBuffer;
-			Parallel.For(0, buffer.size.Product, WorkPixel);
+			Parallel.ForEach(buffer.size.Loop(), WorkPixel);
 
-			void WorkPixel(int index, ParallelLoopState state)
+			void WorkPixel(Int2 position, ParallelLoopState state)
 			{
 				if (Aborted) state.Stop();
-				else passAction(buffer.ToPosition(index));
+				else passAction(position);
 			}
 		}
 
-		public void RunCopyPass(Texture from, Texture to)
-		{
-			Assert.AreEqual(from.size, to.size);
+		public void RunCopyPass(Texture from, Texture2D to) => to.CopyFrom(from);
 
-			RunPass
-			(
-				position =>
-				{
-					ref var target = ref to.GetPixel(position);
-					target = from.GetPixel(position);
-				}
-			);
-		}
-
-		public void RunPassHorizontal(PassActionHorizontal passAction, Texture buffer = null)
+		public void RunPassHorizontal(PassActionHorizontal passAction, Texture2D buffer = null)
 		{
 			if (Aborted) return;
 
@@ -66,7 +53,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 			}
 		}
 
-		public void RunPassVertical(PassActionVertical passAction, Texture buffer = null)
+		public void RunPassVertical(PassActionVertical passAction, Texture2D buffer = null)
 		{
 			if (Aborted) return;
 

@@ -1,6 +1,5 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Textures;
@@ -26,7 +25,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public override void Dispatch()
 		{
 			//Allocate blur resources
-			workerBuffer = new Texture2D(renderBuffer.size);
+			workerBuffer = new Array2D(renderBuffer.size);
 			var blur = new GaussianBlur(this, workerBuffer)
 					   {
 						   Quality = 6,
@@ -45,21 +44,19 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void LuminancePass(Int2 position)
 		{
-			ref Vector128<float> source = ref renderBuffer.GetPixel(position);
-			ref Vector128<float> target = ref workerBuffer.GetPixel(position);
-
+			Vector128<float> source = renderBuffer[position];
 			float luminance = Utilities.GetLuminance(source);
 
-			if (luminance < threshold) target = Vector128<float>.Zero;
-			else target = Sse.Multiply(source, intensityVector);
+			if (luminance < threshold) workerBuffer[position] = Vector128<float>.Zero;
+			else workerBuffer[position] = Sse.Multiply(source, intensityVector);
 		}
 
 		void CombinePass(Int2 position)
 		{
-			ref Vector128<float> source = ref workerBuffer.GetPixel(position);
-			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
+			Vector128<float> source = workerBuffer[position];
+			Vector128<float> target = renderBuffer[position];
 
-			target = Sse.Add(target, source);
+			renderBuffer[position] = Sse.Add(target, source);
 		}
 	}
 }

@@ -5,9 +5,9 @@ using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Textures
 {
-	public class Simplex2D : Generative2D
+	public class TestGenerative : Generative
 	{
-		public Simplex2D(Int2 size, int seed, int layer, float persistence = 0.5f) : base(size)
+		public TestGenerative(int seed, int layer, float persistence = 0.5f)
 		{
 			this.persistence = persistence;
 			simplices = new Simplex[layer];
@@ -41,8 +41,9 @@ namespace EchoRenderer.Textures
 
 			float v1 = FractionalBrownianMotion(position + new Float2(v0 * 5.2f, v0 * 2.3f));
 			float v2 = FractionalBrownianMotion(position + new Float2(v1 * 2.7f, v1 * 4.7f));
+			float v3 = FractionalBrownianMotion(position + new Float2(v2 * 3.1f, v2 * 1.4f));
 
-			return Utilities.ToVector(Utilities.ToColor(new Float3(v1, v2, 1f)));
+			return Utilities.ToVector(Utilities.ToColor(new Float3(v1, v2, v3)));
 		}
 
 		float FractionalBrownianMotion(Float2 position)

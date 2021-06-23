@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
@@ -71,7 +72,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void GatherPass(Int2 position)
 		{
-			Float3 source = renderBuffer[position].XYZ;
+			Float4 source = Utilities.ToFloat4(renderBuffer[position]);
 
 			InterlockedHelper.Max(ref maxCost, source.x);
 			InterlockedHelper.Max(ref totalCost, source.y);
@@ -80,8 +81,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void MainPass(Int2 position)
 		{
-			float percent = renderBuffer[position].x / maxCost;
-			renderBuffer[position] = costGradient[percent];
+			float percent = renderBuffer[position].GetElement(0) / maxCost;
+			renderBuffer[position] = Utilities.ToVector(costGradient[percent]);
 		}
 	}
 }
