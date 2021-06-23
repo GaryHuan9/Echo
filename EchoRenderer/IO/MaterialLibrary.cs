@@ -5,8 +5,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
@@ -15,11 +13,11 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.IO
 {
-	public class MaterialLibrary : ILoadableAsset
+	public class MaterialLibrary
 	{
 		public MaterialLibrary(string path)
 		{
-			path = this.GetAbsolutePath(path); //Formulate path
+			path = AssetsUtility.GetAbsolutePath(acceptableFileExtensions, path); //Formulate path
 
 			using StreamReader reader = new StreamReader(File.OpenRead(path));
 			using var operationsHandle = CollectionPooler<TextureLoadOperation>.list.Fetch();
@@ -95,7 +93,7 @@ namespace EchoRenderer.IO
 				if (!float.TryParse(piece0, NumberStyles.Any, CultureInfo.InvariantCulture, out float float0))
 				{
 					if (bool.TryParse(piece0, out bool boolean)) return boolean;
-					return new TextureLoadOperation(this.GetSiblingPath(path, new string(piece0.Trim('"'))));
+					return new TextureLoadOperation(AssetsUtility.GetSiblingPath(path, new string(piece0.Trim('"'))));
 				}
 
 				if (!float.TryParse(piece1, NumberStyles.Any, CultureInfo.InvariantCulture, out float float1)) return float0;
@@ -111,8 +109,7 @@ namespace EchoRenderer.IO
 			materials = new Dictionary<string, Material>();
 		}
 
-		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new(new[] {".mat"});
-		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
+		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] {".mat"});
 
 		readonly Dictionary<string, Material> materials;
 

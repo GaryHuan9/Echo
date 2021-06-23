@@ -35,8 +35,8 @@ namespace EchoRenderer.IO
 
 				foreach (Int2 local in new EnumerableSpace2D(position, position + glyphSize - Int2.one))
 				{
-					float strength = texture[local].x;
-					texture[local] = (Float4)strength;
+					float strength = texture[local].GetElement(0);
+					texture[local] = Vector128.Create(strength);
 
 					if (strength.AlmostEquals(0f)) continue;
 
@@ -65,7 +65,7 @@ namespace EchoRenderer.IO
 		/// <summary>
 		/// Draws <paramref name="character"/> to <paramref name="destination"/> with this <see cref="Font"/> and <paramref name="style"/>.
 		/// </summary>
-		public void Draw(Texture destination, char character, Style style)
+		public void Draw(Texture2D destination, char character, Style style)
 		{
 			Glyph glyph = glyphs[GetIndex(character)];
 			float multiplier = MapSize * style.height;
@@ -78,6 +78,7 @@ namespace EchoRenderer.IO
 			Vector128<float> color = Utilities.ToVector(colorSource);
 			Vector128<float> alpha = Vector128.Create(style.color.w);
 
+			Vector128<float> sampleSize = Vector128.Create((float)SampleSize * SampleSize);
 			Parallel.ForEach(new EnumerableSpace2D(min.Floored, max.Ceiled), DrawPixel);
 
 			void DrawPixel(Int2 position)
@@ -88,20 +89,21 @@ namespace EchoRenderer.IO
 				foreach (Int2 offset in new EnumerableSpace2D(Int2.one, (Int2)SampleSize))
 				{
 					Float2 point = (position + offset / (SampleSize + 1f) - style.center) / multiplier + glyph.origin;
-					if (glyph.minUV <= point && point <= glyph.maxUV) total = Sse.Add(total, texture.GetPixel(point));
+					if (glyph.minUV <= point && point <= glyph.maxUV) total = Sse.Add(total, texture[point]);
 				}
 
-				total = Sse.Divide(total, Vector128.Create((float)SampleSize * SampleSize));
+				total = Sse.Divide(total, sampleSize);
 
-				ref Vector128<float> target = ref destination.GetPixel(position);
-				target = Utilities.Lerp(target, color, Sse.Multiply(alpha, total));
+				//Assigns color based on alpha
+				Vector128<float> source = destination[position];
+				destination[position] = Utilities.Lerp(source, color, Sse.Multiply(alpha, total));
 			}
 		}
 
 		/// <summary>
 		/// Draws <paramref name="text"/> to <paramref name="destination"/> with this <see cref="Font"/> and <paramref name="style"/>.
 		/// </summary>
-		public void Draw(Texture destination, string text, in Style style)
+		public void Draw(Texture2D destination, string text, in Style style)
 		{
 			for (int i = 0; i < text.Length; i++)
 			{
@@ -127,14 +129,14 @@ namespace EchoRenderer.IO
 			const int LetterCount = 'Z' - 'A' + 1;
 
 			int order = character switch
-			{
-				>= 'A' and <= 'Z' => character - 'A',
-				>= 'a' and <= 'z' => character - 'a' + LetterCount,
-				>= '0' and <= '9' => character - '0' + LetterCount * 2,
-				'.' => LetterCount * 2 + 10,
-				',' => LetterCount * 2 + 11,
-				_ => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
-			};
+						{
+							>= 'A' and <= 'Z' => character - 'A',
+							>= 'a' and <= 'z' => character - 'a' + LetterCount,
+							>= '0' and <= '9' => character - '0' + LetterCount * 2,
+							'.' => LetterCount * 2 + 10,
+							',' => LetterCount * 2 + 11,
+							_ => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
+						};
 
 			Int2 position = new Int2(order % MapSize, order / MapSize);
 			position = new Int2(position.x, MapSize - position.y - 1);

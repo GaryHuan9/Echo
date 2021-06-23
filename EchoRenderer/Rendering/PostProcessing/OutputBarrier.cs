@@ -15,12 +15,12 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		unsafe void BarrierPass(Int2 position)
 		{
-			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
-			Vector128<float> result = Sse.Min(Sse.Max(target, vector0), vector1);
+			Vector128<float> source = Sse.Min(Sse.Max(renderBuffer[position], vector0), vector1);
 
-			//Set alpha to one
-			*((float*)&result + 3) = 1f;
-			target = result;
+			float* pointer = (float*)&source;
+			*(pointer + 3) = 1f; //Assign alpha
+
+			renderBuffer[position] = source;
 		}
 	}
 }

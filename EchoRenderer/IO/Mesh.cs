@@ -13,11 +13,11 @@ using CodeHelpers.Threads;
 
 namespace EchoRenderer.IO
 {
-	public class Mesh : ILoadableAsset
+	public class Mesh
 	{
 		public Mesh(string path) //Loads .obj based on http://paulbourke.net/dataformats/obj/
 		{
-			path = this.GetAbsolutePath(path);
+			path = AssetsUtility.GetAbsolutePath(acceptableFileExtensions, path);
 
 			//These lists will become too large to pool
 			var vertexLines = new List<Line>();
@@ -194,8 +194,7 @@ namespace EchoRenderer.IO
 			}
 		}
 
-		static readonly ReadOnlyCollection<string> _acceptableFileExtensions = new ReadOnlyCollection<string>(new[] {".obj", ".zip"});
-		IReadOnlyList<string> ILoadableAsset.AcceptableFileExtensions => _acceptableFileExtensions;
+		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] {".obj", ".zip"});
 
 		readonly Triangle[] triangles0; //Triangles are stored in two different arrays to support loading quads
 		readonly Triangle[] triangles1;

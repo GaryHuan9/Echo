@@ -8,7 +8,6 @@ using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Textures;
 using EchoRenderer.Textures.Cubemaps;
 using Object = EchoRenderer.Objects.Object;
 

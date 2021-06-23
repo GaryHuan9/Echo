@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
-using EchoRenderer.Mathematics;
-using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
@@ -47,7 +39,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			Console.ReadKey();
+			// Console.ReadKey();
 		}
 
 		static TiledRenderEngine renderEngine;
@@ -106,7 +98,7 @@ namespace EchoRenderer
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
 			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new GridMaterialBall();                   //Selects or creates scene
+			Scene scene = new TestTexture();                        //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
@@ -166,15 +158,11 @@ namespace EchoRenderer
 
 		static void SimplexNoise()
 		{
-			Simplex2D simplex = new Simplex2D(new Int2(1920, 1080), 42, 4);
-			Texture2D texture = new Texture2D(simplex.size);
+			TestGenerative simplex = new TestGenerative(42, 4);
+			Array2D texture = new Array2D((Int2)1080);
 
 			simplex.Tiling = (Float2)1f;
 			simplex.Offset = (Float2)1f;
-
-			PerformanceTest test = new PerformanceTest();
-			using (test.Start()) simplex.Bake();
-			DebugHelper.Log(test.ElapsedMilliseconds);
 
 			texture.CopyFrom(simplex);
 			texture.Save("simplex.png");
@@ -183,11 +171,10 @@ namespace EchoRenderer
 		static void FontTesting()
 		{
 			Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
-			Texture2D output = new Texture2D(new Int2(2048, 2048));
+			Array2D output = new Array2D((Int2)2048);
 
-			foreach (Int2 position in output.size.Loop()) output[position] = new Float4(0f, 0f, 1f, 1f);
-
-			font.Draw(output, "Hello Abe how are you", new Font.Style(new Float2(1024f, 1024f), 100f, Float4.one));
+			foreach (Int2 position in output.size.Loop()) output[position] = Vector128.Create(0f, 0f, 1f, 1f);
+			font.Draw(output, "The quick fox does stuff", new Font.Style(new Float2(1024f, 1024f), 100f, Float4.one));
 
 			output.Save("render.png");
 		}

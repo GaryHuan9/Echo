@@ -66,7 +66,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 		public void Store(RenderBuffer buffer, Int2 position)
 		{
-			buffer[position] = Utilities.ToColor(Color);
+			buffer[position] = Utilities.ToVector(Utilities.ToColor(Color));
 
 			buffer.SetAlbedo(position, (Float3)(albedo / accumulation));
 			buffer.SetNormal(position, (Float3)normal.Normalized);
