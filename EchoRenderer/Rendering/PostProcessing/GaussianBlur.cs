@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
@@ -8,12 +9,12 @@ namespace EchoRenderer.Rendering.PostProcessing
 {
 	public class GaussianBlur
 	{
-		public GaussianBlur(PostProcessingWorker worker, Texture sourceBuffer)
+		public GaussianBlur(PostProcessingWorker worker, Texture2D sourceBuffer)
 		{
 			this.worker = worker;
 			this.sourceBuffer = sourceBuffer;
 
-			workerBuffer = new Texture2D(sourceBuffer.size) {Wrapper = Textures.Wrapper.clamp};
+			workerBuffer = new Array2D(sourceBuffer.size) {Wrapper = Wrappers.clamp};
 		}
 
 		public float Deviation { get; set; }
@@ -46,8 +47,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 		}
 
 		readonly PostProcessingWorker worker;
-		readonly Texture sourceBuffer;
-		readonly Texture workerBuffer;
+		readonly Texture2D sourceBuffer;
+		readonly Texture2D workerBuffer;
 
 		int[] radii = Array.Empty<int>();
 		float builtDeviation;
@@ -101,23 +102,22 @@ namespace EchoRenderer.Rendering.PostProcessing
 			Vector128<float> accumulator = Vector128<float>.Zero;
 			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
 
-			for (int x = -radius; x < radius; x++)
-			{
-				ref readonly Vector128<float> source = ref sourceBuffer.GetPixel(new Int2(x, vertical));
-				accumulator = Sse.Add(accumulator, source);
-			}
+			for (int x = -radius; x < radius; x++) accumulator = Sse.Add(accumulator, Get(x));
 
-			for (int x = 0; x < sourceBuffer.size.x; x++)
+			for (int x = 0; x < workerBuffer.size.x; x++)
 			{
-				ref readonly Vector128<float> sourceHead = ref sourceBuffer.GetPixel(new Int2(x + radius, vertical));
-				ref readonly Vector128<float> sourceTail = ref sourceBuffer.GetPixel(new Int2(x - radius, vertical));
-
-				ref var target = ref workerBuffer.GetPixel(new Int2(x, vertical));
+				Vector128<float> sourceHead = Get(x + radius);
+				Vector128<float> sourceTail = Get(x - radius);
 
 				accumulator = Sse.Add(accumulator, sourceHead);
-				target = Sse.Multiply(accumulator, divisor);
+
+				workerBuffer[new Int2(x, vertical)] = Sse.Multiply(accumulator, divisor);
+
 				accumulator = Sse.Subtract(accumulator, sourceTail);
 			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			Vector128<float> Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.x), vertical)];
 		}
 
 		void VerticalBlurPass(int horizontal, int radius)
@@ -125,23 +125,22 @@ namespace EchoRenderer.Rendering.PostProcessing
 			Vector128<float> accumulator = Vector128<float>.Zero;
 			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
 
-			for (int y = -radius; y < radius; y++)
-			{
-				ref readonly Vector128<float> source = ref workerBuffer.GetPixel(new Int2(horizontal, y));
-				accumulator = Sse.Add(accumulator, source);
-			}
+			for (int y = -radius; y < radius; y++) accumulator = Sse.Add(accumulator, Get(y));
 
 			for (int y = 0; y < sourceBuffer.size.y; y++)
 			{
-				ref readonly Vector128<float> sourceHead = ref workerBuffer.GetPixel(new Int2(horizontal, y + radius));
-				ref readonly Vector128<float> sourceTail = ref workerBuffer.GetPixel(new Int2(horizontal, y - radius));
-
-				ref var target = ref sourceBuffer.GetPixel(new Int2(horizontal, y));
+				Vector128<float> sourceHead = Get(y + radius);
+				Vector128<float> sourceTail = Get(y - radius);
 
 				accumulator = Sse.Add(accumulator, sourceHead);
-				target = Sse.Multiply(accumulator, divisor);
+
+				sourceBuffer[new Int2(horizontal, y)] = Sse.Multiply(accumulator, divisor);
+
 				accumulator = Sse.Subtract(accumulator, sourceTail);
 			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			Vector128<float> Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.y))];
 		}
 	}
 }

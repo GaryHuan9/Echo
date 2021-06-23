@@ -75,15 +75,16 @@ void main()
 		public override void Update()
 		{
 			base.Update();
-			if (RenderBuffer == null) return;
 
-			int length = RenderBuffer.size.Product;
+			var buffer = RenderBuffer;
+			if (buffer == null) return;
 
-			for (int i = 0; i < length; i++)
+			foreach (Int2 position in buffer.size.Loop())
 			{
-				Color32 color = (Color32)Utilities.ToFloat4(RenderBuffer[i]);
+				Color32 color = (Color32)Utilities.ToFloat4(buffer[position]);
+				Int2 inverted = position.ReplaceY(buffer.oneLess.y - position.y);
 
-				int index = i * 4;
+				int index = buffer.ToIndex(inverted) * 4;
 
 				pixelsBuffer[index + 0] = color.r;
 				pixelsBuffer[index + 1] = color.g;

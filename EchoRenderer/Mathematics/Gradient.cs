@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Textures;
@@ -51,17 +50,15 @@ namespace EchoRenderer.Mathematics
 			return Utilities.Lerp(head.vector, tail.vector, Vector128.Create(time));
 		}
 
-		public void Draw(Texture texture, Float2 point0, Float2 point1)
+		public void Draw(Texture2D texture, Float2 point0, Float2 point1)
 		{
 			Segment2 segment = new Segment2(point0, point1);
-			Parallel.For(0, texture.size.Product, SamplePixel);
+			texture.ForEach(SamplePixel);
 
-			void SamplePixel(int index)
+			void SamplePixel(Int2 position)
 			{
-				Float2 position = texture.ToPosition(index) + Float2.half;
-				float percent = segment.ClosestInverseLerpUnclamped(position);
-
-				texture[index] = SampleVector(percent);
+				float percent = segment.ClosestInverseLerpUnclamped(position + Float2.half);
+				texture[position] = SampleVector(percent);
 			}
 		}
 

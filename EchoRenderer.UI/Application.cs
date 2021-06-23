@@ -34,7 +34,7 @@ namespace EchoRenderer.UI
 			engine = new ProgressiveRenderEngine();
 			buffer = new RenderBuffer(resolutions[1]);
 
-			Scene scene = new GridSpheres(); //Creates/loads scene to render
+			Scene scene = new TestTexture(); //Creates/loads scene to render
 
 			profile = new ProgressiveRenderProfile
 					  {
@@ -47,86 +47,22 @@ namespace EchoRenderer.UI
 
 			stopwatch = Stopwatch.StartNew();
 
-			//Test
-			root = (RootUI)new RootUI(this).Add
-			(
-				new AreaUI {transform = {LeftPercent = 0.8f, UniformMargins = 10f}}.Add
-				(
-					new AutoLayoutAreaUI { }.Add
-					(
-						new LabelUI
-						{
-							Text = "Hello World 1",
-							Align = LabelUI.Alignment.left
-						}
-					).Add
-					(
-						new ButtonUI
-						{
-							label =
-							{
-								Text = "Button 1",
-								Align = LabelUI.Alignment.right
-							}
-						}
-					).Add
-					(
-						new LabelUI
-						{
-							Text = "Hello World 2 pp"
-						}
-					).Add
-					(
-						new ButtonUI
-						{
-							label = {Text = "Button 2"}
-						}
-					).Add
-					(
-						new ButtonUI
-						{
-							label = {Text = "Button 3"}
-						}
-					).Add
-					(
-						new TextFieldUI {Text = "Test Field Hehe"}
-					).Add
-					(
-						new FloatFieldUI { }
-					).Add
-					(
-						new Float3FieldUI { }
-					)
-				)
-			).Add
-			(
-				new AreaUI {transform = {RightPercent = 0.8f, UniformMargins = 10f}}.Add
-				(
-					new AutoLayoutAreaUI { }.Add
-					(
-						new ButtonUI
-						{
-							label = {Text = "Button"}
-						}.Label("Click Me")
-					).Add
-					(
-						new TextFieldUI {Text = "Test Field Here"}.Label("Type me")
-					).Add
-					(
-						new FloatFieldUI { }.Label("Sample Count")
-					).Add
-					(
-						(tempField = new Float3FieldUI { }).Label("Camera Position")
-					)
-				)
-			).Add
-			(
-				new RenderPreviewUI
-				{
-					transform = {LeftPercent = 0.2f, RightPercent = 0.2f, UniformMargins = 10f},
-					RenderBuffer = buffer
-				}
-			);
+			//Create UI
+			root = new RootUI(this)
+				   {
+					   new HierarchyUI(),
+					   new SceneViewUI(),
+					   new InspectorUI()
+				   };
+
+			// 	.Add
+			// (
+			// 	new RenderPreviewUI
+			// 	{
+			// 		transform = {LeftPercent = 0.2f, RightPercent = 0.2f, UniformMargins = 10f},
+			// 		RenderBuffer = buffer
+			// 	}
+			// );
 		}
 
 		public readonly ProgressiveRenderEngine engine;
@@ -139,32 +75,17 @@ namespace EchoRenderer.UI
 		readonly RootUI root;
 		readonly Stopwatch stopwatch;
 
-		readonly Float3FieldUI tempField;
-
 		public void Start()
 		{
 			UpdateTime();
 
 			SetVerticalSyncEnabled(true);
 			root.Resize(Size.Cast());
-
-			tempField.Value = profile.Scene.camera.Position;
 		}
 
 		public void Update()
 		{
 			UpdateTime();
-
-			Camera camera = profile.Scene.camera;
-
-			Float3 old = camera.Position;
-			Float3 newValue = tempField.Value;
-
-			if (old != newValue)
-			{
-				camera.Position = newValue;
-				engine.Stop();
-			}
 
 			switch (engine.CurrentState)
 			{

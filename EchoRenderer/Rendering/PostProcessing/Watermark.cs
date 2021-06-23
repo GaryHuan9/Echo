@@ -19,7 +19,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		static readonly Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
 
 		Texture2D workerBuffer;
-		double luminance;
+		double luminanceAverage;
 
 		Crop2D cropWorker;
 		Crop2D cropTarget;
@@ -38,7 +38,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public override void Dispatch()
 		{
 			//Allocate resources for full buffer Gaussian blur
-			workerBuffer = new Texture2D(renderBuffer.size) {Wrapper = Wrapper.clamp};
+			workerBuffer = new Array2D(renderBuffer.size) {Wrapper = Wrappers.clamp};
 			var blur = new GaussianBlur(this, workerBuffer) {Deviation = BlurDeviation};
 
 			//Find size and position
@@ -58,11 +58,11 @@ namespace EchoRenderer.Rendering.PostProcessing
 			RunCopyPass(renderBuffer, workerBuffer); //Copies buffer
 			RunPass(LuminancePass, cropWorker);      //Grabs luminance
 
-			luminance /= cropWorker.size.Product;
+			luminanceAverage /= cropWorker.size.Product;
 
 			blur.Run(); //Run Gaussian blur
 
-			bool lightMode = luminance > LuminanceThreshold;
+			bool lightMode = luminanceAverage > LuminanceThreshold;
 			float tint = lightMode ? 1f + BackgroundTint : 1f - BackgroundTint;
 
 			tintVector = Vector128.Create(tint);
@@ -77,16 +77,14 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void LuminancePass(Int2 position)
 		{
-			ref Vector128<float> source = ref cropWorker.GetPixel(position);
-			InterlockedHelper.Add(ref luminance, Utilities.GetLuminance(source));
+			float luminance = Utilities.GetLuminance(cropWorker[position]);
+			InterlockedHelper.Add(ref luminanceAverage, luminance);
 		}
 
 		void TintPass(Int2 position)
 		{
-			ref Vector128<float> source = ref cropWorker.GetPixel(position);
-			ref Vector128<float> target = ref cropTarget.GetPixel(position);
-
-			target = Sse.Multiply(source, tintVector);
+			Vector128<float> source = cropWorker[position];
+			cropTarget[position] = Sse.Multiply(source, tintVector);
 		}
 
 		float GetHeight()

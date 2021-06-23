@@ -23,17 +23,15 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void MainPass(Int2 position) //https://www.desmos.com/calculator/v9a3uscr8c
 		{
-			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
+			Vector128<float> source = Sse.Multiply(renderBuffer[position], exposureVector);
+			Vector128<float> oneLess = Sse.Subtract(source, oneVector);
 
-			target = Sse.Multiply(target, exposureVector);
+			Vector128<float> a = Sse.Subtract(halfVector, Sse.Multiply(halfVector, Sse.Divide(oneLess, smoothnessVector)));
 
-			Vector128<float> a = Sse.Divide(Sse.Subtract(target, oneVector), smoothnessVector);
-			Vector128<float> h = Sse.Subtract(halfVector, Sse.Multiply(halfVector, a));
+			Vector128<float> h = Sse.Min(Sse.Max(a, zeroVector), oneVector);
+			Vector128<float> b = Sse.Subtract(oneLess, smoothnessVector);
 
-			h = Sse.Min(Sse.Max(h, zeroVector), oneVector);
-
-			Vector128<float> b = Sse.Subtract(Sse.Subtract(target, oneVector), smoothnessVector);
-			target = Sse.Add(Sse.Multiply(Sse.Add(b, Sse.Multiply(smoothnessVector, h)), h), oneVector);
+			renderBuffer[position] = Sse.Add(Sse.Multiply(Sse.Add(b, Sse.Multiply(smoothnessVector, h)), h), oneVector);
 		}
 	}
 }

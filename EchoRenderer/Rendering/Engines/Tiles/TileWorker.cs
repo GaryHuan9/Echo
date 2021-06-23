@@ -2,7 +2,6 @@
 using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
 
@@ -152,7 +151,7 @@ namespace EchoRenderer.Rendering.Engines.Tiles
 		void WorkPixel(Int2 localPosition)
 		{
 			Int2 position = localPosition + RenderOffset;
-			if (renderBuffer.Restrict(position) != position) return; //Ignore pixels outside of buffer
+			if (position.Clamp(Int2.zero, renderBuffer.oneLess) != position) return; //Ignore pixels outside of buffer
 
 			RenderPixel pixel = new RenderPixel();
 

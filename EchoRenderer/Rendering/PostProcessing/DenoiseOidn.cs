@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -30,11 +31,13 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 				RunPass(ForwardPass); //Copies color to unmanaged buffer
 
-				fixed (Float3* colourPointer = colors, albedoPointer = renderBuffer.albedos, normalPointer = renderBuffer.normals)
+				fixed (Float3* colourPointer = colors)
 				{
+					using var pin = renderBuffer.CreatePin();
+
 					filter.Set("color", colourPointer, size);
-					filter.Set("albedo", albedoPointer, size);
-					filter.Set("normal", normalPointer, size);
+					filter.Set("albedo", pin.albedoPointer, size);
+					filter.Set("normal", pin.normalPointer, size);
 
 					//Output to the same buffer
 					filter.Set("output", colourPointer, size);
@@ -56,15 +59,14 @@ namespace EchoRenderer.Rendering.PostProcessing
 		void ForwardPass(Int2 position)
 		{
 			int index = renderBuffer.ToIndex(position);
-			colors[index] = renderBuffer[position].XYZ;
+			Vector128<float> source = renderBuffer[position];
+			colors[index] = Utilities.ToFloat4(source).XYZ;
 		}
 
 		void BackwardPass(Int2 position)
 		{
-			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
 			Float3 data = colors[renderBuffer.ToIndex(position)];
-
-			target = Vector128.Create(data.x, data.y, data.z, 1f);
+			renderBuffer[position] = Utilities.ToVector(Utilities.ToColor(data));
 		}
 
 		readonly struct OidnDevice : IDisposable
@@ -133,13 +135,15 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 			public static OidnFilter CreateNew(OidnDevice device) => oidnNewFilter(device, "RT");
 
+			/// <inheritdoc cref="Set(string,IntPtr,Int2)"/>
+			public unsafe void Set(string name, Float3* texture, Int2 size) => Set(name, new IntPtr((float*)texture), size);
+
 			/// <summary>
 			/// Assigns <paramref name="texture"/> with <paramref name="size"/> under the name <paramref name="name"/>.
 			/// </summary>
-			public unsafe void Set(string name, Float3* texture, Int2 size)
+			public void Set(string name, IntPtr texture, Int2 size)
 			{
-				IntPtr pointer = new IntPtr((float*)texture);
-				oidnSetSharedFilterImage(this, name, pointer, Format.float3, size.x, size.y, 0, 0, 0);
+				oidnSetSharedFilterImage(this, name, texture, Format.float3, size.x, size.y, 0, 0, 0);
 			}
 
 			public void Set(string name, bool value) => oidnSetFilter1b(this, name, value);

@@ -85,7 +85,7 @@ namespace EchoRenderer.Terminals
 		{
 			TiledRenderProfile profile = Engine.CurrentProfile;
 			PressedScene pressed = profile.Scene;
-			Texture buffer = profile.RenderBuffer;
+			Texture2D buffer = profile.RenderBuffer;
 
 			//Display configuration information
 			int totalPixel = buffer.size.Product;
