@@ -47,18 +47,17 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public TestTexture()
 		{
-			Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
 			Texture2D normal = Texture2D.Load("Assets/Textures/WikiNormalMap.png");
+			Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
 			Texture2D chain = Texture2D.Load("Assets/Textures/SponzaChain.png");
 
-			// Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
-			// Material material = new Diffuse {Albedo = Float3.one, NormalMap = normal};
-			Material material = new Diffuse {Albedo = Float3.one, AlbedoMap = chain};
+			Material material0 = new Glossy {Albedo = Float3.one, Smoothness = 1f};
+			Material material1 = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
+			Material material2 = new Diffuse {Albedo = Float3.one, AlbedoMap = chain};
 
-			Cubemap = new SolidCubemap(Float3.one);
-
-			// children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -5.5f), Rotation = new Float3(-90f, 0f, 0f)});
-			children.Add(new PlaneObject(material, Float2.one * 4f) {Position = new Float3(0f, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
+			children.Add(new PlaneObject(material2, Float2.one * 4f) {Position = new Float3(0f, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
+			children.Add(new PlaneObject(material1, Float2.one * 4f) {Position = new Float3(2f, 2f, -3.5f), Rotation = new Float3(-90f, 0f, 0f)});
+			children.Add(new PlaneObject(material0, Float2.one * 4f) {Position = new Float3(0f, 2f, -5.3f), Rotation = new Float3(-90f, 0f, 0f)});
 		}
 	}
 
@@ -102,7 +101,6 @@ namespace EchoRenderer.Objects.Scenes
 		}
 	}
 
-
 	public class TestMaterials : Scene
 	{
 		public TestMaterials()
@@ -110,9 +108,7 @@ namespace EchoRenderer.Objects.Scenes
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.2f);
 
 			children.Add(new Camera(90f) {Position = new Float3(0f, 3f, -5f), Rotation = new Float3(15f, 0f, 0f)});
-			Simplex2D simplex = new Simplex2D((Int2)2048, 42, 4) {Tiling = (Float2)1f, Offset = (Float2)1f};
-
-			simplex.Bake();
+			TestGenerative simplex = new TestGenerative(42, 4) {Tiling = (Float2)1f, Offset = (Float2)1f};
 
 			Material floor = new Glossy {Albedo = Float3.one, AlbedoMap = simplex, Smoothness = 0.5f};
 			Material glass = new Glass {Albedo = Float3.one, IndexOfRefraction = 1.5f, Roughness = 0.6f};

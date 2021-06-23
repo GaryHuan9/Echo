@@ -4,31 +4,27 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Textures
 {
-	public class Crop2D : Texture
+	public class Crop2D : Texture2D
 	{
 		/// <summary>
 		/// Creates the rectangular cropped reference of <paramref name="source"/>.
-		/// <paramref name="cornerMin"/> is inclusive and <paramref name="cornerMax"/> is exclusive.
+		/// <paramref name="min"/> is inclusive and <paramref name="max"/> is exclusive.
 		/// </summary>
-		public Crop2D(Texture source, Int2 cornerMin, Int2 cornerMax) : base(cornerMax - cornerMin)
+		public Crop2D(Texture2D source, Int2 min, Int2 max) : base(max - min, source.Filter)
 		{
 			this.source = source;
-			this.cornerMin = cornerMin;
+			this.min = min;
 
-			Assert.IsTrue(cornerMax > this.cornerMin);
+			Assert.IsTrue(max > this.min);
 		}
 
-		readonly Texture source;
-		readonly Int2 cornerMin;
+		readonly Texture2D source;
+		readonly Int2 min;
 
-		public override ref Vector128<float> this[int index] => ref GetPixelRaw(ToPosition(index));
-
-		public override ref Vector128<float> GetPixel(Int2 position) => ref GetPixelRaw(Wrapper.Convert(this, position));
-
-		ref Vector128<float> GetPixelRaw(Int2 position)
+		public override Vector128<float> this[Int2 position]
 		{
-			int index = source.ToIndex(position + cornerMin);
-			return ref source[index];
+			get => source[min + position];
+			set => source[min + position] = value;
 		}
 	}
 }

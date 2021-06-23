@@ -168,7 +168,7 @@ namespace EchoRenderer.Rendering.Engines
 				else Array.Clear(pixels, 0, pixels.Length);
 
 				buffer = newBuffer;
-				// buffer.Clear();
+				buffer.Clear();
 			}
 
 			public void Store(Int2 position)

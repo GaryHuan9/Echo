@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 
@@ -20,12 +19,11 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void MainPass(Int2 position)
 		{
-			ref Vector128<float> target = ref renderBuffer.GetPixel(position);
-
 			Float2 local = (position - half) / half.MaxComponent;
 			float distance = 1f - local.SquaredMagnitude * intensity;
 
-			target = Sse.Multiply(target, Vector128.Create(distance));
+			Vector128<float> target = renderBuffer[position];
+			renderBuffer[position] = Sse.Multiply(target, Vector128.Create(distance));
 
 			//NOTE: We can use a little bit of film grain (noise) to remove the banding
 		}

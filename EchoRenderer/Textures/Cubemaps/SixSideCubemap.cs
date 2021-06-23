@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Textures.Cubemaps
 {
@@ -67,6 +68,6 @@ namespace EchoRenderer.Textures.Cubemaps
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Float3 Sample(int index, Float2 uv) => textures[index][uv + Float2.half].XYZ * multiplier;
+		Float3 Sample(int index, Float2 uv) => Utilities.ToFloat4(textures[index][uv + Float2.half]).XYZ * multiplier;
 	}
 }
