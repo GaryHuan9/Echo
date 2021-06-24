@@ -49,7 +49,7 @@ namespace EchoRenderer.Textures
 		/// <summary>
 		/// Completely empties this <see cref="RenderBuffer"/>
 		/// </summary>
-		public void Clear()
+		public virtual void Clear()
 		{
 			Array.Clear(pixels, 0, length);
 			Array.Clear(albedos, 0, length);

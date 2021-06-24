@@ -48,7 +48,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public readonly float radiusSquared;
 		public readonly int materialToken;
 
-		public AxisAlignedBoundingBox AABB => new AxisAlignedBoundingBox(position, (Float3)radius);
+		public AxisAlignedBoundingBox AABB => new AxisAlignedBoundingBox(position - (Float3)radius, position + (Float3)radius);
 
 		/// <summary>
 		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.
