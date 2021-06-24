@@ -63,7 +63,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 		public readonly struct Sample
 		{
-			public Sample(in Float3 colour, in Float3 albedo, in Float3 normal)
+			public Sample(in Float3 colour, in Float3 albedo = default, in Float3 normal = default)
 			{
 				this.colour = colour;
 				this.albedo = albedo;
@@ -78,7 +78,7 @@ namespace EchoRenderer.Rendering.Pixels
 								 float.IsNaN(albedo.x) || float.IsNaN(albedo.y) || float.IsNaN(albedo.z) ||
 								 float.IsNaN(normal.x) || float.IsNaN(normal.y) || float.IsNaN(normal.z);
 
-			public static implicit operator Sample(in Float3 colour) => new Sample(colour, Float3.zero, Float3.zero);
+			public static implicit operator Sample(in Float3 colour) => new Sample(colour);
 		}
 	}
 }
