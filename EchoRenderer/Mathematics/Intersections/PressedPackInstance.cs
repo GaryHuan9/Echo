@@ -48,15 +48,14 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					ref readonly var aabb = ref aabbs[i];
 
-					Float3 center = backwardTransform.MultiplyPoint(aabb.center);
-					Float3 extend = absoluteTransform.MultiplyDirection(aabb.extend);
+					Float3 center = backwardTransform.MultiplyPoint(aabb.Center);
+					Float3 extend = absoluteTransform.MultiplyDirection(aabb.Extend);
 
 					min = min.Min(center - extend);
 					max = max.Max(center + extend);
 				}
 
-				Float3 newExtend = (max - min) / 2f;
-				return new AxisAlignedBoundingBox(min + newExtend, newExtend);
+				return new AxisAlignedBoundingBox(min, max);
 			}
 		}
 
