@@ -88,6 +88,8 @@ namespace EchoRenderer.Mathematics.Intersections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe float Intersect(in Ray ray)
 		{
+			//The well known 'slab method'. Referenced from https://tavianator.com/2011/ray_box.html
+
 			Vector128<float> lengths0 = Sse.Multiply(Sse.Subtract(minVector, ray.originVector), ray.inverseDirectionVector);
 			Vector128<float> lengths1 = Sse.Multiply(Sse.Subtract(maxVector, ray.originVector), ray.inverseDirectionVector);
 
@@ -99,6 +101,8 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			float far;
 			float near;
+
+			//Compute horizontal min and max
 
 			if (Avx.IsSupported)
 			{

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Threads;
@@ -10,7 +11,7 @@ using SFML.Window;
 
 namespace EchoRenderer.UI
 {
-	public class Application : RenderWindow
+	public class Application : RenderWindow, IDisposable
 	{
 		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer))
 		{
@@ -61,12 +62,20 @@ namespace EchoRenderer.UI
 			TotalTime = time;
 		}
 
+		void IDisposable.Dispose()
+		{
+			root.Dispose();
+			base.Dispose();
+
+			GC.SuppressFinalize(this);
+		}
+
 		static void Main()
 		{
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
 
-			Application application = new Application();
+			using Application application = new Application();
 
 			application.Start();
 
@@ -78,8 +87,6 @@ namespace EchoRenderer.UI
 				application.Update();
 				application.Display();
 			}
-
-			application.root.Dispose();
 		}
 	}
 }
