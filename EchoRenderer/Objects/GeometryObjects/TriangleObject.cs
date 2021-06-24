@@ -138,8 +138,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 				Float3 min = vertex0.Min(vertex1).Min(vertex2);
 				Float3 max = vertex0.Max(vertex1).Max(vertex2);
 
-				Float3 extend = (max - min) / 2f;
-				return new AxisAlignedBoundingBox(min + extend, extend);
+				return new AxisAlignedBoundingBox(min, max);
 			}
 		}
 

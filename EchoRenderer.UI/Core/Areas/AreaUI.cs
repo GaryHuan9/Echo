@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.UI.Core.Fields;
 using EchoRenderer.UI.Core.Interactions;
@@ -7,7 +9,7 @@ using SFML.Graphics;
 
 namespace EchoRenderer.UI.Core.Areas
 {
-	public class AreaUI : IEnumerable<AreaUI>
+	public class AreaUI : IEnumerable<AreaUI>, IDisposable
 	{
 		public AreaUI()
 		{
@@ -103,6 +105,16 @@ namespace EchoRenderer.UI.Core.Areas
 		}
 
 		public LabeledAreaUI Label(string label) => new() {label = {Text = label}, Area = this};
+
+		/// <summary>
+		/// Invoked on <see cref="Root"/> when the <see cref="Application"/> terminates.
+		/// </summary>
+		public virtual void Dispose()
+		{
+			foreach (AreaUI child in this) child.Dispose();
+
+			GC.SuppressFinalize(this);
+		}
 
 		protected virtual void Reorient(Float2 position, Float2 size)
 		{

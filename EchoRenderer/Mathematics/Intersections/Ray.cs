@@ -7,7 +7,7 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
-	[StructLayout(LayoutKind.Explicit, Size = 48)]
+	[StructLayout(LayoutKind.Explicit, Size = 40)]
 	public readonly struct Ray
 	{
 		/// <summary>
@@ -28,9 +28,6 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			Vector128<float> reciprocalVector = Sse.Divide(oneVector, directionVector); //Because _mm_rcp_ps is only an approximation, we cannot use it here
 			inverseDirectionVector = Sse.Min(maxValueVector, Sse.Max(minValueVector, reciprocalVector));
-
-			Vector128<float> negated = Sse.Subtract(Vector128<float>.Zero, inverseDirectionVector);
-			absolutedInverseDirectionVector = Sse.Max(negated, inverseDirectionVector);
 		}
 
 		[FieldOffset(0)] public readonly Float3 origin;
@@ -41,7 +38,6 @@ namespace EchoRenderer.Mathematics.Intersections
 		[FieldOffset(0)] public readonly Vector128<float> originVector;
 		[FieldOffset(12)] public readonly Vector128<float> directionVector;
 		[FieldOffset(24)] public readonly Vector128<float> inverseDirectionVector;
-		[FieldOffset(36)] public readonly Vector128<float> absolutedInverseDirectionVector;
 
 		static readonly Vector128<float> minValueVector = Vector128.Create(float.MinValue);
 		static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue);

@@ -1,7 +1,4 @@
-﻿using System;
-using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics;
-using EchoRenderer.Textures;
+﻿using EchoRenderer.Textures;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
 using SFML.Graphics;
@@ -13,14 +10,14 @@ namespace EchoRenderer.UI.Interface
 	{
 		public RenderPreviewUI()
 		{
-			imageUI = new ImageUI {Shader = Shader.FromString(null, null, GammaCorrectShader)};
+			imageUI = new ImageUI {Shader = Shader.FromString(null, null, GammaCorrectShader), KeepAspect = false};
 
 			Add(imageUI);
 		}
 
-		RenderBuffer _renderBuffer;
+		DisplayBuffer _renderBuffer;
 
-		public RenderBuffer RenderBuffer
+		public DisplayBuffer RenderBuffer
 		{
 			get => _renderBuffer;
 			set
@@ -40,7 +37,6 @@ namespace EchoRenderer.UI.Interface
 					uint height = (uint)value.size.y;
 
 					imageUI.Texture = new Texture(width, height);
-					pixelsBuffer = new byte[width * height * 4];
 				}
 
 				_renderBuffer = value;
@@ -50,7 +46,6 @@ namespace EchoRenderer.UI.Interface
 		public bool sRGB { get; set; } = true;
 
 		readonly ImageUI imageUI;
-		byte[] pixelsBuffer;
 
 		const string GammaCorrectShader = @"
 
@@ -79,21 +74,8 @@ void main()
 			var buffer = RenderBuffer;
 			if (buffer == null) return;
 
-			foreach (Int2 position in buffer.size.Loop())
-			{
-				Color32 color = (Color32)Utilities.ToFloat4(buffer[position]);
-				Int2 inverted = position.ReplaceY(buffer.oneLess.y - position.y);
-
-				int index = buffer.ToIndex(inverted) * 4;
-
-				pixelsBuffer[index + 0] = color.r;
-				pixelsBuffer[index + 1] = color.g;
-				pixelsBuffer[index + 2] = color.b;
-				pixelsBuffer[index + 3] = byte.MaxValue;
-			}
-
 			imageUI.Shader.SetUniform("sRGB", sRGB);
-			imageUI.Texture.Update(pixelsBuffer);
+			imageUI.Texture.Update(buffer.bytes);
 		}
 	}
 }

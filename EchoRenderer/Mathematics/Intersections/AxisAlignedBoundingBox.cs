@@ -12,46 +12,43 @@ namespace EchoRenderer.Mathematics.Intersections
 	[StructLayout(LayoutKind.Explicit, Size = 28)]
 	public readonly struct AxisAlignedBoundingBox
 	{
-		public AxisAlignedBoundingBox(Float3 center, Float3 extend)
+		public AxisAlignedBoundingBox(Float3 min, Float3 max)
 		{
-			Unsafe.SkipInit(out centerVector);
-			Unsafe.SkipInit(out extendVector);
+			Unsafe.SkipInit(out minVector);
+			Unsafe.SkipInit(out maxVector);
 
-			this.center = center;
-			this.extend = extend;
+			this.min = min;
+			this.max = max;
 
-			Assert.IsTrue(extend.MinComponent >= 0f);
+			Assert.IsTrue(max >= min);
 		}
 
 		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabb)
 		{
-			Unsafe.SkipInit(out centerVector);
-			Unsafe.SkipInit(out extendVector);
+			Unsafe.SkipInit(out minVector);
+			Unsafe.SkipInit(out maxVector);
 
-			Float3 min = Float3.positiveInfinity;
-			Float3 max = Float3.negativeInfinity;
+			min = Float3.positiveInfinity;
+			max = Float3.negativeInfinity;
 
 			for (int i = 0; i < aabb.Count; i++)
 			{
 				AxisAlignedBoundingBox box = aabb[i];
 
-				min = box.Min.Min(min);
-				max = box.Max.Max(max);
+				min = box.min.Min(min);
+				max = box.max.Max(max);
 			}
 
-			extend = (max - min) / 2f;
-			center = min + extend;
-
-			Assert.IsTrue(extend.MinComponent >= 0f);
+			Assert.IsTrue(max >= min);
 		}
 
 		public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
 		{
-			Unsafe.SkipInit(out centerVector);
-			Unsafe.SkipInit(out extendVector);
+			Unsafe.SkipInit(out minVector);
+			Unsafe.SkipInit(out maxVector);
 
-			Float3 min = Float3.positiveInfinity;
-			Float3 max = Float3.negativeInfinity;
+			min = Float3.positiveInfinity;
+			max = Float3.negativeInfinity;
 
 			for (int i = 0; i < points.Length; i++)
 			{
@@ -61,22 +58,28 @@ namespace EchoRenderer.Mathematics.Intersections
 				max = max.Max(point);
 			}
 
-			extend = (max - min) / 2f;
-			center = min + extend;
-
-			Assert.IsTrue(extend.MinComponent >= 0f);
+			Assert.IsTrue(max >= min);
 		}
 
-		[FieldOffset(0)] public readonly Float3 center;  //The exact center of the box
-		[FieldOffset(12)] public readonly Float3 extend; //Half the size of the box
+		[FieldOffset(0)] public readonly Float3 min;
+		[FieldOffset(12)] public readonly Float3 max;
 
-		[FieldOffset(0)] readonly Vector128<float> centerVector;
-		[FieldOffset(12)] readonly Vector128<float> extendVector;
+		[FieldOffset(0)] readonly Vector128<float> minVector;
+		[FieldOffset(12)] readonly Vector128<float> maxVector;
 
-		public Float3 Min => center - extend;
-		public Float3 Max => center + extend;
+		public Float3 Center => (max + min) / 2f;
+		public Float3 Extend => (max - min) / 2f;
 
-		public float Area => extend.x * extend.y + extend.x * extend.z + extend.y * extend.z;
+		public float Area
+		{
+			get
+			{
+				Float3 size = max - min;
+				return size.x * size.y + size.x * size.z + size.y * size.z;
+			}
+		}
+
+		public int MajorAxis => (max - min).MaxIndex;
 
 		/// <summary>
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
@@ -85,52 +88,50 @@ namespace EchoRenderer.Mathematics.Intersections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public unsafe float Intersect(in Ray ray)
 		{
-			Vector128<float> n = Sse.Multiply(ray.inverseDirectionVector, Sse.Subtract(centerVector, ray.originVector));
-			Vector128<float> k = Sse.Multiply(ray.absolutedInverseDirectionVector, extendVector);
+			Vector128<float> lengths0 = Sse.Multiply(Sse.Subtract(minVector, ray.originVector), ray.inverseDirectionVector);
+			Vector128<float> lengths1 = Sse.Multiply(Sse.Subtract(maxVector, ray.originVector), ray.inverseDirectionVector);
 
-			Vector128<float> min = Sse.Add(n, k);
-			Vector128<float> max = Sse.Subtract(n, k);
+			Vector128<float> lengthsMin = Sse.Max(lengths0, lengths1);
+			Vector128<float> lengthsMax = Sse.Min(lengths0, lengths1);
+
+			//The previous two lines could be a bit confusing: we are trying to find
+			//the min of the max lengths for far and the max of the min lengths for near
 
 			float far;
 			float near;
 
 			if (Avx.IsSupported)
 			{
-				//Permute vector for min max, ignores last component
-				Vector128<float> minPermute = Avx.Permute(min, 0b0100_1010);
-				Vector128<float> maxPermute = Avx.Permute(max, 0b0100_1010);
+				//Permute vector for min max, ignore last component
+				Vector128<float> minPermute = Avx.Permute(lengthsMin, 0b0100_1010);
+				Vector128<float> maxPermute = Avx.Permute(lengthsMax, 0b0100_1010);
 
-				min = Sse.Min(min, minPermute);
-				max = Sse.Max(max, maxPermute);
+				lengthsMin = Sse.Min(lengthsMin, minPermute);
+				lengthsMax = Sse.Max(lengthsMax, maxPermute);
 
 				//Second permute for min max
-				minPermute = Avx.Permute(min, 0b1011_0001);
-				maxPermute = Avx.Permute(max, 0b1011_0001);
+				minPermute = Avx.Permute(lengthsMin, 0b1011_0001);
+				maxPermute = Avx.Permute(lengthsMax, 0b1011_0001);
 
-				min = Sse.Min(min, minPermute);
-				max = Sse.Max(max, maxPermute);
+				lengthsMin = Sse.Min(lengthsMin, minPermute);
+				lengthsMax = Sse.Max(lengthsMax, maxPermute);
 
 				//Extract result
-				far = *(float*)&min;
-				near = *(float*)&max;
+				far = *(float*)&lengthsMin;
+				near = *(float*)&lengthsMax;
 			}
 			else
 			{
 				//Software implementation
-				far = (*(Float3*)&min).MinComponent;
-				near = (*(Float3*)&max).MaxComponent;
+				far = (*(Float3*)&lengthsMin).MinComponent;
+				near = (*(Float3*)&lengthsMax).MaxComponent;
 			}
 
 			return near > far || far < 0f ? float.PositiveInfinity : near;
 		}
 
-		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other)
-		{
-			Float3 min = Min.Min(other.Min);
-			Float3 max = Max.Max(other.Max);
+		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other) => new(min.Min(other.min), max.Max(other.max));
 
-			Float3 extends = (max - min) / 2f;
-			return new AxisAlignedBoundingBox(min + extends, extends);
-		}
+		public override int GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
 	}
 }
