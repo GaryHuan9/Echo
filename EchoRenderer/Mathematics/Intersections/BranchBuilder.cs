@@ -10,42 +10,36 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public class BranchBuilder
 	{
-		public BranchBuilder(IReadOnlyList<AxisAlignedBoundingBox> aabbs, int[] sourceIndices)
-		{
-			this.aabbs = aabbs;
-			this.sourceIndices = sourceIndices;
-
-			cutTailVolumes = new AxisAlignedBoundingBox[sourceIndices.Length];
-		}
+		public BranchBuilder(IReadOnlyList<AxisAlignedBoundingBox> aabbs) => this.aabbs = aabbs;
 
 		readonly IReadOnlyList<AxisAlignedBoundingBox> aabbs;
-		readonly int[] sourceIndices;
+		readonly IComparer<int>[] boxComparers = new IComparer<int>[3];
 
-		readonly AxisAlignedBoundingBox[] cutTailVolumes;
+		AxisAlignedBoundingBox[] cutTailVolumes;
 
 		int _nodeCount;
 
 		public int NodeCount => InterlockedHelper.Read(ref _nodeCount);
-		const int ParallelBuildThreshold = 4096;
+		const int ParallelBuildThreshold = 4096; //We can increase this value to disable parallel building
 
 		/// <summary>
 		/// Initialize build on the root builder.
 		/// </summary>
-		public Node Build()
+		public Node Build(Span<int> indices)
 		{
 			if (NodeCount != 0) throw new Exception("Branch already built!");
-			if (aabbs.Count != sourceIndices.Length) throw new Exception("Non-root builder!");
+			if (aabbs.Count != indices.Length) throw new Exception("Non-root builder!");
 
-			if (sourceIndices.Length > 1)
+			if (indices.Length > 1)
 			{
-				int axis = new AxisAlignedBoundingBox(aabbs).extend.MaxIndex;
+				int axis = new AxisAlignedBoundingBox(aabbs).MajorAxis;
 
-				SortIndices(sourceIndices, axis);
-				return BuildLayer(sourceIndices);
+				SortIndices(indices, axis);
+				return BuildLayer(indices);
 			}
 
 			Interlocked.Increment(ref _nodeCount);
-			return new Node(aabbs[sourceIndices[0]], sourceIndices[0]);
+			return new Node(aabbs[indices[0]], indices[0]);
 		}
 
 		Node BuildLayer(ReadOnlySpan<int> indices)
@@ -55,7 +49,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			int minIndex = SearchSurfaceAreaHeuristics(indices, out var headVolume, out var tailVolume);
 			AxisAlignedBoundingBox aabb = headVolume.Encapsulate(tailVolume);
 
-			int axis = aabb.extend.MaxIndex;
+			int axis = aabb.MajorAxis;
 
 			//Recursively construct deeper layers
 			Node child0;
@@ -85,12 +79,10 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		NodeBuilder BuildChildParallel(ReadOnlySpan<int> indices, in AxisAlignedBoundingBox aabb, int parentAxis)
 		{
-			int axis = aabb.extend.MaxIndex;
+			int axis = aabb.MajorAxis;
 			int[] childIndices = indices.ToArray();
 
-			if (axis == parentAxis) return new NodeBuilder(this, childIndices);
-
-			SortIndices(childIndices, axis);
+			if (axis != parentAxis) SortIndices(childIndices, axis);
 			return new NodeBuilder(this, childIndices);
 		}
 
@@ -102,10 +94,10 @@ namespace EchoRenderer.Mathematics.Intersections
 				return new Node(aabb, indices[0]);
 			}
 
-			int axis = aabb.extend.MaxIndex;
+			int axis = aabb.MajorAxis;
 			if (axis == parentAxis) return BuildLayer(indices);
 
-			int[] childIndices = indices.ToArray();
+			Span<int> childIndices = indices.ToArray();
 
 			SortIndices(childIndices, axis);
 			return BuildLayer(childIndices);
@@ -114,16 +106,18 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <summary>
 		/// Sorts <paramref name="indices"/> based on each aabb's location on <paramref name="axis"/>.
 		/// </summary>
-		void SortIndices(int[] indices, int axis)
+		void SortIndices(Span<int> indices, int axis)
 		{
-			Comparison<int> comparison = axis switch
-										 {
-											 0 => (index0, index1) => aabbs[index0].center.x.CompareTo(aabbs[index1].center.x),
-											 1 => (index0, index1) => aabbs[index0].center.y.CompareTo(aabbs[index1].center.y),
-											 _ => (index0, index1) => aabbs[index0].center.z.CompareTo(aabbs[index1].center.z)
-										 };
+			ref IComparer<int> comparer = ref boxComparers[axis];
 
-			Array.Sort(indices, comparison);
+			comparer ??= axis switch
+						 {
+							 0 => new BoxComparerX(aabbs),
+							 1 => new BoxComparerY(aabbs),
+							 _ => new BoxComparerZ(aabbs)
+						 };
+
+			indices.Sort(comparer);
 		}
 
 		/// <summary>
@@ -132,6 +126,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		void PrepareCutTailVolumes(ReadOnlySpan<int> indices)
 		{
+			cutTailVolumes ??= new AxisAlignedBoundingBox[indices.Length];
 			AxisAlignedBoundingBox cutTailVolume = aabbs[indices[^1]];
 
 			for (int i = indices.Length - 2; i >= 0; i--)
@@ -227,10 +222,55 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			void Build()
 			{
-				BranchBuilder builder = new BranchBuilder(source.aabbs, indices);
+				BranchBuilder builder = new BranchBuilder(source.aabbs);
 
 				Interlocked.Exchange(ref result, builder.BuildLayer(indices));
 				Interlocked.Add(ref source._nodeCount, builder.NodeCount);
+			}
+		}
+
+		class BoxComparerX : IComparer<int>
+		{
+			public BoxComparerX(IReadOnlyList<AxisAlignedBoundingBox> aabbs) => this.aabbs = aabbs;
+
+			readonly IReadOnlyList<AxisAlignedBoundingBox> aabbs;
+
+			public int Compare(int index0, int index1)
+			{
+				AxisAlignedBoundingBox box0 = aabbs[index0];
+				AxisAlignedBoundingBox box1 = aabbs[index1];
+
+				return (box0.min.x + box0.max.x).CompareTo(box1.min.x + box1.max.x);
+			}
+		}
+
+		class BoxComparerY : IComparer<int>
+		{
+			public BoxComparerY(IReadOnlyList<AxisAlignedBoundingBox> aabbs) => this.aabbs = aabbs;
+
+			readonly IReadOnlyList<AxisAlignedBoundingBox> aabbs;
+
+			public int Compare(int index0, int index1)
+			{
+				AxisAlignedBoundingBox box0 = aabbs[index0];
+				AxisAlignedBoundingBox box1 = aabbs[index1];
+
+				return (box0.min.y + box0.max.y).CompareTo(box1.min.y + box1.max.y);
+			}
+		}
+
+		class BoxComparerZ : IComparer<int>
+		{
+			public BoxComparerZ(IReadOnlyList<AxisAlignedBoundingBox> aabbs) => this.aabbs = aabbs;
+
+			readonly IReadOnlyList<AxisAlignedBoundingBox> aabbs;
+
+			public int Compare(int index0, int index1)
+			{
+				AxisAlignedBoundingBox box0 = aabbs[index0];
+				AxisAlignedBoundingBox box1 = aabbs[index1];
+
+				return (box0.min.z + box0.max.z).CompareTo(box1.min.z + box1.max.z);
 			}
 		}
 	}

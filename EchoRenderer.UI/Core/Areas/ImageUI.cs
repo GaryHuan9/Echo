@@ -1,13 +1,43 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using SFML.Graphics;
+using SFML.System;
 
 namespace EchoRenderer.UI.Core.Areas
 {
 	public class ImageUI : AreaUI
 	{
-		public bool KeepAspect { get; set; } = true;
+		bool _keepAspect = true;
+		Texture _texture;
 
-		public Texture Texture { get; set; }
+		public bool KeepAspect
+		{
+			get => _keepAspect;
+			set
+			{
+				if (_keepAspect == value) return;
+
+				_keepAspect = value;
+				transform.MarkDirty();
+			}
+		}
+
+		public Texture Texture
+		{
+			get => _texture;
+			set
+			{
+				if (_texture == value) return;
+				_texture = value;
+
+				transform.MarkDirty();
+				display.Texture = value;
+
+				Int2 size = value.Size.Cast();
+				display.TextureRect = new IntRect(0, 0, size.x, size.y);
+			}
+		}
+
 		public Shader Shader { get; set; }
 
 		public Color ImageColor
@@ -45,8 +75,6 @@ namespace EchoRenderer.UI.Core.Areas
 		{
 			base.Paint(renderTarget);
 			if (Texture == null) return;
-
-			display.Texture = Texture;
 
 			if (Shader != null && Shader.IsAvailable)
 			{

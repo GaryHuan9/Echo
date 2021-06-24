@@ -18,8 +18,9 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
 
-			BranchBuilder builder = new BranchBuilder(aabbs, indices);
-			BranchBuilder.Node root = builder.Build(); //Parallel building reduces build time by about 4 folds on very large scenes
+			//Parallel building reduces build time by about 4 folds on very large scenes
+			BranchBuilder builder = new BranchBuilder(aabbs);
+			BranchBuilder.Node root = builder.Build(indices);
 
 			int index = 1;
 
@@ -167,6 +168,19 @@ namespace EchoRenderer.Mathematics.Intersections
 			}
 
 			return current;
+		}
+
+		/// <summary>
+		/// Computes and returns a unique hash value for this entire <see cref="BoundingVolumeHierarchy"/>.
+		/// This method can be slow on large BVHs. Can be used to compare BVH construction between runtimes.
+		/// </summary>
+		public int ComputeHash()
+		{
+			int hash = maxDepth;
+
+			foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
+
+			return hash;
 		}
 
 		unsafe void Traverse(in Ray ray, ref Hit hit)
@@ -363,6 +377,19 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, uint token) => new Node(aabb, token, 0);
 			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int children) => new Node(aabb, default, children);
+
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					int hashCode = aabb.GetHashCode();
+
+					hashCode = (hashCode * 397) ^ (int)token;
+					hashCode = (hashCode * 397) ^ children;
+
+					return hashCode;
+				}
+			}
 		}
 	}
 }

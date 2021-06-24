@@ -7,6 +7,8 @@ namespace EchoRenderer.UI.Core.Areas
 {
 	public class LabelUI : AreaUI
 	{
+		public LabelUI() => TextColor = Theme.ContrastColor;
+
 		string _text = "";
 		Text.Styles _styles;
 		Alignment _align;
