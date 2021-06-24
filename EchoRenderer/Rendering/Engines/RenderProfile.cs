@@ -35,7 +35,7 @@ namespace EchoRenderer.Rendering.Engines
 		/// <summary>
 		/// The maximum number of bounce allowed for one sample.
 		/// </summary>
-		public int BounceLimit { get; init; } = 64;
+		public int BounceLimit { get; init; } = 128;
 
 		/// <summary>
 		/// Epsilon lower bound value to determine when an energy is essentially zero.
