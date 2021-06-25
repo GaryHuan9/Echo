@@ -2,6 +2,7 @@
 using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
 
@@ -25,12 +26,6 @@ namespace EchoRenderer.Rendering.Engines.Tiles
 			pixelSample = profile.PixelSample;
 			adaptiveSample = profile.AdaptiveSample;
 
-			worker = new Thread(WorkThread)
-					 {
-						 IsBackground = true,
-						 Name = $"Tile Worker #{id} {size}x{size}"
-					 };
-
 			spiralOffsets = new Float2[pixelSample];
 			randomOffsets = new Float2[adaptiveSample * 3]; //Prepare more offsets than sample because adaptive sample might go beyond the setting
 
@@ -47,8 +42,15 @@ namespace EchoRenderer.Rendering.Engines.Tiles
 			}
 
 			//Create random offsets
-			Random random = new Random(unchecked((int)(Environment.TickCount64 * id * size)));
-			for (int i = 0; i < randomOffsets.Length; i++) randomOffsets[i] = new Float2((float)random.NextDouble(), (float)random.NextDouble());
+			random = new ExtendedRandom(HashCode.Combine(Environment.TickCount64, id, size)); //NOTE that HashCode returns a different value every runtime!
+			for (int i = 0; i < randomOffsets.Length; i++) randomOffsets[i] = random.NextFloat2();
+
+			//Allocate thread
+			worker = new Thread(WorkThread)
+					 {
+						 IsBackground = true,
+						 Name = $"Tile Worker #{id} {size}x{size}"
+					 };
 		}
 
 		readonly int id;
@@ -78,6 +80,7 @@ namespace EchoRenderer.Rendering.Engines.Tiles
 		public long CompletedPixel => Interlocked.Read(ref _completedPixel);
 		public long RejectedSample => Interlocked.Read(ref _rejectedSample);
 
+		readonly ExtendedRandom random;
 		readonly Thread worker;
 
 		//Offsets applied within each pixel
@@ -164,7 +167,7 @@ namespace EchoRenderer.Rendering.Engines.Tiles
 				{
 					//Sample color
 					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / renderBuffer.size - Float2.half;
-					PixelWorker.Sample sample = pixelWorker.Render(new Float2(uv.x, uv.y / renderBuffer.aspect));
+					var sample = pixelWorker.Render(new Float2(uv.x, uv.y / renderBuffer.aspect), random);
 
 					//Write to pixel
 					bool successful = pixel.Accumulate(sample);

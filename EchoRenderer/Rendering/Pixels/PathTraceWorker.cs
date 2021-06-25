@@ -7,16 +7,15 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public override Sample Render(Float2 screenUV)
+		public override Sample Render(Float2 screenUV, ExtendedRandom random)
 		{
 			PressedScene scene = Profile.Scene;
-			ExtendedRandom random = Random;
-
 			Ray ray = scene.camera.GetRay(screenUV, random);
-			int bounce = 0;
 
 			Float3 energy = Float3.one;
 			Float3 colors = Float3.zero;
+
+			int bounce = 0;
 
 			//Auxiliary data
 			Float3 firstAlbedo = Float3.zero;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Textures
@@ -18,6 +19,16 @@ namespace EchoRenderer.Textures
 		protected readonly int length;
 		protected readonly Vector128<float>[] pixels;
 
+		/// <summary>
+		/// This is the axis in which <see cref="ToPosition"/> is going to move first if you increment the input index.
+		/// </summary>
+		public const int MajorAxis = 0;
+
+		/// <summary>
+		/// The opposite axis of <see cref="MajorAxis"/>.
+		/// </summary>
+		public const int MinorAxis = 1 - MajorAxis;
+
 		public override Vector128<float> this[Int2 position]
 		{
 			get => pixels[ToIndex(position)];
@@ -27,12 +38,22 @@ namespace EchoRenderer.Textures
 		/// <summary>
 		/// Converts the integer pixel <paramref name="position"/> to an index [0, <see cref="length"/>)
 		/// </summary>
-		public int ToIndex(Int2 position) => position.x + position.y * size.x;
+		public int ToIndex(Int2 position)
+		{
+			Assert.IsTrue(Int2.zero <= position);
+			Assert.IsTrue(position < size);
+
+			return position.x + position.y * size.x;
+		}
 
 		/// <summary>
 		/// Converts <paramref name="index"/> [0, <see cref="length"/>) to an integer pixel position
 		/// </summary>
-		public Int2 ToPosition(int index) => new Int2(index % size.x, index / size.x);
+		public Int2 ToPosition(int index)
+		{
+			Assert.IsTrue(0 <= index && index < length);
+			return new Int2(index % size.x, index / size.x);
+		}
 
 		public override void CopyFrom(Texture texture, bool parallel = true)
 		{
