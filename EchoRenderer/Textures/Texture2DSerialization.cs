@@ -59,11 +59,11 @@ namespace EchoRenderer.Textures
 
 				void SaveARGB(Int2 position)
 				{
-					Vector128<float> vector = this[position];
-					if (sRGB) vector = Sse.Sqrt(vector);
+					Vector128<float> colorVector = this[position];
+					if (sRGB) colorVector = Sse.Sqrt(colorVector);
 
 					byte* pointer = origin + ToPointerOffset(position) * 4;
-					Color32 color = (Color32)Utilities.ToFloat4(ref vector);
+					Color32 color = (Color32)Utilities.ToFloat4(colorVector);
 
 					pointer[0] = color.b;
 					pointer[1] = color.g;

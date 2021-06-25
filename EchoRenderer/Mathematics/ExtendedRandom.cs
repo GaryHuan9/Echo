@@ -6,7 +6,8 @@ namespace EchoRenderer.Mathematics
 {
 	public class ExtendedRandom : Random
 	{
-		public ExtendedRandom() : base(Thread.CurrentThread.ManagedThreadId ^ Environment.TickCount) { }
+		public ExtendedRandom(int seed) : base(seed) { }
+		public ExtendedRandom() : this(Thread.CurrentThread.ManagedThreadId ^ Environment.TickCount) { }
 
 		public float NextFloat() => (float)NextDouble();
 		public float NextFloat(float max) => NextFloat() * max;
@@ -49,8 +50,8 @@ namespace EchoRenderer.Mathematics
 		public Float3 NextOnSphere(float radius) => NextInSphere().Normalized * radius;
 
 		/// <summary>
-		/// Returns a random value on the gaussian distribution curve. Implementation based on the
-		/// Box-Muller transform with a standard deviation of 1 and mean of 0.
+		/// Returns a random value on the gaussian distribution curve. Implementation based
+		/// on the Box-Muller transform with a standard deviation of 1 and mean of 0.
 		/// </summary>
 		/// <returns></returns>
 		public float NextGaussian()
@@ -67,8 +68,6 @@ namespace EchoRenderer.Mathematics
 		/// </summary>
 		public Float2 NextSample()
 		{
-			return Float2.half;
-
 			Float2 position = new Float2(NextGaussian(), NextGaussian()) / 6f;
 			return position.Clamp(Float2.negativeHalf, Float2.half) + Float2.half;
 		}

@@ -12,11 +12,11 @@ namespace EchoRenderer.Mathematics
 		public static readonly Float3 luminanceOption = new Float3(0.2126f, 0.7152f, 0.0722f);
 		public static readonly Vector128<float> luminanceVector = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 
-		public static ref Float4 ToFloat4(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref pixel);
-		public static ref Vector128<float> ToVector(ref Float4 pixel) => ref Unsafe.As<Float4, Vector128<float>>(ref pixel);
-
 		public static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
+		public static Float3 ToFloat3(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float3>(ref pixel);
+
 		public static Vector128<float> ToVector(Float4 pixel) => Unsafe.As<Float4, Vector128<float>>(ref pixel);
+		public static Vector128<float> ToVector(Float3 pixel) => Unsafe.As<Float3, Vector128<float>>(ref pixel);
 
 		public static Float4 ToColor(float value) => new Float4(value, value, value, 1f);
 		public static Float4 ToColor(Float3 value) => new Float4(value.x, value.y, value.z, 1f);
