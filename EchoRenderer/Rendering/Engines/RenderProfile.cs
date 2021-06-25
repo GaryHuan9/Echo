@@ -23,12 +23,12 @@ namespace EchoRenderer.Rendering.Engines
 		public PixelWorker Method { get; init; }
 
 		/// <summary>
-		/// The texture buffer to render onto.
+		/// The <see cref="RenderBuffer"/> to render onto.
 		/// </summary>
 		public RenderBuffer RenderBuffer { get; init; }
 
 		/// <summary>
-		/// The number of concurrent tiles being worked on.
+		/// The maximum number of worker threads concurrently running.
 		/// </summary>
 		public int WorkerSize { get; init; } = Environment.ProcessorCount;
 

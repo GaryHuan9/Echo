@@ -6,11 +6,9 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{
-		public override Sample Render(Float2 screenUV)
+		public override Sample Render(Float2 screenUV, ExtendedRandom random)
 		{
 			PressedScene scene = Profile.Scene;
-			ExtendedRandom random = Random;
-
 			Ray ray = scene.camera.GetRay(screenUV, random);
 
 			while (scene.GetIntersection(ray, out CalculatedHit hit))

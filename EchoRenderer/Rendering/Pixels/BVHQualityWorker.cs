@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Engines;
 
@@ -18,7 +19,7 @@ namespace EchoRenderer.Rendering.Pixels
 			Interlocked.Exchange(ref totalSample, 0);
 		}
 
-		public override Sample Render(Float2 screenUV)
+		public override Sample Render(Float2 screenUV, ExtendedRandom random)
 		{
 			PressedScene scene = Profile.Scene;
 			Ray ray = scene.camera.GetRay(screenUV);

@@ -11,18 +11,7 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public abstract class PixelWorker
 	{
-		readonly ThreadLocal<ExtendedRandom> threadRandom = new(() => new ExtendedRandom());
 		protected RenderProfile Profile { get; private set; }
-
-		/// <summary>
-		/// Returns a thread-safe random number generator that can be used in the invoking thread.
-		/// </summary>
-		protected ExtendedRandom Random => threadRandom.Value;
-
-		/// <summary>
-		/// Returns a thread-safe random value larger than or equals zero, and smaller than one.
-		/// </summary>
-		protected float RandomValue => Random.NextFloat();
 
 		/// <summary>
 		/// Assigns the render profile before a render session begins.
@@ -33,9 +22,12 @@ namespace EchoRenderer.Rendering.Pixels
 		/// <summary>
 		/// Renders a <see cref="Sample"/> at <paramref name="screenUV"/>.
 		/// </summary>
-		/// <param name="screenUV">The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
-		/// Y should have the same scale as X and it would depend on the aspect ratio.</param>
-		public abstract Sample Render(Float2 screenUV);
+		/// <param name="screenUV">
+		/// The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
+		/// Y should have the same scale as X and it would depend on the aspect ratio.
+		/// </param>
+		/// <param name="random">The RNG to use. Should be unique to each thread.</param>
+		public abstract Sample Render(Float2 screenUV, ExtendedRandom random);
 
 		/// <summary>
 		/// Creates a new ray with <paramref name="direction"/> and an origin that is slightly shifted according to
