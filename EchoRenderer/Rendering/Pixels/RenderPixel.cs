@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Textures;
@@ -50,7 +54,7 @@ namespace EchoRenderer.Rendering.Pixels
 		{
 			if (value.IsNaN) return false; //NaN gate
 
-			accumulation++;
+			++accumulation;
 
 			Double3 oldMean = average;
 			Double3 newValue = value.colour;
@@ -72,45 +76,109 @@ namespace EchoRenderer.Rendering.Pixels
 			buffer.SetNormal(position, (Float3)normal.Normalized);
 		}
 
+		[StructLayout(LayoutKind.Explicit, Size = 32)]
 		readonly struct Double3
 		{
-			public Double3(double x, double y, double z)
+			Double3(double x, double y, double z)
 			{
+				Unsafe.SkipInit(out vector);
+
 				this.x = x;
 				this.y = y;
 				this.z = z;
+				zero = 0d;
 			}
 
-			readonly double x;
-			readonly double y;
-			readonly double z;
+			Double3(Vector256<double> vector)
+			{
+				Unsafe.SkipInit(out x);
+				Unsafe.SkipInit(out y);
+				Unsafe.SkipInit(out z);
 
-			public double Max => Math.Max(x, Math.Max(y, z));
+				this.vector = vector;
+				zero = 0d;
+			}
+
+			[FieldOffset(00)] readonly double x;
+			[FieldOffset(08)] readonly double y;
+			[FieldOffset(16)] readonly double z;
+			[FieldOffset(24)] readonly double zero; //Unused component, must always be zero
+
+			[FieldOffset(0)] readonly Vector256<double> vector;
+
 			public double Average => (x + y + z) / 3f;
 
-			public Double3 Normalized
+			public unsafe Double3 Normalized
 			{
 				get
 				{
-					double length = Math.Sqrt(x * x + y * y + z * z);
-					return this / Math.Max(length, double.Epsilon);
+					double magnitude;
+
+					if (Avx.IsSupported)
+					{
+						Vector256<double> squared = Avx.Multiply(vector, vector);
+
+						double* p = (double*)&squared;
+						magnitude = p[0] + p[1] + p[2];
+					}
+					else magnitude = x * x + y * y + z * z;
+
+					return this / Math.Max(Math.Sqrt(magnitude), double.Epsilon);
 				}
 			}
 
-			public static Double3 operator +(Double3 first, Double3 second) => new Double3(first.x + second.x, first.y + second.y, first.z + second.z);
-			public static Double3 operator -(Double3 first, Double3 second) => new Double3(first.x - second.x, first.y - second.y, first.z - second.z);
+			public static Double3 operator +(in Double3 value, in Double3 other) => Add(value, other);
+			public static Double3 operator -(in Double3 value, in Double3 other) => Subtract(value, other);
 
-			public static Double3 operator *(Double3 first, Double3 second) => new Double3(first.x * second.x, first.y * second.y, first.z * second.z);
-			public static Double3 operator /(Double3 first, Double3 second) => new Double3(first.x / second.x, first.y / second.y, first.z / second.z);
+			public static Double3 operator *(in Double3 value, in Double3 other) => Multiply(value.vector, other.vector);
+			public static Double3 operator /(in Double3 value, in Double3 other) => Divide(value.vector, other.vector);
 
-			public static Double3 operator *(Double3 first, double second) => new Double3(first.x * second, first.y * second, first.z * second);
-			public static Double3 operator /(Double3 first, double second) => new Double3(first.x / second, first.y / second, first.z / second);
+			public static Double3 operator *(in Double3 value, double other) => Multiply(value.vector, Vector256.Create(other));
+			public static Double3 operator /(in Double3 value, double other) => Divide(value.vector, Vector256.Create(other));
 
-			public static Double3 operator *(double first, Double3 second) => new Double3(first * second.x, first * second.y, first * second.z);
-			public static Double3 operator /(double first, Double3 second) => new Double3(first / second.x, first / second.y, first / second.z);
+			public static Double3 operator *(double value, in Double3 other) => Multiply(Vector256.Create(value), other.vector);
+			public static Double3 operator /(double value, in Double3 other) => Divide(Vector256.Create(value), other.vector);
 
-			public static implicit operator Double3(Float3 value) => new Double3(value.x, value.y, value.z);
-			public static explicit operator Float3(Double3 value) => new Float3((float)value.x, (float)value.y, (float)value.z);
+			public static implicit operator Double3(in Float3 value) => new Double3(value.x, value.y, value.z);
+			public static explicit operator Float3(in Double3 value) => new Float3((float)value.x, (float)value.y, (float)value.z);
+
+			static Double3 Add(in Double3 value, in Double3 other)
+			{
+				if (Avx.IsSupported) return new Double3(Avx.Add(value.vector, other.vector));
+				return new Double3(value.x + other.x, value.y + other.y, value.z + other.z);
+			}
+
+			static Double3 Subtract(in Double3 value, in Double3 other)
+			{
+				if (Avx.IsSupported) return new Double3(Avx.Subtract(value.vector, other.vector));
+				return new Double3(value.x - other.x, value.y - other.y, value.z - other.z);
+			}
+
+			static unsafe Double3 Multiply(in Vector256<double> value, in Vector256<double> other)
+			{
+				if (Avx.IsSupported) return new Double3(Avx.Multiply(value, other));
+
+				Vector256<double> copy0 = value;
+				Vector256<double> copy1 = other;
+
+				double* p0 = (double*)&copy0;
+				double* p1 = (double*)&copy1;
+
+				return new Double3(p0[0] * p1[0], p0[1] * p1[1], p0[2] * p1[2]);
+			}
+
+			static unsafe Double3 Divide(in Vector256<double> value, in Vector256<double> other)
+			{
+				if (Avx.IsSupported) return new Double3(Avx.Divide(value, other));
+
+				Vector256<double> copy0 = value;
+				Vector256<double> copy1 = other;
+
+				double* p0 = (double*)&copy0;
+				double* p1 = (double*)&copy1;
+
+				return new Double3(p0[0] / p1[0], p0[1] / p1[1], p0[2] / p1[2]);
+			}
 		}
 	}
 }

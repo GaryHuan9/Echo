@@ -29,8 +29,8 @@ namespace EchoRenderer.UI.Interface
 					  {
 						  Scene = new PressedScene(scene),
 						  Method = new PathTraceWorker(),
-						  WorkerSize = 20,
-						  EpochSample = 5
+						  WorkerSize = Environment.ProcessorCount - 2,
+						  EpochSample = 6
 					  };
 		}
 
@@ -76,10 +76,11 @@ namespace EchoRenderer.UI.Interface
 			resolution -= Int2.one - resolution % 2; //TODO: Temporary! Remove
 
 			if (resolution == Profile.RenderBuffer?.size) return;
-			DisplayBuffer buffer = new DisplayBuffer(resolution);
+			var buffer = new ProgressiveRenderBuffer(resolution);
 
 			Profile = Profile with {RenderBuffer = buffer};
 			renderPreview.RenderBuffer = buffer;
+
 			engine.Stop();
 		}
 

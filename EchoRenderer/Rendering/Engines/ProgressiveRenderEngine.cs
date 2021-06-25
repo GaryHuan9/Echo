@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
@@ -56,7 +55,7 @@ namespace EchoRenderer.Rendering.Engines
 			CurrentState = State.initialization;
 
 			profile.Method.AssignProfile(profile);
-			renderData.Clean(profile.RenderBuffer);
+			renderData.Recreate(profile.RenderBuffer);
 
 			parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = profile.WorkerSize};
 			if (workThread.ThreadState == ThreadState.Unstarted) workThread.Start();
@@ -96,7 +95,7 @@ namespace EchoRenderer.Rendering.Engines
 			while (!Disposed)
 			{
 				WaitForState(State.rendering);
-				Parallel.For(0, renderData.Length, parallelOptions, WorkPixel);
+				Parallel.For(0, renderData.Size, parallelOptions, WorkPixel);
 			}
 		}
 
@@ -105,7 +104,7 @@ namespace EchoRenderer.Rendering.Engines
 			var profile = CurrentProfile;
 			if (profile == null) return;
 
-			Int2 position = renderData[index];
+			Int2 position = renderData.GetPosition(index);
 
 			if (CurrentState != State.rendering) state.Break();
 			ref RenderPixel pixel = ref renderData[position];
@@ -119,12 +118,12 @@ namespace EchoRenderer.Rendering.Engines
 			{
 				//Sample color
 				Float2 uv = (position + random.NextSample()) / buffer.size - Float2.half;
-				PixelWorker.Sample sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect));
+				var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), random);
 
 				bool successful = pixel.Accumulate(sample);
 			}
 
-			renderData.Store(position);
+			pixel.Store(renderData.Buffer, position);
 		}
 
 		void ThrowIfDisposed()
@@ -143,38 +142,50 @@ namespace EchoRenderer.Rendering.Engines
 
 		class RenderData
 		{
-			RenderBuffer buffer;
+			public RenderBuffer Buffer { get; private set; }
+			public int Size => Buffer.size.Product;
+
 			RenderPixel[] pixels;
 
-			Int2[] pattern;
+			int[] patternMajor;
+			int[] patternMinor;
 
-			public int Length => pattern.Length;
-			public Int2 this[int index] => pattern[index];
+			public ref RenderPixel this[Int2 position] => ref pixels[Buffer.ToIndex(position)];
 
-			public ref RenderPixel this[Int2 position] => ref pixels[buffer.ToIndex(position)];
-
-			public void Clean(RenderBuffer newBuffer)
+			public void Recreate(RenderBuffer newBuffer)
 			{
-				Int2 oldSize = buffer?.size ?? Int2.zero;
-				Int2 newSize = newBuffer.size;
+				RebuildMajor(ref patternMajor, newBuffer.size[Array2D.MajorAxis]);
+				RebuildPattern(ref patternMinor, newBuffer.size[Array2D.MinorAxis]);
 
-				if (oldSize != newSize)
-				{
-					pixels = new RenderPixel[newSize.Product];
-					pattern = newSize.Loop().ToArray();
+				int oldLength = Buffer?.size.Product ?? 0;
+				int newLength = newBuffer.size.Product;
 
-					pattern.Shuffle();
-				}
-				else Array.Clear(pixels, 0, pixels.Length);
+				if (oldLength >= newLength) Array.Clear(pixels, 0, newLength);
+				else pixels = new RenderPixel[newLength];
 
-				buffer = newBuffer;
-				buffer.Clear();
+				Buffer = newBuffer;
+				Buffer.Clear();
 			}
 
-			public void Store(Int2 position)
+			public Int2 GetPosition(int index) => Int2.Create
+			(
+				Array2D.MajorAxis,
+				patternMajor[index / patternMinor.Length],
+				patternMinor[index % patternMinor.Length]
+			);
+
+			static void RebuildMajor(ref int[] pattern, int size)
 			{
-				ref var pixel = ref this[position];
-				pixel.Store(buffer, position);
+				RebuildPattern(ref pattern, size);
+				pattern.Swap(0, pattern.IndexOf(0));
+			}
+
+			static void RebuildPattern(ref int[] pattern, int size)
+			{
+				if (pattern?.Length != size) pattern = new int[size];
+				for (int i = 0; i < pattern.Length; i++) pattern[i] = i;
+
+				pattern.Shuffle();
 			}
 		}
 	}

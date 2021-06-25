@@ -15,9 +15,9 @@ namespace EchoRenderer.UI.Interface
 			Add(imageUI);
 		}
 
-		DisplayBuffer _renderBuffer;
+		ProgressiveRenderBuffer _renderBuffer;
 
-		public DisplayBuffer RenderBuffer
+		public ProgressiveRenderBuffer RenderBuffer
 		{
 			get => _renderBuffer;
 			set
