@@ -1,69 +1,90 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-
-namespace EchoRenderer.UI.Core.Areas
+﻿namespace EchoRenderer.UI.Core.Areas
 {
-	public class AutoLayoutAreaUI : AreaUI
+	public class AutoLayoutAreaUI : AreaUI, ILayoutAreaUI
 	{
 		public bool Horizontal { get; set; }
 
 		public bool Margins { get; set; } = true;
 		public bool Gaps { get; set; } = true;
 
+		//Additional margin sizes used on minor axes
+		public float PositiveMargin { get; set; }
+		public float NegativeMargin { get; set; }
+
+		public float PreferedHeight { get; private set; }
+
 		public override void Update()
 		{
 			base.Update();
 
+			PreferedHeight = 0f;
+
 			int count = ChildCount;
 			if (count == 0) return;
 
-			float marginSize = Margins ? Theme.LargeMargin : 0f;
-			float gapSize = Gaps ? Theme.LargeMargin : 0f;
+			float marginSize = Margins ? Theme.MediumMargin : 0f;
+			float gapSize = Gaps ? Theme.MediumMargin : 0f;
 
 			if (Horizontal)
 			{
-				float gap = gapSize / Size.x;
-				float margin = marginSize / Size.x;
+				float gap = gapSize / Dimension.x;
+				float margin = marginSize / Dimension.x;
 
 				float total = 1f - margin * 2f - (count - 1) * gap;
 
 				float width = total / count;
 				float current = margin;
 
-				foreach (AreaUI child in this)
+				foreach (AreaUI child in LoopForward())
 				{
-					child.transform.LeftPercent = current;
+					Transform target = child.transform;
+
+					target.LeftPercent = current;
 					current += width;
+					target.RightPercent = 1f - current;
 
-					child.transform.RightPercent = 1f - current;
-					child.transform.HorizontalMargins = 0f;
+					target.HorizontalMargins = 0f;
+					target.VerticalPercents = 0f;
 
-					child.transform.VerticalMargins = marginSize;
-					child.transform.VerticalPercents = 0f;
+					target.TopMargin = marginSize + PositiveMargin;
+					target.BottomMargin = marginSize + NegativeMargin;
 
 					current += gap;
 				}
 			}
 			else
 			{
-				float total = Size.y;
+				float total = Dimension.y;
 				float current = marginSize;
 
-				foreach (AreaUI child in this)
+				foreach (AreaUI child in LoopForward())
 				{
+					float height = Theme.LayoutHeight;
+					Transform target = child.transform;
+
+					if (child is ILayoutAreaUI layout) height = layout.PreferedHeight;
+
 					//Vertical layouts are solely controlled by margins
-					child.transform.TopMargin = current;
-					current += Theme.LayoutHeight;
+					target.TopMargin = current;
+					current += height;
+					target.BottomMargin = total - current;
 
-					child.transform.BottomMargin = total - current;
-					child.transform.VerticalPercents = 0f;
+					target.VerticalPercents = 0f;
+					target.HorizontalPercents = 0f;
 
-					child.transform.HorizontalMargins = marginSize;
-					child.transform.HorizontalPercents = 0f;
+					target.RightMargin = marginSize + PositiveMargin;
+					target.LeftMargin = marginSize + NegativeMargin;
 
 					current += gapSize;
 				}
+
+				PreferedHeight = current + marginSize - gapSize;
 			}
 		}
+	}
+
+	public interface ILayoutAreaUI
+	{
+		float PreferedHeight { get; }
 	}
 }

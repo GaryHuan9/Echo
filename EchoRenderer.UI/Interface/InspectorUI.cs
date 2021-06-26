@@ -9,61 +9,64 @@ using SFML.Window;
 
 namespace EchoRenderer.UI.Interface
 {
-	public class InspectorUI : AreaUI
+	public class InspectorUI : WindowUI
 	{
-		public InspectorUI()
+		public InspectorUI() : base("Inspector")
 		{
-			transform.LeftPercent = 0.8f;
-			transform.UniformMargins = 10f;
+			transform.LeftPercent = 0.72f;
 
-			Add
-			(
-				new AutoLayoutAreaUI { }.Add
-				(
-					new LabelUI
-					{
-						Text = "Hello World 1",
-						Align = LabelUI.Alignment.left
-					}
-				).Add
-				(
-					new ButtonUI
-					{
-						label =
-						{
-							Text = "Button 1",
-							Align = LabelUI.Alignment.right
-						}
-					}
-				).Add
-				(
-					new LabelUI
-					{
-						Text = "Hello World 2 pp"
-					}
-				).Add
-				(
-					new ButtonUI
-					{
-						label = {Text = "Button 2"}
-					}
-				).Add
-				(
-					new ButtonUI
-					{
-						label = {Text = "Button 3"}
-					}
-				).Add
-				(
-					new TextFieldUI {Text = "Test Field Hehe"}
-				).Add
-				(
-					new FloatFieldUI { }
-				).Add
-				(
-					new Float3FieldUI { }
-				)
-			);
+			group.Add(new ButtonUI {label = {Text = "Button"}}.Label("Click Me"));
+			group.Add(new TextFieldUI {Text = "Test Field Here"}.Label("Type me"));
+			group.Add(new FloatFieldUI().Label("Sample Count"));
+
+			// Add
+			// (
+			// 	new AutoLayoutAreaUI { }.Add
+			// 	(
+			// 		new LabelUI
+			// 		{
+			// 			Text = "Hello World 1",
+			// 			Align = LabelUI.Alignment.left
+			// 		}
+			// 	).Add
+			// 	(
+			// 		new ButtonUI
+			// 		{
+			// 			label =
+			// 			{
+			// 				Text = "Button 1",
+			// 				Align = LabelUI.Alignment.right
+			// 			}
+			// 		}
+			// 	).Add
+			// 	(
+			// 		new LabelUI
+			// 		{
+			// 			Text = "Hello World 2 pp"
+			// 		}
+			// 	).Add
+			// 	(
+			// 		new ButtonUI
+			// 		{
+			// 			label = {Text = "Button 2"}
+			// 		}
+			// 	).Add
+			// 	(
+			// 		new ButtonUI
+			// 		{
+			// 			label = {Text = "Button 3"}
+			// 		}
+			// 	).Add
+			// 	(
+			// 		new TextFieldUI {Text = "Test Field Hehe"}
+			// 	).Add
+			// 	(
+			// 		new FloatFieldUI { }
+			// 	).Add
+			// 	(
+			// 		new Float3FieldUI { }
+			// 	)
+			// );
 		}
 
 		bool lastEnabled;

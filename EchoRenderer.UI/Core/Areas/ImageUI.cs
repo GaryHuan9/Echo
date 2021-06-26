@@ -48,27 +48,27 @@ namespace EchoRenderer.UI.Core.Areas
 
 		readonly RectangleShape display = new RectangleShape();
 
-		protected override void Reorient(Float2 position, Float2 size)
+		protected override void Reorient(Float2 position, Float2 dimension)
 		{
-			base.Reorient(position, size);
+			base.Reorient(position, dimension);
 			if (Texture == null) return;
 
 			if (KeepAspect)
 			{
 				float aspect = (float)Texture.Size.X / Texture.Size.Y;
-				int majorAxis = aspect * size.y / size.x > 1f ? 0 : 1;
+				int majorAxis = aspect * dimension.y / dimension.x > 1f ? 0 : 1;
 
-				Float2 center = position + size / 2f;
-				float border = size[majorAxis];
+				Float2 center = position + dimension / 2f;
+				float border = dimension[majorAxis];
 
-				size = new Float2(border * aspect, border);
-				if (majorAxis == 0) size /= aspect;
+				dimension = new Float2(border * aspect, border);
+				if (majorAxis == 0) dimension /= aspect;
 
-				position = center - size / 2f;
+				position = center - dimension / 2f;
 			}
 
 			display.Position = position.As();
-			display.Size = size.As();
+			display.Size = dimension.As();
 		}
 
 		protected override void Paint(RenderTarget renderTarget)

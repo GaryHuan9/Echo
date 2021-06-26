@@ -16,7 +16,8 @@ namespace EchoRenderer.UI.Core
 													 PressColor = new Color(42, 42, 45),
 
 													 SmallMargin = 2f,
-													 LargeMargin = 5f,
+													 MediumMargin = 5f,
+													 LargeMargin = 9f,
 													 LayoutHeight = 18f,
 
 													 Culture = CultureInfo.InvariantCulture
@@ -35,6 +36,7 @@ namespace EchoRenderer.UI.Core
 		public Color PressColor { get; set; }
 
 		public float SmallMargin { get; set; }
+		public float MediumMargin { get; set; }
 		public float LargeMargin { get; set; }
 		public float LayoutHeight { get; set; }
 

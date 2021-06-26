@@ -4,9 +4,17 @@ namespace EchoRenderer.UI.Core.Areas
 {
 	public class ButtonUI : PressableUI
 	{
-		public ButtonUI()
+		public ButtonUI(string text = "Button")
 		{
-			label = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}};
+			label = new LabelUI
+					{
+						transform =
+						{
+							UniformMargins = Theme.SmallMargin
+						},
+						Text = text
+					};
+
 			Add(label);
 		}
 
