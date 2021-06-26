@@ -24,7 +24,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 		int accumulation;
 
-		const double MinDeviationThreshold = 0.3d;
+		const double MinDeviationThreshold = 0.08d;
 
 		/// <summary>
 		/// Returns the color average.
@@ -32,8 +32,8 @@ namespace EchoRenderer.Rendering.Pixels
 		public Float3 Color => (Float3)average;
 
 		/// <summary>
-		/// Returns the standard deviation of the pixel.
-		/// Based on algorithm described here: https://nestedsoftware.com/2018/03/27/calculating-standard-deviation-on-streaming-data-253l.23919.html
+		/// Returns the standard deviation divided by the average of the pixel. Based on algorithm described here:
+		/// https://nestedsoftware.com/2018/03/27/calculating-standard-deviation-on-streaming-data-253l.23919.html
 		/// </summary>
 		public double Deviation
 		{

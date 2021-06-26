@@ -25,7 +25,10 @@ namespace EchoRenderer.Objects.Scenes
 
 	public class GridMaterialBall : Scene
 	{
-		public GridMaterialBall() //5.8 billion triangles
+		//Benchmark Scene: 5.8 billion triangles
+		//AMD 3900x 12C 24T: 5.7M ray/sec
+
+		public GridMaterialBall()
 		{
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.2f);
 

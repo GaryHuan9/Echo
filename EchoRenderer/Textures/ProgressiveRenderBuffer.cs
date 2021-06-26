@@ -108,12 +108,15 @@ namespace EchoRenderer.Textures
 			base.Clear();
 
 			ClearSerializedByteArray();
-			Array.Clear(flags, 0, flags.Length);
+			ClearWrittenFlagArray();
 		}
+
+		public void ClearWrittenFlagArray() => Array.Clear(flags, 0, flags.Length);
 
 		unsafe void ClearSerializedByteArray()
 		{
 			Color32 color32 = new Color32(0, 0, 0);
+			if (bytes.Length == 0) return;
 
 			fixed (byte* p = &bytes[0])
 			{
