@@ -33,7 +33,7 @@ namespace EchoRenderer.UI.Core.Areas
 
 		RootUI _root;
 
-		protected RootUI Root
+		public RootUI Root
 		{
 			get => _root;
 			private set

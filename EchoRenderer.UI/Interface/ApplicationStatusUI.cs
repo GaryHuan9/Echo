@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Diagnostics;
+﻿using System.Text;
+using EchoRenderer.Rendering.Engines;
 using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface
@@ -7,26 +8,58 @@ namespace EchoRenderer.UI.Interface
 	{
 		public ApplicationStatusUI()
 		{
-			transform.TopMargin = -Theme.LayoutHeight;
-			transform.TopPercent = 1f;
-
 			PanelColor = Theme.BackgroundColor;
 			Add(label);
 		}
 
+		readonly StringBuilder builder = new StringBuilder();
 		readonly LabelUI label = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.left};
 
 		int frameCount;
 		double deltaTime;
 		float lastAverage;
 
-		const float AverageInterval = 1f;
 
 		public override void Update()
 		{
 			base.Update();
+			builder.Clear();
 
-			if (deltaTime >= AverageInterval)
+			UpdateFPS();
+
+			SceneViewUI sceneView = Root.Find<SceneViewUI>();
+			ProgressiveRenderEngine engine = sceneView?.engine;
+
+			if (engine == null)
+			{
+				builder.Append("Missing Engine");
+				AppendGap();
+			}
+			else if (engine.CurrentState == ProgressiveRenderEngine.State.rendering)
+			{
+				long intersection = engine.CurrentProfile.Scene.Intersections;
+				double rate = intersection / engine.Elapsed.TotalSeconds;
+
+				builder.Append($"Rate: {rate:F2}");
+				AppendGap();
+
+				builder.Append($"Epoch: {engine.Epoch:N0}");
+				AppendGap();
+			}
+			else
+			{
+				builder.Append("Engine Awaiting");
+				AppendGap();
+			}
+
+			label.Text = builder.ToString();
+		}
+
+		void UpdateFPS()
+		{
+			const float UpdateInterval = 1f;
+
+			if (deltaTime >= UpdateInterval)
 			{
 				lastAverage = (float)(frameCount / deltaTime);
 
@@ -37,7 +70,11 @@ namespace EchoRenderer.UI.Interface
 			++frameCount;
 
 			deltaTime += Root.application.DeltaTime;
-			label.Text = $"FPS: {lastAverage:F2}";
+			builder.Append($"FPS: {lastAverage:F2}");
+
+			AppendGap();
 		}
+
+		void AppendGap() => builder.Append(" \t ");
 	}
 }

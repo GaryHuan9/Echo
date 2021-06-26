@@ -6,24 +6,12 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Rendering.Engines.Tiles;
 
 namespace EchoRenderer.Rendering.Engines
 {
 	public class TiledRenderEngine : IDisposable
 	{
-		TiledRenderProfile _profile;
 		int _currentState;
-
-		public TiledRenderProfile Profile
-		{
-			get => InterlockedHelper.Read(ref _profile);
-			set
-			{
-				if (!Rendering) Interlocked.Exchange(ref _profile, value);
-				else throw new Exception("Cannot modify profile when rendering!");
-			}
-		}
 
 		public State CurrentState
 		{
@@ -87,13 +75,15 @@ namespace EchoRenderer.Rendering.Engines
 		readonly object manageLocker = new object(); //Locker used when managing any of the workers
 		readonly object signalLocker = new object(); //Locker to signal when state changed
 
-		public void Begin()
+		public void Begin(TiledRenderProfile profile)
 		{
-			if (Profile == null) throw ExceptionHelper.Invalid(nameof(Profile), this, InvalidType.isNull);
 			if (CurrentState != State.waiting) throw new Exception("Incorrect state! Must reset before rendering!");
 
-			CurrentProfile = Profile;
-			CurrentProfile.Method.AssignProfile(CurrentProfile);
+			profile.Validate();
+			CurrentProfile = profile;
+
+			profile.Scene.ResetIntersectionCount();
+			profile.Method.AssignProfile(profile);
 
 			lock (manageLocker)
 			{
