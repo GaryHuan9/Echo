@@ -6,7 +6,7 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
 
-namespace EchoRenderer.Rendering.Engines.Tiles
+namespace EchoRenderer.Rendering.Engines
 {
 	/// <summary>
 	/// A worker class that process/render on a specific tile.
@@ -27,7 +27,7 @@ namespace EchoRenderer.Rendering.Engines.Tiles
 			adaptiveSample = profile.AdaptiveSample;
 
 			spiralOffsets = new Float2[pixelSample];
-			randomOffsets = new Float2[adaptiveSample * 3]; //Prepare more offsets than sample because adaptive sample might go beyond the setting
+			randomOffsets = new Float2[adaptiveSample * 2]; //Prepare more offsets than sample because adaptive sample might go beyond the setting
 
 			//Create golden ratio square spiral offsets
 			for (int i = 0; i < spiralOffsets.Length; i++)

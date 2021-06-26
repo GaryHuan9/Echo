@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
@@ -20,7 +19,6 @@ namespace EchoRenderer.Rendering
 	{
 		public PressedScene(Scene source)
 		{
-			ExceptionHelper.AssertMainThread();
 			cubemap = source.Cubemap;
 
 			List<PressedLight> lightsList = new List<PressedLight>();
@@ -123,5 +121,7 @@ namespace EchoRenderer.Rendering
 			float distance = float.PositiveInfinity;
 			return rootPack.bvh.GetIntersectionCost(ray, ref distance);
 		}
+
+		public void ResetIntersectionCount() => Interlocked.Exchange(ref intersections, 0);
 	}
 }

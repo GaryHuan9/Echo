@@ -3,7 +3,6 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Rendering.Engines.Tiles;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Terminals

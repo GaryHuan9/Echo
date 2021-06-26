@@ -110,7 +110,6 @@ namespace EchoRenderer.Objects.Scenes
 			public bool HasParent(Node node)
 			{
 				if (node == this) return true;
-				ExceptionHelper.AssertMainThread();
 
 				using ReleaseHandle<HashSet<Node>> searched = CollectionPooler<Node>.hashSet.Fetch();
 

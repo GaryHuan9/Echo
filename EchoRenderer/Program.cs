@@ -1,15 +1,14 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System;
+using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Rendering.Engines.Tiles;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.PostProcessing;
 using EchoRenderer.Terminals;
@@ -39,7 +38,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			// Console.ReadKey();
+			Console.ReadKey();
 		}
 
 		static TiledRenderEngine renderEngine;
@@ -98,7 +97,7 @@ namespace EchoRenderer
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
 			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new GridMaterialBall();                   //Selects or creates scene
+			Scene scene = new LightedBMW();                         //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
@@ -108,13 +107,13 @@ namespace EchoRenderer
 						  Scene = new PressedScene(scene)
 					  };
 
-			using TiledRenderEngine engine = new TiledRenderEngine {Profile = profile};
+			using TiledRenderEngine engine = new TiledRenderEngine();
 
 			renderEngine = engine;
 			renderMonitor.Engine = engine;
 
 			PerformanceTest setupTest = new PerformanceTest();
-			using (setupTest.Start()) engine.Begin(); //Initializes render
+			using (setupTest.Start()) engine.Begin(profile); //Initializes render
 
 			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender(); //Main thread wait for engine to complete render
@@ -225,7 +224,7 @@ namespace EchoRenderer
 		[Command]
 		static CommandResult SaveRenderBuffer()
 		{
-			RenderBuffer buffer = renderEngine.Profile.RenderBuffer;
+			RenderBuffer buffer = renderEngine.CurrentProfile.RenderBuffer;
 			if (buffer == null) return new CommandResult("No buffer assigned", false);
 
 			buffer.Save("render.png");

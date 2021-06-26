@@ -1,12 +1,16 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
+using ThreadState = System.Threading.ThreadState;
 
 namespace EchoRenderer.Rendering.Engines
 {
@@ -21,6 +25,7 @@ namespace EchoRenderer.Rendering.Engines
 		public ProgressiveRenderProfile CurrentProfile { get; private set; }
 
 		int _currentState;
+		int _epoch;
 
 		public State CurrentState
 		{
@@ -34,15 +39,24 @@ namespace EchoRenderer.Rendering.Engines
 			}
 		}
 
+		public int Epoch
+		{
+			get => InterlockedHelper.Read(ref _epoch);
+			private set => Interlocked.Exchange(ref _epoch, value);
+		}
+
+		public TimeSpan Elapsed => stopwatch.Elapsed;
 		bool Disposed => CurrentState == State.disposed;
 
 		readonly Thread workThread;
 		readonly RenderData renderData;
 
-		ParallelOptions parallelOptions;
+		readonly Stopwatch stopwatch = new Stopwatch();
 		readonly object signalLocker = new object();
 
 		readonly ThreadLocal<ExtendedRandom> threadRandom = new(() => new ExtendedRandom());
+
+		ParallelOptions parallelOptions;
 
 		public void Begin(ProgressiveRenderProfile profile)
 		{
@@ -54,18 +68,24 @@ namespace EchoRenderer.Rendering.Engines
 
 			CurrentState = State.initialization;
 
+			Epoch = 0;
+
 			profile.Method.AssignProfile(profile);
+			profile.Scene.ResetIntersectionCount();
+
 			renderData.Recreate(profile.RenderBuffer);
 
 			parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = profile.WorkerSize};
 			if (workThread.ThreadState == ThreadState.Unstarted) workThread.Start();
 
+			stopwatch.Restart();
 			CurrentState = State.rendering;
 		}
 
 		public void Stop()
 		{
 			ThrowIfDisposed();
+			stopwatch.Stop();
 
 			CurrentState = State.waiting;
 			CurrentProfile = null;
@@ -74,9 +94,9 @@ namespace EchoRenderer.Rendering.Engines
 		public void Dispose()
 		{
 			if (Disposed) return;
-
 			CurrentState = State.disposed;
-			workThread.Join();
+
+			if (workThread.IsAlive) workThread.Join();
 		}
 
 		public void WaitForState(State state)
@@ -95,6 +115,9 @@ namespace EchoRenderer.Rendering.Engines
 			while (!Disposed)
 			{
 				WaitForState(State.rendering);
+
+				++Epoch;
+
 				Parallel.For(0, renderData.Size, parallelOptions, WorkPixel);
 			}
 		}
@@ -113,8 +136,15 @@ namespace EchoRenderer.Rendering.Engines
 			var method = profile.Method;
 
 			ExtendedRandom random = threadRandom.Value;
+			double sampleCount = profile.EpochSample;
 
-			for (int i = 0; i < profile.EpochSample; i++)
+			if (Epoch > profile.EpochLength)
+			{
+				sampleCount += profile.AdaptiveSample;
+				sampleCount *= pixel.Deviation;
+			}
+
+			for (int i = 0; i < sampleCount; i++)
 			{
 				//Sample color
 				Float2 uv = (position + random.NextSample()) / buffer.size - Float2.half;
@@ -163,8 +193,9 @@ namespace EchoRenderer.Rendering.Engines
 				if (oldLength >= newLength) Array.Clear(pixels, 0, newLength);
 				else pixels = new RenderPixel[newLength];
 
+				if (newBuffer is ProgressiveRenderBuffer buffer) buffer.ClearWrittenFlagArray();
+
 				Buffer = newBuffer;
-				Buffer.Clear();
 			}
 
 			public Int2 GetPosition(int index) => Int2.Create

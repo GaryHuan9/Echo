@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
@@ -28,10 +30,44 @@ namespace EchoRenderer.UI.Core.Areas
 		public IHoverable MouseHovering { get; private set; }
 		public IHoverable MousePressing { get; private set; }
 
+		readonly Dictionary<Type, AreaUI> typeMapper = new Dictionary<Type, AreaUI>();
+
 		public void Resize(Float2 size)
 		{
 			Reorient(Float2.zero, size);
 			transform.MarkDirty();
+		}
+
+		public T Find<T>() where T : AreaUI => (T)Find(typeof(T));
+
+		public AreaUI Find(Type type)
+		{
+			if (typeMapper.TryGetValue(type, out AreaUI value))
+			{
+				if (value.Root == this) return value;
+				typeMapper.Remove(type);
+			}
+
+			AreaUI result = Search(this);
+			if (result == null) return null;
+
+			typeMapper[type] = result;
+			return result;
+
+			AreaUI Search(AreaUI current)
+			{
+				if (type.IsInstanceOfType(current)) return current;
+
+				foreach (AreaUI child in current!)
+				{
+					AreaUI search = Search(child);
+					if (search == null) continue;
+
+					return search;
+				}
+
+				return null;
+			}
 		}
 
 		void OnResize(object sender, SizeEventArgs args)
