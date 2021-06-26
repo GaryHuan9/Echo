@@ -1,31 +1,43 @@
-﻿using EchoRenderer.UI.Core.Areas;
-using EchoRenderer.UI.Core.Fields;
+﻿using EchoRenderer.Objects.Scenes;
+using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface
 {
-	public class HierarchyUI : AreaUI
+	public class HierarchyUI : WindowUI
 	{
-		public HierarchyUI()
+		public HierarchyUI() : base("Hierarchy")
 		{
-			transform.RightPercent = 0.8f;
-			transform.UniformMargins = 10f;
+			transform.RightPercent = 0.84f;
 
-			Add
-			(
-				new AutoLayoutAreaUI { }.Add
-				(
-					new ButtonUI
-					{
-						label = {Text = "Button"}
-					}.Label("Click Me")
-				).Add
-				(
-					new TextFieldUI {Text = "Test Field Here"}.Label("Type me")
-				).Add
-				(
-					new FloatFieldUI { }.Label("Sample Count")
-				)
-			);
+			rebuildButton = new ButtonUI {label = {Text = "Rebuild Scene"}};
+			rebuildButton.OnPressedMethods += OnRebuildPressed;
+
+			group.Add(rebuildButton);
 		}
+
+		readonly ButtonUI rebuildButton;
+
+		Scene opened;
+
+		HierarchyNodeUI root;
+
+		public override void Update()
+		{
+			base.Update();
+
+			SceneViewUI sceneView = Root.Find<SceneViewUI>();
+			Scene scene = sceneView?.Profile.Scene?.source;
+
+			if (scene == opened) return;
+
+			if (opened != null && root != null && group.Contains(root)) group.Remove(root);
+
+			root = new HierarchyNodeUI(scene);
+
+			opened = scene;
+			group.Add(root);
+		}
+
+		void OnRebuildPressed() { }
 	}
 }

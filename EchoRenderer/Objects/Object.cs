@@ -59,6 +59,8 @@ namespace EchoRenderer.Objects
 
 		public event Action OnTransformationChangedMethods;
 
+		public virtual string Name => GetType().Name;
+
 		//TODO: Currently child/parent relationship does not affect transformation
 		public readonly Children children;
 

@@ -16,30 +16,34 @@ namespace EchoRenderer.UI
 		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer)) //, Styles.Fullscreen)
 		{
 			Closed += (_, _) => Close();
-
 			stopwatch = Stopwatch.StartNew();
 
-			//Create UI
-			root = new RootUI(this)
-				   {
-					   new AreaUI
-						   {
-							   transform = {BottomMargin = 20f}
-						   }.Add(new HierarchyUI())
-							.Add(new SceneViewUI())
-							.Add(new InspectorUI()),
-					   new AutoLayoutAreaUI
-						   {
-							   transform =
-							   {
-								   TopMargin = -Theme.Current.LayoutHeight,
-								   TopPercent = 1f
-							   },
-							   Horizontal = true,
-							   Margins = false
-						   }.Add(new ApplicationStatusUI())
-							.Add(new ExitButtonUI())
-				   };
+			root = new RootUI(this);
+
+			root.Add
+			(
+				new AreaUI
+					{
+						transform = {BottomMargin = Theme.Current.LayoutHeight}
+					}.Add(new HierarchyUI())
+					 .Add(new SceneViewUI())
+					 .Add(new InspectorUI())
+			);
+
+			root.Add
+			(
+				new AutoLayoutAreaUI
+					{
+						transform =
+						{
+							TopMargin = -Theme.Current.LayoutHeight,
+							TopPercent = 1f
+						},
+						Horizontal = true,
+						Margins = false
+					}.Add(new ApplicationStatusUI())
+					 .Add(new ExitButtonUI())
+			);
 		}
 
 		public double TotalTime { get; private set; }

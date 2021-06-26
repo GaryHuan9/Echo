@@ -19,6 +19,7 @@ namespace EchoRenderer.Rendering
 	{
 		public PressedScene(Scene source)
 		{
+			this.source = source;
 			cubemap = source.Cubemap;
 
 			List<PressedLight> lightsList = new List<PressedLight>();
@@ -56,8 +57,10 @@ namespace EchoRenderer.Rendering
 			Program.commandsController?.Log("Pressed scene");
 		}
 
+		public readonly Scene source;
 		public readonly Camera camera;
 		public readonly Cubemap cubemap;
+
 		public readonly ReadOnlyCollection<PressedLight> lights;
 
 		public GeometryCounts InstancedCounts => presser.root.InstancedCounts;

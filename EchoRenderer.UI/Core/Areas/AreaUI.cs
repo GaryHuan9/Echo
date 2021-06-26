@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using CodeHelpers;
 using CodeHelpers.Mathematics;
-using EchoRenderer.UI.Core.Fields;
 using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
 
 namespace EchoRenderer.UI.Core.Areas
 {
-	public class AreaUI : IEnumerable<AreaUI>, IDisposable
+	public partial class AreaUI : IDisposable
 	{
 		public AreaUI()
 		{
@@ -27,9 +24,7 @@ namespace EchoRenderer.UI.Core.Areas
 		}
 
 		public readonly Transform transform;
-
 		public AreaUI Parent { get; private set; }
-		public bool Visible { get; set; } = true;
 
 		RootUI _root;
 
@@ -43,9 +38,39 @@ namespace EchoRenderer.UI.Core.Areas
 				var old = _root;
 				_root = value;
 
-				foreach (AreaUI child in this) child.Root = value;
+				foreach (AreaUI child in LoopForward(false)) child.Root = value;
 
 				OnRootChanged(old);
+			}
+		}
+
+		bool _visible = true;
+		bool _enabled = true;
+
+		/// <summary>
+		/// Whether the <see cref="AreaUI"/> is visible or not. If true, the object is drawn, receives mouse events and <see cref="Update"/> invocations.
+		/// If false, the object is invisible and do not receive mouse events. However <see cref="Update"/> is still invoked if <see cref="Enabled"/> is true
+		/// </summary>
+		public bool Visible
+		{
+			get => _visible && Enabled;
+			set => _visible = value;
+		}
+
+		/// <summary>
+		/// If this property is toggled to false, no event nor method is raised; the <see cref="AreaUI"/> becomes a ghost.
+		/// There is little difference between using the <see cref="Remove"/> method apart from the performance overhead.
+		/// </summary>
+		public bool Enabled
+		{
+			get => _enabled;
+			set
+			{
+				if (_enabled == value) return;
+				_enabled = value;
+
+				if (Parent == null) return;
+				Parent.ChildCount += value ? 1 : -1;
 			}
 		}
 
@@ -58,11 +83,10 @@ namespace EchoRenderer.UI.Core.Areas
 		readonly RectangleShape panel = new RectangleShape();
 		readonly List<AreaUI> children = new List<AreaUI>();
 
-		public AreaUI this[int index] => children[index];
+		protected Float2 Position => panel.Position.As();
+		protected Float2 Dimension => panel.Size.As();
 
-		public int ChildCount => children.Count;
-		protected Float2 Size => panel.Size.As();
-
+		public int ChildCount { get; private set; }
 		protected static Theme Theme => Theme.Current;
 
 		public AreaUI Add(AreaUI child)
@@ -76,6 +100,8 @@ namespace EchoRenderer.UI.Core.Areas
 			child.Parent = this;
 			child.Root = Root;
 
+			if (child.Enabled) ++ChildCount;
+
 			return this;
 		}
 
@@ -86,6 +112,8 @@ namespace EchoRenderer.UI.Core.Areas
 			child.Parent = null;
 			child.Root = null;
 
+			if (child.Enabled) --ChildCount;
+
 			return true;
 		}
 
@@ -93,33 +121,52 @@ namespace EchoRenderer.UI.Core.Areas
 
 		public virtual void Update()
 		{
-			foreach (AreaUI child in this) child.Update();
+			foreach (AreaUI child in LoopForward()) child.Update();
 		}
 
-		public void Draw(RenderTarget renderTarget)
+		public void Draw(RenderTarget renderTarget, bool paint = true)
 		{
 			transform.Reorient();
 
-			if (Size > Float2.zero && Visible) Paint(renderTarget);
-			foreach (AreaUI child in this) child.Draw(renderTarget);
-		}
+			Float2 min = default;
+			Float2 max = default;
 
-		public LabeledAreaUI Label(string label) => new() {label = {Text = label}, Area = this};
+			if (paint)
+			{
+				GetMinMax(this, out min, out max);
+
+				paint &= Visible && max > min;
+				if (paint) Paint(renderTarget);
+			}
+
+			foreach (AreaUI child in LoopForward())
+			{
+				bool paintChild = false;
+
+				if (paint)
+				{
+					GetMinMax(child, out Float2 childMin, out Float2 childMax);
+					paintChild = childMin < max && min < childMax;
+				}
+
+				child.Draw(renderTarget, paintChild);
+			}
+		}
 
 		/// <summary>
 		/// Invoked on <see cref="Root"/> when the <see cref="Application"/> terminates.
 		/// </summary>
 		public virtual void Dispose()
 		{
-			foreach (AreaUI child in this) child.Dispose();
+			foreach (AreaUI child in LoopForward(false)) child.Dispose();
 
 			GC.SuppressFinalize(this);
 		}
 
-		protected virtual void Reorient(Float2 position, Float2 size)
+		protected virtual void Reorient(Float2 position, Float2 dimension)
 		{
 			panel.Position = position.As();
-			panel.Size = size.As();
+			panel.Size = dimension.As();
 		}
 
 		protected virtual void Paint(RenderTarget renderTarget)
@@ -131,16 +178,15 @@ namespace EchoRenderer.UI.Core.Areas
 
 		protected IHoverable Find(Float2 point)
 		{
-			Float2 min = panel.Position.As();
-			Float2 max = min + panel.Size.As();
+			GetMinMax(this, out Float2 min, out Float2 max);
 
 			if (min <= point && point <= max)
 			{
 				//Must iterate in reverse so that the layering is correct
 
-				for (int i = ChildCount - 1; i >= 0; i--)
+				foreach (AreaUI child in LoopBackward())
 				{
-					var found = this[i].Find(point);
+					var found = child.Find(point);
 					if (found != null) return found;
 				}
 
@@ -163,178 +209,10 @@ namespace EchoRenderer.UI.Core.Areas
 			return false;
 		}
 
-		List<AreaUI>.Enumerator GetEnumerator() => children.GetEnumerator();
-
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-		IEnumerator<AreaUI> IEnumerable<AreaUI>.GetEnumerator() => GetEnumerator();
-
-		public class Transform
+		static void GetMinMax(AreaUI target, out Float2 min, out Float2 max)
 		{
-			public Transform(AreaUI areaUi) => areaUI = areaUi;
-
-			readonly AreaUI areaUI;
-
-			float _rightPercent;
-			float _bottomPercent;
-			float _leftPercent;
-			float _topPercent;
-
-			public float RightPercent
-			{
-				get => _rightPercent;
-				set => Assign(ref _rightPercent, value);
-			}
-
-			public float BottomPercent
-			{
-				get => _bottomPercent;
-				set => Assign(ref _bottomPercent, value);
-			}
-
-			public float LeftPercent
-			{
-				get => _leftPercent;
-				set => Assign(ref _leftPercent, value);
-			}
-
-			public float TopPercent
-			{
-				get => _topPercent;
-				set => Assign(ref _topPercent, value);
-			}
-
-			float _rightMargin;
-			float _bottomMargin;
-			float _leftMargin;
-			float _topMargin;
-
-			public float RightMargin
-			{
-				get => _rightMargin;
-				set => Assign(ref _rightMargin, value);
-			}
-
-			public float BottomMargin
-			{
-				get => _bottomMargin;
-				set => Assign(ref _bottomMargin, value);
-			}
-
-			public float LeftMargin
-			{
-				get => _leftMargin;
-				set => Assign(ref _leftMargin, value);
-			}
-
-			public float TopMargin
-			{
-				get => _topMargin;
-				set => Assign(ref _topMargin, value);
-			}
-
-			public float VerticalPercents
-			{
-				get => (BottomPercent + TopPercent) / 2f;
-				set => BottomPercent = TopPercent = value;
-			}
-
-			public float VerticalMargins
-			{
-				get => (BottomMargin + TopMargin) / 2f;
-				set => BottomMargin = TopMargin = value;
-			}
-
-			public float HorizontalPercents
-			{
-				get => (RightPercent + LeftPercent) / 2f;
-				set => RightPercent = LeftPercent = value;
-			}
-
-			public float HorizontalMargins
-			{
-				get => (RightMargin + LeftMargin) / 2f;
-				set => RightMargin = LeftMargin = value;
-			}
-
-			public float UniformPercents
-			{
-				get => (RightPercent + BottomPercent + LeftPercent + TopPercent) / 4f;
-				set => RightPercent = BottomPercent = LeftPercent = TopPercent = value;
-			}
-
-			public float UniformMargins
-			{
-				get => (RightMargin + BottomMargin + LeftMargin + TopMargin) / 4f;
-				set => RightMargin = BottomMargin = LeftMargin = TopMargin = value;
-			}
-
-			bool _dirtied;
-
-			public bool Dirtied
-			{
-				get => _dirtied;
-				private set
-				{
-					if (value && !_dirtied)
-					{
-						//Dirtying the parent dirties the entire hierarchy
-						//However note that if a parent is already dirtied, but the child just cleaned its transform
-						//dirtying the parent again will not re-dirty the child. We only dirty the entire hierarchy
-						//if there has been a modification to the dirtied boolean to reduce overhead. This behavior can be changed if necessary.
-
-						foreach (AreaUI child in areaUI) child.transform.Dirtied = true;
-					}
-
-					_dirtied = value;
-				}
-			}
-
-			public void Reorient()
-			{
-				if (!Dirtied) return;
-
-				Dirtied = false;
-
-				if (areaUI.Parent == null) return;
-
-				RectangleShape parent = areaUI.Parent.panel;
-
-				Float2 parentPosition = parent.Position.As();
-				Float2 parentSize = parent.Size.As();
-
-				Float2 position = parentPosition + parentSize * new Float2
-								  (
-									  LeftPercent,
-									  TopPercent
-								  ) + new Float2
-								  (
-									  LeftMargin,
-									  TopMargin
-								  );
-
-				Float2 size = parentSize * new Float2
-							  (
-								  1f - RightPercent - LeftPercent,
-								  1f - TopPercent - BottomPercent
-							  ) - new Float2
-							  (
-								  RightMargin + LeftMargin,
-								  TopMargin + BottomMargin
-							  );
-
-				areaUI.Reorient(position, size);
-			}
-
-			public void MarkDirty() => Dirtied = true;
-
-			void Assign(ref float original, float value)
-			{
-				if (!original.AlmostEquals(value)) MarkDirty();
-				original = value;
-			}
-
-			public static Float2 operator *(Float2 value, Transform transform) => transform.areaUI.panel.Transform.TransformPoint(value.As()).As();
-			public static Float2 operator /(Float2 value, Transform transform) => transform.areaUI.panel.InverseTransform.TransformPoint(value.As()).As();
+			min = target.panel.Position.As();
+			max = min + target.panel.Size.As();
 		}
 	}
 }
