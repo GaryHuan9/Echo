@@ -57,8 +57,7 @@ namespace EchoRenderer.UI.Core.Areas
 			AreaUI Search(AreaUI current)
 			{
 				if (type.IsInstanceOfType(current)) return current;
-
-				foreach (AreaUI child in current!)
+				foreach (AreaUI child in current!.LoopForward(false))
 				{
 					AreaUI search = Search(child);
 					if (search == null) continue;

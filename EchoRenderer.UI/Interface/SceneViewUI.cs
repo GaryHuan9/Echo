@@ -15,8 +15,9 @@ namespace EchoRenderer.UI.Interface
 	{
 		public SceneViewUI()
 		{
-			transform.HorizontalPercents = 0.2f;
-			transform.UniformMargins = 10f;
+			transform.LeftPercent = 0.16f;
+			transform.RightPercent = 0.28f;
+			transform.UniformMargins = Theme.LargeMargin;
 
 			engine = new ProgressiveRenderEngine();
 			renderPreview = new RenderPreviewUI();
@@ -31,7 +32,7 @@ namespace EchoRenderer.UI.Interface
 						  AdaptiveSample = 35
 					  };
 
-			new Thread(LoadScene<SingleMaterialBall>)
+			new Thread(LoadScene<TestMaterials>)
 			{
 				IsBackground = true,
 				Name = "Scene Loader"
@@ -104,9 +105,9 @@ namespace EchoRenderer.UI.Interface
 			}
 		}
 
-		protected override void Reorient(Float2 position, Float2 size)
+		protected override void Reorient(Float2 position, Float2 dimension)
 		{
-			base.Reorient(position, size);
+			base.Reorient(position, dimension);
 			CheckResolutionChange();
 		}
 
@@ -122,7 +123,7 @@ namespace EchoRenderer.UI.Interface
 
 		void CheckResolutionChange()
 		{
-			Int2 resolution = (Size * ResolutionMultiplier).Rounded;
+			Int2 resolution = (Dimension * ResolutionMultiplier).Rounded;
 			if (resolution == Profile.RenderBuffer?.size) return;
 
 			var buffer = new ProgressiveRenderBuffer(resolution);

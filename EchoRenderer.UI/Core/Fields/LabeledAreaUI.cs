@@ -13,7 +13,7 @@ namespace EchoRenderer.UI.Core.Fields
 							   UniformPercents = 0f,
 							   UniformMargins = 0f,
 							   RightPercent = 0.6f,
-							   RightMargin = Theme.LargeMargin
+							   RightMargin = Theme.MediumMargin
 						   },
 						   PanelColor = Theme.PanelColor
 					   };
@@ -24,7 +24,7 @@ namespace EchoRenderer.UI.Core.Fields
 						{
 							UniformPercents = 0f,
 							UniformMargins = Theme.SmallMargin,
-							LeftMargin = Theme.LargeMargin
+							LeftMargin = Theme.MediumMargin
 						},
 						Align = LabelUI.Alignment.left
 					};
@@ -56,5 +56,11 @@ namespace EchoRenderer.UI.Core.Fields
 		}
 
 		public readonly LabelUI label;
+	}
+
+	public
+		static class LabeledAreaUIExtensions
+	{
+		public static LabeledAreaUI Label(this AreaUI area, string label) => new() {label = {Text = label}, Area = area};
 	}
 }

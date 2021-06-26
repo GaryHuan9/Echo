@@ -19,7 +19,6 @@ namespace EchoRenderer.UI.Interface
 		double deltaTime;
 		float lastAverage;
 
-
 		public override void Update()
 		{
 			base.Update();

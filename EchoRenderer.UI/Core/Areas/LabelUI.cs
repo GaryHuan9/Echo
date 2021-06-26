@@ -18,7 +18,7 @@ namespace EchoRenderer.UI.Core.Areas
 			get => _text;
 			set
 			{
-				if (_text == value) return;
+				if (value.SequenceEqual(_text)) return;
 				_text = new string(value);
 
 				display.DisplayedString = _text;
@@ -65,7 +65,7 @@ namespace EchoRenderer.UI.Core.Areas
 				FloatRect bounds = display.GetLocalBounds();
 
 				float width = bounds.Width;
-				float area = Size.x;
+				float area = Dimension.x;
 
 				switch (Align)
 				{
@@ -116,11 +116,13 @@ namespace EchoRenderer.UI.Core.Areas
 			float GetDistance(int target) => Math.Abs(display.FindCharacterPos((uint)target).X - position);
 		}
 
-		protected override void Reorient(Float2 position, Float2 size)
+		protected override void Reorient(Float2 position, Float2 dimension)
 		{
-			base.Reorient(position, size);
+			base.Reorient(position, dimension);
 
-			display.CharacterSize = (uint)Math.Max(0, size.y);
+			float fontSize = Math.Max(0f, dimension.y);
+			display.CharacterSize = (uint)fontSize;
+
 			FloatRect bounds = display.GetLocalBounds();
 
 			float margin = bounds.Left;
@@ -134,7 +136,7 @@ namespace EchoRenderer.UI.Core.Areas
 				case Alignment.center:
 				{
 					xOrigin = margin + extend;
-					xPosition = position.x + size.x / 2f;
+					xPosition = position.x + dimension.x / 2f;
 
 					break;
 				}
@@ -148,13 +150,13 @@ namespace EchoRenderer.UI.Core.Areas
 				case Alignment.right:
 				{
 					xOrigin = margin + extend * 2f;
-					xPosition = position.x + size.x - Margin;
+					xPosition = position.x + dimension.x - Margin;
 
 					break;
 				}
 			}
 
-			float y = position.y - size.y * 0.16f;
+			float y = position.y - dimension.y * 0.16f;
 
 			display.Origin = new Vector2f(xOrigin, 0f);
 			display.Position = new Vector2f(xPosition, y);
