@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.Scenes;
@@ -22,19 +23,26 @@ namespace EchoRenderer.UI.Interface
 
 			Add(renderPreview);
 
-			//Create render environment
-			Scene scene = new TestMaterials();
-
 			Profile = new ProgressiveRenderProfile
 					  {
-						  Scene = new PressedScene(scene),
 						  Method = new PathTraceWorker(),
-						  WorkerSize = Environment.ProcessorCount - 2,
-						  EpochSample = 6
+						  EpochSample = 2,
+						  EpochLength = 24,
+						  AdaptiveSample = 35
 					  };
+
+			new Thread(LoadScene<SingleMaterialBall>)
+			{
+				IsBackground = true,
+				Name = "Scene Loader"
+			}.Start();
 		}
 
+		public readonly ProgressiveRenderEngine engine;
+		public float RedrawInterval { get; set; } = 0.3f;
+
 		ProgressiveRenderProfile _profile;
+		float _resolutionMultiplier = 0.5f;
 
 		public ProgressiveRenderProfile Profile
 		{
@@ -42,8 +50,22 @@ namespace EchoRenderer.UI.Interface
 			set => _profile = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
 		}
 
-		readonly ProgressiveRenderEngine engine;
+		public float ResolutionMultiplier
+		{
+			get => _resolutionMultiplier;
+			set
+			{
+				if (_resolutionMultiplier.AlmostEquals(value)) return;
+
+				_resolutionMultiplier = value;
+				CheckResolutionChange();
+			}
+		}
+
 		readonly RenderPreviewUI renderPreview;
+
+		bool requestingRedraw;
+		float lastInterval;
 
 		public override void Update()
 		{
@@ -58,9 +80,23 @@ namespace EchoRenderer.UI.Interface
 						Profile.Validate();
 						engine.Begin(Profile);
 					}
-					catch (Exception exception)
+					catch (Exception)
 					{
-						Console.WriteLine(exception);
+						// ignored
+					}
+
+					break;
+				}
+				case ProgressiveRenderEngine.State.rendering:
+				{
+					float time = (float)Root.application.TotalTime;
+
+					if (requestingRedraw && lastInterval + RedrawInterval < time)
+					{
+						engine.Stop();
+
+						requestingRedraw = false;
+						lastInterval = time;
 					}
 
 					break;
@@ -71,17 +107,7 @@ namespace EchoRenderer.UI.Interface
 		protected override void Reorient(Float2 position, Float2 size)
 		{
 			base.Reorient(position, size);
-			Int2 resolution = size.Rounded;
-
-			resolution -= Int2.one - resolution % 2; //TODO: Temporary! Remove
-
-			if (resolution == Profile.RenderBuffer?.size) return;
-			var buffer = new ProgressiveRenderBuffer(resolution);
-
-			Profile = Profile with {RenderBuffer = buffer};
-			renderPreview.RenderBuffer = buffer;
-
-			engine.Stop();
+			CheckResolutionChange();
 		}
 
 		public override void Dispose()
@@ -90,6 +116,27 @@ namespace EchoRenderer.UI.Interface
 
 			engine.Stop();
 			engine.Dispose();
+		}
+
+		public void RequestRedraw() => requestingRedraw = true;
+
+		void CheckResolutionChange()
+		{
+			Int2 resolution = (Size * ResolutionMultiplier).Rounded;
+			if (resolution == Profile.RenderBuffer?.size) return;
+
+			var buffer = new ProgressiveRenderBuffer(resolution);
+
+			Profile = Profile with {RenderBuffer = buffer};
+			renderPreview.RenderBuffer = buffer;
+
+			RequestRedraw();
+		}
+
+		void LoadScene<T>() where T : Scene, new()
+		{
+			PressedScene scene = new PressedScene(new T());
+			Profile = Profile with {Scene = scene};
 		}
 	}
 }

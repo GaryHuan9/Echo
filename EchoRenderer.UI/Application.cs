@@ -13,7 +13,7 @@ namespace EchoRenderer.UI
 {
 	public class Application : RenderWindow, IDisposable
 	{
-		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer))
+		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer)) //, Styles.Fullscreen)
 		{
 			Closed += (_, _) => Close();
 
@@ -28,7 +28,17 @@ namespace EchoRenderer.UI
 						   }.Add(new HierarchyUI())
 							.Add(new SceneViewUI())
 							.Add(new InspectorUI()),
-					   new ApplicationStatusUI()
+					   new AutoLayoutAreaUI
+						   {
+							   transform =
+							   {
+								   TopMargin = -Theme.Current.LayoutHeight,
+								   TopPercent = 1f
+							   },
+							   Horizontal = true,
+							   Margins = false
+						   }.Add(new ApplicationStatusUI())
+							.Add(new ExitButtonUI())
 				   };
 		}
 

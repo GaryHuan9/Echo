@@ -67,7 +67,6 @@ namespace EchoRenderer.Objects
 
 		public IEnumerable<Object> LoopChildren(bool all)
 		{
-			ExceptionHelper.AssertMainThread();
 			if (children.Count == 0) yield break;
 
 			Queue<Object> frontier = CollectionPooler<Object>.queue.GetObject();

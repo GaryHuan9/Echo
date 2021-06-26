@@ -1,5 +1,11 @@
-﻿using EchoRenderer.UI.Core.Areas;
+﻿using System;
+using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
+using EchoRenderer.Objects;
+using EchoRenderer.UI.Core;
+using EchoRenderer.UI.Core.Areas;
 using EchoRenderer.UI.Core.Fields;
+using SFML.Window;
 
 namespace EchoRenderer.UI.Interface
 {
@@ -58,6 +64,55 @@ namespace EchoRenderer.UI.Interface
 					new Float3FieldUI { }
 				)
 			);
+		}
+
+		bool lastEnabled;
+		Int2 lastMouse;
+
+		const float MouseSensitivity = 0.18f;
+		const float MovementSpeed = 3.5f;
+
+		public override void Update()
+		{
+			base.Update();
+
+			SceneViewUI sceneView = Root.Find<SceneViewUI>();
+			Camera camera = sceneView?.Profile.Scene?.camera;
+
+			if (camera == null) return;
+
+			if (Mouse.IsButtonPressed(Mouse.Button.Right))
+			{
+				Int2 mouse = Mouse.GetPosition().As();
+				Float4x4 matrix = camera.LocalToWorld;
+
+				if (!lastEnabled)
+				{
+					lastEnabled = true;
+					lastMouse = mouse;
+				}
+
+				Int2 delta = mouse - lastMouse;
+
+				Float2 input = new Int2
+				(
+					KeyDown(Keyboard.Key.D) - KeyDown(Keyboard.Key.A),
+					KeyDown(Keyboard.Key.W) - KeyDown(Keyboard.Key.S)
+				).Normalized;
+
+				Float3 movement = input.X_Y * (float)Root.application.DeltaTime;
+				Float3 change = camera.LocalToWorld.MultiplyDirection(movement);
+
+				camera.Rotation += delta.YX_ * MouseSensitivity;
+				camera.Position += change * MovementSpeed;
+
+				lastMouse = mouse;
+
+				if (matrix != camera.LocalToWorld) sceneView.RequestRedraw();
+
+				static int KeyDown(Keyboard.Key key) => Convert.ToInt32(Keyboard.IsKeyPressed(key));
+			}
+			else lastEnabled = false;
 		}
 	}
 }

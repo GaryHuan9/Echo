@@ -3,7 +3,7 @@ using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 
-namespace EchoRenderer.Rendering.Engines.Tiles
+namespace EchoRenderer.Rendering.Engines
 {
 	public interface ITilePattern
 	{
