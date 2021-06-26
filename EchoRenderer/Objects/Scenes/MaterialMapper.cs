@@ -22,7 +22,7 @@ namespace EchoRenderer.Objects.Scenes
 
 		public MaterialMapper Clone()
 		{
-			var mapper = new MaterialMapper();
+			MaterialMapper mapper = new MaterialMapper();
 
 			foreach ((Material from, Material to) in map) mapper.map.Add(from, to);
 
