@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
+using CodeHelpers.ObjectPooling;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
@@ -10,16 +12,20 @@ namespace EchoRenderer.Rendering.PostProcessing
 	{
 		public PostProcessingEngine(RenderBuffer renderBuffer)
 		{
-			workThread = new Thread(Work);
 			this.renderBuffer = renderBuffer;
+			workThread = new Thread(Work);
+
+			texturePooler = new Array2DPooler(renderBuffer.size);
 		}
+
+		public readonly RenderBuffer renderBuffer;
+		public readonly Array2DPooler texturePooler;
 
 		readonly List<PostProcessingWorker> workers = new List<PostProcessingWorker>();
 
 		readonly Thread workThread;
 		readonly object processLocker = new object();
 
-		public readonly RenderBuffer renderBuffer;
 		public bool Aborted { get; private set; }
 
 		public void AddWorker(PostProcessingWorker worker)
@@ -64,6 +70,18 @@ namespace EchoRenderer.Rendering.PostProcessing
 			}
 
 			lock (processLocker) Monitor.PulseAll(processLocker);
+		}
+
+		public class Array2DPooler : PoolerBase<Array2D>
+		{
+			public Array2DPooler(Int2 size) => this.size = size;
+
+			readonly Int2 size;
+
+			protected override int MaxPoolSize => 16;
+
+			protected override Array2D GetNewObject() => new(size);
+			protected override void Reset(Array2D target) { }
 		}
 	}
 }

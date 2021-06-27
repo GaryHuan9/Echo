@@ -37,7 +37,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		float totalCost;
 		float totalSample;
 
-		static readonly Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
+		static readonly Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
 
 		const float Scale = 0.03f;
 
@@ -63,10 +63,10 @@ namespace EchoRenderer.Rendering.PostProcessing
 			for (int i = 0; i < labels.Length; i++)
 			{
 				string label = labels[i];
-				float width = font.GetWidth(label.Length, height);
+				float width = font.GetWidth(label.Length, style);
 
 				Float2 position = new Float2(height + width / 2f, height * (i + 1.5f));
-				font.Draw(renderBuffer, label, style.ReplaceCenter(position));
+				font.Draw(renderBuffer, label, position, style);
 			}
 		}
 
