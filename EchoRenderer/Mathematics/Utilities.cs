@@ -12,14 +12,27 @@ namespace EchoRenderer.Mathematics
 		public static readonly Float3 luminanceOption = new Float3(0.2126f, 0.7152f, 0.0722f);
 		public static readonly Vector128<float> luminanceVector = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 
+		public static readonly Vector128<float> vector0 = Vector128.Create(0f);
+		public static readonly Vector128<float> vector1 = Vector128.Create(1f);
+		public static readonly Vector128<float> vector2 = Vector128.Create(2f);
+		public static readonly Vector128<float> vector3 = Vector128.Create(3f);
+
+		public static readonly Vector128<float> vector05 = Vector128.Create(0.5f);
+		public static readonly Vector128<float> vectorN1 = Vector128.Create(-1f);
+		public static readonly Vector128<float> vectorN2 = Vector128.Create(-2f);
+
+		public static readonly Vector128<float> vectorMinValue = Vector128.Create(float.MinValue);
+		public static readonly Vector128<float> vectorMaxValue = Vector128.Create(float.MaxValue);
+
 		public static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
 		public static Float3 ToFloat3(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float3>(ref pixel);
 
 		public static Vector128<float> ToVector(Float4 pixel) => Unsafe.As<Float4, Vector128<float>>(ref pixel);
 		public static Vector128<float> ToVector(Float3 pixel) => Unsafe.As<Float3, Vector128<float>>(ref pixel);
 
-		public static Float4 ToColor(float value) => new Float4(value, value, value, 1f);
-		public static Float4 ToColor(Float3 value) => new Float4(value.x, value.y, value.z, 1f);
+		public static Float4 ToColor(float value) => ToColor((Float4)value);
+		public static Float4 ToColor(Float3 value) => ToColor((Float4)value);
+		public static Float4 ToColor(Float4 value) => value.Replace(3, 1f);
 
 		public static Float4 ToColor(ReadOnlySpan<char> value)
 		{
@@ -63,6 +76,9 @@ namespace EchoRenderer.Mathematics
 			if (Fma.IsSupported) return Fma.MultiplyAdd(length, time, left);
 			return Sse.Add(Sse.Multiply(length, time), left);
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector128<float> Clamp(in Vector128<float> min, in Vector128<float> max, in Vector128<float> value) => Sse.Min(max, Sse.Max(min, value));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe float GetLuminance(in Vector128<float> color)

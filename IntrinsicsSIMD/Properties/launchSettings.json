@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "EchoRenderer.UI": {
+    "IntrinsicsSIMD": {
       "commandName": "Project",
       "workingDirectory": "C:\\Users\\MMXXXVIII\\Things\\CodingStuff\\C#\\EchoRenderer\\EchoRenderer"
     }

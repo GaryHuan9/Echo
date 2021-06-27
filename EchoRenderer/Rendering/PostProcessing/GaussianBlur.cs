@@ -3,28 +3,38 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
+using CodeHelpers.ObjectPooling;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
-	public class GaussianBlur
+	public struct GaussianBlur : IDisposable
 	{
-		public GaussianBlur(PostProcessingWorker worker, Texture2D sourceBuffer)
+		public GaussianBlur(PostProcessingWorker worker, Texture2D sourceBuffer, float deviation = 1f, int quality = 4) : this()
 		{
 			this.worker = worker;
 			this.sourceBuffer = sourceBuffer;
 
-			workerBuffer = new Array2D(sourceBuffer.size) {Wrapper = Wrappers.clamp};
+			this.deviation = deviation;
+			this.quality = quality;
+
+			handle = worker.FetchTemporaryBuffer(out workerBuffer, sourceBuffer.size);
 		}
 
-		public float Deviation { get; set; }
-		public int Quality { get; set; } = 4;
+		readonly PostProcessingWorker worker;
+
+		readonly Texture2D sourceBuffer;
+		readonly Texture2D workerBuffer;
+
+		public readonly float deviation;
+		public readonly int quality;
 
 		float _deviationActual;
 
 		/// <summary>
 		/// Because <see cref="GaussianBlur"/> uses a O(n) approximation method, this property gets
-		/// the actual deviation based on <see cref="Deviation"/> and <see cref="Quality"/>.
+		/// the actual deviation based on <see cref="deviation"/> and <see cref="quality"/>.
 		/// </summary>
 		public float DeviationActual
 		{
@@ -33,74 +43,35 @@ namespace EchoRenderer.Rendering.PostProcessing
 				BuildRadii();
 				return _deviationActual;
 			}
-			private set => _deviationActual = value;
 		}
 
-		/// <summary>
-		/// Can be used to change the <see cref="Texture.Wrapper"/> to change how
-		/// the blur will be calculated on the border of the texture.
-		/// </summary>
-		public IWrapper Wrapper
-		{
-			get => workerBuffer.Wrapper;
-			set => workerBuffer.Wrapper = value;
-		}
+		ReleaseHandle<Array2D> handle;
 
-		readonly PostProcessingWorker worker;
-		readonly Texture2D sourceBuffer;
-		readonly Texture2D workerBuffer;
-
-		int[] radii = Array.Empty<int>();
-		float builtDeviation;
+		int[] radii;
 
 		public void Run()
 		{
 			BuildRadii();
 
-			using var _ = new ScopedWrapper(sourceBuffer, Wrapper);
-
 			//Run Gaussian blur passes
-			for (int i = 0; i < Quality; i++)
+			for (int i = 0; i < quality; i++)
 			{
 				int radius = radii[i];
+				GaussianBlur blur = this;
 
-				worker.RunPassHorizontal(vertical => HorizontalBlurPass(vertical, radius), workerBuffer);
-				worker.RunPassVertical(horizontal => VerticalBlurPass(horizontal, radius), sourceBuffer);
+				worker.RunPassHorizontal(vertical => blur.HorizontalBlurPass(vertical, radius), workerBuffer);
+				worker.RunPassVertical(horizontal => blur.VerticalBlurPass(horizontal, radius), sourceBuffer);
 			}
 		}
 
-		void BuildRadii()
-		{
-			if (radii.Length == Quality && builtDeviation.AlmostEquals(Deviation)) return;
-
-			Array.Resize(ref radii, Quality);
-			builtDeviation = Deviation;
-
-			//Calculate Gaussian approximation convolution square size
-			//Code based on: http://blog.ivank.net/fastest-gaussian-blur.html
-			float alpha = Deviation * Deviation;
-
-			int beta = MathF.Sqrt(12f * alpha / Quality + 1f).Floor();
-			if (beta % 2 == 0) beta--;
-
-			float gamma = Quality * beta * beta - 4f * Quality * beta - 3f * Quality;
-			int delta = ((12f * alpha - gamma) / (-4f * beta - 4f)).Round();
-
-			//Record radii
-			for (int i = 0; i < Quality; i++)
-			{
-				int size = i < delta ? beta : beta + 2;
-				radii[i] = (size - 1) / 2;
-			}
-
-			//Calculate actual deviation
-			DeviationActual = MathF.Sqrt((delta * beta * beta + (Quality - delta) * (beta + 2) * (beta + 2) - Quality) / 12f);
-		}
+		public void Dispose() => handle.Dispose();
 
 		void HorizontalBlurPass(int vertical, int radius)
 		{
-			Vector128<float> accumulator = Vector128<float>.Zero;
+			Vector128<float> accumulator = Utilities.vector0;
 			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
+
+			Texture2D texture = sourceBuffer;
 
 			for (int x = -radius; x < radius; x++) accumulator = Sse.Add(accumulator, Get(x));
 
@@ -117,13 +88,15 @@ namespace EchoRenderer.Rendering.PostProcessing
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			Vector128<float> Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.x), vertical)];
+			Vector128<float> Get(int x) => texture[new Int2(x.Clamp(0, texture.oneLess.x), vertical)];
 		}
 
 		void VerticalBlurPass(int horizontal, int radius)
 		{
-			Vector128<float> accumulator = Vector128<float>.Zero;
+			Vector128<float> accumulator = Utilities.vector0;
 			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
+
+			Texture2D texture = workerBuffer;
 
 			for (int y = -radius; y < radius; y++) accumulator = Sse.Add(accumulator, Get(y));
 
@@ -140,7 +113,37 @@ namespace EchoRenderer.Rendering.PostProcessing
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			Vector128<float> Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.y))];
+			Vector128<float> Get(int y) => texture[new Int2(horizontal, y.Clamp(0, texture.oneLess.y))];
+		}
+
+		void BuildRadii() => radii ??= BuildRadii(deviation, quality, out _deviationActual);
+
+		static int[] BuildRadii(float deviation, int quality, out float deviationActual)
+		{
+			//Calculate Gaussian approximation convolution square size
+			//Code based on: http://blog.ivank.net/fastest-gaussian-blur.html
+			float alpha = deviation * deviation;
+
+			int beta = MathF.Sqrt(12f * alpha / quality + 1f).Floor();
+			if (beta % 2 == 0) beta--;
+
+			float gamma = quality * beta * beta - 4f * quality * beta - 3f * quality;
+			int delta = ((12f * alpha - gamma) / (-4f * beta - 4f)).Round();
+
+			//Record radii
+			int[] radii = new int[quality];
+
+			for (int i = 0; i < quality; i++)
+			{
+				int size = i < delta ? beta : beta + 2;
+				radii[i] = (size - 1) / 2;
+			}
+
+			//Calculate actual deviation
+			deviationActual = (quality - delta) * (beta + 2) * (beta + 2) - quality;
+			deviationActual = MathF.Sqrt((delta * beta * beta + deviationActual) / 12f);
+
+			return radii;
 		}
 	}
 }
