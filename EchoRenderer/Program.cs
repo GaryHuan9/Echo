@@ -38,7 +38,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			Console.ReadKey();
+			// Console.ReadKey();
 		}
 
 		static TiledRenderEngine renderEngine;

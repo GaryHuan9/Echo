@@ -8,6 +8,7 @@ namespace EchoRenderer.UI.Interface
 		public HierarchyUI() : base("Hierarchy")
 		{
 			transform.RightPercent = 0.84f;
+			transform.BottomPercent = 0.5f;
 
 			rebuildButton = new ButtonUI {label = {Text = "Rebuild Scene"}};
 			rebuildButton.OnPressedMethods += OnRebuildPressed;
