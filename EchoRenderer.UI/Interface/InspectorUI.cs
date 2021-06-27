@@ -1,5 +1,4 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects;
 using EchoRenderer.UI.Core;

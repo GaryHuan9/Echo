@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.UI.Core.Interactions;
 using SFML.Graphics;
+using SFML.Graphics.Glsl;
 using SFML.System;
 using SFML.Window;
 
@@ -30,7 +31,49 @@ namespace EchoRenderer.UI.Core.Areas
 		public IHoverable MouseHovering { get; private set; }
 		public IHoverable MousePressing { get; private set; }
 
+		readonly Shader borderRegularShader = Shader.FromString(null, null, BorderRegularShader);
+		readonly Shader borderTextureShader = Shader.FromString(null, null, BorderTextureShader);
+
 		readonly Dictionary<Type, AreaUI> typeMapper = new Dictionary<Type, AreaUI>();
+
+		const string BorderShader = @"
+
+uniform vec2 resolution;
+uniform vec4 border;
+
+float GetClipping()
+{
+	vec2 point = gl_FragCoord.xy;
+	point.y = resolution.y - point.y;
+
+	vec2 clip = step(border.xy, point) - step(border.zw, point);
+
+	return clip.x * clip.y;
+}
+
+";
+
+		const string BorderRegularShader = BorderShader + @"
+
+void main()
+{
+	gl_FragColor = gl_Color * GetClipping();
+}
+
+";
+
+		const string BorderTextureShader = BorderShader + @"
+
+uniform sampler2D texture;
+
+void main()
+{
+    // lookup the pixel in the texture
+    vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
+	gl_FragColor = gl_Color * pixel * GetClipping();
+}
+
+";
 
 		public void Resize(Float2 size)
 		{
@@ -67,6 +110,30 @@ namespace EchoRenderer.UI.Core.Areas
 
 				return null;
 			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void PaintRegular(Drawable drawable, Float2 min, Float2 max)
+		{
+			borderRegularShader.SetUniform("border", new Vec4(min.x, min.y, max.x, max.y));
+			drawable.Draw(application, new RenderStates(borderRegularShader));
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void PaintTexture(Drawable drawable, Float2 min, Float2 max)
+		{
+			borderTextureShader.SetUniform("border", new Vec4(min.x, min.y, max.x, max.y));
+			borderTextureShader.SetUniform("texture", Shader.CurrentTexture);
+			drawable.Draw(application, new RenderStates(borderTextureShader));
+		}
+
+		protected override void Reorient(Float2 position, Float2 dimension)
+		{
+			base.Reorient(position, dimension);
+			Vec2 resolution = dimension.As();
+
+			borderRegularShader.SetUniform("resolution", resolution);
+			borderTextureShader.SetUniform("resolution", resolution);
 		}
 
 		void OnResize(object sender, SizeEventArgs args)

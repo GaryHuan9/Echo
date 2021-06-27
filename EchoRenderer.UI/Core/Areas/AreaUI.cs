@@ -15,7 +15,7 @@ namespace EchoRenderer.UI.Core.Areas
 
 			if (this is RootUI root) Root = root;
 
-			// Random random = RandomHelper.CurrentRandom;
+			// Random random = CodeHelpers.RandomHelper.CurrentRandom;
 			// Span<byte> bytes = stackalloc byte[3];
 			//
 			// random.NextBytes(bytes);
@@ -70,7 +70,9 @@ namespace EchoRenderer.UI.Core.Areas
 				_enabled = value;
 
 				if (Parent == null) return;
+
 				Parent.ChildCount += value ? 1 : -1;
+				Parent.transform.MarkDirty();
 			}
 		}
 
@@ -83,8 +85,8 @@ namespace EchoRenderer.UI.Core.Areas
 		readonly RectangleShape panel = new RectangleShape();
 		readonly List<AreaUI> children = new List<AreaUI>();
 
-		protected Float2 Position => panel.Position.As();
-		protected Float2 Dimension => panel.Size.As();
+		public Float2 Position => panel.Position.As();
+		public Float2 Dimension => panel.Size.As();
 
 		public int ChildCount { get; private set; }
 		protected static Theme Theme => Theme.Current;
@@ -100,7 +102,11 @@ namespace EchoRenderer.UI.Core.Areas
 			child.Parent = this;
 			child.Root = Root;
 
-			if (child.Enabled) ++ChildCount;
+			if (child.Enabled)
+			{
+				++ChildCount;
+				transform.MarkDirty();
+			}
 
 			return this;
 		}
@@ -112,7 +118,11 @@ namespace EchoRenderer.UI.Core.Areas
 			child.Parent = null;
 			child.Root = null;
 
-			if (child.Enabled) --ChildCount;
+			if (child.Enabled)
+			{
+				--ChildCount;
+				transform.MarkDirty();
+			}
 
 			return true;
 		}
@@ -124,34 +134,7 @@ namespace EchoRenderer.UI.Core.Areas
 			foreach (AreaUI child in LoopForward()) child.Update();
 		}
 
-		public void Draw(RenderTarget renderTarget, bool paint = true)
-		{
-			transform.Reorient();
-
-			Float2 min = default;
-			Float2 max = default;
-
-			if (paint)
-			{
-				GetMinMax(this, out min, out max);
-
-				paint &= Visible && max > min;
-				if (paint) Paint(renderTarget);
-			}
-
-			foreach (AreaUI child in LoopForward())
-			{
-				bool paintChild = false;
-
-				if (paint)
-				{
-					GetMinMax(child, out Float2 childMin, out Float2 childMax);
-					paintChild = childMin < max && min < childMax;
-				}
-
-				child.Draw(renderTarget, paintChild);
-			}
-		}
+		public void Draw() => Draw(true, Float2.negativeInfinity, Float2.positiveInfinity);
 
 		/// <summary>
 		/// Invoked on <see cref="Root"/> when the <see cref="Application"/> terminates.
@@ -169,9 +152,9 @@ namespace EchoRenderer.UI.Core.Areas
 			panel.Size = dimension.As();
 		}
 
-		protected virtual void Paint(RenderTarget renderTarget)
+		protected virtual void Paint(Float2 min, Float2 max)
 		{
-			if (PanelColor.A > 0) renderTarget.Draw(panel);
+			if (PanelColor.A > 0) Root.PaintRegular(panel, min, max);
 		}
 
 		protected virtual void OnRootChanged(RootUI previous) { }
@@ -194,6 +177,42 @@ namespace EchoRenderer.UI.Core.Areas
 			}
 
 			return null;
+		}
+
+		void Draw(bool paint, Float2 min, Float2 max)
+		{
+			transform.Reorient();
+
+			if (paint)
+			{
+				GetMinMax(this, out Float2 currentMin, out Float2 currentMax);
+
+				min = min.Max(currentMin);
+				max = max.Min(currentMax);
+
+				paint &= Visible && max > min;
+				if (paint) Paint(min, max);
+			}
+
+			foreach (AreaUI child in LoopForward())
+			{
+				bool paintChild = false;
+
+				Float2 childMin = min;
+				Float2 childMax = max;
+
+				if (paint)
+				{
+					GetMinMax(child, out Float2 currentMin, out Float2 currentMax);
+
+					childMin = childMin.Max(currentMin);
+					childMax = childMax.Min(currentMax);
+
+					paintChild = childMax > childMin;
+				}
+
+				child.Draw(paintChild, childMin, childMax);
+			}
 		}
 
 		bool HasAncestor(AreaUI ancestor)

@@ -1,7 +1,5 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using SFML.Graphics;
-using SFML.System;
 
 namespace EchoRenderer.UI.Core.Areas
 {
@@ -38,8 +36,6 @@ namespace EchoRenderer.UI.Core.Areas
 			}
 		}
 
-		public Shader Shader { get; set; }
-
 		public Color ImageColor
 		{
 			get => display.FillColor;
@@ -71,17 +67,10 @@ namespace EchoRenderer.UI.Core.Areas
 			display.Size = dimension.As();
 		}
 
-		protected override void Paint(RenderTarget renderTarget)
+		protected override void Paint(Float2 min, Float2 max)
 		{
-			base.Paint(renderTarget);
-			if (Texture == null) return;
-
-			if (Shader != null && Shader.IsAvailable)
-			{
-				Shader.SetUniform("texture", Shader.CurrentTexture);
-				renderTarget.Draw(display, new RenderStates(Shader));
-			}
-			else renderTarget.Draw(display);
+			base.Paint(min, max);
+			if (Texture != null) Root.PaintTexture(display, min, max);
 		}
 	}
 }

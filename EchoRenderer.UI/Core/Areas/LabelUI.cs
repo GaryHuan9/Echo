@@ -162,10 +162,10 @@ namespace EchoRenderer.UI.Core.Areas
 			display.Position = new Vector2f(xPosition, y);
 		}
 
-		protected override void Paint(RenderTarget renderTarget)
+		protected override void Paint(Float2 min, Float2 max)
 		{
-			base.Paint(renderTarget);
-			renderTarget.Draw(display);
+			base.Paint(min, max);
+			Root.PaintTexture(display, min, max);
 		}
 
 		public enum Alignment
