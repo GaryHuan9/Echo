@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
+using CodeHelpers.ObjectPooling;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
@@ -65,6 +66,40 @@ namespace EchoRenderer.Rendering.PostProcessing
 				if (Aborted) state.Stop();
 				else passAction(horizontal);
 			}
+		}
+
+		/// <summary>
+		/// Gets the handle to a temporary <see cref="Array2D"/> with the same size as <see cref="renderBuffer"/>.
+		/// This method does not guarantee the initial content of the allocated buffer! It might not be empty.
+		/// NOTE: Remember to use the using statement to release the texture when you are done with it!
+		/// </summary>
+		public ReleaseHandle<Array2D> FetchTemporaryBuffer(out Array2D buffer) => engine.texturePooler.Fetch(out buffer);
+
+		/// <summary>
+		/// Functions similarly to <see cref="FetchTemporaryBuffer(out Array2D)"/>, except that you can indicate a <paramref name="size"/>
+		/// which must be smaller than or equals to the size of <see cref="renderBuffer"/>. NOTE: Remember to dispose/release the handle.
+		/// </summary>
+		public ReleaseHandle<Array2D> FetchTemporaryBuffer(out Texture2D buffer, Int2 size)
+		{
+			var handle = FetchTemporaryBuffer(out Array2D texture);
+
+			if (size == texture.size) buffer = texture;
+			else buffer = new Crop2D(texture, Int2.zero, size);
+
+			return handle;
+		}
+
+		/// <summary>
+		/// Gets the handle to a temporary <see cref="Array2D"/> with the same size as <see cref="renderBuffer"/>.
+		/// The content of <see cref="renderBuffer"/> is copied onto the allocated <paramref name="buffer"/>.
+		/// NOTE: Remember to use the using statement to release the texture when you are done with it!
+		/// </summary>
+		public ReleaseHandle<Array2D> CopyTemporaryBuffer(out Array2D buffer)
+		{
+			var handle = FetchTemporaryBuffer(out buffer);
+			RunCopyPass(renderBuffer, buffer);
+
+			return handle;
 		}
 
 		public delegate void PassAction(Int2 position);

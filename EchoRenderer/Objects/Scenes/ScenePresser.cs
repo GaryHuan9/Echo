@@ -111,7 +111,7 @@ namespace EchoRenderer.Objects.Scenes
 			{
 				if (node == this) return true;
 
-				using ReleaseHandle<HashSet<Node>> searched = CollectionPooler<Node>.hashSet.Fetch();
+				using var searched = CollectionPooler<Node>.hashSet.Fetch();
 
 				return Search(this);
 

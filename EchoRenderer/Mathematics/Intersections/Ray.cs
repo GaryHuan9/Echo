@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
+using static EchoRenderer.Mathematics.Utilities;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -26,8 +27,8 @@ namespace EchoRenderer.Mathematics.Intersections
 			this.origin = origin;
 			this.direction = direction;
 
-			Vector128<float> reciprocalVector = Sse.Divide(oneVector, directionVector); //Because _mm_rcp_ps is only an approximation, we cannot use it here
-			inverseDirectionVector = Sse.Min(maxValueVector, Sse.Max(minValueVector, reciprocalVector));
+			Vector128<float> reciprocalVector = Sse.Divide(vector1, directionVector); //Because _mm_rcp_ps is only an approximation, we cannot use it here
+			inverseDirectionVector = Clamp(vectorMinValue, vectorMaxValue, reciprocalVector);
 		}
 
 		[FieldOffset(0)] public readonly Float3 origin;
@@ -38,10 +39,6 @@ namespace EchoRenderer.Mathematics.Intersections
 		[FieldOffset(0)] public readonly Vector128<float> originVector;
 		[FieldOffset(12)] public readonly Vector128<float> directionVector;
 		[FieldOffset(24)] public readonly Vector128<float> inverseDirectionVector;
-
-		static readonly Vector128<float> minValueVector = Vector128.Create(float.MinValue);
-		static readonly Vector128<float> maxValueVector = Vector128.Create(float.MaxValue);
-		static readonly Vector128<float> oneVector = Vector128.Create(1f);
 
 		public unsafe Float3 GetPoint(float distance)
 		{
