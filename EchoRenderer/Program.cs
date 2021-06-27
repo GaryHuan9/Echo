@@ -97,7 +97,7 @@ namespace EchoRenderer
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
 			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new LightedBMW();                         //Selects or creates scene
+			Scene scene = new SingleMaterialBall();                 //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
@@ -169,11 +169,11 @@ namespace EchoRenderer
 
 		static void FontTesting()
 		{
-			Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
+			Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
 			Array2D output = new Array2D((Int2)2048);
 
 			foreach (Int2 position in output.size.Loop()) output[position] = Vector128.Create(0f, 0f, 1f, 1f);
-			font.Draw(output, "The quick fox does stuff", new Font.Style(new Float2(1024f, 1024f), 100f, Float4.one));
+			font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.one));
 
 			output.Save("render.png");
 		}

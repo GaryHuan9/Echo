@@ -24,8 +24,7 @@ namespace EchoRenderer.Rendering.Materials
 
 		Float4 albedoColor;
 
-		static readonly Vector128<float> normalMultiplier = Vector128.Create(2f);
-		static readonly Vector128<float> normalAdder = Vector128.Create(-1f, -1f, -2f, 0f);
+		static readonly Vector128<float> normalShift = Vector128.Create(-1f, -1f, -2f, 0f);
 
 		/// <summary>
 		/// This method is invoked before render begins during the preparation phase.
@@ -56,7 +55,7 @@ namespace EchoRenderer.Rendering.Materials
 			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals(0f)) return;
 
 			Vector128<float> sample = NormalMap[hit.texcoord];
-			Vector128<float> local = Fma.MultiplyAdd(sample, normalMultiplier, normalAdder);
+			Vector128<float> local = Fma.MultiplyAdd(sample, Utilities.vector2, normalShift);
 
 			//Transform local direction to world space based on normal
 			Float3 helper = Math.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;

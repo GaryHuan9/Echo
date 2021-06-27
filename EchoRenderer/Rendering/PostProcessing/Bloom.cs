@@ -20,17 +20,13 @@ namespace EchoRenderer.Rendering.PostProcessing
 		readonly float deviation;
 		readonly float threshold;
 
-		Texture2D workerBuffer;
+		Array2D workerBuffer;
 
 		public override void Dispatch()
 		{
 			//Allocate blur resources
-			workerBuffer = new Array2D(renderBuffer.size);
-			var blur = new GaussianBlur(this, workerBuffer)
-					   {
-						   Quality = 6,
-						   Deviation = deviation
-					   };
+			using var handle = FetchTemporaryBuffer(out workerBuffer);
+			using var blur = new GaussianBlur(this, workerBuffer, deviation, 6);
 
 			//Fill luminance threshold buffer to sourceBuffer
 			RunPass(LuminancePass);
@@ -47,7 +43,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 			Vector128<float> source = renderBuffer[position];
 			float luminance = Utilities.GetLuminance(source);
 
-			if (luminance < threshold) workerBuffer[position] = Vector128<float>.Zero;
+			if (luminance < threshold) workerBuffer[position] = Utilities.vector0;
 			else workerBuffer[position] = Sse.Multiply(source, intensityVector);
 		}
 

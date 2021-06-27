@@ -16,15 +16,13 @@ namespace EchoRenderer.Rendering.PostProcessing
 	{
 		public Watermark(PostProcessingEngine engine) : base(engine) { }
 
-		static readonly Font font = new Font("Assets/Fonts/JetBrainsMono/FontMap.png");
-
-		Texture2D workerBuffer;
-		double luminanceAverage;
-
 		Crop2D cropWorker;
 		Crop2D cropTarget;
 
+		double luminanceAverage;
 		Vector128<float> tintVector;
+
+		static readonly Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
 
 		const float Scale = 0.025f;
 		const float Margin = 0.51f;
@@ -38,14 +36,14 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public override void Dispatch()
 		{
 			//Allocate resources for full buffer Gaussian blur
-			workerBuffer = new Array2D(renderBuffer.size) {Wrapper = Wrappers.clamp};
-			var blur = new GaussianBlur(this, workerBuffer) {Deviation = BlurDeviation};
+			using var handle = FetchTemporaryBuffer(out Array2D workerBuffer);
+			using var blur = new GaussianBlur(this, workerBuffer, BlurDeviation);
 
 			//Find size and position
-			float height = GetHeight();
-			Float2 margin = (Float2)Margin * height;
+			Font.Style style = new Font.Style(GetHeight());
+			Float2 margin = (Float2)Margin * style.Height;
 
-			Float2 size = new Float2(font.GetWidth(Label.Length, height), height) + margin;
+			Float2 size = new Float2(font.GetWidth(Label.Length, style), style.Height) + margin;
 			Float2 position = renderBuffer.size.X_ + (size / 2f + margin) * new Float2(-1f, 1f);
 
 			Int2 min = (position - size / 2f).Floored;
@@ -69,10 +67,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 			RunPass(TintPass, cropWorker); //Copies buffer
 
 			//Write label
-			Float4 fontColor = Utilities.ToColor(lightMode ? 0f : 1f);
-			Font.Style style = new Font.Style(position, height, fontColor);
-
-			font.Draw(renderBuffer, Label, style);
+			style = style with {Color = Utilities.ToColor(lightMode ? 0f : 1f)};
+			font.Draw(renderBuffer, Label, position, style);
 		}
 
 		void LuminancePass(Int2 position)
