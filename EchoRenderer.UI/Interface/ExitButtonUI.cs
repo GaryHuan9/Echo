@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using EchoRenderer.UI.Core.Areas;
+﻿using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface
 {

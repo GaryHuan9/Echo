@@ -83,7 +83,7 @@ namespace EchoRenderer.UI.Core.Fields
 		{
 			base.OnMousePressed(mouse);
 
-			float x = (mouse.point / editingDisplay.transform).x;
+			float x = mouse.point.x - editingDisplay.Position.x;
 			cursor.Position = editingDisplay.GetIndex(x);
 		}
 
