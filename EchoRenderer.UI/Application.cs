@@ -13,7 +13,7 @@ namespace EchoRenderer.UI
 {
 	public class Application : RenderWindow, IDisposable
 	{
-		public Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer)) //, Styles.Fullscreen)
+		Application() : base(VideoMode.DesktopMode, nameof(EchoRenderer), Styles.Default, new ContextSettings(0, 0) {SRgbCapable = true})
 		{
 			Closed += (_, _) => Close();
 			stopwatch = Stopwatch.StartNew();
@@ -63,9 +63,11 @@ namespace EchoRenderer.UI
 		public void Update()
 		{
 			UpdateTime();
-
 			root.Update();
-			root.Draw(this);
+
+			AreaUI.Transform.IncrementFrame();
+
+			root.Draw();
 		}
 
 		void UpdateTime()

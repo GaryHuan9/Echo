@@ -1,7 +1,6 @@
 ﻿using EchoRenderer.Textures;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
-using SFML.Graphics;
 using Texture = SFML.Graphics.Texture;
 
 namespace EchoRenderer.UI.Interface
@@ -10,7 +9,7 @@ namespace EchoRenderer.UI.Interface
 	{
 		public RenderPreviewUI()
 		{
-			imageUI = new ImageUI {Shader = Shader.FromString(null, null, GammaCorrectShader), KeepAspect = false};
+			imageUI = new ImageUI {KeepAspect = false};
 
 			Add(imageUI);
 		}
@@ -43,29 +42,7 @@ namespace EchoRenderer.UI.Interface
 			}
 		}
 
-		public bool sRGB { get; set; } = true;
-
 		readonly ImageUI imageUI;
-
-		const string GammaCorrectShader = @"
-
-uniform sampler2D texture;
-uniform bool sRGB;
-
-void main()
-{
-    //Fetch pixel color data
-    vec4 pixel = texture2D(texture, gl_TexCoord[0].xy);
-
-	//Clean up data & sRGB
-	pixel = clamp(pixel, 0.0, 1.0);
-	if (sRGB) pixel = sqrt(pixel);
-
-    //Output
-    gl_FragColor = gl_Color * pixel;
-}
-
-";
 
 		public override void Update()
 		{
@@ -74,7 +51,6 @@ void main()
 			var buffer = RenderBuffer;
 			if (buffer == null) return;
 
-			imageUI.Shader.SetUniform("sRGB", sRGB);
 			imageUI.Texture.Update(buffer.bytes);
 		}
 	}

@@ -1,36 +1,38 @@
-﻿namespace EchoRenderer.UI.Core.Areas
+﻿using CodeHelpers.Mathematics;
+
+namespace EchoRenderer.UI.Core.Areas
 {
-	public class AutoLayoutAreaUI : AreaUI, ILayoutAreaUI
+	public class AutoLayoutAreaUI : AreaUI
 	{
 		public bool Horizontal { get; set; }
 
 		public bool Margins { get; set; } = true;
-		public bool Gaps { get; set; } = true;
+		public bool Spaces { get; set; } = true;
 
 		//Additional margin sizes used on minor axes
 		public float PositiveMargin { get; set; }
 		public float NegativeMargin { get; set; }
 
-		public float PreferedHeight { get; private set; }
-
-		public override void Update()
+		protected override void Reorient(Float2 position, Float2 dimension)
 		{
-			base.Update();
-
-			PreferedHeight = 0f;
-
+			base.Reorient(position, dimension);
 			int count = ChildCount;
-			if (count == 0) return;
+
+			if (count == 0)
+			{
+				transform.PreferedHeight = null;
+				return;
+			}
 
 			float marginSize = Margins ? Theme.MediumMargin : 0f;
-			float gapSize = Gaps ? Theme.MediumMargin : 0f;
+			float spaceSize = Spaces ? Theme.MediumMargin : 0f;
 
 			if (Horizontal)
 			{
-				float gap = gapSize / Dimension.x;
 				float margin = marginSize / Dimension.x;
+				float space = spaceSize / Dimension.x;
 
-				float total = 1f - margin * 2f - (count - 1) * gap;
+				float total = 1f - margin * 2f - (count - 1) * space;
 
 				float width = total / count;
 				float current = margin;
@@ -49,42 +51,35 @@
 					target.TopMargin = marginSize + PositiveMargin;
 					target.BottomMargin = marginSize + NegativeMargin;
 
-					current += gap;
+					current += space;
 				}
 			}
 			else
 			{
-				float total = Dimension.y;
 				float current = marginSize;
 
 				foreach (AreaUI child in LoopForward())
 				{
-					float height = Theme.LayoutHeight;
 					Transform target = child.transform;
+					float height = target.PreferedHeight ?? Theme.LayoutHeight;
 
-					if (child is ILayoutAreaUI layout) height = layout.PreferedHeight;
-
-					//Vertical layouts are solely controlled by margins
+					//Vertical layouts are controlled solely by margins
 					target.TopMargin = current;
 					current += height;
-					target.BottomMargin = total - current;
+					target.BottomMargin = -current;
 
-					target.VerticalPercents = 0f;
+					target.TopPercent = 0f;
+					target.BottomPercent = 1f;
 					target.HorizontalPercents = 0f;
 
 					target.RightMargin = marginSize + PositiveMargin;
 					target.LeftMargin = marginSize + NegativeMargin;
 
-					current += gapSize;
+					current += spaceSize;
 				}
 
-				PreferedHeight = current + marginSize - gapSize;
+				transform.PreferedHeight = current + marginSize - spaceSize;
 			}
 		}
-	}
-
-	public interface ILayoutAreaUI
-	{
-		float PreferedHeight { get; }
 	}
 }
