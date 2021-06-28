@@ -7,11 +7,11 @@ using CodeHelpers.ObjectPooling;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Textures;
 
-namespace EchoRenderer.Rendering.PostProcessing
+namespace EchoRenderer.Rendering.PostProcessing.Operators
 {
-	public struct GaussianBlur : IDisposable
+	public class GaussianBlur : IDisposable
 	{
-		public GaussianBlur(PostProcessingWorker worker, Texture2D sourceBuffer, float deviation = 1f, int quality = 4) : this()
+		public GaussianBlur(PostProcessingWorker worker, Texture2D sourceBuffer, float deviation = 1f, int quality = 4)
 		{
 			this.worker = worker;
 			this.sourceBuffer = sourceBuffer;
@@ -45,9 +45,11 @@ namespace EchoRenderer.Rendering.PostProcessing
 			}
 		}
 
-		ReleaseHandle<Array2D> handle;
-
 		int[] radii;
+		int radius;
+
+		Vector128<float> radiusDivisor;
+		ReleaseHandle<Array2D> handle;
 
 		public void Run()
 		{
@@ -56,21 +58,19 @@ namespace EchoRenderer.Rendering.PostProcessing
 			//Run Gaussian blur passes
 			for (int i = 0; i < quality; i++)
 			{
-				int radius = radii[i];
-				GaussianBlur blur = this;
+				radius = radii[i];
+				radiusDivisor = Vector128.Create(1f / (radius * 2f + 1f));
 
-				worker.RunPassHorizontal(vertical => blur.HorizontalBlurPass(vertical, radius), workerBuffer);
-				worker.RunPassVertical(horizontal => blur.VerticalBlurPass(horizontal, radius), sourceBuffer);
+				worker.RunPassVertical(HorizontalBlurPass, workerBuffer);
+				worker.RunPassHorizontal(VerticalBlurPass, sourceBuffer);
 			}
 		}
 
 		public void Dispose() => handle.Dispose();
 
-		void HorizontalBlurPass(int vertical, int radius)
+		void HorizontalBlurPass(int vertical)
 		{
 			Vector128<float> accumulator = Utilities.vector0;
-			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
-
 			Texture2D texture = sourceBuffer;
 
 			for (int x = -radius; x < radius; x++) accumulator = Sse.Add(accumulator, Get(x));
@@ -82,7 +82,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 				accumulator = Sse.Add(accumulator, sourceHead);
 
-				workerBuffer[new Int2(x, vertical)] = Sse.Multiply(accumulator, divisor);
+				workerBuffer[new Int2(x, vertical)] = Sse.Multiply(accumulator, radiusDivisor);
 
 				accumulator = Sse.Subtract(accumulator, sourceTail);
 			}
@@ -91,11 +91,9 @@ namespace EchoRenderer.Rendering.PostProcessing
 			Vector128<float> Get(int x) => texture[new Int2(x.Clamp(0, texture.oneLess.x), vertical)];
 		}
 
-		void VerticalBlurPass(int horizontal, int radius)
+		void VerticalBlurPass(int horizontal)
 		{
 			Vector128<float> accumulator = Utilities.vector0;
-			Vector128<float> divisor = Vector128.Create(1f / (radius * 2f + 1f));
-
 			Texture2D texture = workerBuffer;
 
 			for (int y = -radius; y < radius; y++) accumulator = Sse.Add(accumulator, Get(y));
@@ -107,7 +105,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 				accumulator = Sse.Add(accumulator, sourceHead);
 
-				sourceBuffer[new Int2(horizontal, y)] = Sse.Multiply(accumulator, divisor);
+				sourceBuffer[new Int2(horizontal, y)] = Sse.Multiply(accumulator, radiusDivisor);
 
 				accumulator = Sse.Subtract(accumulator, sourceTail);
 			}

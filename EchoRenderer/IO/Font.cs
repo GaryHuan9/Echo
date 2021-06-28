@@ -85,12 +85,13 @@ namespace EchoRenderer.IO
 			Int2 sampleSquare = (Int2)style.SampleSize;
 			float inverse = 1f / (sampleSquare.x + 1f);
 
-			Vector128<float> sampleSizeVector = Vector128.Create((float)sampleSquare.Product);
+			Vector128<float> sizeInverse = Vector128.Create(1f / sampleSquare.Product);
 			Parallel.ForEach(new EnumerableSpace2D(min.Floored, max.Ceiled), DrawPixel);
 
 			void DrawPixel(Int2 position)
 			{
 				Vector128<float> total = Utilities.vector0;
+				Vector128<float> source = destination[position];
 
 				//Take multiple samples and calculate the average
 				foreach (Int2 offset in new EnumerableSpace2D(Int2.one, sampleSquare))
@@ -100,9 +101,7 @@ namespace EchoRenderer.IO
 				}
 
 				//Assigns color based on alpha
-				Vector128<float> source = destination[position];
-				total = Sse.Divide(total, sampleSizeVector);
-
+				total = Sse.Multiply(total, sizeInverse);
 				destination[position] = Utilities.Lerp(source, color, Sse.Multiply(alpha, total));
 			}
 		}
@@ -113,7 +112,7 @@ namespace EchoRenderer.IO
 		/// </summary>
 		public void Draw(Texture2D destination, string text, Float2 center, Style style)
 		{
-			float offset = text.Length / 2f + 0.5f;
+			float offset = text.Length / 2f - 0.5f;
 			float aspect = style.GlyphWidth * glyphAspect;
 
 			for (int i = 0; i < text.Length; i++)

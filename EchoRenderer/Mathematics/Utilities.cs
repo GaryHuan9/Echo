@@ -9,9 +9,6 @@ namespace EchoRenderer.Mathematics
 {
 	public static class Utilities
 	{
-		public static readonly Float3 luminanceOption = new Float3(0.2126f, 0.7152f, 0.0722f);
-		public static readonly Vector128<float> luminanceVector = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
-
 		public static readonly Vector128<float> vector0 = Vector128.Create(0f);
 		public static readonly Vector128<float> vector1 = Vector128.Create(1f);
 		public static readonly Vector128<float> vector2 = Vector128.Create(2f);
@@ -23,6 +20,8 @@ namespace EchoRenderer.Mathematics
 
 		public static readonly Vector128<float> vectorMinValue = Vector128.Create(float.MinValue);
 		public static readonly Vector128<float> vectorMaxValue = Vector128.Create(float.MaxValue);
+
+		static readonly Vector128<float> luminanceVector = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 
 		public static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
 		public static Float3 ToFloat3(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float3>(ref pixel);
@@ -81,14 +80,11 @@ namespace EchoRenderer.Mathematics
 		public static Vector128<float> Clamp(in Vector128<float> min, in Vector128<float> max, in Vector128<float> value) => Sse.Min(max, Sse.Max(min, value));
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static unsafe float GetLuminance(in Vector128<float> color)
+		public static float GetLuminance(in Vector128<float> color)
 		{
-			var vector = Sse41.DotProduct(color, luminanceVector, 0b1110_0001);
-			return *(float*)&vector;
+			var vector = Sse41.DotProduct(color, luminanceVector, 0b0111_0001);
+			return vector.GetElement(0);
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static float GetLuminance(in Float3 color) => color.Dot(luminanceOption);
 
 		public static int Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
 		public static Int2 Morton(int index) => new Int2(Unsaw(index), Unsaw(index >> 1));

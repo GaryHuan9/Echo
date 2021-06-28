@@ -46,7 +46,7 @@ namespace EchoRenderer.Mathematics
 			Anchor head = index == 0 ? anchors[index] : anchors[index - 1];
 			Anchor tail = index == anchors.Count ? anchors[index - 1] : anchors[index];
 
-			float time = Scalars.InverseLerp(head.percent, tail.percent, percent).Clamp(0f, 1f);
+			float time = Scalars.InverseLerp(head.percent, tail.percent, percent).Clamp();
 			return Utilities.Lerp(head.vector, tail.vector, Vector128.Create(time));
 		}
 

@@ -15,9 +15,20 @@ namespace EchoRenderer.Rendering.PostProcessing
 			Vector128<float> source = Clamp(vector0, vector1, renderBuffer[position]);
 
 			float* pointer = (float*)&source;
-			*(pointer + 3) = 1f; //Assign alpha
+
+			Filter(0);
+			Filter(1);
+			Filter(2);
+
+			pointer[3] = 1f; //Assign alpha
 
 			renderBuffer[position] = source;
+
+			void Filter(int index)
+			{
+				ref float value = ref pointer[index];
+				value = float.IsNaN(value) ? 0f : value;
+			}
 		}
 	}
 }
