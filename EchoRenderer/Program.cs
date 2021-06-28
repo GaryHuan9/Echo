@@ -1,4 +1,5 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System;
+using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
@@ -39,7 +40,7 @@ namespace EchoRenderer
 			RandomHelper.Seed = 47;
 
 			PerformRender();
-			// Console.ReadKey();
+			Console.ReadKey();
 		}
 
 		static TiledRenderEngine renderEngine;
@@ -96,16 +97,18 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[2]); //Selects resolution and create buffer
+			RenderBuffer buffer = new RenderBuffer(resolutions[4]); //Selects resolution and create buffer
 			TiledRenderProfile profile = pathTraceExportProfile;    //Selects or creates render profile
-			Scene scene = new TestMaterials();                      //Selects or creates scene
+			Scene scene = new CornellBox();                         //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
 			profile = profile with
 					  {
 						  RenderBuffer = buffer,
-						  Scene = new PressedScene(scene)
+						  Scene = new PressedScene(scene),
+						  PixelSample = 80,
+						  AdaptiveSample = 2400
 					  };
 
 			using TiledRenderEngine engine = new TiledRenderEngine();
