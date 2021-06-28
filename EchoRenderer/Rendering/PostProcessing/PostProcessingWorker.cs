@@ -24,47 +24,60 @@ namespace EchoRenderer.Rendering.PostProcessing
 		/// </summary>
 		public abstract void Dispatch();
 
+		/// <summary>
+		/// Run <paramref name="passAction"/> through every integer position on <paramref name="buffer"/>.
+		/// NOTE: If <paramref name="buffer"/> is null, <see cref="renderBuffer"/> will be used instead.
+		/// </summary>
 		public void RunPass(PassAction passAction, Texture2D buffer = null)
 		{
 			if (Aborted) return;
-
 			buffer ??= renderBuffer;
+
 			Parallel.ForEach(buffer.size.Loop(), WorkPixel);
 
 			void WorkPixel(Int2 position, ParallelLoopState state)
 			{
-				if (Aborted) state.Stop();
+				if (Aborted) state.Break();
 				else passAction(position);
 			}
 		}
 
+		/// <summary>
+		/// Run a pass to copy the content of <paramref name="from"/> to <paramref name="to"/>.
+		/// </summary>
 		public void RunCopyPass(Texture from, Texture2D to) => to.CopyFrom(from);
 
+		/// <summary>
+		/// Run a pass along every horizontal position on <paramref name="buffer"/>.
+		/// </summary>
 		public void RunPassHorizontal(PassActionHorizontal passAction, Texture2D buffer = null)
 		{
 			if (Aborted) return;
-
 			buffer ??= renderBuffer;
-			Parallel.For(0, buffer.size.y, WorkPixel);
 
-			void WorkPixel(int vertical, ParallelLoopState state)
-			{
-				if (Aborted) state.Stop();
-				else passAction(vertical);
-			}
-		}
-
-		public void RunPassVertical(PassActionVertical passAction, Texture2D buffer = null)
-		{
-			if (Aborted) return;
-
-			buffer ??= renderBuffer;
 			Parallel.For(0, buffer.size.x, WorkPixel);
 
 			void WorkPixel(int horizontal, ParallelLoopState state)
 			{
-				if (Aborted) state.Stop();
+				if (Aborted) state.Break();
 				else passAction(horizontal);
+			}
+		}
+
+		/// <summary>
+		/// Run a pass along every vertical position on <paramref name="buffer"/>.
+		/// </summary>
+		public void RunPassVertical(PassActionVertical passAction, Texture2D buffer = null)
+		{
+			if (Aborted) return;
+			buffer ??= renderBuffer;
+
+			Parallel.For(0, buffer.size.y, WorkPixel);
+
+			void WorkPixel(int vertical, ParallelLoopState state)
+			{
+				if (Aborted) state.Break();
+				else passAction(vertical);
 			}
 		}
 
@@ -103,7 +116,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		}
 
 		public delegate void PassAction(Int2 position);
-		public delegate void PassActionHorizontal(int vertical);
-		public delegate void PassActionVertical(int horizontal);
+		public delegate void PassActionHorizontal(int horizontal);
+		public delegate void PassActionVertical(int vertical);
 	}
 }
