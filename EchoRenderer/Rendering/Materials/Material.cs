@@ -34,7 +34,7 @@ namespace EchoRenderer.Rendering.Materials
 		{
 			AssertZeroOne(Albedo);
 
-			NormalIntensity = NormalIntensity.Clamp(-1f, 1f);
+			NormalIntensity = NormalIntensity.Clamp(-1f);
 			albedoColor = Utilities.ToColor(Albedo);
 		}
 

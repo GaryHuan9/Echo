@@ -75,7 +75,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			uv = new Float2
 			(
 				0.5f + MathF.Atan2(point.x, point.z) / Scalars.TAU,
-				0.5f + MathF.Asin((point.y / radius).Clamp(-1f, 1f)) / Scalars.PI
+				0.5f + MathF.Asin((point.y / radius).Clamp(-1f)) / Scalars.PI
 			);
 
 			return result;

@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
+using static EchoRenderer.Mathematics.Utilities;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -22,7 +23,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 			Float2 local = (position - half) / half.MaxComponent;
 			float distance = 1f - local.SquaredMagnitude * intensity;
 
-			Vector128<float> target = renderBuffer[position];
+			Vector128<float> target = Clamp(vector0, vector1, renderBuffer[position]);
 			renderBuffer[position] = Sse.Multiply(target, Vector128.Create(distance));
 
 			//NOTE: We can use a little bit of film grain (noise) to remove the banding

@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
+using EchoRenderer.Rendering.PostProcessing.Operators;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
