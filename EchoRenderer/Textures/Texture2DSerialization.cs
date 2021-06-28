@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -6,6 +7,7 @@ using System.IO.Compression;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
@@ -139,8 +141,7 @@ namespace EchoRenderer.Textures
 
 		void SaveFloatingPointImage(string path)
 		{
-			using Stream stream = new GZipStream(File.Open(path, FileMode.Create), CompressionLevel.Optimal);
-			using DataWriter writer = new DataWriter(stream);
+			using DataWriter writer = new DataWriter(File.Open(path, FileMode.Create));
 
 			writer.Write(1); //Writes version number
 			Write(writer);
@@ -148,11 +149,10 @@ namespace EchoRenderer.Textures
 
 		static Array2D ReadFloatingPointImage(string path)
 		{
-			using Stream stream = new GZipStream(File.Open(path, FileMode.Open), CompressionMode.Decompress);
-			using DataReader reader = new DataReader(stream);
+			using DataReader reader = new DataReader(File.Open(path, FileMode.Open));
 
 			int version = reader.ReadInt32(); //Reads version number
-			if (version == 0) return ReadRaw(reader);
+			if (version == 0) throw new NotSupportedException();
 
 			return Read(reader);
 		}
@@ -172,11 +172,7 @@ namespace EchoRenderer.Textures
 				sequence = current;
 				uint* pointer = (uint*)&xor;
 
-				for (int j = 0; j < 4; j++)
-				{
-					uint bits = pointer[j];
-					writer.WriteCompact(bits);
-				}
+				for (int j = 0; j < 4; j++) writer.WriteCompact(pointer[j]);
 			}
 		}
 
@@ -200,16 +196,6 @@ namespace EchoRenderer.Textures
 				texture[position] = current.AsSingle();
 				sequence = current;
 			}
-
-			return texture;
-		}
-
-		static Array2D ReadRaw(DataReader reader)
-		{
-			Int2 size = reader.ReadInt2();
-			Array2D texture = new Array2D(size);
-
-			foreach (Int2 position in size.Loop()) texture[position] = Utilities.ToVector(reader.ReadFloat4());
 
 			return texture;
 		}
