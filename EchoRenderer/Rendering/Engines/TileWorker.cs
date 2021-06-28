@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
@@ -26,10 +27,9 @@ namespace EchoRenderer.Rendering.Engines
 			pixelSample = profile.PixelSample;
 			adaptiveSample = profile.AdaptiveSample;
 
-			spiralOffsets = new Float2[pixelSample];
-			randomOffsets = new Float2[adaptiveSample * 2]; //Prepare more offsets than sample because adaptive sample might go beyond the setting
-
 			//Create golden ratio square spiral offsets
+			spiralOffsets = new Float2[pixelSample];
+
 			for (int i = 0; i < spiralOffsets.Length; i++)
 			{
 				float theta = Scalars.TAU * Scalars.GoldenRatio * i;
@@ -41,16 +41,15 @@ namespace EchoRenderer.Rendering.Engines
 				spiralOffsets[i] = offset * radius + Float2.half;
 			}
 
-			//Create random offsets
-			random = new ExtendedRandom(HashCode.Combine(Environment.TickCount64, id, size)); //NOTE that HashCode returns a different value every runtime!
-			for (int i = 0; i < randomOffsets.Length; i++) randomOffsets[i] = random.NextFloat2();
-
 			//Allocate thread
 			worker = new Thread(WorkThread)
 					 {
 						 IsBackground = true,
 						 Name = $"Tile Worker #{id} {size}x{size}"
 					 };
+
+			//Create RNG for thread. NOTE that HashCode returns a different value every runtime!
+			random = new ExtendedRandom(HashCode.Combine(Environment.TickCount64, id, size));
 		}
 
 		readonly int id;
@@ -80,12 +79,13 @@ namespace EchoRenderer.Rendering.Engines
 		public long CompletedPixel => Interlocked.Read(ref _completedPixel);
 		public long RejectedSample => Interlocked.Read(ref _rejectedSample);
 
-		readonly ExtendedRandom random;
 		readonly Thread worker;
+		readonly ExtendedRandom random;
 
-		//Offsets applied within each pixel
+		/// <summary>
+		/// Offset applied to each pixel during regular pixel sampling.
+		/// </summary>
 		readonly Float2[] spiralOffsets;
-		readonly Float2[] randomOffsets;
 
 		readonly ManualResetEventSlim dispatchEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
 		public bool Working => dispatchEvent.IsSet;
@@ -156,34 +156,33 @@ namespace EchoRenderer.Rendering.Engines
 			Int2 position = localPosition + RenderOffset;
 			if (position.Clamp(Int2.zero, renderBuffer.oneLess) != position) return; //Ignore pixels outside of buffer
 
+			float aspect = 1f / renderBuffer.aspect;
 			RenderPixel pixel = new RenderPixel();
 
-			int sampleCount = pixelSample;
-			Float2[] uvOffsets = spiralOffsets;
+			//Regular pixel sampling
+			for (int i = 0; i < pixelSample; i++) Sample(spiralOffsets[i]);
 
-			for (int method = 0; method < 2; method++)
-			{
-				for (int i = 0; i < sampleCount; i++)
-				{
-					//Sample color
-					Float2 uv = (position + uvOffsets[i % uvOffsets.Length]) / renderBuffer.size - Float2.half;
-					var sample = pixelWorker.Render(new Float2(uv.x, uv.y / renderBuffer.aspect), random);
-
-					//Write to pixel
-					bool successful = pixel.Accumulate(sample);
-					Interlocked.Increment(ref _completedSample);
-
-					if (!successful) Interlocked.Increment(ref _rejectedSample);
-				}
-
-				//Change to adaptive sampling
-				sampleCount = (int)(pixel.Deviation * adaptiveSample);
-				uvOffsets = randomOffsets;
-			}
+			//Change to adaptive sampling
+			int sampleCount = (int)(pixel.Deviation * adaptiveSample);
+			for (int i = 0; i < sampleCount; i++) Sample(random.NextSample());
 
 			//Store pixel
 			pixel.Store(renderBuffer, position);
 			Interlocked.Increment(ref _completedPixel);
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void Sample(Float2 offset)
+			{
+				//Sample color
+				Float2 uv = (position + offset) / renderBuffer.size - Float2.half;
+				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), random);
+
+				//Write to pixel
+				bool successful = pixel.Accumulate(sample);
+				Interlocked.Increment(ref _completedSample);
+
+				if (!successful) Interlocked.Increment(ref _rejectedSample);
+			}
 		}
 
 		public void Abort()
