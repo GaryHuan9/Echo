@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
+using EchoRenderer.Rendering.PostProcessing.Operators;
 
 namespace EchoRenderer.Rendering.PostProcessing.ToneMappers
 {
@@ -9,7 +10,25 @@ namespace EchoRenderer.Rendering.PostProcessing.ToneMappers
 	{
 		protected ToneMapper(PostProcessingEngine engine) : base(engine) { }
 
-		public override void Dispatch() => RunPass(MainPass);
+		float luminanceForward;
+		float luminanceInverse;
+
+		//https://bruop.github.io/tonemapping/
+
+		public override void Dispatch()
+		{
+			var grab = new LuminanceGrab(this, renderBuffer);
+
+			grab.Run();
+
+			if (grab.Luminance.AlmostEquals(0f)) return;
+
+			luminanceForward = 9.6f * grab.Luminance;
+			luminanceInverse = 1f / luminanceForward;
+
+			RunPass(MainPass);
+		}
+
 		protected abstract float MapLuminance(float luminance);
 
 		void MainPass(Int2 position)
@@ -17,9 +36,9 @@ namespace EchoRenderer.Rendering.PostProcessing.ToneMappers
 			Vector128<float> source = renderBuffer[position];
 			float luminance = Utilities.GetLuminance(source);
 
-			float mapped = MapLuminance(luminance).Clamp();
+			float mapped = MapLuminance(luminance * luminanceInverse) * luminanceForward;
 
-			var multiplier = Vector128.Create(mapped / luminance);
+			var multiplier = Vector128.Create(mapped.Clamp() / luminance);
 			renderBuffer[position] = Sse.Multiply(source, multiplier);
 		}
 	}
