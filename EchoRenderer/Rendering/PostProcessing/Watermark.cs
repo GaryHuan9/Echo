@@ -27,7 +27,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		const float Margin = 0.51f;
 
 		const float BlurDeviation = 0.38f;
-		const float BackgroundTint = 0.1f;
+		const float BackgroundTint = 0.2f;
 
 		const float LuminanceThreshold = 0.35f;
 		const string Label = nameof(EchoRenderer);

@@ -4,9 +4,9 @@ namespace EchoRenderer.Rendering.PostProcessing.ToneMappers
 {
 	public class BasicShoulder : ToneMapper
 	{
-		public BasicShoulder(PostProcessingEngine engine, float smoothness) : base(engine) => this.smoothness = smoothness;
+		public BasicShoulder(PostProcessingEngine engine) : base(engine) { }
 
-		readonly float smoothness;
+		public float Smoothness { get; set; } = 0.5f;
 
 		//https://www.desmos.com/calculator/nngw01x7om
 
@@ -14,8 +14,8 @@ namespace EchoRenderer.Rendering.PostProcessing.ToneMappers
 		{
 			float oneLess = luminance - 1f;
 
-			float h = (0.5f - 0.5f * oneLess / smoothness).Clamp();
-			return (oneLess - smoothness + smoothness * h) * h + 1f;
+			float h = (0.5f - 0.5f * oneLess / Smoothness).Clamp();
+			return (oneLess - Smoothness + Smoothness * h) * h + 1f;
 		}
 	}
 }

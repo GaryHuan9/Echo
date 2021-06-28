@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
@@ -23,6 +22,7 @@ namespace EchoRenderer
 		{
 			// SimplexNoise();
 			// FontTesting();
+			// PostProcessTesting();
 
 			// return;
 
@@ -96,9 +96,9 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new LightedBMW();                         //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[2]); //Selects resolution and create buffer
+			TiledRenderProfile profile = pathTraceExportProfile;    //Selects or creates render profile
+			Scene scene = new TestMaterials();                      //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
@@ -135,9 +135,9 @@ namespace EchoRenderer
 				}
 
 				//Standard render post processing layers
-				postProcess.AddWorker(new Bloom(postProcess, 0.01f, 1f));
-				postProcess.AddWorker(new Reinhard(postProcess, 1.5f));
-				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
+				postProcess.AddWorker(new Bloom(postProcess));
+				postProcess.AddWorker(new BasicShoulder(postProcess));
+				postProcess.AddWorker(new Vignette(postProcess));
 				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 			}
 
@@ -177,6 +177,27 @@ namespace EchoRenderer
 			font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.one));
 
 			output.Save("render.png");
+		}
+
+		static void PostProcessTesting()
+		{
+			Array2D texture = Texture2D.Load("render.fpi");
+			RenderBuffer buffer = new RenderBuffer(texture.size);
+
+			buffer.CopyFrom(texture);
+
+			using PostProcessingEngine engine = new PostProcessingEngine(buffer);
+
+			engine.AddWorker(new DenoiseOidn(engine));
+			engine.AddWorker(new Bloom(engine));
+			engine.AddWorker(new Reinhard(engine));
+			engine.AddWorker(new Vignette(engine));
+			engine.AddWorker(new OutputBarrier(engine));
+
+			engine.Dispatch();
+			engine.WaitForProcess();
+
+			buffer.Save("post process.png");
 		}
 
 		[Command]
