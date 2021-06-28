@@ -23,7 +23,7 @@ namespace EchoRenderer.Objects
 			direction = light.LocalToWorld.MultiplyDirection(Float3.forward).Normalized;
 			intensity = light.Intensity.Max(Float3.zero);
 
-			threshold = 1f - light.Coverage.Clamp(0f, 1f);
+			threshold = 1f - light.Coverage.Clamp();
 		}
 
 		public readonly Float3 direction;

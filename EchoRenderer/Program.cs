@@ -11,6 +11,7 @@ using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.PostProcessing;
+using EchoRenderer.Rendering.PostProcessing.ToneMappers;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures;
 
@@ -97,7 +98,7 @@ namespace EchoRenderer
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
 			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new SingleMaterialBall();                 //Selects or creates scene
+			Scene scene = new LightedBMW();                         //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
@@ -135,7 +136,7 @@ namespace EchoRenderer
 
 				//Standard render post processing layers
 				postProcess.AddWorker(new Bloom(postProcess, 0.01f, 1f));
-				postProcess.AddWorker(new ToneMapping(postProcess, 2.2f, 1f));
+				postProcess.AddWorker(new Reinhard(postProcess, 1.5f));
 				postProcess.AddWorker(new Vignette(postProcess, 0.18f));
 				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 			}

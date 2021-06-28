@@ -34,6 +34,21 @@ namespace EchoRenderer.Textures
 		}
 
 		/// <summary>
+		/// Returns the average of the two <see cref="size"/> axes.
+		/// We use an logarithmic equation since the average is nicer.
+		/// </summary>
+		public float LogSize
+		{
+			get
+			{
+				float logWidth = MathF.Log(size.x);
+				float logHeight = MathF.Log(size.y);
+
+				return MathF.Exp((logWidth + logHeight) / 2f);
+			}
+		}
+
+		/// <summary>
 		/// Gets and sets the <see cref="Vector128{T}"/> pixel data at a specific <paramref name="position"/>.
 		/// The input <paramref name="position"/> must be between zero and <see cref="oneLess"/> (both inclusive).
 		/// </summary>
