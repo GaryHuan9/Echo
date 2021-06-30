@@ -1,4 +1,5 @@
-﻿using EchoRenderer.Objects;
+﻿using System.Collections.Generic;
+using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.UI.Core.Areas;
 
@@ -44,15 +45,21 @@ namespace EchoRenderer.UI.Interface
 			SetExpanded(nodeObject is Scene);
 
 			Margins = false;
+			packs = new HashSet<ObjectPack>();
+
+			if (nodeObject is ObjectPackInstance instance) packs.Add(instance.ObjectPack);
 
 			foreach (Object child in nodeObject.LoopChildren(false))
 			{
 				var node = new HierarchyNodeUI(child);
+
+				packs.UnionWith(node.packs);
 				container.Add(node);
 			}
 		}
 
 		public readonly Object nodeObject;
+		public readonly HashSet<ObjectPack> packs;
 
 		readonly ButtonUI selectButton;
 		readonly ButtonUI expandButton;
