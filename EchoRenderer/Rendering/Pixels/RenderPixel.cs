@@ -21,6 +21,7 @@ namespace EchoRenderer.Rendering.Pixels
 		//The auxiliary data
 		Double3 albedo;
 		Double3 normal;
+		double zDepth;
 
 		int accumulation;
 
@@ -64,6 +65,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			albedo += value.albedo;
 			normal += value.normal;
+			zDepth += value.zDepth;
 
 			return true;
 		}
@@ -72,8 +74,11 @@ namespace EchoRenderer.Rendering.Pixels
 		{
 			buffer[position] = Utilities.ToVector(Utilities.ToColor(Color));
 
-			buffer.SetAlbedo(position, (Float3)(albedo / accumulation));
+			double inverse = 1d / accumulation;
+
+			buffer.SetAlbedo(position, (Float3)(albedo * inverse));
 			buffer.SetNormal(position, (Float3)normal.Normalized);
+			buffer.SetZDepth(position, (float)(zDepth * inverse));
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = 32)]

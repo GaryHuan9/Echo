@@ -19,7 +19,9 @@ namespace EchoRenderer.Rendering.Pixels
 
 			//Auxiliary data
 			Float3 firstAlbedo = Float3.zero;
-			Float3 firstNormal = Float3.zero;
+			Float3 firstNormal = Float3.up;
+			float firstZDepth = float.PositiveInfinity;
+
 			bool missingAuxiliary = true;
 
 			while (bounce < Profile.BounceLimit && scene.GetIntersection(ray, out CalculatedHit hit))
@@ -39,6 +41,7 @@ namespace EchoRenderer.Rendering.Pixels
 				{
 					firstAlbedo = albedo;
 					firstNormal = hit.normal;
+					firstZDepth = hit.distance;
 
 					missingAuxiliary = false;
 				}
@@ -74,7 +77,7 @@ namespace EchoRenderer.Rendering.Pixels
 			}
 			else firstAlbedo = colors; //No bounce sample do not have albedo so we just use the skybox
 
-			return new Sample(colors.Max(Float3.zero), firstAlbedo, firstNormal);
+			return new Sample(colors.Max(Float3.zero), firstAlbedo, firstNormal, firstZDepth);
 		}
 	}
 }
