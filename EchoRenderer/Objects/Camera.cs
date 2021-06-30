@@ -41,7 +41,7 @@ namespace EchoRenderer.Objects
 		/// Returns a ray emitted from the camera at <paramref name="uv"/>.
 		/// </summary>
 		/// <param name="uv">X component from -0.5 to 0.5; Y component an aspect radio corrected version of X.</param>
-		/// <param name="random">An RNG used for depth of field. Can be null if no DoF is wanted.</param>
+		/// <param name="random">An RNG used for Depth of Field. Can be null if no DoF is wanted.</param>
 		public Ray GetRay(Float2 uv, ExtendedRandom random = null)
 		{
 			Float3 direction = uv.CreateXY(fieldDistance);

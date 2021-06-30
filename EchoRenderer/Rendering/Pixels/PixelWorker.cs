@@ -6,6 +6,7 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Rendering.PostProcessing;
 
 namespace EchoRenderer.Rendering.Pixels
 {
@@ -55,20 +56,23 @@ namespace EchoRenderer.Rendering.Pixels
 
 		public readonly struct Sample
 		{
-			public Sample(in Float3 colour, in Float3 albedo = default, in Float3 normal = default)
+			public Sample(in Float3 colour, in Float3 albedo = default, in Float3 normal = default, float zDepth = default)
 			{
 				this.colour = colour;
 				this.albedo = albedo;
 				this.normal = normal;
+				this.zDepth = zDepth;
 			}
 
-			public readonly Float3 colour; //We use the British spelling here so that all the names line up :D
+			public readonly Float3 colour; //We use the British spelling here so that all the names line up (sort of)
 			public readonly Float3 albedo;
 			public readonly Float3 normal;
+			public readonly float zDepth;
 
 			public bool IsNaN => float.IsNaN(colour.x) || float.IsNaN(colour.y) || float.IsNaN(colour.z) ||
 								 float.IsNaN(albedo.x) || float.IsNaN(albedo.y) || float.IsNaN(albedo.z) ||
-								 float.IsNaN(normal.x) || float.IsNaN(normal.y) || float.IsNaN(normal.z);
+								 float.IsNaN(normal.x) || float.IsNaN(normal.y) || float.IsNaN(normal.z) ||
+								 float.IsNaN(zDepth);
 
 			public static implicit operator Sample(in Float3 colour) => new Sample(colour);
 		}
