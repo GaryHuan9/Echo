@@ -97,18 +97,16 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[4]); //Selects resolution and create buffer
-			TiledRenderProfile profile = pathTraceExportProfile;    //Selects or creates render profile
-			Scene scene = new CornellBox();                         //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
+			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
+			Scene scene = new RandomSpheres(120);                   //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
 			profile = profile with
 					  {
 						  RenderBuffer = buffer,
-						  Scene = new PressedScene(scene),
-						  PixelSample = 80,
-						  AdaptiveSample = 2400
+						  Scene = new PressedScene(scene)
 					  };
 
 			using TiledRenderEngine engine = new TiledRenderEngine();
@@ -140,6 +138,7 @@ namespace EchoRenderer
 				//Standard render post processing layers
 				postProcess.AddWorker(new Bloom(postProcess));
 				postProcess.AddWorker(new BasicShoulder(postProcess));
+				// postProcess.AddWorker(new DepthOfField(postProcess));
 				postProcess.AddWorker(new Vignette(postProcess));
 				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 			}
