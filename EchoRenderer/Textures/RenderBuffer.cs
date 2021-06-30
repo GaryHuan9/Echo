@@ -15,16 +15,20 @@ namespace EchoRenderer.Textures
 		{
 			albedos = new Float3[length];
 			normals = new Float3[length];
+			zDepths = new float[length];
 		}
 
 		readonly Float3[] albedos;
 		readonly Float3[] normals;
+		readonly float[] zDepths;
 
 		public Float3 GetAlbedo(Int2 position) => albedos[ToIndex(position)];
 		public Float3 GetNormal(Int2 position) => normals[ToIndex(position)];
+		public float GetZDepth(Int2 position) => zDepths[ToIndex(position)];
 
 		public void SetAlbedo(Int2 position, Float3 value) => albedos[ToIndex(position)] = value;
 		public void SetNormal(Int2 position, Float3 value) => normals[ToIndex(position)] = value;
+		public void SetZDepth(Int2 position, float value) => zDepths[ToIndex(position)] = value;
 
 		/// <summary>
 		/// Creates and returns an <see cref="Array2D"/> texture to visualize the <see cref="albedos"/> data.
@@ -44,6 +48,7 @@ namespace EchoRenderer.Textures
 
 			Array.Copy(buffer.albedos, albedos, length);
 			Array.Copy(buffer.normals, normals, length);
+			Array.Copy(buffer.zDepths, zDepths, length);
 		}
 
 		/// <summary>
@@ -54,6 +59,7 @@ namespace EchoRenderer.Textures
 			Array.Clear(pixels, 0, length);
 			Array.Clear(albedos, 0, length);
 			Array.Clear(normals, 0, length);
+			Array.Clear(zDepths, 0, length);
 		}
 
 		/// <summary>
