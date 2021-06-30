@@ -13,6 +13,7 @@ namespace EchoRenderer.UI.Interface
 		public InspectorUI() : base("Inspector")
 		{
 			transform.LeftPercent = 0.72f;
+			transform.BottomPercent = 0.4f;
 
 			group.Add(new ButtonUI {label = {Text = "Button"}}.Label("Click Me"));
 			group.Add(new TextFieldUI {Text = "Test Field Here"}.Label("Type me"));
