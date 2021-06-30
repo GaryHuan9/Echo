@@ -28,6 +28,7 @@ namespace EchoRenderer.UI
 					}.Add(new HierarchyUI())
 					 .Add(new SceneViewUI())
 					 .Add(new InspectorUI())
+					 .Add(new ProfileUI())
 			);
 
 			root.Add

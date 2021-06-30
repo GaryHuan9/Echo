@@ -3,9 +3,9 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
-	public class FieldOfView : PostProcessingWorker
+	public class DepthOfField : PostProcessingWorker
 	{
-		public FieldOfView(PostProcessingEngine engine) : base(engine) { }
+		public DepthOfField(PostProcessingEngine engine) : base(engine) { }
 
 		float deviation;
 
