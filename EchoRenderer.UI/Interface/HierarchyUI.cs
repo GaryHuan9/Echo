@@ -1,4 +1,6 @@
-﻿using EchoRenderer.Objects.Scenes;
+﻿using System.Collections.Generic;
+using EchoRenderer.Objects;
+using EchoRenderer.Objects.Scenes;
 using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface
@@ -8,7 +10,6 @@ namespace EchoRenderer.UI.Interface
 		public HierarchyUI() : base("Hierarchy")
 		{
 			transform.RightPercent = 0.84f;
-			transform.BottomPercent = 0.5f;
 
 			rebuildButton = new ButtonUI {label = {Text = "Rebuild Scene"}};
 			rebuildButton.OnPressedMethods += OnRebuildPressed;
@@ -18,9 +19,8 @@ namespace EchoRenderer.UI.Interface
 
 		readonly ButtonUI rebuildButton;
 
-		Scene opened;
-
-		HierarchyNodeUI root;
+		readonly HashSet<ObjectPack> packs = new();
+		readonly HashSet<HierarchyNodeUI> nodes = new();
 
 		public override void Update()
 		{
@@ -29,14 +29,34 @@ namespace EchoRenderer.UI.Interface
 			SceneViewUI sceneView = Root.Find<SceneViewUI>();
 			Scene scene = sceneView?.Profile.Scene?.source;
 
-			if (scene == opened) return;
+			if (scene == null || packs.Contains(scene)) return;
 
-			if (opened != null && root != null && group.Contains(root)) group.Remove(root);
+			foreach (HierarchyNodeUI node in nodes) group.Remove(node);
 
-			root = new HierarchyNodeUI(scene);
+			nodes.Clear();
 
-			opened = scene;
-			group.Add(root);
+			Queue<ObjectPack> frontier = new Queue<ObjectPack>();
+
+			frontier.Enqueue(scene);
+
+			while (frontier.Count > 0)
+			{
+				ObjectPack pack = frontier.Dequeue();
+
+				if (packs.Contains(pack))
+				{
+					//TODO: Invalid pack ordering (recursive parenting)
+					continue;
+				}
+
+				var node = new HierarchyNodeUI(pack);
+
+				foreach (ObjectPack child in node.packs) frontier.Enqueue(child);
+
+				packs.Add(pack);
+				nodes.Add(node);
+				group.Add(node);
+			}
 		}
 
 		void OnRebuildPressed() { }
