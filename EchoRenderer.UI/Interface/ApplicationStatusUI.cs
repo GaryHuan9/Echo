@@ -16,7 +16,7 @@ namespace EchoRenderer.UI.Interface
 		readonly LabelUI label = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.left};
 
 		int frameCount;
-		double deltaTime;
+		double interval;
 		float lastAverage;
 
 		public override void Update()
@@ -58,17 +58,17 @@ namespace EchoRenderer.UI.Interface
 		{
 			const float UpdateInterval = 1f;
 
-			if (deltaTime >= UpdateInterval)
+			if (interval >= UpdateInterval)
 			{
-				lastAverage = (float)(frameCount / deltaTime);
+				lastAverage = (float)(frameCount / interval);
 
 				frameCount = 0;
-				deltaTime = 0d;
+				interval = 0d;
 			}
 
 			++frameCount;
 
-			deltaTime += Root.application.DeltaTime;
+			interval += Root.application.DeltaTime;
 			builder.Append($"FPS: {lastAverage:F2}");
 
 			AppendGap();

@@ -20,6 +20,7 @@ namespace EchoRenderer.Objects.Scenes
 		public readonly MaterialPresser materials;
 		public readonly Node root;
 
+		public Dictionary<ObjectPack, Node>.KeyCollection UniquePacks => objectPacks.Keys;
 		readonly Dictionary<ObjectPack, Node> objectPacks = new Dictionary<ObjectPack, Node>();
 
 		public PressedPack GetPressedPack(ObjectPack pack)

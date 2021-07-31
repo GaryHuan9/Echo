@@ -32,7 +32,7 @@ namespace EchoRenderer.UI.Interface
 						  AdaptiveSample = 35
 					  };
 
-			new Thread(LoadScene<TestInstancing>)
+			new Thread(LoadScene<LightedBMW>)
 			{
 				IsBackground = true,
 				Name = "Scene Loader"
