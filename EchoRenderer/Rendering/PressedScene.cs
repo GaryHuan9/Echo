@@ -49,7 +49,7 @@ namespace EchoRenderer.Rendering
 			lights = new ReadOnlyCollection<PressedLight>(lightsList);
 
 			presser = new ScenePresser(source); //Second pass create presser
-			rootPack = presser.PressPacks();    //Third pass create bounding volume hierarchies
+			rootPack = presser.PressPacks();    //Third pass create bvh
 
 			materials = presser.materials.GetMapper(null); //Get default material mapper
 			presser.materials.Press();                     //Press materials and mappers
@@ -58,20 +58,16 @@ namespace EchoRenderer.Rendering
 		}
 
 		public readonly Scene source;
+		public readonly ScenePresser presser;
+
 		public readonly Camera camera;
 		public readonly Cubemap cubemap;
-
 		public readonly ReadOnlyCollection<PressedLight> lights;
-
-		public GeometryCounts InstancedCounts => presser.root.InstancedCounts;
-		public GeometryCounts UniqueCounts => presser.root.UniqueCounts;
-
-		public int MaterialCount => presser.materials.Count;
-		public long Intersections => Interlocked.Read(ref intersections);
 
 		long intersections; //Intersection count
 
-		readonly ScenePresser presser;
+		public long Intersections => Interlocked.Read(ref intersections);
+
 		readonly PressedPack rootPack;
 		readonly MaterialPresser.Mapper materials;
 
