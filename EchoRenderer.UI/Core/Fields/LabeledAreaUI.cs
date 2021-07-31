@@ -10,8 +10,6 @@ namespace EchoRenderer.UI.Core.Fields
 					   {
 						   transform =
 						   {
-							   UniformPercents = 0f,
-							   UniformMargins = 0f,
 							   RightPercent = 0.6f,
 							   RightMargin = Theme.MediumMargin
 						   },
@@ -22,7 +20,6 @@ namespace EchoRenderer.UI.Core.Fields
 					{
 						transform =
 						{
-							UniformPercents = 0f,
 							UniformMargins = Theme.SmallMargin,
 							LeftMargin = Theme.MediumMargin
 						},
@@ -58,8 +55,7 @@ namespace EchoRenderer.UI.Core.Fields
 		public readonly LabelUI label;
 	}
 
-	public
-		static class LabeledAreaUIExtensions
+	public static class LabeledAreaUIExtensions
 	{
 		public static LabeledAreaUI Label(this AreaUI area, string label) => new() {label = {Text = label}, Area = area};
 	}

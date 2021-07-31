@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CodeHelpers.Diagnostics;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.UI.Core.Areas;
@@ -20,7 +21,7 @@ namespace EchoRenderer.UI.Interface
 		readonly ButtonUI rebuildButton;
 
 		readonly HashSet<ObjectPack> packs = new();
-		readonly HashSet<HierarchyNodeUI> nodes = new();
+		readonly List<HierarchyNodeUI> nodes = new();
 
 		public override void Update()
 		{
@@ -33,25 +34,15 @@ namespace EchoRenderer.UI.Interface
 
 			foreach (HierarchyNodeUI node in nodes) group.Remove(node);
 
+			packs.Clear();
 			nodes.Clear();
 
-			Queue<ObjectPack> frontier = new Queue<ObjectPack>();
+			ScenePresser presser = sceneView.Profile.Scene.presser;
 
-			frontier.Enqueue(scene);
-
-			while (frontier.Count > 0)
+			foreach (ObjectPack pack in presser.UniquePacks)
 			{
-				ObjectPack pack = frontier.Dequeue();
-
-				if (packs.Contains(pack))
-				{
-					//TODO: Invalid pack ordering (recursive parenting)
-					continue;
-				}
-
+				Assert.IsFalse(packs.Contains(pack));
 				var node = new HierarchyNodeUI(pack);
-
-				foreach (ObjectPack child in node.packs) frontier.Enqueue(child);
 
 				packs.Add(pack);
 				nodes.Add(node);
