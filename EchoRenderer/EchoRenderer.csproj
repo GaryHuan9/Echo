@@ -19,14 +19,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Drawing.Common" Version="5.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="5.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="Assets/**/">
+        <Content Include="Assets/**">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-        <ContentWithTargetPath Include="Oidn/**/">
+        <ContentWithTargetPath Include="Oidn/**">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
             <TargetPath>%(Filename)%(Extension)</TargetPath>
         </ContentWithTargetPath>
