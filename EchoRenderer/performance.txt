@@ -35,7 +35,3 @@ Without: Completed after 39.37 seconds with 131,174,400 samples at 3,331,982 sam
 With v1: Completed after 33.80 seconds with 131,174,400 samples at 3,880,441 samples per second.
 
 Iterative Unsafe BVH V2: Completed after 25.71 seconds with 131,174,400 samples at 5,102,216 samples per second.
-
-Bloom Post Process (960x540)
-Brute Force: 14427ms
-Optimized:

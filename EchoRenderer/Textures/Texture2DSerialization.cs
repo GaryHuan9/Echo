@@ -3,11 +3,9 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.IO.Compression;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
@@ -21,6 +19,11 @@ namespace EchoRenderer.Textures
 		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif, null});
 
 		const string FloatingPointImageExtension = ".fpi";
+
+		const float GammaThreshold = 0.0031308f;
+		const float GammaMultiplier = 12.92f;
+		const float GammaOffset = 0.055f;
+		const float GammaExponent = 2.4f;
 
 		public void Save(string relativePath, bool sRGB = true)
 		{
@@ -62,9 +65,9 @@ namespace EchoRenderer.Textures
 				void SaveARGB(Int2 position)
 				{
 					Vector128<float> colorVector = this[position];
-					if (sRGB) colorVector = Sse.Sqrt(colorVector);
-
 					byte* pointer = origin + ToPointerOffset(position) * 4;
+
+					if (sRGB) colorVector = ForwardGammaCorrect(colorVector);
 					Color32 color = (Color32)Utilities.ToFloat4(colorVector);
 
 					pointer[0] = color.b;
@@ -117,7 +120,7 @@ namespace EchoRenderer.Textures
 				Color32 pixel = new Color32(pointer[2], pointer[1], pointer[0]);
 				Vector128<float> vector = Utilities.ToVector((Float4)pixel);
 
-				texture[position] = sRGB ? Sse.Multiply(vector, vector) : vector;
+				texture[position] = sRGB ? InverseGammaCorrect(vector) : vector;
 			}
 
 			void LoadARGB(Int2 position)
@@ -127,7 +130,7 @@ namespace EchoRenderer.Textures
 				Color32 pixel = new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
 				Vector128<float> vector = Utilities.ToVector((Float4)pixel);
 
-				texture[position] = sRGB ? Sse.Multiply(vector, vector) : vector;
+				texture[position] = sRGB ? InverseGammaCorrect(vector) : vector;
 			}
 
 			source.UnlockBits(data);
@@ -138,6 +141,36 @@ namespace EchoRenderer.Textures
 		/// Returns an index/offset to the origin of a <see cref="BitmapData"/> during serialization.
 		/// </summary>
 		int ToPointerOffset(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
+
+		static unsafe Vector128<float> ForwardGammaCorrect(Vector128<float> value)
+		{
+			float* pointer = (float*)&value;
+
+			for (int i = 0; i < 4; i++) Operate(pointer + i);
+
+			return value;
+
+			static void Operate(float* target)
+			{
+				if (*target <= GammaThreshold) *target *= GammaMultiplier;
+				else *target = (1f + GammaOffset) * MathF.Pow(*target, 1f / GammaExponent) - GammaOffset;
+			}
+		}
+
+		static unsafe Vector128<float> InverseGammaCorrect(Vector128<float> value)
+		{
+			float* pointer = (float*)&value;
+
+			for (int i = 0; i < 4; i++) Operate(pointer + i);
+
+			return value;
+
+			static void Operate(float* target)
+			{
+				if (*target <= GammaThreshold * GammaMultiplier) *target *= 1f / GammaMultiplier;
+				else *target = MathF.Pow((*target + GammaOffset) * (1f / (1f + GammaOffset)), GammaExponent);
+			}
+		}
 
 		void SaveFloatingPointImage(string path)
 		{
