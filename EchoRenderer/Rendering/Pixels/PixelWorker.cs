@@ -15,6 +15,12 @@ namespace EchoRenderer.Rendering.Pixels
 		protected RenderProfile Profile { get; private set; }
 
 		/// <summary>
+		/// Should create and return a new object of base type <see cref="MemoryArena"/> with <paramref name="hash"/>.
+		/// NOTE: The returned <see cref="MemoryArena"/> will be exactly the allocator used for <see cref="Render"/>.
+		/// </summary>
+		public abstract MemoryArena CreateArena(int hash);
+
+		/// <summary>
 		/// Assigns the render profile before a render session begins.
 		/// NOTE: This can be used as a "reset" point for the worker.
 		/// </summary>
@@ -27,8 +33,8 @@ namespace EchoRenderer.Rendering.Pixels
 		/// The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
 		/// Y should have the same scale as X and it would depend on the aspect ratio.
 		/// </param>
-		/// <param name="random">The RNG to use. Should be unique to each thread.</param>
-		public abstract Sample Render(Float2 screenUV, ExtendedRandom random);
+		/// <param name="arena">The <see cref="MemoryArena"/> to use for this sample.</param>
+		public abstract Sample Render(Float2 screenUV, MemoryArena arena);
 
 		/// <summary>
 		/// Creates a new ray with <paramref name="direction"/> and an origin that is slightly shifted according to

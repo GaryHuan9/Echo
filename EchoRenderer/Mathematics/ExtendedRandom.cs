@@ -7,7 +7,7 @@ namespace EchoRenderer.Mathematics
 	public class ExtendedRandom : Random
 	{
 		public ExtendedRandom(int seed) : base(seed) { }
-		public ExtendedRandom() : this(Thread.CurrentThread.ManagedThreadId ^ Environment.TickCount) { }
+		public ExtendedRandom() : this(HashCode.Combine(Thread.CurrentThread.ManagedThreadId, Environment.TickCount64)) { }
 
 		public float NextFloat() => (float)NextDouble();
 		public float NextFloat(float max) => NextFloat() * max;
@@ -53,7 +53,6 @@ namespace EchoRenderer.Mathematics
 		/// Returns a random value on the gaussian distribution curve. Implementation based
 		/// on the Box-Muller transform with a standard deviation of 1 and mean of 0.
 		/// </summary>
-		/// <returns></returns>
 		public float NextGaussian()
 		{
 			float u0 = 1f - NextFloat();
