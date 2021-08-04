@@ -128,6 +128,7 @@ namespace EchoRenderer.Rendering.Pixels
 					}
 					else magnitude = x * x + y * y + z * z;
 
+					//NOTE: This division is optimized with reciprocal
 					return this / Math.Max(Math.Sqrt(magnitude), double.Epsilon);
 				}
 			}
@@ -139,7 +140,7 @@ namespace EchoRenderer.Rendering.Pixels
 			public static Double3 operator /(in Double3 value, in Double3 other) => Divide(value.vector, other.vector);
 
 			public static Double3 operator *(in Double3 value, double other) => Multiply(value.vector, Vector256.Create(other));
-			public static Double3 operator /(in Double3 value, double other) => Divide(value.vector, Vector256.Create(other));
+			public static Double3 operator /(in Double3 value, double other) => Multiply(value.vector, Vector256.Create(1d / other));
 
 			public static Double3 operator *(double value, in Double3 other) => Multiply(Vector256.Create(value), other.vector);
 			public static Double3 operator /(double value, in Double3 other) => Divide(Vector256.Create(value), other.vector);
@@ -147,18 +148,21 @@ namespace EchoRenderer.Rendering.Pixels
 			public static implicit operator Double3(in Float3 value) => new Double3(value.x, value.y, value.z);
 			public static explicit operator Float3(in Double3 value) => new Float3((float)value.x, (float)value.y, (float)value.z);
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static Double3 Add(in Double3 value, in Double3 other)
 			{
 				if (Avx.IsSupported) return new Double3(Avx.Add(value.vector, other.vector));
 				return new Double3(value.x + other.x, value.y + other.y, value.z + other.z);
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static Double3 Subtract(in Double3 value, in Double3 other)
 			{
 				if (Avx.IsSupported) return new Double3(Avx.Subtract(value.vector, other.vector));
 				return new Double3(value.x - other.x, value.y - other.y, value.z - other.z);
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static unsafe Double3 Multiply(in Vector256<double> value, in Vector256<double> other)
 			{
 				if (Avx.IsSupported) return new Double3(Avx.Multiply(value, other));
@@ -172,6 +176,7 @@ namespace EchoRenderer.Rendering.Pixels
 				return new Double3(p0[0] * p1[0], p0[1] * p1[1], p0[2] * p1[2]);
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static unsafe Double3 Divide(in Vector256<double> value, in Vector256<double> other)
 			{
 				if (Avx.IsSupported) return new Double3(Avx.Divide(value, other));

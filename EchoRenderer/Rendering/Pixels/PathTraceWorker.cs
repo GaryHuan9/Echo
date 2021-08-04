@@ -7,9 +7,13 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public override Sample Render(Float2 screenUV, ExtendedRandom random)
+		public override MemoryArena CreateArena(int hash) => new MemoryArena(hash);
+
+		public override Sample Render(Float2 screenUV, MemoryArena arena)
 		{
 			PressedScene scene = Profile.Scene;
+			ExtendedRandom random = arena.random;
+
 			Ray ray = scene.camera.GetRay(screenUV, random);
 
 			Float3 energy = Float3.one;
