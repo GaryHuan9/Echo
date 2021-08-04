@@ -48,8 +48,8 @@ namespace EchoRenderer.Rendering.Engines
 						 Name = $"Tile Worker #{id} {size}x{size}"
 					 };
 
-			//Create RNG for thread. NOTE that HashCode returns a different value every runtime!
-			random = new ExtendedRandom(HashCode.Combine(Environment.TickCount64, id, size));
+			//Create arena for thread. NOTE that HashCode returns a different value every runtime!
+			arena = pixelWorker.CreateArena(HashCode.Combine(Environment.TickCount64, id, size));
 		}
 
 		readonly int id;
@@ -80,7 +80,7 @@ namespace EchoRenderer.Rendering.Engines
 		public long RejectedSample => Interlocked.Read(ref _rejectedSample);
 
 		readonly Thread worker;
-		readonly ExtendedRandom random;
+		readonly MemoryArena arena;
 
 		/// <summary>
 		/// Offset applied to each pixel during regular pixel sampling.
@@ -164,7 +164,7 @@ namespace EchoRenderer.Rendering.Engines
 
 			//Change to adaptive sampling
 			int sampleCount = (int)(pixel.Deviation * adaptiveSample);
-			for (int i = 0; i < sampleCount; i++) Sample(random.NextSample());
+			for (int i = 0; i < sampleCount; i++) Sample(arena.random.NextSample());
 
 			//Store pixel
 			pixel.Store(renderBuffer, position);
@@ -175,7 +175,7 @@ namespace EchoRenderer.Rendering.Engines
 			{
 				//Sample color
 				Float2 uv = (position + offset) / renderBuffer.size - Float2.half;
-				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), random);
+				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), arena);
 
 				//Write to pixel
 				bool successful = pixel.Accumulate(sample);
