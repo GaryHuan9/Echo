@@ -54,8 +54,7 @@ namespace EchoRenderer.Rendering.Engines
 		readonly Stopwatch stopwatch = new Stopwatch();
 		readonly object signalLocker = new object();
 
-		readonly ThreadLocal<ExtendedRandom> threadRandom = new(() => new ExtendedRandom());
-
+		ThreadLocal<MemoryArena> threadArena;
 		ParallelOptions parallelOptions;
 
 		public void Begin(ProgressiveRenderProfile profile)
@@ -69,6 +68,7 @@ namespace EchoRenderer.Rendering.Engines
 			CurrentState = State.initialization;
 
 			Epoch = 0;
+			CreateThreadArena();
 
 			profile.Method.AssignProfile(profile);
 			profile.Scene.ResetIntersectionCount();
@@ -135,7 +135,7 @@ namespace EchoRenderer.Rendering.Engines
 			var buffer = profile.RenderBuffer;
 			var method = profile.Method;
 
-			ExtendedRandom random = threadRandom.Value;
+			MemoryArena arena = threadArena.Value;
 			double sampleCount = profile.EpochSample;
 
 			if (Epoch > profile.EpochLength)
@@ -147,8 +147,8 @@ namespace EchoRenderer.Rendering.Engines
 			for (int i = 0; i < sampleCount; i++)
 			{
 				//Sample color
-				Float2 uv = (position + random.NextSample()) / buffer.size - Float2.half;
-				var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), random);
+				Float2 uv = (position + arena.random.NextSample()) / buffer.size - Float2.half;
+				var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), arena);
 
 				bool successful = pixel.Accumulate(sample);
 			}
@@ -161,6 +161,17 @@ namespace EchoRenderer.Rendering.Engines
 			if (!Disposed) return;
 			throw new Exception($"Operation invalid after {nameof(Dispose)}!");
 		}
+
+		void CreateThreadArena() => threadArena = new ThreadLocal<MemoryArena>
+									(
+										() =>
+										{
+											int id = Thread.CurrentThread.ManagedThreadId;
+											long tick = Environment.TickCount64;
+
+											return CurrentProfile.Method.CreateArena(HashCode.Combine(id, tick));
+										}
+									);
 
 		public enum State
 		{
