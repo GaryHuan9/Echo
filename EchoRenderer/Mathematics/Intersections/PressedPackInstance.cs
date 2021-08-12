@@ -8,7 +8,7 @@ namespace EchoRenderer.Mathematics.Intersections
 {
 	public class PressedPackInstance
 	{
-		public PressedPackInstance(ObjectPackInstance instance, ScenePresser presser) : this(presser, instance.ObjectPack, instance.Mapper)
+		public PressedPackInstance(ScenePresser presser, ObjectPackInstance instance) : this(presser, instance.ObjectPack, instance.Mapper)
 		{
 			backwardTransform = instance.LocalToWorld;
 			forwardTransform = instance.WorldToLocal;
@@ -23,7 +23,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			else throw new Exception($"{nameof(ObjectPackInstance)} does not support none uniform scaling! '{scale}'");
 		}
 
-		public PressedPackInstance(Scene scene, ScenePresser presser) : this(presser, scene, null)
+		public PressedPackInstance(ScenePresser presser, Scene scene) : this(presser, scene, null)
 		{
 			forwardTransform = Float4x4.identity;
 			backwardTransform = Float4x4.identity;
