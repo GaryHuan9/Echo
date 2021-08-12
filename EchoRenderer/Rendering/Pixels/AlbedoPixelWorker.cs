@@ -18,9 +18,9 @@ namespace EchoRenderer.Rendering.Pixels
 			while (scene.GetIntersection(ref query))
 			{
 				Float3 albedo = query.shading.material.BidirectionalScatter(query, random, out Float3 direction);
+				if (!HitPassThrough(query, albedo, direction)) return albedo; //Return intersected albedo color
 
-				if (HitPassThrough(query, albedo, direction)) query.Next(query.ray.direction);
-				else return new Sample(albedo, albedo, query.shading.normal); //Return intersected albedo color
+				query.Next(query.ray.direction);
 			}
 
 			return scene.cubemap?.Sample(query.ray.direction) ?? Float3.zero;
