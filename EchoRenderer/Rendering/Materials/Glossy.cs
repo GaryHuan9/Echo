@@ -32,7 +32,7 @@ namespace EchoRenderer.Rendering.Materials
 			Float3 normal = (query.shading.normal + random.NextInSphere(radius)).Normalized;
 
 			direction = query.ray.direction.Reflect(normal).Normalized;
-			if (direction.Dot(query.normal) < 0f) color = Float3.zero; //Absorbed
+			if (direction.Dot(query.shading.normal) < 0f) color = Float3.zero; //Absorbed
 
 			return color;
 		}

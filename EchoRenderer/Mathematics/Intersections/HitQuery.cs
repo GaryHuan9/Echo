@@ -50,12 +50,6 @@ namespace EchoRenderer.Mathematics.Intersections
 
 	public readonly struct GeometryToken : IEquatable<GeometryToken>
 	{
-		public GeometryToken(uint instance, uint geometry)
-		{
-			this.instance = instance;
-			this.geometry = geometry;
-		}
-
 		public GeometryToken(PressedPackInstance instance, uint geometry)
 		{
 			this.instance = instance.id;
