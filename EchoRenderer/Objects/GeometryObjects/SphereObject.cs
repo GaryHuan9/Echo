@@ -50,6 +50,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public AxisAlignedBoundingBox AABB => new AxisAlignedBoundingBox(position - (Float3)radius, position + (Float3)radius);
 
+		const float DistanceMin = PressedPack.DistanceMin;
+
 		/// <summary>
 		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.
 		/// <paramref name="uv"/> contains the barycentric position of the intersection.
@@ -67,8 +69,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 			float point2 = MathF.Sqrt(point2Squared);
 			float result = point1 - point2;
 
-			if (result < 0f) result = point1 + point2;
-			if (result < 0f) goto noIntersection;
+			if (result < DistanceMin) result = point1 + point2;
+			if (result < DistanceMin) goto noIntersection;
 
 			Float3 point = offset + ray.direction * result;
 
@@ -101,13 +103,13 @@ namespace EchoRenderer.Objects.GeometryObjects
 			float point2 = MathF.Sqrt(point2Squared);
 			float result = point1 - point2;
 
-			if (result < 0f) result = point1 + point2;
-			if (result < 0f) return float.PositiveInfinity;
+			if (result < DistanceMin) result = point1 + point2;
+			if (result < DistanceMin) return float.PositiveInfinity;
 
 			return result;
 		}
 
-		public Float3 GetNormal(Float2 uv)
+		public static Float3 GetNormal(Float2 uv)
 		{
 			//TODO: account for rotation during uv calculation, and in turn normal calculation
 

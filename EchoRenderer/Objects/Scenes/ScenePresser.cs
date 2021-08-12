@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
@@ -13,6 +14,8 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public ScenePresser(Scene scene)
 		{
+			threadId = Thread.CurrentThread.ManagedThreadId;
+
 			root = CreateNode(scene, null);
 			materials = new MaterialPresser();
 
@@ -23,6 +26,8 @@ namespace EchoRenderer.Objects.Scenes
 		public readonly Node root;
 
 		public Dictionary<ObjectPack, Node>.KeyCollection UniquePacks => objectPacks.Keys;
+
+		readonly int threadId;
 
 		readonly Dictionary<ObjectPack, Node> objectPacks = new();
 		readonly List<PressedPackInstance> packInstances = new() {null};
@@ -41,12 +46,12 @@ namespace EchoRenderer.Objects.Scenes
 		}
 
 		/// <summary>
-		/// Returns an unique id for the newly created <paramref name="instance"/>
-		/// and register it into this <see cref="ScenePresser"/>.
+		/// Returns an unique id for the newly created <paramref name="instance"/> and register it into this <see cref="ScenePresser"/>.
+		/// NOTE: This method must be invoked on the same thread as the constructor of this <see cref="ScenePresser"/>!
 		/// </summary>
 		public uint RegisterPressedPackInstance(PressedPackInstance instance)
 		{
-			ExceptionHelper.AssertMainThread();
+			if (threadId != Thread.CurrentThread.ManagedThreadId) throw new Exception($"Invalid thread {threadId}!");
 
 			packInstances.Add(instance);
 			return (uint)(packInstances.Count - 1);

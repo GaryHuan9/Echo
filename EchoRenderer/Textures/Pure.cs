@@ -17,6 +17,8 @@ namespace EchoRenderer.Textures
 
 		readonly Vector128<float> color;
 
+		public Float3 Color => Utilities.ToFloat3(color);
+
 		protected override Vector128<float> GetPixel(Float2 uv) => color;
 	}
 }

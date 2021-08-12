@@ -99,11 +99,11 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			//Must use exact comparison to check for modification
 			//Compare before multiplication to avoid float math issues
-			bool skip = oldDistance == query.distance;
+			bool skip = oldDistance.Equals(query.distance);
 
 			query.ray = oldRay;
-			query.distance *= backwardScale;
 			query.instance = oldInstance;
+			query.distance *= backwardScale;
 
 			//If the distance did not change, it means no intersection made thus we can skip
 			if (skip) return;
