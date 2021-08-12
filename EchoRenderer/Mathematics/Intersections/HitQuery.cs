@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Materials;
 
@@ -12,7 +13,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		public Ray ray;
 		public PressedPackInstance instance;
 
-		public GeometryToken previousToken;
+		public GeometryToken previous;
 		public GeometryToken token;
 
 		public float distance;
@@ -24,12 +25,13 @@ namespace EchoRenderer.Mathematics.Intersections
 		public readonly bool Hit => token != default;
 		public readonly Float3 Position => ray.GetPoint(distance);
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Next(Float3 direction)
 		{
 			Float3 origin = ray.GetPoint(distance);
 			ray = new Ray(origin, direction);
 
-			previousToken = token;
+			previous = token;
 			token = default;
 
 			distance = float.PositiveInfinity;
@@ -45,7 +47,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			public Material material;
 		}
 
-		public static implicit operator HitQuery(in Ray ray) => new() {ray = ray};
+		public static implicit operator HitQuery(in Ray ray) => new() {ray = ray, distance = float.PositiveInfinity};
 	}
 
 	public readonly struct GeometryToken : IEquatable<GeometryToken>
