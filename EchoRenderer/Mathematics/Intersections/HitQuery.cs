@@ -23,13 +23,11 @@ namespace EchoRenderer.Mathematics.Intersections
 		public Shading shading;
 
 		public readonly bool Hit => token != default;
-		public readonly Float3 Position => ray.GetPoint(distance);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Next(Float3 direction)
 		{
-			Float3 origin = ray.GetPoint(distance);
-			ray = new Ray(origin, direction);
+			ray = new Ray(ray.GetPoint(distance), direction);
 
 			previous = token;
 			token = default;
