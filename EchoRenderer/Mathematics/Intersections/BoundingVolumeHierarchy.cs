@@ -75,29 +75,6 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
-		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
-		/// If a closer intersection distance is found, it will replace <paramref name="distance"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void GetIntersection(in Ray ray, ref float distance)
-		{
-			if (nodes == null) return;
-
-			if (nodes.Length == 1)
-			{
-				uint token = nodes[0].token; //If root is the only node/leaf
-				pack.GetIntersection(ray, ref distance, token);
-			}
-			else
-			{
-				ref readonly Node root = ref nodes[0];
-				float local = root.aabb.Intersect(ray);
-
-				if (local < distance) Traverse(ray, ref distance);
-			}
-		}
-
-		/// <summary>
 		/// Returns the number of AABB intersection calculated before a result it determined.
 		/// </summary>
 		public int GetIntersectionCost(in Ray ray, ref float distance)
@@ -244,77 +221,6 @@ namespace EchoRenderer.Mathematics.Intersections
 					if (hit1 < hit.distance)
 					{
 						if (child1.IsLeaf) pack.GetIntersection(ray, ref hit, child1.token);
-						else
-						{
-							*next++ = child1.children;
-							*hits++ = hit1;
-						}
-					}
-				}
-			}
-		}
-
-		unsafe void Traverse(in Ray ray, ref float distance)
-		{
-			int* stack = stackalloc int[maxDepth];
-			float* hits = stackalloc float[maxDepth];
-
-			int* next = stack;
-
-			*next++ = 1;  //The root's first children is always at one
-			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
-
-			while (next != stack)
-			{
-				int index = *--next;
-				if (*--hits >= distance) continue;
-
-				ref readonly Node child0 = ref nodes[index];
-				ref readonly Node child1 = ref nodes[index + 1];
-
-				float hit0 = child0.aabb.Intersect(ray);
-				float hit1 = child1.aabb.Intersect(ray);
-
-				//Orderly intersects the two children so that there is a higher chance of intersection on the first child.
-				//Although the order of leaf intersection is wrong, the performance is actually better than reversing to correct it.
-
-				if (hit0 < hit1)
-				{
-					if (hit1 < distance)
-					{
-						if (child1.IsLeaf) pack.GetIntersection(ray, ref distance, child1.token);
-						else
-						{
-							*next++ = child1.children;
-							*hits++ = hit1;
-						}
-					}
-
-					if (hit0 < distance)
-					{
-						if (child0.IsLeaf) pack.GetIntersection(ray, ref distance, child0.token);
-						else
-						{
-							*next++ = child0.children;
-							*hits++ = hit0;
-						}
-					}
-				}
-				else
-				{
-					if (hit0 < distance)
-					{
-						if (child0.IsLeaf) pack.GetIntersection(ray, ref distance, child0.token);
-						else
-						{
-							*next++ = child0.children;
-							*hits++ = hit0;
-						}
-					}
-
-					if (hit1 < distance)
-					{
-						if (child1.IsLeaf) pack.GetIntersection(ray, ref distance, child1.token);
 						else
 						{
 							*next++ = child1.children;

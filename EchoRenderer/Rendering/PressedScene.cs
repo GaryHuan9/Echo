@@ -71,7 +71,6 @@ namespace EchoRenderer.Rendering
 		readonly PressedPack rootPack;
 		readonly MaterialPresser.Mapper materials;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool GetIntersection(in Ray ray, out CalculatedHit calculated)
 		{
 			Hit hit = new Hit {distance = float.PositiveInfinity};
@@ -104,15 +103,12 @@ namespace EchoRenderer.Rendering
 			return true;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool GetIntersection(in Ray ray)
 		{
-			float distance = float.PositiveInfinity;
+			//TODO: We need a separate implementation that calculates intersection with any geometry (boolean true/false return)
+			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
 
-			rootPack.bvh.GetIntersection(ray, ref distance);
-			Interlocked.Increment(ref intersections);
-
-			return float.IsFinite(distance);
+			return GetIntersection(ray, out CalculatedHit hit);
 		}
 
 		public int GetIntersectionCost(in Ray ray)
