@@ -38,27 +38,27 @@ namespace EchoRenderer.Rendering.Pixels
 
 		/// <summary>
 		/// Creates a new ray with <paramref name="direction"/> and an origin that is slightly shifted according to
-		/// <paramref name="hit"/> to avoid self intersecting with the previous geometries.
+		/// <paramref name="query"/> to avoid self intersecting with the previous geometries.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static Ray CreateBiasedRay(in Float3 direction, in CalculatedHit hit)
+		protected static Ray CreateBiasedRay(in Float3 direction, in HitQuery query)
 		{
 			const float BiasScale = 2.4E-4f; //Ray origins will shift to try to get this far from the geometry
 			const float MaxLength = 5.7E-4f; //The maximum distance origins are allowed to move before stopping
 
-			float distance = direction.Dot(hit.normalRaw);
+			float distance = direction.Dot(query.normal);
 			if (distance < 0f) distance = -distance;
 
 			distance = Math.Min(BiasScale / distance, MaxLength);
-			return new Ray(hit.position + direction * distance, direction);
+			return new Ray(query.Position + direction * distance, direction);
 		}
 
 		/// <summary>
-		/// Returns whether <paramref name="hit"/> is on an invisible surface and we should just continue through, ignoring this hit
+		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit
 		/// NOTE: this works with 1 IOR white <see cref="Glass"/> materials as well because they are essentially invisible too.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static bool HitPassThrough(in CalculatedHit hit, in Float3 albedo, in Float3 direction) => hit.direction == direction && albedo == Float3.one;
+		protected static bool HitPassThrough(in HitQuery query, in Float3 albedo, in Float3 direction) => query.ray.direction == direction && albedo == Float3.one;
 
 		public readonly struct Sample
 		{

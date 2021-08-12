@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
@@ -24,7 +25,7 @@ namespace EchoRenderer.Rendering
 
 			List<PressedLight> lightsList = new List<PressedLight>();
 
-			//First pass gather important objects
+			//Gather important objects
 			foreach (Object child in source.LoopChildren(true))
 			{
 				switch (child)
@@ -48,11 +49,9 @@ namespace EchoRenderer.Rendering
 
 			lights = new ReadOnlyCollection<PressedLight>(lightsList);
 
-			presser = new ScenePresser(source); //Second pass create presser
-			rootPack = presser.PressPacks();    //Third pass create bvh
-
-			materials = presser.materials.GetMapper(null); //Get default material mapper
-			presser.materials.Press();                     //Press materials and mappers
+			presser = new ScenePresser(source);
+			rootInstance = new PressedPackInstance(source, presser); //Create root instance
+			presser.materials.Press();
 
 			Program.commandsController?.Log("Pressed scene");
 		}
@@ -68,39 +67,22 @@ namespace EchoRenderer.Rendering
 
 		public long Intersections => Interlocked.Read(ref intersections);
 
-		readonly PressedPack rootPack;
-		readonly MaterialPresser.Mapper materials;
+		readonly PressedPackInstance rootInstance;
 
-		public bool GetIntersection(in Ray ray, out CalculatedHit calculated)
+		public bool GetIntersection(ref HitQuery query)
 		{
-			Hit hit = new Hit {distance = float.PositiveInfinity};
-
-			rootPack.bvh.GetIntersection(ray, ref hit);
+			rootInstance.GetIntersectionRoot(ref query);
 			Interlocked.Increment(ref intersections);
 
-			if (float.IsInfinity(hit.distance))
+			bool hit = query.Hit;
+
+			if (hit)
 			{
-				Unsafe.SkipInit(out calculated);
-				return false;
+				var instance = presser.GetPressedPackInstance(query.token.instance);
+				instance.pack.FillShading(ref query, instance);
 			}
 
-			PressedPack pack;
-			MaterialPresser.Mapper mapper;
-
-			if (hit.instance == null)
-			{
-				pack = rootPack;
-				mapper = materials;
-				pack.GetNormal(ref hit);
-			}
-			else
-			{
-				pack = hit.instance.pack;
-				mapper = hit.instance.materials;
-			}
-
-			calculated = pack.CreateHit(hit, ray, mapper);
-			return true;
+			return hit;
 		}
 
 		public bool GetIntersection(in Ray ray)
@@ -108,13 +90,14 @@ namespace EchoRenderer.Rendering
 			//TODO: We need a separate implementation that calculates intersection with any geometry (boolean true/false return)
 			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
 
-			return GetIntersection(ray, out CalculatedHit hit);
+			HitQuery query = new HitQuery {ray = ray};
+			return GetIntersection(ref query);
 		}
 
 		public int GetIntersectionCost(in Ray ray)
 		{
 			float distance = float.PositiveInfinity;
-			return rootPack.bvh.GetIntersectionCost(ray, ref distance);
+			return rootInstance.GetIntersectionCost(ray, ref distance);
 		}
 
 		public void ResetIntersectionCount() => Interlocked.Exchange(ref intersections, 0);

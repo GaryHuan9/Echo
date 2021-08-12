@@ -13,17 +13,17 @@ namespace EchoRenderer.Rendering.Pixels
 			PressedScene scene = Profile.Scene;
 			ExtendedRandom random = arena.random;
 
-			Ray ray = scene.camera.GetRay(screenUV, random);
+			HitQuery query = scene.camera.GetRay(screenUV, random);
 
-			while (scene.GetIntersection(ray, out CalculatedHit hit))
+			while (scene.GetIntersection(ref query))
 			{
-				Float3 albedo = hit.material.BidirectionalScatter(hit, random, out Float3 direction);
+				Float3 albedo = query.shading.material.BidirectionalScatter(query, random, out Float3 direction);
 
-				if (HitPassThrough(hit, albedo, direction)) ray = CreateBiasedRay(ray.direction, hit);
-				else return new Sample(albedo, albedo, hit.normal); //Return intersected albedo color
+				if (HitPassThrough(query, albedo, direction)) query.Next(query.ray.direction);
+				else return new Sample(albedo, albedo, query.shading.normal); //Return intersected albedo color
 			}
 
-			return scene.cubemap?.Sample(ray.direction) ?? Float3.zero;
+			return scene.cubemap?.Sample(query.ray.direction) ?? Float3.zero;
 		}
 	}
 }

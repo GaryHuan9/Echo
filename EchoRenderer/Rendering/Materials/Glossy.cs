@@ -20,19 +20,19 @@ namespace EchoRenderer.Rendering.Materials
 			randomRadius = SmoothnessToRandomRadius(Smoothness);
 		}
 
-		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
+		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
 		{
-			if (CullBackface(hit) || AlphaTest(hit, out Float3 color))
+			if (CullBackface(query) || AlphaTest(query, out Float3 color))
 			{
-				direction = hit.direction;
+				direction = query.ray.direction;
 				return Float3.one;
 			}
 
-			float radius = SampleTexture(SmoothnessMap, randomRadius, hit.texcoord);
-			Float3 normal = (hit.normal + random.NextInSphere(radius)).Normalized;
+			float radius = SampleTexture(SmoothnessMap, randomRadius, query.shading.texcoord);
+			Float3 normal = (query.shading.normal + random.NextInSphere(radius)).Normalized;
 
-			direction = hit.direction.Reflect(normal).Normalized;
-			if (direction.Dot(hit.normal) < 0f) color = Float3.zero; //Absorbed
+			direction = query.ray.direction.Reflect(normal).Normalized;
+			if (direction.Dot(query.normal) < 0f) color = Float3.zero; //Absorbed
 
 			return color;
 		}
