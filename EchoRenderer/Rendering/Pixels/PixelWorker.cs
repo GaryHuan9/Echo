@@ -37,23 +37,6 @@ namespace EchoRenderer.Rendering.Pixels
 		public abstract Sample Render(Float2 screenUV, MemoryArena arena);
 
 		/// <summary>
-		/// Creates a new ray with <paramref name="direction"/> and an origin that is slightly shifted according to
-		/// <paramref name="query"/> to avoid self intersecting with the previous geometries.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static Ray CreateBiasedRay(in Float3 direction, in HitQuery query)
-		{
-			const float BiasScale = 2.4E-4f; //Ray origins will shift to try to get this far from the geometry
-			const float MaxLength = 5.7E-4f; //The maximum distance origins are allowed to move before stopping
-
-			float distance = direction.Dot(query.normal);
-			if (distance < 0f) distance = -distance;
-
-			distance = Math.Min(BiasScale / distance, MaxLength);
-			return new Ray(query.Position + direction * distance, direction);
-		}
-
-		/// <summary>
 		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit
 		/// NOTE: this works with 1 IOR white <see cref="Glass"/> materials as well because they are essentially invisible too.
 		/// </summary>
