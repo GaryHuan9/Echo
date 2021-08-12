@@ -50,7 +50,7 @@ namespace EchoRenderer.Rendering
 			lights = new ReadOnlyCollection<PressedLight>(lightsList);
 
 			presser = new ScenePresser(source);
-			rootInstance = new PressedPackInstance(source, presser); //Create root instance
+			rootInstance = new PressedPackInstance(presser, source); //Create root instance
 			presser.materials.Press();
 
 			Program.commandsController?.Log("Pressed scene");

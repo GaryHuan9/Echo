@@ -36,7 +36,7 @@ namespace EchoRenderer.Mathematics.Intersections
 					}
 					case ObjectPackInstance packInstance:
 					{
-						instancesList.Add(new PressedPackInstance(packInstance, presser));
+						instancesList.Add(new PressedPackInstance(presser, packInstance));
 						break;
 					}
 				}
@@ -113,39 +113,39 @@ namespace EchoRenderer.Mathematics.Intersections
 		const float DistanceMin = 5e-4f;
 
 		/// <summary>
-		/// Calculates the intersection between <paramref name="ray"/> and object with <paramref name="token"/>.
-		/// If the intersection occurs before the original <paramref name="hit.distance"/>, then the intersection is recorded.
+		/// Calculates the intersection between <paramref name="query"/> and object with <paramref name="token"/>.
+		/// If the intersection occurs before the original <paramref name="query.distance"/>, then the intersection is recorded.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void GetIntersection(ref HitQuery hit, uint token)
+		public void GetIntersection(ref HitQuery query, uint token)
 		{
 			switch (token)
 			{
 				case >= TrianglesThreshold:
 				{
 					ref PressedTriangle triangle = ref triangles[token - TrianglesThreshold];
-					float distance = triangle.GetIntersection(hit.ray, out Float2 uv);
+					float distance = triangle.GetIntersection(query.ray, out Float2 uv);
 
-					if (!ValidateDistance(distance, ref hit, token)) return;
+					if (!ValidateDistance(distance, ref query, token)) return;
 
-					hit.uv = uv;
+					query.uv = uv;
 
 					break;
 				}
 				case >= SpheresThreshold:
 				{
 					ref PressedSphere sphere = ref spheres[token - SpheresThreshold];
-					float distance = sphere.GetIntersection(hit.ray, out Float2 uv);
+					float distance = sphere.GetIntersection(query.ray, out Float2 uv);
 
-					if (!ValidateDistance(distance, ref hit, token)) return;
+					if (!ValidateDistance(distance, ref query, token)) return;
 
-					hit.uv = uv;
+					query.uv = uv;
 
 					break;
 				}
 				default:
 				{
-					instances[token].GetIntersection(ref hit);
+					instances[token].GetIntersection(ref query);
 					break;
 				}
 			}
@@ -157,7 +157,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				PressedPackInstance instance = hit.instance;
 
 				GeometryToken geometryToken = new GeometryToken(instance, token);
-				if (distance <= DistanceMin && hit.token == geometryToken) return false;
+				if (distance <= DistanceMin && hit.previous == geometryToken) return false;
 
 				hit.token = geometryToken;
 				hit.distance = distance;
