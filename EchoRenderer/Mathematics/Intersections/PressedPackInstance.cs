@@ -93,16 +93,6 @@ namespace EchoRenderer.Mathematics.Intersections
 			hit.normal = backwardTransform.MultiplyDirection(hit.normal) * forwardScale;
 		}
 
-		public void GetIntersection(in Ray ray, ref float distance)
-		{
-			distance *= forwardScale;
-
-			//Gets intersection from bvh, calculation done in local space
-			pack.bvh.GetIntersection(TransformForward(ray), ref distance);
-
-			distance *= backwardScale;
-		}
-
 		public int GetIntersectionCost(in Ray ray, ref float distance)
 		{
 			//Forward transform distance to local space
