@@ -11,8 +11,7 @@ namespace IntrinsicsSIMD
 			// BenchmarkRunner.Run<BenchmarkBVH>();
 			// BenchmarkRunner.Run<BenchmarkTexture>();
 			// BenchmarkRunner.Run<BenchmarkRadixSort>();
-			// BenchmarkRunner.Run<BenchmarkLoop>();
-			BenchmarkRunner.Run<BenchmarkLocalRef>();
+			BenchmarkRunner.Run<BenchmarkLoop>();
 		}
 	}
 }

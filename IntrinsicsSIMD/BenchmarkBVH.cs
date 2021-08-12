@@ -50,26 +50,26 @@ namespace IntrinsicsSIMD
 		// | GetIntersectionNew | 54.96 ms | 0.265 ms | 0.248 ms |
 		// |    GetIntersection | 58.26 ms | 0.252 ms | 0.223 ms |
 
-		[Benchmark]
-		public float GetIntersectionNew()
-		{
-			bool hit = default;
+		// [Benchmark]
+		// public float GetIntersectionNew()
+		// {
+		// 	bool hit = default;
+		//
+		// 	for (int i = 0; i < rays.Length; i++) hit = pressed.GetIntersection(rays[i]);
+		//
+		// 	return hit ? 1f : 0f;
+		// }
 
-			for (int i = 0; i < rays.Length; i++) hit = pressed.GetIntersection(rays[i]);
-
-			return hit ? 1f : 0f;
-		}
-
-		[Benchmark]
-		public float GetIntersection()
-		{
-			bool hit = default;
-			CalculatedHit calculated = default;
-
-			for (int i = 0; i < rays.Length; i++) hit = pressed.GetIntersection(rays[i], out calculated);
-
-			return hit ? calculated.distance : 0f;
-		}
+		// [Benchmark]
+		// public float GetIntersection()
+		// {
+		// 	bool hit = default;
+		// 	CalculatedHit calculated = default;
+		//
+		// 	for (int i = 0; i < rays.Length; i++) hit = pressed.GetIntersection(rays[i], out calculated);
+		//
+		// 	return hit ? calculated.distance : 0f;
+		// }
 
 		// [Benchmark]
 		// public Hit GetIntersectionOld()
