@@ -3,6 +3,7 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Pixels
 {
@@ -24,7 +25,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			//Auxiliary data
 			Float3 firstAlbedo = Float3.zero;
-			Float3 firstNormal = Float3.up;
+			Float3 firstNormal = Texture.normal.Color;
 			float firstZDepth = float.PositiveInfinity;
 
 			bool missingAuxiliary = true;

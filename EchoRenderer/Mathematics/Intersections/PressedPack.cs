@@ -107,10 +107,15 @@ namespace EchoRenderer.Mathematics.Intersections
 		readonly PressedSphere[] spheres;         //Indices: [0x4000_0000 to 0x8000_0000)
 		readonly PressedPackInstance[] instances; //Indices: [0 to 0x4000_0000)
 
+		/// <summary>
+		/// If an intersection has a distance under this value and we just intersected the exactly same geometry with the last query,
+		/// we will ignore this intersection. NOTE: because spheres have two intersection points, <see cref="PressedSphere"/>'s get
+		/// intersection method must return the point with a distance larger than or equals to this value.
+		/// </summary>
+		public const float DistanceMin = 6e-4f;
+
 		const uint TrianglesThreshold = 0x8000_0000u;
 		const uint SpheresThreshold = 0x4000_0000u;
-
-		const float DistanceMin = 5e-4f;
 
 		/// <summary>
 		/// Calculates the intersection between <paramref name="query"/> and object with <paramref name="token"/>.
@@ -129,7 +134,6 @@ namespace EchoRenderer.Mathematics.Intersections
 					if (!ValidateDistance(distance, ref query, token)) return;
 
 					query.uv = uv;
-
 					break;
 				}
 				case >= SpheresThreshold:
@@ -140,7 +144,6 @@ namespace EchoRenderer.Mathematics.Intersections
 					if (!ValidateDistance(distance, ref query, token)) return;
 
 					query.uv = uv;
-
 					break;
 				}
 				default:
@@ -154,10 +157,9 @@ namespace EchoRenderer.Mathematics.Intersections
 			static bool ValidateDistance(float distance, ref HitQuery hit, uint token)
 			{
 				if (distance >= hit.distance) return false;
-				PressedPackInstance instance = hit.instance;
 
-				GeometryToken geometryToken = new GeometryToken(instance, token);
-				if (distance <= DistanceMin && hit.previous == geometryToken) return false;
+				GeometryToken geometryToken = new GeometryToken(hit.instance, token);
+				if (distance < DistanceMin && hit.previous == geometryToken) return false;
 
 				hit.token = geometryToken;
 				hit.distance = distance;
@@ -211,8 +213,8 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 				case >= SpheresThreshold:
 				{
-					ref PressedSphere sphere = ref spheres[token - SpheresThreshold];
-					query.normal = sphere.GetNormal(query.uv);
+					// ref PressedSphere sphere = ref spheres[token - SpheresThreshold];
+					query.normal = PressedSphere.GetNormal(query.uv);
 
 					break;
 				}
