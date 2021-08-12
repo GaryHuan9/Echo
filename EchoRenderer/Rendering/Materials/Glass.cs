@@ -33,6 +33,7 @@ namespace EchoRenderer.Rendering.Materials
 		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
 		{
 			ref readonly Float3 inDirection = ref query.ray.direction;
+			ref readonly Float2 texcoord = ref query.shading.texcoord;
 
 			if (AlphaTest(query, out Float3 color))
 			{
@@ -45,7 +46,7 @@ namespace EchoRenderer.Rendering.Materials
 			bool backface = inDirection.Dot(hitNormal) > 0f;
 
 			float etaI = 1f;
-			float etaT = SampleTexture(IndexOfRefractionMap, IndexOfRefraction, query.shading.texcoord);
+			float etaT = SampleTexture(IndexOfRefractionMap, IndexOfRefraction, texcoord);
 
 			if (backface) //If hit back face
 			{
@@ -53,7 +54,7 @@ namespace EchoRenderer.Rendering.Materials
 				hitNormal = -hitNormal;
 			}
 
-			float radius = SampleTexture(RoughnessMap, randomRadius, query.shading.texcoord);
+			float radius = SampleTexture(RoughnessMap, randomRadius, texcoord);
 			Float3 faceNormal = (hitNormal + random.NextInSphere(radius)).Normalized;
 
 			float cosI = inDirection.Dot(faceNormal);
