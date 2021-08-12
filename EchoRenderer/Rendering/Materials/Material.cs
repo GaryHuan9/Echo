@@ -41,21 +41,24 @@ namespace EchoRenderer.Rendering.Materials
 		/// <summary>
 		/// Returns the emission of this material.
 		/// </summary>
-		public virtual Float3 Emit(in CalculatedHit hit, ExtendedRandom random) => SampleTexture(EmissionMap, Emission, hit.texcoord);
+		public virtual Float3 Emit(in HitQuery query, ExtendedRandom random) => SampleTexture(EmissionMap, Emission, query.shading.texcoord);
 
 		/// <summary>
 		/// Returns the bidirectional scattering distribution function value of this material and outputs the randomly scattered direction.
 		/// NOTE: The returned value/color is (?) the albedo. If <paramref name="direction"/> is zero then the scatter is absorbed,
-		/// and if <paramref name="direction"/> is unchanged from <paramref name="hit.direction"/> then the scatter is passed through.
+		/// and if <paramref name="direction"/> is unchanged from <paramref name="query.ray.direction"/> then the scatter is passed through.
 		/// </summary>
-		public abstract Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction);
+		public abstract Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction);
 
-		public unsafe void ApplyTangentNormal(in CalculatedHit hit, ref Float3 normal)
+		public unsafe void FillTangentNormal(ref HitQuery query)
 		{
-			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals(0f)) return;
+			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals()) return;
 
-			Vector128<float> sample = NormalMap[hit.texcoord];
+			Vector128<float> sample = NormalMap[query.shading.texcoord];
 			Vector128<float> local = Fma.MultiplyAdd(sample, Utilities.vector2, normalShift);
+
+			ref readonly Float3 normal = ref query.normal;
+			ref Float3 shadingNormal = ref query.shading.normal;
 
 			//Transform local direction to world space based on normal
 			Float3 helper = Math.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
@@ -66,27 +69,27 @@ namespace EchoRenderer.Rendering.Materials
 			float* p = (float*)&local;
 
 			//Transforms direction using 3x3 matrix multiplication
-			normal -= new Float3
-					  (
-						  tangent.x * p[0] + binormal.x * p[1] + normal.x * p[2],
-						  tangent.y * p[0] + binormal.y * p[1] + normal.y * p[2],
-						  tangent.z * p[0] + binormal.z * p[1] + normal.z * p[2]
-					  ) * NormalIntensity;
+			shadingNormal = normal - new Float3
+							(
+								tangent.x * p[0] + binormal.x * p[1] + normal.x * p[2],
+								tangent.y * p[0] + binormal.y * p[1] + normal.y * p[2],
+								tangent.z * p[0] + binormal.z * p[1] + normal.z * p[2]
+							) * NormalIntensity;
 
-			normal = normal.Normalized;
+			shadingNormal = shadingNormal.Normalized;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected bool AlphaTest(in CalculatedHit hit, out Float3 color)
+		protected bool AlphaTest(in HitQuery query, out Float3 color)
 		{
-			Float4 sample = SampleTexture(AlbedoMap, albedoColor, hit.texcoord);
+			Float4 sample = SampleTexture(AlbedoMap, albedoColor, query.shading.texcoord);
 			color = sample.XYZ;
 
-			return sample.w.AlmostEquals(0f);
+			return sample.w.AlmostEquals();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected bool CullBackface(in CalculatedHit hit) => BackfaceCulling && hit.direction.Dot(hit.normalRaw) > 0f;
+		protected bool CullBackface(in HitQuery query) => BackfaceCulling && query.ray.direction.Dot(query.normal) > 0f;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected static float SmoothnessToRandomRadius(float smoothness) => RoughnessToRandomRadius(1f - smoothness);

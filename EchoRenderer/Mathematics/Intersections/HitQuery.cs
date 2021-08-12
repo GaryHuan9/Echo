@@ -1,0 +1,89 @@
+﻿using System;
+using CodeHelpers.Mathematics;
+using EchoRenderer.Rendering.Materials;
+
+namespace EchoRenderer.Mathematics.Intersections
+{
+	/// <summary>
+	/// Mutable data struct used to communicate intersection information.
+	/// </summary>
+	public struct HitQuery
+	{
+		public Ray ray;
+		public PressedPackInstance instance;
+
+		public GeometryToken previousToken;
+		public GeometryToken token;
+
+		public float distance;
+		public Float3 normal;
+		public Float2 uv;
+
+		public Shading shading;
+
+		public readonly bool Hit => token != default;
+		public readonly Float3 Position => ray.GetPoint(distance);
+
+		public void Next(Float3 direction)
+		{
+			Float3 origin = ray.GetPoint(distance);
+			ray = new Ray(origin, direction);
+
+			previousToken = token;
+			token = default;
+
+			distance = float.PositiveInfinity;
+		}
+
+		/// <summary>
+		/// Information calculated right after intersection calculation
+		/// </summary>
+		public struct Shading
+		{
+			public Float3 normal;
+			public Float2 texcoord;
+			public Material material;
+		}
+
+		public static implicit operator HitQuery(in Ray ray) => new() {ray = ray};
+	}
+
+	public readonly struct GeometryToken : IEquatable<GeometryToken>
+	{
+		public GeometryToken(uint instance, uint geometry)
+		{
+			this.instance = instance;
+			this.geometry = geometry;
+		}
+
+		public GeometryToken(PressedPackInstance instance, uint geometry)
+		{
+			this.instance = instance.id;
+			this.geometry = geometry;
+		}
+
+		/// <summary>
+		/// The id of the <see cref="PressedPackInstance"/> that contains this particular geometry.
+		/// </summary>
+		public readonly uint instance;
+
+		/// <summary>
+		/// The unique token for one geometry inside a <see cref="PressedPack"/>.
+		/// </summary>
+		public readonly uint geometry;
+
+		public bool Equals(GeometryToken other) => instance == other.instance && geometry == other.geometry;
+		public override bool Equals(object obj) => obj is GeometryToken other && Equals(other);
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return ((int)instance * 397) ^ (int)geometry;
+			}
+		}
+
+		public static bool operator ==(GeometryToken token0, GeometryToken token1) => token0.Equals(token1);
+		public static bool operator !=(GeometryToken token0, GeometryToken token1) => !token0.Equals(token1);
+	}
+}

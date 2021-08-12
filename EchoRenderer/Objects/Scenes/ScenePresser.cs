@@ -15,14 +15,21 @@ namespace EchoRenderer.Objects.Scenes
 		{
 			root = CreateNode(scene, null);
 			materials = new MaterialPresser();
+
+			PressPacks(root);
 		}
 
 		public readonly MaterialPresser materials;
 		public readonly Node root;
 
 		public Dictionary<ObjectPack, Node>.KeyCollection UniquePacks => objectPacks.Keys;
-		readonly Dictionary<ObjectPack, Node> objectPacks = new Dictionary<ObjectPack, Node>();
 
+		readonly Dictionary<ObjectPack, Node> objectPacks = new();
+		readonly List<PressedPackInstance> packInstances = new() {null};
+
+		/// <summary>
+		/// Creates or retrieves and returns the <see cref="PressedPack"/> for <paramref name="pack"/>.
+		/// </summary>
 		public PressedPack GetPressedPack(ObjectPack pack)
 		{
 			Node node = objectPacks.TryGetValue(pack);
@@ -33,7 +40,21 @@ namespace EchoRenderer.Objects.Scenes
 			return node.PressedPack;
 		}
 
-		public PressedPack PressPacks() => PressPacks(root);
+		/// <summary>
+		/// Returns an unique id for the newly created <paramref name="instance"/>
+		/// and register it into this <see cref="ScenePresser"/>.
+		/// </summary>
+		public uint RegisterPressedPackInstance(PressedPackInstance instance)
+		{
+			packInstances.Add(instance);
+			return (uint)(packInstances.Count - 1);
+		}
+
+		/// <summary>
+		/// Retrieves a registered <see cref="PressedPackInstance"/> with
+		/// <paramref name="id"/> from this <see cref="ScenePresser"/>.
+		/// </summary>
+		public PressedPackInstance GetPressedPackInstance(uint id) => packInstances[(int)id];
 
 		Node CreateNode(ObjectPack pack, Node parent)
 		{

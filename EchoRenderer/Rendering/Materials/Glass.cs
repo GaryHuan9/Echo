@@ -30,20 +30,22 @@ namespace EchoRenderer.Rendering.Materials
 
 		//Equations based from: https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
 
-		public override Float3 BidirectionalScatter(in CalculatedHit hit, ExtendedRandom random, out Float3 direction)
+		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
 		{
-			if (AlphaTest(hit, out Float3 color))
+			ref readonly Float3 inDirection = ref query.ray.direction;
+
+			if (AlphaTest(query, out Float3 color))
 			{
-				direction = hit.direction;
+				direction = inDirection;
 				return Float3.one;
 			}
 
 			//Refraction and reflection
-			Float3 hitNormal = hit.normal;
-			bool backface = hit.direction.Dot(hitNormal) > 0f;
+			Float3 hitNormal = query.shading.normal;
+			bool backface = inDirection.Dot(hitNormal) > 0f;
 
 			float etaI = 1f;
-			float etaT = SampleTexture(IndexOfRefractionMap, IndexOfRefraction, hit.texcoord);
+			float etaT = SampleTexture(IndexOfRefractionMap, IndexOfRefraction, query.shading.texcoord);
 
 			if (backface) //If hit back face
 			{
@@ -51,10 +53,10 @@ namespace EchoRenderer.Rendering.Materials
 				hitNormal = -hitNormal;
 			}
 
-			float radius = SampleTexture(RoughnessMap, randomRadius, hit.texcoord);
+			float radius = SampleTexture(RoughnessMap, randomRadius, query.shading.texcoord);
 			Float3 faceNormal = (hitNormal + random.NextInSphere(radius)).Normalized;
 
-			float cosI = hit.direction.Dot(faceNormal);
+			float cosI = inDirection.Dot(faceNormal);
 			if (cosI < 0f) cosI = -cosI;
 
 			float eta = etaI / etaT;
@@ -82,8 +84,8 @@ namespace EchoRenderer.Rendering.Materials
 			}
 
 			//Randomly select between reflection or refraction
-			if (random.NextFloat() < reflectChance) direction = hit.direction.Reflect(faceNormal); //Reflection
-			else direction = (eta * hit.direction + (eta * cosI - cosT) * faceNormal).Normalized;  //Refraction
+			if (random.NextFloat() < reflectChance) direction = inDirection.Reflect(faceNormal); //Reflection
+			else direction = (eta * inDirection + (eta * cosI - cosT) * faceNormal).Normalized;  //Refraction
 
 			return color;
 		}
