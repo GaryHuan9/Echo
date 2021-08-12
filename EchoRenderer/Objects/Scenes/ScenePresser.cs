@@ -46,6 +46,8 @@ namespace EchoRenderer.Objects.Scenes
 		/// </summary>
 		public uint RegisterPressedPackInstance(PressedPackInstance instance)
 		{
+			ExceptionHelper.AssertMainThread();
+
 			packInstances.Add(instance);
 			return (uint)(packInstances.Count - 1);
 		}

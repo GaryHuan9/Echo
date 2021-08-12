@@ -33,8 +33,6 @@ namespace EchoRenderer.Rendering.Pixels
 			{
 				++bounce;
 
-				query.previousToken = query.token;
-
 				ref readonly Material material = ref query.shading.material;
 
 				Float3 emission = material.Emit(query, random);
