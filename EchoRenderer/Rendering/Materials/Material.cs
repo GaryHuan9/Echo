@@ -52,13 +52,17 @@ namespace EchoRenderer.Rendering.Materials
 
 		public unsafe void FillTangentNormal(ref HitQuery query)
 		{
-			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals()) return;
+			ref readonly Float3 normal = ref query.normal;
+			ref Float3 shadingNormal = ref query.shading.normal;
+
+			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals())
+			{
+				shadingNormal = normal;
+				return;
+			}
 
 			Vector128<float> sample = NormalMap[query.shading.texcoord];
 			Vector128<float> local = Fma.MultiplyAdd(sample, Utilities.vector2, normalShift);
-
-			ref readonly Float3 normal = ref query.normal;
-			ref Float3 shadingNormal = ref query.shading.normal;
 
 			//Transform local direction to world space based on normal
 			Float3 helper = Math.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
