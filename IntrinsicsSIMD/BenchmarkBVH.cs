@@ -21,22 +21,22 @@ namespace IntrinsicsSIMD
 			scene.children.Add(new MeshObject(mesh, new Glossy()));
 
 			pressed = new PressedScene(scene);
-			rays = new Ray[65536];
+			queries = new HitQuery[65536];
 
 			const float Radius = 10f;
 			const float Height = 12f;
 
-			for (int i = 0; i < rays.Length; i++)
+			for (int i = 0; i < queries.Length; i++)
 			{
 				var position = new Float3(Random() * Radius, Random() * Height, 0f).RotateXZ(Random() * 360f);
-				rays[i] = new Ray(position, (new Float3(0f, 1.2f, 0f) - position).Normalized);
+				// queries[i] = new Ray(position, (new Float3(0f, 1.2f, 0f) - position).Normalized);
 			}
 
 			float Random() => (float)random.NextDouble();
 		}
 
 		readonly PressedScene pressed;
-		readonly Ray[] rays;
+		readonly HitQuery[] queries;
 
 		//First test set. Different sets will have different timings
 		//V0: 903.5us per 1000 intersections (recursive)

@@ -2,6 +2,7 @@
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
+using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Rendering.Pixels
 {
@@ -14,7 +15,7 @@ namespace EchoRenderer.Rendering.Pixels
 			PressedScene scene = Profile.Scene;
 			ExtendedRandom random = arena.random;
 
-			Ray ray = scene.camera.GetRay(screenUV, random);
+			HitQuery query = scene.camera.GetRay(screenUV, random);
 
 			Float3 energy = Float3.one;
 			Float3 colors = Float3.zero;
@@ -28,24 +29,28 @@ namespace EchoRenderer.Rendering.Pixels
 
 			bool missingAuxiliary = true;
 
-			while (bounce < Profile.BounceLimit && scene.GetIntersection(ray, out CalculatedHit hit))
+			while (bounce < Profile.BounceLimit && scene.GetIntersection(ref query))
 			{
 				++bounce;
 
-				Float3 emission = hit.material.Emit(hit, random);
-				Float3 albedo = hit.material.BidirectionalScatter(hit, random, out Float3 direction);
+				query.previousToken = query.token;
 
-				if (HitPassThrough(hit, albedo, direction))
+				ref readonly Material material = ref query.shading.material;
+
+				Float3 emission = material.Emit(query, random);
+				Float3 albedo = material.BidirectionalScatter(query, random, out Float3 direction);
+
+				if (HitPassThrough(query, albedo, direction))
 				{
-					ray = CreateBiasedRay(ray.direction, hit);
+					query.Next(direction);
 					continue;
 				}
 
 				if (missingAuxiliary)
 				{
 					firstAlbedo = albedo;
-					firstNormal = hit.normal;
-					firstZDepth = hit.distance;
+					firstNormal = query.normal;
+					firstZDepth = query.distance;
 
 					missingAuxiliary = false;
 				}
@@ -54,7 +59,7 @@ namespace EchoRenderer.Rendering.Pixels
 				energy *= albedo;
 
 				if (energy <= Profile.EnergyEpsilon) break;
-				ray = CreateBiasedRay(direction, hit);
+				query.Next(direction);
 			}
 
 #if DEBUG
@@ -65,7 +70,7 @@ namespace EchoRenderer.Rendering.Pixels
 			var cubemap = scene.cubemap;
 			var lights = scene.lights;
 
-			if (cubemap != null) colors += energy * cubemap.Sample(ray.direction);
+			if (cubemap != null) colors += energy * cubemap.Sample(query.ray.direction);
 
 			if (bounce > 0)
 			{
@@ -75,7 +80,7 @@ namespace EchoRenderer.Rendering.Pixels
 				{
 					PressedLight light = lights[i];
 
-					float weight = -light.direction.Dot(ray.direction);
+					float weight = -light.direction.Dot(query.ray.direction);
 					if (weight > light.threshold) colors += energy * light.intensity * weight;
 				}
 			}

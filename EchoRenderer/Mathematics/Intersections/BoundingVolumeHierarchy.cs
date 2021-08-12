@@ -51,26 +51,26 @@ namespace EchoRenderer.Mathematics.Intersections
 		readonly int maxDepth;
 
 		/// <summary>
-		/// Traverses and finds the closest intersection of <paramref name="ray"/> with this BVH.
-		/// The intersection is recorded on <paramref name="hit"/>, and only only intersections
-		/// that are closer than the initial <paramref name="hit.distance"/> value are tested.
+		/// Traverses and finds the closest intersection of <paramref name="query"/> with this BVH.
+		/// The intersection is recorded in <paramref name="query"/>, and only only intersections
+		/// that are closer than the initial <paramref name="query.distance"/> value are tested.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void GetIntersection(in Ray ray, ref Hit hit)
+		public void GetIntersection(ref HitQuery query)
 		{
 			if (nodes == null) return;
 
 			if (nodes.Length == 1)
 			{
 				uint token = nodes[0].token; //If root is the only node/leaf
-				pack.GetIntersection(ray, ref hit, token);
+				pack.GetIntersection(ref query, token);
 			}
 			else
 			{
 				ref readonly Node root = ref nodes[0];
-				float local = root.aabb.Intersect(ray);
+				float local = root.aabb.Intersect(query.ray);
 
-				if (local < hit.distance) Traverse(ray, ref hit);
+				if (local < query.distance) Traverse(ref query);
 			}
 		}
 
@@ -160,7 +160,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			return hash;
 		}
 
-		unsafe void Traverse(in Ray ray, ref Hit hit)
+		unsafe void Traverse(ref HitQuery query)
 		{
 			int* stack = stackalloc int[maxDepth];
 			float* hits = stackalloc float[maxDepth];
@@ -173,22 +173,22 @@ namespace EchoRenderer.Mathematics.Intersections
 			while (next != stack)
 			{
 				int index = *--next;
-				if (*--hits >= hit.distance) continue;
+				if (*--hits >= query.distance) continue;
 
 				ref readonly Node child0 = ref nodes[index];
 				ref readonly Node child1 = ref nodes[index + 1];
 
-				float hit0 = child0.aabb.Intersect(ray);
-				float hit1 = child1.aabb.Intersect(ray);
+				float hit0 = child0.aabb.Intersect(query.ray);
+				float hit1 = child1.aabb.Intersect(query.ray);
 
 				//Orderly intersects the two children so that there is a higher chance of intersection on the first child.
 				//Although the order of leaf intersection is wrong, the performance is actually better than reversing to correct it.
 
 				if (hit0 < hit1)
 				{
-					if (hit1 < hit.distance)
+					if (hit1 < query.distance)
 					{
-						if (child1.IsLeaf) pack.GetIntersection(ray, ref hit, child1.token);
+						if (child1.IsLeaf) pack.GetIntersection(ref query, child1.token);
 						else
 						{
 							*next++ = child1.children;
@@ -196,9 +196,9 @@ namespace EchoRenderer.Mathematics.Intersections
 						}
 					}
 
-					if (hit0 < hit.distance)
+					if (hit0 < query.distance)
 					{
-						if (child0.IsLeaf) pack.GetIntersection(ray, ref hit, child0.token);
+						if (child0.IsLeaf) pack.GetIntersection(ref query, child0.token);
 						else
 						{
 							*next++ = child0.children;
@@ -208,9 +208,9 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 				else
 				{
-					if (hit0 < hit.distance)
+					if (hit0 < query.distance)
 					{
-						if (child0.IsLeaf) pack.GetIntersection(ray, ref hit, child0.token);
+						if (child0.IsLeaf) pack.GetIntersection(ref query, child0.token);
 						else
 						{
 							*next++ = child0.children;
@@ -218,9 +218,9 @@ namespace EchoRenderer.Mathematics.Intersections
 						}
 					}
 
-					if (hit1 < hit.distance)
+					if (hit1 < query.distance)
 					{
-						if (child1.IsLeaf) pack.GetIntersection(ray, ref hit, child1.token);
+						if (child1.IsLeaf) pack.GetIntersection(ref query, child1.token);
 						else
 						{
 							*next++ = child1.children;
