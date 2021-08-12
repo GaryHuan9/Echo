@@ -11,9 +11,9 @@ namespace EchoRenderer.Textures
 	{
 		protected Texture(IWrapper wrapper) => Wrapper = wrapper;
 
-		public static readonly Texture white = new Pure(Float4.one);
-		public static readonly Texture black = new Pure(Float4.ana);
-		public static readonly Texture normal = new Pure(new Float4(0.5f, 0.5f, 1f, 1f));
+		public static readonly Pure white = new Pure(Float4.one);
+		public static readonly Pure black = new Pure(Float4.ana);
+		public static readonly Pure normal = new Pure(new Float4(0.5f, 0.5f, 1f, 1f));
 
 		IWrapper _wrapper;
 

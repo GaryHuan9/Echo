@@ -97,9 +97,9 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new SingleMaterialBall();                 //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[2]); //Selects resolution and create buffer
+			TiledRenderProfile profile = pathTraceProfile;          //Selects or creates render profile
+			Scene scene = new TestMaterials();                      //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
@@ -132,7 +132,7 @@ namespace EchoRenderer
 			{
 				if (profile.Method is PathTraceWorker)
 				{
-					postProcess.AddWorker(new DenoiseOidn(postProcess));
+					// postProcess.AddWorker(new DenoiseOidn(postProcess));
 				}
 
 				//Standard render post processing layers
