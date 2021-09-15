@@ -20,11 +20,11 @@ namespace IntrinsicsSIMD
 			}
 
 			sources.Shuffle();
-			radix = new RadixSort();
+			radix = new RadixSorter();
 		}
 
 		readonly float[][] sources;
-		readonly RadixSort radix;
+		readonly RadixSorter radix;
 
 		float[][] targets;
 
