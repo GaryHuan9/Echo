@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using CodeHelpers;
 using CodeHelpers.Threads;
 
 namespace EchoRenderer.Mathematics.Intersections
@@ -72,6 +73,9 @@ namespace EchoRenderer.Mathematics.Intersections
 				child0 = BuildChild(indices[..minIndex], headVolume, axis);
 				child1 = builder.Wait();
 			}
+
+			//Places the child with the larger surface area first to improve branch prediction
+			if (headVolume.Area < tailVolume.Area) CodeHelper.Swap(ref child0, ref child1);
 
 			Interlocked.Increment(ref _nodeCount);
 			return new Node(child0, child1, aabb);

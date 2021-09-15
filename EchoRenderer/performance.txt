@@ -36,6 +36,5 @@ With v1: Completed after 33.80 seconds with 131,174,400 samples at 3,880,441 sam
 
 Iterative Unsafe BVH V2: Completed after 25.71 seconds with 131,174,400 samples at 5,102,216 samples per second.
 
-Single Material Ball; 16 spp; 80 aspp:
+Single Material Ball; 16 spp; 80 aspp (fast profile):
 Completed after 14.70 seconds with 18,774,354 samples at 1,276,749 samples per second.
-Engine Setup Complete: 12.1197ms
