@@ -42,7 +42,7 @@ namespace EchoRenderer.Textures
 
 		class Clamp : IWrapper
 		{
-			public Float2 Convert(Float2 uv) => uv.Clamp(0f, 1f);
+			public Float2 Convert(Float2 uv) => uv.Clamp();
 		}
 
 		class Repeat : IWrapper

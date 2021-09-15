@@ -34,16 +34,18 @@ namespace IntrinsicsSIMD
 
 		// |                    Method |       Mean |    Error |   StdDev |
 		// |-------------------------- |-----------:|---------:|---------:|
-		// |                 ArrayFor0 |   500.3 us |  6.12 us |  5.72 us |
-		// |                  ListFor1 |   497.2 us |  3.29 us |  2.92 us |
-		// |    ReadOnlyCollectionFor0 | 3,935.2 us | 18.21 us | 17.03 us |
-		// |    ReadOnlyCollectionFor1 | 2,459.7 us | 15.18 us | 14.20 us |
-		// |          ReadOnlyListFor0 | 3,934.9 us | 39.03 us | 36.51 us |
-		// |          ReadOnlyListFor1 | 1,974.6 us | 10.14 us |  9.49 us | <- better
-		// |              ArrayForEach |   489.4 us |  2.48 us |  2.32 us | <- fastest
-		// |               ListForEach | 1,915.0 us | 12.00 us | 11.22 us |
-		// | ReadOnlyCollectionForEach | 3,687.1 us | 14.52 us | 12.87 us |
-		// |       ReadOnlyListForEach | 3,702.7 us | 28.39 us | 23.70 us |
+		// |                 ArrayFor0 |   490.0 us |  2.77 us |  2.59 us |
+		// |                 ArrayFor1 |   489.7 us |  3.15 us |  2.95 us |
+		// |                  ListFor0 |   878.6 us |  4.18 us |  3.91 us |
+		// |                  ListFor1 |   503.7 us |  3.15 us |  2.94 us |
+		// |    ReadOnlyCollectionFor0 | 3,975.1 us | 12.28 us | 11.48 us |
+		// |    ReadOnlyCollectionFor1 | 2,244.7 us | 13.25 us | 11.74 us |
+		// |          ReadOnlyListFor0 | 4,230.2 us | 11.51 us | 10.77 us |
+		// |          ReadOnlyListFor1 | 2,243.6 us |  6.55 us |  6.13 us | <- better
+		// |              ArrayForEach |   343.1 us |  2.29 us |  2.15 us | <- fastest
+		// |               ListForEach | 1,996.3 us |  6.61 us |  6.18 us |
+		// | ReadOnlyCollectionForEach | 3,733.8 us | 16.07 us | 14.25 us |
+		// |       ReadOnlyListForEach | 3,732.6 us | 16.93 us | 15.84 us |
 
 		[Benchmark]
 		public long ArrayFor0()
@@ -58,7 +60,7 @@ namespace IntrinsicsSIMD
 			return sum;
 		}
 
-		// [Benchmark]
+		[Benchmark]
 		public long ArrayFor1()
 		{
 			long sum = 0L;
@@ -72,7 +74,7 @@ namespace IntrinsicsSIMD
 			return sum;
 		}
 
-		// [Benchmark]
+		[Benchmark]
 		public long ListFor0()
 		{
 			long sum = 0L;
