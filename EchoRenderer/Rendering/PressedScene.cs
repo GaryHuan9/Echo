@@ -53,7 +53,7 @@ namespace EchoRenderer.Rendering
 			rootInstance = new PressedPackInstance(presser, source); //Create root instance
 			presser.materials.Press();
 
-			Program.commandsController?.Log("Pressed scene");
+			DebugHelper.Log("Pressed scene");
 		}
 
 		public readonly Scene source;
@@ -87,7 +87,7 @@ namespace EchoRenderer.Rendering
 
 		public bool GetIntersection(in Ray ray)
 		{
-			//TODO: We need a separate implementation that calculates intersection with any geometry (boolean true/false return)
+			//TODO: We need a separate implementation that calculates intersection with any geometry (occlusion: boolean true/false return)
 			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
 
 			HitQuery query = new HitQuery {ray = ray};
