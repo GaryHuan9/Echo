@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using static EchoRenderer.Mathematics.Utilities;
 
@@ -18,7 +19,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
 		public Ray(Float3 origin, Float3 direction)
 		{
-			Debug.Assert(direction.SquaredMagnitude.AlmostEquals(1f));
+			Assert.AreEqual(direction.SquaredMagnitude, 1f);
 
 			Unsafe.SkipInit(out originVector);
 			Unsafe.SkipInit(out directionVector);
