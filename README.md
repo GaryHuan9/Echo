@@ -3,7 +3,7 @@
 ---
 
 EchoRenderer (Echo) is a CPU path traced rendering software that I am writing in C# completely from scratch.
-The only library that I am using is CodeHelpers, which is also written by me (https://github.com/MMXXX-VIII/CodeHelpers).
+The only library that I am using is CodeHelpers, which is also written by me (https://github.com/GaryHuan9/CodeHelpers).
 
 The renderer currently supports four materials: Diffuse, Glossy, Glass, and Emissive.
 All material properties can be controlled by texture maps, which are either loaded from file or dynamically generated.
