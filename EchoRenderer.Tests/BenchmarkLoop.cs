@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using BenchmarkDotNet.Attributes;
 
-namespace IntrinsicsSIMD
+namespace EchoRenderer.Tests
 {
 	public class BenchmarkLoop
 	{

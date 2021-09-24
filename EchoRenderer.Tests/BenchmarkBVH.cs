@@ -8,7 +8,7 @@ using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Materials;
 
-namespace IntrinsicsSIMD
+namespace EchoRenderer.Tests
 {
 	public class BenchmarkBVH
 	{

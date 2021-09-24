@@ -16,7 +16,7 @@ using BenchmarkDotNet.Attributes;
 // |        DivideLoadX | 0.6562 ns | 0.0098 ns | 0.0092 ns |
 // |         DivideFuse | 0.9338 ns | 0.0120 ns | 0.0112 ns |
 
-namespace IntrinsicsSIMD
+namespace EchoRenderer.Tests
 {
 	public class TestSIMD
 	{
@@ -35,6 +35,8 @@ namespace IntrinsicsSIMD
 
 		static readonly Vector4 vector0 = new(x, y, z, w);
 		static readonly Vector4 vector1 = new(a, b, c, d);
+
+
 
 		// [Benchmark]
 		public Vector4 SeeSharpDivide() => vector0 / vector1;
