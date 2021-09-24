@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
 
-namespace IntrinsicsSIMD
+namespace EchoRenderer.Tests
 {
 	public class Program
 	{
@@ -11,7 +11,8 @@ namespace IntrinsicsSIMD
 			// BenchmarkRunner.Run<BenchmarkBVH>();
 			// BenchmarkRunner.Run<BenchmarkTexture>();
 			// BenchmarkRunner.Run<BenchmarkRadixSort>();
-			BenchmarkRunner.Run<BenchmarkLoop>();
+			// BenchmarkRunner.Run<BenchmarkLoop>();
+			BenchmarkRunner.Run<AxisAlignedBoundingBoxSIMD>();
 		}
 	}
 }

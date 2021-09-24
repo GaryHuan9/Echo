@@ -21,6 +21,9 @@ namespace EchoRenderer.Mathematics
 		public static readonly Vector128<float> vectorMinValue = Vector128.Create(float.MinValue);
 		public static readonly Vector128<float> vectorMaxValue = Vector128.Create(float.MaxValue);
 
+		public static readonly Vector128<float> vectorPositiveInfinity = Vector128.Create(float.PositiveInfinity);
+		public static readonly Vector128<float> vectorNegativeInfinity = Vector128.Create(float.NegativeInfinity);
+
 		static readonly Vector128<float> luminanceVector = Vector128.Create(0.2126f, 0.7152f, 0.0722f, 0f);
 
 		public static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
