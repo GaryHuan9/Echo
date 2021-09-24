@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoRenderer", "EchoRenderer\EchoRenderer.csproj", "{619F5156-12E9-489E-812D-06EDC7A9FFDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntrinsicsSIMD", "IntrinsicsSIMD\IntrinsicsSIMD.csproj", "{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoRenderer.Tests", "EchoRenderer.Tests\EchoRenderer.Tests.csproj", "{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoRenderer.UI", "EchoRenderer.UI\EchoRenderer.UI.csproj", "{C96DB829-6A96-477B-BCAB-FE643AD3FA3E}"
 EndProject

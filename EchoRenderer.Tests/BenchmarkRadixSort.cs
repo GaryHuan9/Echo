@@ -5,7 +5,7 @@ using BenchmarkDotNet.Attributes;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 
-namespace IntrinsicsSIMD
+namespace EchoRenderer.Tests
 {
 	public class BenchmarkRadixSort
 	{
