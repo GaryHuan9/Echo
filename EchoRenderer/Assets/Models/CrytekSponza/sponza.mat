@@ -89,12 +89,12 @@ AlbedoMap textures/sponza_fabric_blue_diff.png
 NormalMap textures/sponza_fabric_ddn.png
 
 declare Diffuse fabric_e
-Albedo 1.000000 1.000000 1.000000
+Albedo 1.000000 1.000000 0.800000
 AlbedoMap textures/sponza_fabric_green_diff.png
 NormalMap textures/sponza_fabric_ddn.png
 
 declare Diffuse fabric_f
-Albedo 1.000000 1.000000 1.000000
+Albedo 1.000000 1.000000 0.800000
 AlbedoMap textures/sponza_curtain_green_diff.png
 NormalMap textures/sponza_curtain_ddn.png
 

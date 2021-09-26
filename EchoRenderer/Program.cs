@@ -100,8 +100,8 @@ namespace EchoRenderer
 			};
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new SingleMaterialBall();                 //Selects or creates scene
+			TiledRenderProfile profile = pathTraceExportProfile;    //Selects or creates render profile
+			Scene scene = new Sponza();                             //Selects or creates scene
 
 			commandsController.Log("Assets loaded");
 
