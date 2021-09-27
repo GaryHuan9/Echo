@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Threads;
+using EchoRenderer.Mathematics.Intersections;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Accelerations
 {
 	/// <summary>
 	/// Builds the branch of a <see cref="BoundingVolumeHierarchy"/>.

@@ -4,8 +4,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CodeHelpers;
+using EchoRenderer.Mathematics.Intersections;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Accelerations
 {
 	public class BoundingVolumeHierarchy
 	{

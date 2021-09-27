@@ -10,6 +10,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.IO
 {

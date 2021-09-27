@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.PostProcessing.Operators
 {

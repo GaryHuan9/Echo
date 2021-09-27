@@ -6,7 +6,7 @@ using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.ObjectPooling;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Accelerations;
 
 namespace EchoRenderer.Objects.Scenes
 {
