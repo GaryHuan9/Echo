@@ -2,7 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.PostProcessing.Operators;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {

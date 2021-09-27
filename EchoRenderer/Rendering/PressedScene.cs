@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Net.NetworkInformation;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
+using EchoRenderer.Mathematics.Accelerations;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;

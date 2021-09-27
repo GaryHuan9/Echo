@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.DimensionTwo
 {
 	/// <summary>
 	/// A <see cref="Texture"/> only defined by integer positional pixel data.

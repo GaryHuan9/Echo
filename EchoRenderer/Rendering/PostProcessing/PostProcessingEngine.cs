@@ -4,7 +4,7 @@ using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {

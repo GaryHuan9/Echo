@@ -2,7 +2,7 @@
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.DimensionTwo
 {
 	public class Crop2D : Texture2D
 	{

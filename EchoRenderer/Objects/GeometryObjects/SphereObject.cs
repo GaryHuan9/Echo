@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics.Accelerations;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;

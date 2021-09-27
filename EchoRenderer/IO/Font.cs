@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
@@ -8,7 +7,7 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.IO
 {

@@ -7,6 +7,7 @@ using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface

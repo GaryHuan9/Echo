@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Textures.Cubemaps
 {
