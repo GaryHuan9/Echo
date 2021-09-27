@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.DimensionTwo
 {
 	/// <summary>
 	/// Retrieves the pixel of a <see cref="Texture2D"/> using a texture coordinate.

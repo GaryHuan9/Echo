@@ -32,4 +32,8 @@
         </ContentWithTargetPath>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
+    </ItemGroup>
+
 </Project>

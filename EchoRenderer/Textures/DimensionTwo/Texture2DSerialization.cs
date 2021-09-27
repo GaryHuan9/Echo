@@ -11,7 +11,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.DimensionTwo
 {
 	public partial class Texture2D
 	{

@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using CodeHelpers.ObjectPooling;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {

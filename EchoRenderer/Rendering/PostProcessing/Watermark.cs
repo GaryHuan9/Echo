@@ -1,11 +1,10 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.PostProcessing.Operators;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {

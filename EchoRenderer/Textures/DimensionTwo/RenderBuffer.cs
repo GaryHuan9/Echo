@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.DimensionTwo
 {
 	/// <summary>
 	/// A regular <see cref="Array2D"/> with albedo and normal auxiliary data.

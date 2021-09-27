@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
@@ -16,6 +14,7 @@ using EchoRenderer.Rendering.PostProcessing;
 using EchoRenderer.Rendering.PostProcessing.ToneMappers;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer
 {

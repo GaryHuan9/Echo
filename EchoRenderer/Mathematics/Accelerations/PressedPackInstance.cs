@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Accelerations
 {
 	public class PressedPackInstance
 	{

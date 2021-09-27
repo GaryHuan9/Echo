@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.DimensionTwo
 {
 	/// <summary>
 	/// The default <see cref="Texture2D"/>; stores RGBA color information with 32 bits per channel, supports full float range.

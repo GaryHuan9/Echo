@@ -1,12 +1,8 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Threading;
+﻿using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Materials;
-using EchoRenderer.Rendering.PostProcessing;
 
 namespace EchoRenderer.Rendering.Pixels
 {
