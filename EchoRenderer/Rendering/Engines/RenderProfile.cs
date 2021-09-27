@@ -2,7 +2,7 @@
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Pixels;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.Engines
 {

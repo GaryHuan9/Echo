@@ -1,9 +1,8 @@
 using System;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Terminals
 {

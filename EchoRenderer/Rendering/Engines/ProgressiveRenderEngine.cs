@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
-using EchoRenderer.Textures;
+using EchoRenderer.Textures.DimensionTwo;
 using ThreadState = System.Threading.ThreadState;
 
 namespace EchoRenderer.Rendering.Engines

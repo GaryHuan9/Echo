@@ -28,6 +28,5 @@ namespace EchoRenderer.Mathematics.Intersections
 		[FieldOffset(28)] readonly float padding1;
 
 		[FieldOffset(16)] readonly Vector128<float> inverseDirectionVector;
-
 	}
 }
