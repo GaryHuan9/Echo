@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Accelerations;
+using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Mathematics.Intersections

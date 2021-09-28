@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using EchoRenderer.Mathematics.Accelerations;
+using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
@@ -68,6 +68,7 @@ namespace EchoRenderer.Rendering
 
 		readonly PressedPackInstance rootInstance;
 
+		/// <inheritdoc cref="TraceAccelerator.GetIntersection(ref HitQuery)"/>
 		public bool GetIntersection(ref HitQuery query)
 		{
 			rootInstance.GetIntersectionRoot(ref query);
@@ -93,6 +94,7 @@ namespace EchoRenderer.Rendering
 			return GetIntersection(ref query);
 		}
 
+		/// <inheritdoc cref="TraceAccelerator.GetIntersectionCost"/>
 		public int GetIntersectionCost(in Ray ray)
 		{
 			float distance = float.PositiveInfinity;

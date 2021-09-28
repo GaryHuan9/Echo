@@ -24,7 +24,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		readonly Vector128<float> maxY;
 		readonly Vector128<float> maxZ;
 
-		public Vector128<float> Intersect(in TracerRay ray)
+		public Vector128<float> Intersect(in TraceRay ray)
 		{
 			//X axis
 			Vector128<float> origin = Make(ray.origin.x);

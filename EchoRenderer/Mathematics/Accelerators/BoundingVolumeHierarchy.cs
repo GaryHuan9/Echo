@@ -1,25 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers;
 using EchoRenderer.Mathematics.Intersections;
 
-namespace EchoRenderer.Mathematics.Accelerations
+namespace EchoRenderer.Mathematics.Accelerators
 {
-	public class BoundingVolumeHierarchy
+	public class BoundingVolumeHierarchy : TraceAccelerator
 	{
-		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
+		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
 		{
-			this.pack = pack;
-
-			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(tokens), tokens, $"does not have a matching length with {nameof(aabbs)}");
-			if (aabbs.Count == 0) return;
-
 			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
 
-			//Parallel building reduces build time by about 4 folds on very large scenes
 			BranchBuilder builder = new BranchBuilder(aabbs);
 			BranchBuilder.Node root = builder.Build(indices);
 
@@ -47,17 +39,22 @@ namespace EchoRenderer.Mathematics.Accelerations
 			}
 		}
 
-		readonly PressedPack pack;
+		public override int Hash
+		{
+			get
+			{
+				int hash = maxDepth;
+
+				foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
+
+				return hash;
+			}
+		}
+
 		readonly Node[] nodes;
 		readonly int maxDepth;
 
-		/// <summary>
-		/// Traverses and finds the closest intersection of <paramref name="query"/> with this BVH.
-		/// The intersection is recorded in <paramref name="query"/>, and only only intersections
-		/// that are closer than the initial <paramref name="query.distance"/> value are tested.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void GetIntersection(ref HitQuery query)
+		public override void GetIntersection(ref HitQuery query)
 		{
 			if (nodes == null) return;
 
@@ -75,10 +72,7 @@ namespace EchoRenderer.Mathematics.Accelerations
 			}
 		}
 
-		/// <summary>
-		/// Returns the number of AABB intersection calculated before a result it determined.
-		/// </summary>
-		public int GetIntersectionCost(in Ray ray, ref float distance)
+		public override int GetIntersectionCost(in Ray ray, ref float distance)
 		{
 			if (nodes == null) return 0;
 
@@ -89,12 +83,7 @@ namespace EchoRenderer.Mathematics.Accelerations
 			return GetIntersectionCost(root, ray, ref distance) + 1;
 		}
 
-		/// <summary>
-		/// Fills <paramref name="span"/> with the aabbs of nodes in this bvh at <paramref name="depth"/>.
-		/// The root node has a <paramref name="depth"/> of 1. Returns the actual length of <paramref name="span"/>
-		/// used to store the aabbs. NOTE: <paramref name="span"/> should not be shorter than 2 ^ (depth - 1).
-		/// </summary>
-		public unsafe int FillAABB(int depth, Span<AxisAlignedBoundingBox> span)
+		public override unsafe int FillAABB(int depth, Span<AxisAlignedBoundingBox> span)
 		{
 			int length = 1 << (depth - 1);
 			if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
@@ -146,19 +135,6 @@ namespace EchoRenderer.Mathematics.Accelerations
 			}
 
 			return current;
-		}
-
-		/// <summary>
-		/// Computes and returns a unique hash value for this entire <see cref="BoundingVolumeHierarchy"/>.
-		/// This method can be slow on large BVHs. Can be used to compare BVH construction between runtimes.
-		/// </summary>
-		public int ComputeHash()
-		{
-			int hash = maxDepth;
-
-			foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
-
-			return hash;
 		}
 
 		unsafe void Traverse(ref HitQuery query)
