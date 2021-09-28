@@ -41,7 +41,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 			float brightness = luminance - Threshold;
 			Vector128<float> result = Utilities.vector0;
 
-			if (brightness > 0f && !luminance.AlmostEquals(0f))
+			if (brightness > 0f && !luminance.AlmostEquals())
 			{
 				float multiplier = brightness / luminance * Intensity;
 				result = Sse.Multiply(source, Vector128.Create(multiplier));

@@ -5,7 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Threads;
 using EchoRenderer.Mathematics.Intersections;
 
-namespace EchoRenderer.Mathematics.Accelerations
+namespace EchoRenderer.Mathematics.Accelerators
 {
 	/// <summary>
 	/// Builds the branch of a <see cref="BoundingVolumeHierarchy"/>.

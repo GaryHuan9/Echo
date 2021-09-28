@@ -28,14 +28,10 @@ namespace EchoRenderer
 
 			// return;
 
-			using Terminal terminal = new Terminal();
-			renderTerminal = terminal;
+			using Terminal terminal = renderTerminal = new Terminal();
 
-			commandsController = new CommandsController(terminal);
-			renderMonitor = new RenderMonitor(terminal);
-
-			terminal.AddSection(commandsController);
-			terminal.AddSection(renderMonitor);
+			terminal.AddSection(new CommandsController(terminal));
+			terminal.AddSection(renderMonitor = new RenderMonitor(terminal));
 
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
@@ -46,8 +42,6 @@ namespace EchoRenderer
 
 		static TiledRenderEngine renderEngine;
 		static Terminal renderTerminal;
-
-		static CommandsController commandsController;
 		static RenderMonitor renderMonitor;
 
 		static readonly TiledRenderProfile pathTraceFastProfile = new()
@@ -99,26 +93,29 @@ namespace EchoRenderer
 			};
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			TiledRenderProfile profile = pathTraceExportProfile;    //Selects or creates render profile
-			Scene scene = new Sponza();                             //Selects or creates scene
+			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
+			Scene scene = new SingleMaterialBall();                 //Selects or creates scene
 
-			commandsController.Log("Assets loaded");
+			DebugHelper.Log("Assets loaded");
 
-			profile = profile with
-					  {
-						  RenderBuffer = buffer,
-						  Scene = new PressedScene(scene)
-					  };
-
+			PerformanceTest setupTest = new PerformanceTest();
 			using TiledRenderEngine engine = new TiledRenderEngine();
 
 			renderEngine = engine;
 			renderMonitor.Engine = engine;
 
-			PerformanceTest setupTest = new PerformanceTest();
-			using (setupTest.Start()) engine.Begin(profile); //Initializes render
+			using (setupTest.Start())
+			{
+				profile = profile with
+						  {
+							  RenderBuffer = buffer,
+							  Scene = new PressedScene(scene)
+						  };
 
-			commandsController.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
+				engine.Begin(profile); //Initializes render
+			}
+
+			DebugHelper.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
 			engine.WaitForRender(); //Main thread wait for engine to complete render
 
 			buffer.Save("render.fpi"); //Save floating point image before post processing
@@ -155,7 +152,7 @@ namespace EchoRenderer
 			double elapsedSeconds = engine.Elapsed.TotalSeconds;
 			long completedSample = engine.CompletedSample;
 
-			commandsController.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
+			DebugHelper.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
 			renderEngine = null;
 		}
 

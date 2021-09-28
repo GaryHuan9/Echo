@@ -14,7 +14,7 @@ using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 using Object = EchoRenderer.Objects.Object;
 
-namespace EchoRenderer.Mathematics.Accelerations
+namespace EchoRenderer.Mathematics.Accelerators
 {
 	public class PressedPack
 	{
@@ -62,13 +62,6 @@ namespace EchoRenderer.Mathematics.Accelerations
 
 			Thread.MemoryBarrier();
 
-			//Un-references large intermediate lists for GC
-			trianglesList = null;
-			spheresList = null;
-			instancesList = null;
-
-			bvh = new BoundingVolumeHierarchy(this, aabbs, tokens);
-
 			void FillTriangles(int index)
 			{
 				var triangle = trianglesList[index];
@@ -99,14 +92,21 @@ namespace EchoRenderer.Mathematics.Accelerations
 				aabbs[target] = instance.AABB;
 				tokens[target] = (uint)index;
 			}
+
+			//Un-references large intermediate lists for GC
+			trianglesList = null;
+			spheresList = null;
+			instancesList = null;
+
+			accelerator = new BoundingVolumeHierarchy(this, aabbs, tokens);
 		}
 
-		public readonly BoundingVolumeHierarchy bvh;
+		public readonly TraceAccelerator accelerator;
 		public readonly GeometryCounts geometryCounts;
 
-		readonly PressedTriangle[] triangles;     //Indices: [0x8000_0000 to 0xFFFF_FFFF)
-		readonly PressedSphere[] spheres;         //Indices: [0x4000_0000 to 0x8000_0000)
-		readonly PressedPackInstance[] instances; //Indices: [0 to 0x4000_0000)
+		readonly PressedTriangle[] triangles;     //Indices: [0x4000_0000 to 0x8000_0000)
+		readonly PressedSphere[] spheres;         //Indices: [0x2000_0000 to 0x4000_0000)
+		readonly PressedPackInstance[] instances; //Indices: [0 to 0x2000_0000)
 
 		/// <summary>
 		/// If an intersection has a distance under this value and we just intersected the exactly same geometry with the last query,
@@ -115,16 +115,18 @@ namespace EchoRenderer.Mathematics.Accelerations
 		/// </summary>
 		public const float DistanceMin = 6e-4f;
 
-		const uint TrianglesThreshold = 0x8000_0000u;
-		const uint SpheresThreshold = 0x4000_0000u;
+		const uint NodeThreshold = TraceAccelerator.NodeThreshold;
+		const uint TrianglesThreshold = 0x4000_0000u;
+		const uint SpheresThreshold = 0x2000_0000u;
 
 		/// <summary>
 		/// Calculates the intersection between <paramref name="query"/> and object with <paramref name="token"/>.
 		/// If the intersection occurs before the original <paramref name="query.distance"/>, then the intersection is recorded.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void GetIntersection(ref HitQuery query, uint token)
 		{
+			Assert.IsTrue(token < NodeThreshold);
+
 			switch (token)
 			{
 				case >= TrianglesThreshold:
@@ -174,6 +176,8 @@ namespace EchoRenderer.Mathematics.Accelerations
 		/// </summary>
 		public int GetIntersectionCost(in Ray ray, ref float distance, uint token)
 		{
+			Assert.IsTrue(token < NodeThreshold);
+
 			switch (token)
 			{
 				case >= TrianglesThreshold:
@@ -202,6 +206,7 @@ namespace EchoRenderer.Mathematics.Accelerations
 		public void GetNormal(ref HitQuery query)
 		{
 			uint token = query.token.geometry;
+			Assert.IsTrue(token < NodeThreshold);
 
 			switch (token)
 			{
@@ -228,12 +233,13 @@ namespace EchoRenderer.Mathematics.Accelerations
 		/// </summary>
 		public void FillShading(ref HitQuery query, PressedPackInstance instance)
 		{
-			Assert.AreEqual(instance.pack, this);
-
-			int materialToken;
 			ref Float2 texcoord = ref query.shading.texcoord;
 
+			int materialToken;
 			uint token = query.token.geometry;
+
+			Assert.AreEqual(instance.pack, this);
+			Assert.IsTrue(token < NodeThreshold);
 
 			switch (token)
 			{
