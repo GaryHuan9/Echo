@@ -33,7 +33,7 @@ namespace EchoRenderer.UI.Interface
 						  AdaptiveSample = 35
 					  };
 
-			new Thread(LoadScene<BallRoom>)
+			new Thread(LoadScene<RandomSpheres>)
 			{
 				IsBackground = true,
 				Name = "Scene Loader"
@@ -129,7 +129,7 @@ namespace EchoRenderer.UI.Interface
 
 			var buffer = new ProgressiveRenderBuffer(resolution);
 
-			Profile = Profile with {RenderBuffer = buffer};
+			Profile = Profile with { RenderBuffer = buffer };
 			renderPreview.RenderBuffer = buffer;
 
 			RequestRedraw();
@@ -138,7 +138,7 @@ namespace EchoRenderer.UI.Interface
 		void LoadScene<T>() where T : Scene, new()
 		{
 			PressedScene scene = new PressedScene(new T());
-			Profile = Profile with {Scene = scene};
+			Profile = Profile with { Scene = scene };
 		}
 	}
 }

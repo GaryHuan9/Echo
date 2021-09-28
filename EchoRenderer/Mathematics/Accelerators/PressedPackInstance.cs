@@ -5,7 +5,7 @@ using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
 
-namespace EchoRenderer.Mathematics.Accelerations
+namespace EchoRenderer.Mathematics.Accelerators
 {
 	public class PressedPackInstance
 	{
@@ -52,7 +52,7 @@ namespace EchoRenderer.Mathematics.Accelerations
 				const int FetchDepth = 5; //How deep do we go into the bvh to get the AABB of the nodes
 				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (FetchDepth - 1)];
 
-				int count = pack.bvh.FillAABB(FetchDepth, aabbs);
+				int count = pack.accelerator.FillAABB(FetchDepth, aabbs);
 				Float4x4 absoluteTransform = backwardTransform.Absoluted;
 
 				Float3 min = Float3.positiveInfinity;
@@ -95,8 +95,8 @@ namespace EchoRenderer.Mathematics.Accelerations
 			query.ray = TransformForward(query.ray);
 			query.instance = this;
 
-			//Gets intersection from bvh, calculation done in local space
-			pack.bvh.GetIntersection(ref query);
+			//Gets intersection from accelerator, calculation done in local space
+			pack.accelerator.GetIntersection(ref query);
 
 			//Must use exact comparison to check for modification
 			//Compare before multiplication to avoid float math issues
@@ -117,7 +117,7 @@ namespace EchoRenderer.Mathematics.Accelerations
 		public void GetIntersectionRoot(ref HitQuery query)
 		{
 			query.instance = this;
-			pack.bvh.GetIntersection(ref query);
+			pack.accelerator.GetIntersection(ref query);
 
 			CheckToken(ref query);
 			query.instance = null;
@@ -129,7 +129,7 @@ namespace EchoRenderer.Mathematics.Accelerations
 			distance *= forwardScale;
 
 			//Gets intersection cost from bvh, calculation done in local space
-			int cost = pack.bvh.GetIntersectionCost(TransformForward(ray), ref distance);
+			int cost = pack.accelerator.GetIntersectionCost(TransformForward(ray), ref distance);
 
 			//Transforms distance back to parent space
 			distance *= backwardScale;
