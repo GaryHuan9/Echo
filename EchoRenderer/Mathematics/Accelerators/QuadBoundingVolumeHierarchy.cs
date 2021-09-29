@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Mathematics.Accelerators
@@ -79,18 +81,105 @@ namespace EchoRenderer.Mathematics.Accelerators
 		readonly Node[] nodes;
 		readonly int maxDepth;
 
+		/// <summary>
+		/// If a child pointer in <see cref="Node"/> has this value,
+		/// it means that is a null pointer and there is no child.
+		/// </summary>
 		const uint EmptyNode = ~0u;
 
-		public override int Hash { get; }
-
-		public override void GetIntersection(ref HitQuery query)
+		public override int Hash
 		{
-			throw new NotImplementedException();
+			get
+			{
+				var hash = new HashCode();
+				hash.Add(maxDepth);
+
+				foreach (Node node in nodes) hash.Add(node);
+
+				return hash.ToHashCode();
+			}
+		}
+
+		public override unsafe void GetIntersection(ref HitQuery query)
+		{
+			uint* stack = stackalloc uint[maxDepth * 2];
+			float* hits = stackalloc float[maxDepth * 2];
+
+			uint* next = stack;
+
+			*next++ = 0;  //Add the index of the root node to the stack
+			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
+
+			const int Width = 4;
+			uint* child4 = stackalloc uint[Width];
+
+			while (next != stack)
+			{
+				uint index = *--next;
+				if (*--hits >= query.distance) continue;
+
+				ref readonly Node node = ref nodes[index];
+
+				child4[0] = node.child0;
+				child4[1] = node.child1;
+				child4[2] = node.child2;
+				child4[3] = node.child3;
+
+				Vector128<float> vector = node.aabb4.Intersect(query.traceRay);
+
+				var hit4 = (float*)&vector;
+				Sort4(hit4, child4);
+
+				for (int i = 0; i < Width; i++)
+				{
+					float hit = hit4[i];
+					uint child = child4[i];
+
+					if (float.IsNegativeInfinity(hit)) break;
+
+					if (child < NodeThreshold)
+					{
+						//Child is leaf
+						pack.GetIntersection(ref query, child);
+					}
+					else
+					{
+						//Child is branch
+						*next++ = child - NodeThreshold;
+						*hits++ = hit;
+					}
+				}
+			}
 		}
 
 		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
 
 		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
+
+		static unsafe void Sort4(float* pointer0, uint* pointer1)
+		{
+			const int Width = 4;
+
+			for (int i = 0; i < Width - 1; i++)
+			{
+				float max = pointer0[i];
+				int index = i;
+
+				for (int j = i + 1; j < Width; j++)
+				{
+					float value = pointer0[j];
+					if (value <= max) continue;
+
+					max = value;
+					index = j;
+				}
+
+				// if (index == i) continue;
+
+				CodeHelper.Swap(ref pointer0[i], ref pointer0[index]);
+				CodeHelper.Swap(ref pointer1[i], ref pointer1[index]);
+			}
+		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 128)]
 		readonly struct Node
@@ -107,7 +196,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				ref readonly var aabb2 = ref GetAABB(ref child);
 				ref readonly var aabb3 = ref GetAABB(ref child);
 
-				aabb = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
+				aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
 
 				child0 = children[0];
 				child1 = children[1];
@@ -124,18 +213,20 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 			}
 
-			public readonly AxisAlignedBoundingBox4 aabb;
+			public readonly AxisAlignedBoundingBox4 aabb4;
 
 			public readonly uint child0;
 			public readonly uint child1;
 			public readonly uint child2;
 			public readonly uint child3;
 
-			public readonly int axis0;
-			public readonly int axis1;
-			public readonly int axis2;
+			// public readonly int axis0;
+			// public readonly int axis1;
+			// public readonly int axis2;
 
-			readonly int padding;
+			readonly Int4 padding;
+
+			public override int GetHashCode() => HashCode.Combine(aabb4, child0, child1, child2, child3);
 		}
 
 		class BuildNode
