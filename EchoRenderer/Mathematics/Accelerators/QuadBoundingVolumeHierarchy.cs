@@ -100,7 +100,55 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		public override unsafe void GetIntersection(ref HitQuery query)
+		public override void GetIntersection(ref HitQuery query)
+		{
+			IntersectRecursive(ref query);
+			// IntersectStack(ref query);
+		}
+
+		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
+
+		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
+
+		unsafe void IntersectRecursive(ref HitQuery query, uint index = 0u)
+		{
+			ref readonly Node node = ref nodes[index];
+
+			Vector128<float> vector = node.aabb4.Intersect(query.traceRay);
+
+			const int Width = 4;
+			var hit4 = (float*)&vector;
+
+			uint* child4 = stackalloc uint[Width]
+			{
+				node.child0, node.child1,
+				node.child2, node.child3
+			};
+
+			Sort4(hit4, child4);
+
+			for (int i = Width - 1; i >= 0; i--)
+			{
+				float hit = hit4[i];
+				uint child = child4[i];
+
+				if (float.IsNegativeInfinity(hit)) continue;
+
+				if (child < NodeThreshold)
+				{
+					//Child is leaf
+					pack.GetIntersection(ref query, child);
+				}
+				else
+				{
+					//Child is branch
+					if (hit >= query.distance) continue;
+					IntersectRecursive(ref query, child - NodeThreshold);
+				}
+			}
+		}
+
+		unsafe void IntersectStack(ref HitQuery query)
 		{
 			uint* stack = stackalloc uint[maxDepth * 2];
 			float* hits = stackalloc float[maxDepth * 2];
@@ -151,10 +199,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 			}
 		}
-
-		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
-
-		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 
 		static unsafe void Sort4(float* pointer0, uint* pointer1)
 		{
