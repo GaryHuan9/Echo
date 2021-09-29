@@ -46,7 +46,7 @@ namespace EchoRenderer.Objects
 		{
 			Float3 direction = uv.CreateXY(fieldDistance);
 
-			if (Aperture.AlmostEquals(0f) || random == null)
+			if (Aperture.AlmostEquals() || random == null)
 			{
 				//No depth of field
 

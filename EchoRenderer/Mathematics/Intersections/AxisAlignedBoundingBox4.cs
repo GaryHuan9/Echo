@@ -24,6 +24,10 @@ namespace EchoRenderer.Mathematics.Intersections
 		readonly Vector128<float> maxY;
 		readonly Vector128<float> maxZ;
 
+		/// <summary>
+		/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
+		/// Returns either the intersection distance or <see cref="float.NegativeInfinity"/> if none was found.
+		/// </summary>
 		public Vector128<float> Intersect(in TraceRay ray)
 		{
 			//X axis
@@ -58,7 +62,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			return Sse41.BlendVariable
 			(
-				near, Utilities.vectorPositiveInfinity, Sse.Or
+				near, Utilities.vectorNegativeInfinity, Sse.Or
 				(
 					Sse.CompareGreaterThan(near, far),
 					Sse.CompareGreaterThan(Utilities.vector0, far)
