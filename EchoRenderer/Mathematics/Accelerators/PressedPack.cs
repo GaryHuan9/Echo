@@ -98,7 +98,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			spheresList = null;
 			instancesList = null;
 
-			accelerator = new BoundingVolumeHierarchy(this, aabbs, tokens);
+			accelerator = new QuadBoundingVolumeHierarchy(this, aabbs, tokens);
 		}
 
 		public readonly TraceAccelerator accelerator;
