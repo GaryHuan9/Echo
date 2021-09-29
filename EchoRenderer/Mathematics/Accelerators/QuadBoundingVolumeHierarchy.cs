@@ -24,76 +24,62 @@ namespace EchoRenderer.Mathematics.Accelerators
 			BranchBuilder.Node root = builder.Build(indices);
 
 			int count = 1;
-			int index = 0;
-
 			var buildRoot = new BuildNode(root, ref count);
 
 			Assert.IsTrue(count > 1);
+			int nodeIndex = 0;
 
 			nodes = new Node[count];
 			nodes[0] = CreateNode(buildRoot, out maxDepth);
 
-			Span<int> a;
-
-			Node CreateNode(BuildNode node, out int depth)
+			Node CreateNode(BuildNode buildNode, out int depth)
 			{
-				Assert.IsNotNull(node.child);
-				BuildNode current = node.child;
+				Assert.IsNotNull(buildNode.child);
+				BuildNode current = buildNode.child;
 
-				Span<uint> children = stackalloc uint[4];
-				int childIndex = 0;
+				const int Width = 4;
 
-				while (current != null)
+				Span<uint> children = stackalloc uint[Width];
+
+				children.Fill(EmptyNode);
+
+				int child = -1;
+				depth = 0;
+
+				while (current != null && ++child < Width)
 				{
+					uint nodeChild;
+					int nodeDepth;
+
 					if (current.child == null)
 					{
-						int nodeIndex = current.node.index;
-						children[childIndex] = tokens[nodeIndex];
+						nodeChild = tokens[current.source.index];
+						nodeDepth = 1;
 					}
 					else
 					{
-						ref Node child = ref nodes[++index];
+						uint index = (uint)++nodeIndex;
+						ref Node node = ref nodes[index];
+
+						node = CreateNode(current, out nodeDepth);
+						nodeChild = index + NodeThreshold;
 					}
+
+					children[child] = nodeChild;
+					depth = Math.Max(depth, nodeDepth);
 
 					current = current.sibling;
-					++childIndex;
 				}
 
-				current = current.sibling;
-
-				if (current != null)
-				{
-					if (current.child == null) *children++ = 3;
-					else
-					{
-						nodes[index] = CreateNode(current, out depth);
-					}
-				}
-
-
-				current = current.sibling;
-
-				if (node.chi) nodes[++index] = 
-
-				if (node.IsLeaf)
-				{
-					depth = 1;
-					return Node.CreateLeaf(node.aabb, tokens[node.index]);
-				}
-
-				// int children = index;
-				index += 2;
-
-				nodes[children] = CreateNode(node.child0, out int depth0);
-				nodes[children + 1] = CreateNode(node.child1, out int depth1);
-
-				depth = Math.Max(depth0, depth1) + 1;
-				return Node.CreateNode(node.aabb, children);
+				++depth;
+				return new Node(buildNode, children);
 			}
 		}
 
 		readonly Node[] nodes;
 		readonly int maxDepth;
+
+		const uint EmptyNode = ~0u;
 
 		public override int Hash { get; }
 
@@ -109,12 +95,33 @@ namespace EchoRenderer.Mathematics.Accelerators
 		[StructLayout(LayoutKind.Sequential, Size = 128)]
 		readonly struct Node
 		{
-			public Node(BuildNode node)
+			public Node(BuildNode node, ReadOnlySpan<uint> children)
 			{
 				Assert.IsNotNull(node.child);
-
-
 				Unsafe.SkipInit(out padding);
+
+				BuildNode child = node.child;
+
+				ref readonly var aabb0 = ref GetAABB(ref child);
+				ref readonly var aabb1 = ref GetAABB(ref child);
+				ref readonly var aabb2 = ref GetAABB(ref child);
+				ref readonly var aabb3 = ref GetAABB(ref child);
+
+				aabb = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
+
+				child0 = children[0];
+				child1 = children[1];
+				child2 = children[2];
+				child3 = children[3];
+
+				static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
+				{
+					if (node == null) return ref AxisAlignedBoundingBox.zero;
+					ref readonly AxisAlignedBoundingBox aabb = ref node.source.aabb;
+
+					node = node.sibling;
+					return ref aabb;
+				}
 			}
 
 			public readonly AxisAlignedBoundingBox4 aabb;
@@ -133,14 +140,14 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		class BuildNode
 		{
-			public BuildNode(BranchBuilder.Node node, ref int count, BuildNode sibling = null)
+			public BuildNode(BranchBuilder.Node source, ref int count, BuildNode sibling = null)
 			{
-				this.node = node;
+				this.source = source;
 				this.sibling = sibling;
-				if (node.IsLeaf) return;
+				if (source.IsLeaf) return;
 
-				var node0 = node.child0;
-				var node1 = node.child1;
+				var node0 = source.child0;
+				var node1 = source.child1;
 
 				//Swap to make sure that the non-leaf nodes go first
 				if (node0.IsLeaf) CodeHelper.Swap(ref node0, ref node1);
@@ -171,7 +178,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 			}
 
-			public readonly BranchBuilder.Node node;
+			public readonly BranchBuilder.Node source;
 
 			public readonly BuildNode child;   //Linked list to the first child
 			public readonly BuildNode sibling; //Reference to the next sibling node
