@@ -61,6 +61,8 @@ namespace EchoRenderer.Mathematics.Intersections
 			Assert.IsTrue(max >= min);
 		}
 
+		public static readonly AxisAlignedBoundingBox zero = new AxisAlignedBoundingBox(Float3.zero, Float3.zero);
+
 		[FieldOffset(0)] public readonly Float3 min;
 		[FieldOffset(12)] public readonly Float3 max;
 
