@@ -12,6 +12,7 @@ namespace EchoRenderer.Mathematics.Intersections
 	public struct HitQuery
 	{
 		public Ray ray;
+		public TraceRay traceRay;
 		public PressedPackInstance instance;
 
 		public GeometryToken previous;
@@ -29,6 +30,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		public void Next(Float3 direction)
 		{
 			ray = new Ray(ray.GetPoint(distance), direction);
+			traceRay = new TraceRay(ray.origin, ray.direction);
 
 			previous = token;
 			token = default;
@@ -46,7 +48,11 @@ namespace EchoRenderer.Mathematics.Intersections
 			public Material material;
 		}
 
-		public static implicit operator HitQuery(in Ray ray) => new() {ray = ray, distance = float.PositiveInfinity};
+		public static implicit operator HitQuery(in Ray ray) => new()
+																{
+																	ray = ray, distance = float.PositiveInfinity,
+																	traceRay = new TraceRay(ray.origin, ray.direction)
+																};
 	}
 
 	public readonly struct GeometryToken : IEquatable<GeometryToken>
