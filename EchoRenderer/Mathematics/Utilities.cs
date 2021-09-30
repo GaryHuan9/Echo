@@ -92,6 +92,18 @@ namespace EchoRenderer.Mathematics
 		public static int Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
 		public static Int2 Morton(int index) => new Int2(Unsaw(index), Unsaw(index >> 1));
 
+		public static int GetHashCode<T>(in Vector128<T> value) where T : struct
+		{
+			unchecked
+			{
+				int hashCode = value.GetElement(0).GetHashCode();
+				hashCode = (hashCode * 397) ^ value.GetElement(1).GetHashCode();
+				hashCode = (hashCode * 397) ^ value.GetElement(2).GetHashCode();
+				hashCode = (hashCode * 397) ^ value.GetElement(3).GetHashCode();
+				return hashCode;
+			}
+		}
+
 		/// <summary>
 		/// Transforms a number into a saw blade shape:
 		/// _ _ _ _ _ _ _ _ 7 6 5 4 3 2 1 0
