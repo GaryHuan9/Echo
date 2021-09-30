@@ -43,12 +43,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 		{
 			get
 			{
-				var hash = new HashCode();
-				hash.Add(maxDepth);
+				int hash = maxDepth;
 
-				foreach (Node node in nodes) hash.Add(node);
+				foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
 
-				return hash.ToHashCode();
+				return hash;
 			}
 		}
 
@@ -262,7 +261,16 @@ namespace EchoRenderer.Mathematics.Accelerators
 			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, uint token) => new Node(aabb, token, 0);
 			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int children) => new Node(aabb, default, children);
 
-			public override int GetHashCode() => HashCode.Combine(aabb, token, children);
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					int hashCode = aabb.GetHashCode();
+					hashCode = (hashCode * 397) ^ (int)token;
+					hashCode = (hashCode * 397) ^ children;
+					return hashCode;
+				}
+			}
 		}
 	}
 }

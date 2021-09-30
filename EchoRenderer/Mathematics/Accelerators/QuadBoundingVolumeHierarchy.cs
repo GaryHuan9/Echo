@@ -34,6 +34,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 			nodes = new Node[count];
 			nodes[0] = CreateNode(buildRoot, out maxDepth);
 
+			DebugHelper.Log(maxDepth, count, aabbs.Count, Hash);
+
 			Node CreateNode(BuildNode buildNode, out int depth)
 			{
 				Assert.IsNotNull(buildNode.child);
@@ -91,12 +93,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 		{
 			get
 			{
-				var hash = new HashCode();
-				hash.Add(maxDepth);
+				int hash = maxDepth;
 
-				foreach (Node node in nodes) hash.Add(node);
+				foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
 
-				return hash.ToHashCode();
+				return hash;
 			}
 		}
 
@@ -132,7 +133,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 				float hit = hit4[i];
 				uint child = child4[i];
 
-				if (float.IsNegativeInfinity(hit)) continue;
+				if (float.IsNegativeInfinity(hit) || child == EmptyNode) continue;
+				Assert.AreNotEqual(child, EmptyNode);
 
 				if (child < NodeThreshold)
 				{
@@ -270,7 +272,18 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 			readonly Int4 padding;
 
-			public override int GetHashCode() => HashCode.Combine(aabb4, child0, child1, child2, child3);
+			public override int GetHashCode()
+			{
+				unchecked
+				{
+					int hashCode = aabb4.GetHashCode();
+					hashCode = (hashCode * 397) ^ (int)child0;
+					hashCode = (hashCode * 397) ^ (int)child1;
+					hashCode = (hashCode * 397) ^ (int)child2;
+					hashCode = (hashCode * 397) ^ (int)child3;
+					return hashCode;
+				}
+			}
 		}
 
 		class BuildNode
@@ -280,6 +293,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 				this.source = source;
 				this.sibling = sibling;
 				if (source.IsLeaf) return;
+
+				++count;
 
 				var node0 = source.child0;
 				var node1 = source.child1;
@@ -306,11 +321,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 				else AddChild(node0, ref count, ref child);
 
-				static void AddChild(BranchBuilder.Node node, ref int count, ref BuildNode children)
-				{
-					children = new BuildNode(node, ref count, children);
-					++count;
-				}
+				static void AddChild(BranchBuilder.Node node, ref int count, ref BuildNode children) => children = new BuildNode(node, ref count, children);
 			}
 
 			public readonly BranchBuilder.Node source;
