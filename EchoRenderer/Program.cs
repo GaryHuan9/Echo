@@ -108,7 +108,6 @@ namespace EchoRenderer
 			{
 				profile = profile with
 						  {
-							  WorkerSize = 1,
 							  RenderBuffer = buffer,
 							  Scene = new PressedScene(scene)
 						  };

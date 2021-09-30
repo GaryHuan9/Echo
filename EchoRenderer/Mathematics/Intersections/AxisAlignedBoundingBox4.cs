@@ -70,7 +70,33 @@ namespace EchoRenderer.Mathematics.Intersections
 			);
 		}
 
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = GetHashCode(minX);
+				hashCode = (hashCode * 397) ^ GetHashCode(minY);
+				hashCode = (hashCode * 397) ^ GetHashCode(minZ);
+				hashCode = (hashCode * 397) ^ GetHashCode(maxX);
+				hashCode = (hashCode * 397) ^ GetHashCode(maxY);
+				hashCode = (hashCode * 397) ^ GetHashCode(maxZ);
+				return hashCode;
+			}
+		}
+
 		static Vector128<float> Make(float value) => Vector128.Create(value);
 		static Vector128<float> Make(float value0, float value1, float value2, float value3) => Vector128.Create(value0, value1, value2, value3);
+
+		static int GetHashCode(in Vector128<float> value)
+		{
+			unchecked
+			{
+				int hashCode = value.GetElement(0).GetHashCode();
+				hashCode = (hashCode * 397) ^ value.GetElement(1).GetHashCode();
+				hashCode = (hashCode * 397) ^ value.GetElement(2).GetHashCode();
+				hashCode = (hashCode * 397) ^ value.GetElement(3).GetHashCode();
+				return hashCode;
+			}
+		}
 	}
 }
