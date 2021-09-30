@@ -8,11 +8,11 @@ namespace EchoRenderer.Tests
 		{
 			// BenchmarkRunner.Run<TestSIMD>();
 			// BenchmarkRunner.Run<BenchmarkAABB>();
-			// BenchmarkRunner.Run<BenchmarkBVH>();
+			BenchmarkRunner.Run<BenchmarkBVH>();
 			// BenchmarkRunner.Run<BenchmarkTexture>();
 			// BenchmarkRunner.Run<BenchmarkRadixSort>();
 			// BenchmarkRunner.Run<BenchmarkLoop>();
-			BenchmarkRunner.Run<AxisAlignedBoundingBoxSIMD>();
+			// BenchmarkRunner.Run<AxisAlignedBoundingBoxSIMD>();
 		}
 	}
 }

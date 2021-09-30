@@ -28,20 +28,18 @@ namespace EchoRenderer.Mathematics.Accelerators
 			int count = 1;
 			var buildRoot = new BuildNode(root, ref count);
 
-			Assert.IsTrue(count > 1);
 			int nodeIndex = 0;
 
+			Assert.IsTrue(count > 1);
 			nodes = new Node[count];
-			nodes[0] = CreateNode(buildRoot, out maxDepth);
+			nodes[0] = CreateNode(buildRoot, out int maxDepth);
 
-			DebugHelper.Log(maxDepth, count, aabbs.Count, Hash);
+			stackSize = maxDepth * 3;
 
 			Node CreateNode(BuildNode buildNode, out int depth)
 			{
 				Assert.IsNotNull(buildNode.child);
 				BuildNode current = buildNode.child;
-
-				const int Width = 4;
 
 				Span<uint> children = stackalloc uint[Width];
 
@@ -81,7 +79,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		readonly Node[] nodes;
-		readonly int maxDepth;
+		readonly int stackSize;
 
 		/// <summary>
 		/// If a child pointer in <see cref="Node"/> has this value,
@@ -89,11 +87,16 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// </summary>
 		const uint EmptyNode = ~0u;
 
+		/// <summary>
+		/// This is the width of the multiple processing size.  
+		/// </summary>
+		const int Width = 4;
+
 		public override int Hash
 		{
 			get
 			{
-				int hash = maxDepth;
+				int hash = stackSize;
 
 				foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
 
@@ -103,88 +106,45 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		public override void GetIntersection(ref HitQuery query)
 		{
-			IntersectRecursive(ref query);
-			// IntersectStack(ref query);
+			Traverse(ref query);
 		}
 
 		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
 
 		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 
-		unsafe void IntersectRecursive(ref HitQuery query, uint index = 0u)
+		unsafe void Traverse(ref HitQuery query)
 		{
-			ref readonly Node node = ref nodes[index];
-
-			Vector128<float> vector = node.aabb4.Intersect(query.traceRay);
-
-			const int Width = 4;
-			var hit4 = (float*)&vector;
-
-			uint* child4 = stackalloc uint[Width]
-			{
-				node.child0, node.child1,
-				node.child2, node.child3
-			};
-
-			Sort4(hit4, child4);
-
-			for (int i = Width - 1; i >= 0; i--)
-			{
-				float hit = hit4[i];
-				uint child = child4[i];
-
-				if (float.IsNegativeInfinity(hit) || child == EmptyNode) continue;
-				Assert.AreNotEqual(child, EmptyNode);
-
-				if (child < NodeThreshold)
-				{
-					//Child is leaf
-					pack.GetIntersection(ref query, child);
-				}
-				else
-				{
-					//Child is branch
-					if (hit >= query.distance) continue;
-					IntersectRecursive(ref query, child - NodeThreshold);
-				}
-			}
-		}
-
-		unsafe void IntersectStack(ref HitQuery query)
-		{
-			uint* stack = stackalloc uint[maxDepth * 2];
-			float* hits = stackalloc float[maxDepth * 2];
+			uint* stack = stackalloc uint[stackSize];
+			float* hits = stackalloc float[stackSize];
 
 			uint* next = stack;
 
 			*next++ = 0;  //Add the index of the root node to the stack
 			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
 
-			const int Width = 4;
-			uint* child4 = stackalloc uint[Width];
-
 			while (next != stack)
 			{
 				uint index = *--next;
-				if (*--hits >= query.distance) continue;
 
+				if (*--hits >= query.distance) continue;
 				ref readonly Node node = ref nodes[index];
 
-				child4[0] = node.child0;
-				child4[1] = node.child1;
-				child4[2] = node.child2;
-				child4[3] = node.child3;
+				Vector128<float> intersections = node.aabb4.Intersect(query.traceRay);
+				Vector128<uint> children = node.child4;
 
-				Vector128<float> vector = node.aabb4.Intersect(query.traceRay);
+				float* hit4 = (float*)&intersections;
+				uint* child4 = (uint*)&children;
 
-				var hit4 = (float*)&vector;
-				Sort4(hit4, child4);
+				int count = node.childCount;
+				Sort4(hit4, child4, count);
 
-				for (int i = 0; i < Width; i++)
+				for (int i = 0; i < count; i++)
 				{
 					float hit = hit4[i];
 					uint child = child4[i];
 
+					if (child == EmptyNode) continue;
 					if (float.IsNegativeInfinity(hit)) break;
 
 					if (child < NodeThreshold)
@@ -192,7 +152,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 						//Child is leaf
 						pack.GetIntersection(ref query, child);
 					}
-					else
+					else if (hit < query.distance)
 					{
 						//Child is branch
 						*next++ = child - NodeThreshold;
@@ -202,16 +162,16 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		static unsafe void Sort4(float* pointer0, uint* pointer1)
+		static unsafe void Sort4(float* pointer0, uint* pointer1, int count)
 		{
-			const int Width = 4;
+			Assert.IsTrue(count <= Width);
 
-			for (int i = 0; i < Width - 1; i++)
+			for (int i = 0; i < count - 1; i++)
 			{
 				float max = pointer0[i];
 				int index = i;
 
-				for (int j = i + 1; j < Width; j++)
+				for (int j = i + 1; j < count; j++)
 				{
 					float value = pointer0[j];
 					if (value <= max) continue;
@@ -230,11 +190,10 @@ namespace EchoRenderer.Mathematics.Accelerators
 		[StructLayout(LayoutKind.Sequential, Size = 128)]
 		readonly struct Node
 		{
-			public Node(BuildNode node, ReadOnlySpan<uint> children)
+			public unsafe Node(BuildNode node, ReadOnlySpan<uint> children)
 			{
 				Assert.IsNotNull(node.child);
 				Unsafe.SkipInit(out padding);
-
 				BuildNode child = node.child;
 
 				ref readonly var aabb0 = ref GetAABB(ref child);
@@ -243,11 +202,13 @@ namespace EchoRenderer.Mathematics.Accelerators
 				ref readonly var aabb3 = ref GetAABB(ref child);
 
 				aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
+				fixed (uint* pointer = children) child4 = *(Vector128<uint>*)pointer;
 
-				child0 = children[0];
-				child1 = children[1];
-				child2 = children[2];
-				child3 = children[3];
+				int count = Width - 1;
+
+				while (children[count] == EmptyNode) --count;
+
+				childCount = count + 1;
 
 				static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 				{
@@ -260,27 +221,22 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 
 			public readonly AxisAlignedBoundingBox4 aabb4;
+			public readonly Vector128<uint> child4;
 
-			public readonly uint child0;
-			public readonly uint child1;
-			public readonly uint child2;
-			public readonly uint child3;
+			public readonly int childCount;
 
 			// public readonly int axis0;
 			// public readonly int axis1;
 			// public readonly int axis2;
 
-			readonly Int4 padding;
+			readonly Int3 padding;
 
 			public override int GetHashCode()
 			{
 				unchecked
 				{
 					int hashCode = aabb4.GetHashCode();
-					hashCode = (hashCode * 397) ^ (int)child0;
-					hashCode = (hashCode * 397) ^ (int)child1;
-					hashCode = (hashCode * 397) ^ (int)child2;
-					hashCode = (hashCode * 397) ^ (int)child3;
+					hashCode = (hashCode * 397) ^ Utilities.GetHashCode(child4);
 					return hashCode;
 				}
 			}

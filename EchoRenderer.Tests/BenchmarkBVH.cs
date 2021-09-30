@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
+using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
@@ -29,14 +31,25 @@ namespace EchoRenderer.Tests
 			for (int i = 0; i < queries.Length; i++)
 			{
 				var position = new Float3(Random() * Radius, Random() * Height, 0f).RotateXZ(Random() * 360f);
-				// queries[i] = new Ray(position, (new Float3(0f, 1.2f, 0f) - position).Normalized);
+				queries[i] = new Ray(position, (new Float3(0f, 1.2f, 0f) - position).Normalized);
 			}
+
+			Packs = new[]
+					{
+						new PressedPack(scene, new ScenePresser(scene), AcceleratorType.boundingVolumeHierarchy),
+						new PressedPack(scene, new ScenePresser(scene), AcceleratorType.quadBoundingVolumeHierarchy)
+					};
 
 			float Random() => (float)random.NextDouble();
 		}
 
 		readonly PressedScene pressed;
 		readonly HitQuery[] queries;
+
+		[ParamsSource(nameof(Packs))]
+		public PressedPack pack;
+
+		public IEnumerable<PressedPack> Packs { get; set; }
 
 		//First test set. Different sets will have different timings
 		//V0: 903.5us per 1000 intersections (recursive)
@@ -49,6 +62,16 @@ namespace EchoRenderer.Tests
 		// |------------------- |---------:|---------:|---------:|
 		// | GetIntersectionNew | 54.96 ms | 0.265 ms | 0.248 ms |
 		// |    GetIntersection | 58.26 ms | 0.252 ms | 0.223 ms |
+
+		[Benchmark]
+		public void GetIntersection()
+		{
+			for (int i = 0; i < queries.Length; i++)
+			{
+				HitQuery query = queries[i];
+				pack.accelerator.GetIntersection(ref query);
+			}
+		}
 
 		// [Benchmark]
 		// public float GetIntersectionNew()
