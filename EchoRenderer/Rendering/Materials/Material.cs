@@ -114,7 +114,7 @@ namespace EchoRenderer.Rendering.Materials
 			if (texture == Texture.white) return value;
 			if (texture == Texture.black) return 0f;
 
-			return value.AlmostEquals(0f) ? 0f : value * texture[texcoord].GetElement(0);
+			return value.AlmostEquals() ? 0f : value * texture[texcoord].GetElement(0);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

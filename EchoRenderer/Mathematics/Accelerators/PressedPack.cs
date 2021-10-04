@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
@@ -12,6 +13,7 @@ using EchoRenderer.Objects;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Rendering.Profiles;
 using Object = EchoRenderer.Objects.Object;
 
 namespace EchoRenderer.Mathematics.Accelerators
@@ -20,9 +22,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 	{
 		public PressedPack(ObjectPack source, ScenePresser presser)
 		{
-			List<PressedTriangle> trianglesList = new List<PressedTriangle>();
-			List<PressedSphere> spheresList = new List<PressedSphere>();
-			List<PressedPackInstance> instancesList = new List<PressedPackInstance>();
+			var trianglesList = new ConcurrentList<PressedTriangle>();
+			var spheresList = new List<PressedSphere>();
+			var instancesList = new List<PressedPackInstance>();
+
+			trianglesList.BeginAdd();
 
 			foreach (Object child in source.LoopChildren(true))
 			{
@@ -43,7 +47,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 			}
 
-			SubdivideTriangles(trianglesList);
+			trianglesList.EndAdd();
+
+			SubdivideTriangles(trianglesList, presser.profile);
 
 			//Extract pressed data
 			triangles = new PressedTriangle[trianglesList.Count];
@@ -59,8 +65,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 			Parallel.For(0, triangles.Length, FillTriangles);
 			Parallel.For(0, spheres.Length, FillSpheres);
 			Parallel.For(0, instances.Length, FillInstances);
-
-			Thread.MemoryBarrier();
 
 			void FillTriangles(int index)
 			{
@@ -98,7 +102,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			spheresList = null;
 			instancesList = null;
 
-			accelerator = new QuadBoundingVolumeHierarchy(this, aabbs, tokens);
+			accelerator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
 		}
 
 		public readonly TraceAccelerator accelerator;
@@ -273,50 +277,33 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		/// <summary>
-		/// Divides large triangles for better BVH space partitioning.
+		/// Divides large triangles for better space partitioning.
 		/// </summary>
-		static void SubdivideTriangles(List<PressedTriangle> triangles)
+		static void SubdivideTriangles(ConcurrentList<PressedTriangle> triangles, ScenePressProfile profile)
 		{
 			double totalArea = 0d;
 
 			Parallel.ForEach(triangles, triangle => InterlockedHelper.Add(ref totalArea, triangle.Area));
+			float threshold = (float)(totalArea / triangles.Count * profile.ThresholdMultiplier);
 
-			const float ThresholdMultiplier = 4.8f; //How many times does an area has to be over the average to trigger a fragmentation
-			const int MaxIteration = 3;             //The maximum number of fragmentation that can happen to one source triangle
+			using var _ = triangles.BeginAdd();
 
-			float threshold = (float)(totalArea / triangles.Count * ThresholdMultiplier);
-			using ReaderWriterLockSlim locker = new ReaderWriterLockSlim();
+			Parallel.For(0, triangles.Count, index => SubdivideTriangle(triangles, ref triangles[index], threshold, profile.MaxIteration));
+		}
 
-			Parallel.For(0, triangles.Count, SubdivideSingle);
+		static void SubdivideTriangle(ConcurrentList<PressedTriangle> triangles, ref PressedTriangle triangle, float threshold, int maxIteration)
+		{
+			float multiplier = MathF.Log2(triangle.Area / threshold);
+			int iteration = Math.Min(multiplier.Ceil(), maxIteration);
+			if (iteration <= 0) return;
 
-			//ReSharper disable AccessToDisposedClosure
-			void SubdivideSingle(int index)
-			{
-				PressedTriangle triangle;
+			int subdivision = 1 << (iteration * 2);
+			Span<PressedTriangle> divided = stackalloc PressedTriangle[subdivision];
 
-				locker.EnterReadLock();
-				try { triangle = triangles[index]; }
-				finally { locker.ExitReadLock(); }
+			triangle.GetSubdivided(divided, iteration);
 
-				float multiplier = triangle.Area / threshold;
-
-				int iteration = Math.Min(MathF.Log2(multiplier).Ceil(), MaxIteration);
-				if (iteration <= 0) return;
-
-				int subdivision = 1 << (iteration * 2);
-				Span<PressedTriangle> divided = stackalloc PressedTriangle[subdivision];
-
-				triangle.GetSubdivided(divided, iteration);
-
-				locker.EnterWriteLock();
-				try
-				{
-					triangles[index] = divided[0];
-					for (int i = 1; i < subdivision; i++) triangles.Add(divided[i]);
-				}
-				finally { locker.ExitWriteLock(); }
-			}
-			//ReSharper restore AccessToDisposedClosure
+			triangle = divided[0];
+			for (int i = 1; i < subdivision; i++) triangles.Add(divided[i]);
 		}
 	}
 }

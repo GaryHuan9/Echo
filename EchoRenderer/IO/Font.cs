@@ -39,7 +39,7 @@ namespace EchoRenderer.IO
 					float strength = texture[local].GetElement(0);
 					texture[local] = Vector128.Create(strength);
 
-					if (strength.AlmostEquals(0f)) continue;
+					if (strength.AlmostEquals()) continue;
 
 					min = min.Min(local);
 					max = max.Max(local);

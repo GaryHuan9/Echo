@@ -1,4 +1,5 @@
 ﻿using CodeHelpers;
+using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Engines
 {
