@@ -40,7 +40,7 @@ namespace EchoRenderer.UI.Core.Fields
 			get => _value;
 			set
 			{
-				if (!Increment.AlmostEquals(0f))
+				if (!Increment.AlmostEquals())
 				{
 					float remain = value.Repeat(Increment);
 					if (remain > Increment / 2f) value += Increment;
@@ -70,7 +70,7 @@ namespace EchoRenderer.UI.Core.Fields
 			base.OnMouseScrolled(delta);
 			float change = delta.Sum;
 
-			change *= Increment.AlmostEquals(0f) ? DefaultIncrement : Increment;
+			change *= Increment.AlmostEquals() ? DefaultIncrement : Increment;
 			if (Keyboard.IsKeyPressed(Keyboard.Key.LShift)) change /= ModifyMultiplier;
 			if (Keyboard.IsKeyPressed(Keyboard.Key.LControl)) change *= ModifyMultiplier;
 
@@ -91,7 +91,7 @@ namespace EchoRenderer.UI.Core.Fields
 			string toString = Increment.ToString(CultureInfo.InvariantCulture);
 			int count = toString.Length - Math.Max(toString.IndexOf('.'), 0) - 1;
 
-			if (Increment.AlmostEquals(0f)) count = int.MaxValue;
+			if (Increment.AlmostEquals()) count = int.MaxValue;
 			format = $"F{count.Clamp(0, FormatMaxDecimal)}";
 		}
 

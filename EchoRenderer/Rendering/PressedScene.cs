@@ -7,6 +7,7 @@ using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures.Cubemaps;
 using Object = EchoRenderer.Objects.Object;
 
@@ -17,7 +18,7 @@ namespace EchoRenderer.Rendering
 	/// </summary>
 	public class PressedScene
 	{
-		public PressedScene(Scene source)
+		public PressedScene(Scene source, ScenePressProfile profile)
 		{
 			this.source = source;
 			cubemap = source.Cubemap;
@@ -48,7 +49,7 @@ namespace EchoRenderer.Rendering
 
 			lights = new ReadOnlyCollection<PressedLight>(lightsList);
 
-			presser = new ScenePresser(source);
+			presser = new ScenePresser(source, profile);
 			rootInstance = new PressedPackInstance(presser, source); //Create root instance
 			presser.materials.Press();
 

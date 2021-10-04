@@ -7,21 +7,24 @@ using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.ObjectPooling;
 using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Objects.Scenes
 {
 	public class ScenePresser
 	{
-		public ScenePresser(Scene scene)
+		public ScenePresser(Scene scene, ScenePressProfile profile)
 		{
-			threadId = Thread.CurrentThread.ManagedThreadId;
-
-			root = CreateNode(scene, null);
+			this.profile = profile;
 			materials = new MaterialPresser();
+			root = CreateNode(scene, null);
+
+			threadId = Thread.CurrentThread.ManagedThreadId;
 
 			PressPacks(root);
 		}
 
+		public readonly ScenePressProfile profile;
 		public readonly MaterialPresser materials;
 		public readonly Node root;
 
@@ -30,7 +33,7 @@ namespace EchoRenderer.Objects.Scenes
 		readonly int threadId;
 
 		readonly Dictionary<ObjectPack, Node> objectPacks = new();
-		readonly List<PressedPackInstance> packInstances = new() {null};
+		readonly List<PressedPackInstance> packInstances = new() { null };
 
 		/// <summary>
 		/// Creates or retrieves and returns the <see cref="PressedPack"/> for <paramref name="pack"/>.

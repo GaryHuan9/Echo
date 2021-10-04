@@ -6,6 +6,7 @@ using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.DimensionTwo;
 using EchoRenderer.UI.Core.Areas;
@@ -33,7 +34,7 @@ namespace EchoRenderer.UI.Interface
 						  AdaptiveSample = 35
 					  };
 
-			new Thread(LoadScene<RandomSpheres>)
+			new Thread(LoadScene<LightedBMW>)
 			{
 				IsBackground = true,
 				Name = "Scene Loader"
@@ -137,7 +138,7 @@ namespace EchoRenderer.UI.Interface
 
 		void LoadScene<T>() where T : Scene, new()
 		{
-			PressedScene scene = new PressedScene(new T());
+			var scene = new PressedScene(new T(), new ScenePressProfile());
 			Profile = Profile with { Scene = scene };
 		}
 	}
