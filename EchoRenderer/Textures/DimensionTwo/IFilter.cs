@@ -75,7 +75,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 				Vector128<float> y1x1 = texture[upperRight];
 
 				//Interpolate
-				Float2 time = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp(0f, 1f);
+				Float2 time = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp();
 
 				Vector128<float> timeX = Vector128.Create(time.x);
 				Vector128<float> timeY = Vector128.Create(time.y);

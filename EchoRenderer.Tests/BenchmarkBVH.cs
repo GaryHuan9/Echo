@@ -22,7 +22,7 @@ namespace EchoRenderer.Tests
 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
 			scene.children.Add(new MeshObject(mesh, new Glossy()));
 
-			pressed = new PressedScene(scene);
+			// pressed = new PressedScene(scene);
 			queries = new HitQuery[65536];
 
 			const float Radius = 10f;
@@ -34,11 +34,11 @@ namespace EchoRenderer.Tests
 				queries[i] = new Ray(position, (new Float3(0f, 1.2f, 0f) - position).Normalized);
 			}
 
-			Packs = new[]
-					{
-						new PressedPack(scene, new ScenePresser(scene), AcceleratorType.boundingVolumeHierarchy),
-						new PressedPack(scene, new ScenePresser(scene), AcceleratorType.quadBoundingVolumeHierarchy)
-					};
+			// Packs = new[]
+			// 		{
+			// 			new PressedPack(scene, new ScenePresser(scene), AcceleratorType.boundingVolumeHierarchy),
+			// 			new PressedPack(scene, new ScenePresser(scene), AcceleratorType.quadBoundingVolumeHierarchy)
+			// 		};
 
 			float Random() => (float)random.NextDouble();
 		}

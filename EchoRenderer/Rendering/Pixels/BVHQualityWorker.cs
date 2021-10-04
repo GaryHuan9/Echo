@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Engines;
+using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Pixels
 {
