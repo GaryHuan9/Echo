@@ -4,13 +4,13 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures.DimensionTwo;
 
-namespace EchoRenderer.Rendering.Engines
+namespace EchoRenderer.Rendering.Profiles
 {
 	/// <summary>
 	/// An immutable record that defines the renderer's settings/parameters.
 	/// Immutability ensures that the profile never change when all threads are running.
 	/// </summary>
-	public record RenderProfile
+	public record RenderProfile : IProfile
 	{
 		/// <summary>
 		/// The target scene to render.

@@ -21,7 +21,7 @@ namespace EchoRenderer.Rendering.PostProcessing.ToneMappers
 
 			grab.Run();
 
-			if (grab.Luminance.AlmostEquals(0f)) return;
+			if (grab.Luminance.AlmostEquals()) return;
 
 			luminanceForward = 9.6f * grab.Luminance;
 			luminanceInverse = 1f / luminanceForward;

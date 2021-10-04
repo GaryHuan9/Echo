@@ -1,17 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Intrinsics;
 using System.Threading;
+using System.Threading.Tasks;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
+using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.PostProcessing;
 using EchoRenderer.Rendering.PostProcessing.ToneMappers;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.DimensionTwo;
@@ -84,6 +90,8 @@ namespace EchoRenderer
 																   AdaptiveSample = 0
 															   };
 
+		static readonly ScenePressProfile scenePressProfile = new();
+
 		static void PerformRender()
 		{
 			Int2[] resolutions = //Different resolutions for easy selection
@@ -92,9 +100,9 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			TiledRenderProfile profile = pathTraceFastProfile;      //Selects or creates render profile
-			Scene scene = new SingleMaterialBall();                 //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[1]);  //Selects resolution and create buffer
+			TiledRenderProfile renderProfile = pathTraceFastProfile; //Selects or creates render profile
+			Scene scene = new SingleMaterialBall();                  //Selects or creates scene
 
 			DebugHelper.Log("Assets loaded");
 
@@ -106,13 +114,15 @@ namespace EchoRenderer
 
 			using (setupTest.Start())
 			{
-				profile = profile with
-						  {
-							  RenderBuffer = buffer,
-							  Scene = new PressedScene(scene)
-						  };
+				var pressed = new PressedScene(scene, scenePressProfile);
 
-				engine.Begin(profile); //Initializes render
+				renderProfile = renderProfile with
+								{
+									RenderBuffer = buffer,
+									Scene = pressed
+								};
+
+				engine.Begin(renderProfile); //Initializes render
 			}
 
 			DebugHelper.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
@@ -122,13 +132,13 @@ namespace EchoRenderer
 
 			using var postProcess = new PostProcessingEngine(buffer);
 
-			if (profile.Method is BVHQualityWorker) //Creates different post processing workers based on render method
+			if (renderProfile.Method is BVHQualityWorker) //Creates different post processing workers based on render method
 			{
 				postProcess.AddWorker(new BVHQualityVisualizer(postProcess)); //Only used for BVH quality testing
 			}
 			else
 			{
-				if (profile.Method is PathTraceWorker)
+				if (renderProfile.Method is PathTraceWorker)
 				{
 					postProcess.AddWorker(new DenoiseOidn(postProcess));
 				}
