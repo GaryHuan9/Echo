@@ -1,25 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Intrinsics;
 using System.Threading;
-using System.Threading.Tasks;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Objects;
+using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
+using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.PostProcessing;
 using EchoRenderer.Rendering.PostProcessing.ToneMappers;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures;
+using EchoRenderer.Textures.Cubemaps;
 using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer
@@ -90,7 +91,13 @@ namespace EchoRenderer
 																   AdaptiveSample = 0
 															   };
 
-		static readonly ScenePressProfile scenePressProfile = new();
+		static readonly ScenePressProfile scenePressProfile = new()
+															  {
+																  AcceleratorProfile = new TraceAcceleratorProfile
+																					   {
+																						   AcceleratorType = typeof(QuadBoundingVolumeHierarchy)
+																					   }
+															  };
 
 		static void PerformRender()
 		{

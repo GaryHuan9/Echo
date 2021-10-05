@@ -9,6 +9,7 @@ using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Tests
 {
@@ -22,7 +23,6 @@ namespace EchoRenderer.Tests
 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
 			scene.children.Add(new MeshObject(mesh, new Glossy()));
 
-			// pressed = new PressedScene(scene);
 			queries = new HitQuery[65536];
 
 			const float Radius = 10f;
@@ -34,22 +34,21 @@ namespace EchoRenderer.Tests
 				queries[i] = new Ray(position, (new Float3(0f, 1.2f, 0f) - position).Normalized);
 			}
 
-			// Packs = new[]
-			// 		{
-			// 			new PressedPack(scene, new ScenePresser(scene), AcceleratorType.boundingVolumeHierarchy),
-			// 			new PressedPack(scene, new ScenePresser(scene), AcceleratorType.quadBoundingVolumeHierarchy)
-			// 		};
+			Pairs = new[]
+					{
+						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
+					};
 
 			float Random() => (float)random.NextDouble();
 		}
 
-		readonly PressedScene pressed;
 		readonly HitQuery[] queries;
 
-		[ParamsSource(nameof(Packs))]
-		public PressedPack pack;
+		[ParamsSource(nameof(Pairs))]
+		public Pair CurrentPair { get; set; }
 
-		public IEnumerable<PressedPack> Packs { get; set; }
+		public IEnumerable<Pair> Pairs { get; set; }
 
 		//First test set. Different sets will have different timings
 		//V0: 903.5us per 1000 intersections (recursive)
@@ -69,7 +68,7 @@ namespace EchoRenderer.Tests
 			for (int i = 0; i < queries.Length; i++)
 			{
 				HitQuery query = queries[i];
-				pack.accelerator.GetIntersection(ref query);
+				CurrentPair.scene.GetIntersection(ref query);
 			}
 		}
 
@@ -103,6 +102,20 @@ namespace EchoRenderer.Tests
 		//
 		// 	return hit;
 		// }
+
+		public readonly struct Pair
+		{
+			public Pair(PressedScene scene, string name)
+			{
+				this.scene = scene;
+				this.name = name;
+			}
+
+			public readonly PressedScene scene;
+			public readonly string name;
+
+			public override string ToString() => name;
+		}
 	}
 
 }
