@@ -26,7 +26,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		/// <summary>
 		/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
-		/// Returns either the intersection distance or <see cref="float.NegativeInfinity"/> if none was found.
+		/// Returns either the intersection distance or <see cref="float.PositiveInfinity"/> if none was found.
 		/// </summary>
 		public Vector128<float> Intersect(in TraceRay ray)
 		{
@@ -62,7 +62,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			return Sse41.BlendVariable
 			(
-				near, Utilities.vectorNegativeInfinity, Sse.Or
+				near, Utilities.vectorPositiveInfinity, Sse.Or
 				(
 					Sse.CompareGreaterThan(near, far),
 					Sse.CompareGreaterThan(Utilities.vector0, far)

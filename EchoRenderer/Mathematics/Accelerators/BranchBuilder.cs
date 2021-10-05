@@ -79,7 +79,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			if (headVolume.Area < tailVolume.Area) CodeHelper.Swap(ref child0, ref child1);
 
 			Interlocked.Increment(ref _nodeCount);
-			return new Node(child0, child1, aabb);
+			return new Node(child0, child1, aabb, axis);
 		}
 
 		NodeBuilder BuildChildParallel(ReadOnlySpan<int> indices, in AxisAlignedBoundingBox aabb, int parentAxis)
@@ -180,11 +180,12 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// </summary>
 		public class Node
 		{
-			public Node(Node child0, Node child1, AxisAlignedBoundingBox aabb)
+			public Node(Node child0, Node child1, AxisAlignedBoundingBox aabb, int axis)
 			{
 				this.child0 = child0;
 				this.child1 = child1;
 				this.aabb = aabb;
+				this.axis = axis;
 			}
 
 			public Node(AxisAlignedBoundingBox aabb, int index)
@@ -197,7 +198,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 			public readonly Node child1;
 
 			public readonly AxisAlignedBoundingBox aabb;
-			public readonly int index;
+			public readonly int index; //If is leaf, this indicates the index of the token
+			public readonly int axis;  //The axis used to divide the two children in this node
 
 			public bool IsLeaf => child0 == null || child1 == null;
 		}
