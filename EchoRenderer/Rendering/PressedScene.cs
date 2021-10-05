@@ -91,7 +91,7 @@ namespace EchoRenderer.Rendering
 			//TODO: We need a separate implementation that calculates intersection with any geometry (occlusion: boolean true/false return)
 			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
 
-			HitQuery query = new HitQuery {ray = ray};
+			HitQuery query = ray;
 			return GetIntersection(ref query);
 		}
 

@@ -25,12 +25,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 			BranchBuilder builder = new BranchBuilder(aabbs);
 			BranchBuilder.Node root = builder.Build(indices);
 
-			int count = 1;
+			int count = 0;
 			var buildRoot = new BuildNode(root, ref count);
 
 			int nodeIndex = 0;
 
-			Assert.IsTrue(count > 1);
 			nodes = new Node[count];
 			nodes[0] = CreateNode(buildRoot, out int maxDepth);
 
@@ -45,15 +44,19 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 				children.Fill(EmptyNode);
 
-				int child = -1;
 				depth = 0;
 
-				while (current != null && ++child < Width)
+				for (int i = 0; i < Width; i++)
 				{
 					uint nodeChild;
 					int nodeDepth;
 
-					if (current.child == null)
+					if (current.IsEmpty)
+					{
+						nodeChild = EmptyNode;
+						nodeDepth = 0;
+					}
+					else if (current.IsLeaf)
 					{
 						nodeChild = tokens[current.source.index];
 						nodeDepth = 1;
@@ -67,7 +70,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 						nodeChild = index + NodeThreshold;
 					}
 
-					children[child] = nodeChild;
+					children[i] = nodeChild;
 					depth = Math.Max(depth, nodeDepth);
 
 					current = current.sibling;
@@ -123,6 +126,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 			*next++ = 0;  //Add the index of the root node to the stack
 			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
 
+			float* direction = stackalloc float[] { 0f, 0f, 0f, 1f };
+			*(Float3*)direction = query.traceRay.inverseDirection;
+
 			while (next != stack)
 			{
 				uint index = *--next;
@@ -136,23 +142,69 @@ namespace EchoRenderer.Mathematics.Accelerators
 				float* hit4 = (float*)&intersections;
 				uint* child4 = (uint*)&children;
 
-				int count = node.childCount;
-				Sort4(hit4, child4, count);
-
-				for (int i = 0; i < count; i++)
+				if (direction[node.axisMajor] > 0)
 				{
-					float hit = hit4[i];
-					uint child = child4[i];
+					if (direction[node.axisMinor1] > 0)
+					{
+						Push(3, ref query);
+						Push(2, ref query);
+					}
+					else
+					{
+						Push(2, ref query);
+						Push(3, ref query);
+					}
 
-					if (child == EmptyNode) continue;
-					if (float.IsNegativeInfinity(hit)) break;
+					if (direction[node.axisMinor0] > 0)
+					{
+						Push(1, ref query);
+						Push(0, ref query);
+					}
+					else
+					{
+						Push(0, ref query);
+						Push(1, ref query);
+					}
+				}
+				else
+				{
+					if (direction[node.axisMinor0] > 0)
+					{
+						Push(1, ref query);
+						Push(0, ref query);
+					}
+					else
+					{
+						Push(0, ref query);
+						Push(1, ref query);
+					}
+
+					if (direction[node.axisMinor1] > 0)
+					{
+						Push(3, ref query);
+						Push(2, ref query);
+					}
+					else
+					{
+						Push(2, ref query);
+						Push(3, ref query);
+					}
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				void Push(int offset, ref HitQuery hitQuery)
+				{
+					float hit = hit4[offset];
+					uint child = child4[offset];
+
+					if (child == EmptyNode) return;
 
 					if (child < NodeThreshold)
 					{
 						//Child is leaf
-						pack.GetIntersection(ref query, child);
+						pack.GetIntersection(ref hitQuery, child);
 					}
-					else if (hit < query.distance)
+					else if (hit < hitQuery.distance)
 					{
 						//Child is branch
 						*next++ = child - NodeThreshold;
@@ -162,38 +214,16 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		static unsafe void Sort4(float* pointer0, uint* pointer1, int count)
-		{
-			Assert.IsTrue(count <= Width);
-
-			for (int i = 0; i < count - 1; i++)
-			{
-				float max = pointer0[i];
-				int index = i;
-
-				for (int j = i + 1; j < count; j++)
-				{
-					float value = pointer0[j];
-					if (value <= max) continue;
-
-					max = value;
-					index = j;
-				}
-
-				// if (index == i) continue;
-
-				CodeHelper.Swap(ref pointer0[i], ref pointer0[index]);
-				CodeHelper.Swap(ref pointer1[i], ref pointer1[index]);
-			}
-		}
-
+		/// <summary>
+		/// The node is only 124-byte in size, however we pad it to 128 bytes to better align with cache lines and memory stuff.
+		/// NOTE: we do not explicitly add a padding field, instead we assign it through <see cref="StructLayoutAttribute.Size"/>.
+		/// </summary>
 		[StructLayout(LayoutKind.Sequential, Size = 128)]
 		readonly struct Node
 		{
 			public unsafe Node(BuildNode node, ReadOnlySpan<uint> children)
 			{
 				Assert.IsNotNull(node.child);
-				Unsafe.SkipInit(out padding);
 				BuildNode child = node.child;
 
 				ref readonly var aabb0 = ref GetAABB(ref child);
@@ -204,15 +234,13 @@ namespace EchoRenderer.Mathematics.Accelerators
 				aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
 				fixed (uint* pointer = children) child4 = *(Vector128<uint>*)pointer;
 
-				int count = Width - 1;
-
-				while (children[count] == EmptyNode) --count;
-
-				childCount = count + 1;
+				axisMajor = node.axisMajor;
+				axisMinor0 = node.axisMinor0;
+				axisMinor1 = node.axisMinor1;
 
 				static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 				{
-					if (node == null) return ref AxisAlignedBoundingBox.zero;
+					if (node?.source == null) return ref AxisAlignedBoundingBox.zero;
 					ref readonly AxisAlignedBoundingBox aabb = ref node.source.aabb;
 
 					node = node.sibling;
@@ -223,20 +251,30 @@ namespace EchoRenderer.Mathematics.Accelerators
 			public readonly AxisAlignedBoundingBox4 aabb4;
 			public readonly Vector128<uint> child4;
 
-			public readonly int childCount;
+			/// <summary>
+			/// The integer value of the axis that divided the two primary nodes
+			/// </summary>
+			public readonly int axisMajor;
 
-			// public readonly int axis0;
-			// public readonly int axis1;
-			// public readonly int axis2;
+			/// <summary>
+			/// The integer value of the axis that divided the first two secondary nodes
+			/// </summary>
+			public readonly int axisMinor0;
 
-			readonly Int3 padding;
+			/// <summary>
+			/// The integer value of the axis that divided the second two secondary nodes
+			/// </summary>
+			public readonly int axisMinor1;
 
 			public override int GetHashCode()
 			{
 				unchecked
 				{
 					int hashCode = aabb4.GetHashCode();
-					hashCode = (hashCode * 397) ^ Utilities.GetHashCode(child4);
+					hashCode = (hashCode * 397) ^ child4.GetHashCode();
+					hashCode = (hashCode * 397) ^ axisMajor;
+					hashCode = (hashCode * 397) ^ axisMinor0;
+					hashCode = (hashCode * 397) ^ axisMinor1;
 					return hashCode;
 				}
 			}
@@ -244,46 +282,103 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		class BuildNode
 		{
-			public BuildNode(BranchBuilder.Node source, ref int count, BuildNode sibling = null)
+			/// <summary>
+			/// Collapses <see cref="source"/> from a binary tree to a quad tree.
+			/// This node will be the root node of that newly created quad tree.
+			/// </summary>
+			public BuildNode(BranchBuilder.Node source, ref int count) : this(source, null, ref count) { }
+
+			/// <summary>
+			/// Creates a new <see cref="BuildNode"/> from <paramref name="source"/>.
+			/// NOTE: <paramref name="source"/> can be null to indicate an empty node,
+			/// or turn <paramref name="source.IsLeaf"/> on to indicate a leaf node.
+			/// </summary>
+			BuildNode(BranchBuilder.Node source, BuildNode sibling, ref int count)
 			{
 				this.source = source;
 				this.sibling = sibling;
-				if (source.IsLeaf) return;
+
+				if (source?.IsLeaf != false) return;
 
 				++count;
 
-				var node0 = source.child0;
-				var node1 = source.child1;
-
-				//Swap to make sure that the non-leaf nodes go first
-				if (node0.IsLeaf) CodeHelper.Swap(ref node0, ref node1);
+				axisMajor = GetChildrenSorted(source, out var child0, out var child1);
 
 				//Add children as a linked list
 				//Note that the order is reversed
 
-				if (!node1.IsLeaf)
-				{
-					Assert.IsFalse(node0.IsLeaf);
-
-					AddChild(node1.child1, ref count, ref child);
-					AddChild(node1.child0, ref count, ref child);
-				}
-				else AddChild(node1, ref count, ref child);
-
-				if (!node0.IsLeaf)
-				{
-					AddChild(node0.child1, ref count, ref child);
-					AddChild(node0.child0, ref count, ref child);
-				}
-				else AddChild(node0, ref count, ref child);
-
-				static void AddChild(BranchBuilder.Node node, ref int count, ref BuildNode children) => children = new BuildNode(node, ref count, children);
+				axisMinor1 = AddChildren(child1, ref child, ref count);
+				axisMinor0 = AddChildren(child0, ref child, ref count);
 			}
+
+			public bool IsEmpty => source == null;
+			public bool IsLeaf => child == null;
 
 			public readonly BranchBuilder.Node source;
 
-			public readonly BuildNode child;   //Linked list to the first child
+			public readonly BuildNode child;   //Linked list to the first child (4)
 			public readonly BuildNode sibling; //Reference to the next sibling node
+
+			/// <inheritdoc cref="Node.axisMajor"/>
+			public readonly int axisMajor;
+
+			/// <inheritdoc cref="Node.axisMinor0"/>
+			public readonly int axisMinor0;
+
+			/// <inheritdoc cref="Node.axisMinor1"/>
+			public readonly int axisMinor1;
+
+			/// <summary>
+			/// Adds children to the linked list represented by <paramref name="child"/>. If <paramref name="node"/> is a leaf,
+			/// add <paramref name="node"/> and an empty node to the linked list. Otherwise, add the two children of <paramref name="node"/>
+			/// to the linked list orderly, based on the position of their aabbs along <paramref name="node.axis"/>. The node with the
+			/// smaller position will be placed before the node with the larger position. Returns <paramref name="node.axis"/>.
+			/// </summary>
+			static int AddChildren(BranchBuilder.Node node, ref BuildNode child, ref int count)
+			{
+				int axis;
+
+				if (node.IsLeaf)
+				{
+					//NOTE assigning axis to 3 means when we are indexing the direction, we will always get 1,
+					//which means the cascading branches will always position the leaf node before the empty node.
+					axis = 3;
+
+					AddChild(null, ref child, ref count);
+					AddChild(node, ref child, ref count);
+				}
+				else
+				{
+					axis = GetChildrenSorted(node, out var child0, out var child1);
+
+					AddChild(child1, ref child, ref count);
+					AddChild(child0, ref child, ref count);
+				}
+
+				return axis;
+			}
+
+			/// <summary>
+			/// Outputs the two children of <paramref name="node"/> in sorted order. The children are stored based on the position of their
+			/// aabbs along <paramref name="node.axis"/>. The node with the smaller position will be placed in <paramref name="child0"/> and
+			/// the other one will be placed in <paramref name="child1"/>. Returns <paramref name="node.axis"/>.
+			/// </summary>
+			static int GetChildrenSorted(BranchBuilder.Node node, out BranchBuilder.Node child0, out BranchBuilder.Node child1)
+			{
+				int axis = node.axis;
+				child0 = node.child0;
+				child1 = node.child1;
+
+				//Put child1 as the first child if child0 has a larger position
+				if (child0.aabb.min[axis] > child1.aabb.min[axis]) CodeHelper.Swap(ref child0, ref child1);
+
+				return axis;
+			}
+
+			/// <summary>
+			/// Adds a new <see cref="BuildNode"/> to the linked list represented by <paramref name="child"/>.
+			/// </summary>
+			static void AddChild(BranchBuilder.Node node, ref BuildNode child, ref int count) => child = new BuildNode(node, child, ref count);
 		}
 	}
 }
