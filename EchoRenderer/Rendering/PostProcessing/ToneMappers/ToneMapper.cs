@@ -37,9 +37,8 @@ namespace EchoRenderer.Rendering.PostProcessing.ToneMappers
 			float luminance = Utilities.GetLuminance(source);
 
 			float mapped = MapLuminance(luminance * luminanceInverse) * luminanceForward;
-
-			var multiplier = Vector128.Create(mapped.Clamp() / luminance);
-			renderBuffer[position] = Sse.Multiply(source, multiplier);
+			float multiplier = luminance.AlmostEquals() ? mapped : mapped / luminance;
+			renderBuffer[position] = Sse.Multiply(source, Vector128.Create(multiplier));
 		}
 	}
 }

@@ -8,19 +8,15 @@ using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Objects;
-using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.PostProcessing;
 using EchoRenderer.Rendering.PostProcessing.ToneMappers;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures;
-using EchoRenderer.Textures.Cubemaps;
 using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer
@@ -205,7 +201,9 @@ namespace EchoRenderer
 
 			using PostProcessingEngine engine = new PostProcessingEngine(buffer);
 
+			//NOTE: Oidn do not have normal and albedo data here, so its quality might be pretty bad
 			engine.AddWorker(new DenoiseOidn(engine));
+
 			engine.AddWorker(new Bloom(engine));
 			engine.AddWorker(new Reinhard(engine));
 			engine.AddWorker(new Vignette(engine));
