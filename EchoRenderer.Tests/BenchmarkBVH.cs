@@ -25,7 +25,7 @@ namespace EchoRenderer.Tests
 
 			queries = new HitQuery[65536];
 
-			const float Radius = 10f;
+			const float Radius = 18f;
 			const float Height = 12f;
 
 			for (int i = 0; i < queries.Length; i++)
@@ -67,8 +67,9 @@ namespace EchoRenderer.Tests
 		{
 			for (int i = 0; i < queries.Length; i++)
 			{
-				HitQuery query = queries[i];
+				ref HitQuery query = ref queries[i];
 				CurrentPair.scene.GetIntersection(ref query);
+				query.distance = float.PositiveInfinity;
 			}
 		}
 
