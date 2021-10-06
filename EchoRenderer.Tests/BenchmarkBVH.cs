@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using BenchmarkDotNet.Attributes;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.GeometryObjects;
@@ -18,20 +21,33 @@ namespace EchoRenderer.Tests
 		public BenchmarkBVH()
 		{
 			Scene scene = new Scene();
-			Random random = new Random(42);
 
 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
 			scene.children.Add(new MeshObject(mesh, new Glossy()));
 
 			queries = new HitQuery[65536];
 
-			const float Radius = 18f;
-			const float Height = 12f;
+			ExtendedRandom random = new ExtendedRandom(42);
+
+			const float Radius = 9f;
+			const float Height = 5f;
 
 			for (int i = 0; i < queries.Length; i++)
 			{
-				var position = new Float3(Random() * Radius, Random() * Height, 0f).RotateXZ(Random() * 360f);
-				queries[i] = new Ray(position, (new Float3(0f, 1.2f, 0f) - position).Normalized);
+				Float2 point = new Float2(MathF.Sqrt(Random()) * Radius, Random() * Height);
+				Float3 position = point.X_Y.RotateXZ(Random() * 360f);
+
+				Float3 target = Float3.CreateY(0.6f) + random.NextInSphere(0.25f);
+
+				if (random.NextDouble() < 0.01f)
+				{
+					Float3 offset = (target - position) / 2f;
+
+					target = position;
+					position += offset;
+				}
+
+				queries[i] = new Ray(position, (target - position).Normalized);
 			}
 
 			Pairs = new[]
@@ -57,10 +73,15 @@ namespace EchoRenderer.Tests
 
 		//NOTE: Tests with 65536 rays will have a higher average because the rays are more distributed
 
-		// |             Method |     Mean |    Error |   StdDev |
-		// |------------------- |---------:|---------:|---------:|
-		// | GetIntersectionNew | 54.96 ms | 0.265 ms | 0.248 ms |
-		// |    GetIntersection | 58.26 ms | 0.252 ms | 0.223 ms |
+		// |                   Method |     Mean |    Error |   StdDev |
+		// |------------------------- |---------:|---------:|---------:|
+		// | GetIntersectionOcclusion | 54.96 ms | 0.265 ms | 0.248 ms |
+		// |  GetIntersectionOriginal | 58.26 ms | 0.252 ms | 0.223 ms |
+
+		// |          Method | CurrentPair |     Mean |    Error |   StdDev |
+		// |---------------- |------------ |---------:|---------:|---------:|
+		// | GetIntersection |        Quad | 52.89 ms | 0.314 ms | 0.293 ms |
+		// | GetIntersection |     Regular | 61.75 ms | 0.396 ms | 0.370 ms |
 
 		[Benchmark]
 		public void GetIntersection()
@@ -72,37 +93,6 @@ namespace EchoRenderer.Tests
 				query.distance = float.PositiveInfinity;
 			}
 		}
-
-		// [Benchmark]
-		// public float GetIntersectionNew()
-		// {
-		// 	bool hit = default;
-		//
-		// 	for (int i = 0; i < rays.Length; i++) hit = pressed.GetIntersection(rays[i]);
-		//
-		// 	return hit ? 1f : 0f;
-		// }
-
-		// [Benchmark]
-		// public float GetIntersection()
-		// {
-		// 	bool hit = default;
-		// 	CalculatedHit calculated = default;
-		//
-		// 	for (int i = 0; i < rays.Length; i++) hit = pressed.GetIntersection(rays[i], out calculated);
-		//
-		// 	return hit ? calculated.distance : 0f;
-		// }
-
-		// [Benchmark]
-		// public Hit GetIntersectionOld()
-		// {
-		// 	Hit hit = default;
-		//
-		// 	for (int i = 0; i < rays.Length; i++) hit = bvh.GetIntersectionOld(rays[i]);
-		//
-		// 	return hit;
-		// }
 
 		public readonly struct Pair
 		{
