@@ -240,11 +240,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 				static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 				{
-					if (node?.source == null) return ref AxisAlignedBoundingBox.zero;
-					ref readonly AxisAlignedBoundingBox aabb = ref node.source.aabb;
-
+					var source = node.source;
 					node = node.sibling;
-					return ref aabb;
+
+					if (source != null) return ref source.aabb;
+					return ref AxisAlignedBoundingBox.zero;
 				}
 			}
 
