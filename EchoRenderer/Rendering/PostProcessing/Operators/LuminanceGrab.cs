@@ -22,7 +22,7 @@ namespace EchoRenderer.Rendering.PostProcessing.Operators
 
 		double luminanceTotal;
 
-		static int HeightThreshold => Environment.ProcessorCount * 2;
+		static int HeightThreshold => Environment.ProcessorCount * 6;
 
 		public void Run()
 		{
