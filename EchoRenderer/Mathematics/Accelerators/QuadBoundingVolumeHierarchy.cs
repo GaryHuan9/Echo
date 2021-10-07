@@ -116,6 +116,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 		unsafe void Traverse(ref HitQuery query)
 		{
 			uint* stack = stackalloc uint[stackSize];
@@ -137,74 +138,68 @@ namespace EchoRenderer.Mathematics.Accelerators
 				ref readonly Node node = ref nodes[index];
 
 				Vector128<float> intersections = node.aabb4.Intersect(query.traceRay);
-				Vector128<uint> children = node.child4;
-
-				float* hit4 = (float*)&intersections;
-				uint* child4 = (uint*)&children;
+				float* i = (float*)&intersections;
 
 				if (direction[node.axisMajor] > 0)
 				{
 					if (direction[node.axisMinor1] > 0)
 					{
-						Push(3, ref query);
-						Push(2, ref query);
+						Push(i[3], node.child3, ref query);
+						Push(i[2], node.child2, ref query);
 					}
 					else
 					{
-						Push(2, ref query);
-						Push(3, ref query);
+						Push(i[2], node.child2, ref query);
+						Push(i[3], node.child3, ref query);
 					}
 
 					if (direction[node.axisMinor0] > 0)
 					{
-						Push(1, ref query);
-						Push(0, ref query);
+						Push(i[1], node.child1, ref query);
+						Push(i[0], node.child0, ref query);
 					}
 					else
 					{
-						Push(0, ref query);
-						Push(1, ref query);
+						Push(i[0], node.child0, ref query);
+						Push(i[1], node.child1, ref query);
 					}
 				}
 				else
 				{
 					if (direction[node.axisMinor0] > 0)
 					{
-						Push(1, ref query);
-						Push(0, ref query);
+						Push(i[1], node.child1, ref query);
+						Push(i[0], node.child0, ref query);
 					}
 					else
 					{
-						Push(0, ref query);
-						Push(1, ref query);
+						Push(i[0], node.child0, ref query);
+						Push(i[1], node.child1, ref query);
 					}
 
 					if (direction[node.axisMinor1] > 0)
 					{
-						Push(3, ref query);
-						Push(2, ref query);
+						Push(i[3], node.child3, ref query);
+						Push(i[2], node.child2, ref query);
 					}
 					else
 					{
-						Push(2, ref query);
-						Push(3, ref query);
+						Push(i[2], node.child2, ref query);
+						Push(i[3], node.child3, ref query);
 					}
 				}
 
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				void Push(int offset, ref HitQuery hitQuery)
+				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+				void Push(float hit, uint child, ref HitQuery hitQuery)
 				{
-					float hit = hit4[offset];
-					uint child = child4[offset];
-
-					if (child == EmptyNode) return;
+					if (child == EmptyNode || hit >= hitQuery.distance) return;
 
 					if (child < NodeThreshold)
 					{
 						//Child is leaf
 						pack.GetIntersection(ref hitQuery, child);
 					}
-					else if (hit < hitQuery.distance)
+					else
 					{
 						//Child is branch
 						*next++ = child - NodeThreshold;
@@ -216,12 +211,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		/// <summary>
 		/// The node is only 124-byte in size, however we pad it to 128 bytes to better align with cache lines and memory stuff.
-		/// NOTE: we do not explicitly add a padding field, instead we assign it through <see cref="StructLayoutAttribute.Size"/>.
 		/// </summary>
 		[StructLayout(LayoutKind.Sequential, Size = 128)]
 		readonly struct Node
 		{
-			public unsafe Node(BuildNode node, ReadOnlySpan<uint> children)
+			public Node(BuildNode node, ReadOnlySpan<uint> children)
 			{
 				Assert.IsNotNull(node.child);
 				BuildNode child = node.child;
@@ -231,12 +225,18 @@ namespace EchoRenderer.Mathematics.Accelerators
 				ref readonly var aabb2 = ref GetAABB(ref child);
 				ref readonly var aabb3 = ref GetAABB(ref child);
 
+				child0 = children[0];
+				child1 = children[1];
+				child2 = children[2];
+				child3 = children[3];
+
 				aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
-				fixed (uint* pointer = children) child4 = *(Vector128<uint>*)pointer;
 
 				axisMajor = node.axisMajor;
 				axisMinor0 = node.axisMinor0;
 				axisMinor1 = node.axisMinor1;
+
+				Unsafe.SkipInit(out padding);
 
 				static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 				{
@@ -249,7 +249,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 
 			public readonly AxisAlignedBoundingBox4 aabb4;
-			public readonly Vector128<uint> child4;
+
+			public readonly uint child0;
+			public readonly uint child1;
+			public readonly uint child2;
+			public readonly uint child3;
 
 			/// <summary>
 			/// The integer value of the axis that divided the two primary nodes
@@ -266,12 +270,17 @@ namespace EchoRenderer.Mathematics.Accelerators
 			/// </summary>
 			public readonly int axisMinor1;
 
+			readonly int padding;
+
 			public override int GetHashCode()
 			{
 				unchecked
 				{
 					int hashCode = aabb4.GetHashCode();
-					hashCode = (hashCode * 397) ^ child4.GetHashCode();
+					hashCode = (hashCode * 397) ^ (int)child0;
+					hashCode = (hashCode * 397) ^ (int)child1;
+					hashCode = (hashCode * 397) ^ (int)child2;
+					hashCode = (hashCode * 397) ^ (int)child3;
 					hashCode = (hashCode * 397) ^ axisMajor;
 					hashCode = (hashCode * 397) ^ axisMinor0;
 					hashCode = (hashCode * 397) ^ axisMinor1;

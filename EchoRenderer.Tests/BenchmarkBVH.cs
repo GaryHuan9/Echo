@@ -52,7 +52,7 @@ namespace EchoRenderer.Tests
 
 			Pairs = new[]
 					{
-						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+						// new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
 						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 					};
 
@@ -82,6 +82,10 @@ namespace EchoRenderer.Tests
 		// |---------------- |------------ |---------:|---------:|---------:|
 		// | GetIntersection |        Quad | 52.89 ms | 0.314 ms | 0.293 ms |
 		// | GetIntersection |     Regular | 61.75 ms | 0.396 ms | 0.370 ms |
+
+		// |          Method | CurrentPair |     Mean |    Error |   StdDev |
+		// |---------------- |------------ |---------:|---------:|---------:|
+		// | GetIntersection |        Quad | 43.66 ms | 0.177 ms | 0.166 ms |
 
 		[Benchmark]
 		public void GetIntersection()
