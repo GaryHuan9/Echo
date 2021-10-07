@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
@@ -29,7 +30,16 @@ namespace EchoRenderer
 			// FontTesting();
 			// PostProcessTesting();
 
-			// return;
+			for (int i = 0; i < 100; i++)
+			{
+
+				const double InverseLn2 = 1d / 0.69314718056d;
+				int log = (int)(Math.Log(i) * InverseLn2);
+
+				DebugHelper.Log(log, i);
+			}
+
+			return;
 
 			using Terminal terminal = renderTerminal = new Terminal();
 
