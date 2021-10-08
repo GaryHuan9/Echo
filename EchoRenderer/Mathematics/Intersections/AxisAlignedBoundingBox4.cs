@@ -28,7 +28,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
 		/// Returns either the intersection distance or <see cref="float.PositiveInfinity"/> if none was found.
 		/// </summary>
-		public Vector128<float> Intersect(in TraceRay ray)
+		public Vector128<float> Intersect(in Ray ray)
 		{
 			//X axis
 			Vector128<float> origin = Make(ray.origin.x);
