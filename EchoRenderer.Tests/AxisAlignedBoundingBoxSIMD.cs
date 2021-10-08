@@ -25,7 +25,6 @@ namespace EchoRenderer.Tests
 			Float3 origin = CreateFloat3(10f);
 
 			ray = new Ray(origin, -origin.Normalized);
-			traceRay = new TraceRay(ray.origin, ray.direction);
 
 			AxisAlignedBoundingBox CreateAABB()
 			{
@@ -53,7 +52,6 @@ namespace EchoRenderer.Tests
 		readonly AxisAlignedBoundingBox4 aabb;
 
 		readonly Ray ray;
-		readonly TraceRay traceRay;
 
 		[Benchmark]
 		public Vector128<float> Regular() => Vector128.Create
@@ -65,6 +63,6 @@ namespace EchoRenderer.Tests
 		);
 
 		[Benchmark]
-		public Vector128<float> Quad() => aabb.Intersect(traceRay);
+		public Vector128<float> Quad() => aabb.Intersect(ray);
 	}
 }
