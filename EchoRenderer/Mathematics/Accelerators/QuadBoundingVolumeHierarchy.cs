@@ -109,7 +109,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		public override void GetIntersection(ref HitQuery query)
 		{
-			Traverse0(ref query);
+			Traverse(ref query);
 		}
 
 		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
@@ -117,7 +117,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-		unsafe void Traverse0(ref HitQuery query)
+		unsafe void Traverse(ref HitQuery query)
 		{
 			uint* stack = stackalloc uint[stackSize];
 			float* hits = stackalloc float[stackSize];
@@ -210,157 +210,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-		unsafe void Traverse1(ref HitQuery query)
-		{
-			uint* stack = stackalloc uint[stackSize];
-			float* hits = stackalloc float[stackSize];
-
-			uint* next = stack;
-
-			*next++ = 0;  //Add the index of the root node to the stack
-			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
-
-			while (next != stack)
-			{
-				uint index = *--next;
-
-				if (*--hits >= query.distance) continue;
-				ref readonly Node node = ref nodes[index];
-
-				Vector128<float> intersections = node.aabb4.Intersect(query.ray);
-				Vector128<uint> children = node.children;
-
-				float* hit4 = (float*)&intersections;
-				uint* child4 = (uint*)&children;
-
-				Sort4(hit4, child4);
-
-				for (int i = Width - 1; i >= 0; i--)
-				{
-					float hit = hits[i];
-					uint child = child4[i];
-
-					if (hit >= query.distance || child == EmptyNode) continue;
-
-					if (child < NodeThreshold)
-					{
-						//Child is leaf
-						pack.GetIntersection(ref query, child);
-					}
-					else
-					{
-						//Child is branch
-						*next++ = child - NodeThreshold;
-						*hits++ = hit;
-					}
-				}
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-		static unsafe void Sort4(float* keys, uint* values)
-		{
-			ConditionalSwap(0, 2);
-			ConditionalSwap(1, 3);
-			ConditionalSwap(0, 1);
-			ConditionalSwap(2, 3);
-			ConditionalSwap(1, 2);
-
-			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-			void ConditionalSwap(int index0, int index1)
-			{
-				if (keys[index0] <= keys[index1]) return;
-
-				CodeHelper.Swap(ref keys[index0], ref keys[index1]);
-				CodeHelper.Swap(ref values[index0], ref values[index1]);
-			}
-		}
-
-		// static void ConstructLookup()
-		// {
-		// 	uint[] childLookup = new uint[1 << (2 * 3 + 3)];
-		//
-		// 	Span<byte> span = stackalloc byte[4];
-		// 	Span<int> directions = stackalloc int[4];
-		// 	Span<int> axes = stackalloc int[3];
-		//
-		// 	for (byte axis = 0b00_0000; axis <= 0b11_1111; axis++)
-		// 	{
-		// 		for (byte direction = 0b000; direction <= 0b111; direction++)
-		// 		{
-		// 			directions[0] = (direction >> 0) & 1;
-		// 			directions[1] = (direction >> 1) & 1;
-		// 			directions[2] = (direction >> 2) & 1;
-		// 			directions[3] = 1;
-		//
-		// 			axes[0] = (axis >> 0) & 0b11;
-		// 			axes[1] = (axis >> 1) & 0b11;
-		// 			axes[2] = (axis >> 2) & 0b11;
-		//
-		// 			FillSequence(span, directions, axes);
-		// 			DebugHelper.Log(axis.ToStringBinary(), direction.ToStringBinary());
-		// 			DebugHelper.Log(span[0], span[1], span[2], span[3]);
-		// 		}
-		// 	}
-		//
-		// 	static void FillSequence(Span<byte> span, ReadOnlySpan<int> directions, ReadOnlySpan<int> axes)
-		// 	{
-		// 		int head = 0;
-		//
-		// 		if (directions[axes[0]] > 0)
-		// 		{
-		// 			if (directions[axes[2]] > 0)
-		// 			{
-		// 				span[head++] = 3;
-		// 				span[head++] = 2;
-		// 			}
-		// 			else
-		// 			{
-		// 				span[head++] = 2;
-		// 				span[head++] = 3;
-		// 			}
-		//
-		// 			if (directions[axes[1]] > 0)
-		// 			{
-		// 				span[head++] = 1;
-		// 				span[head++] = 0;
-		// 			}
-		// 			else
-		// 			{
-		// 				span[head++] = 0;
-		// 				span[head++] = 1;
-		// 			}
-		// 		}
-		// 		else
-		// 		{
-		// 			if (directions[axes[1]] > 0)
-		// 			{
-		// 				span[head++] = 1;
-		// 				span[head++] = 0;
-		// 			}
-		// 			else
-		// 			{
-		// 				span[head++] = 0;
-		// 				span[head++] = 1;
-		// 			}
-		//
-		// 			if (directions[axes[2]] > 0)
-		// 			{
-		// 				span[head++] = 3;
-		// 				span[head++] = 2;
-		// 			}
-		// 			else
-		// 			{
-		// 				span[head++] = 2;
-		// 				span[head++] = 3;
-		// 			}
-		// 		}
-		//
-		// 		Assert.AreEqual(head, span.Length);
-		// 	}
-		// }
-
 		/// <summary>
 		/// The node is only 124-byte in size, however we pad it to 128 bytes to better align with cache lines and memory stuff.
 		/// </summary>
@@ -371,8 +220,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 			{
 				Assert.IsNotNull(node.child);
 				BuildNode child = node.child;
-
-				Unsafe.SkipInit(out this.children);
 				Unsafe.SkipInit(out padding);
 
 				ref readonly var aabb0 = ref GetAABB(ref child);
@@ -402,7 +249,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 
 			[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
-			[FieldOffset(96)] public readonly Vector128<uint> children;
 
 			[FieldOffset(096)] public readonly uint child0;
 			[FieldOffset(100)] public readonly uint child1;
