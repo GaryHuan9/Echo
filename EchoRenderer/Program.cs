@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
@@ -30,16 +31,7 @@ namespace EchoRenderer
 			// FontTesting();
 			// PostProcessTesting();
 
-			for (int i = 0; i < 100; i++)
-			{
-
-				const double InverseLn2 = 1d / 0.69314718056d;
-				int log = (int)(Math.Log(i) * InverseLn2);
-
-				DebugHelper.Log(log, i);
-			}
-
-			return;
+			// return;
 
 			using Terminal terminal = renderTerminal = new Terminal();
 

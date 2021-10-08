@@ -24,7 +24,7 @@
 
     <ItemGroup>
         <Content Include="Assets/**">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <ContentWithTargetPath Include="Oidn/**">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -33,7 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
+        <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
     </ItemGroup>
 
 </Project>

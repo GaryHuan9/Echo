@@ -27,8 +27,8 @@ namespace EchoRenderer.Mathematics.Intersections
 			this.origin = origin;
 			this.direction = direction;
 
-			Vector128<float> reciprocalVector = Sse.Divide(vector1, directionVector); //Because _mm_rcp_ps is only an approximation, we cannot use it here
-			inverseDirectionVector = Clamp(vectorMinValue, vectorMaxValue, reciprocalVector);
+			//Because _mm_rcp_ps is only an approximation, we cannot use it here
+			inverseDirectionVector = Sse.Divide(vector1, directionVector);
 		}
 
 		[FieldOffset(0)] public readonly Float3 origin;
@@ -45,12 +45,12 @@ namespace EchoRenderer.Mathematics.Intersections
 			Vector128<float> length = Vector128.Create(distance);
 			Vector128<float> result;
 
-			if (Fma.IsSupported) result = Fma.MultiplyAdd(directionVector, length, originVector);
-			else
+			if (!Fma.IsSupported)
 			{
 				result = Sse.Multiply(directionVector, length);
 				result = Sse.Add(originVector, result);
 			}
+			else result = Fma.MultiplyAdd(directionVector, length, originVector);
 
 			return *(Float3*)&result;
 		}
