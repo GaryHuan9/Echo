@@ -52,7 +52,7 @@ namespace EchoRenderer.Tests
 
 			Pairs = new[]
 					{
-						// new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
 						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 					};
 
