@@ -61,7 +61,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			Assert.IsTrue(max >= min);
 		}
 
-		public static readonly AxisAlignedBoundingBox zero = new AxisAlignedBoundingBox(Float3.zero, Float3.zero);
+		public static readonly AxisAlignedBoundingBox none = new(Float3.negativeInfinity, Float3.negativeInfinity);
 
 		[FieldOffset(0)] public readonly Float3 min;
 		[FieldOffset(12)] public readonly Float3 max;
@@ -82,6 +82,13 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		public int MajorAxis => (max - min).MaxIndex;
+
+		/// <summary>
+		/// Multiplier used on the far distance to remove floating point arithmetic errors when calculating
+		/// an intersection with <see cref="AxisAlignedBoundingBox"/> by converting false-misses into false-hits.
+		/// See https://www.arnoldrenderer.com/research/jcgt2013_robust_BVH-revised.pdf for details.
+		/// </summary>
+		public const float FarMultiplier = 1.00000024f;
 
 		/// <summary>
 		/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
@@ -133,7 +140,11 @@ namespace EchoRenderer.Mathematics.Intersections
 				near = (*(Float3*)&lengthsMax).MaxComponent;
 			}
 
-			return near > far || far < 0f ? float.PositiveInfinity : near;
+			far *= FarMultiplier;
+
+			//NOTE: we place the infinity constant as the second return candidate because
+			//if either near or far is NaN, this method will still return a valid result
+			return far >= near && far >= 0f ? near : float.PositiveInfinity;
 		}
 
 		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other) => new(min.Min(other.min), max.Max(other.max));

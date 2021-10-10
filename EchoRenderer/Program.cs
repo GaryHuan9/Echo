@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics.Accelerators;
-using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
@@ -145,7 +142,7 @@ namespace EchoRenderer
 			{
 				if (renderProfile.Method is PathTraceWorker)
 				{
-					postProcess.AddWorker(new DenoiseOidn(postProcess));
+					// postProcess.AddWorker(new DenoiseOidn(postProcess));
 				}
 
 				//Standard render post processing layers

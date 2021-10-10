@@ -193,7 +193,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 				void Push(float hit, uint child, ref HitQuery hitQuery)
 				{
-					if (child == EmptyNode || hit >= hitQuery.distance) return;
+					if (hit >= hitQuery.distance) return;
 
 					if (child < NodeThreshold)
 					{
@@ -244,7 +244,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 					node = node.sibling;
 
 					if (source != null) return ref source.aabb;
-					return ref AxisAlignedBoundingBox.zero;
+					return ref AxisAlignedBoundingBox.none;
 				}
 			}
 

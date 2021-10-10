@@ -24,6 +24,8 @@ namespace EchoRenderer.Mathematics.Intersections
 		readonly Vector128<float> maxY;
 		readonly Vector128<float> maxZ;
 
+		static readonly Vector128<float> farMultiplier = Make(AxisAlignedBoundingBox.FarMultiplier);
+
 		/// <summary>
 		/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
 		/// Returns either the intersection distance or <see cref="float.PositiveInfinity"/> if none was found.
@@ -60,12 +62,15 @@ namespace EchoRenderer.Mathematics.Intersections
 			far = Sse.Min(far, Sse.Max(length0, length1));
 			near = Sse.Max(near, Sse.Min(length0, length1));
 
+			far = Sse.Multiply(far, farMultiplier);
+
+			//See the single AABB implementation about the order of the positive infinity vs near
 			return Sse41.BlendVariable
 			(
-				near, Utilities.vectorPositiveInfinity, Sse.Or
+				Utilities.vectorPositiveInfinity, near, Sse.And
 				(
-					Sse.CompareGreaterThan(near, far),
-					Sse.CompareGreaterThan(Utilities.vector0, far)
+					Sse.CompareGreaterThanOrEqual(far, near),
+					Sse.CompareGreaterThanOrEqual(far, Utilities.vector0)
 				)
 			);
 		}
