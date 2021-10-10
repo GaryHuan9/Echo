@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using BenchmarkDotNet.Attributes;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
@@ -85,7 +83,8 @@ namespace EchoRenderer.Tests
 
 		// |          Method | CurrentPair |     Mean |    Error |   StdDev |
 		// |---------------- |------------ |---------:|---------:|---------:|
-		// | GetIntersection |        Quad | 43.66 ms | 0.177 ms | 0.166 ms |
+		// | GetIntersection |        Quad | 44.14 ms | 0.245 ms | 0.229 ms |
+		// | GetIntersection |     Regular | 61.48 ms | 0.310 ms | 0.290 ms |
 
 		[Benchmark]
 		public void GetIntersection()
