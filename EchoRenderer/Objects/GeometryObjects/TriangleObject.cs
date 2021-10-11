@@ -273,8 +273,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float3 GetInterpolatedNormal(Float2 uv) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
 
 			static void Fill(Span<PressedTriangle> span, int index, int materialToken,
-							 Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							 Float3 normal0, Float3 normal1, Float3 normal2,
+							 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
+							 in Float3 normal0, in Float3 normal1, in Float3 normal2,
 							 Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
 			{
 				int gap = span.Length / 4;
