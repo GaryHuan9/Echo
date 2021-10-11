@@ -42,14 +42,14 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		/// <summary>
 		/// Computes the AABB of all contents inside this instance based on its parent's coordinate system.
-		/// This AABB does not necessary enclose the bvh root, only the enclosure of bvh content is guaranteed.
+		/// This AABB does not necessary enclose the root, only the enclosure of the content is guaranteed.
 		/// NOTE: This property could be slow, so if performance issues arise try to memoize the result.
 		/// </summary>
 		public AxisAlignedBoundingBox AABB
 		{
 			get
 			{
-				const int FetchDepth = 5; //How deep do we go into the bvh to get the AABB of the nodes
+				const int FetchDepth = 5; //How deep do we go into the accelerator to get the AABB of the nodes
 				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (FetchDepth - 1)];
 
 				int count = pack.accelerator.FillAABB(FetchDepth, aabbs);
@@ -58,7 +58,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				Float3 min = Float3.positiveInfinity;
 				Float3 max = Float3.negativeInfinity;
 
-				//Find a small AABB by encapsulating children nodes of the bvh instead of the full bvh
+				//Find a small AABB by encapsulating children nodes instead of the full accelerator
 				for (int i = 0; i < count; i++)
 				{
 					ref readonly var aabb = ref aabbs[i];
