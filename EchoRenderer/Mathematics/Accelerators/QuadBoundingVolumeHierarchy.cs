@@ -12,7 +12,10 @@ using EchoRenderer.Mathematics.Intersections;
 namespace EchoRenderer.Mathematics.Accelerators
 {
 	/// <summary>
-	/// A four-way bounding volume hierarchy. There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
+	/// A four-way hierarchical spacial partitioning acceleration structure.
+	/// Works best with very large quantities of geometries and tokens.
+	/// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
+	/// ref: https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf
 	/// </summary>
 	public class QuadBoundingVolumeHierarchy : TraceAccelerator
 	{
@@ -41,8 +44,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 				BuildNode current = buildNode.child;
 
 				Span<uint> children = stackalloc uint[Width];
-
-				children.Fill(EmptyNode);
 
 				depth = 0;
 
@@ -112,7 +113,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			Traverse(ref query);
 		}
 
-		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
+		public override int GetIntersectionCost(in Ray ray, ref float distance) => GetIntersectionCost(0, ray, ref distance);
 
 		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 
@@ -127,9 +128,13 @@ namespace EchoRenderer.Mathematics.Accelerators
 			*next++ = 0;  //Push the index of the root node to the stack
 			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
 
-			float* direction = stackalloc float[Width];
-			*(Float3*)direction = query.ray.inverseDirection;
-			direction[Width - 1] = 1f;
+			bool* direction = stackalloc bool[Width]
+			{
+				query.ray.inverseDirection.x > 0,
+				query.ray.inverseDirection.y > 0,
+				query.ray.inverseDirection.z > 0,
+				true
+			};
 
 			while (next != stack)
 			{
@@ -141,9 +146,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 				Vector128<float> intersections = node.aabb4.Intersect(query.ray);
 				float* i = (float*)&intersections;
 
-				if (direction[node.axisMajor] > 0)
+				if (direction[node.axisMajor])
 				{
-					if (direction[node.axisMinor1] > 0)
+					if (direction[node.axisMinor1])
 					{
 						Push(i[3], node.child3, ref query);
 						Push(i[2], node.child2, ref query);
@@ -154,7 +159,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 						Push(i[3], node.child3, ref query);
 					}
 
-					if (direction[node.axisMinor0] > 0)
+					if (direction[node.axisMinor0])
 					{
 						Push(i[1], node.child1, ref query);
 						Push(i[0], node.child0, ref query);
@@ -167,7 +172,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 				else
 				{
-					if (direction[node.axisMinor0] > 0)
+					if (direction[node.axisMinor0])
 					{
 						Push(i[1], node.child1, ref query);
 						Push(i[0], node.child0, ref query);
@@ -178,7 +183,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 						Push(i[1], node.child1, ref query);
 					}
 
-					if (direction[node.axisMinor1] > 0)
+					if (direction[node.axisMinor1])
 					{
 						Push(i[3], node.child3, ref query);
 						Push(i[2], node.child2, ref query);
@@ -210,6 +215,43 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
+		int GetIntersectionCost(uint index, in Ray ray, ref float distance)
+		{
+			if (index < NodeThreshold) return pack.GetIntersectionCost(ray, ref distance, index);
+
+			ref readonly Node node = ref nodes[index - NodeThreshold];
+			Vector128<float> intersections = node.aabb4.Intersect(ray);
+
+			int cost = 4;
+
+			if (ray.direction[node.axisMajor] > 0)
+			{
+				GetIntersectionCost2(ray.direction[node.axisMinor0], 0, intersections, ray, ref distance, ref cost);
+				GetIntersectionCost2(ray.direction[node.axisMinor1], 2, intersections, ray, ref distance, ref cost);
+			}
+			else
+			{
+				GetIntersectionCost2(ray.direction[node.axisMinor1], 2, intersections, ray, ref distance, ref cost);
+				GetIntersectionCost2(ray.direction[node.axisMinor0], 0, intersections, ray, ref distance, ref cost);
+			}
+
+			return cost;
+		}
+
+		void GetIntersectionCost2(float direction, uint child, in Vector128<float> intersections, in Ray ray, ref float distance, ref int cost)
+		{
+			if (direction > 0f)
+			{
+				if (intersections.GetElement((int)child + 0) < distance) cost += GetIntersectionCost(child + 0, ray, ref distance);
+				if (intersections.GetElement((int)child + 1) < distance) cost += GetIntersectionCost(child + 1, ray, ref distance);
+			}
+			else
+			{
+				if (intersections.GetElement((int)child + 1) < distance) cost += GetIntersectionCost(child + 1, ray, ref distance);
+				if (intersections.GetElement((int)child + 0) < distance) cost += GetIntersectionCost(child + 0, ray, ref distance);
+			}
+		}
+
 		/// <summary>
 		/// The node is only 124-byte in size, however we pad it to 128 bytes to better align with cache lines and memory stuff.
 		/// </summary>
@@ -220,7 +262,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 			{
 				Assert.IsNotNull(node.child);
 				BuildNode child = node.child;
-				Unsafe.SkipInit(out padding);
 
 				ref readonly var aabb0 = ref GetAABB(ref child);
 				ref readonly var aabb1 = ref GetAABB(ref child);
@@ -238,6 +279,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 				axisMinor0 = node.axisMinor0;
 				axisMinor1 = node.axisMinor1;
 
+				Unsafe.SkipInit(out padding);
+				Unsafe.SkipInit(out this.children);
+
 				static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 				{
 					var source = node.source;
@@ -249,6 +293,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 
 			[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
+			[FieldOffset(96)] public readonly Vector128<uint> children;
 
 			[FieldOffset(096)] public readonly uint child0;
 			[FieldOffset(100)] public readonly uint child1;
