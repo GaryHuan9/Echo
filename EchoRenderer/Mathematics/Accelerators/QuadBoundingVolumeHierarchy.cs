@@ -113,7 +113,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			Traverse(ref query);
 		}
 
-		public override int GetIntersectionCost(in Ray ray, ref float distance) => GetIntersectionCost(0, ray, ref distance);
+		public override int GetIntersectionCost(in Ray ray, ref float distance) => GetIntersectionCost(NodeThreshold, ray, ref distance);
 
 		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 
@@ -128,7 +128,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			*next++ = 0;  //Push the index of the root node to the stack
 			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
 
-			bool* direction = stackalloc bool[Width]
+			bool* orders = stackalloc bool[Width]
 			{
 				query.ray.inverseDirection.x > 0,
 				query.ray.inverseDirection.y > 0,
@@ -146,9 +146,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 				Vector128<float> intersections = node.aabb4.Intersect(query.ray);
 				float* i = (float*)&intersections;
 
-				if (direction[node.axisMajor])
+				if (orders[node.axisMajor])
 				{
-					if (direction[node.axisMinor1])
+					if (orders[node.axisMinor1])
 					{
 						Push(i[3], node.child3, ref query);
 						Push(i[2], node.child2, ref query);
@@ -159,7 +159,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 						Push(i[3], node.child3, ref query);
 					}
 
-					if (direction[node.axisMinor0])
+					if (orders[node.axisMinor0])
 					{
 						Push(i[1], node.child1, ref query);
 						Push(i[0], node.child0, ref query);
@@ -172,7 +172,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 				else
 				{
-					if (direction[node.axisMinor0])
+					if (orders[node.axisMinor0])
 					{
 						Push(i[1], node.child1, ref query);
 						Push(i[0], node.child0, ref query);
@@ -183,7 +183,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 						Push(i[1], node.child1, ref query);
 					}
 
-					if (direction[node.axisMinor1])
+					if (orders[node.axisMinor1])
 					{
 						Push(i[3], node.child3, ref query);
 						Push(i[2], node.child2, ref query);
@@ -215,41 +215,54 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		int GetIntersectionCost(uint index, in Ray ray, ref float distance)
+		int GetIntersectionCost(uint index, in Ray ray, ref float distance, float intersection = 0f)
 		{
+			if (index == EmptyNode || intersection >= distance) return 0;
 			if (index < NodeThreshold) return pack.GetIntersectionCost(ray, ref distance, index);
 
 			ref readonly Node node = ref nodes[index - NodeThreshold];
 			Vector128<float> intersections = node.aabb4.Intersect(ray);
 
+			Span<bool> orders = stackalloc bool[Width]
+			{
+				ray.inverseDirection.x > 0f,
+				ray.inverseDirection.y > 0f,
+				ray.inverseDirection.z > 0f,
+				true
+			};
+
 			int cost = 4;
 
-			if (ray.direction[node.axisMajor] > 0)
+			if (orders[node.axisMajor])
 			{
-				GetIntersectionCost2(ray.direction[node.axisMinor0], 0, intersections, ray, ref distance, ref cost);
-				GetIntersectionCost2(ray.direction[node.axisMinor1], 2, intersections, ray, ref distance, ref cost);
+				cost += GetIntersectionCost2(orders[node.axisMinor0], intersections.GetLower(), node.children.GetLower(), ray, ref distance);
+				cost += GetIntersectionCost2(orders[node.axisMinor1], intersections.GetUpper(), node.children.GetUpper(), ray, ref distance);
 			}
 			else
 			{
-				GetIntersectionCost2(ray.direction[node.axisMinor1], 2, intersections, ray, ref distance, ref cost);
-				GetIntersectionCost2(ray.direction[node.axisMinor0], 0, intersections, ray, ref distance, ref cost);
+				cost += GetIntersectionCost2(orders[node.axisMinor1], intersections.GetUpper(), node.children.GetUpper(), ray, ref distance);
+				cost += GetIntersectionCost2(orders[node.axisMinor0], intersections.GetLower(), node.children.GetLower(), ray, ref distance);
 			}
 
 			return cost;
 		}
 
-		void GetIntersectionCost2(float direction, uint child, in Vector128<float> intersections, in Ray ray, ref float distance, ref int cost)
+		int GetIntersectionCost2(bool order, in Vector64<float> intersections, in Vector64<uint> children, in Ray ray, ref float distance)
 		{
-			if (direction > 0f)
+			int cost = 0;
+
+			if (order)
 			{
-				if (intersections.GetElement((int)child + 0) < distance) cost += GetIntersectionCost(child + 0, ray, ref distance);
-				if (intersections.GetElement((int)child + 1) < distance) cost += GetIntersectionCost(child + 1, ray, ref distance);
+				cost += GetIntersectionCost(children.GetElement(0), ray, ref distance, intersections.GetElement(0));
+				cost += GetIntersectionCost(children.GetElement(1), ray, ref distance, intersections.GetElement(1));
 			}
 			else
 			{
-				if (intersections.GetElement((int)child + 1) < distance) cost += GetIntersectionCost(child + 1, ray, ref distance);
-				if (intersections.GetElement((int)child + 0) < distance) cost += GetIntersectionCost(child + 0, ray, ref distance);
+				cost += GetIntersectionCost(children.GetElement(1), ray, ref distance, intersections.GetElement(1));
+				cost += GetIntersectionCost(children.GetElement(0), ray, ref distance, intersections.GetElement(0));
 			}
+
+			return cost;
 		}
 
 		/// <summary>
@@ -293,7 +306,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 
 			[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
-			[FieldOffset(96)] public readonly Vector128<uint> children;
+			[FieldOffset(096)] public readonly Vector128<uint> children;
 
 			[FieldOffset(096)] public readonly uint child0;
 			[FieldOffset(100)] public readonly uint child1;

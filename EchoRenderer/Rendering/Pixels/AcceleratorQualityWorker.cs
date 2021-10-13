@@ -1,12 +1,11 @@
 ﻿using System.Threading;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Pixels
 {
-	public class BVHQualityWorker : PixelWorker
+	public class AcceleratorQualityWorker : PixelWorker
 	{
 		long totalCost;
 		long totalSample;
