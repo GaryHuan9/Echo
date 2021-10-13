@@ -78,13 +78,13 @@ namespace EchoRenderer
 															   AdaptiveSample = 80
 														   };
 
-		static readonly TiledRenderProfile bvhQualityProfile = new()
-															   {
-																   Method = new BVHQualityWorker(),
-																   TilePattern = new OrderedPattern(),
-																   PixelSample = 1,
-																   AdaptiveSample = 0
-															   };
+		static readonly TiledRenderProfile acceleratorQualityProfile = new()
+																	   {
+																		   Method = new AcceleratorQualityWorker(),
+																		   TilePattern = new OrderedPattern(),
+																		   PixelSample = 1,
+																		   AdaptiveSample = 0
+																	   };
 
 		static readonly ScenePressProfile scenePressProfile = new()
 															  {
@@ -102,9 +102,9 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]);  //Selects resolution and create buffer
-			TiledRenderProfile renderProfile = pathTraceFastProfile; //Selects or creates render profile
-			Scene scene = new SingleMaterialBall();                  //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[1]);       //Selects resolution and create buffer
+			TiledRenderProfile renderProfile = acceleratorQualityProfile; //Selects or creates render profile
+			Scene scene = new SingleMaterialBall();                       //Selects or creates scene
 
 			DebugHelper.Log("Assets loaded");
 
@@ -134,9 +134,9 @@ namespace EchoRenderer
 
 			using var postProcess = new PostProcessingEngine(buffer);
 
-			if (renderProfile.Method is BVHQualityWorker) //Creates different post processing workers based on render method
+			if (renderProfile.Method is AcceleratorQualityWorker) //Creates different post processing workers based on render method
 			{
-				postProcess.AddWorker(new BVHQualityVisualizer(postProcess)); //Only used for BVH quality testing
+				postProcess.AddWorker(new AcceleratorQualityVisualizer(postProcess)); //Only used for accelerator quality testing
 			}
 			else
 			{
