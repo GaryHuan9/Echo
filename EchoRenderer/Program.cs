@@ -90,7 +90,7 @@ namespace EchoRenderer
 															  {
 																  AcceleratorProfile = new TraceAcceleratorProfile
 																					   {
-																						   AcceleratorType = typeof(QuadBoundingVolumeHierarchy)
+																						   AcceleratorType = typeof(BoundingVolumeHierarchy)
 																					   }
 															  };
 
@@ -102,9 +102,9 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]);       //Selects resolution and create buffer
-			TiledRenderProfile renderProfile = acceleratorQualityProfile; //Selects or creates render profile
-			Scene scene = new SingleMaterialBall();                       //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[2]);    //Selects resolution and create buffer
+			TiledRenderProfile renderProfile = pathTraceExportProfile; //Selects or creates render profile
+			Scene scene = new GridMaterialBall();                      //Selects or creates scene
 
 			DebugHelper.Log("Assets loaded");
 
@@ -142,7 +142,7 @@ namespace EchoRenderer
 			{
 				if (renderProfile.Method is PathTraceWorker)
 				{
-					// postProcess.AddWorker(new DenoiseOidn(postProcess));
+					postProcess.AddWorker(new DenoiseOidn(postProcess));
 				}
 
 				//Standard render post processing layers
