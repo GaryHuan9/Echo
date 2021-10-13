@@ -83,8 +83,8 @@ namespace EchoRenderer.Tests
 
 		// |          Method | CurrentPair |     Mean |    Error |   StdDev |
 		// |---------------- |------------ |---------:|---------:|---------:|
-		// | GetIntersection |        Quad | 44.14 ms | 0.245 ms | 0.229 ms |
-		// | GetIntersection |     Regular | 61.48 ms | 0.310 ms | 0.290 ms |
+		// | GetIntersection |        Quad | 42.93 ms | 0.192 ms | 0.170 ms |
+		// | GetIntersection |     Regular | 61.47 ms | 0.581 ms | 0.543 ms |
 
 		[Benchmark]
 		public void GetIntersection()
