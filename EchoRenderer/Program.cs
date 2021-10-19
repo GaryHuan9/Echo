@@ -102,9 +102,9 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[2]);    //Selects resolution and create buffer
-			TiledRenderProfile renderProfile = pathTraceExportProfile; //Selects or creates render profile
-			Scene scene = new GridMaterialBall();                      //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[1]);  //Selects resolution and create buffer
+			TiledRenderProfile renderProfile = pathTraceFastProfile; //Selects or creates render profile
+			Scene scene = new SingleBunny();                         //Selects or creates scene
 
 			DebugHelper.Log("Assets loaded");
 
@@ -142,7 +142,7 @@ namespace EchoRenderer
 			{
 				if (renderProfile.Method is PathTraceWorker)
 				{
-					postProcess.AddWorker(new DenoiseOidn(postProcess));
+					// postProcess.AddWorker(new DenoiseOidn(postProcess));
 				}
 
 				//Standard render post processing layers
@@ -201,7 +201,7 @@ namespace EchoRenderer
 			using PostProcessingEngine engine = new PostProcessingEngine(buffer);
 
 			//NOTE: Oidn do not have normal and albedo data here, so its quality might be pretty bad
-			engine.AddWorker(new DenoiseOidn(engine));
+			// engine.AddWorker(new DenoiseOidn(engine));
 
 			engine.AddWorker(new Bloom(engine));
 			engine.AddWorker(new Reinhard(engine));
