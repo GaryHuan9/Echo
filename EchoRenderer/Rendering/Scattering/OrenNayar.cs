@@ -33,6 +33,16 @@ namespace EchoRenderer.Rendering.Scattering
 			float sinO = Sine(outgoing);
 			float sinI = Sine(incident);
 
+			float cos = 0f;
+			if (!sinO.AlmostEquals() && !sinI.AlmostEquals())
+			{
+				float sinPhiO = SinePhi(outgoing);
+				float sinPhiI = SinePhi(incident);
+
+				float cosPhiO = CosinePhi(outgoing);
+				float cosPhiI = CosinePhi(outgoing);
+			}
+
 			throw new NotImplementedException();
 		}
 	}
