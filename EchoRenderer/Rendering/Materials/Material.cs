@@ -11,14 +11,14 @@ namespace EchoRenderer.Rendering.Materials
 {
 	public abstract class Material
 	{
-		public Float3 Albedo { get; set; }
+		public Float3 Albedo   { get; set; }
 		public Float3 Emission { get; set; }
 
-		public Texture AlbedoMap { get; set; } = Texture.white;
+		public Texture AlbedoMap   { get; set; } = Texture.white;
 		public Texture EmissionMap { get; set; } = Texture.white;
 
-		public float NormalIntensity { get; set; } = 1f;
-		public Texture NormalMap { get; set; } = Texture.normal;
+		public float   NormalIntensity { get; set; } = 1f;
+		public Texture NormalMap       { get; set; } = Texture.normal;
 
 		public bool BackfaceCulling { get; set; } = true;
 
@@ -35,7 +35,7 @@ namespace EchoRenderer.Rendering.Materials
 			AssertZeroOne(Albedo);
 
 			NormalIntensity = NormalIntensity.Clamp(-1f);
-			albedoColor = Utilities.ToColor(Albedo);
+			albedoColor     = Utilities.ToColor(Albedo);
 		}
 
 		/// <summary>
@@ -52,8 +52,8 @@ namespace EchoRenderer.Rendering.Materials
 
 		public unsafe void FillTangentNormal(ref HitQuery query)
 		{
-			ref readonly Float3 normal = ref query.normal;
-			ref Float3 shadingNormal = ref query.shading.normal;
+			ref readonly Float3 normal        = ref query.normal;
+			ref Float3          shadingNormal = ref query.shading.normal;
 
 			if (NormalMap == Texture.normal || NormalIntensity.AlmostEquals())
 			{
@@ -62,12 +62,12 @@ namespace EchoRenderer.Rendering.Materials
 			}
 
 			Vector128<float> sample = NormalMap[query.shading.texcoord];
-			Vector128<float> local = Fma.MultiplyAdd(sample, Utilities.vector2, normalShift);
+			Vector128<float> local  = Fma.MultiplyAdd(sample, Utilities.vector2, normalShift);
 
 			//Transform local direction to world space based on normal
 			Float3 helper = Math.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
 
-			Float3 tangent = Float3.Cross(normal, helper).Normalized;
+			Float3 tangent  = Float3.Cross(normal, helper).Normalized;
 			Float3 binormal = Float3.Cross(normal, tangent).Normalized;
 
 			float* p = (float*)&local;
@@ -102,7 +102,7 @@ namespace EchoRenderer.Rendering.Materials
 		protected static float RoughnessToRandomRadius(float roughness)
 		{
 			const float Alpha = 7.4f;
-			const float Beta = 1.8f;
+			const float Beta  = 1.8f;
 
 			float radius = MathF.Pow(Alpha, roughness) - 1f;
 			return MathF.Pow(radius / (Alpha - 1f), Beta);
