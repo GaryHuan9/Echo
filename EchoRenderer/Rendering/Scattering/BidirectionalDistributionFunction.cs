@@ -75,7 +75,8 @@ namespace EchoRenderer.Rendering.Scattering
 		protected static float Tangent2(in Float3 direction) => Sine2(direction) / Cosine2(direction);
 
 		/// <summary>
-		/// Returns the cosine value of the local <paramref name="direction"/> with the tangent direction.
+		/// Returns the cosine value of the local <paramref name="direction"/>
+		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
 		protected static float CosinePhi(in Float3 direction)
 		{
@@ -85,17 +86,19 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Returns the sine value of the local <paramref name="direction"/> with the tangent direction.
+		/// Returns the sine value of the local <paramref name="direction"/>
+		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
 		protected static float SinePhi(in Float3 direction)
 		{
 			float sin = Sine(direction);
-			if (sin.AlmostEquals()) return 1f;
+			if (sin.AlmostEquals()) return 0f;
 			return (direction.y / sin).Clamp(-1f);
 		}
 
 		/// <summary>
-		/// Returns the cosine squared value of the local <paramref name="direction"/> with the tangent direction.
+		/// Returns the cosine squared value of the local <paramref name="direction"/>
+		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
 		protected static float Cosine2Phi(in Float3 direction)
 		{
@@ -105,12 +108,13 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Returns the sine squared value of the local <paramref name="direction"/> with the tangent direction.
+		/// Returns the sine squared value of the local <paramref name="direction"/>
+		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
 		protected static float Sine2Phi(in Float3 direction)
 		{
 			float sin2 = Sine2(direction);
-			if (sin2.AlmostEquals()) return 1f;
+			if (sin2.AlmostEquals()) return 0f;
 			return (direction.y * direction.y / sin2).Clamp();
 		}
 	}
