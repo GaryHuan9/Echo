@@ -42,46 +42,46 @@ namespace EchoRenderer.Rendering.Scattering
 		/// <summary>
 		/// Returns the cosine value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		protected static float Cosine(in Float3 direction) => direction.z;
+		public static float Cosine(in Float3 direction) => direction.z;
 
 		/// <summary>
 		/// Returns the cosine squared value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		protected static float Cosine2(in Float3 direction) => direction.z * direction.z;
+		public static float Cosine2(in Float3 direction) => direction.z * direction.z;
 
 		/// <summary>
 		/// Returns the absolute cosine value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		protected static float AbsoluteCosine(in Float3 direction) => Math.Abs(direction.z);
+		public static float AbsoluteCosine(in Float3 direction) => Math.Abs(direction.z);
 
 		/// <summary>
 		/// Returns the sine squared value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		protected static float Sine2(in Float3 direction) => Math.Max(1f - Cosine(direction), 0f);
+		public static float Sine2(in Float3 direction) => Math.Max(1f - Cosine2(direction), 0f);
 
 		/// <summary>
 		/// Returns the sine value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		protected static float Sine(in Float3 direction) => MathF.Sqrt(Sine2(direction));
+		public static float Sine(in Float3 direction) => MathF.Sqrt(Sine2(direction));
 
 		/// <summary>
 		/// Returns the tangent value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		protected static float Tangent(in Float3 direction) => Sine(direction) / Cosine(direction);
+		public static float Tangent(in Float3 direction) => Sine(direction) / Cosine(direction);
 
 		/// <summary>
 		/// Returns the tangent squared value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		protected static float Tangent2(in Float3 direction) => Sine2(direction) / Cosine2(direction);
+		public static float Tangent2(in Float3 direction) => Sine2(direction) / Cosine2(direction);
 
 		/// <summary>
 		/// Returns the cosine value of the local <paramref name="direction"/>
 		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
-		protected static float CosinePhi(in Float3 direction)
+		public static float CosinePhi(in Float3 direction)
 		{
 			float sin = Sine(direction);
-			if (sin.AlmostEquals()) return 1f;
+			if (sin == 0f) return 1f;
 			return (direction.x / sin).Clamp(-1f);
 		}
 
@@ -89,10 +89,10 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Returns the sine value of the local <paramref name="direction"/>
 		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
-		protected static float SinePhi(in Float3 direction)
+		public static float SinePhi(in Float3 direction)
 		{
 			float sin = Sine(direction);
-			if (sin.AlmostEquals()) return 0f;
+			if (sin == 0f) return 0f;
 			return (direction.y / sin).Clamp(-1f);
 		}
 
@@ -100,10 +100,10 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Returns the cosine squared value of the local <paramref name="direction"/>
 		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
-		protected static float Cosine2Phi(in Float3 direction)
+		public static float Cosine2Phi(in Float3 direction)
 		{
 			float sin2 = Sine2(direction);
-			if (sin2.AlmostEquals()) return 1f;
+			if (sin2 == 0f) return 1f;
 			return (direction.x * direction.x / sin2).Clamp();
 		}
 
@@ -111,10 +111,10 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Returns the sine squared value of the local <paramref name="direction"/>
 		/// with the tangent direction in the horizontal/flat angle phi.
 		/// </summary>
-		protected static float Sine2Phi(in Float3 direction)
+		public static float Sine2Phi(in Float3 direction)
 		{
 			float sin2 = Sine2(direction);
-			if (sin2.AlmostEquals()) return 0f;
+			if (sin2 == 0f) return 0f;
 			return (direction.y * direction.y / sin2).Clamp();
 		}
 	}

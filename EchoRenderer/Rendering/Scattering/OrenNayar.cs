@@ -3,6 +3,9 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Rendering.Scattering
 {
+	/// <summary>
+	/// Microfacet diffuse reflection based on Oren and Nayer (1994)
+	/// </summary>
 	public class OrenNayar : BidirectionalDistributionFunction
 	{
 		public OrenNayar() : base
@@ -33,17 +36,33 @@ namespace EchoRenderer.Rendering.Scattering
 			float sinO = Sine(outgoing);
 			float sinI = Sine(incident);
 
-			float cos = 0f;
+			float cosMax = 0f;
+
 			if (!sinO.AlmostEquals() && !sinI.AlmostEquals())
 			{
-				float sinPhiO = SinePhi(outgoing);
-				float sinPhiI = SinePhi(incident);
-
-				float cosPhiO = CosinePhi(outgoing);
-				float cosPhiI = CosinePhi(outgoing);
+				float cos = CosinePhi(outgoing) * CosinePhi(incident);
+				float sin = SinePhi(outgoing) * SinePhi(incident);
+				cosMax = Math.Max(cos + sin, 0f);
 			}
 
-			throw new NotImplementedException();
+			float cosO = AbsoluteCosine(outgoing);
+			float cosI = AbsoluteCosine(incident);
+
+			float sinA;
+			float tanB;
+
+			if (cosO < cosI)
+			{
+				sinA = sinO;
+				tanB = sinI / cosI;
+			}
+			else
+			{
+				sinA = sinI;
+				tanB = sinO / cosO;
+			}
+
+			return 1f / Scalars.PI * (a + b * cosMax * sinA * tanB) * reflectance;
 		}
 	}
 }
