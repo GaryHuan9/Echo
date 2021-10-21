@@ -3,6 +3,9 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Rendering.Scattering
 {
+	/// <summary>
+	/// Perfectly uniform Lambertian diffuse reflection.
+	/// </summary>
 	public class LambertianReflection : BidirectionalDistributionFunction
 	{
 		public LambertianReflection() : base
@@ -21,6 +24,9 @@ namespace EchoRenderer.Rendering.Scattering
 		public override Float3 GetReflectance(ReadOnlySpan<Float2> samples0, ReadOnlySpan<Float2> samples1) => reflectance;
 	}
 
+	/// <summary>
+	/// Perfectly uniform Lambertian diffuse transmission.
+	/// </summary>
 	public class LambertianTransmission : BidirectionalDistributionFunction
 	{
 		public LambertianTransmission() : base
