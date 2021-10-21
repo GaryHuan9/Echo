@@ -53,6 +53,11 @@ namespace EchoRenderer.Tests
 
 		readonly Ray ray;
 
+		// |  Method |      Mean |     Error |    StdDev |
+		// |-------- |----------:|----------:|----------:|
+		// | Regular | 12.454 ns | 0.0538 ns | 0.0503 ns |
+		// |    Quad |  3.144 ns | 0.0388 ns | 0.0363 ns |
+
 		[Benchmark]
 		public Vector128<float> Regular() => Vector128.Create
 		(
