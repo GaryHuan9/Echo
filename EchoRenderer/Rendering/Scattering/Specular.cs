@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Rendering.Sampling;
 
 namespace EchoRenderer.Rendering.Scattering
 {
@@ -7,8 +8,8 @@ namespace EchoRenderer.Rendering.Scattering
 	{
 		public SpecularReflection() : base
 		(
-			BidirectionalDistributionFunctionType.reflection |
-			BidirectionalDistributionFunctionType.specular
+			FunctionType.reflection |
+			FunctionType.specular
 		) { }
 
 		public void Reset(in Float3 newReflectance, in FresnelDielectric newDielectric)
@@ -33,7 +34,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => Float3.zero;
 
-		public override Float3 Sample(in Float3 outgoing, out Float3 incident, in Float2 sample, out float pdf, ref BidirectionalDistributionFunctionType type)
+		public override Float3 Sample(in Float3 outgoing, out Float3 incident, in Sample2 sample, out float pdf)
 		{
 			incident = new Float3(-outgoing.x, -outgoing.y, outgoing.z);
 
@@ -43,14 +44,16 @@ namespace EchoRenderer.Rendering.Scattering
 			Float3 evaluation = isDielectric ? dielectric.Evaluate(cosI) : conductor.Evaluate(cosI);
 			return evaluation * reflectance / AbsoluteCosine(incident);
 		}
+
+		public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
 	}
 
 	public class SpecularTransmission : BidirectionalDistributionFunction
 	{
 		public SpecularTransmission() : base
 		(
-			BidirectionalDistributionFunctionType.transmission |
-			BidirectionalDistributionFunctionType.specular
+			FunctionType.transmission |
+			FunctionType.specular
 		) { }
 
 		public void Reset(in Float3 newTransmittance, float newEtaAbove, float newEtaBelow)
@@ -72,6 +75,8 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => Float3.zero;
 
-		public override Float3 Sample(in Float3 outgoing, out Float3 incident, in Float2 sample, out float pdf, ref BidirectionalDistributionFunctionType type) => throw new NotImplementedException();
+		public override Float3 Sample(in Float3 outgoing, out Float3 incident, in Sample2 sample, out float pdf) => throw new NotImplementedException();
+
+		public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
 	}
 }

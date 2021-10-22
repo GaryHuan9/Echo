@@ -3,8 +3,9 @@
 namespace EchoRenderer.Rendering.Scattering
 {
 	[Flags]
-	public enum BidirectionalDistributionFunctionType
+	public enum FunctionType
 	{
+		none         = 0,
 		reflection   = 1 << 0,
 		transmission = 1 << 1,
 		diffuse      = 1 << 2,

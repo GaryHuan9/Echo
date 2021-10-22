@@ -13,7 +13,9 @@ namespace EchoRenderer.Textures
 
 		public Pure(Float4 color) : this(Utilities.ToVector(color)) { }
 
-		public Pure(float color) : this(Vector128.Create(color)) { }
+		public Pure(Float3 color) : this(Utilities.ToColor(color)) { }
+
+		public Pure(float color) : this((Float3)color) { }
 
 		readonly Vector128<float> color;
 
