@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
@@ -33,14 +34,14 @@ namespace EchoRenderer.Textures.DimensionTwo
 		}
 
 		readonly Texture2D texture;
-		readonly IFilter original;
+		readonly IFilter   original;
 
 		public void Dispose() => texture.Filter = original;
 	}
 
 	public static class Filters
 	{
-		public static readonly IFilter point = new Point();
+		public static readonly IFilter point    = new Point();
 		public static readonly IFilter bilinear = new Bilinear();
 
 		class Point : IFilter
@@ -75,15 +76,20 @@ namespace EchoRenderer.Textures.DimensionTwo
 				Vector128<float> y1x1 = texture[upperRight];
 
 				//Interpolate
-				Float2 time = Int2.InverseLerp(bottomLeft, upperRight, uv - Float2.half).Clamp();
-
-				Vector128<float> timeX = Vector128.Create(time.x);
-				Vector128<float> timeY = Vector128.Create(time.y);
+				Vector128<float> timeX = Vector128.Create(InverseLerp(bottomLeft.x, upperRight.x, uv.x - 0.5f));
+				Vector128<float> timeY = Vector128.Create(InverseLerp(bottomLeft.y, upperRight.y, uv.y - 0.5f));
 
 				Vector128<float> y0 = Utilities.Lerp(y0x0, y0x1, timeX);
 				Vector128<float> y1 = Utilities.Lerp(y1x0, y1x1, timeX);
 
 				return Utilities.Lerp(y0, y1, timeY);
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static float InverseLerp(int left, int right, float value)
+			{
+				if (left == right) return 0f;
+				return value - left;
 			}
 		}
 	}

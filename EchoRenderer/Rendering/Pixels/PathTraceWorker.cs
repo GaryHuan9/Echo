@@ -3,15 +3,16 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public override MemoryArena CreateArena(int hash) => new MemoryArena(hash);
+		public override Arena CreateArena(int hash) => new Arena(hash);
 
-		public override Sample Render(Float2 screenUV, MemoryArena arena)
+		public override Sample Render(Float2 screenUV, Arena arena)
 		{
 			PressedScene scene = Profile.Scene;
 			ExtendedRandom random = arena.random;

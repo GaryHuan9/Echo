@@ -1,14 +1,15 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Rendering.Memory;
 
 namespace EchoRenderer.Rendering.Pixels
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{
-		public override MemoryArena CreateArena(int hash) => new MemoryArena(hash);
+		public override Arena CreateArena(int hash) => new Arena(hash);
 
-		public override Sample Render(Float2 screenUV, MemoryArena arena)
+		public override Sample Render(Float2 screenUV, Arena arena)
 		{
 			PressedScene scene = Profile.Scene;
 			ExtendedRandom random = arena.random;

@@ -1,4 +1,5 @@
 ﻿using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
 
 namespace EchoRenderer.Rendering.Materials
@@ -9,6 +10,6 @@ namespace EchoRenderer.Rendering.Materials
 		/// Determines the scattering properties of this material at <paramref name="query"/>.
 		/// Initializes a <see cref="BidirectionalScatteringDistributionFunctions"/>.
 		/// </summary>
-		public abstract void Scatter(ref HitQuery query, MemoryArena arena, TransportMode mode);
+		public abstract void Scatter(ref HitQuery query, Arena arena, TransportMode mode);
 	}
 }

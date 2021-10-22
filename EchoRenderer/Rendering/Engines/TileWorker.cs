@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures.DimensionTwo;
 
@@ -79,7 +80,7 @@ namespace EchoRenderer.Rendering.Engines
 		public long RejectedSample => Interlocked.Read(ref _rejectedSample);
 
 		readonly Thread worker;
-		readonly MemoryArena arena;
+		readonly Arena arena;
 
 		/// <summary>
 		/// Offset applied to each pixel during regular pixel sampling.
