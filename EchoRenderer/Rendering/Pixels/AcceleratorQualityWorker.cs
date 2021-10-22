@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Pixels
@@ -10,7 +11,7 @@ namespace EchoRenderer.Rendering.Pixels
 		long totalCost;
 		long totalSample;
 
-		public override MemoryArena CreateArena(int hash) => new MemoryArena(hash);
+		public override Arena CreateArena(int hash) => new Arena(hash);
 
 		public override void AssignProfile(RenderProfile profile)
 		{
@@ -20,7 +21,7 @@ namespace EchoRenderer.Rendering.Pixels
 			Interlocked.Exchange(ref totalSample, 0);
 		}
 
-		public override Sample Render(Float2 screenUV, MemoryArena arena)
+		public override Sample Render(Float2 screenUV, Arena arena)
 		{
 			PressedScene scene = Profile.Scene;
 			Ray ray = scene.camera.GetRay(screenUV);

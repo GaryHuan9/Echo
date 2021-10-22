@@ -16,7 +16,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 			pixels = new Vector128<float>[length];
 		}
 
-		protected readonly int length;
+		protected readonly int                length;
 		protected readonly Vector128<float>[] pixels;
 
 		/// <summary>

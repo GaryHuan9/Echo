@@ -28,7 +28,7 @@ namespace EchoRenderer.Rendering.Scattering
 			//Use a helper to calculate the tangent and binormal vectors
 			Float3 helper = Math.Abs(normalShading.x) >= 0.9f ? Float3.forward : Float3.right;
 
-			tangent = Float3.Cross(normalShading,  helper).Normalized;
+			tangent = Float3.Cross(normalShading, helper).Normalized;
 			binormal = Float3.Cross(normalShading, tangent).Normalized;
 		}
 
@@ -127,7 +127,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 			//Sample the selected function
 			Float3 outgoing = WorldToLocal(outgoingWorld);
-			Float3 sampled  = selected.Sample(outgoing, out Float3 incident, sample, out pdf);
+			Float3 sampled = selected.Sample(outgoing, out Float3 incident, sample, out pdf);
 
 			if (pdf.AlmostEquals())
 			{
@@ -163,7 +163,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// </summary>
 		public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2> samples, FunctionType type)
 		{
-			Float3 outgoing    = WorldToLocal(outgoingWorld);
+			Float3 outgoing = WorldToLocal(outgoingWorld);
 			Float3 reflectance = Float3.zero;
 
 			for (int i = 0; i < count; i++)
@@ -194,9 +194,28 @@ namespace EchoRenderer.Rendering.Scattering
 			return reflectance;
 		}
 
-		public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld)
+		/// <summary>
+		/// Returns the aggregated probability density for all <see cref="BidirectionalDistributionFunction"/> that matches with
+		/// <paramref name="type"/>. See <see cref="BidirectionalDistributionFunction.ProbabilityDensity"/> for more information.
+		/// </summary>
+		public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type)
 		{
+			Float3 outgoing = WorldToLocal(outgoingWorld);
+			Float3 incident = WorldToLocal(incidentWorld);
 
+			int matched = 0;
+			float pdf = 0f;
+
+			for (int i = 0; i < count; i++)
+			{
+				var function = functions[i];
+				if (!function.MatchType(type)) continue;
+
+				pdf += function.ProbabilityDensity(outgoing, incident);
+				++matched;
+			}
+
+			return matched == 0 ? 0f : pdf / matched;
 		}
 
 		Float3 WorldToLocal(in Float3 direction) => new(direction.Dot(tangent), direction.Dot(binormal), direction.Dot(normalShading));
