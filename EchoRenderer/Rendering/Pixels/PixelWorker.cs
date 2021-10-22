@@ -3,6 +3,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Pixels
@@ -12,10 +13,10 @@ namespace EchoRenderer.Rendering.Pixels
 		protected RenderProfile Profile { get; private set; }
 
 		/// <summary>
-		/// Should create and return a new object of base type <see cref="MemoryArena"/> with <paramref name="hash"/>.
-		/// NOTE: The returned <see cref="MemoryArena"/> will be exactly the allocator used for <see cref="Render"/>.
+		/// Should create and return a new object of base type <see cref="Arena"/> with <paramref name="hash"/>.
+		/// NOTE: The returned <see cref="Arena"/> will be exactly the allocator used for <see cref="Render"/>.
 		/// </summary>
-		public abstract MemoryArena CreateArena(int hash);
+		public abstract Arena CreateArena(int hash);
 
 		/// <summary>
 		/// Assigns the render profile before a render session begins.
@@ -30,8 +31,8 @@ namespace EchoRenderer.Rendering.Pixels
 		/// The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
 		/// Y should have the same scale as X and it would depend on the aspect ratio.
 		/// </param>
-		/// <param name="arena">The <see cref="MemoryArena"/> to use for this sample.</param>
-		public abstract Sample Render(Float2 screenUV, MemoryArena arena);
+		/// <param name="arena">The <see cref="Arena"/> to use for this sample.</param>
+		public abstract Sample Render(Float2 screenUV, Arena arena);
 
 		/// <summary>
 		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit

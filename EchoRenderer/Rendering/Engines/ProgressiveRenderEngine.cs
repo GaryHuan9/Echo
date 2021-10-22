@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures.DimensionTwo;
 using ThreadState = System.Threading.ThreadState;
@@ -51,7 +52,7 @@ namespace EchoRenderer.Rendering.Engines
 		readonly Stopwatch stopwatch = new Stopwatch();
 		readonly object signalLocker = new object();
 
-		ThreadLocal<MemoryArena> threadArena;
+		ThreadLocal<Arena> threadArena;
 		ParallelOptions parallelOptions;
 
 		public void Begin(ProgressiveRenderProfile profile)
@@ -132,7 +133,7 @@ namespace EchoRenderer.Rendering.Engines
 			var buffer = profile.RenderBuffer;
 			var method = profile.Method;
 
-			MemoryArena arena = threadArena.Value;
+			Arena arena = threadArena.Value;
 			double sampleCount = profile.EpochSample;
 
 			if (Epoch > profile.EpochLength)
@@ -159,7 +160,7 @@ namespace EchoRenderer.Rendering.Engines
 			throw new Exception($"Operation invalid after {nameof(Dispose)}!");
 		}
 
-		void CreateThreadArena() => threadArena = new ThreadLocal<MemoryArena>
+		void CreateThreadArena() => threadArena = new ThreadLocal<Arena>
 									(
 										() =>
 										{
