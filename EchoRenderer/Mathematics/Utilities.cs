@@ -32,9 +32,9 @@ namespace EchoRenderer.Mathematics
 		public static Vector128<float> ToVector(Float4 pixel) => Unsafe.As<Float4, Vector128<float>>(ref pixel);
 		public static Vector128<float> ToVector(Float3 pixel) => Unsafe.As<Float3, Vector128<float>>(ref pixel);
 
-		public static Float4 ToColor(float value) => ToColor((Float4)value);
-		public static Float4 ToColor(Float3 value) => ToColor((Float4)value);
-		public static Float4 ToColor(Float4 value) => value.Replace(3, 1f);
+		public static Float4 ToColor(float  value) => ToColor((Float4)value);
+		public static Float4 ToColor(in Float3 value) => ToColor((Float4)value);
+		public static Float4 ToColor(in Float4 value) => value.Replace(3, 1f);
 
 		public static Float4 ToColor(ReadOnlySpan<char> value)
 		{
@@ -73,14 +73,19 @@ namespace EchoRenderer.Mathematics
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector128<float> Lerp(in Vector128<float> left, in Vector128<float> right, in Vector128<float> time)
 		{
-			Vector128<float> length = Sse.Subtract(right, left);
-
-			if (Fma.IsSupported) return Fma.MultiplyAdd(length, time, left);
-			return Sse.Add(Sse.Multiply(length, time), left);
+			var length = Sse.Subtract(right, left);
+			return Fused(length, time, left);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector128<float> Clamp(in Vector128<float> min, in Vector128<float> max, in Vector128<float> value) => Sse.Min(max, Sse.Max(min, value));
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector128<float> Fused(in Vector128<float> value, in Vector128<float> multiplier, in Vector128<float> adder)
+		{
+			if (Fma.IsSupported) return Fma.MultiplyAdd(value, multiplier, adder);
+			return Sse.Add(Sse.Multiply(value, multiplier), adder);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float GetLuminance(in Vector128<float> color)
@@ -89,8 +94,8 @@ namespace EchoRenderer.Mathematics
 			return vector.GetElement(0);
 		}
 
-		public static int Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
-		public static Int2 Morton(int index) => new Int2(Unsaw(index), Unsaw(index >> 1));
+		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
+		public static Int2 Morton(int  index)    => new Int2(Unsaw(index), Unsaw(index >> 1));
 
 		public static int GetHashCode<T>(in Vector128<T> value) where T : struct
 		{
