@@ -17,7 +17,7 @@ namespace EchoRenderer.Rendering.Scattering
 		public void Reset(in Float3 newReflectance, float newSigma)
 		{
 			reflectance = newReflectance;
-			sigma       = newSigma * Scalars.DegreeToRadian;
+			sigma = newSigma * Scalars.DegreeToRadian;
 
 			float sigma2 = sigma * sigma;
 
