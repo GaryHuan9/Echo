@@ -43,7 +43,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		BidirectionalDistributionFunction[] functions = new BidirectionalDistributionFunction[InitialSize];
 
-		const int InitialSize = 16;
+		const int InitialSize = 8;
 
 		/// <summary>
 		/// Adds <paramref name="function"/> into this <see cref="BidirectionalScatteringDistributionFunctions"/>.
