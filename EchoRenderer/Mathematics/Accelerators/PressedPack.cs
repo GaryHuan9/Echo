@@ -96,19 +96,14 @@ namespace EchoRenderer.Mathematics.Accelerators
 				tokens[target] = (uint)index;
 			}
 
-			//Un-references large intermediate lists for GC
-			trianglesList = null;
-			spheresList = null;
-			instancesList = null;
-
 			accelerator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
 		}
 
 		public readonly TraceAccelerator accelerator;
-		public readonly GeometryCounts geometryCounts;
+		public readonly GeometryCounts   geometryCounts;
 
-		readonly PressedTriangle[] triangles;     //Indices: [0x4000_0000 to 0x8000_0000)
-		readonly PressedSphere[] spheres;         //Indices: [0x2000_0000 to 0x4000_0000)
+		readonly PressedTriangle[]     triangles; //Indices: [0x4000_0000 to 0x8000_0000)
+		readonly PressedSphere[]       spheres;   //Indices: [0x2000_0000 to 0x4000_0000)
 		readonly PressedPackInstance[] instances; //Indices: [0 to 0x2000_0000)
 
 		/// <summary>
@@ -118,9 +113,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// </summary>
 		public const float DistanceMin = 6e-4f;
 
-		const uint NodeThreshold = TraceAccelerator.NodeThreshold;
+		const uint NodeThreshold      = TraceAccelerator.NodeThreshold;
 		const uint TrianglesThreshold = 0x4000_0000u;
-		const uint SpheresThreshold = 0x2000_0000u;
+		const uint SpheresThreshold   = 0x2000_0000u;
 
 		/// <summary>
 		/// Calculates the intersection between <paramref name="query"/> and object with <paramref name="token"/>.
