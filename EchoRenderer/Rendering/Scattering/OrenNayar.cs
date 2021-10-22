@@ -10,8 +10,8 @@ namespace EchoRenderer.Rendering.Scattering
 	{
 		public OrenNayar() : base
 		(
-			BidirectionalDistributionFunctionType.reflection |
-			BidirectionalDistributionFunctionType.diffuse
+			FunctionType.reflection |
+			FunctionType.diffuse
 		) { }
 
 		public void Reset(in Float3 newReflectance, float newSigma)
