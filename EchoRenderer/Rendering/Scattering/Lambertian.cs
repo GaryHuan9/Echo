@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Rendering.Sampling;
 
 namespace EchoRenderer.Rendering.Scattering
 {
@@ -10,8 +11,8 @@ namespace EchoRenderer.Rendering.Scattering
 	{
 		public LambertianReflection() : base
 		(
-			BidirectionalDistributionFunctionType.reflection |
-			BidirectionalDistributionFunctionType.diffuse
+			FunctionType.reflection |
+			FunctionType.diffuse
 		) { }
 
 		public void Reset(in Float3 newReflectance) => reflectance = newReflectance;
@@ -20,8 +21,8 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => reflectance * (1f / Scalars.PI);
 
-		public override Float3 GetReflectance(in Float3            outLocal, ReadOnlySpan<Float2> samples)  => reflectance;
-		public override Float3 GetReflectance(ReadOnlySpan<Float2> samples0, ReadOnlySpan<Float2> samples1) => reflectance;
+		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Sample2> samples)  => reflectance;
+		public override Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1) => reflectance;
 	}
 
 	/// <summary>
@@ -31,8 +32,8 @@ namespace EchoRenderer.Rendering.Scattering
 	{
 		public LambertianTransmission() : base
 		(
-			BidirectionalDistributionFunctionType.transmission |
-			BidirectionalDistributionFunctionType.diffuse
+			FunctionType.transmission |
+			FunctionType.diffuse
 		) { }
 
 		public void Reset(in Float3 newTransmittance) => transmittance = newTransmittance;
@@ -41,7 +42,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => transmittance * (1f / Scalars.PI);
 
-		public override Float3 GetReflectance(in Float3            outLocal, ReadOnlySpan<Float2> samples)  => transmittance;
-		public override Float3 GetReflectance(ReadOnlySpan<Float2> samples0, ReadOnlySpan<Float2> samples1) => transmittance;
+		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Sample2> samples)  => transmittance;
+		public override Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1) => transmittance;
 	}
 }

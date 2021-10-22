@@ -1,11 +1,11 @@
-﻿using EchoRenderer.Mathematics.Intersections;
+﻿using System;
+using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Rendering.Materials
 {
-	public class Matte : IMaterial
+	public class Matte : MaterialNew
 	{
-
-		public void Scatter(ref HitQuery query, MemoryArena arena, TransportMode mode)
+		public override void Scatter(ref HitQuery query, MemoryArena arena, TransportMode mode)
 		{
 
 		}
