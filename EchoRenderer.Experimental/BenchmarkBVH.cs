@@ -12,7 +12,7 @@ using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 
-namespace EchoRenderer.Tests
+namespace EchoRenderer.Experimental
 {
 	public class BenchmarkBVH
 	{

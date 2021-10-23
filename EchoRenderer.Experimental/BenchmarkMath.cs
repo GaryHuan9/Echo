@@ -2,7 +2,7 @@
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Tests
+namespace EchoRenderer.Experimental
 {
 	public class BenchmarkMath
 	{

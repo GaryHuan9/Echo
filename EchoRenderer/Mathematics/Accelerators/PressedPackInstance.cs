@@ -49,8 +49,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 		{
 			get
 			{
-				const int FetchDepth = 5; //How deep do we go into the accelerator to get the AABB of the nodes
-				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (FetchDepth - 1)];
+				const uint FetchDepth = 6; //How deep do we go into the accelerator to get the AABB of the nodes
+				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (int)FetchDepth];
 
 				int count = pack.accelerator.FillAABB(FetchDepth, aabbs);
 				Float4x4 absoluteTransform = backwardTransform.Absoluted;
@@ -74,8 +74,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		public readonly uint id;
-		public readonly PressedPack pack;
+		public readonly uint                   id;
+		public readonly PressedPack            pack;
 		public readonly MaterialPresser.Mapper mapper;
 
 		readonly Float4x4 forwardTransform;  //The parent to local transform matrix

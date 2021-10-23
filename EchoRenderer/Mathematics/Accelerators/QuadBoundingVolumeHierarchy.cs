@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -83,7 +84,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		readonly Node[] nodes;
-		readonly int stackSize;
+		readonly int    stackSize;
+
+		readonly AxisAlignedBoundingBox aabbRoot;
 
 		/// <summary>
 		/// If a child pointer in <see cref="Node"/> has this value,
@@ -115,7 +118,75 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		public override int GetIntersectionCost(in Ray ray, ref float distance) => GetIntersectionCost(NodeThreshold, ray, ref distance);
 
-		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
+		public override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
+		{
+			int length = 1 << (int)depth;
+			if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
+
+			//Span is too small
+			if (length < Width)
+			{
+				span[0] = aabbRoot;
+				return 1;
+			}
+
+			//Because we fetch the aabbs in packs of Width (4) moving down one more level yields 4x more aabbs
+			//Thus, we must carefully reduce the value of depth to make sure that we never exceed the span size
+			depth = depth / 2 - 1;
+
+			uint* stack0 = stackalloc uint[length];
+			uint* stack1 = stackalloc uint[length];
+
+			uint* next0 = stack0;
+			uint* next1 = stack1;
+
+			*next0++ = 0; //Root at 0
+			int head = 0; //Result head
+
+			for (int i = 0; i < depth; i++)
+			{
+				while (next0 != stack0)
+				{
+					ref readonly Node node = ref nodes[*--next0];
+
+					for (int j = 0; j < Width; j++)
+					{
+						uint child = node.children.GetElement(j);
+						if (child == EmptyNode) continue;
+
+						if (child >= NodeThreshold) *next1++ = child;
+						else span[head++] = node.aabb4.Extract(j);
+					}
+				}
+
+				//Swap the two stacks
+				Swap(ref next0, ref next1);
+				Swap(ref stack0, ref stack1);
+
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				void Swap(ref uint* pointer0, ref uint* pointer1)
+				{
+					var storage = pointer0;
+					pointer0 = pointer1;
+					pointer1 = storage;
+				}
+			}
+
+			//Export results
+			while (next0 != stack0)
+			{
+				ref readonly Node node = ref nodes[*--next0];
+
+				for (int i = 0; i < Width; i++)
+				{
+					uint child = node.children.GetElement(i);
+					if (child is EmptyNode or < NodeThreshold) continue;
+					span[head++] = node.aabb4.Extract(i);
+				}
+			}
+
+			return head;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 		unsafe void Traverse(ref HitQuery query)
@@ -305,8 +376,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 			}
 
-			[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
-			[FieldOffset(096)] public readonly Vector128<uint> children;
+			[FieldOffset(0)]   public readonly AxisAlignedBoundingBox4 aabb4;
+			[FieldOffset(096)] public readonly Vector128<uint>         children;
 
 			[FieldOffset(096)] public readonly uint child0;
 			[FieldOffset(100)] public readonly uint child1;
@@ -379,7 +450,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 
 			public bool IsEmpty => source == null;
-			public bool IsLeaf => child == null;
+			public bool IsLeaf  => child == null;
 
 			public readonly BranchBuilder.Node source;
 

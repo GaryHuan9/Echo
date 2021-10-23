@@ -16,7 +16,7 @@ using BenchmarkDotNet.Attributes;
 // |        DivideLoadX | 0.6562 ns | 0.0098 ns | 0.0092 ns |
 // |         DivideFuse | 0.9338 ns | 0.0120 ns | 0.0112 ns |
 
-namespace EchoRenderer.Tests
+namespace EchoRenderer.Experimental
 {
 	public class TestSIMD
 	{

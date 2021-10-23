@@ -5,4 +5,14 @@
         <RootNamespace />
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DefineConstants>TRACE; UNSAFE_CODE_ENABLED; </DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DefineConstants>TRACE; UNSAFE_CODE_ENABLED; </DefineConstants>
+    </PropertyGroup>
+
 </Project>
