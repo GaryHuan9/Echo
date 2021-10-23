@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using EchoRenderer.Mathematics.Intersections;
 
@@ -57,7 +58,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		readonly Node[] nodes;
-		readonly int maxDepth;
+		readonly int    maxDepth;
 
 		public override void GetIntersection(ref HitQuery query)
 		{
@@ -88,9 +89,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 			return GetIntersectionCost(root, ray, ref distance) + 1;
 		}
 
-		public override unsafe int FillAABB(int depth, Span<AxisAlignedBoundingBox> span)
+		public override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
 		{
-			int length = 1 << (depth - 1);
+			int length = 1 << (int)depth;
 			if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
 
 			int* stack0 = stackalloc int[length];
@@ -100,48 +101,47 @@ namespace EchoRenderer.Mathematics.Accelerators
 			int* next1 = stack1;
 
 			*next0++ = 0; //Root at 0
+			int head = 0; //Result head
 
-			for (int i = 1; i < depth; i++)
+			for (uint i = 0; i < depth; i++)
 			{
 				while (next0 != stack0)
 				{
 					int index = *--next0;
 					ref readonly Node node = ref nodes[index];
 
-					if (node.IsLeaf) //If leaf then we just continue with this node
-					{
-						*next1++ = index;
-					}
-					else
+					if (!node.IsLeaf)
 					{
 						*next1++ = node.children;
 						*next1++ = node.children + 1;
 					}
+					else span[head++] = node.aabb; //If leaf then we write it to the result
 				}
 
 				//Swap the two stacks
-				int* next = next0;
-				int* stack = stack0;
+				Swap(ref next0, ref next1);
+				Swap(ref stack0, ref stack1);
 
-				next0 = next1;
-				next1 = next;
-
-				stack0 = stack1;
-				stack1 = stack;
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				void Swap(ref int* pointer0, ref int* pointer1)
+				{
+					var storage = pointer0;
+					pointer0 = pointer1;
+					pointer1 = storage;
+				}
 			}
 
 			//Export results
-			int current = 0;
-
 			while (next0 != stack0)
 			{
 				ref readonly Node node = ref nodes[*--next0];
-				span[current++] = node.aabb;
+				span[head++] = node.aabb;
 			}
 
-			return current;
+			return head;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 		unsafe void Traverse(ref HitQuery query)
 		{
 			int* stack = stackalloc int[maxDepth];
@@ -258,13 +258,13 @@ namespace EchoRenderer.Mathematics.Accelerators
 			//NOTE: the AABB is 28 bytes large, but its last 4 bytes are not used and only occupied for SIMD loading
 			//So we can overlap the next four bytes onto the AABB and pay extra attention when first assigning the fields
 
-			[FieldOffset(24)] public readonly uint token;   //Token will only be assigned if is leaf
-			[FieldOffset(28)] public readonly int children; //Index of first child, second child is right after first
+			[FieldOffset(24)] public readonly uint token;    //Token will only be assigned if is leaf
+			[FieldOffset(28)] public readonly int  children; //Index of first child, second child is right after first
 
 			public bool IsLeaf => children == 0;
 
-			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, uint token) => new Node(aabb, token, 0);
-			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int children) => new Node(aabb, default, children);
+			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, uint token)    => new Node(aabb, token, 0);
+			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int  children) => new Node(aabb, default, children);
 
 			public override int GetHashCode()
 			{

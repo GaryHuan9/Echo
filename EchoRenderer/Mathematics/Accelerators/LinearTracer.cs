@@ -20,6 +20,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
 
-		public override int FillAABB(int depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
+		public override int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 	}
 }

@@ -1,10 +1,6 @@
-﻿using System;
-using BenchmarkDotNet.Running;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using BenchmarkDotNet.Running;
 
-namespace EchoRenderer.Tests
+namespace EchoRenderer.Experimental
 {
 	public class Program
 	{

@@ -18,6 +18,7 @@
 
     <ItemGroup>
       <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+      <PackageReference Include="ComputeSharp" Version="2.0.0-alpha.6" />
     </ItemGroup>
 
     <ItemGroup>
