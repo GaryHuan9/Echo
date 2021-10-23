@@ -5,7 +5,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 
-namespace EchoRenderer.Tests
+namespace EchoRenderer.Experimental
 {
 	public class AxisAlignedBoundingBoxSIMD
 	{

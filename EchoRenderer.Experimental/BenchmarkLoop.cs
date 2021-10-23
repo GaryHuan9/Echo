@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using BenchmarkDotNet.Attributes;
 
-namespace EchoRenderer.Tests
+namespace EchoRenderer.Experimental
 {
 	public class BenchmarkLoop
 	{

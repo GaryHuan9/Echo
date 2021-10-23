@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -75,6 +76,16 @@ namespace EchoRenderer.Mathematics.Intersections
 			);
 		}
 
+		/// <summary>
+		/// Extracts out a particular <see cref="AxisAlignedBoundingBox"/> at
+		/// <paramref name="index"/>, which should be between 0 and 3 (both inclusive).
+		/// </summary>
+		public AxisAlignedBoundingBox Extract(int index) => new
+		(
+			new Float3(minX.GetElement(index), minY.GetElement(index), minZ.GetElement(index)),
+			new Float3(maxX.GetElement(index), maxY.GetElement(index), maxZ.GetElement(index))
+		);
+
 		public override int GetHashCode()
 		{
 			unchecked
@@ -89,7 +100,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			}
 		}
 
-		static Vector128<float> Make(float value) => Vector128.Create(value);
+		static Vector128<float> Make(float value)                                            => Vector128.Create(value);
 		static Vector128<float> Make(float value0, float value1, float value2, float value3) => Vector128.Create(value0, value1, value2, value3);
 	}
 }

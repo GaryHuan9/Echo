@@ -59,8 +59,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// Fills <paramref name="span"/> with the <see cref="AxisAlignedBoundingBox"/> of nodes in this <see cref="TraceAccelerator"/>
 		/// at <paramref name="depth"/>, with the root node having a <paramref name="depth"/> of 1. Returns the actual length of
 		/// <paramref name="span"/> used to store the <see cref="AxisAlignedBoundingBox"/>.
-		/// NOTE: <paramref name="span"/> should not be shorter than 2 ^ (depth - 1).
+		/// NOTE: <paramref name="span"/> should not be smaller than 2 ^ depth.
 		/// </summary>
-		public abstract int FillAABB(int depth, Span<AxisAlignedBoundingBox> span);
+		public abstract int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span);
 	}
 }
