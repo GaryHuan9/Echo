@@ -42,7 +42,7 @@ namespace EchoRenderer.Textures.Cubemaps
 		readonly ReadOnlyCollection<Texture> textures;
 		readonly Float3 multiplier;
 
-		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new ReadOnlyCollection<string>(new[] {"px", "py", "pz", "nx", "ny", "nz"});
+		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new(new[] {"px", "py", "pz", "nx", "ny", "nz"});
 
 		public override Float3 Sample(in Float3 direction)
 		{

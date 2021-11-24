@@ -95,7 +95,7 @@ namespace EchoRenderer.Mathematics
 		}
 
 		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
-		public static Int2 Morton(int  index)    => new Int2(Unsaw(index), Unsaw(index >> 1));
+		public static Int2 Morton(int  index)    => new(Unsaw(index), Unsaw(index >> 1));
 
 		public static int GetHashCode<T>(in Vector128<T> value) where T : struct
 		{

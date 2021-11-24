@@ -61,7 +61,7 @@ namespace EchoRenderer.Rendering.Pixels
 								 float.IsNaN(normal.x) || float.IsNaN(normal.y) || float.IsNaN(normal.z) ||
 								 float.IsNaN(zDepth);
 
-			public static implicit operator Sample(in Float3 colour) => new Sample(colour);
+			public static implicit operator Sample(in Float3 colour) => new(colour);
 		}
 	}
 }

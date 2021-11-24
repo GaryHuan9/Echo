@@ -68,7 +68,7 @@ namespace EchoRenderer.Rendering.Engines
 		public int RenderOffsetX => InterlockedHelper.Read(ref _renderOffsetX);
 		public int RenderOffsetY => InterlockedHelper.Read(ref _renderOffsetY);
 
-		public Int2 RenderOffset => new Int2(RenderOffsetX, RenderOffsetY);
+		public Int2 RenderOffset => new(RenderOffsetX, RenderOffsetY);
 		public long TotalPixel => Interlocked.Read(ref _totalPixel);
 
 		long _completedSample;
@@ -87,7 +87,7 @@ namespace EchoRenderer.Rendering.Engines
 		/// </summary>
 		readonly Float2[] spiralOffsets;
 
-		readonly ManualResetEventSlim dispatchEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
+		readonly ManualResetEventSlim dispatchEvent = new(); //Event sets when the worker is dispatched
 		public bool Working => dispatchEvent.IsSet;
 
 		static volatile int workerIdAccumulator;

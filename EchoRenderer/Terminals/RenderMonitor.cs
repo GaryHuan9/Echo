@@ -33,8 +33,8 @@ namespace EchoRenderer.Terminals
 
 		readonly string[][] statusGrid;
 
-		const int StatusHeight = 7;              //Lines of text used to display the current status
-		readonly Int2 gridSize = new Int2(5, 4); //4 rows; 5 columns: Name, Tile, Pixel, Sample, Intersection
+		const int StatusHeight = 7;         //Lines of text used to display the current status
+		readonly Int2 gridSize = new(5, 4); //4 rows; 5 columns: Name, Tile, Pixel, Sample, Intersection
 
 		public override void Update()
 		{

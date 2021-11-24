@@ -12,7 +12,7 @@ namespace EchoRenderer.Mathematics
 {
 	public class Gradient : IEnumerable<float>
 	{
-		readonly List<Anchor> anchors = new List<Anchor>();
+		readonly List<Anchor> anchors = new();
 
 		public Float4 this[float percent] => Utilities.ToFloat4(SampleVector(percent));
 
@@ -67,7 +67,7 @@ namespace EchoRenderer.Mathematics
 
 		class Comparer : IDoubleComparer<Anchor, float>
 		{
-			public static readonly Comparer instance = new Comparer();
+			public static readonly Comparer instance = new();
 
 			public int CompareTo(Anchor first, float second)
 			{

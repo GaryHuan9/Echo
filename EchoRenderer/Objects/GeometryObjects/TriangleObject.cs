@@ -243,9 +243,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public override string ToString() => $"<{nameof(vertex0)}: {vertex0}, {nameof(Vertex1)}: {Vertex1}, {nameof(Vertex2)}: {Vertex2}>";
 
 		//The uv locations right in the middle of two vertices
-		static readonly Float2 uv01 = new Float2(0.5f, 0f);
-		static readonly Float2 uv02 = new Float2(0f, 0.5f);
-		static readonly Float2 uv12 = new Float2(0.5f, 0.5f);
+		static readonly Float2 uv01 = new(0.5f, 0f);
+		static readonly Float2 uv02 = new(0f, 0.5f);
+		static readonly Float2 uv12 = new(0.5f, 0.5f);
 
 		static void GetSubdivided(Span<PressedTriangle> triangles, Float3 normal0, Float3 normal1, Float3 normal2)
 		{

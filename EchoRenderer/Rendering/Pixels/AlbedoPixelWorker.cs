@@ -7,7 +7,7 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{
-		public override Arena CreateArena(int hash) => new Arena(hash);
+		public override Arena CreateArena(int hash) => new(hash);
 
 		public override Sample Render(Float2 screenUV, Arena arena)
 		{
