@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
+using CodeHelpers.Pooling;
 
 namespace EchoRenderer.Objects
 {
