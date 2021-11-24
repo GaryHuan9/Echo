@@ -4,7 +4,7 @@ using EchoRenderer.Rendering.Sampling;
 
 namespace EchoRenderer.Rendering.Scattering
 {
-	public class SpecularReflection : BidirectionalDistributionFunction
+	public class SpecularReflection : BxDF
 	{
 		public SpecularReflection() : base
 		(
@@ -48,7 +48,7 @@ namespace EchoRenderer.Rendering.Scattering
 		public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
 	}
 
-	public class SpecularTransmission : BidirectionalDistributionFunction
+	public class SpecularTransmission : BxDF
 	{
 		public SpecularTransmission() : base
 		(
