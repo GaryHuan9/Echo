@@ -3,8 +3,8 @@
 namespace EchoRenderer.Rendering.Memory
 {
 	/// <summary>
-	/// A class that handles memory allocation and deallocation during the rendering of a sample.
-	/// NOTE: This class should be unique to each thread and can be inherited for more options.
+	/// A region of memory that can be used to store localized temporary objects or access shared immutable objects.
+	/// NOTE: This class should be unique/local to each thread and can be inherited for more options.
 	/// Thus, the entirety of this class is not thread safe and relies on this fact for fast memory.
 	/// </summary>
 	public class Arena

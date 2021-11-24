@@ -8,9 +8,9 @@ namespace EchoRenderer.Rendering.Scattering
 	/// <summary>
 	/// The base class to either bidirectional reflectance distribution function or bidirectional transmittance distribution function.
 	/// </summary>
-	public abstract class BidirectionalDistributionFunction
+	public abstract class BxDF
 	{
-		protected BidirectionalDistributionFunction(FunctionType type) => functionType = type;
+		protected BxDF(FunctionType type) => functionType = type;
 
 		public readonly FunctionType functionType;
 
