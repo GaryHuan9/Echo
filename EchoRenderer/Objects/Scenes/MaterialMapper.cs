@@ -18,7 +18,7 @@ namespace EchoRenderer.Objects.Scenes
 
 		public Dictionary<Material, Material>.KeyCollection Keys => map.Keys;
 
-		readonly Dictionary<Material, Material> map = new Dictionary<Material, Material>();
+		readonly Dictionary<Material, Material> map = new();
 
 		public MaterialMapper Clone()
 		{

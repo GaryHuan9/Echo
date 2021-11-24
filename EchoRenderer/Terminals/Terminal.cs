@@ -31,8 +31,8 @@ namespace EchoRenderer.Terminals
 		public float UpdateFrequency { get; set; } = 24f;
 		public double AliveTime => stopwatch.Elapsed.TotalMilliseconds;
 
-		readonly List<Section> sections = new List<Section>();
-		readonly List<int> heights = new List<int>();
+		readonly List<Section> sections = new();
+		readonly List<int> heights = new();
 
 		readonly Thread displayThread;
 		readonly Stopwatch stopwatch;
@@ -136,7 +136,7 @@ namespace EchoRenderer.Terminals
 
 			readonly Section section;
 
-			readonly List<Line> lines = new List<Line>();
+			readonly List<Line> lines = new();
 			char[] writeBuffer;
 
 			public char this[Int2 index]

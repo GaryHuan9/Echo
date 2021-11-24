@@ -66,7 +66,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 		/// Pins this <see cref="RenderBuffer"/> for various unmanaged access or pointer shenanigans.
 		/// NOTE: Remember to dispose <see cref="Pin"/> after use to unpin the buffers and handles.
 		/// </summary>
-		public Pin CreatePin() => new Pin(this);
+		public Pin CreatePin() => new(this);
 
 		Array2D CreateTexture(IReadOnlyList<Float3> data)
 		{

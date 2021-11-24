@@ -49,8 +49,8 @@ namespace EchoRenderer.Rendering.Engines
 		readonly Thread workThread;
 		readonly RenderData renderData;
 
-		readonly Stopwatch stopwatch = new Stopwatch();
-		readonly object signalLocker = new object();
+		readonly Stopwatch stopwatch = new();
+		readonly object signalLocker = new();
 
 		ThreadLocal<Arena> threadArena;
 		ParallelOptions parallelOptions;

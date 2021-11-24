@@ -25,9 +25,9 @@ namespace EchoRenderer.Textures
 
 		public Tint Tint { get; set; } = Tint.identity;
 
-		public static readonly Pure white  = new Pure(Float4.one);
-		public static readonly Pure black  = new Pure(Float4.ana);
-		public static readonly Pure normal = new Pure(new Float4(0.5f, 0.5f, 1f, 1f));
+		public static readonly Pure white  = new(Float4.one);
+		public static readonly Pure black  = new(Float4.ana);
+		public static readonly Pure normal = new(new Float4(0.5f, 0.5f, 1f, 1f));
 
 		public Vector128<float> this[Float2 uv]
 		{

@@ -45,13 +45,13 @@ namespace EchoRenderer.IO
 				if (token.SequenceEqual("declare"))
 				{
 					//Declaring new material
-					string typeName = new string(Eat(ref line));
+					var typeName = new string(Eat(ref line));
 					Type type = Type.GetType($"EchoRenderer.Rendering.Materials.{typeName}");
 
 					if (type != null) processing = (Material)Activator.CreateInstance(type);
 					else throw new Exception($"Invalid material type name: {typeName}");
 
-					string name = new string(Eat(ref line));
+					var name = new string(Eat(ref line));
 
 					if (!materials.ContainsKey(name)) materials.Add(name, processing);
 					else throw new Exception($"Duplicated material name: {name}");

@@ -16,5 +16,6 @@ namespace EchoRenderer.Rendering.Memory
 		public Arena(int hash) => random = new ExtendedRandom(hash);
 
 		public readonly ExtendedRandom random;
+		public readonly Allocator allocator = new();
 	}
 }
