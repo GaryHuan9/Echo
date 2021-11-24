@@ -90,8 +90,16 @@ namespace EchoRenderer.Mathematics
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float GetLuminance(in Vector128<float> color)
 		{
-			var vector = Sse41.DotProduct(color, luminanceVector, 0b0111_0001);
-			return vector.GetElement(0);
+			if (Sse41.IsSupported)
+			{
+				var result = Sse41.DotProduct(color, luminanceVector, 0b0111_0001);
+				return result.GetElement(0);
+			}
+			else
+			{
+				var result = Sse.Multiply(color, luminanceVector);
+				return result.GetElement(0) + result.GetElement(1) + result.GetElement(2);
+			}
 		}
 
 		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance

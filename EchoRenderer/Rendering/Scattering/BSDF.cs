@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Sampling;
@@ -7,12 +6,12 @@ using EchoRenderer.Rendering.Sampling;
 namespace EchoRenderer.Rendering.Scattering
 {
 	/// <summary>
-	/// A container of many <see cref="BidirectionalDistributionFunction"/>.
+	/// A bidirectional scattering distribution function which is the container for many <see cref="BxDF"/>.
 	/// </summary>
-	public class BidirectionalScatteringDistributionFunctions
+	public class BSDF
 	{
 		/// <summary>
-		/// Resets and initializes this <see cref="BidirectionalScatteringDistributionFunctions"/> for new use.
+		/// Resets and initializes this <see cref="BSDF"/> for new use.
 		/// </summary>
 		public void Reset(in HitQuery query, float newEta = 1f)
 		{
@@ -41,21 +40,21 @@ namespace EchoRenderer.Rendering.Scattering
 		Float3 tangent;
 		Float3 binormal;
 
-		BidirectionalDistributionFunction[] functions = new BidirectionalDistributionFunction[InitialSize];
+		BxDF[] functions = new BxDF[InitialSize];
 
 		const int InitialSize = 8;
 
 		/// <summary>
-		/// Adds <paramref name="function"/> into this <see cref="BidirectionalScatteringDistributionFunctions"/>.
+		/// Adds <paramref name="function"/> into this <see cref="BSDF"/>.
 		/// </summary>
-		public void Add(BidirectionalDistributionFunction function)
+		public void Add(BxDF function)
 		{
 			int length = functions.Length;
 
 			if (count == length)
 			{
 				var array = functions;
-				functions = new BidirectionalDistributionFunction[length * 2];
+				functions = new BxDF[length * 2];
 				for (int i = 0; i < length; i++) functions[i] = array[i];
 			}
 
@@ -63,8 +62,8 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Counts how many <see cref="BidirectionalScatteringDistributionFunctions"/> in this
-		/// <see cref="BidirectionalScatteringDistributionFunctions"/> have <paramref name="type"/>.
+		/// Counts how many <see cref="BSDF"/> in this
+		/// <see cref="BSDF"/> have <paramref name="type"/>.
 		/// </summary>
 		public int Count(FunctionType type)
 		{
@@ -79,8 +78,8 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Samples all <see cref="BidirectionalDistributionFunction"/> that matches with <paramref name="type"/>.
-		/// See <see cref="BidirectionalDistributionFunction.Sample(in Float3, in Float3)"/> for more information.
+		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/>.
+		/// See <see cref="BxDF.Sample(in Float3, in Float3)"/> for more information.
 		/// </summary>
 		public Float3 Sample(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type)
 		{
@@ -104,8 +103,8 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Samples all <see cref="BidirectionalDistributionFunction"/> that matches with <paramref name="type"/> with an output direction.
-		/// See <see cref="BidirectionalDistributionFunction.Sample(in Float3, out Float3, in Sample2, out float)"/> for more information.
+		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/> with an output direction.
+		/// See <see cref="BxDF.Sample(in Float3, out Float3, in Sample2, out float)"/> for more information.
 		/// </summary>
 		public Float3 Sample(in Float3 outgoingWorld, out Float3 incidentWorld, Sample2 sample, out float pdf, FunctionType type, out FunctionType sampledType)
 		{
@@ -121,7 +120,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 			//Remap sample back to a uniformed distribution because we just used it to find a function
 			sample = new Sample2(sample.X * matched - index, sample.Y);
-			BidirectionalDistributionFunction selected = functions[index];
+			BxDF selected = functions[index];
 
 			sampledType = selected.functionType;
 
@@ -144,7 +143,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 				for (int i = 0; i < count; i++)
 				{
-					BidirectionalDistributionFunction function = functions[i];
+					BxDF function = functions[i];
 					if (function == selected || !function.MatchType(type)) continue;
 
 					pdf += function.ProbabilityDensity(outgoing, incident);
@@ -158,8 +157,8 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Returns the aggregated reflectance for all <see cref="BidirectionalDistributionFunction"/> that matches with <paramref name="type"/>.
-		/// See <see cref="BidirectionalDistributionFunction.GetReflectance(in Float3, ReadOnlySpan{Sample2})"/> for more information.
+		/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
+		/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Sample2})"/> for more information.
 		/// </summary>
 		public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2> samples, FunctionType type)
 		{
@@ -177,8 +176,8 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Returns the aggregated reflectance for all <see cref="BidirectionalDistributionFunction"/> that matches with <paramref name="type"/>.
-		/// See <see cref="BidirectionalDistributionFunction.GetReflectance(ReadOnlySpan{Sample2}, ReadOnlySpan{Sample2})"/> for more information.
+		/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
+		/// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Sample2}, ReadOnlySpan{Sample2})"/> for more information.
 		/// </summary>
 		public Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1, FunctionType type)
 		{
@@ -195,8 +194,8 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Returns the aggregated probability density for all <see cref="BidirectionalDistributionFunction"/> that matches with
-		/// <paramref name="type"/>. See <see cref="BidirectionalDistributionFunction.ProbabilityDensity"/> for more information.
+		/// Returns the aggregated probability density for all <see cref="BxDF"/> that matches with
+		/// <paramref name="type"/>. See <see cref="BxDF.ProbabilityDensity"/> for more information.
 		/// </summary>
 		public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type)
 		{
