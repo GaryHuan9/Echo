@@ -19,9 +19,9 @@ namespace EchoRenderer.Rendering.Memory
 		int utilization;
 
 		readonly int poolerCapacity;
-		static   int tokenCount;
+		static int tokenCount;
 
-		object[] poolers  = new object[InitialSize];
+		object[] poolers = new object[InitialSize];
 		ushort[] pointers = new ushort[InitialSize];
 
 		static ConcurrentList<Token> tokens = new();
@@ -86,6 +86,7 @@ namespace EchoRenderer.Rendering.Memory
 				Assert.IsFalse(tokens.Adding);
 				foreach (var token in tokens) token.value = Token.Unmanaged;
 
+				Interlocked.Exchange(ref tokenCount, 0);
 				tokens = new ConcurrentList<Token>();
 			}
 		}
