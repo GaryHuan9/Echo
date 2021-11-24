@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
+using CodeHelpers.Pooling;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.DimensionTwo;
 
@@ -116,8 +116,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 			return handle;
 		}
 
-		public delegate void PassAction(Int2 position);
+		public delegate void PassAction(Int2          position);
 		public delegate void PassActionHorizontal(int horizontal);
-		public delegate void PassActionVertical(int vertical);
+		public delegate void PassActionVertical(int   vertical);
 	}
 }

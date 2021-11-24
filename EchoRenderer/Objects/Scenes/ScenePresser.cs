@@ -5,7 +5,7 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.ObjectPooling;
+using CodeHelpers.Pooling;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Rendering.Profiles;
 
