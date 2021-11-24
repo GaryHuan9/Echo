@@ -98,7 +98,7 @@ namespace EchoRenderer.Objects
 			public Children(Object source) => this.source = source;
 
 			readonly Object source;
-			readonly List<Object> children = new List<Object>();
+			readonly List<Object> children = new();
 
 			public int Count => children.Count;
 

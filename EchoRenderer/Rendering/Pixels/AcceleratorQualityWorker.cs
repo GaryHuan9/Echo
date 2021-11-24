@@ -11,7 +11,7 @@ namespace EchoRenderer.Rendering.Pixels
 		long totalCost;
 		long totalSample;
 
-		public override Arena CreateArena(int hash) => new Arena(hash);
+		public override Arena CreateArena(int hash) => new(hash);
 
 		public override void AssignProfile(RenderProfile profile)
 		{
