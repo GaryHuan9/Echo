@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
+using CodeHelpers.Pooling;
 using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.PostProcessing
