@@ -32,7 +32,7 @@ namespace EchoRenderer.Rendering.Scattering
 			binormal = Float3.Cross(normalShading, tangent).Normalized;
 		}
 
-		int   count;
+		int count;
 		float eta;
 
 		Float3 normalShading;

@@ -46,7 +46,7 @@ namespace EchoRenderer.Terminals
 		const float BlinkPeriod = 500f; //In milliseconds
 		const string CommandPrefix = "/";
 
-		Int2 Cursor => new Int2(cursorPosition, CursorY);
+		Int2 Cursor => new(cursorPosition, CursorY);
 
 		public override void Update()
 		{
