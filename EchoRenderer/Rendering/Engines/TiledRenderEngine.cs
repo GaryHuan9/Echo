@@ -83,7 +83,7 @@ namespace EchoRenderer.Rendering.Engines
 			CurrentProfile = profile;
 
 			profile.Scene.ResetIntersectionCount();
-			profile.Method.AssignProfile(profile);
+			profile.Method.BeforeRender(profile);
 
 			lock (manageLocker)
 			{

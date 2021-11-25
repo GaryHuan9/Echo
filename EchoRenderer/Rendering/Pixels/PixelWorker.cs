@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
@@ -10,19 +9,16 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public abstract class PixelWorker
 	{
-		protected RenderProfile Profile { get; private set; }
+		/// <summary>
+		/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Render"/>.
+		/// </summary>
+		public virtual Arena CreateArena(RenderProfile profile, int seed) => new(profile, seed);
 
 		/// <summary>
-		/// Should create and return a new object of base type <see cref="Arena"/> with <paramref name="hash"/>.
-		/// NOTE: The returned <see cref="Arena"/> will be exactly the allocator used for <see cref="Render"/>.
+		/// Invoked before a new rendering process begin on this <see cref="PixelWorker"/>.
+		/// Can be used to prepare the worker for future invocations to <see cref="Render"/>.
 		/// </summary>
-		public abstract Arena CreateArena(int hash);
-
-		/// <summary>
-		/// Assigns the render profile before a render session begins.
-		/// NOTE: This can be used as a "reset" point for the worker.
-		/// </summary>
-		public virtual void AssignProfile(RenderProfile profile) => Profile = profile;
+		public virtual void BeforeRender(RenderProfile profile) { }
 
 		/// <summary>
 		/// Renders a <see cref="Sample"/> at <paramref name="screenUV"/>.

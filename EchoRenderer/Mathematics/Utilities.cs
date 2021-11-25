@@ -70,6 +70,9 @@ namespace EchoRenderer.Mathematics
 			}
 		}
 
+		/// <summary>
+		/// Linearly interpolates between <paramref name="left"/> and <paramref name="right"/> based on <paramref name="time"/>.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector128<float> Lerp(in Vector128<float> left, in Vector128<float> right, in Vector128<float> time)
 		{
@@ -77,9 +80,15 @@ namespace EchoRenderer.Mathematics
 			return Fused(length, time, left);
 		}
 
+		/// <summary>
+		/// Clamps <paramref name="value"/> between <paramref name="min"/> and <paramref name="max"/>.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector128<float> Clamp(in Vector128<float> min, in Vector128<float> max, in Vector128<float> value) => Sse.Min(max, Sse.Max(min, value));
 
+		/// <summary>
+		/// Fused multiply and add <paramref name="value"/> with <paramref name="multiplier"/> first and then <paramref name="adder"/>.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector128<float> Fused(in Vector128<float> value, in Vector128<float> multiplier, in Vector128<float> adder)
 		{
@@ -87,6 +96,9 @@ namespace EchoRenderer.Mathematics
 			return Sse.Add(Sse.Multiply(value, multiplier), adder);
 		}
 
+		/// <summary>
+		/// Returns the approximated luminance of <paramref name="color"/>.
+		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static float GetLuminance(in Vector128<float> color)
 		{
@@ -101,6 +113,12 @@ namespace EchoRenderer.Mathematics
 				return result.GetElement(0) + result.GetElement(1) + result.GetElement(2);
 			}
 		}
+
+		/// <summary>
+		/// Returns a color with minimal individual component sum that has <paramref name="luminance"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector128<float> CreateLuminance(float luminance) => Sse.Multiply(luminanceVector, Vector128.Create(luminance));
 
 		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
 		public static Int2 Morton(int  index)    => new(Unsaw(index), Unsaw(index >> 1));
