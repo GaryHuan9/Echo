@@ -12,23 +12,21 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		unsafe void BarrierPass(Int2 position)
 		{
-			Vector128<float> source = Clamp(vector0, vector1, renderBuffer[position]);
+			Vector128<float> source = Clamp01(renderBuffer[position]);
 
 			float* pointer = (float*)&source;
 
-			Filter(0);
-			Filter(1);
-			Filter(2);
+			if (float.IsNaN(pointer[0]) || float.IsNaN(pointer[1]) || float.IsNaN(pointer[2]))
+			{
+				//NaN pixels are assigned an artificial magenta color
+				pointer[0] = 1f;
+				pointer[1] = 0f;
+				pointer[2] = 1f;
+			}
 
 			pointer[3] = 1f; //Assign alpha
 
 			renderBuffer[position] = source;
-
-			void Filter(int index)
-			{
-				ref float value = ref pointer[index];
-				value = float.IsNaN(value) ? 0f : value;
-			}
 		}
 	}
 }
