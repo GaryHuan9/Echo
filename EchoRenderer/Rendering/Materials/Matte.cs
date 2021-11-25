@@ -13,6 +13,13 @@ namespace EchoRenderer.Rendering.Materials
 	{
 		public Texture Deviation { get; set; }
 
+		public override void BeforeRender()
+		{
+			base.BeforeRender();
+
+			Deviation ??= Texture.black;
+		}
+
 		public override void Scatter(ref HitQuery query, Arena arena)
 		{
 			FillTangentNormal(ref query);
@@ -22,13 +29,13 @@ namespace EchoRenderer.Rendering.Materials
 			bsdf.Reset(query);
 
 			Float3 albedo = Utilities.ToFloat3(Albedo[query.uv]);
-			if (albedo == Float3.zero) return; //TODO: use luminance comparison
+			if (arena.profile.IsZero(albedo)) return;
 
-			float sigma = Deviation[query.uv].GetElement(0).Clamp(0f, 90f);
+			float deviation = FastMath.Clamp01(Deviation[query.uv].GetElement(0));
 
 			BxDF function;
 
-			if (sigma.AlmostEquals())
+			if (deviation.AlmostEquals())
 			{
 				function = arena.allocator.New<LambertianReflection>();
 				((LambertianReflection)function).Reset(albedo);
@@ -36,7 +43,7 @@ namespace EchoRenderer.Rendering.Materials
 			else
 			{
 				function = arena.allocator.New<OrenNayar>();
-				((OrenNayar)function).Reset(albedo, sigma);
+				((OrenNayar)function).Reset(albedo, deviation * 90f);
 			}
 
 			bsdf.Add(function);
