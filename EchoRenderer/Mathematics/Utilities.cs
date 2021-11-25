@@ -29,10 +29,15 @@ namespace EchoRenderer.Mathematics
 		public static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
 		public static Float3 ToFloat3(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float3>(ref pixel);
 
+		public static ref Float4 ToFloat4(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref pixel);
+		public static ref Float3 ToFloat3(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float3>(ref pixel);
+
 		public static Vector128<float> ToVector(Float4 pixel) => Unsafe.As<Float4, Vector128<float>>(ref pixel);
 		public static Vector128<float> ToVector(Float3 pixel) => Unsafe.As<Float3, Vector128<float>>(ref pixel);
 
-		public static Float4 ToColor(float  value) => ToColor((Float4)value);
+		//NOTE: to vector with ref values is unsafe and not provided here since we can access weird memory with it.
+
+		public static Float4 ToColor(float     value) => ToColor((Float4)value);
 		public static Float4 ToColor(in Float3 value) => ToColor((Float4)value);
 		public static Float4 ToColor(in Float4 value) => value.Replace(3, 1f);
 
@@ -81,10 +86,16 @@ namespace EchoRenderer.Mathematics
 		}
 
 		/// <summary>
-		/// Clamps <paramref name="value"/> between <paramref name="min"/> and <paramref name="max"/>.
+		/// Numerically clamps <paramref name="value"/> between <paramref name="min"/> and <paramref name="max"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Vector128<float> Clamp(in Vector128<float> min, in Vector128<float> max, in Vector128<float> value) => Sse.Min(max, Sse.Max(min, value));
+		public static Vector128<float> Clamp(in Vector128<float> value, in Vector128<float> min, in Vector128<float> max) => Sse.Min(max, Sse.Max(min, value));
+
+		/// <summary>
+		/// Numerically clamps <paramref name="value"/> between zero and one.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static Vector128<float> Clamp01(in Vector128<float> value) => Clamp(value, vector0, vector1);
 
 		/// <summary>
 		/// Fused multiply and add <paramref name="value"/> with <paramref name="multiplier"/> first and then <paramref name="adder"/>.
@@ -142,6 +153,9 @@ namespace EchoRenderer.Mathematics
 		/// </summary>
 		static int Saw(short number)
 		{
+			//NOTE: we can use the pext and pdep instructions under the BMI2 instruction set to accelerate this
+			//https://stackoverflow.com/a/30540867/9196958
+
 			int x = number;
 
 			x = (x | (x << 08)) & 0b0000_0000_1111_1111_0000_0000_1111_1111; // _ _ _ _ 7 6 5 4 _ _ _ _ 3 2 1 0

@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.Scattering
 {
@@ -20,7 +21,7 @@ namespace EchoRenderer.Rendering.Scattering
 			float etaI = fresnelEtaI;
 			float etaT = fresnelEtaT;
 
-			cosI = cosI.Clamp(-1f);
+			cosI = FastMath.Clamp11(cosI);
 
 			//Swap indices of refraction if needed
 			if (cosI < 0f)
@@ -30,10 +31,10 @@ namespace EchoRenderer.Rendering.Scattering
 			}
 
 			//Apply Snell's law
-			float sinI = Identity(cosI);
+			float sinI = FastMath.Identity(cosI);
 			float sinT = etaI / etaT * sinI;
 			if (sinT >= 1f) return Float3.one; //Total internal reflection
-			float cosT = Identity(sinT);
+			float cosT = FastMath.Identity(sinT);
 
 			//Fresnel equation
 			float ti = etaT * cosI;
@@ -47,11 +48,6 @@ namespace EchoRenderer.Rendering.Scattering
 
 			return (Float3)((Rs * Rs + Rp * Rp) / 2f);
 		}
-
-		/// <summary>
-		/// Computes either sine or cosine using the pythagoras identity sin^2 + cos^2 = 1
-		/// </summary>
-		static float Identity(float value) => MathF.Sqrt(Math.Max(1f - value * value, 0f));
 	}
 
 	public readonly struct FresnelConductor
@@ -60,10 +56,10 @@ namespace EchoRenderer.Rendering.Scattering
 		{
 			Float3 inverse = 1f / newEtaI;
 
-			eta2  = newEtaT * inverse;
+			eta2 = newEtaT * inverse;
 			etaK2 = newAbsorption * inverse;
 
-			eta2  *= eta2;
+			eta2 *= eta2;
 			etaK2 *= etaK2;
 		}
 
@@ -78,7 +74,7 @@ namespace EchoRenderer.Rendering.Scattering
 			float sinI2 = 1f - cosI2;
 
 			Float3 gamma = eta2 - etaK2 - (Float3)sinI2;
-			Float3 sum   = Sqrt(gamma * gamma + 4f * eta2 * etaK2);
+			Float3 sum = Sqrt(gamma * gamma + 4f * eta2 * etaK2);
 
 			Float3 term0 = sum + (Float3)cosI2;
 			Float3 term1 = cosI * Scalars.Sqrt2 * Sqrt(sum + gamma);
