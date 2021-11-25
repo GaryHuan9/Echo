@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures.DimensionTwo;
 
@@ -40,7 +42,13 @@ namespace EchoRenderer.Rendering.Profiles
 		/// <summary>
 		/// Epsilon lower bound value to determine when an energy is essentially zero.
 		/// </summary>
-		public Float3 EnergyEpsilon { get; init; } = (Float3)9E-3f;
+		public Float3 EnergyEpsilon { get; init; } = Utilities.ToFloat3(Utilities.CreateLuminance(12E-3f));
+
+		/// <summary>
+		/// Returns whether <paramref name="energy"/> is considered as empty or zero
+		/// based on the <see cref="EnergyEpsilon"/> of this <see cref="RenderProfile"/>.
+		/// </summary>
+		public bool IsZero(in Float3 energy) => energy <= EnergyEpsilon;
 
 		public virtual void Validate()
 		{
