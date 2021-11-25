@@ -7,6 +7,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Pixels;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures.DimensionTwo;
 using ThreadState = System.Threading.ThreadState;
 
@@ -66,14 +67,14 @@ namespace EchoRenderer.Rendering.Engines
 			CurrentState = State.initialization;
 
 			Epoch = 0;
-			CreateThreadArena();
+			threadArena = new ThreadLocal<Arena>(CreateArena);
 
-			profile.Method.AssignProfile(profile);
+			profile.Method.BeforeRender(profile);
 			profile.Scene.ResetIntersectionCount();
 
 			renderData.Recreate(profile.RenderBuffer);
 
-			parallelOptions = new ParallelOptions {MaxDegreeOfParallelism = profile.WorkerSize};
+			parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = profile.WorkerSize };
 			if (workThread.ThreadState == ThreadState.Unstarted) workThread.Start();
 
 			stopwatch.Restart();
@@ -160,16 +161,18 @@ namespace EchoRenderer.Rendering.Engines
 			throw new Exception($"Operation invalid after {nameof(Dispose)}!");
 		}
 
-		void CreateThreadArena() => threadArena = new ThreadLocal<Arena>
-									(
-										() =>
-										{
-											int id = Thread.CurrentThread.ManagedThreadId;
-											long tick = Environment.TickCount64;
+		/// <summary>
+		/// Creates a new <see cref="Arena"/> for the invocation thread and <see cref="CurrentProfile"/>.
+		/// </summary>
+		Arena CreateArena()
+		{
+			int id = Thread.CurrentThread.ManagedThreadId;
+			long tick = Environment.TickCount64;
 
-											return CurrentProfile.Method.CreateArena(HashCode.Combine(id, tick));
-										}
-									);
+			RenderProfile profile = CurrentProfile;
+			int seed = HashCode.Combine(id, tick);
+			return profile.Method.CreateArena(profile, seed);
+		}
 
 		public enum State
 		{
