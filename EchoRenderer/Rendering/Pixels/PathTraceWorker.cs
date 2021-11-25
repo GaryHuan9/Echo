@@ -4,17 +4,17 @@ using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public override Arena CreateArena(int hash) => new(hash);
-
 		public override Sample Render(Float2 screenUV, Arena arena)
 		{
-			PressedScene scene = Profile.Scene;
+			RenderProfile profile = arena.profile;
+			PressedScene scene = profile.Scene;
 			ExtendedRandom random = arena.random;
 
 			HitQuery query = scene.camera.GetRay(screenUV, random);
@@ -31,7 +31,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			bool missingAuxiliary = true;
 
-			while (bounce < Profile.BounceLimit && scene.GetIntersection(ref query))
+			while (bounce < profile.BounceLimit && scene.GetIntersection(ref query))
 			{
 				++bounce;
 
@@ -58,7 +58,7 @@ namespace EchoRenderer.Rendering.Pixels
 				colors += energy * emission;
 				energy *= albedo;
 
-				if (energy <= Profile.EnergyEpsilon) break;
+				if (energy <= profile.EnergyEpsilon) break;
 				query.Next(direction);
 			}
 

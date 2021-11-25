@@ -1,4 +1,5 @@
 ﻿using EchoRenderer.Mathematics;
+using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Memory
 {
@@ -12,10 +13,17 @@ namespace EchoRenderer.Rendering.Memory
 		/// <summary>
 		/// Creates a new <see cref="Arena"/>.
 		/// </summary>
-		/// <param name="hash">Should be fairly random number that varies based on each rendering thread.</param>
-		public Arena(int hash) => random = new ExtendedRandom(hash);
+		/// <param name="profile">The <see cref="RenderProfile"/> to use for this render.</param>
+		/// <param name="seed">Should be fairly random number that varies based on each rendering thread.</param>
+		public Arena(RenderProfile profile, int seed)
+		{
+			this.profile = profile;
+			random = new ExtendedRandom(seed);
+		}
 
+		public readonly RenderProfile profile;
 		public readonly ExtendedRandom random;
+
 		public readonly Allocator allocator = new();
 	}
 }
