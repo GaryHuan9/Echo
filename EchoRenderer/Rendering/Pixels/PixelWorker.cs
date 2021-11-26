@@ -21,14 +21,14 @@ namespace EchoRenderer.Rendering.Pixels
 		public virtual void BeforeRender(RenderProfile profile) { }
 
 		/// <summary>
-		/// Renders a <see cref="Sample"/> at <paramref name="screenUV"/>.
+		/// Renders a <see cref="Sample"/> at <paramref name="uv"/>.
 		/// </summary>
-		/// <param name="screenUV">
+		/// <param name="uv">
 		/// The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
 		/// Y should have the same scale as X and it would depend on the aspect ratio.
 		/// </param>
 		/// <param name="arena">The <see cref="Arena"/> to use for this sample.</param>
-		public abstract Sample Render(Float2 screenUV, Arena arena);
+		public abstract Sample Render(Float2 uv, Arena arena);
 
 		/// <summary>
 		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit
