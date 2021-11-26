@@ -3,6 +3,7 @@ using CodeHelpers.Mathematics.Enumerables;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.Cubemaps;
@@ -30,9 +31,9 @@ namespace EchoRenderer.Objects.Scenes
 
 			children.FindFirst<Camera>().FieldOfView = 80f;
 
-			Light light = children.FindFirst<Light>();
-			light.Coverage = 0.04f; //This makes the scene super noisy even after good number of samples
-			light.Intensity *= 5f;  //We need a better way to trace global/directional lights
+			// Light light = children.FindFirst<Light>();
+			// light.Coverage = 0.04f; //This makes the scene super noisy even after good number of samples
+			// light.Intensity *= 5f;  //We need a better way to trace global/directional lights
 
 			Material core = new Diffuse {Albedo = Utilities.ToColor("DD444C").XYZ};
 			Material solid = new Glossy {Albedo = (Float3)0.9f, Smoothness = 0.9f};
