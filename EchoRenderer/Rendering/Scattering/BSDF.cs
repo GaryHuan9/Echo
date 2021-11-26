@@ -96,17 +96,17 @@ namespace EchoRenderer.Rendering.Scattering
 
 		/// <summary>
 		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/> with an output direction.
-		/// See <see cref="BxDF.Sample(in Float3, out Float3, in Sample2, out float)"/> for more information.
+		/// See <see cref="BxDF.Sample(in Float3, in Sample2, out Float3, out float)"/> for more information.
 		/// </summary>
-		public Float3 Sample(in Float3 outgoingWorld, out Float3 incidentWorld, Sample2 sample, out float pdf, FunctionType type, out FunctionType sampledType)
+		public Float3 Sample(in Float3 outgoingWorld, Sample2 sample, FunctionType type, out Float3 incidentWorld, out float pdf, out FunctionType sampledType)
 		{
 			int index = FindFunction(type, ref sample, out int matched);
 
 			if (index < 0)
 			{
+				incidentWorld = Float3.zero;
 				pdf = 0f;
 				sampledType = FunctionType.none;
-				incidentWorld = Float3.zero;
 				return Float3.zero;
 			}
 
@@ -116,7 +116,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 			//Sample the selected function
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-			Float3 sampled = selected.Sample(outgoing, out Float3 incident, sample, out pdf);
+			Float3 sampled = selected.Sample(outgoing, sample, out Float3 incident, out pdf);
 
 			if (pdf.AlmostEquals())
 			{

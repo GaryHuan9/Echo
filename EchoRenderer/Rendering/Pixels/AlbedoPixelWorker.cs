@@ -7,12 +7,12 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{
-		public override Sample Render(Float2 screenUV, Arena arena)
+		public override Sample Render(Float2 uv, Arena arena)
 		{
 			PressedScene scene = arena.profile.Scene;
 			ExtendedRandom random = arena.random;
 
-			HitQuery query = scene.camera.GetRay(screenUV, random);
+			HitQuery query = scene.camera.GetRay(uv, random);
 
 			while (scene.GetIntersection(ref query))
 			{

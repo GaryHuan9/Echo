@@ -19,10 +19,10 @@ namespace EchoRenderer.Rendering.Pixels
 			Interlocked.Exchange(ref totalSample, 0);
 		}
 
-		public override Sample Render(Float2 screenUV, Arena arena)
+		public override Sample Render(Float2 uv, Arena arena)
 		{
 			PressedScene scene = arena.profile.Scene;
-			Ray ray = scene.camera.GetRay(screenUV);
+			Ray ray = scene.camera.GetRay(uv);
 
 			int cost = scene.GetIntersectionCost(ray);
 

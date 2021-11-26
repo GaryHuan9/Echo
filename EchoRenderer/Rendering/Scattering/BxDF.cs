@@ -2,6 +2,7 @@
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Sampling;
 
 namespace EchoRenderer.Rendering.Scattering
@@ -28,7 +29,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Samples and returns the value of the distribution function from <paramref name="outgoing"/>, and outputs
 		/// the scattering direction to <paramref name="incident"/>. Used by delta distributions (eg. perfect specular)
 		/// </summary>
-		public virtual Float3 Sample(in Float3 outgoing, out Float3 incident, in Sample2 sample, out float pdf)
+		public virtual Float3 Sample(in Float3 outgoing, in Sample2 sample, out Float3 incident, out float pdf)
 		{
 			incident = sample.CosineHemisphere;
 			if (outgoing.z < 0f) incident = new Float3(incident.x, incident.y, -incident.z);
@@ -45,9 +46,9 @@ namespace EchoRenderer.Rendering.Scattering
 		{
 			Float3 result = Float3.zero;
 
-			foreach (Sample2 sample in samples)
+			foreach (ref readonly Sample2 sample in samples)
 			{
-				Float3 sampled = Sample(outgoing, out Float3 incident, sample, out float pdf);
+				Float3 sampled = Sample(outgoing, sample, out Float3 incident, out float pdf);
 				if (pdf > 0f) result += sampled * AbsoluteCosine(incident) / pdf;
 			}
 
@@ -66,10 +67,10 @@ namespace EchoRenderer.Rendering.Scattering
 			Assert.AreEqual(length, samples1.Length);
 			for (int i = 0; i < samples0.Length; i++)
 			{
-				Sample2 sample = samples0[i];
+				ref readonly Sample2 sample = ref samples0[i];
 
 				Float3 outgoing = sample.UniformHemisphere;
-				Float3 sampled = Sample(outgoing, out Float3 incident, samples1[i], out float pdf);
+				Float3 sampled = Sample(outgoing, samples1[i], out Float3 incident, out float pdf);
 
 				pdf *= sample.UniformHemispherePdf;
 
