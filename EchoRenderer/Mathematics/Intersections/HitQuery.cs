@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Rendering.Scattering;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -43,6 +44,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		public Float2 uv;
 
 		public Shading shading;
+		public BSDF bsdf;
 
 		public readonly bool Hit => token != default;
 
@@ -56,6 +58,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			previous = token;
 			token = default;
+			bsdf = null;
 
 			distance = float.PositiveInfinity;
 		}

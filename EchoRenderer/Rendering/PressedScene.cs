@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
+using EchoRenderer.Objects.Lights;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures.Cubemaps;
@@ -23,7 +23,7 @@ namespace EchoRenderer.Rendering
 			this.source = source;
 			cubemap = source.Cubemap;
 
-			List<PressedLight> lightsList = new List<PressedLight>();
+			var lightsList = new List<Light>();
 
 			//Gather important objects
 			foreach (Object child in source.LoopChildren(true))
@@ -39,7 +39,7 @@ namespace EchoRenderer.Rendering
 					}
 					case Light value:
 					{
-						lightsList.Add(new PressedLight(value));
+						lightsList.Add(value);
 						break;
 					}
 				}
@@ -47,11 +47,15 @@ namespace EchoRenderer.Rendering
 				if (child.Scale.MinComponent <= 0f) throw new Exception($"Cannot have non-positive scales! '{child.Scale}'");
 			}
 
-			lights = new ReadOnlyCollection<PressedLight>(lightsList);
-
+			lights = lightsList.ToArray();
 			presser = new ScenePresser(source, profile);
-			rootInstance = new PressedPackInstance(presser, source); //Create root instance
+
+			//Create root instance and press materials
+			rootInstance = new PressedPackInstance(presser, source);
 			presser.materials.Press();
+
+			//Press lights
+			foreach (Light light in lights) light.Press(this);
 
 			DebugHelper.Log("Pressed scene");
 		}
@@ -61,11 +65,13 @@ namespace EchoRenderer.Rendering
 
 		public readonly Camera camera;
 		public readonly Cubemap cubemap;
-		public readonly ReadOnlyCollection<PressedLight> lights;
+		readonly Light[] lights;
 
-		long intersections; //Intersection count
+		long _intersections; //Intersection count
 
-		public long Intersections => Interlocked.Read(ref intersections);
+		public ReadOnlySpan<Light> Lights => lights;
+
+		public long Intersections => Interlocked.Read(ref _intersections);
 
 		readonly PressedPackInstance rootInstance;
 
@@ -73,7 +79,7 @@ namespace EchoRenderer.Rendering
 		public bool GetIntersection(ref HitQuery query)
 		{
 			rootInstance.GetIntersectionRoot(ref query);
-			Interlocked.Increment(ref intersections);
+			Interlocked.Increment(ref _intersections);
 
 			bool hit = query.Hit;
 
@@ -102,6 +108,6 @@ namespace EchoRenderer.Rendering
 			return rootInstance.GetIntersectionCost(ray, ref distance);
 		}
 
-		public void ResetIntersectionCount() => Interlocked.Exchange(ref intersections, 0);
+		public void ResetIntersectionCount() => Interlocked.Exchange(ref _intersections, 0);
 	}
 }

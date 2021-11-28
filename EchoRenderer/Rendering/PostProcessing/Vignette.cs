@@ -2,7 +2,6 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
-using static EchoRenderer.Mathematics.Utilities;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -32,7 +31,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 				float distance = (position * scale - Float2.half).SquaredMagnitude * Intensity;
 				float multiplier = 1f + random.NextFloat(-FilmGrain, FilmGrain) - distance;
 
-				Vector128<float> target = Clamp(vector0, vector1, renderBuffer[position]);
+				Vector128<float> target = Utilities.Clamp01(renderBuffer[position]);
 				renderBuffer[position] = Sse.Multiply(target, Vector128.Create(multiplier));
 			}
 		}
