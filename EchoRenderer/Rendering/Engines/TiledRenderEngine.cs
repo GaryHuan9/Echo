@@ -33,7 +33,7 @@ namespace EchoRenderer.Rendering.Engines
 		Int2[] tilePositions; //Positions of tiles. Processed from 0 to length. Positions can be in any order.
 
 		Dictionary<Int2, TileStatus> tileStatuses; //Indexer to status of tiles, tile position in tile-space, meaning the gap between tiles is one
-		readonly Stopwatch stopwatch = new Stopwatch();
+		readonly Stopwatch stopwatch = new();
 
 		volatile int dispatchedTileCount; //Number of tiles being processed or are already processed.
 		volatile int completedTileCount;  //Number of tiles finished processing
@@ -72,8 +72,8 @@ namespace EchoRenderer.Rendering.Engines
 		public Int2 TotalTileSize { get; private set; }     //The size of the rendering tile grid
 		public int TotalTileCount => TotalTileSize.Product; //The number of processed tiles or tiles currently being processed
 
-		readonly object manageLocker = new object(); //Locker used when managing any of the workers
-		readonly object signalLocker = new object(); //Locker to signal when state changed
+		readonly object manageLocker = new(); //Locker used when managing any of the workers
+		readonly object signalLocker = new(); //Locker to signal when state changed
 
 		public void Begin(TiledRenderProfile profile)
 		{
@@ -83,7 +83,7 @@ namespace EchoRenderer.Rendering.Engines
 			CurrentProfile = profile;
 
 			profile.Scene.ResetIntersectionCount();
-			profile.Method.AssignProfile(profile);
+			profile.Method.BeforeRender(profile);
 
 			lock (manageLocker)
 			{

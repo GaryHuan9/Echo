@@ -6,7 +6,7 @@ namespace EchoRenderer.Rendering.Scattering
 	/// <summary>
 	/// Microfacet diffuse reflection based on Oren and Nayer (1994)
 	/// </summary>
-	public class OrenNayar : BidirectionalDistributionFunction
+	public class OrenNayar : BxDF
 	{
 		public OrenNayar() : base
 		(

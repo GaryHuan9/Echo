@@ -5,6 +5,7 @@ using CodeHelpers.Mathematics.Enumerables;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures.Cubemaps;
 
@@ -57,7 +58,7 @@ namespace EchoRenderer.Objects.Scenes
 				children.Add(new ObjectPackInstance(ball) { Position = position.XYZ, Mapper = mapper });
 			}
 
-			children.Add(new Light { Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 60f, 0f) });
+			// children.Add(new Light { Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 60f, 0f) });
 
 			Camera camera = new Camera(100f) { Position = new Float3(-5f, 6f, -10f) };
 

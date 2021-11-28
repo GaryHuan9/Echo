@@ -49,7 +49,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public readonly float radiusSquared;
 		public readonly int materialToken;
 
-		public AxisAlignedBoundingBox AABB => new AxisAlignedBoundingBox(position - (Float3)radius, position + (Float3)radius);
+		public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
 
 		const float DistanceMin = PressedPack.DistanceMin;
 

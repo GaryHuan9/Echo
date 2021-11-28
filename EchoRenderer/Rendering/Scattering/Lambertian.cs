@@ -7,7 +7,7 @@ namespace EchoRenderer.Rendering.Scattering
 	/// <summary>
 	/// Perfectly uniform Lambertian diffuse reflection.
 	/// </summary>
-	public class LambertianReflection : BidirectionalDistributionFunction
+	public class LambertianReflection : BxDF
 	{
 		public LambertianReflection() : base
 		(
@@ -28,7 +28,7 @@ namespace EchoRenderer.Rendering.Scattering
 	/// <summary>
 	/// Perfectly uniform Lambertian diffuse transmission.
 	/// </summary>
-	public class LambertianTransmission : BidirectionalDistributionFunction
+	public class LambertianTransmission : BxDF
 	{
 		public LambertianTransmission() : base
 		(

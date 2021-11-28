@@ -5,7 +5,7 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.ObjectPooling;
+using CodeHelpers.Pooling;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Rendering.Profiles;
 
@@ -113,7 +113,7 @@ namespace EchoRenderer.Objects.Scenes
 			public GeometryCounts InstancedCounts { get; private set; }
 			public GeometryCounts UniqueCounts { get; private set; }
 
-			readonly HashSet<Node> parents = new HashSet<Node>();
+			readonly HashSet<Node> parents = new();
 			readonly Dictionary<Node, int> children = new(); //Maps child to the number of duplicated instances
 
 			/// <summary>

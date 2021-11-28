@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
+using CodeHelpers.Pooling;
 using CodeHelpers.Threads;
 
 namespace EchoRenderer.IO

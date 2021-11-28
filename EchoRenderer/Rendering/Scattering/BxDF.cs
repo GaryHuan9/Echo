@@ -1,6 +1,8 @@
 ﻿using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering.Sampling;
 
 namespace EchoRenderer.Rendering.Scattering
@@ -8,9 +10,9 @@ namespace EchoRenderer.Rendering.Scattering
 	/// <summary>
 	/// The base class to either bidirectional reflectance distribution function or bidirectional transmittance distribution function.
 	/// </summary>
-	public abstract class BidirectionalDistributionFunction
+	public abstract class BxDF
 	{
-		protected BidirectionalDistributionFunction(FunctionType type) => functionType = type;
+		protected BxDF(FunctionType type) => functionType = type;
 
 		public readonly FunctionType functionType;
 
@@ -27,7 +29,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Samples and returns the value of the distribution function from <paramref name="outgoing"/>, and outputs
 		/// the scattering direction to <paramref name="incident"/>. Used by delta distributions (eg. perfect specular)
 		/// </summary>
-		public virtual Float3 Sample(in Float3 outgoing, out Float3 incident, in Sample2 sample, out float pdf)
+		public virtual Float3 Sample(in Float3 outgoing, in Sample2 sample, out Float3 incident, out float pdf)
 		{
 			incident = sample.CosineHemisphere;
 			if (outgoing.z < 0f) incident = new Float3(incident.x, incident.y, -incident.z);
@@ -44,9 +46,9 @@ namespace EchoRenderer.Rendering.Scattering
 		{
 			Float3 result = Float3.zero;
 
-			foreach (Sample2 sample in samples)
+			foreach (ref readonly Sample2 sample in samples)
 			{
-				Float3 sampled = Sample(outgoing, out Float3 incident, sample, out float pdf);
+				Float3 sampled = Sample(outgoing, sample, out Float3 incident, out float pdf);
 				if (pdf > 0f) result += sampled * AbsoluteCosine(incident) / pdf;
 			}
 
@@ -60,15 +62,15 @@ namespace EchoRenderer.Rendering.Scattering
 		public virtual Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1)
 		{
 			Float3 result = Float3.zero;
-			int    length = samples0.Length;
+			int length = samples0.Length;
 
 			Assert.AreEqual(length, samples1.Length);
 			for (int i = 0; i < samples0.Length; i++)
 			{
-				Sample2 sample = samples0[i];
+				ref readonly Sample2 sample = ref samples0[i];
 
 				Float3 outgoing = sample.UniformHemisphere;
-				Float3 sampled  = Sample(outgoing, out Float3 incident, samples1[i], out float pdf);
+				Float3 sampled = Sample(outgoing, samples1[i], out Float3 incident, out float pdf);
 
 				pdf *= sample.UniformHemispherePdf;
 
@@ -101,12 +103,12 @@ namespace EchoRenderer.Rendering.Scattering
 		/// <summary>
 		/// Returns the absolute cosine value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		public static float AbsoluteCosine(in Float3 direction) => Math.Abs(direction.z);
+		public static float AbsoluteCosine(in Float3 direction) => FastMath.Abs(direction.z);
 
 		/// <summary>
 		/// Returns the sine squared value of the local <paramref name="direction"/> with the normal.
 		/// </summary>
-		public static float Sine2(in Float3 direction) => Math.Max(1f - Cosine2(direction), 0f);
+		public static float Sine2(in Float3 direction) => FastMath.Max0(1f - Cosine2(direction));
 
 		/// <summary>
 		/// Returns the sine value of the local <paramref name="direction"/> with the normal.
@@ -131,7 +133,7 @@ namespace EchoRenderer.Rendering.Scattering
 		{
 			float sin = Sine(direction);
 			if (sin == 0f) return 1f;
-			return (direction.x / sin).Clamp(-1f);
+			return FastMath.Clamp11(direction.x / sin);
 		}
 
 		/// <summary>
@@ -142,7 +144,7 @@ namespace EchoRenderer.Rendering.Scattering
 		{
 			float sin = Sine(direction);
 			if (sin == 0f) return 0f;
-			return (direction.y / sin).Clamp(-1f);
+			return FastMath.Clamp11(direction.y / sin);
 		}
 
 		/// <summary>
@@ -153,7 +155,7 @@ namespace EchoRenderer.Rendering.Scattering
 		{
 			float sin2 = Sine2(direction);
 			if (sin2 == 0f) return 1f;
-			return (direction.x * direction.x / sin2).Clamp();
+			return FastMath.Clamp01(direction.x * direction.x / sin2);
 		}
 
 		/// <summary>
@@ -164,7 +166,7 @@ namespace EchoRenderer.Rendering.Scattering
 		{
 			float sin2 = Sine2(direction);
 			if (sin2 == 0f) return 0f;
-			return (direction.y * direction.y / sin2).Clamp();
+			return FastMath.Clamp01(direction.y * direction.y / sin2);
 		}
 
 		/// <summary>
