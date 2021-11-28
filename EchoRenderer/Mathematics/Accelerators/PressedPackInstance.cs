@@ -74,8 +74,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		public readonly uint                   id;
-		public readonly PressedPack            pack;
+		public readonly uint id;
+		public readonly PressedPack pack;
 		public readonly MaterialPresser.Mapper mapper;
 
 		readonly Float4x4 forwardTransform;  //The parent to local transform matrix

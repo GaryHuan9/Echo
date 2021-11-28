@@ -24,7 +24,7 @@ namespace EchoRenderer.Rendering.Profiles
 			if (AcceleratorType == typeof(LinearTracer)) return new LinearTracer(pack, aabbs, tokens);
 			if (AcceleratorType == typeof(QuadBoundingVolumeHierarchy)) return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
 
-			return new BoundingVolumeHierarchy(pack, aabbs, tokens);
+			return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
 		}
 	}
 }

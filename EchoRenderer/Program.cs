@@ -43,8 +43,8 @@ namespace EchoRenderer
 		}
 
 		static TiledRenderEngine renderEngine;
-		static Terminal          renderTerminal;
-		static RenderMonitor     renderMonitor;
+		static Terminal renderTerminal;
+		static RenderMonitor renderMonitor;
 
 		static readonly TiledRenderProfile pathTraceFastProfile = new()
 																  {
@@ -90,7 +90,7 @@ namespace EchoRenderer
 															  {
 																  AcceleratorProfile = new TraceAcceleratorProfile
 																					   {
-																						   AcceleratorType = typeof(BoundingVolumeHierarchy)
+																						   AcceleratorType = typeof(QuadBoundingVolumeHierarchy)
 																					   }
 															  };
 
