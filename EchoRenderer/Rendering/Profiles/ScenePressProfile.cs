@@ -15,13 +15,13 @@ namespace EchoRenderer.Rendering.Profiles
 		/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
 		/// Fragmentation can cause the construction of better <see cref="TraceAccelerator"/>, however it can also backfire.
 		/// </summary>
-		public float ThresholdMultiplier { get; init; } = 4.8f;
+		public float FragmentationThresholdMultiplier { get; init; } = 4.8f;
 
 		/// <summary>
 		/// The maximum number of fragmentation that can happen to one source triangle.
 		/// Note that we can completely disable fragmentation by setting this value to 0.
 		/// </summary>
-		public int MaxIteration { get; init; } = 3;
+		public int FragmentationMaxIteration { get; init; } = 3;
 
 		public void Validate()
 		{

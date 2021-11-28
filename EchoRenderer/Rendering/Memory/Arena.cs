@@ -13,8 +13,13 @@ namespace EchoRenderer.Rendering.Memory
 		/// Creates a new <see cref="Arena"/>.
 		/// </summary>
 		/// <param name="hash">Should be fairly random number that varies based on each rendering thread.</param>
-		public Arena(int hash) => random = new ExtendedRandom(hash);
+		public Arena(int hash)
+		{
+			random = new ExtendedRandom(hash);
+			allocator = new Allocator();
+		}
 
 		public readonly ExtendedRandom random;
+		public readonly Allocator allocator;
 	}
 }

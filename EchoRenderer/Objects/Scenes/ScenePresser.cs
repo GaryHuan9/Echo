@@ -91,14 +91,12 @@ namespace EchoRenderer.Objects.Scenes
 			return node;
 		}
 
-		PressedPack PressPacks(Node node)
+		void PressPacks(Node node)
 		{
-			foreach (Node child in node) PressPacks(child);
-			node.AssignPack(new PressedPack(node.objectPack, this));
-
 			//Head recursion to make sure that all children is pressed before the parent
 
-			return node.PressedPack;
+			foreach (Node child in node) PressPacks(child);
+			node.AssignPack(new PressedPack(node.objectPack, this));
 		}
 
 		public class Node : IEnumerable<Node>
@@ -177,7 +175,7 @@ namespace EchoRenderer.Objects.Scenes
 			Dictionary<Node, int>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();
 
 			IEnumerator<Node> IEnumerable<Node>.GetEnumerator() => GetEnumerator();
-			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+			IEnumerator IEnumerable.            GetEnumerator() => GetEnumerator();
 		}
 	}
 }

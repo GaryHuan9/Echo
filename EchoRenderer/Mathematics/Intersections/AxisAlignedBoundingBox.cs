@@ -63,10 +63,10 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public static readonly AxisAlignedBoundingBox none = new(Float3.negativeInfinity, Float3.negativeInfinity);
 
-		[FieldOffset(0)]  public readonly Float3 min;
+		[FieldOffset(0)] public readonly Float3 min;
 		[FieldOffset(12)] public readonly Float3 max;
 
-		[FieldOffset(0)]  readonly Vector128<float> minVector;
+		[FieldOffset(0)] readonly Vector128<float> minVector;
 		[FieldOffset(12)] readonly Vector128<float> maxVector;
 
 		public Float3 Center => (max + min) / 2f;
@@ -149,6 +149,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other) => new(min.Min(other.min), max.Max(other.max));
 
-		public override int GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
+		public override int    GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
+		public override string ToString()    => $"{nameof(Center)}: {Center}, {nameof(Extend)}: {Extend}";
 	}
 }
