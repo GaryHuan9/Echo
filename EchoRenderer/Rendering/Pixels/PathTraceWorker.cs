@@ -1,23 +1,24 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Objects;
+using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public override Arena CreateArena(int hash) => new Arena(hash);
-
-		public override Sample Render(Float2 screenUV, Arena arena)
+		public override Sample Render(Float2 uv, Arena arena)
 		{
-			PressedScene scene = Profile.Scene;
+			RenderProfile profile = arena.profile;
+			PressedScene scene = profile.Scene;
 			ExtendedRandom random = arena.random;
 
-			HitQuery query = scene.camera.GetRay(screenUV, random);
+			HitQuery query = scene.camera.GetRay(uv, random);
 
 			Float3 energy = Float3.one;
 			Float3 colors = Float3.zero;
@@ -31,7 +32,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			bool missingAuxiliary = true;
 
-			while (bounce < Profile.BounceLimit && scene.GetIntersection(ref query))
+			while (bounce < profile.BounceLimit && scene.GetIntersection(ref query))
 			{
 				++bounce;
 
@@ -58,7 +59,7 @@ namespace EchoRenderer.Rendering.Pixels
 				colors += energy * emission;
 				energy *= albedo;
 
-				if (energy <= Profile.EnergyEpsilon) break;
+				if (energy <= profile.EnergyEpsilon) break;
 				query.Next(direction);
 			}
 
@@ -68,7 +69,6 @@ namespace EchoRenderer.Rendering.Pixels
 #endif
 
 			var cubemap = scene.cubemap;
-			var lights = scene.lights;
 
 			if (cubemap != null) colors += energy * cubemap.Sample(query.ray.direction);
 
@@ -76,13 +76,11 @@ namespace EchoRenderer.Rendering.Pixels
 			{
 				//Add light colors if we actually hit some geometry
 
-				for (int i = 0; i < lights.Count; i++)
-				{
-					PressedLight light = lights[i];
-
-					float weight = -light.direction.Dot(query.ray.direction);
-					if (weight > light.threshold) colors += energy * light.intensity * weight;
-				}
+				// foreach (ref readonly PressedLight light in scene.lights.AsSpan())
+				// {
+				// 	float weight = -light.direction.Dot(query.ray.direction);
+				// 	if (weight > light.threshold) colors += energy * light.intensity * weight;
+				// }
 			}
 			else firstAlbedo = colors; //No bounce sample do not have albedo so we just use the skybox
 

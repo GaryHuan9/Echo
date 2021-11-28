@@ -1,7 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
@@ -10,29 +9,26 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public abstract class PixelWorker
 	{
-		protected RenderProfile Profile { get; private set; }
+		/// <summary>
+		/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Render"/>.
+		/// </summary>
+		public virtual Arena CreateArena(RenderProfile profile, int seed) => new(profile, seed);
 
 		/// <summary>
-		/// Should create and return a new object of base type <see cref="Arena"/> with <paramref name="hash"/>.
-		/// NOTE: The returned <see cref="Arena"/> will be exactly the allocator used for <see cref="Render"/>.
+		/// Invoked before a new rendering process begin on this <see cref="PixelWorker"/>.
+		/// Can be used to prepare the worker for future invocations to <see cref="Render"/>.
 		/// </summary>
-		public abstract Arena CreateArena(int hash);
+		public virtual void BeforeRender(RenderProfile profile) { }
 
 		/// <summary>
-		/// Assigns the render profile before a render session begins.
-		/// NOTE: This can be used as a "reset" point for the worker.
+		/// Renders a <see cref="Sample"/> at <paramref name="uv"/>.
 		/// </summary>
-		public virtual void AssignProfile(RenderProfile profile) => Profile = profile;
-
-		/// <summary>
-		/// Renders a <see cref="Sample"/> at <paramref name="screenUV"/>.
-		/// </summary>
-		/// <param name="screenUV">
+		/// <param name="uv">
 		/// The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
 		/// Y should have the same scale as X and it would depend on the aspect ratio.
 		/// </param>
 		/// <param name="arena">The <see cref="Arena"/> to use for this sample.</param>
-		public abstract Sample Render(Float2 screenUV, Arena arena);
+		public abstract Sample Render(Float2 uv, Arena arena);
 
 		/// <summary>
 		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit
@@ -61,7 +57,7 @@ namespace EchoRenderer.Rendering.Pixels
 								 float.IsNaN(normal.x) || float.IsNaN(normal.y) || float.IsNaN(normal.z) ||
 								 float.IsNaN(zDepth);
 
-			public static implicit operator Sample(in Float3 colour) => new Sample(colour);
+			public static implicit operator Sample(in Float3 colour) => new(colour);
 		}
 	}
 }

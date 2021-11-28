@@ -1,10 +1,11 @@
 ﻿using EchoRenderer.Mathematics;
+using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Memory
 {
 	/// <summary>
-	/// A class that handles memory allocation and deallocation during the rendering of a sample.
-	/// NOTE: This class should be unique to each thread and can be inherited for more options.
+	/// A region of memory that can be used to store localized temporary objects or access shared immutable objects.
+	/// NOTE: This class should be unique/local to each thread and can be inherited for more options.
 	/// Thus, the entirety of this class is not thread safe and relies on this fact for fast memory.
 	/// </summary>
 	public class Arena
@@ -12,14 +13,17 @@ namespace EchoRenderer.Rendering.Memory
 		/// <summary>
 		/// Creates a new <see cref="Arena"/>.
 		/// </summary>
-		/// <param name="hash">Should be fairly random number that varies based on each rendering thread.</param>
-		public Arena(int hash)
+		/// <param name="profile">The <see cref="RenderProfile"/> to use for this render.</param>
+		/// <param name="seed">Should be fairly random number that varies based on each rendering thread.</param>
+		public Arena(RenderProfile profile, int seed)
 		{
-			random = new ExtendedRandom(hash);
-			allocator = new Allocator();
+			this.profile = profile;
+			random = new ExtendedRandom(seed);
 		}
 
+		public readonly RenderProfile profile;
 		public readonly ExtendedRandom random;
-		public readonly Allocator allocator;
+
+		public readonly Allocator allocator = new();
 	}
 }
