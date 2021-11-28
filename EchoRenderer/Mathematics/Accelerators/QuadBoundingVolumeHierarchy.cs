@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -22,7 +23,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 	{
 		public QuadBoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
 		{
-			if (tokens.Count <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Count), tokens.Count, "does contain more than one token");
+			if (tokens.Count <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Count), tokens.Count, "does not contain more than one token");
 
 			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
 
@@ -38,6 +39,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			nodes[0] = CreateNode(buildRoot, out int maxDepth);
 
 			stackSize = maxDepth * 3;
+			aabbRoot = root.aabb;
 
 			Node CreateNode(BuildNode buildNode, out int depth)
 			{
@@ -84,8 +86,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		readonly Node[] nodes;
-		readonly int    stackSize;
-
+		readonly int stackSize;
 		readonly AxisAlignedBoundingBox aabbRoot;
 
 		/// <summary>
@@ -154,7 +155,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 						uint child = node.children.GetElement(j);
 						if (child == EmptyNode) continue;
 
-						if (child >= NodeThreshold) *next1++ = child;
+						if (child >= NodeThreshold) *next1++ = child - NodeThreshold;
 						else span[head++] = node.aabb4.Extract(j);
 					}
 				}
@@ -180,7 +181,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				for (int i = 0; i < Width; i++)
 				{
 					uint child = node.children.GetElement(i);
-					if (child is EmptyNode or < NodeThreshold) continue;
+					if (child == EmptyNode) continue;
 					span[head++] = node.aabb4.Extract(i);
 				}
 			}
@@ -376,8 +377,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 			}
 
-			[FieldOffset(0)]   public readonly AxisAlignedBoundingBox4 aabb4;
-			[FieldOffset(096)] public readonly Vector128<uint>         children;
+			[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
+			[FieldOffset(096)] public readonly Vector128<uint> children;
 
 			[FieldOffset(096)] public readonly uint child0;
 			[FieldOffset(100)] public readonly uint child1;
@@ -450,7 +451,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 
 			public bool IsEmpty => source == null;
-			public bool IsLeaf  => child == null;
+			public bool IsLeaf => child == null;
 
 			public readonly BranchBuilder.Node source;
 

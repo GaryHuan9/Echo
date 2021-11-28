@@ -10,7 +10,7 @@ namespace EchoRenderer.Rendering.Materials
 	/// </summary>
 	public class Invisible : Material
 	{
-		public override Float3 Emit(in HitQuery hit, ExtendedRandom random) => Float3.zero;
+		public override Float3 Emit(in HitQuery query, ExtendedRandom random) => Float3.zero;
 
 		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
 		{

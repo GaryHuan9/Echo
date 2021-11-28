@@ -278,11 +278,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 			double totalArea = 0d;
 
 			Parallel.ForEach(triangles, triangle => InterlockedHelper.Add(ref totalArea, triangle.Area));
-			float threshold = (float)(totalArea / triangles.Count * profile.ThresholdMultiplier);
+			float threshold = (float)(totalArea / triangles.Count * profile.FragmentationThresholdMultiplier);
 
 			using var _ = triangles.BeginAdd();
 
-			Parallel.For(0, triangles.Count, index => SubdivideTriangle(triangles, ref triangles[index], threshold, profile.MaxIteration));
+			Parallel.For(0, triangles.Count, index => SubdivideTriangle(triangles, ref triangles[index], threshold, profile.FragmentationMaxIteration));
 		}
 
 		static void SubdivideTriangle(ConcurrentList<PressedTriangle> triangles, ref PressedTriangle triangle, float threshold, int maxIteration)

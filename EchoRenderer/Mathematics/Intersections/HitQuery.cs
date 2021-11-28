@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Rendering.Materials;
@@ -11,7 +10,29 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public struct HitQuery
 	{
-		public Ray ray;
+		public HitQuery(in Ray ray)
+		{
+			this.ray = ray;
+			instance = null;
+
+			previous = default;
+			token = default;
+
+			distance = float.PositiveInfinity;
+			uv = default;
+		}
+
+		HitQuery(in HitQuery last)
+		{
+
+		}
+
+		public readonly Ray ray;
+
+		/// <summary>
+		/// Used during intersection test. Assigned to the <see cref="PressedPackInstance"/> that the
+		/// query is currently travelling through and assigned to null once the test is concluded
+		/// </summary>
 		public PressedPackInstance instance;
 
 		public GeometryToken previous;
@@ -26,7 +47,10 @@ namespace EchoRenderer.Mathematics.Intersections
 		public readonly bool Hit => token != default;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Next(Float3 direction)
+		public readonly HitQuery Next(Float3 direction) => new HitQuery()
+														   {
+															   ray = new Ray(ray.GetPoint(distance), direction),
+														   };
 		{
 			ray = new Ray(ray.GetPoint(distance), direction);
 
@@ -35,6 +59,8 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			distance = float.PositiveInfinity;
 		}
+
+		public static implicit operator HitQuery(in Ray ray) => new(ray);
 
 		/// <summary>
 		/// Information calculated right after intersection calculation
@@ -45,40 +71,5 @@ namespace EchoRenderer.Mathematics.Intersections
 			public Float2 texcoord;
 			public Material material;
 		}
-
-		public static implicit operator HitQuery(in Ray ray) => new() { ray = ray, distance = float.PositiveInfinity };
-	}
-
-	public readonly struct GeometryToken : IEquatable<GeometryToken>
-	{
-		public GeometryToken(PressedPackInstance instance, uint geometry)
-		{
-			this.instance = instance.id;
-			this.geometry = geometry;
-		}
-
-		/// <summary>
-		/// The id of the <see cref="PressedPackInstance"/> that contains this particular geometry.
-		/// </summary>
-		public readonly uint instance;
-
-		/// <summary>
-		/// The unique token for one geometry inside a <see cref="PressedPack"/>.
-		/// </summary>
-		public readonly uint geometry;
-
-		public bool Equals(GeometryToken other) => instance == other.instance && geometry == other.geometry;
-		public override bool Equals(object obj) => obj is GeometryToken other && Equals(other);
-
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				return ((int)instance * 397) ^ (int)geometry;
-			}
-		}
-
-		public static bool operator ==(GeometryToken token0, GeometryToken token1) => token0.Equals(token1);
-		public static bool operator !=(GeometryToken token0, GeometryToken token1) => !token0.Equals(token1);
 	}
 }
