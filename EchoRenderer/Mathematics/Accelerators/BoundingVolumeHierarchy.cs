@@ -254,8 +254,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 			public bool IsLeaf => children == 0;
 
-			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, uint token)    => new Node(aabb, token, 0);
-			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int  children) => new Node(aabb, default, children);
+			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, uint token)    => new(aabb, token, 0);
+			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int  children) => new(aabb, default, children);
 
 			public override int GetHashCode()
 			{

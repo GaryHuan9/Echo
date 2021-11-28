@@ -11,20 +11,18 @@ namespace EchoRenderer.Rendering.Pixels
 		long totalCost;
 		long totalSample;
 
-		public override Arena CreateArena(int hash) => new Arena(hash);
-
-		public override void AssignProfile(RenderProfile profile)
+		public override void BeforeRender(RenderProfile profile)
 		{
-			base.AssignProfile(profile);
+			base.BeforeRender(profile);
 
 			Interlocked.Exchange(ref totalCost, 0);
 			Interlocked.Exchange(ref totalSample, 0);
 		}
 
-		public override Sample Render(Float2 screenUV, Arena arena)
+		public override Sample Render(Float2 uv, Arena arena)
 		{
-			PressedScene scene = Profile.Scene;
-			Ray ray = scene.camera.GetRay(screenUV);
+			PressedScene scene = arena.profile.Scene;
+			Ray ray = scene.camera.GetRay(uv);
 
 			int cost = scene.GetIntersectionCost(ray);
 

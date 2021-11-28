@@ -35,8 +35,8 @@ namespace EchoRenderer.Rendering.Engines
 				float theta = Scalars.TAU * Scalars.GoldenRatio * i;
 				Float2 offset = new Float2(MathF.Cos(theta), MathF.Sin(theta));
 
-				float square = 1f / (Math.Abs(MathF.Cos(theta + Scalars.PI / 4)) + Math.Abs(MathF.Sin(theta + Scalars.PI / 4)));
-				float radius = MathF.Sqrt((i + 0.5f) / spiralOffsets.Length) * Scalars.Sqrt2 * square / 2f;
+				float square = Math.Abs(MathF.Cos(theta + Scalars.PI / 4)) + Math.Abs(MathF.Sin(theta + Scalars.PI / 4));
+				float radius = MathF.Sqrt((i + 0.5f) / spiralOffsets.Length) * Scalars.Sqrt2 / square / 2f;
 
 				spiralOffsets[i] = offset * radius + Float2.half;
 			}
@@ -49,7 +49,8 @@ namespace EchoRenderer.Rendering.Engines
 					 };
 
 			//Create arena for thread. NOTE that HashCode returns a different value every runtime!
-			arena = pixelWorker.CreateArena(HashCode.Combine(Environment.TickCount64, id, size));
+			int seed = HashCode.Combine(Environment.TickCount64, id, size);
+			arena = pixelWorker.CreateArena(profile, seed);
 		}
 
 		readonly int id;
@@ -68,7 +69,7 @@ namespace EchoRenderer.Rendering.Engines
 		public int RenderOffsetX => InterlockedHelper.Read(ref _renderOffsetX);
 		public int RenderOffsetY => InterlockedHelper.Read(ref _renderOffsetY);
 
-		public Int2 RenderOffset => new Int2(RenderOffsetX, RenderOffsetY);
+		public Int2 RenderOffset => new(RenderOffsetX, RenderOffsetY);
 		public long TotalPixel => Interlocked.Read(ref _totalPixel);
 
 		long _completedSample;
@@ -87,7 +88,7 @@ namespace EchoRenderer.Rendering.Engines
 		/// </summary>
 		readonly Float2[] spiralOffsets;
 
-		readonly ManualResetEventSlim dispatchEvent = new ManualResetEventSlim(); //Event sets when the worker is dispatched
+		readonly ManualResetEventSlim dispatchEvent = new(); //Event sets when the worker is dispatched
 		public bool Working => dispatchEvent.IsSet;
 
 		static volatile int workerIdAccumulator;
@@ -203,7 +204,7 @@ namespace EchoRenderer.Rendering.Engines
 			dispatchEvent.Dispose();
 		}
 
-		public override int GetHashCode() => id;
-		public override string ToString() => $"Tile Worker #{id} {size}x{size}";
+		public override int    GetHashCode() => id;
+		public override string ToString()    => $"Tile Worker #{id} {size}x{size}";
 	}
 }

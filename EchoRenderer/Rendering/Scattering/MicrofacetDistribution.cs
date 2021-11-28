@@ -3,7 +3,7 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Rendering.Scattering
 {
-	using static BidirectionalDistributionFunction;
+	using static BxDF;
 
 	/// <summary>
 	/// The base class that models microfacet distribution functions.

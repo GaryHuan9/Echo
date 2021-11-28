@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using CodeHelpers.ObjectPooling;
+using CodeHelpers.Pooling;
 using EchoRenderer.Textures.DimensionTwo;
 
 namespace EchoRenderer.Rendering.PostProcessing
@@ -21,10 +21,10 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public readonly RenderBuffer renderBuffer;
 		public readonly Array2DPooler texturePooler;
 
-		readonly List<PostProcessingWorker> workers = new List<PostProcessingWorker>();
+		readonly List<PostProcessingWorker> workers = new();
 
 		readonly Thread workThread;
-		readonly object processLocker = new object();
+		readonly object processLocker = new();
 
 		public bool Aborted { get; private set; }
 
