@@ -13,10 +13,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 			this.pack = pack;
 
 			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(aabbs), $"does not have a matching size with {nameof(tokens)}");
-			if (aabbs.Count == 0) throw ExceptionHelper.Invalid(nameof(aabbs.Count), aabbs.Count, InvalidType.countIsZero);
 
 #if DEBUG
-
 			int count = tokens.Count;
 
 			for (int i = 0; i < count; i++)
@@ -24,7 +22,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 				uint token = tokens[i];
 				Assert.IsTrue(token < NodeThreshold);
 			}
-
 #endif
 		}
 

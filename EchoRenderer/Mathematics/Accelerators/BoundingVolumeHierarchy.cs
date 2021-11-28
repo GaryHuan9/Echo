@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using CodeHelpers;
 using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Mathematics.Accelerators
@@ -16,6 +17,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 	{
 		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
 		{
+			if (tokens.Count <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Count), tokens.Count, "does not contain more than one token");
+
 			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
 
 			BranchBuilder builder = new BranchBuilder(aabbs);
@@ -58,30 +61,18 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		readonly Node[] nodes;
-		readonly int    maxDepth;
+		readonly int maxDepth;
 
 		public override void GetIntersection(ref HitQuery query)
 		{
-			if (nodes == null) return;
+			ref readonly Node root = ref nodes[0];
+			float local = root.aabb.Intersect(query.ray);
 
-			if (nodes.Length == 1)
-			{
-				uint token = nodes[0].token; //If root is the only node/leaf
-				pack.GetIntersection(ref query, token);
-			}
-			else
-			{
-				ref readonly Node root = ref nodes[0];
-				float local = root.aabb.Intersect(query.ray);
-
-				if (local < query.distance) Traverse(ref query);
-			}
+			if (local < query.distance) Traverse(ref query);
 		}
 
 		public override int GetIntersectionCost(in Ray ray, ref float distance)
 		{
-			if (nodes == null) return 0;
-
 			ref readonly Node root = ref nodes[0];
 			float hit = root.aabb.Intersect(ray);
 
@@ -258,8 +249,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 			//NOTE: the AABB is 28 bytes large, but its last 4 bytes are not used and only occupied for SIMD loading
 			//So we can overlap the next four bytes onto the AABB and pay extra attention when first assigning the fields
 
-			[FieldOffset(24)] public readonly uint token;    //Token will only be assigned if is leaf
-			[FieldOffset(28)] public readonly int  children; //Index of first child, second child is right after first
+			[FieldOffset(24)] public readonly uint token;   //Token will only be assigned if is leaf
+			[FieldOffset(28)] public readonly int children; //Index of first child, second child is right after first
 
 			public bool IsLeaf => children == 0;
 
