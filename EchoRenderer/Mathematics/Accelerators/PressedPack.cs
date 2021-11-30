@@ -19,11 +19,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 {
 	public class PressedPack
 	{
-		public PressedPack(ObjectPack source, ScenePresser presser)
+		public PressedPack(ScenePresser presser, ObjectPack source)
 		{
 			var trianglesList = new ConcurrentList<PressedTriangle>();
 			var spheresList = new List<PressedSphere>();
-			var instancesList = new List<PressedPackInstance>();
+			var instancesList = new List<PressedInstance>();
 
 			trianglesList.BeginAdd();
 
@@ -38,9 +38,9 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 						break;
 					}
-					case ObjectPackInstance packInstance:
+					case ObjectInstance packInstance:
 					{
-						instancesList.Add(new PressedPackInstance(presser, packInstance));
+						instancesList.Add(new PressedInstance(presser, packInstance));
 						break;
 					}
 				}
@@ -53,7 +53,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			//Extract pressed data
 			triangles = new PressedTriangle[trianglesList.Count];
 			spheres = new PressedSphere[spheresList.Count];
-			instances = new PressedPackInstance[instancesList.Count];
+			instances = new PressedInstance[instancesList.Count];
 
 			geometryCounts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
@@ -104,7 +104,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		readonly PressedTriangle[]     triangles; //Indices: [0x4000_0000 to 0x8000_0000)
 		readonly PressedSphere[]       spheres;   //Indices: [0x2000_0000 to 0x4000_0000)
-		readonly PressedPackInstance[] instances; //Indices: [0 to 0x2000_0000)
+		readonly PressedInstance[] instances; //Indices: [0 to 0x2000_0000)
 
 		/// <summary>
 		/// If an intersection has a distance under this value and we just intersected the exactly same geometry with the last query,
@@ -222,14 +222,14 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 					break;
 				}
-				default: throw new Exception($"{nameof(GetNormal)} cannot be used to get the normal of a {nameof(PressedPackInstance)}!");
+				default: throw new Exception($"{nameof(GetNormal)} cannot be used to get the normal of a {nameof(PressedInstance)}!");
 			}
 		}
 
 		/// <summary>
 		/// Fills the appropriate <see cref="HitQuery.Shading"/> information for <see cref="query"/>.
 		/// </summary>
-		public void FillShading(ref HitQuery query, PressedPackInstance instance)
+		public void FillShading(ref HitQuery query, PressedInstance instance)
 		{
 			ref Float2 texcoord = ref query.shading.texcoord;
 

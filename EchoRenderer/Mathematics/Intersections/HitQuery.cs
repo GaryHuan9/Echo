@@ -31,10 +31,10 @@ namespace EchoRenderer.Mathematics.Intersections
 		public readonly Ray ray;
 
 		/// <summary>
-		/// Used during intersection test. Assigned to the <see cref="PressedPackInstance"/> that the
+		/// Used during intersection test. Assigned to the <see cref="PressedInstance"/> that the
 		/// query is currently travelling through and assigned to null once the test is concluded
 		/// </summary>
-		public PressedPackInstance instance;
+		public PressedInstance instance;
 
 		public GeometryToken previous;
 		public GeometryToken token;

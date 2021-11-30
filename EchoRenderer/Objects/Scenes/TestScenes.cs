@@ -151,12 +151,12 @@ namespace EchoRenderer.Objects.Scenes
 
 			foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))
 			{
-				bunnyWall.children.Add(new ObjectPackInstance(bunny) {Position = offset.XY_});
+				bunnyWall.children.Add(new ObjectInstance(bunny) {Position = offset.XY_});
 			}
 
 			for (int z = 0; z < 4; z++)
 			{
-				children.Add(new ObjectPackInstance(bunnyWall) {Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f)});
+				children.Add(new ObjectInstance(bunnyWall) {Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f)});
 			}
 
 			bunnyWall.children.Add(new PlaneObject(materials.first, Float2.one) {Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f)});

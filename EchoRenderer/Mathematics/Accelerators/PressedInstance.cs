@@ -7,12 +7,12 @@ using EchoRenderer.Objects.Scenes;
 
 namespace EchoRenderer.Mathematics.Accelerators
 {
-	public class PressedPackInstance
+	public class PressedInstance
 	{
-		public PressedPackInstance(ScenePresser presser, ObjectPackInstance instance) : this(presser, instance.ObjectPack, instance.Mapper)
+		public PressedInstance(ScenePresser presser, ObjectInstance instance) : this(presser, instance.ObjectPack, instance.Mapper)
 		{
-			backwardTransform = instance.LocalToWorld;
 			forwardTransform = instance.WorldToLocal;
+			backwardTransform = instance.LocalToWorld;
 
 			Float3 scale = instance.Scale;
 
@@ -21,10 +21,10 @@ namespace EchoRenderer.Mathematics.Accelerators
 				backwardScale = scale.Average;
 				forwardScale = 1f / backwardScale;
 			}
-			else throw new Exception($"{nameof(ObjectPackInstance)} does not support none uniform scaling! '{scale}'");
+			else throw new Exception($"{nameof(ObjectInstance)} does not support none uniform scaling! '{scale}'");
 		}
 
-		public PressedPackInstance(ScenePresser presser, Scene scene) : this(presser, scene, null)
+		public PressedInstance(ScenePresser presser, Scene scene) : this(presser, scene, null)
 		{
 			forwardTransform = Float4x4.identity;
 			backwardTransform = Float4x4.identity;
@@ -33,7 +33,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			backwardScale = 1f;
 		}
 
-		PressedPackInstance(ScenePresser presser, ObjectPack pack, MaterialMapper mapper)
+		PressedInstance(ScenePresser presser, ObjectPack pack, MaterialMapper mapper)
 		{
 			id = presser.RegisterPressedPackInstance(this);
 			this.pack = presser.GetPressedPack(pack);
