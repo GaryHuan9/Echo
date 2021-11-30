@@ -33,7 +33,7 @@ namespace EchoRenderer.Objects.Scenes
 		readonly int threadId;
 
 		readonly Dictionary<ObjectPack, Node> objectPacks = new();
-		readonly List<PressedPackInstance> packInstances = new() { null };
+		readonly List<PressedInstance> packInstances = new() { null };
 
 		/// <summary>
 		/// Creates or retrieves and returns the <see cref="PressedPack"/> for <paramref name="pack"/>.
@@ -49,10 +49,10 @@ namespace EchoRenderer.Objects.Scenes
 		}
 
 		/// <summary>
-		/// Returns an unique id for the newly created <paramref name="instance"/> and register it into this <see cref="ScenePresser"/>.
+		/// Returns a unique id for the newly created <paramref name="instance"/> and register it into this <see cref="ScenePresser"/>.
 		/// NOTE: This method must be invoked on the same thread as the constructor of this <see cref="ScenePresser"/>!
 		/// </summary>
-		public uint RegisterPressedPackInstance(PressedPackInstance instance)
+		public uint RegisterPressedPackInstance(PressedInstance instance)
 		{
 			if (threadId != Thread.CurrentThread.ManagedThreadId) throw new Exception($"Invalid thread {threadId}!");
 
@@ -61,10 +61,10 @@ namespace EchoRenderer.Objects.Scenes
 		}
 
 		/// <summary>
-		/// Retrieves a registered <see cref="PressedPackInstance"/> with
+		/// Retrieves a registered <see cref="PressedInstance"/> with
 		/// <paramref name="id"/> from this <see cref="ScenePresser"/>.
 		/// </summary>
-		public PressedPackInstance GetPressedPackInstance(uint id) => packInstances[(int)id];
+		public PressedInstance GetPressedPackInstance(uint id) => packInstances[(int)id];
 
 		Node CreateNode(ObjectPack pack, Node parent)
 		{
@@ -80,7 +80,7 @@ namespace EchoRenderer.Objects.Scenes
 			foreach (Object child in pack.LoopChildren(true))
 			{
 				if (child is ObjectPack) throw new Exception($"Cannot directly assign {child} as a child!");
-				if (child is not ObjectPackInstance instance || instance.ObjectPack == null) continue;
+				if (child is not ObjectInstance instance || instance.ObjectPack == null) continue;
 
 				Node childNode = CreateNode(instance.ObjectPack, node);
 
@@ -96,7 +96,7 @@ namespace EchoRenderer.Objects.Scenes
 			//Head recursion to make sure that all children is pressed before the parent
 
 			foreach (Node child in node) PressPacks(child);
-			node.AssignPack(new PressedPack(node.objectPack, this));
+			node.AssignPack(new PressedPack(this, node.objectPack));
 		}
 
 		public class Node : IEnumerable<Node>
