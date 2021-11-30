@@ -51,7 +51,7 @@ namespace EchoRenderer.Rendering
 			presser = new ScenePresser(source, profile);
 
 			//Create root instance and press materials
-			rootInstance = new PressedPackInstance(presser, source);
+			rootInstance = new PressedInstance(presser, source);
 			presser.materials.Press();
 
 			//Press lights
@@ -73,7 +73,7 @@ namespace EchoRenderer.Rendering
 
 		public long Intersections => Interlocked.Read(ref _intersections);
 
-		readonly PressedPackInstance rootInstance;
+		readonly PressedInstance rootInstance;
 
 		/// <inheritdoc cref="TraceAccelerator.GetIntersection(ref HitQuery)"/>
 		public bool GetIntersection(ref HitQuery query)

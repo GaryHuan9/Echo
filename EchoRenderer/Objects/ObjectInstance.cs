@@ -4,9 +4,9 @@ using EchoRenderer.Objects.Scenes;
 
 namespace EchoRenderer.Objects
 {
-	public class ObjectPackInstance : Object
+	public class ObjectInstance : Object
 	{
-		public ObjectPackInstance(ObjectPack objectPack = null) => ObjectPack = objectPack;
+		public ObjectInstance(ObjectPack objectPack = null) => ObjectPack = objectPack;
 
 		public override Float3 Scale
 		{
@@ -14,7 +14,7 @@ namespace EchoRenderer.Objects
 			set
 			{
 				if (value.x.AlmostEquals(value.y) && value.x.AlmostEquals(value.z)) base.Scale = (Float3)value.Average;
-				else throw new Exception($"Cannot use none uniformed scale of '{value}' for {nameof(ObjectPackInstance)}!");
+				else throw new Exception($"Cannot use none uniformed scale of '{value}' for {nameof(ObjectInstance)}!");
 			}
 		}
 
