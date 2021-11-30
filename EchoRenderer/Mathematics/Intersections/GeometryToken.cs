@@ -5,14 +5,14 @@ namespace EchoRenderer.Mathematics.Intersections
 {
 	public readonly struct GeometryToken : IEquatable<GeometryToken>
 	{
-		public GeometryToken(PressedPackInstance instance, uint geometry)
+		public GeometryToken(PressedInstance instance, uint geometry)
 		{
 			this.instance = instance.id;
 			this.geometry = geometry;
 		}
 
 		/// <summary>
-		/// The id of the <see cref="PressedPackInstance"/> that contains this particular geometry.
+		/// The id of the <see cref="PressedInstance"/> that contains this particular geometry.
 		/// </summary>
 		public readonly uint instance;
 

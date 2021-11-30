@@ -55,7 +55,7 @@ namespace EchoRenderer.Objects.Scenes
 				Material solid = solids.TryGetValue(position.x) ?? (solids[position.x] = new Glass { Albedo = solidSource.Albedo, IndexOfRefraction = solidSource.IndexOfRefraction, Roughness = percent.x });
 
 				MaterialMapper mapper = new MaterialMapper { [coreSource] = core, [solidSource] = solid };
-				children.Add(new ObjectPackInstance(ball) { Position = position.XYZ, Mapper = mapper });
+				children.Add(new ObjectInstance(ball) { Position = position.XYZ, Mapper = mapper });
 			}
 
 			// children.Add(new Light { Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 60f, 0f) });
