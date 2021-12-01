@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
@@ -51,11 +52,13 @@ namespace EchoRenderer.Objects.Scenes
 			{
 				Float3 percent = Float3.InverseLerp(-gridSize, gridSize, position);
 
-				Material core = cores.TryGetValue(position.YZ) ?? (cores[position.YZ] = new Diffuse { Albedo = Float3.Lerp(Float3.one, Float3.Lerp(coreSource.Albedo, Float3.zero, percent.z), percent.y) });
-				Material solid = solids.TryGetValue(position.x) ?? (solids[position.x] = new Glass { Albedo = solidSource.Albedo, IndexOfRefraction = solidSource.IndexOfRefraction, Roughness = percent.x });
+				throw new NotImplementedException();
 
-				MaterialMapper mapper = new MaterialMapper { [coreSource] = core, [solidSource] = solid };
-				children.Add(new ObjectInstance(ball) { Position = position.XYZ, Mapper = mapper });
+				// Material core = cores.TryGetValue(position.YZ) ?? (cores[position.YZ] = new Diffuse { Albedo = Float3.Lerp(Float3.one, Float3.Lerp(coreSource.Albedo, Float3.zero, percent.z), percent.y) });
+				// Material solid = solids.TryGetValue(position.x) ?? (solids[position.x] = new Glass { Albedo = solidSource.Albedo, IndexOfRefraction = solidSource.IndexOfRefraction, Roughness = percent.x });
+				//
+				// MaterialMapper mapper = new MaterialMapper { [coreSource] = core, [solidSource] = solid };
+				// children.Add(new ObjectInstance(ball) { Position = position.XYZ, Mapper = mapper });
 			}
 
 			// children.Add(new Light { Intensity = Utilities.ToColor("#c9e2ff").XYZ, Rotation = new Float3(60f, 60f, 0f) });

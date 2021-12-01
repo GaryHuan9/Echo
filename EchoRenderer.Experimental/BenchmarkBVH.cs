@@ -23,7 +23,7 @@ namespace EchoRenderer.Experimental
 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
 			scene.children.Add(new MeshObject(mesh, new Glossy()));
 
-			queries = new HitQuery[65536];
+			queries = new TraceQuery[65536];
 
 			ExtendedRandom random = new ExtendedRandom(42);
 
@@ -45,7 +45,7 @@ namespace EchoRenderer.Experimental
 					position += offset;
 				}
 
-				queries[i] = new Ray(position, (target - position).Normalized);
+				queries[i] = new TraceQuery(new Ray(position, (target - position).Normalized));
 			}
 
 			Pairs = new[]
@@ -57,7 +57,7 @@ namespace EchoRenderer.Experimental
 			float Random() => (float)random.NextDouble();
 		}
 
-		readonly HitQuery[] queries;
+		readonly TraceQuery[] queries;
 
 		[ParamsSource(nameof(Pairs))]
 		public Pair CurrentPair { get; set; }
@@ -91,8 +91,8 @@ namespace EchoRenderer.Experimental
 		{
 			for (int i = 0; i < queries.Length; i++)
 			{
-				ref HitQuery query = ref queries[i];
-				CurrentPair.scene.GetIntersection(ref query);
+				ref TraceQuery query = ref queries[i];
+				CurrentPair.scene.Trace(ref query);
 				query.distance = float.PositiveInfinity;
 			}
 		}

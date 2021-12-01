@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
@@ -9,28 +8,34 @@ namespace EchoRenderer.Mathematics.Accelerators
 {
 	public class PressedInstance
 	{
+		/// <summary>
+		/// Creates a regular <see cref="PressedInstance"/>.
+		/// </summary>
 		public PressedInstance(ScenePresser presser, ObjectInstance instance) : this(presser, instance.ObjectPack, instance.Mapper)
 		{
 			forwardTransform = instance.WorldToLocal;
-			backwardTransform = instance.LocalToWorld;
+			inverseTransform = instance.LocalToWorld;
 
 			Float3 scale = instance.Scale;
 
 			if (scale.Sorted == scale.SortedReversed)
 			{
-				backwardScale = scale.Average;
-				forwardScale = 1f / backwardScale;
+				inverseScale = scale.Average;
+				forwardScale = 1f / inverseScale;
 			}
 			else throw new Exception($"{nameof(ObjectInstance)} does not support none uniform scaling! '{scale}'");
 		}
 
+		/// <summary>
+		/// Creates a root <see cref="PressedInstance"/> with <paramref name="scene"/>.
+		/// </summary>
 		public PressedInstance(ScenePresser presser, Scene scene) : this(presser, scene, null)
 		{
 			forwardTransform = Float4x4.identity;
-			backwardTransform = Float4x4.identity;
+			inverseTransform = Float4x4.identity;
 
 			forwardScale = 1f;
-			backwardScale = 1f;
+			inverseScale = 1f;
 		}
 
 		PressedInstance(ScenePresser presser, ObjectPack pack, MaterialMapper mapper)
@@ -53,7 +58,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (int)FetchDepth];
 
 				int count = pack.accelerator.FillAABB(FetchDepth, aabbs);
-				Float4x4 absoluteTransform = backwardTransform.Absoluted;
+				Float4x4 absoluteTransform = inverseTransform.Absoluted;
 
 				Float3 min = Float3.positiveInfinity;
 				Float3 max = Float3.negativeInfinity;
@@ -63,7 +68,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				{
 					ref readonly var aabb = ref aabbs[i];
 
-					Float3 center = backwardTransform.MultiplyPoint(aabb.Center);
+					Float3 center = inverseTransform.MultiplyPoint(aabb.Center);
 					Float3 extend = absoluteTransform.MultiplyDirection(aabb.Extend);
 
 					min = min.Min(center - extend);
@@ -78,62 +83,66 @@ namespace EchoRenderer.Mathematics.Accelerators
 		public readonly PressedPack pack;
 		public readonly MaterialPresser.Mapper mapper;
 
-		readonly Float4x4 forwardTransform;  //The parent to local transform matrix
-		readonly Float4x4 backwardTransform; //The local to parent transform matrix
+		readonly Float4x4 forwardTransform; //The parent to local transform matrix
+		readonly Float4x4 inverseTransform; //The local to parent transform matrix
 
-		readonly float forwardScale;  //The parent to local scale multiplier
-		readonly float backwardScale; //The local to parent scale multiplier
+		readonly float forwardScale; //The parent to local scale multiplier
+		readonly float inverseScale; //The local to parent scale multiplier
 
-		public void GetIntersection(ref HitQuery query)
+		/// <summary>
+		/// Processes <paramref name="query"/>.
+		/// </summary>
+		public void Trace(ref TraceQuery query)
 		{
-			query.distance *= forwardScale;
-
 			var oldRay = query.ray;
 			var oldInstance = query.instance;
-			var oldDistance = query.distance;
 
+			//Convert from parent space to local space
 			query.ray = TransformForward(query.ray);
+			query.distance *= forwardScale;
 			query.instance = this;
 
-			//Gets intersection from accelerator, calculation done in local space
-			pack.accelerator.GetIntersection(ref query);
+			//Gets intersection from accelerator in local space
+			pack.accelerator.Trace(ref query);
 
-			//Must use exact comparison to check for modification
-			//Compare before multiplication to avoid float math issues
-			bool skip = oldDistance.Equals(query.distance);
-
+			//Convert back to parent space
 			query.ray = oldRay;
+			query.distance *= inverseScale;
 			query.instance = oldInstance;
-			query.distance *= backwardScale;
-
-			//If the distance did not change, it means no intersection made thus we can skip
-			if (skip) return;
-			CheckToken(ref query);
-
-			//We have to transform the normal from local to parent space
-			query.normal = backwardTransform.MultiplyDirection(query.normal) * forwardScale;
 		}
 
-		public void GetIntersectionRoot(ref HitQuery query)
+		/// <summary>
+		/// Processes <paramref name="query"/> as a <see cref="PressedInstance"/> root.
+		/// </summary>
+		public void TraceRoot(ref TraceQuery query)
 		{
 			query.instance = this;
-			pack.accelerator.GetIntersection(ref query);
-
-			CheckToken(ref query);
+			pack.accelerator.Trace(ref query);
 			query.instance = null;
 		}
 
-		public int GetIntersectionCost(in Ray ray, ref float distance)
+		/// <summary>
+		/// Returns the cost of tracing a <see cref="TraceQuery"/>.
+		/// </summary>
+		public int TraceCost(in Ray ray, ref float distance)
 		{
 			//Forward transform distance to local space
 			distance *= forwardScale;
 
 			//Gets intersection cost from bvh, calculation done in local space
-			int cost = pack.accelerator.GetIntersectionCost(TransformForward(ray), ref distance);
+			int cost = pack.accelerator.TraceCost(TransformForward(ray), ref distance);
 
 			//Transforms distance back to parent space
-			distance *= backwardScale;
+			distance *= inverseScale;
 			return cost;
+		}
+
+		/// <summary>
+		/// Applies this <see cref="PressedInstance"/>'s world/global transformation to <paramref name="direction"/>.
+		/// </summary>
+		public void ApplyWorldTransform(ref Float3 direction)
+		{
+			throw new NotImplementedException();
 		}
 
 		/// <summary>
@@ -144,19 +153,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			Float3 origin = forwardTransform.MultiplyPoint(ray.origin);
 			Float3 direction = forwardTransform.MultiplyDirection(ray.direction);
 
-			return new Ray(origin, direction * backwardScale);
-		}
-
-		/// <summary>
-		/// If we just hit a geometry in this pack, this method assigns
-		/// the appropriate information (normal) to <see cref="query"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void CheckToken(ref HitQuery query)
-		{
-			if (query.token.instance != id) return;
-
-			pack.GetNormal(ref query);
+			return new Ray(origin, direction * inverseScale);
 		}
 	}
 }

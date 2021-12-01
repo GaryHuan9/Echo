@@ -112,12 +112,12 @@ namespace EchoRenderer.Mathematics.Accelerators
 			}
 		}
 
-		public override void GetIntersection(ref HitQuery query)
+		public override void Trace(ref TraceQuery query)
 		{
 			Traverse(ref query);
 		}
 
-		public override int GetIntersectionCost(in Ray ray, ref float distance) => GetIntersectionCost(NodeThreshold, ray, ref distance);
+		public override int TraceCost(in Ray ray, ref float distance) => GetIntersectionCost(NodeThreshold, ray, ref distance);
 
 		public override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
 		{
@@ -190,7 +190,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-		unsafe void Traverse(ref HitQuery query)
+		unsafe void Traverse(ref TraceQuery query)
 		{
 			uint* stack = stackalloc uint[stackSize];
 			float* hits = stackalloc float[stackSize];
@@ -268,7 +268,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-				void Push(float hit, uint child, ref HitQuery hitQuery)
+				void Push(float hit, uint child, ref TraceQuery hitQuery)
 				{
 					if (hit >= hitQuery.distance) return;
 

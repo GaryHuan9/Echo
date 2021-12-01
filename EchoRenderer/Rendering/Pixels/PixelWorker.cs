@@ -35,7 +35,7 @@ namespace EchoRenderer.Rendering.Pixels
 		/// NOTE: this works with 1 IOR white <see cref="Glass"/> materials as well because they are essentially invisible too.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static bool HitPassThrough(in HitQuery query, in Float3 albedo, in Float3 direction) => query.ray.direction == direction && albedo == Float3.one;
+		protected static bool HitPassThrough(in TraceQuery query, in Float3 albedo, in Float3 direction) => query.ray.direction == direction && albedo == Float3.one;
 
 		public readonly struct Sample
 		{

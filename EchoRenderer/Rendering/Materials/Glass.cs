@@ -7,7 +7,7 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Materials
 {
-	public class Glass : Material
+	public class Glass : MaterialOld
 	{
 		public float IndexOfRefraction { get; set; } = 1f;
 		public float Roughness { get; set; }
@@ -30,7 +30,7 @@ namespace EchoRenderer.Rendering.Materials
 
 		//Equations based from: https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-shading/reflection-refraction-fresnel
 
-		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
+		public override Float3 BidirectionalScatter(in TraceQuery query, ExtendedRandom random, out Float3 direction)
 		{
 			ref readonly Float3 inDirection = ref query.ray.direction;
 			ref readonly Float2 texcoord = ref query.shading.texcoord;

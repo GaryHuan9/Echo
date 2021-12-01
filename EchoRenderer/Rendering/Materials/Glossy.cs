@@ -5,7 +5,7 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Materials
 {
-	public class Glossy : Material
+	public class Glossy : MaterialOld
 	{
 		public float Smoothness { get; set; }
 		public Texture SmoothnessMap { get; set; } = Texture.white;
@@ -20,7 +20,7 @@ namespace EchoRenderer.Rendering.Materials
 			randomRadius = SmoothnessToRandomRadius(Smoothness);
 		}
 
-		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
+		public override Float3 BidirectionalScatter(in TraceQuery query, ExtendedRandom random, out Float3 direction)
 		{
 			if (CullBackface(query) || AlphaTest(query, out Float3 color))
 			{

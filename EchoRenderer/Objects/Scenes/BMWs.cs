@@ -14,7 +14,7 @@ namespace EchoRenderer.Objects.Scenes
 			var mesh = new Mesh("Assets/Models/BlenderBMW/BlenderBMW.obj");
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
 
-			Material dark = new Glossy {Albedo = (Float3)0.3f, Smoothness = 0.9f};
+			MaterialOld dark = new Glossy {Albedo = (Float3)0.3f, Smoothness = 0.9f};
 			children.Add(new MeshObject(mesh, dark) {Position = Float3.zero, Rotation = new Float3(0f, 115f, 0f), Scale = (Float3)1.4f});
 		}
 	}

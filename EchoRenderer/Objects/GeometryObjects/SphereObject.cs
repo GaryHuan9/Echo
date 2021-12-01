@@ -110,7 +110,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			return result;
 		}
 
-		public static Float3 GetNormal(Float2 uv)
+		public static Float3 GetGeometryNormal(Float2 uv)
 		{
 			//TODO: account for rotation during uv calculation, and in turn normal calculation
 
