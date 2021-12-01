@@ -36,21 +36,26 @@ namespace EchoRenderer.Rendering.Pixels
 			{
 				++bounce;
 
-				ref readonly MaterialOld material = ref query.shading.material;
+				Interaction interaction = scene.Interact(query, out Material material);
 
-				Float3 emission = material.Emit(query, random);
-				Float3 albedo = material.BidirectionalScatter(query, random, out Float3 direction);
+				// Float3 emission = material.Emit(query, random);
+				// Float3 albedo = material.BidirectionalScatter(query, random, out Float3 direction);
 
-				if (HitPassThrough(query, albedo, direction))
+				Float3 emission = default;
+				Float3 albedo = default;
+
+				Float3 incidentWorld = default;
+
+				if (HitPassThrough(query, albedo, incidentWorld))
 				{
-					query.Next(direction);
+					query = query.Next();
 					continue;
 				}
 
 				if (missingAuxiliary)
 				{
 					firstAlbedo = albedo;
-					firstNormal = query.normal;
+					firstNormal = interaction.normal;
 					firstZDepth = query.distance;
 
 					missingAuxiliary = false;
@@ -60,7 +65,7 @@ namespace EchoRenderer.Rendering.Pixels
 				energy *= albedo;
 
 				if (energy <= profile.EnergyEpsilon) break;
-				query.Next(direction);
+				query = query.Next(incidentWorld);
 			}
 
 #if DEBUG

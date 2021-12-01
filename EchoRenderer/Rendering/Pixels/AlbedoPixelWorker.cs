@@ -1,6 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 
 namespace EchoRenderer.Rendering.Pixels
@@ -16,10 +17,12 @@ namespace EchoRenderer.Rendering.Pixels
 
 			while (scene.Trace(ref query))
 			{
-				Float3 albedo = query.shading.material.BidirectionalScatter(query, random, out Float3 direction);
-				if (!HitPassThrough(query, albedo, direction)) return albedo; //Return intersected albedo color
+				Interaction interaction = scene.Interact(query, out Material material);
 
-				query.Next(query.ray.direction);
+				Float3 albedo = Utilities.ToFloat3(material.Albedo[interaction.texcoord]);
+				if (!HitPassThrough(query, albedo, interaction.outgoingWorld)) return albedo; //Return intersected albedo color
+
+				query = query.Next(query.ray.direction);
 			}
 
 			return scene.cubemap?.Sample(query.ray.direction) ?? Float3.zero;

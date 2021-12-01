@@ -38,6 +38,6 @@ namespace EchoRenderer.Mathematics
 		/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
 		/// </summary>
-		public static float Identity(float value) => Sqrt0(1f - value * value);
+		public static float Identity(float value) => Sqrt0(MathF.FusedMultiplyAdd(value, -value, 1f));
 	}
 }
