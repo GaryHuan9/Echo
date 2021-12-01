@@ -13,6 +13,7 @@ namespace EchoRenderer.Rendering.Materials
 		public override void Scatter(ref Interaction interaction, Arena arena)
 		{
 			DebugHelper.LogWarning("Attempting to scatter an invisible material!");
+			interaction.bsdf = null;
 		}
 	}
 }

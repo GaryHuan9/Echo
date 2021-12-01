@@ -75,6 +75,6 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		public readonly TraceQuery Next() => Next(ray.direction);
 
-		public static implicit operator TraceQuery(in Ray ray) => new TraceQuery(ray);
+		public static implicit operator TraceQuery(in Ray ray) => new(ray);
 	}
 }
