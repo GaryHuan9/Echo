@@ -8,11 +8,11 @@ namespace EchoRenderer.Rendering.Materials
 	/// Represents a completely invisible material. The <see cref="PressedScene"/>
 	/// should omit all geometry tagged with this material.
 	/// </summary>
-	public class Invisible : Material
+	public class Invisible : MaterialOld
 	{
-		public override Float3 Emit(in HitQuery query, ExtendedRandom random) => Float3.zero;
+		public override Float3 Emit(in TraceQuery query, ExtendedRandom random) => Float3.zero;
 
-		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
+		public override Float3 BidirectionalScatter(in TraceQuery query, ExtendedRandom random, out Float3 direction)
 		{
 			direction = query.ray.direction;
 			return Float3.one;

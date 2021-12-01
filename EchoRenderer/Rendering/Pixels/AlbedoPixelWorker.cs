@@ -12,9 +12,9 @@ namespace EchoRenderer.Rendering.Pixels
 			PressedScene scene = arena.profile.Scene;
 			ExtendedRandom random = arena.random;
 
-			HitQuery query = scene.camera.GetRay(uv, random);
+			TraceQuery query = scene.camera.GetRay(uv, random);
 
-			while (scene.GetIntersection(ref query))
+			while (scene.Trace(ref query))
 			{
 				Float3 albedo = query.shading.material.BidirectionalScatter(query, random, out Float3 direction);
 				if (!HitPassThrough(query, albedo, direction)) return albedo; //Return intersected albedo color

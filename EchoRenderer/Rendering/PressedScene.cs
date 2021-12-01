@@ -7,6 +7,7 @@ using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures.Cubemaps;
 using Object = EchoRenderer.Objects.Object;
@@ -75,37 +76,49 @@ namespace EchoRenderer.Rendering
 
 		readonly PressedInstance rootInstance;
 
-		/// <inheritdoc cref="TraceAccelerator.GetIntersection(ref HitQuery)"/>
-		public bool GetIntersection(ref HitQuery query)
+		/// <summary>
+		/// Processes the <paramref name="query"/> and returns whether it intersected with something.
+		/// </summary>
+		public bool Trace(ref TraceQuery query)
 		{
-			rootInstance.GetIntersectionRoot(ref query);
+			Assert.IsFalse(query.Hit);
+
+			rootInstance.TraceRoot(ref query);
 			Interlocked.Increment(ref _intersections);
-
-			bool hit = query.Hit;
-
-			if (hit)
-			{
-				var instance = presser.GetPressedPackInstance(query.token.instance);
-				instance.pack.FillShading(ref query, instance);
-			}
-
-			return hit;
+			return query.Hit;
 		}
 
-		public bool GetIntersection(in Ray ray)
+		/// <summary>
+		/// Begins interacting with the result of <paramref name="query"/> by creating and
+		/// returning an <see cref="Interaction"/> and outputting <paramref name="material"/>.
+		/// </summary>
+		public Interaction Interact(in TraceQuery query, out Material material)
+		{
+			Assert.IsTrue(query.Hit);
+
+			var instance = presser.GetPressedPackInstance(query.token.instance);
+			return instance.pack.Interact(query, instance, out material);
+		}
+
+		/// <summary>
+		/// Returns whether <paramref name="ray"/> traveling <paramref name="distance"/> will be occluded.
+		/// </summary>
+		public bool Occlude(in Ray ray, float distance)
 		{
 			//TODO: We need a separate implementation that calculates intersection with any geometry (occlusion: boolean true/false return)
 			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
 
-			HitQuery query = ray;
-			return GetIntersection(ref query);
+			var query = new TraceQuery(ray);
+			return Trace(ref query) && query.distance <= distance;
 		}
 
-		/// <inheritdoc cref="TraceAccelerator.GetIntersectionCost"/>
-		public int GetIntersectionCost(in Ray ray)
+		/// <summary>
+		/// Returns the approximated cost of computing a <see cref="TraceQuery"/> with <see cref="Trace"/>.
+		/// </summary>
+		public int TraceCost(in Ray ray)
 		{
 			float distance = float.PositiveInfinity;
-			return rootInstance.GetIntersectionCost(ray, ref distance);
+			return rootInstance.TraceCost(ray, ref distance);
 		}
 
 		public void ResetIntersectionCount() => Interlocked.Exchange(ref _intersections, 0);

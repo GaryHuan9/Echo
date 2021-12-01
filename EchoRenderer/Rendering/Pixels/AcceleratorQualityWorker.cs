@@ -24,7 +24,7 @@ namespace EchoRenderer.Rendering.Pixels
 			PressedScene scene = arena.profile.Scene;
 			Ray ray = scene.camera.GetRay(uv);
 
-			int cost = scene.GetIntersectionCost(ray);
+			int cost = scene.TraceCost(ray);
 
 			long currentCost = Interlocked.Add(ref totalCost, cost);
 			long currentSample = Interlocked.Increment(ref totalSample);

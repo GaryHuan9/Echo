@@ -49,7 +49,7 @@ namespace EchoRenderer.Objects.Scenes
 				bool metal = RandomHelper.Value < 0.3d;
 				bool emissive = RandomHelper.Value < 0.05d;
 
-				Material material;
+				MaterialOld material;
 
 				if (metal) material = new Glossy { Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f };
 				else if (emissive) material = new Emissive { Emission = color / color.MaxComponent * 3f };

@@ -32,7 +32,7 @@ namespace EchoRenderer.Mathematics
 		/// Returns the square root of <paramref name="value"/> if is larger than zero, or zero otherwise.
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
 		/// </summary>
-		public static float Sqrt0(float value) => value <= 0f ? 0f : MathF.Sqrt(Max0(value));
+		public static float Sqrt0(float value) => value <= 0f ? 0f : MathF.Sqrt(value);
 
 		/// <summary>
 		/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1

@@ -44,13 +44,13 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// The intersection is recorded in <paramref name="query"/>, and only intersections that are closer than the initial
 		/// <paramref name="query.distance"/> value are tested.
 		/// </summary>
-		public abstract void GetIntersection(ref HitQuery query);
+		public abstract void Trace(ref TraceQuery query);
 
 		/// <summary>
 		/// Returns the number of intersection tests performed before a result it determined.
 		/// NOTE that the returned value is the cost for a full query, not an occlusion query.
 		/// </summary>
-		public abstract int GetIntersectionCost(in Ray ray, ref float distance);
+		public abstract int TraceCost(in Ray ray, ref float distance);
 
 		/// <summary>
 		/// Fills <paramref name="span"/> with the <see cref="AxisAlignedBoundingBox"/> of nodes in this <see cref="TraceAccelerator"/>
