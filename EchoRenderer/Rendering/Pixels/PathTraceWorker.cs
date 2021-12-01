@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
@@ -16,7 +17,7 @@ namespace EchoRenderer.Rendering.Pixels
 		{
 			RenderProfile profile = arena.profile;
 			PressedScene scene = profile.Scene;
-			ExtendedRandom random = arena.random;
+			IRandom random = arena.random;
 
 			TraceQuery query = scene.camera.GetRay(uv, random);
 

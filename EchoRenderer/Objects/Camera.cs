@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Randomization;
 
 namespace EchoRenderer.Objects
 {
@@ -41,8 +42,8 @@ namespace EchoRenderer.Objects
 		/// Returns a ray emitted from the camera at <paramref name="uv"/>.
 		/// </summary>
 		/// <param name="uv">X component from -0.5 to 0.5; Y component an aspect radio corrected version of X.</param>
-		/// <param name="random">An RNG used for Depth of Field. Can be null if no DoF is wanted.</param>
-		public Ray GetRay(Float2 uv, ExtendedRandom random = null)
+		/// <param name="random">An PRNG used for Depth of Field. Can be null if no DoF is wanted.</param>
+		public Ray GetRay(Float2 uv, IRandom random = null)
 		{
 			Float3 direction = uv.CreateXY(fieldDistance);
 
@@ -56,7 +57,7 @@ namespace EchoRenderer.Objects
 
 			//With randomized origin to add depth of field
 
-			Float3 origin = random.NextFloat2(-Aperture, Aperture).XY_;
+			Float3 origin = random.Next2(-Aperture, Aperture).XY_;
 			direction = direction.Normalized * FocalLength - origin;
 
 			origin = LocalToWorld.MultiplyPoint(origin);
