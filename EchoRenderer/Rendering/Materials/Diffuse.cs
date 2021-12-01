@@ -4,9 +4,9 @@ using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Rendering.Materials
 {
-	public class Diffuse : Material
+	public class Diffuse : MaterialOld
 	{
-		public override Float3 BidirectionalScatter(in HitQuery query, ExtendedRandom random, out Float3 direction)
+		public override Float3 BidirectionalScatter(in TraceQuery query, ExtendedRandom random, out Float3 direction)
 		{
 			if (CullBackface(query) || AlphaTest(query, out Float3 color))
 			{

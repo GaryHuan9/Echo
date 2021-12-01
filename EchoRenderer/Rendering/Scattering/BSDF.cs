@@ -14,7 +14,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// <summary>
 		/// Resets and initializes this <see cref="BSDF"/> for new use.
 		/// </summary>
-		public void Reset(in HitQuery query, float newEta = 1f)
+		public void Reset(in Interaction interaction, float newEta = 1f)
 		{
 			//Note that we do not need to worry about releasing the references from the functions
 			//because they are supposed to be allocated in an arena, which handles the deallocation
@@ -22,15 +22,15 @@ namespace EchoRenderer.Rendering.Scattering
 			count = 0;
 			eta = newEta;
 
-			transform = new NormalTransform(query.shading.normal);
-			normalGeometry = query.normal;
+			transform = new NormalTransform(interaction.normal);
+			geometryNormal = interaction.geometryNormal;
 		}
 
 		int count;
 		float eta;
 
 		NormalTransform transform;
-		Float3 normalGeometry;
+		Float3 geometryNormal;
 
 		BxDF[] functions = new BxDF[InitialSize];
 
@@ -211,7 +211,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Determines whether the direction pair <paramref name="outgoingWorld"/> and <paramref name="incidentWorld"/>
 		/// is a reflection transport or a transmission transport using our geometry normal to avoid light leak.
 		/// </summary>
-		bool Reflect(in Float3 outgoingWorld, in Float3 incidentWorld) => outgoingWorld.Dot(normalGeometry) * incidentWorld.Dot(normalGeometry) > 0f;
+		bool Reflect(in Float3 outgoingWorld, in Float3 incidentWorld) => outgoingWorld.Dot(geometryNormal) * incidentWorld.Dot(geometryNormal) > 0f;
 
 		int FindFunction(FunctionType type, ref Sample2 sample, out int matched)
 		{

@@ -63,7 +63,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		readonly Node[] nodes;
 		readonly int maxDepth;
 
-		public override void GetIntersection(ref HitQuery query)
+		public override void Trace(ref TraceQuery query)
 		{
 			ref readonly Node root = ref nodes[0];
 			float local = root.aabb.Intersect(query.ray);
@@ -71,7 +71,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			if (local < query.distance) Traverse(ref query);
 		}
 
-		public override int GetIntersectionCost(in Ray ray, ref float distance)
+		public override int TraceCost(in Ray ray, ref float distance)
 		{
 			ref readonly Node root = ref nodes[0];
 			float hit = root.aabb.Intersect(ray);
@@ -133,7 +133,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-		unsafe void Traverse(ref HitQuery query)
+		unsafe void Traverse(ref TraceQuery query)
 		{
 			int* stack = stackalloc int[maxDepth];
 			float* hits = stackalloc float[maxDepth];

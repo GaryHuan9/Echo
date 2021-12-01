@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
@@ -67,7 +68,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			normal, normal, normal, materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+		public PressedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
 							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
@@ -92,8 +93,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float2.zero, Float2.zero, Float2.zero, materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							   Float3 normal0, Float3 normal1, Float3 normal2,
+		public PressedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
+							   Float3 normal0,   Float3 normal1,   Float3 normal2,
 							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken)
 		{
 			this.vertex0 = vertex0;
@@ -128,6 +129,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float3 Vertex1 => vertex0 + edge1;
 		public Float3 Vertex2 => vertex0 + edge2;
 
+		/// <summary>
+		/// Returns the smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PressedTriangle"/>.
+		/// </summary>
 		public AxisAlignedBoundingBox AABB
 		{
 			get
@@ -143,7 +147,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		}
 
 		/// <summary>
-		/// Returns the area of the triangle using Heron's formula.
+		/// Returns the area of this <see cref="PressedTriangle"/> using Heron's formula.
 		/// </summary>
 		public float Area
 		{
@@ -156,12 +160,17 @@ namespace EchoRenderer.Objects.GeometryObjects
 				float sum = (distance0 + distance1 + distance2) / 2f;
 				float value = sum * (sum - distance0) * (sum - distance1) * (sum - distance2);
 
-				return value <= 0f ? 0f : MathF.Sqrt(value); //To avoid square rooting negative values due to floating point precision issues
+				return FastMath.Sqrt0(value);
 			}
 		}
 
+		/// <summary>
+		/// Returns the geometric normal of this <see cref="PressedTriangle"/>.
+		/// </summary>
+		public Float3 GeometryNormal => Float3.Cross(edge1, edge2);
+
 		const float Epsilon = 1E-7f; //Tiny number used to check for zero
-		const float Margin = 0f;     //Used to easily differentiate adjacent triangles to create an outline effect
+		const float Margin = 0f;     //Used to easily differentiate adjacent triangles by creating an outline effect
 
 		/// <summary>
 		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
@@ -224,8 +233,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			return distance;
 		}
 
-		public Float3 GetVertex(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
-		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
+		public Float3 GetNormal(Float2   uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
 		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
 
 		public void GetSubdivided(Span<PressedTriangle> triangles, int iteration)
@@ -242,6 +250,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public override string ToString() => $"<{nameof(vertex0)}: {vertex0}, {nameof(Vertex1)}: {Vertex1}, {nameof(Vertex2)}: {Vertex2}>";
 
+		Float3 InterpolateVertex(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
+
 		//The uv locations right in the middle of two vertices
 		static readonly Float2 uv01 = new(0.5f, 0f);
 		static readonly Float2 uv02 = new(0f, 0.5f);
@@ -252,9 +262,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 			if (triangles.Length <= 1) return;
 			PressedTriangle triangle = triangles[0];
 
-			Float3 vertex01 = triangle.GetVertex(uv01);
-			Float3 vertex02 = triangle.GetVertex(uv02);
-			Float3 vertex12 = triangle.GetVertex(uv12);
+			Float3 vertex01 = triangle.InterpolateVertex(uv01);
+			Float3 vertex02 = triangle.InterpolateVertex(uv02);
+			Float3 vertex12 = triangle.InterpolateVertex(uv12);
 
 			Float3 normal01 = GetInterpolatedNormal(uv01);
 			Float3 normal02 = GetInterpolatedNormal(uv02);
@@ -272,10 +282,10 @@ namespace EchoRenderer.Objects.GeometryObjects
 			//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
 			Float3 GetInterpolatedNormal(Float2 uv) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
 
-			static void Fill(Span<PressedTriangle> span, int index, int materialToken,
-							 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							 in Float3 normal0, in Float3 normal1, in Float3 normal2,
-							 Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
+			static void Fill(Span<PressedTriangle> span,      int       index,     int       materialToken,
+							 in Float3             vertex0,   in Float3 vertex1,   in Float3 vertex2,
+							 in Float3             normal0,   in Float3 normal1,   in Float3 normal2,
+							 Float2                texcoord0, Float2    texcoord1, Float2    texcoord2)
 			{
 				int gap = span.Length / 4;
 				var slice = span.Slice(gap * index, gap);
