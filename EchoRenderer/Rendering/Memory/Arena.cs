@@ -1,4 +1,5 @@
 ﻿using EchoRenderer.Mathematics;
+using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Memory
@@ -22,7 +23,7 @@ namespace EchoRenderer.Rendering.Memory
 		}
 
 		public readonly RenderProfile profile;
-		public readonly ExtendedRandom random;
+		public readonly IRandom random;
 
 		public readonly Allocator allocator = new();
 	}
