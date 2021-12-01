@@ -6,6 +6,7 @@ using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
@@ -25,19 +26,19 @@ namespace EchoRenderer.Experimental
 
 			queries = new TraceQuery[65536];
 
-			ExtendedRandom random = new ExtendedRandom(42);
+			IRandom random = new ExtendedRandom(42);
 
 			const float Radius = 9f;
 			const float Height = 5f;
 
 			for (int i = 0; i < queries.Length; i++)
 			{
-				Float2 point = new Float2(MathF.Sqrt(Random()) * Radius, Random() * Height);
-				Float3 position = point.X_Y.RotateXZ(Random() * 360f);
+				Float2 point = new Float2(MathF.Sqrt(random.Value) * Radius, random.Value * Height);
+				Float3 position = point.X_Y.RotateXZ(random.Value * 360f);
 
 				Float3 target = Float3.CreateY(0.6f) + random.NextInSphere(0.25f);
 
-				if (random.NextDouble() < 0.01f)
+				if (random.Value < 0.01f)
 				{
 					Float3 offset = (target - position) / 2f;
 
@@ -53,8 +54,6 @@ namespace EchoRenderer.Experimental
 						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
 						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 					};
-
-			float Random() => (float)random.NextDouble();
 		}
 
 		readonly TraceQuery[] queries;

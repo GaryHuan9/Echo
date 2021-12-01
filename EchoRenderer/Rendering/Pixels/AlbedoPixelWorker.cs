@@ -1,6 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 
@@ -11,7 +12,7 @@ namespace EchoRenderer.Rendering.Pixels
 		public override Sample Render(Float2 uv, Arena arena)
 		{
 			PressedScene scene = arena.profile.Scene;
-			ExtendedRandom random = arena.random;
+			IRandom random = arena.random;
 
 			TraceQuery query = scene.camera.GetRay(uv, random);
 
