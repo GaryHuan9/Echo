@@ -49,11 +49,13 @@ namespace EchoRenderer.Objects.Scenes
 				bool metal = RandomHelper.Value < 0.3d;
 				bool emissive = RandomHelper.Value < 0.05d;
 
-				MaterialOld material;
+				Material material;
 
-				if (metal) material = new Glossy { Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f };
-				else if (emissive) material = new Emissive { Emission = color / color.MaxComponent * 3f };
-				else material = new Diffuse { Albedo = color };
+				// if (metal) material = new Glossy { Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f };
+				// else if (emissive) material = new Emissive { Emission = color / color.MaxComponent * 3f };
+				// else material = new Diffuse { Albedo = color };
+
+				material = new Matte();
 
 				children.Add(new SphereObject(material, radius) { Position = position });
 			}
@@ -89,7 +91,9 @@ namespace EchoRenderer.Objects.Scenes
 				for (float j = 0f; j <= Height; j++)
 				{
 					// var material = new Glossy {Albedo = Float3.Lerp((Float3)0.9f, new Float3(0.867f, 0.267f, 0.298f), j / Height), Smoothness = i / Width};
-					var material = new Glass { Albedo = (Float3)0.9f, IndexOfRefraction = Scalars.Lerp(1.1f, 1.7f, j / Height), Roughness = i / Width };
+					// var material = new Glass { Albedo = (Float3)0.9f, IndexOfRefraction = Scalars.Lerp(1.1f, 1.7f, j / Height), Roughness = i / Width };
+
+					var material = new Matte();
 
 					children.Add(new SphereObject(material, 0.45f) { Position = new Float3(i - Width / 2f, j - Height / 2f, 2f) });
 				}

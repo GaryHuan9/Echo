@@ -21,7 +21,7 @@ namespace EchoRenderer.Experimental
 			Scene scene = new Scene();
 
 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
-			scene.children.Add(new MeshObject(mesh, new Glossy()));
+			scene.children.Add(new MeshObject(mesh, new Matte()));
 
 			queries = new TraceQuery[65536];
 
@@ -45,7 +45,7 @@ namespace EchoRenderer.Experimental
 					position += offset;
 				}
 
-				queries[i] = new TraceQuery(new Ray(position, (target - position).Normalized));
+				queries[i] = new Ray(position, (target - position).Normalized);
 			}
 
 			Pairs = new[]

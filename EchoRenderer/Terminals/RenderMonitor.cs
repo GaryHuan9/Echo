@@ -1,5 +1,6 @@
 using System;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Textures.DimensionTwo;

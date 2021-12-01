@@ -1,21 +1,18 @@
-﻿using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics;
+﻿using CodeHelpers.Diagnostics;
+using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Rendering.Memory;
 
 namespace EchoRenderer.Rendering.Materials
 {
 	/// <summary>
-	/// Represents a completely invisible material. The <see cref="PressedScene"/>
-	/// should omit all geometry tagged with this material.
+	/// Represents a completely invisible material. <see cref="PressedPack"/> Will omit all geometry tagged with this material.
 	/// </summary>
-	public class Invisible : MaterialOld
+	public class Invisible : Material
 	{
-		public override Float3 Emit(in TraceQuery query, ExtendedRandom random) => Float3.zero;
-
-		public override Float3 BidirectionalScatter(in TraceQuery query, ExtendedRandom random, out Float3 direction)
+		public override void Scatter(ref Interaction interaction, Arena arena)
 		{
-			direction = query.ray.direction;
-			return Float3.one;
+			DebugHelper.LogWarning("Attempting to scatter an invisible material!");
 		}
 	}
 }
