@@ -8,7 +8,7 @@ namespace EchoRenderer.Experimental
 	{
 		public BenchmarkMath()
 		{
-			array = new float[1_000_000];
+			array = new float[1024 * 1024];
 			Random random = new Random(42);
 
 			for (int i = 0; i < array.Length; i++)
@@ -70,6 +70,8 @@ namespace EchoRenderer.Experimental
 		{
 			float result = 0f;
 
+			//NOTE: Multiply takes about the same amount of time as Overhead because of FMA! (I think)
+
 			foreach (float value in array) result += value * value;
 
 			return result;
@@ -88,11 +90,11 @@ namespace EchoRenderer.Experimental
 		static float FRSqrt(float value)
 		{
 			float x2 = value * 0.5F;
-			int   i  = Scalars.SingleToInt32Bits(value);
+			int i = Scalars.SingleToInt32Bits(value);
 			i = 0x5f3759df - (i >> 1);
 			float y = Scalars.Int32ToSingleBits(i);
-			y *= 1.5F - x2 * y * y;
-			y *= 1.5F - x2 * y * y;
+			y *= 1.5f - x2 * y * y;
+			y *= 1.5f - x2 * y * y;
 
 			return y;
 		}

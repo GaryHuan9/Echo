@@ -23,10 +23,10 @@ namespace EchoRenderer.IO
 			using StreamReader reader = new StreamReader(File.OpenRead(path));
 			using var operationsHandle = CollectionPooler<TextureLoadOperation>.list.Fetch();
 
-			materials = new Dictionary<string, MaterialOld>();
+			materials = new Dictionary<string, Material>();
 			List<TextureLoadOperation> operations = operationsHandle;
 
-			MaterialOld processing = null;
+			Material processing = null;
 
 			while (true)
 			{
@@ -48,7 +48,7 @@ namespace EchoRenderer.IO
 					var typeName = new string(Eat(ref line));
 					Type type = Type.GetType($"EchoRenderer.Rendering.Materials.{typeName}");
 
-					if (type != null) processing = (MaterialOld)Activator.CreateInstance(type);
+					if (type != null) processing = (Material)Activator.CreateInstance(type);
 					else throw new Exception($"Invalid material type name: {typeName}");
 
 					var name = new string(Eat(ref line));
@@ -104,25 +104,25 @@ namespace EchoRenderer.IO
 			}
 		}
 
-		public MaterialLibrary(MaterialOld first = null)
+		public MaterialLibrary(Material first = null)
 		{
 			this.first = first;
-			materials = new Dictionary<string, MaterialOld>();
+			materials = new Dictionary<string, Material>();
 		}
 
 		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] {".mat"});
 
-		readonly Dictionary<string, MaterialOld> materials;
+		readonly Dictionary<string, Material> materials;
 
 		/// <summary>
 		/// Returns the first material of this library.
 		/// </summary>
-		public readonly MaterialOld first;
+		public readonly Material first;
 
 		/// <summary>
 		/// Returns the material based on its name in this library.
 		/// </summary>
-		public MaterialOld this[string name]
+		public Material this[string name]
 		{
 			get => materials[name];
 			set => materials[name] = value;
@@ -166,7 +166,7 @@ namespace EchoRenderer.IO
 			readonly string path;
 
 			public PropertyInfo Property { get; set; }
-			public MaterialOld Target { get; set; }
+			public Material Target { get; set; }
 
 			public void Operate()
 			{

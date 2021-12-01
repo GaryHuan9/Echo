@@ -69,5 +69,12 @@ namespace EchoRenderer.Mathematics.Intersections
 			Assert.IsTrue(Hit);
 			return new TraceQuery(new Ray(ray.GetPoint(distance), direction), token);
 		}
+
+		/// <summary>
+		/// Spans and returns a new <see cref="TraceQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
+		/// </summary>
+		public readonly TraceQuery Next() => Next(ray.direction);
+
+		public static implicit operator TraceQuery(in Ray ray) => new TraceQuery(ray);
 	}
 }
