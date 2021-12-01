@@ -1,6 +1,7 @@
 using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.Sampling
 {
@@ -20,18 +21,18 @@ namespace EchoRenderer.Rendering.Sampling
 		public float X => u.x;
 		public float Y => u.x;
 
-		public Float3 UniformHemisphere    => ProjectSphere(u.x, u.y);
-		public float  UniformHemispherePdf => 1f / Scalars.TAU;
+		public Float3 UniformHemisphere => ProjectSphere(u.x, u.y);
+		public float UniformHemispherePdf => 1f / Scalars.TAU;
 
-		public Float3 UniformSphere    => ProjectSphere(1f - u.x * 2f, u.y);
-		public float  UniformSpherePdf => 1f / 2f / Scalars.TAU;
+		public Float3 UniformSphere => ProjectSphere(1f - u.x * 2f, u.y);
+		public float UniformSpherePdf => 1f / 2f / Scalars.TAU;
 
 		public Float2 UniformDisk
 		{
 			get
 			{
-				float radius = MathF.Sqrt(u.x);
-				float angle  = Scalars.TAU * u.y;
+				float radius = FastMath.Sqrt0(u.x);
+				float angle = Scalars.TAU * u.y;
 				return ProjectDisk(radius, angle);
 			}
 		}
@@ -46,7 +47,7 @@ namespace EchoRenderer.Rendering.Sampling
 				float radius;
 				float angle;
 
-				if (Math.Abs(mapped.x) > Math.Abs(mapped.y))
+				if (FastMath.Abs(mapped.x) > FastMath.Abs(mapped.y))
 				{
 					radius = mapped.x;
 					angle = Scalars.PI / 4f * mapped.y / mapped.x;
@@ -66,18 +67,26 @@ namespace EchoRenderer.Rendering.Sampling
 			get
 			{
 				Float2 disk = ConcentricDisk;
-				float  z    = disk.SquaredMagnitude;
-				return disk.CreateXY(MathF.Sqrt(1f - z));
+				float z = disk.SquaredMagnitude;
+				return disk.CreateXY(FastMath.Sqrt0(1f - z));
 			}
 		}
 
 		static Float3 ProjectSphere(float z, float u)
 		{
-			float radius = MathF.Sqrt(1f - z * z);
-			float angle  = Scalars.TAU * u;
-			return new Float3(radius * MathF.Cos(angle), radius * MathF.Sin(angle), z);
+			float radius = FastMath.Identity(z);
+			float angle = Scalars.TAU * u;
+			return ProjectDisk(radius, angle).CreateXY(z);
 		}
 
-		static Float2 ProjectDisk(float radius, float angle) => new Float2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
+		static Float2 ProjectDisk(float radius, float angle)
+		{
+			float cos = MathF.Cos(angle);
+			float sin = FastMath.Identity(cos);
+
+			//We use the trigonometry identity to calculate sine because square root is faster than sine
+
+			return new Float2(cos, sin) * radius;
+		}
 	}
 }

@@ -36,4 +36,15 @@
         <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Rendering\Materials\Diffuse.cs" />
+      <Compile Remove="Rendering\Materials\Glass.cs" />
+      <Compile Remove="Rendering\Materials\Glossy.cs" />
+      <Compile Remove="Rendering\Materials\MaterialOld.cs" />
+      <Compile Remove="Rendering\Materials\Emissive.cs" />
+      <Compile Remove="Objects\Scenes\BMWs.cs" />
+      <Compile Remove="Objects\Scenes\CornellBox.cs" />
+      <Compile Remove="Objects\Scenes\TestScenes.cs" />
+    </ItemGroup>
+
 </Project>

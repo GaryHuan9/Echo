@@ -1,4 +1,4 @@
-﻿namespace EchoRenderer.Objects.Scenes
+﻿namespace EchoRenderer.Objects.GeometryObjects
 {
 	public readonly struct GeometryCounts
 	{

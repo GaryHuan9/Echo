@@ -34,7 +34,7 @@ namespace EchoRenderer.UI.Interface
 						  AdaptiveSample = 35
 					  };
 
-			new Thread(LoadScene<SingleMaterialBall>)
+			new Thread(LoadScene<SingleBunny>)
 			{
 				IsBackground = true,
 				Name = "Scene Loader"
