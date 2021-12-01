@@ -100,10 +100,10 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		public readonly TraceAccelerator accelerator;
-		public readonly GeometryCounts   geometryCounts;
+		public readonly GeometryCounts geometryCounts;
 
-		readonly PressedTriangle[]     triangles; //Indices: [0x4000_0000 to 0x8000_0000)
-		readonly PressedSphere[]       spheres;   //Indices: [0x2000_0000 to 0x4000_0000)
+		readonly PressedTriangle[] triangles; //Indices: [0x4000_0000 to 0x8000_0000)
+		readonly PressedSphere[] spheres;     //Indices: [0x2000_0000 to 0x4000_0000)
 		readonly PressedInstance[] instances; //Indices: [0 to 0x2000_0000)
 
 		/// <summary>
@@ -113,15 +113,15 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// </summary>
 		public const float DistanceMin = 6e-4f;
 
-		const uint NodeThreshold      = TraceAccelerator.NodeThreshold;
+		const uint NodeThreshold = TraceAccelerator.NodeThreshold;
 		const uint TrianglesThreshold = 0x4000_0000u;
-		const uint SpheresThreshold   = 0x2000_0000u;
+		const uint SpheresThreshold = 0x2000_0000u;
 
 		/// <summary>
 		/// Calculates the intersection between <paramref name="query"/> and object with <paramref name="token"/>.
 		/// If the intersection occurs before the original <paramref name="query.distance"/>, then the intersection is recorded.
 		/// </summary>
-		public void GetIntersection(ref HitQuery query, uint token)
+		public void GetIntersection(ref TraceQuery query, uint token)
 		{
 			Assert.IsTrue(token < NodeThreshold);
 
@@ -129,7 +129,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			{
 				case >= TrianglesThreshold:
 				{
-					ref PressedTriangle triangle = ref triangles[token - TrianglesThreshold];
+					ref readonly var triangle = ref triangles[token - TrianglesThreshold];
 					float distance = triangle.GetIntersection(query.ray, out Float2 uv);
 
 					if (!ValidateDistance(distance, ref query, token)) return;
@@ -139,7 +139,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 				case >= SpheresThreshold:
 				{
-					ref PressedSphere sphere = ref spheres[token - SpheresThreshold];
+					ref readonly var sphere = ref spheres[token - SpheresThreshold];
 					float distance = sphere.GetIntersection(query.ray, out Float2 uv);
 
 					if (!ValidateDistance(distance, ref query, token)) return;
@@ -149,13 +149,13 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 				default:
 				{
-					instances[token].GetIntersection(ref query);
+					instances[token].Trace(ref query);
 					break;
 				}
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static bool ValidateDistance(float distance, ref HitQuery hit, uint token)
+			static bool ValidateDistance(float distance, ref TraceQuery hit, uint token)
 			{
 				if (distance >= hit.distance) return false;
 
@@ -180,7 +180,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			{
 				case >= TrianglesThreshold:
 				{
-					ref PressedTriangle triangle = ref triangles[token - TrianglesThreshold];
+					ref readonly var triangle = ref triangles[token - TrianglesThreshold];
 					float hit = triangle.GetIntersection(ray, out Float2 _);
 
 					distance = Math.Min(distance, hit);
@@ -188,86 +188,70 @@ namespace EchoRenderer.Mathematics.Accelerators
 				}
 				case >= SpheresThreshold:
 				{
-					ref PressedSphere sphere = ref spheres[token - SpheresThreshold];
+					ref readonly var sphere = ref spheres[token - SpheresThreshold];
 					float hit = sphere.GetIntersection(ray, out Float2 _);
 
 					distance = Math.Min(distance, hit);
 					return 1;
 				}
-				default: return instances[token].GetIntersectionCost(ray, ref distance);
+				default: return instances[token].TraceCost(ray, ref distance);
 			}
 		}
 
 		/// <summary>
-		/// Calculates the normal of <paramref name="query"/> and assigns it back to <paramref name="query.normal"/>.
+		/// Begins interacting with the result of <paramref name="query"/> by returning
+		/// the <see cref="Interaction"/> and outputting the <paramref name="material"/>.
 		/// </summary>
-		public void GetNormal(ref HitQuery query)
+		public Interaction Interact(in TraceQuery query, PressedInstance instance, out Material material)
 		{
 			uint token = query.token.geometry;
+
 			Assert.IsTrue(token < NodeThreshold);
-
-			switch (token)
-			{
-				case >= TrianglesThreshold:
-				{
-					ref PressedTriangle triangle = ref triangles[token - TrianglesThreshold];
-					query.normal = triangle.GetNormal(query.uv);
-
-					break;
-				}
-				case >= SpheresThreshold:
-				{
-					// ref PressedSphere sphere = ref spheres[token - SpheresThreshold];
-					query.normal = PressedSphere.GetNormal(query.uv);
-
-					break;
-				}
-				default: throw new Exception($"{nameof(GetNormal)} cannot be used to get the normal of a {nameof(PressedInstance)}!");
-			}
-		}
-
-		/// <summary>
-		/// Fills the appropriate <see cref="HitQuery.Shading"/> information for <see cref="query"/>.
-		/// </summary>
-		public void FillShading(ref HitQuery query, PressedInstance instance)
-		{
-			ref Float2 texcoord = ref query.shading.texcoord;
+			Assert.AreEqual(instance.pack, this);
+			Assert.AreEqual(instance.id, query.token.instance);
 
 			int materialToken;
-			uint token = query.token.geometry;
-
-			Assert.AreEqual(instance.pack, this);
-			Assert.IsTrue(token < NodeThreshold);
+			Float3 geometryNormal;
+			Float3 normal;
+			Float2 texcoord;
 
 			switch (token)
 			{
 				case >= TrianglesThreshold:
 				{
-					ref PressedTriangle triangle = ref triangles[token - TrianglesThreshold];
+					ref readonly var triangle = ref triangles[token - TrianglesThreshold];
 
 					materialToken = triangle.materialToken;
+					geometryNormal = triangle.GeometryNormal;
+					normal = triangle.GetNormal(query.uv);
 					texcoord = triangle.GetTexcoord(query.uv);
+
+					instance.ApplyWorldTransform(ref geometryNormal);
+					instance.ApplyWorldTransform(ref normal);
 
 					break;
 				}
 				case >= SpheresThreshold:
 				{
-					ref PressedSphere sphere = ref spheres[token - SpheresThreshold];
+					ref readonly var sphere = ref spheres[token - SpheresThreshold];
 
 					materialToken = sphere.materialToken;
 					texcoord = query.uv; //Sphere directly uses the uv as texcoord
 
+					normal = PressedSphere.GetGeometryNormal(query.uv);
+					instance.ApplyWorldTransform(ref normal);
+					geometryNormal = normal;
+
 					break;
 				}
 
-				//The default case handles tokens of PressedPackInstance, which is invalid since tokens should be resolved to pure geometry after intersection calculation
-				default: throw new Exception($"{nameof(FillShading)} should be invoked on the base {nameof(PressedPack)}, not one with a token that is a pack instance!");
+				//The default case handles tokens of PressedInstance, which is invalid since tokens should be resolved to pure geometry after intersection calculation
+				default: throw new Exception($"{nameof(Interact)} should be invoked on the base {nameof(PressedPack)}, not one with a token that is a pack instance!");
 			}
 
-			ref Material material = ref query.shading.material;
-
 			material = instance.mapper[materialToken];
-			material.FillTangentNormal(ref query);
+			material.ApplyNormalMapping(texcoord, ref normal);
+			return new Interaction(query, geometryNormal, normal, texcoord);
 		}
 
 		/// <summary>

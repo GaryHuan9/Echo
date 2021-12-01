@@ -35,8 +35,8 @@ namespace EchoRenderer.Objects.Scenes
 			// light.Coverage = 0.04f; //This makes the scene super noisy even after good number of samples
 			// light.Intensity *= 5f;  //We need a better way to trace global/directional lights
 
-			Material core = new Diffuse {Albedo = Utilities.ToColor("DD444C").XYZ};
-			Material solid = new Glossy {Albedo = (Float3)0.9f, Smoothness = 0.9f};
+			MaterialOld core = new Diffuse {Albedo = Utilities.ToColor("DD444C").XYZ};
+			MaterialOld solid = new Glossy {Albedo = (Float3)0.9f, Smoothness = 0.9f};
 
 			var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
 			var materials = new MaterialLibrary(core) {["Core"] = core, ["Solid"] = solid};
@@ -53,9 +53,9 @@ namespace EchoRenderer.Objects.Scenes
 			Texture2D texture = Texture2D.Load("Assets/Textures/MinecraftTexture.bmp");
 			Texture2D chain = Texture2D.Load("Assets/Textures/SponzaChain.png");
 
-			Material material0 = new Glossy {Albedo = Float3.one, Smoothness = 1f};
-			Material material1 = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
-			Material material2 = new Diffuse {Albedo = Float3.one, AlbedoMap = chain};
+			MaterialOld material0 = new Glossy {Albedo = Float3.one, Smoothness = 1f};
+			MaterialOld material1 = new Diffuse {Albedo = Float3.one, AlbedoMap = texture};
+			MaterialOld material2 = new Diffuse {Albedo = Float3.one, AlbedoMap = chain};
 
 			children.Add(new PlaneObject(material2, Float2.one * 4f) {Position = new Float3(0f, 2f, -2f), Rotation = new Float3(-90f, 0f, 0f)});
 			children.Add(new PlaneObject(material1, Float2.one * 4f) {Position = new Float3(2f, 2f, -3.5f), Rotation = new Float3(-90f, 0f, 0f)});
@@ -69,7 +69,7 @@ namespace EchoRenderer.Objects.Scenes
 		{
 			// children.Add(new SphereObject(new Material {Diffuse = new Float3(0.8f, 0.8f, 0f)}, 100f) {Position = new Float3(0f, -100.5f, 0f)});
 
-			Material material = new Glass {IndexOfRefraction = 1.5f, Albedo = (Float3)0.9f};
+			MaterialOld material = new Glass {IndexOfRefraction = 1.5f, Albedo = (Float3)0.9f};
 			children.Add(new BoxObject(material, new Float3(4f, 1f, 0.03f)) {Position = new Float3(0f, 0.5f, 0f)});
 
 			children.Add(new SphereObject(new Glass {IndexOfRefraction = 1.5f, Albedo = Float3.one}, 0.5f) {Position = new Float3(-1f, 0f, 0f)});
@@ -112,8 +112,8 @@ namespace EchoRenderer.Objects.Scenes
 			children.Add(new Camera(90f) {Position = new Float3(0f, 3f, -5f), Rotation = new Float3(15f, 0f, 0f)});
 			TestGenerative simplex = new TestGenerative(42, 4) {Tiling = (Float2)1f, Offset = (Float2)1f};
 
-			Material floor = new Glossy {Albedo = Float3.one, AlbedoMap = simplex, Smoothness = 0.5f};
-			Material glass = new Glass {Albedo = Float3.one, IndexOfRefraction = 1.5f, Roughness = 0.6f};
+			MaterialOld floor = new Glossy {Albedo = Float3.one, AlbedoMap = simplex, Smoothness = 0.5f};
+			MaterialOld glass = new Glass {Albedo = Float3.one, IndexOfRefraction = 1.5f, Roughness = 0.6f};
 
 			children.Add(new PlaneObject(floor, new Float2(24f, 16f)));
 

@@ -9,29 +9,27 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Materials
 {
-	public class Matte : MaterialNew
+	public class Matte : Material
 	{
 		public Texture Deviation { get; set; }
 
-		public override void BeforeRender()
+		public override void Press()
 		{
-			base.BeforeRender();
+			base.Press();
 
 			Deviation ??= Texture.black;
 		}
 
-		public override void Scatter(ref HitQuery query, Arena arena)
+		public override void Scatter(ref Interaction interaction, Arena arena)
 		{
-			FillTangentNormal(ref query);
-
-			ref BSDF bsdf = ref query.bsdf;
+			ref BSDF bsdf = ref interaction.bsdf;
 			bsdf = arena.allocator.New<BSDF>();
-			bsdf.Reset(query);
+			bsdf.Reset(interaction);
 
-			Float3 albedo = Utilities.ToFloat3(Albedo[query.uv]);
+			Float3 albedo = Utilities.ToFloat3(Albedo[interaction.uv]);
 			if (arena.profile.IsZero(albedo)) return;
 
-			float deviation = FastMath.Clamp01(Deviation[query.uv].GetElement(0));
+			float deviation = FastMath.Clamp01(Deviation[interaction.uv].GetElement(0));
 
 			BxDF function;
 

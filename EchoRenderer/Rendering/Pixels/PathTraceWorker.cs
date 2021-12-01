@@ -18,7 +18,7 @@ namespace EchoRenderer.Rendering.Pixels
 			PressedScene scene = profile.Scene;
 			ExtendedRandom random = arena.random;
 
-			HitQuery query = scene.camera.GetRay(uv, random);
+			TraceQuery query = scene.camera.GetRay(uv, random);
 
 			Float3 energy = Float3.one;
 			Float3 colors = Float3.zero;
@@ -32,11 +32,11 @@ namespace EchoRenderer.Rendering.Pixels
 
 			bool missingAuxiliary = true;
 
-			while (bounce < profile.BounceLimit && scene.GetIntersection(ref query))
+			while (bounce < profile.BounceLimit && scene.Trace(ref query))
 			{
 				++bounce;
 
-				ref readonly Material material = ref query.shading.material;
+				ref readonly MaterialOld material = ref query.shading.material;
 
 				Float3 emission = material.Emit(query, random);
 				Float3 albedo = material.BidirectionalScatter(query, random, out Float3 direction);

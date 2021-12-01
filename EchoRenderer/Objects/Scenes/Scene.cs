@@ -14,7 +14,7 @@ namespace EchoRenderer.Objects.Scenes
 
 	public class StandardScene : Scene
 	{
-		public StandardScene(Material ground = null)
+		public StandardScene(MaterialOld ground = null)
 		{
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideSea");
 

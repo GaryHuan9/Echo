@@ -13,12 +13,12 @@ namespace EchoRenderer.Mathematics.Accelerators
 
 		public override int Hash { get; }
 
-		public override void GetIntersection(ref HitQuery query)
+		public override void Trace(ref TraceQuery query)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override int GetIntersectionCost(in Ray ray, ref float distance) => throw new NotImplementedException();
+		public override int TraceCost(in Ray ray, ref float distance) => throw new NotImplementedException();
 
 		public override int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span) => throw new NotImplementedException();
 	}
