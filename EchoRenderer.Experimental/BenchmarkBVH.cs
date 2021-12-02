@@ -33,12 +33,12 @@ namespace EchoRenderer.Experimental
 
 			for (int i = 0; i < queries.Length; i++)
 			{
-				Float2 point = new Float2(MathF.Sqrt(random.Value) * Radius, random.Value * Height);
-				Float3 position = point.X_Y.RotateXZ(random.Value * 360f);
+				Float2 point = new Float2(MathF.Sqrt(random.Next()) * Radius, random.Next() * Height);
+				Float3 position = point.X_Y.RotateXZ(random.Next() * 360f);
 
 				Float3 target = Float3.CreateY(0.6f) + random.NextInSphere(0.25f);
 
-				if (random.Value < 0.01f)
+				if (random.Next() < 0.01f)
 				{
 					Float3 offset = (target - position) / 2f;
 
