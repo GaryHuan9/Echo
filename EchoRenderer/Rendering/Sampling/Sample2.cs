@@ -21,12 +21,29 @@ namespace EchoRenderer.Rendering.Sampling
 		public float X => u.x;
 		public float Y => u.x;
 
+		/// <summary>
+		/// Returns a uniformly sampled point on a unit hemisphere surface.
+		/// </summary>
 		public Float3 UniformHemisphere => ProjectSphere(u.x, u.y);
-		public float UniformHemispherePdf => 1f / Scalars.TAU;
 
+		/// <summary>
+		/// Returns the probability density function for <see cref="UniformHemisphere"/>.
+		/// </summary>
+		public float UniformHemispherePDF => 1f / Scalars.TAU;
+
+		/// <summary>
+		/// Returns a uniformly sampled point on a unit sphere surface.
+		/// </summary>
 		public Float3 UniformSphere => ProjectSphere(1f - u.x * 2f, u.y);
-		public float UniformSpherePdf => 1f / 2f / Scalars.TAU;
 
+		/// <summary>
+		/// Returns the probability density function for <see cref="UniformSphere"/>.
+		/// </summary>
+		public float UniformSpherePDF => 1f / 2f / Scalars.TAU;
+
+		/// <summary>
+		/// Returns a uniformly sampled point inside a unit disk.
+		/// </summary>
 		public Float2 UniformDisk
 		{
 			get
@@ -37,6 +54,9 @@ namespace EchoRenderer.Rendering.Sampling
 			}
 		}
 
+		/// <summary>
+		/// Returns a uniformly and concentrically sampled point inside a unit disk.
+		/// </summary>
 		public Float2 ConcentricDisk
 		{
 			get
@@ -62,6 +82,10 @@ namespace EchoRenderer.Rendering.Sampling
 			}
 		}
 
+		/// <summary>
+		/// Returns a cosine weight sampled point on the surface of a unit hemisphere by
+		/// first generating a uniform disk as the base and projecting it onto the hemisphere.
+		/// </summary>
 		public Float3 CosineHemisphere
 		{
 			get
