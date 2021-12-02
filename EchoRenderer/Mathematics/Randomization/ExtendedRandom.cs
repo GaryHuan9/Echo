@@ -6,6 +6,6 @@ namespace EchoRenderer.Mathematics.Randomization
 	{
 		public ExtendedRandom(int seed) : base(seed) { }
 
-		public float Value => (float)NextDouble();
+		public float Next() => (float)NextDouble();
 	}
 }

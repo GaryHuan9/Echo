@@ -8,49 +8,49 @@ namespace EchoRenderer.Mathematics.Randomization
 		/// <summary>
 		/// Returns the next pseudorandom number between zero (inclusive) and one (exclusive).
 		/// </summary>
-		public float Value { get; }
+		public float Next();
 
 		/// <summary>
-		/// Returns the next <see cref="Value"/> between zero (inclusive) and <paramref name="max"/> (exclusive).
+		/// Returns the next <see cref="Next()"/> between zero (inclusive) and <paramref name="max"/> (exclusive).
 		/// </summary>
-		public float Next(float max) => Value * max;
+		public float Next(float max) => Next() * max;
 
 		/// <summary>
-		/// Returns the next <see cref="Value"/> between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
+		/// Returns the next <see cref="Next()"/> between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
 		/// </summary>
 		public float Next(float min, float max)
 		{
 			float distance = max - min;
-			return MathF.FusedMultiplyAdd(distance, Value, min);
+			return MathF.FusedMultiplyAdd(distance, Next(), min);
 		}
 
 		/// <summary>
-		/// Returns the next two <see cref="Value"/> between zero (inclusive) and one (exclusive).
+		/// Returns the next two <see cref="Next()"/> between zero (inclusive) and one (exclusive).
 		/// </summary>
-		public Float2 Next2() => new(Value, Value);
+		public Float2 Next2() => new(Next(), Next());
 
 		/// <summary>
-		/// Returns the next two <see cref="Value"/> between zero (inclusive) and <paramref name="max"/> (exclusive).
+		/// Returns the next two <see cref="Next()"/> between zero (inclusive) and <paramref name="max"/> (exclusive).
 		/// </summary>
 		public Float2 Next2(float max) => new(Next(max), Next(max));
 
 		/// <summary>
-		/// Returns the next two <see cref="Value"/> between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
+		/// Returns the next two <see cref="Next()"/> between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
 		/// </summary>
 		public Float2 Next2(float min, float max) => new(Next(min, max), Next(min, max));
 
 		/// <summary>
-		/// Returns the next three <see cref="Value"/> between zero (inclusive) and one (exclusive).
+		/// Returns the next three <see cref="Next()"/> between zero (inclusive) and one (exclusive).
 		/// </summary>
-		public Float3 Next3() => new(Value, Value, Value);
+		public Float3 Next3() => new(Next(), Next(), Next());
 
 		/// <summary>
-		/// Returns the next three <see cref="Value"/> between zero (inclusive) and <paramref name="max"/> (exclusive).
+		/// Returns the next three <see cref="Next()"/> between zero (inclusive) and <paramref name="max"/> (exclusive).
 		/// </summary>
 		public Float3 Next3(float max) => new(Next(max), Next(max), Next(max));
 
 		/// <summary>
-		/// Returns the next three <see cref="Value"/> between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
+		/// Returns the next three <see cref="Next()"/> between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
 		/// </summary>
 		public Float3 Next3(float min, float max) => new(Next(min, max), Next(min, max), Next(min, max));
 
@@ -88,8 +88,8 @@ namespace EchoRenderer.Mathematics.Randomization
 		/// </summary>
 		public float NextGaussian()
 		{
-			float u0 = 1f - Value;
-			float u1 = 1f - Value;
+			float u0 = 1f - Next();
+			float u1 = 1f - Next();
 
 			return FastMath.Sqrt0(-2f * MathF.Log(u0)) * MathF.Sin(Scalars.TAU * u1);
 		}
