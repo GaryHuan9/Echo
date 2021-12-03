@@ -9,19 +9,16 @@ namespace EchoRenderer.Rendering.Sampling
 	{
 		protected Sampler(int sampleCount) => this.sampleCount = sampleCount;
 
-		readonly List<int> lengthsSpan1 = new();
-		readonly List<int> lengthsSpan2 = new();
-
-		readonly List<Sample1[]> aggregateSpans1 = new();
-		readonly List<Sample2[]> aggregateSpans2 = new();
-
-		int indexSpan1;
-		int indexSpan2;
+		protected readonly List<SpanAggregate<Sample1>> spanOnes = new();
+		protected readonly List<SpanAggregate<Sample2>> spanTwos = new();
 
 		/// <summary>
 		/// The maximum number of samples performed for one pixel.
 		/// </summary>
 		protected readonly int sampleCount;
+
+		int spanOneIndex;
+		int spanTwoIndex;
 
 		/// <summary>
 		/// The position of the current processing pixel.
@@ -36,24 +33,12 @@ namespace EchoRenderer.Rendering.Sampling
 		/// <summary>
 		/// Requests a span of one dimensional values with <paramref name="length"/> to be available.
 		/// </summary>
-		public virtual void RequestSpan1(int length)
-		{
-			var array = new Sample1[length * sampleCount];
-
-			lengthsSpan1.Add(length);
-			aggregateSpans1.Add(array);
-		}
+		public void RequestSpanOne(int length) => spanOnes.Add(new SpanAggregate<Sample1>(length, sampleCount));
 
 		/// <summary>
 		/// Requests a span of two dimensional values with <paramref name="length"/> to be available.
 		/// </summary>
-		public virtual void RequestSpan2(int length)
-		{
-			var array = new Sample2[length * sampleCount];
-
-			lengthsSpan2.Add(length);
-			aggregateSpans2.Add(array);
-		}
+		public void RequestSpanTwo(int length) => spanTwos.Add(new SpanAggregate<Sample2>(length, sampleCount));
 
 		/// <summary>
 		/// Begins sampling on a new pixel at <paramref name="position"/>.
@@ -72,28 +57,42 @@ namespace EchoRenderer.Rendering.Sampling
 			++SampleIndex;
 			Assert.IsTrue(SampleIndex < sampleCount);
 
-			indexSpan1 = -1;
-			indexSpan2 = -1;
+			spanOneIndex = -1;
+			spanTwoIndex = -1;
 		}
 
 		/// <summary>
 		/// Returns the next one dimensional value of this sample.
 		/// </summary>
-		public abstract Sample1 Next1();
+		public abstract Sample1 NextOne();
 
 		/// <summary>
 		/// Returns the next two dimensional value of this sample.
 		/// </summary>
-		public abstract Sample2 Next2();
+		public abstract Sample2 NextTwo();
 
 		/// <summary>
 		/// Returns the next span of one dimensional values of this sample.
 		/// </summary>
-		public abstract ReadOnlySpan<Sample1> NextSpan1();
+		public ReadOnlySpan<Sample1> NextSpanOne() => spanOnes[++spanOneIndex][SampleIndex];
 
 		/// <summary>
 		/// Returns the next span of two dimensional values of this sample.
 		/// </summary>
-		public abstract ReadOnlySpan<Sample2> NextSpan2();
+		public ReadOnlySpan<Sample2> NextSpanTwo() => spanTwos[++spanTwoIndex][SampleIndex];
+
+		protected readonly struct SpanAggregate<T> where T : struct
+		{
+			public SpanAggregate(int length, int sampleCount)
+			{
+				this.length = length;
+				array = new T[length * sampleCount];
+			}
+
+			public readonly int length;
+			public readonly T[] array;
+
+			public Span<T> this[int sampleIndex] => array.AsSpan(sampleIndex * length, length);
+		}
 	}
 }

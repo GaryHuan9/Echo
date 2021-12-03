@@ -170,7 +170,7 @@ namespace EchoRenderer.Rendering.Engines
 			long tick = Environment.TickCount64;
 
 			RenderProfile profile = CurrentProfile;
-			int seed = HashCode.Combine(id, tick);
+			uint seed = (uint)HashCode.Combine(id, tick);
 			return profile.Method.CreateArena(profile, seed);
 		}
 
