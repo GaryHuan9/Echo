@@ -23,14 +23,14 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 		void HorizontalPass(int horizontal)
 		{
-			IRandom random = new ExtendedRandom(horizontal);
+			IRandom random = new SystemRandom((uint)horizontal);
 
 			for (int y = 0; y < renderBuffer.size.y; y++)
 			{
 				Int2 position = new Int2(horizontal, y);
 
 				float distance = (position * scale - Float2.half).SquaredMagnitude * Intensity;
-				float multiplier = 1f + random.Next(-FilmGrain, FilmGrain) - distance;
+				float multiplier = 1f + random.Next1(-FilmGrain, FilmGrain) - distance;
 
 				Vector128<float> target = Utilities.Clamp01(renderBuffer[position]);
 				renderBuffer[position] = Sse.Multiply(target, Vector128.Create(multiplier));
