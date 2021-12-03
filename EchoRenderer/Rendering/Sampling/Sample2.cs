@@ -16,10 +16,7 @@ namespace EchoRenderer.Rendering.Sampling
 			this.u = u;
 		}
 
-		readonly Float2 u;
-
-		public float X => u.x;
-		public float Y => u.x;
+		public readonly Float2 u;
 
 		/// <summary>
 		/// Returns a uniformly sampled point on a unit hemisphere surface.
