@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
@@ -6,12 +7,21 @@ namespace EchoRenderer.Rendering.Sampling
 {
 	public abstract class Sampler
 	{
-		protected Sampler(long sampleCount) => this.sampleCount = sampleCount;
+		protected Sampler(int sampleCount) => this.sampleCount = sampleCount;
+
+		readonly List<int> lengthsSpan1 = new();
+		readonly List<int> lengthsSpan2 = new();
+
+		readonly List<Sample1[]> aggregateSpans1 = new();
+		readonly List<Sample2[]> aggregateSpans2 = new();
+
+		int indexSpan1;
+		int indexSpan2;
 
 		/// <summary>
 		/// The maximum number of samples performed for one pixel.
 		/// </summary>
-		protected readonly long sampleCount;
+		protected readonly int sampleCount;
 
 		/// <summary>
 		/// The position of the current processing pixel.
@@ -21,17 +31,29 @@ namespace EchoRenderer.Rendering.Sampling
 		/// <summary>
 		/// The index of the current processing sample.
 		/// </summary>
-		protected long SampleIndex { get; private set; }
+		protected int SampleIndex { get; private set; }
 
 		/// <summary>
 		/// Requests a span of one dimensional values with <paramref name="length"/> to be available.
 		/// </summary>
-		public abstract void RequestSpan1(int length);
+		public virtual void RequestSpan1(int length)
+		{
+			var array = new Sample1[length * sampleCount];
+
+			lengthsSpan1.Add(length);
+			aggregateSpans1.Add(array);
+		}
 
 		/// <summary>
 		/// Requests a span of two dimensional values with <paramref name="length"/> to be available.
 		/// </summary>
-		public abstract void RequestSpan2(int length);
+		public virtual void RequestSpan2(int length)
+		{
+			var array = new Sample2[length * sampleCount];
+
+			lengthsSpan2.Add(length);
+			aggregateSpans2.Add(array);
+		}
 
 		/// <summary>
 		/// Begins sampling on a new pixel at <paramref name="position"/>.
@@ -49,6 +71,9 @@ namespace EchoRenderer.Rendering.Sampling
 		{
 			++SampleIndex;
 			Assert.IsTrue(SampleIndex < sampleCount);
+
+			indexSpan1 = -1;
+			indexSpan2 = -1;
 		}
 
 		/// <summary>

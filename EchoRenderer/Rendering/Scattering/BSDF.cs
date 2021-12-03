@@ -228,8 +228,8 @@ namespace EchoRenderer.Rendering.Scattering
 			if (matched == 0) return -1;
 
 			//Finds the index and remaps sample to a uniformed distribution because we just used it to find a function
-			int index = stack[(sample.X * matched).Floor()];
-			sample = new Sample2(sample.X * matched - index, sample.Y);
+			int index = stack[(sample.u.x * matched).Floor()];
+			sample = new Sample2(sample.u.x * matched - index, sample.u.y);
 
 			return index;
 		}
