@@ -12,7 +12,7 @@ namespace EchoRenderer.Rendering.Pixels
 		/// <summary>
 		/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Render"/>.
 		/// </summary>
-		public virtual Arena CreateArena(RenderProfile profile, int seed) => new(profile, seed);
+		public virtual Arena CreateArena(RenderProfile profile, uint seed) => new(profile, seed);
 
 		/// <summary>
 		/// Invoked before a new rendering process begin on this <see cref="PixelWorker"/>.

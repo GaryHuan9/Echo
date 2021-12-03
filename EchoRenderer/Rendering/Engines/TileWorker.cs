@@ -50,7 +50,7 @@ namespace EchoRenderer.Rendering.Engines
 
 			//Create arena for thread. NOTE that HashCode returns a different value every runtime!
 			int seed = HashCode.Combine(Environment.TickCount64, id, size);
-			arena = pixelWorker.CreateArena(profile, seed);
+			arena = pixelWorker.CreateArena(profile, (uint)seed);
 		}
 
 		readonly int id;
