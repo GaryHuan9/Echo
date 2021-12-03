@@ -16,10 +16,10 @@ namespace EchoRenderer.Rendering.Memory
 		/// </summary>
 		/// <param name="profile">The <see cref="RenderProfile"/> to use for this render.</param>
 		/// <param name="seed">Should be fairly random number that varies based on each rendering thread.</param>
-		public Arena(RenderProfile profile, int seed)
+		public Arena(RenderProfile profile, uint seed)
 		{
 			this.profile = profile;
-			random = new ExtendedRandom(seed);
+			random = new SystemRandom(seed);
 		}
 
 		public readonly RenderProfile profile;
