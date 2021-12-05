@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using CodeHelpers;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics.Randomization
@@ -165,6 +168,14 @@ namespace EchoRenderer.Mathematics.Randomization
 		{
 			Float2 position = new Float2(NextGaussian(), NextGaussian()) / 6f;
 			return position.Clamp(Float2.negativeHalf, Float2.half) + Float2.half;
+		}
+
+		/// <summary>
+		/// Completely and uniformly shuffles the content stored in <paramref name="span"/>.
+		/// </summary>
+		public sealed void Shuffle<T>(Span<T> span)
+		{
+			for (int i = span.Length - 1; i > 0; i--) CodeHelper.Swap(ref span[i], ref span[Next1(i + 1)]);
 		}
 	}
 }

@@ -23,6 +23,12 @@ namespace EchoRenderer.Mathematics
 		public static float Clamp11(float value) => value <= -1f ? -1f : value >= 1f ? 1f : value;
 
 		/// <summary>
+		/// Returns <paramref name="value"/> as if it is clamped between zero (inclusive) and one (exclusive).
+		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+		/// </summary>
+		public static float ClampEpsilon(float value) => value <= 0f ? 0f : value > 1f ? 1f : value;
+
+		/// <summary>
 		/// Returns the absolute value of <paramref name="value"/>.
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
 		/// </summary>

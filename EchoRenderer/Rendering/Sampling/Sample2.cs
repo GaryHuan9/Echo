@@ -9,12 +9,11 @@ namespace EchoRenderer.Rendering.Sampling
 	{
 		public Sample2(float x, float y) : this(new Float2(x, y)) { }
 
-		public Sample2(Float2 u)
-		{
-			Assert.IsTrue(Float2.zero <= u);
-			Assert.IsTrue(Float2.one > u);
-			this.u = u;
-		}
+		public Sample2(Float2 u) => this.u = new Float2
+									(
+										FastMath.ClampEpsilon(u.x),
+										FastMath.ClampEpsilon(u.y)
+									);
 
 		public readonly Float2 u;
 
