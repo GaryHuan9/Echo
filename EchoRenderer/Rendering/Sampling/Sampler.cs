@@ -2,20 +2,45 @@
 using System.Collections.Generic;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics.Randomization;
 
 namespace EchoRenderer.Rendering.Sampling
 {
 	public abstract class Sampler
 	{
-		protected Sampler(int sampleCount) => this.sampleCount = sampleCount;
+		protected Sampler(int sampleCount)
+		{
+			this.sampleCount = sampleCount;
 
-		protected readonly List<SpanAggregate<Sample1>> spanOnes = new();
-		protected readonly List<SpanAggregate<Sample2>> spanTwos = new();
+			spanOnes = new List<SpanAggregate<Sample1>>();
+			spanTwos = new List<SpanAggregate<Sample2>>();
+		}
+
+		protected Sampler(Sampler sampler)
+		{
+			sampleCount = sampler.sampleCount;
+
+			spanOnes = Clone(sampler.spanOnes);
+			spanTwos = Clone(sampler.spanTwos);
+
+			static List<SpanAggregate<T>> Clone<T>(IReadOnlyList<SpanAggregate<T>> list)
+			{
+				int count = list.Count;
+
+				List<SpanAggregate<T>> clone = new List<SpanAggregate<T>>(count);
+				for (int i = 0; i < count; i++) clone.Add(list[i].Replicate());
+
+				return clone;
+			}
+		}
 
 		/// <summary>
 		/// The maximum number of samples performed for one pixel.
 		/// </summary>
 		protected readonly int sampleCount;
+
+		protected readonly List<SpanAggregate<Sample1>> spanOnes;
+		protected readonly List<SpanAggregate<Sample2>> spanTwos;
 
 		int spanOneIndex;
 		int spanTwoIndex;
@@ -29,6 +54,11 @@ namespace EchoRenderer.Rendering.Sampling
 		/// The index of the current processing sample.
 		/// </summary>
 		protected int SampleIndex { get; private set; }
+
+		/// <summary>
+		/// The specific pseudo random number generator associated with this <see cref="Sampler"/>.
+		/// </summary>
+		protected IRandom PRNG { get; set; }
 
 		/// <summary>
 		/// Requests a span of one dimensional values with <paramref name="length"/> to be available.
@@ -81,7 +111,13 @@ namespace EchoRenderer.Rendering.Sampling
 		/// </summary>
 		public ReadOnlySpan<Sample2> NextSpanTwo() => spanTwos[++spanTwoIndex][SampleIndex];
 
-		protected readonly struct SpanAggregate<T> where T : struct
+		/// <summary>
+		/// Produces and returns another copy of this <see cref="Sampler"/> of the same <see cref="Object.GetType()"/> to be used for other threads.
+		/// NOTE: Only the information indicated prior to rendering needs to be cloned over; pixel, sample, or PRNG specific data can be ignored.
+		/// </summary>
+		public abstract Sampler Replicate();
+
+		protected readonly struct SpanAggregate<T>
 		{
 			public SpanAggregate(int length, int sampleCount)
 			{
@@ -89,10 +125,18 @@ namespace EchoRenderer.Rendering.Sampling
 				array = new T[length * sampleCount];
 			}
 
+			SpanAggregate(int length, T[] array)
+			{
+				this.length = length;
+				this.array = array;
+			}
+
 			public readonly int length;
 			public readonly T[] array;
 
 			public Span<T> this[int sampleIndex] => array.AsSpan(sampleIndex * length, length);
+
+			public SpanAggregate<T> Replicate() => new(length, new T[array.Length]);
 		}
 	}
 }
