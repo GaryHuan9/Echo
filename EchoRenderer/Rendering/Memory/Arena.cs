@@ -1,6 +1,8 @@
-﻿using EchoRenderer.Mathematics;
+﻿using System;
+using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Profiles;
+using EchoRenderer.Rendering.Sampling;
 
 namespace EchoRenderer.Rendering.Memory
 {
@@ -14,17 +16,38 @@ namespace EchoRenderer.Rendering.Memory
 		/// <summary>
 		/// Creates a new <see cref="Arena"/>.
 		/// </summary>
-		/// <param name="profile">The <see cref="RenderProfile"/> to use for this render.</param>
-		/// <param name="seed">Should be fairly random number that varies based on each rendering thread.</param>
-		public Arena(RenderProfile profile, uint seed)
-		{
-			this.profile = profile;
-			random = new SystemRandom(seed);
-		}
+		public Arena(RenderProfile profile) => this.profile = profile;
 
 		public readonly RenderProfile profile;
-		public readonly IRandom random;
-
 		public readonly Allocator allocator = new();
+
+		Sampler _sampler;
+		IRandom _random;
+
+		public Sampler Sampler
+		{
+			get => _sampler;
+			set
+			{
+				Assert.IsNotNull(_sampler);
+				Assert.IsNotNull(value);
+
+				_sampler = value.Replicate();
+				_sampler.PRNG = _random;
+			}
+		}
+
+		public IRandom Random
+		{
+			get => _random;
+			set
+			{
+				Assert.IsNotNull(_random);
+				Assert.IsNotNull(value);
+
+				_random = value;
+				if (_sampler != null) _sampler.PRNG = value;
+			}
+		}
 	}
 }
