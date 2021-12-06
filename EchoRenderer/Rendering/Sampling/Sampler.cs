@@ -12,16 +12,16 @@ namespace EchoRenderer.Rendering.Sampling
 		{
 			this.sampleCount = sampleCount;
 
-			spanOnes = new List<SpanAggregate<Sample1>>();
-			spanTwos = new List<SpanAggregate<Sample2>>();
+			arrayOnes = new List<SpanAggregate<Sample1>>();
+			arrayTwos = new List<SpanAggregate<Sample2>>();
 		}
 
 		protected Sampler(Sampler sampler)
 		{
 			sampleCount = sampler.sampleCount;
 
-			spanOnes = Clone(sampler.spanOnes);
-			spanTwos = Clone(sampler.spanTwos);
+			arrayOnes = Clone(sampler.arrayOnes);
+			arrayTwos = Clone(sampler.arrayTwos);
 
 			static List<SpanAggregate<T>> Clone<T>(IReadOnlyList<SpanAggregate<T>> list)
 			{
@@ -39,11 +39,11 @@ namespace EchoRenderer.Rendering.Sampling
 		/// </summary>
 		protected readonly int sampleCount;
 
-		protected readonly List<SpanAggregate<Sample1>> spanOnes;
-		protected readonly List<SpanAggregate<Sample2>> spanTwos;
+		protected readonly List<SpanAggregate<Sample1>> arrayOnes;
+		protected readonly List<SpanAggregate<Sample2>> arrayTwos;
 
-		int spanOneIndex;
-		int spanTwoIndex;
+		int arrayOneIndex;
+		int arrayTwoIndex;
 
 		/// <summary>
 		/// The position of the current processing pixel.
@@ -58,17 +58,17 @@ namespace EchoRenderer.Rendering.Sampling
 		/// <summary>
 		/// The specific pseudo random number generator associated with this <see cref="Sampler"/>.
 		/// </summary>
-		protected IRandom PRNG { get; set; }
+		public IRandom PRNG { get; set; }
 
 		/// <summary>
 		/// Requests a span of one dimensional values with <paramref name="length"/> to be available.
 		/// </summary>
-		public void RequestSpanOne(int length) => spanOnes.Add(new SpanAggregate<Sample1>(length, sampleCount));
+		public void RequestSpanOne(int length) => arrayOnes.Add(new SpanAggregate<Sample1>(length, sampleCount));
 
 		/// <summary>
 		/// Requests a span of two dimensional values with <paramref name="length"/> to be available.
 		/// </summary>
-		public void RequestSpanTwo(int length) => spanTwos.Add(new SpanAggregate<Sample2>(length, sampleCount));
+		public void RequestSpanTwo(int length) => arrayTwos.Add(new SpanAggregate<Sample2>(length, sampleCount));
 
 		/// <summary>
 		/// Begins sampling on a new pixel at <paramref name="position"/>.
@@ -87,8 +87,8 @@ namespace EchoRenderer.Rendering.Sampling
 			++SampleIndex;
 			Assert.IsTrue(SampleIndex < sampleCount);
 
-			spanOneIndex = -1;
-			spanTwoIndex = -1;
+			arrayOneIndex = -1;
+			arrayTwoIndex = -1;
 		}
 
 		/// <summary>
@@ -104,12 +104,12 @@ namespace EchoRenderer.Rendering.Sampling
 		/// <summary>
 		/// Returns the next span of one dimensional values of this sample.
 		/// </summary>
-		public ReadOnlySpan<Sample1> NextSpanOne() => spanOnes[++spanOneIndex][SampleIndex];
+		public ReadOnlySpan<Sample1> NextSpanOne() => arrayOnes[++arrayOneIndex][SampleIndex];
 
 		/// <summary>
 		/// Returns the next span of two dimensional values of this sample.
 		/// </summary>
-		public ReadOnlySpan<Sample2> NextSpanTwo() => spanTwos[++spanTwoIndex][SampleIndex];
+		public ReadOnlySpan<Sample2> NextSpanTwo() => arrayTwos[++arrayTwoIndex][SampleIndex];
 
 		/// <summary>
 		/// Produces and returns another copy of this <see cref="Sampler"/> of the same <see cref="Object.GetType()"/> to be used for other threads.

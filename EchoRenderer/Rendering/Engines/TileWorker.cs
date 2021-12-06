@@ -165,7 +165,7 @@ namespace EchoRenderer.Rendering.Engines
 
 			//Change to adaptive sampling
 			int sampleCount = (int)(pixel.Deviation * adaptiveSample);
-			for (int i = 0; i < sampleCount; i++) Sample(arena.random.NextSample());
+			for (int i = 0; i < sampleCount; i++) Sample(arena.Random.NextSample());
 
 			//Store pixel
 			pixel.Store(renderBuffer, position);
@@ -177,6 +177,8 @@ namespace EchoRenderer.Rendering.Engines
 				//Sample color
 				Float2 uv = (position + offset) / renderBuffer.size - Float2.half;
 				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), arena);
+
+				arena.allocator.Release();
 
 				//Write to pixel
 				bool successful = pixel.Accumulate(sample);

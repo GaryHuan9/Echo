@@ -20,9 +20,11 @@ namespace EchoRenderer.Rendering.Engines
 
 		/// <summary>
 		/// The number of additional samples used for each pixel during each epoch when adaptive sampling is on.
-		/// NOTE: This number is added with <see cref="EpochSample"/> the multiplied to the pixel's deviation.
+		/// NOTE: This number is added with <see cref="EpochSample"/> then multiplied to the pixel's deviation.
 		/// </summary>
 		public int AdaptiveSample { get; init; }
+
+		public override int BaseSample => EpochSample;
 
 		public override void Validate()
 		{
