@@ -5,11 +5,14 @@ using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.Sampling
 {
-	public readonly struct Sample2
+	/// <summary>
+	/// A two dimensional distribution between zero (inclusive) and one (exclusive)
+	/// </summary>
+	public readonly struct Distro2
 	{
-		public Sample2(float x, float y) : this(new Float2(x, y)) { }
+		public Distro2(float x, float y) : this(new Float2(x, y)) { }
 
-		public Sample2(Float2 u) => this.u = new Float2
+		public Distro2(Float2 u) => this.u = new Float2
 									(
 										FastMath.ClampEpsilon(u.x),
 										FastMath.ClampEpsilon(u.y)

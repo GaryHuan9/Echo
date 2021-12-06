@@ -7,7 +7,7 @@ namespace EchoRenderer.Objects.Lights
 	{
 		public override Float3 Power => 2f * Scalars.TAU * Intensity;
 
-		public override Float3 Sample(in Float3 position, in Sample2 sample, out Float3 incident, out float pdf, out float distance)
+		public override Float3 Sample(in Float3 position, in Distro2 distro, out Float3 incident, out float pdf, out float distance)
 		{
 			pdf = 1f;
 
