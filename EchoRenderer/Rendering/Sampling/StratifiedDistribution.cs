@@ -4,14 +4,14 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Rendering.Sampling
 {
-	public class StratifiedSampler : LimitedSampler
+	public class StratifiedDistribution : LimitedDistribution
 	{
-		public StratifiedSampler(Int2 sampleSize, int dimensionCount) : base(sampleSize.Product, dimensionCount) => this.sampleSize = sampleSize;
+		public StratifiedDistribution(Int2 sampleSize, int dimensionCount) : base(sampleSize.Product, dimensionCount) => this.sampleSize = sampleSize;
 
-		StratifiedSampler(StratifiedSampler sampler) : base(sampler)
+		StratifiedDistribution(StratifiedDistribution distribution) : base(distribution)
 		{
-			sampleSize = sampler.sampleSize;
-			Jitter = sampler.Jitter;
+			sampleSize = distribution.sampleSize;
+			Jitter = distribution.Jitter;
 		}
 
 		public readonly Int2 sampleSize;
@@ -27,16 +27,16 @@ namespace EchoRenderer.Rendering.Sampling
 			Assert.IsNotNull(PRNG);
 
 			//Fill single samples
-			foreach (SpanAggregate<Sample1> aggregate in singleOnes)
+			foreach (SpanAggregate<Distro1> aggregate in singleOnes)
 			{
 				FillStratum(aggregate.array);
-				PRNG.Shuffle<Sample1>(aggregate.array);
+				PRNG.Shuffle<Distro1>(aggregate.array);
 			}
 
-			foreach (SpanAggregate<Sample2> aggregate in singleTwos)
+			foreach (SpanAggregate<Distro2> aggregate in singleTwos)
 			{
 				FillStratum(aggregate.array, sampleSize);
-				PRNG.Shuffle<Sample2>(aggregate.array);
+				PRNG.Shuffle<Distro2>(aggregate.array);
 			}
 		}
 
@@ -47,7 +47,7 @@ namespace EchoRenderer.Rendering.Sampling
 			//Fill span samples
 			for (int i = 0; i < arrayOnes.Count; i++)
 			{
-				Span<Sample1> span = arrayOnes[i][SampleIndex];
+				Span<Distro1> span = arrayOnes[i][SampleIndex];
 
 				FillStratum(span);
 				PRNG.Shuffle(span);
@@ -59,19 +59,19 @@ namespace EchoRenderer.Rendering.Sampling
 			}
 		}
 
-		void FillStratum(Span<Sample1> span)
+		void FillStratum(Span<Distro1> span)
 		{
 			float scale = 1f / span.Length;
 
 			for (int i = 0; i < span.Length; i++)
 			{
-				ref Sample1 sample = ref span[i];
+				ref Distro1 distro = ref span[i];
 				float offset = Jitter ? PRNG.Next1() : 0.5f;
-				sample = new Sample1((i + offset) * scale);
+				distro = new Distro1((i + offset) * scale);
 			}
 		}
 
-		void FillStratum(Span<Sample2> span, Int2 size)
+		void FillStratum(Span<Distro2> span, Int2 size)
 		{
 			Assert.AreEqual(span.Length, size.Product);
 			Float2 scale = 1f / size;
@@ -80,17 +80,17 @@ namespace EchoRenderer.Rendering.Sampling
 
 			for (int i = 0; i < span.Length; i++)
 			{
-				ref Sample2 sample = ref span[i];
+				ref Distro2 distro = ref span[i];
 
 				Float2 offset = Jitter ? PRNG.Next2() : Float2.half;
-				sample = new Sample2((position + offset) * scale);
+				distro = new Distro2((position + offset) * scale);
 
 				if (position.x < size.x - 1) position += Int2.right;
 				else position = new Int2(0, position.y + 1);
 			}
 		}
 
-		void LatinHypercube(Span<Sample2> span)
+		void LatinHypercube(Span<Distro2> span)
 		{
 			int length = span.Length;
 			float scale = 1f / length;
@@ -106,13 +106,13 @@ namespace EchoRenderer.Rendering.Sampling
 
 			for (int i = 0; i < span.Length; i++)
 			{
-				ref Sample2 sample = ref span[i];
+				ref Distro2 distro = ref span[i];
 				Float2 offset = Jitter ? PRNG.Next2() : Float2.half;
 				Float2 position = new Float2(spanX[i], spanY[i]);
-				sample = new Sample2((position + offset) * scale);
+				distro = new Distro2((position + offset) * scale);
 			}
 		}
 
-		public override Sampler Replicate() => new StratifiedSampler(this);
+		public override Distribution Replicate() => new StratifiedDistribution(this);
 	}
 }
