@@ -1,9 +1,6 @@
-﻿using System;
-using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Randomization;
-using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
@@ -13,11 +10,13 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
+		public override Arena CreateArena(RenderProfile profile, uint seed) => new(profile) { Random = new SystemRandom(seed) };
+
 		public override Sample Render(Float2 uv, Arena arena)
 		{
 			RenderProfile profile = arena.profile;
 			PressedScene scene = profile.Scene;
-			IRandom random = arena.random;
+			IRandom random = arena.Random;
 
 			TraceQuery query = scene.camera.GetRay(uv, random);
 
