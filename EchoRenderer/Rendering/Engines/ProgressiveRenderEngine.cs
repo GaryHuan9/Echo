@@ -146,7 +146,7 @@ namespace EchoRenderer.Rendering.Engines
 			for (int i = 0; i < sampleCount; i++)
 			{
 				//Sample color
-				Float2 uv = (position + arena.random.NextSample()) / buffer.size - Float2.half;
+				Float2 uv = (position + arena.Random.NextSample()) / buffer.size - Float2.half;
 				var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), arena);
 
 				bool successful = pixel.Accumulate(sample);

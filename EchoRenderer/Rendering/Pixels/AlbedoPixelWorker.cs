@@ -4,15 +4,18 @@ using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Pixels
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{
+		public override Arena CreateArena(RenderProfile profile, uint seed) => new(profile) { Random = new SystemRandom(seed) };
+
 		public override Sample Render(Float2 uv, Arena arena)
 		{
 			PressedScene scene = arena.profile.Scene;
-			IRandom random = arena.random;
+			IRandom random = arena.Random;
 
 			TraceQuery query = scene.camera.GetRay(uv, random);
 

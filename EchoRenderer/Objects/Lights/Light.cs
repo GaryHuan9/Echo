@@ -15,6 +15,11 @@ namespace EchoRenderer.Objects.Lights
 		public Float3 Intensity { get; set; } = Float3.one;
 
 		/// <summary>
+		/// The number of consecutive samples that should be used to sample this <see cref="Light"/>.
+		/// </summary>
+		public int SampleCount { get; set; } = 1;
+
+		/// <summary>
 		/// The approximated outputting power of this <see cref="Light"/>.
 		/// </summary>
 		public abstract Float3 Power { get; }

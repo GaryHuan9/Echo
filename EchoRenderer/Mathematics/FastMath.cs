@@ -1,9 +1,12 @@
 using System;
+using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics
 {
 	public static class FastMath
 	{
+		static readonly float oneMinusEpsilon = Scalars.UInt32ToSingleBits(Scalars.SingleToUInt32Bits(1f) - 1u);
+
 		/// <summary>
 		/// Returns <paramref name="value"/> if it is larger than zero, or zero otherwise.
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
@@ -26,7 +29,7 @@ namespace EchoRenderer.Mathematics
 		/// Returns <paramref name="value"/> as if it is clamped between zero (inclusive) and one (exclusive).
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
 		/// </summary>
-		public static float ClampEpsilon(float value) => value <= 0f ? 0f : value > 1f ? 1f : value;
+		public static float ClampEpsilon(float value) => value <= 0f ? 0f : value >= 1f ? oneMinusEpsilon : value;
 
 		/// <summary>
 		/// Returns the absolute value of <paramref name="value"/>.

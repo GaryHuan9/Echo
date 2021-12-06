@@ -27,40 +27,39 @@ namespace EchoRenderer.Rendering.Sampling
 			Assert.IsNotNull(PRNG);
 
 			//Fill single samples
-			foreach (SpanAggregate<Sample1> aggregate in ones)
+			foreach (SpanAggregate<Sample1> aggregate in singleOnes)
 			{
-				FillIntervals(aggregate.array);
+				FillStratum(aggregate.array);
 				PRNG.Shuffle<Sample1>(aggregate.array);
 			}
 
-			foreach (SpanAggregate<Sample2> aggregate in twos)
+			foreach (SpanAggregate<Sample2> aggregate in singleTwos)
 			{
-				FillIntervals(aggregate.array, sampleSize);
+				FillStratum(aggregate.array, sampleSize);
 				PRNG.Shuffle<Sample2>(aggregate.array);
-			}
-
-			//Fill span samples
-			foreach (var aggregate in spanOnes)
-			{
-				for (int i = 0; i < aggregate.length; i++)
-				{
-					Span<Sample1> span = aggregate[i];
-
-					FillIntervals(span);
-					PRNG.Shuffle(span);
-				}
-			}
-
-			foreach (var aggregate in spanTwos)
-			{
-				for (int i = 0; i < aggregate.length; i++)
-				{
-					LatinHypercube(aggregate[i]);
-				}
 			}
 		}
 
-		void FillIntervals(Span<Sample1> span)
+		public override void BeginSample()
+		{
+			base.BeginSample();
+
+			//Fill span samples
+			for (int i = 0; i < arrayOnes.Count; i++)
+			{
+				Span<Sample1> span = arrayOnes[i][SampleIndex];
+
+				FillStratum(span);
+				PRNG.Shuffle(span);
+			}
+
+			for (int i = 0; i < arrayTwos.Count; i++)
+			{
+				LatinHypercube(arrayTwos[i][SampleIndex]);
+			}
+		}
+
+		void FillStratum(Span<Sample1> span)
 		{
 			float scale = 1f / span.Length;
 
@@ -72,7 +71,7 @@ namespace EchoRenderer.Rendering.Sampling
 			}
 		}
 
-		void FillIntervals(Span<Sample2> span, Int2 size)
+		void FillStratum(Span<Sample2> span, Int2 size)
 		{
 			Assert.AreEqual(span.Length, size.Product);
 			Float2 scale = 1f / size;

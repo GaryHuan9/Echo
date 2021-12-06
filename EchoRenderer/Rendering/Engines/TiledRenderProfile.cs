@@ -27,6 +27,8 @@ namespace EchoRenderer.Rendering.Engines
 		/// </summary>
 		public int AdaptiveSample { get; init; }
 
+		public override int BaseSample => PixelSample;
+
 		public override void Validate()
 		{
 			base.Validate();

@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
 
@@ -18,6 +19,8 @@ namespace EchoRenderer.Rendering.Pixels
 			Interlocked.Exchange(ref totalCost, 0);
 			Interlocked.Exchange(ref totalSample, 0);
 		}
+
+		public override Arena CreateArena(RenderProfile profile, uint seed) => new(profile);
 
 		public override Sample Render(Float2 uv, Arena arena)
 		{
