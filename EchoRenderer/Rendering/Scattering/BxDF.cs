@@ -29,9 +29,9 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Samples and returns the value of the distribution function from <paramref name="outgoing"/>, and outputs
 		/// the scattering direction to <paramref name="incident"/>. Used by delta distributions (eg. perfect specular)
 		/// </summary>
-		public virtual Float3 Sample(in Float3 outgoing, in Sample2 sample, out Float3 incident, out float pdf)
+		public virtual Float3 Sample(in Float3 outgoing, in Distro2 distro, out Float3 incident, out float pdf)
 		{
-			incident = sample.CosineHemisphere;
+			incident = distro.CosineHemisphere;
 			if (outgoing.z < 0f) incident = new Float3(incident.x, incident.y, -incident.z);
 
 			pdf = ProbabilityDensity(outgoing, incident);
@@ -42,37 +42,37 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Returns the hemispherical-directional reflectance, the total reflectance in direction
 		/// <paramref name="outgoing"/> due to a constant illumination over the doming hemisphere
 		/// </summary>
-		public virtual Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2> samples)
+		public virtual Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Distro2> distros)
 		{
 			Float3 result = Float3.zero;
 
-			foreach (ref readonly Sample2 sample in samples)
+			foreach (ref readonly Distro2 distro in distros)
 			{
-				Float3 sampled = Sample(outgoing, sample, out Float3 incident, out float pdf);
+				Float3 sampled = Sample(outgoing, distro, out Float3 incident, out float pdf);
 				if (pdf > 0f) result += sampled * AbsoluteCosine(incident) / pdf;
 			}
 
-			return result / samples.Length;
+			return result / distros.Length;
 		}
 
 		/// <summary>
 		/// Returns the hemispherical-hemispherical reflectance, the fraction of incident light
 		/// reflected when the amount of incident light is constant across all directions
 		/// </summary>
-		public virtual Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1)
+		public virtual Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1)
 		{
 			Float3 result = Float3.zero;
-			int length = samples0.Length;
+			int length = distros0.Length;
 
-			Assert.AreEqual(length, samples1.Length);
-			for (int i = 0; i < samples0.Length; i++)
+			Assert.AreEqual(length, distros1.Length);
+			for (int i = 0; i < distros0.Length; i++)
 			{
-				ref readonly Sample2 sample = ref samples0[i];
+				ref readonly Distro2 distro = ref distros0[i];
 
-				Float3 outgoing = sample.UniformHemisphere;
-				Float3 sampled = Sample(outgoing, samples1[i], out Float3 incident, out float pdf);
+				Float3 outgoing = distro.UniformHemisphere;
+				Float3 sampled = Sample(outgoing, distros1[i], out Float3 incident, out float pdf);
 
-				pdf *= sample.UniformHemispherePDF;
+				pdf *= distro.UniformHemispherePDF;
 
 				if (pdf > 0f) result += sampled * AbsoluteCosine(outgoing) * AbsoluteCosine(incident) / pdf;
 			}

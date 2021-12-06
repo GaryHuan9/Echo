@@ -33,7 +33,7 @@ namespace EchoRenderer.Objects.Lights
 		/// <summary>
 		/// Samples the contribution of this <see cref="Light"/> to <paramref name="position"/>.
 		/// </summary>
-		public abstract Float3 Sample(in Float3 position, in Sample2 sample, out Float3 incident, out float pdf, out float distance);
+		public abstract Float3 Sample(in Float3 position, in Distro2 distro, out Float3 incident, out float pdf, out float distance);
 
 		/// <summary>
 		/// Returns the sampled probability density (pdf) for a given pair of
