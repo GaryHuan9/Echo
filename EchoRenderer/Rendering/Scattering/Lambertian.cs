@@ -21,8 +21,8 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => reflectance * (1f / Scalars.PI);
 
-		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Sample2> samples)  => reflectance;
-		public override Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1) => reflectance;
+		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Distro2> distros)  => reflectance;
+		public override Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1) => reflectance;
 	}
 
 	/// <summary>
@@ -42,7 +42,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => transmittance * (1f / Scalars.PI);
 
-		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Sample2> samples)  => transmittance;
-		public override Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1) => transmittance;
+		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Distro2> distros)  => transmittance;
+		public override Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1) => transmittance;
 	}
 }

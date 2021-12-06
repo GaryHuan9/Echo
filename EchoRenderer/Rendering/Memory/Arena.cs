@@ -21,19 +21,19 @@ namespace EchoRenderer.Rendering.Memory
 		public readonly RenderProfile profile;
 		public readonly Allocator allocator = new();
 
-		Sampler _sampler;
+		Distribution distribution;
 		IRandom _random;
 
-		public Sampler Sampler
+		public Distribution Distribution
 		{
-			get => _sampler;
+			get => distribution;
 			set
 			{
-				Assert.IsNotNull(_sampler);
+				Assert.IsNotNull(distribution);
 				Assert.IsNotNull(value);
 
-				_sampler = value.Replicate();
-				_sampler.PRNG = _random;
+				distribution = value.Replicate();
+				distribution.PRNG = _random;
 			}
 		}
 
@@ -46,7 +46,7 @@ namespace EchoRenderer.Rendering.Memory
 				Assert.IsNotNull(value);
 
 				_random = value;
-				if (_sampler != null) _sampler.PRNG = value;
+				if (distribution != null) distribution.PRNG = value;
 			}
 		}
 	}

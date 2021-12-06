@@ -96,11 +96,11 @@ namespace EchoRenderer.Rendering.Scattering
 
 		/// <summary>
 		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/> with an output direction.
-		/// See <see cref="BxDF.Sample(in Float3, in Sample2, out Float3, out float)"/> for more information.
+		/// See <see cref="BxDF.Sample(in Float3, in Distribution2, out Float3, out float)"/> for more information.
 		/// </summary>
-		public Float3 Sample(in Float3 outgoingWorld, Sample2 sample, FunctionType type, out Float3 incidentWorld, out float pdf, out FunctionType sampledType)
+		public Float3 Sample(in Float3 outgoingWorld, Distro2 distro, FunctionType type, out Float3 incidentWorld, out float pdf, out FunctionType sampledType)
 		{
-			int index = FindFunction(type, ref sample, out int matched);
+			int index = FindFunction(type, ref distro, out int matched);
 
 			if (index < 0)
 			{
@@ -116,7 +116,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 			//Sample the selected function
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-			Float3 sampled = selected.Sample(outgoing, sample, out Float3 incident, out pdf);
+			Float3 sampled = selected.Sample(outgoing, distro, out Float3 incident, out pdf);
 
 			if (pdf.AlmostEquals())
 			{
@@ -148,9 +148,9 @@ namespace EchoRenderer.Rendering.Scattering
 
 		/// <summary>
 		/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-		/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Sample2})"/> for more information.
+		/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Distribution2})"/> for more information.
 		/// </summary>
-		public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2> samples, FunctionType type)
+		public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Distro2> distros, FunctionType type)
 		{
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 			Float3 reflectance = Float3.zero;
@@ -159,7 +159,7 @@ namespace EchoRenderer.Rendering.Scattering
 			{
 				BxDF function = functions[i];
 				if (!function.MatchType(type)) continue;
-				reflectance += function.GetReflectance(outgoing, samples);
+				reflectance += function.GetReflectance(outgoing, distros);
 			}
 
 			return reflectance;
@@ -167,9 +167,9 @@ namespace EchoRenderer.Rendering.Scattering
 
 		/// <summary>
 		/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-		/// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Sample2}, ReadOnlySpan{Sample2})"/> for more information.
+		/// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Distro2}, ReadOnlySpan{Distro2})"/> for more information.
 		/// </summary>
-		public Float3 GetReflectance(ReadOnlySpan<Sample2> samples0, ReadOnlySpan<Sample2> samples1, FunctionType type)
+		public Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1, FunctionType type)
 		{
 			Float3 reflectance = Float3.zero;
 
@@ -177,7 +177,7 @@ namespace EchoRenderer.Rendering.Scattering
 			{
 				BxDF function = functions[i];
 				if (!function.MatchType(type)) continue;
-				reflectance += function.GetReflectance(samples0, samples1);
+				reflectance += function.GetReflectance(distros0, distros1);
 			}
 
 			return reflectance;
@@ -213,7 +213,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// </summary>
 		bool Reflect(in Float3 outgoingWorld, in Float3 incidentWorld) => outgoingWorld.Dot(geometryNormal) * incidentWorld.Dot(geometryNormal) > 0f;
 
-		int FindFunction(FunctionType type, ref Sample2 sample, out int matched)
+		int FindFunction(FunctionType type, ref Distro2 distro, out int matched)
 		{
 			Span<int> stack = stackalloc int[count];
 
@@ -228,8 +228,8 @@ namespace EchoRenderer.Rendering.Scattering
 			if (matched == 0) return -1;
 
 			//Finds the index and remaps sample to a uniformed distribution because we just used it to find a function
-			int index = stack[(sample.u.x * matched).Floor()];
-			sample = new Sample2(sample.u.x * matched - index, sample.u.y);
+			int index = stack[(distro.u.x * matched).Floor()];
+			distro = new Distro2(distro.u.x * matched - index, distro.u.y);
 
 			return index;
 		}

@@ -34,7 +34,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => Float3.zero;
 
-		public override Float3 Sample(in Float3 outgoing, in Sample2 sample, out Float3 incident, out float pdf)
+		public override Float3 Sample(in Float3 outgoing, in Distro2 distro, out Float3 incident, out float pdf)
 		{
 			incident = new Float3(-outgoing.x, -outgoing.y, outgoing.z);
 
@@ -75,7 +75,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => Float3.zero;
 
-		public override Float3 Sample(in Float3 outgoing, in Sample2 sample, out Float3 incident, out float pdf) => throw new NotImplementedException();
+		public override Float3 Sample(in Float3 outgoing, in Distro2 distro, out Float3 incident, out float pdf) => throw new NotImplementedException();
 
 		public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
 	}
