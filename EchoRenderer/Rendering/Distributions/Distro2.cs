@@ -3,7 +3,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Rendering.Sampling
+namespace EchoRenderer.Rendering.Distributions
 {
 	/// <summary>
 	/// A two dimensional distribution between zero (inclusive) and one (exclusive)
