@@ -11,11 +11,6 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class PathTraceWorker : PixelWorker
 	{
-		public override void BeforeRender(RenderProfile profile)
-		{
-			SourceDistribution = new UniformDistribution(profile.TotalSample);
-		}
-
 		public override Sample Render(Float2 uv, Arena arena)
 		{
 			RenderProfile profile = arena.profile;
