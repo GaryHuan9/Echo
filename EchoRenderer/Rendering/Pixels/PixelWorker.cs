@@ -11,13 +11,12 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public abstract class PixelWorker
 	{
-		protected Distribution SourceDistribution { get; set; }
+		protected Distribution SourceDistribution { get; private set; }
 
 		/// <summary>
-		/// Invoked one before a new rendering process begin on this <see cref="PixelWorker"/>.
-		/// Can be used to prepare the worker for future invocations to <see cref="Render"/>.
+		/// Invoked once before a new rendering process begin on this <see cref="PixelWorker"/>.
 		/// </summary>
-		public abstract void BeforeRender(RenderProfile profile);
+		public void BeforeRender(RenderProfile profile) => SourceDistribution = CreateDistribution(profile);
 
 		/// <summary>
 		/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Render"/>.
@@ -39,6 +38,13 @@ namespace EchoRenderer.Rendering.Pixels
 		/// </param>
 		/// <param name="arena">The <see cref="Arena"/> to use for this sample.</param>
 		public abstract Sample Render(Float2 uv, Arena arena);
+
+		/// <summary>
+		/// Invoked once before a new rendering process begins on this <see cref="PixelWorker"/>.
+		/// Can be used to prepare the worker for future invocations to <see cref="Render"/>.
+		/// Should create and return a source <see cref="Distribution"/> that will be used.
+		/// </summary>
+		protected virtual Distribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
 
 		/// <summary>
 		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit
