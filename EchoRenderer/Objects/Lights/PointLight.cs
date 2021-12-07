@@ -1,5 +1,5 @@
 using CodeHelpers.Mathematics;
-using EchoRenderer.Rendering.Sampling;
+using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Objects.Lights
 {

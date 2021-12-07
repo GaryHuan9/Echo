@@ -2,7 +2,7 @@
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Rendering.Sampling
+namespace EchoRenderer.Rendering.Distributions
 {
 	public class StratifiedDistribution : LimitedDistribution
 	{
