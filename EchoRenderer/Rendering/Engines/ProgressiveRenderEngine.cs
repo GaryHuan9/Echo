@@ -137,6 +137,8 @@ namespace EchoRenderer.Rendering.Engines
 			Arena arena = threadArena.Value;
 			double sampleCount = profile.EpochSample;
 
+			//TODO: switch from progressive epoch sampling to regular pixel sampling after scene stopped changing
+
 			if (Epoch > profile.EpochLength)
 			{
 				sampleCount += profile.AdaptiveSample;

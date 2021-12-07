@@ -29,6 +29,21 @@ namespace EchoRenderer.Rendering.Profiles
 		public RenderBuffer RenderBuffer { get; init; }
 
 		/// <summary>
+		/// The minimum (i.e. base) number of consecutive samples performed on each pixel.
+		/// </summary>
+		public int PixelSample { get; init; }
+
+		/// <summary>
+		/// The number of additional samples that can be performed on each pixel if its variance is still higher than the desired amount.
+		/// </summary>
+		public int AdaptiveSample { get; init; }
+
+		/// <summary>
+		/// The maximum number of consecutive samples that can be done on one pixel.
+		/// </summary>
+		public int TotalSample => PixelSample + AdaptiveSample;
+
+		/// <summary>
 		/// The maximum number of worker threads concurrently running.
 		/// </summary>
 		public int WorkerSize { get; init; } = Environment.ProcessorCount;
@@ -44,11 +59,6 @@ namespace EchoRenderer.Rendering.Profiles
 		public Float3 EnergyEpsilon { get; init; } = Utilities.ToFloat3(Utilities.CreateLuminance(12E-3f));
 
 		/// <summary>
-		/// The minimum number of consecutive samples performed on each pixel.
-		/// </summary>
-		public abstract int BaseSample { get; }
-
-		/// <summary>
 		/// Returns whether <paramref name="energy"/> is considered as empty or zero
 		/// based on the <see cref="EnergyEpsilon"/> of this <see cref="RenderProfile"/>.
 		/// </summary>
@@ -59,6 +69,9 @@ namespace EchoRenderer.Rendering.Profiles
 			if (Scene == null) throw ExceptionHelper.Invalid(nameof(Scene), InvalidType.isNull);
 			if (Method == null) throw ExceptionHelper.Invalid(nameof(Method), InvalidType.isNull);
 			if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), InvalidType.isNull);
+
+			if (PixelSample <= 0) throw ExceptionHelper.Invalid(nameof(PixelSample), PixelSample, InvalidType.outOfBounds);
+			if (AdaptiveSample < 0) throw ExceptionHelper.Invalid(nameof(AdaptiveSample), AdaptiveSample, InvalidType.outOfBounds);
 
 			if (WorkerSize <= 0) throw ExceptionHelper.Invalid(nameof(WorkerSize), WorkerSize, InvalidType.outOfBounds);
 			if (BounceLimit < 0) throw ExceptionHelper.Invalid(nameof(BounceLimit), BounceLimit, InvalidType.outOfBounds);

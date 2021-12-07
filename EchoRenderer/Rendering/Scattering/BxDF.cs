@@ -26,8 +26,8 @@ namespace EchoRenderer.Rendering.Scattering
 		public abstract Float3 Sample(in Float3 outgoing, in Float3 incident);
 
 		/// <summary>
-		/// Samples and returns the value of the distribution function from <paramref name="outgoing"/>, and outputs
-		/// the scattering direction to <paramref name="incident"/>. Used by delta distributions (eg. perfect specular)
+		/// Samples and returns the value of the distribution function from <paramref name="outgoing"/>, and outputs the scattering
+		/// direction to <paramref name="incident"/>. Should be overriden by delta distribution functions (eg. perfect specular)
 		/// </summary>
 		public virtual Float3 Sample(in Float3 outgoing, in Distro2 distro, out Float3 incident, out float pdf)
 		{
