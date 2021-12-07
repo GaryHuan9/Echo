@@ -4,7 +4,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Randomization;
 
-namespace EchoRenderer.Rendering.Sampling
+namespace EchoRenderer.Rendering.Distributions
 {
 	public abstract class Distribution
 	{

@@ -4,7 +4,7 @@ using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Rendering.Sampling;
+using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Rendering.Pixels
 {

@@ -1,4 +1,4 @@
-﻿namespace EchoRenderer.Rendering.Sampling
+﻿namespace EchoRenderer.Rendering.Distributions
 {
 	public abstract class LimitedDistribution : Distribution
 	{

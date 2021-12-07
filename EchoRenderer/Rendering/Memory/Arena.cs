@@ -2,7 +2,7 @@
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Rendering.Sampling;
+using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Rendering.Memory
 {

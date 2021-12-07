@@ -3,7 +3,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Rendering.Sampling;
+using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Rendering.Scattering
 {
