@@ -6,7 +6,7 @@ using EchoRenderer.Mathematics;
 namespace EchoRenderer.Rendering.Distributions
 {
 	/// <summary>
-	/// A two dimensional distribution between zero (inclusive) and one (exclusive)
+	/// A sample on a two dimensional distribution between zero (inclusive) and one (exclusive)
 	/// </summary>
 	public readonly struct Distro2
 	{
