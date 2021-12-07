@@ -10,13 +10,9 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class DirectLightingWorker : PixelWorker
 	{
-		Distribution sourceDistribution;
-
 		public override void BeforeRender(RenderProfile profile)
 		{
-			base.BeforeRender(profile);
-
-			sourceDistribution = new UniformDistribution(profile.BaseSample);
+			SourceDistribution = new UniformDistribution(profile.TotalSample);
 
 			for (int i = 0; i < profile.BounceLimit; i++)
 			{
@@ -24,21 +20,23 @@ namespace EchoRenderer.Rendering.Pixels
 				{
 					int count = light.SampleCount;
 
-					sourceDistribution.RequestSpanTwo(count);
-					sourceDistribution.RequestSpanTwo(count);
+					SourceDistribution.RequestSpanTwo(count); //Request span for reflectance
+					SourceDistribution.RequestSpanTwo(count); //Request span for transmittance
 				}
 			}
 		}
 
-		public override Arena CreateArena(RenderProfile profile, uint seed) => new(profile)
-																			   {
-																				   Distribution = sourceDistribution,
-																				   Random = new SystemRandom(seed)
-																			   };
+		public override Arena CreateArena(RenderProfile profile, uint seed)
+		{
+			Arena arena = base.CreateArena(profile, seed);
+			arena.Random = new SystemRandom(seed);
+			return arena;
+		}
 
 		public override Sample Render(Float2 uv, Arena arena)
 		{
 			throw new NotImplementedException();
 		}
+
 	}
 }

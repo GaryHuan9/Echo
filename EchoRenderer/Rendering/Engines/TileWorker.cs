@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures.DimensionTwo;
@@ -20,26 +21,10 @@ namespace EchoRenderer.Rendering.Engines
 		{
 			id = Interlocked.Increment(ref workerIdAccumulator);
 			size = profile.TileSize;
+			this.profile = profile;
 
 			renderBuffer = profile.RenderBuffer;
 			pixelWorker = profile.Method;
-
-			pixelSample = profile.PixelSample;
-			adaptiveSample = profile.AdaptiveSample;
-
-			//Create golden ratio square spiral offsets
-			spiralOffsets = new Float2[pixelSample];
-
-			for (int i = 0; i < spiralOffsets.Length; i++)
-			{
-				float theta = Scalars.TAU * Scalars.GoldenRatio * i;
-				Float2 offset = new Float2(MathF.Cos(theta), MathF.Sin(theta));
-
-				float square = Math.Abs(MathF.Cos(theta + Scalars.PI / 4)) + Math.Abs(MathF.Sin(theta + Scalars.PI / 4));
-				float radius = MathF.Sqrt((i + 0.5f) / spiralOffsets.Length) * Scalars.Sqrt2 / square / 2f;
-
-				spiralOffsets[i] = offset * radius + Float2.half;
-			}
 
 			//Allocate thread
 			worker = new Thread(WorkThread)
@@ -55,12 +40,10 @@ namespace EchoRenderer.Rendering.Engines
 
 		readonly int id;
 		readonly int size;
+		readonly TiledRenderProfile profile;
 
 		readonly RenderBuffer renderBuffer;
 		readonly PixelWorker pixelWorker;
-
-		readonly int pixelSample;
-		readonly int adaptiveSample;
 
 		int _renderOffsetX;
 		int _renderOffsetY;
@@ -82,11 +65,6 @@ namespace EchoRenderer.Rendering.Engines
 
 		readonly Thread worker;
 		readonly Arena arena;
-
-		/// <summary>
-		/// Offset applied to each pixel during regular pixel sampling.
-		/// </summary>
-		readonly Float2[] spiralOffsets;
 
 		readonly ManualResetEventSlim dispatchEvent = new(); //Event sets when the worker is dispatched
 		public bool Working => dispatchEvent.IsSet;
@@ -161,30 +139,35 @@ namespace EchoRenderer.Rendering.Engines
 			RenderPixel pixel = new RenderPixel();
 
 			//Regular pixel sampling
-			for (int i = 0; i < pixelSample; i++) Sample(spiralOffsets[i]);
+			Sample(profile.PixelSample);
 
-			//Change to adaptive sampling
-			int sampleCount = (int)(pixel.Deviation * adaptiveSample);
-			for (int i = 0; i < sampleCount; i++) Sample(arena.Random.NextSample());
+			//Adaptive sampling (temporary)
+			float deviation = (float)pixel.Deviation.Clamp();
+			Sample((int)(deviation * profile.AdaptiveSample));
 
 			//Store pixel
 			pixel.Store(renderBuffer, position);
 			Interlocked.Increment(ref _completedPixel);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			void Sample(Float2 offset)
+			void Sample(int count)
 			{
-				//Sample color
-				Float2 uv = (position + offset) / renderBuffer.size - Float2.half;
-				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), arena);
+				for (int i = 0; i < count; i++)
+				{
+					Float2 offset = arena.distribution.NextTwo().u;
 
-				arena.allocator.Release();
+					//Sample radiance
+					Float2 uv = (position + offset) / renderBuffer.size - Float2.half;
+					var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), arena);
 
-				//Write to pixel
-				bool successful = pixel.Accumulate(sample);
-				Interlocked.Increment(ref _completedSample);
+					arena.allocator.Release();
 
-				if (!successful) Interlocked.Increment(ref _rejectedSample);
+					//Write to pixel
+					bool successful = pixel.Accumulate(sample);
+					Interlocked.Increment(ref _completedSample);
+
+					if (!successful) Interlocked.Increment(ref _rejectedSample);
+				}
 			}
 		}
 

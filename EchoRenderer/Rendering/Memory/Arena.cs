@@ -1,5 +1,4 @@
-﻿using System;
-using CodeHelpers.Diagnostics;
+﻿using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Rendering.Distributions;
@@ -16,26 +15,20 @@ namespace EchoRenderer.Rendering.Memory
 		/// <summary>
 		/// Creates a new <see cref="Arena"/>.
 		/// </summary>
-		public Arena(RenderProfile profile) => this.profile = profile;
-
-		public readonly RenderProfile profile;
-		public readonly Allocator allocator = new();
-
-		Distribution distribution;
-		IRandom _random;
-
-		public Distribution Distribution
+		public Arena(RenderProfile profile, Distribution distribution)
 		{
-			get => distribution;
-			set
-			{
-				Assert.IsNotNull(distribution);
-				Assert.IsNotNull(value);
+			Assert.IsNotNull(profile);
+			Assert.IsNotNull(distribution);
 
-				distribution = value.Replicate();
-				distribution.PRNG = _random;
-			}
+			this.profile = profile;
+			this.distribution = distribution;
 		}
+
+		public readonly Allocator allocator = new();
+		public readonly RenderProfile profile;
+		public readonly Distribution distribution;
+
+		IRandom _random;
 
 		public IRandom Random
 		{
@@ -46,7 +39,7 @@ namespace EchoRenderer.Rendering.Memory
 				Assert.IsNotNull(value);
 
 				_random = value;
-				if (distribution != null) distribution.PRNG = value;
+				distribution.PRNG = value;
 			}
 		}
 	}

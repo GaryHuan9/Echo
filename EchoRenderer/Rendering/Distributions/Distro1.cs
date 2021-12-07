@@ -3,7 +3,7 @@
 namespace EchoRenderer.Rendering.Distributions
 {
 	/// <summary>
-	/// A one dimensional distribution between zero (inclusive) and one (exclusive)
+	/// A sample on an one dimensional distribution between zero (inclusive) and one (exclusive)
 	/// </summary>
 	public readonly struct Distro1
 	{

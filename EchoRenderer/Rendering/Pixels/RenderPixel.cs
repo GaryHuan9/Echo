@@ -111,7 +111,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			[FieldOffset(0)] readonly Vector256<double> vector;
 
-			public double Average => (x + y + z) / 3f;
+			public double Average => (x + y + z) / 3d;
 
 			public unsafe Double3 Normalized
 			{
