@@ -2,6 +2,7 @@
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Randomization;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
@@ -10,7 +11,10 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class AlbedoPixelWorker : PixelWorker
 	{
-		public override Arena CreateArena(RenderProfile profile, uint seed) => new(profile) { Random = new SystemRandom(seed) };
+		public override void BeforeRender(RenderProfile profile)
+		{
+			SourceDistribution = new UniformDistribution(profile.TotalSample);
+		}
 
 		public override Sample Render(Float2 uv, Arena arena)
 		{

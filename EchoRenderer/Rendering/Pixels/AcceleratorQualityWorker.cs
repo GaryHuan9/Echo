@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Randomization;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
 
@@ -14,13 +15,11 @@ namespace EchoRenderer.Rendering.Pixels
 
 		public override void BeforeRender(RenderProfile profile)
 		{
-			base.BeforeRender(profile);
-
 			Interlocked.Exchange(ref totalCost, 0);
 			Interlocked.Exchange(ref totalSample, 0);
-		}
 
-		public override Arena CreateArena(RenderProfile profile, uint seed) => new(profile);
+			SourceDistribution = new UniformDistribution(profile.TotalSample) { Jitter = profile.TotalSample > 1 };
+		}
 
 		public override Sample Render(Float2 uv, Arena arena)
 		{
