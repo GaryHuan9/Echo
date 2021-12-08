@@ -1,6 +1,5 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Randomization;
 

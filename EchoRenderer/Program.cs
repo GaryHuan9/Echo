@@ -48,7 +48,7 @@ namespace EchoRenderer
 
 		static readonly TiledRenderProfile pathTraceFastProfile = new()
 																  {
-																	  Method = new PathTraceWorker(),
+																	  Method = new DirectLightingWorker(),
 																	  TilePattern = new CheckerboardPattern(),
 																	  PixelSample = 16,
 																	  AdaptiveSample = 80
@@ -138,7 +138,7 @@ namespace EchoRenderer
 			{
 				postProcess.AddWorker(new AcceleratorQualityVisualizer(postProcess)); //Only used for accelerator quality testing
 			}
-			else
+			else if (false) //Enable or disable post processing
 			{
 				if (renderProfile.Method is PathTraceWorker)
 				{

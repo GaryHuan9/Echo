@@ -68,11 +68,11 @@ namespace EchoRenderer.Rendering
 		public readonly Cubemap cubemap;
 		readonly Light[] lights;
 
-		long _intersections; //Intersection count
+		long _traceCount; //Intersection count
 
 		public ReadOnlySpan<Light> Lights => lights;
 
-		public long Intersections => Interlocked.Read(ref _intersections);
+		public long TraceCount => Interlocked.Read(ref _traceCount);
 
 		readonly PressedInstance rootInstance;
 
@@ -84,7 +84,7 @@ namespace EchoRenderer.Rendering
 			Assert.IsFalse(query.Hit);
 
 			rootInstance.TraceRoot(ref query);
-			Interlocked.Increment(ref _intersections);
+			Interlocked.Increment(ref _traceCount);
 			return query.Hit;
 		}
 
@@ -96,8 +96,8 @@ namespace EchoRenderer.Rendering
 		{
 			Assert.IsTrue(query.Hit);
 
-			var instance = presser.GetPressedPackInstance(query.token.instance);
-			return instance.pack.Interact(query, instance, out material);
+			var instance = presser.GetPressedPackInstance(query.token.FinalInstanceId);
+			return instance.pack.Interact(query, presser, instance, out material);
 		}
 
 		/// <summary>
@@ -121,6 +121,6 @@ namespace EchoRenderer.Rendering
 			return rootInstance.TraceCost(ray, ref distance);
 		}
 
-		public void ResetIntersectionCount() => Interlocked.Exchange(ref _intersections, 0);
+		public void ResetIntersectionCount() => Interlocked.Exchange(ref _traceCount, 0);
 	}
 }

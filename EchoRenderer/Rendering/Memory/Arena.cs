@@ -35,7 +35,7 @@ namespace EchoRenderer.Rendering.Memory
 			get => _random;
 			set
 			{
-				Assert.IsNotNull(_random);
+				Assert.IsNull(_random);
 				Assert.IsNotNull(value);
 
 				_random = value;

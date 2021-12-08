@@ -34,7 +34,7 @@ namespace EchoRenderer.Objects.Scenes
 		readonly int threadId;
 
 		readonly Dictionary<ObjectPack, Node> objectPacks = new();
-		readonly List<PressedInstance> packInstances = new() { null };
+		readonly List<PressedInstance> packInstances = new();
 
 		/// <summary>
 		/// Creates or retrieves and returns the <see cref="PressedPack"/> for <paramref name="pack"/>.
