@@ -26,7 +26,7 @@ namespace EchoRenderer.Rendering.Pixels
 			Float3 radiance = Float3.zero;
 			TraceQuery query = scene.camera.GetRay(uv);
 
-			return scene.Trace(ref query) ? scene.Interact(query, out _).normal : Float3.zero;
+			return scene.Trace(ref query) ? scene.Interact(query, out _).geometryNormal : Float3.zero;
 
 			// if (!scene.Trace(ref query))
 			// {
