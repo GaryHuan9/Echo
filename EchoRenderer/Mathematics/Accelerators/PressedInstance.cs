@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
@@ -95,12 +96,11 @@ namespace EchoRenderer.Mathematics.Accelerators
 		public void Trace(ref TraceQuery query)
 		{
 			var oldRay = query.ray;
-			var oldInstance = query.instance;
 
 			//Convert from parent space to local space
-			query.ray = TransformForward(query.ray);
+			TransformForward(ref query.ray);
 			query.distance *= forwardScale;
-			query.instance = this;
+			query.current.Push(this);
 
 			//Gets intersection from accelerator in local space
 			pack.accelerator.Trace(ref query);
@@ -108,7 +108,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			//Convert back to parent space
 			query.ray = oldRay;
 			query.distance *= inverseScale;
-			query.instance = oldInstance;
+			query.current.Pop();
 		}
 
 		/// <summary>
@@ -116,9 +116,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// </summary>
 		public void TraceRoot(ref TraceQuery query)
 		{
-			query.instance = this;
+			Assert.IsTrue(query.current.Equals(default));
 			pack.accelerator.Trace(ref query);
-			query.instance = null;
 		}
 
 		/// <summary>
@@ -130,7 +129,10 @@ namespace EchoRenderer.Mathematics.Accelerators
 			distance *= forwardScale;
 
 			//Gets intersection cost from bvh, calculation done in local space
-			int cost = pack.accelerator.TraceCost(TransformForward(ray), ref distance);
+			Ray transformed = ray;
+			TransformForward(ref transformed);
+
+			int cost = pack.accelerator.TraceCost(transformed, ref distance);
 
 			//Transforms distance back to parent space
 			distance *= inverseScale;
@@ -138,22 +140,23 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		/// <summary>
-		/// Applies this <see cref="PressedInstance"/>'s world/global transformation to <paramref name="direction"/>.
+		/// Transforms <paramref name="direction"/> from parent space to local space.
 		/// </summary>
-		public void ApplyWorldTransform(ref Float3 direction)
+		public void TransformForward(ref Float3 direction)
 		{
-			throw new NotImplementedException();
+			direction = forwardTransform.MultiplyDirection(direction);
+			direction *= inverseScale;
 		}
 
 		/// <summary>
-		/// Transforms <paramref name="ray"/> from parent to local space and returns the new ray.
+		/// Transforms <paramref name="ray"/> from parent to local space.
 		/// </summary>
-		Ray TransformForward(in Ray ray)
+		void TransformForward(ref Ray ray)
 		{
 			Float3 origin = forwardTransform.MultiplyPoint(ray.origin);
 			Float3 direction = forwardTransform.MultiplyDirection(ray.direction);
 
-			return new Ray(origin, direction * inverseScale);
+			ray = new Ray(origin, direction * inverseScale);
 		}
 	}
 }

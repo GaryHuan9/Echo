@@ -159,10 +159,10 @@ namespace EchoRenderer.Mathematics.Accelerators
 			{
 				if (distance >= hit.distance) return false;
 
-				GeometryToken geometryToken = new GeometryToken(hit.instance, token);
-				if (distance < DistanceMin && hit.previous == geometryToken) return false;
+				hit.current.geometry = token;
+				if (distance < DistanceMin && hit.previous.Equals(hit.current)) return false;
 
-				hit.token = geometryToken;
+				hit.token = hit.current;
 				hit.distance = distance;
 
 				return true;
@@ -202,44 +202,47 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// Begins interacting with the result of <paramref name="query"/> by returning
 		/// the <see cref="Interaction"/> and outputting the <paramref name="material"/>.
 		/// </summary>
-		public Interaction Interact(in TraceQuery query, PressedInstance instance, out Material material)
+		public Interaction Interact(in TraceQuery query, ScenePresser presser, PressedInstance instance, out Material material)
 		{
-			uint token = query.token.geometry;
+			uint geometry = query.token.geometry;
 
-			Assert.IsTrue(token < NodeThreshold);
+			Assert.IsTrue(geometry < NodeThreshold);
 			Assert.AreEqual(instance.pack, this);
-			Assert.AreEqual(instance.id, query.token.instance);
+
+			Span<uint> instanceIds = stackalloc uint[ObjectPack.MaxLayer];
+			int instanceCount = query.token.FillInstanceIds(instanceIds);
+			instanceIds = instanceIds[..instanceCount];
 
 			int materialToken;
 			Float3 geometryNormal;
 			Float3 normal;
 			Float2 texcoord;
 
-			switch (token)
+			switch (geometry)
 			{
 				case >= TrianglesThreshold:
 				{
-					ref readonly var triangle = ref triangles[token - TrianglesThreshold];
+					ref readonly var triangle = ref triangles[geometry - TrianglesThreshold];
 
 					materialToken = triangle.materialToken;
 					geometryNormal = triangle.GeometryNormal;
 					normal = triangle.GetNormal(query.uv);
 					texcoord = triangle.GetTexcoord(query.uv);
 
-					instance.ApplyWorldTransform(ref geometryNormal);
-					instance.ApplyWorldTransform(ref normal);
+					ApplyWorldTransform(instanceIds, ref geometryNormal);
+					ApplyWorldTransform(instanceIds, ref normal);
 
 					break;
 				}
 				case >= SpheresThreshold:
 				{
-					ref readonly var sphere = ref spheres[token - SpheresThreshold];
+					ref readonly var sphere = ref spheres[geometry - SpheresThreshold];
 
 					materialToken = sphere.materialToken;
 					texcoord = query.uv; //Sphere directly uses the uv as texcoord
 
 					normal = PressedSphere.GetGeometryNormal(query.uv);
-					instance.ApplyWorldTransform(ref normal);
+					ApplyWorldTransform(instanceIds, ref normal);
 					geometryNormal = normal;
 
 					break;
@@ -252,6 +255,12 @@ namespace EchoRenderer.Mathematics.Accelerators
 			material = instance.mapper[materialToken];
 			material.ApplyNormalMapping(texcoord, ref normal);
 			return new Interaction(query, geometryNormal, normal, texcoord);
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			void ApplyWorldTransform(ReadOnlySpan<uint> ids, ref Float3 direction)
+			{
+				foreach (uint id in ids) presser.GetPressedPackInstance(id).TransformForward(ref direction);
+			}
 		}
 
 		/// <summary>

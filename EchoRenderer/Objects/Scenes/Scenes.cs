@@ -7,14 +7,18 @@ using EchoRenderer.Textures.Cubemaps;
 
 namespace EchoRenderer.Objects.Scenes
 {
-	public class SingleBunny : StandardScene
+	public class SingleBunny : Scene
 	{
 		public SingleBunny()
 		{
 			var mesh = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
-			var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
+			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
+			var material = new Matte();
 
-			children.Add(new MeshObject(mesh, materials) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
+			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
+
+			// children.Add(new MeshObject(mesh, materials) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
+			children.Add(new MeshObject(mesh, material) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 		}
 	}
 
