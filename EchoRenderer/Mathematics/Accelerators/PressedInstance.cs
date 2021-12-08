@@ -140,12 +140,12 @@ namespace EchoRenderer.Mathematics.Accelerators
 		}
 
 		/// <summary>
-		/// Transforms <paramref name="direction"/> from parent space to local space.
+		/// Transforms <paramref name="direction"/> from local space to parent space.
+		/// NOTE: this might apply a uniformed scaling to <paramref name="direction"/>.
 		/// </summary>
-		public void TransformForward(ref Float3 direction)
+		public void TransformInverse(ref Float3 direction)
 		{
-			direction = forwardTransform.MultiplyDirection(direction);
-			direction *= inverseScale;
+			direction = inverseTransform.MultiplyDirection(direction);
 		}
 
 		/// <summary>
