@@ -209,10 +209,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 			Assert.IsTrue(geometry < NodeThreshold);
 			Assert.AreEqual(instance.pack, this);
 
-			Span<uint> instanceIds = stackalloc uint[ObjectPack.MaxLayer];
-			int instanceCount = query.token.FillInstanceIds(instanceIds);
-			instanceIds = instanceIds[..instanceCount];
-
 			int materialToken;
 			Float3 geometryNormal;
 			Float3 normal;
@@ -229,8 +225,8 @@ namespace EchoRenderer.Mathematics.Accelerators
 					normal = triangle.GetNormal(query.uv);
 					texcoord = triangle.GetTexcoord(query.uv);
 
-					ApplyWorldTransform(instanceIds, ref geometryNormal);
-					ApplyWorldTransform(instanceIds, ref normal);
+					query.token.ApplyWorldTransform(presser, ref geometryNormal);
+					query.token.ApplyWorldTransform(presser, ref normal);
 
 					break;
 				}
@@ -242,7 +238,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 					texcoord = query.uv; //Sphere directly uses the uv as texcoord
 
 					normal = PressedSphere.GetGeometryNormal(query.uv);
-					ApplyWorldTransform(instanceIds, ref normal);
+					query.token.ApplyWorldTransform(presser, ref normal);
 					geometryNormal = normal;
 
 					break;
@@ -255,12 +251,6 @@ namespace EchoRenderer.Mathematics.Accelerators
 			material = instance.mapper[materialToken];
 			material.ApplyNormalMapping(texcoord, ref normal);
 			return new Interaction(query, geometryNormal, normal, texcoord);
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			void ApplyWorldTransform(ReadOnlySpan<uint> ids, ref Float3 direction)
-			{
-				foreach (uint id in ids) presser.GetPressedPackInstance(id).TransformForward(ref direction);
-			}
 		}
 
 		/// <summary>
