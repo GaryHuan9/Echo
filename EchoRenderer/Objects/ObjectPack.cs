@@ -32,6 +32,12 @@ namespace EchoRenderer.Objects
 			}
 		}
 
+		/// <summary>
+		/// The maximum number of instanced layers allowed (excluding the root).
+		/// This number can be increased if needed at a performance penalty.
+		/// </summary>
+		public const int MaxLayer = 6;
+
 		static void ThrowModifyTransformException() => throw new Exception($"Cannot modify {nameof(ObjectPack)} transform!");
 	}
 }

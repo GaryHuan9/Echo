@@ -23,21 +23,22 @@ namespace EchoRenderer.Rendering.Pixels
 			RenderProfile profile = arena.profile;
 			PressedScene scene = profile.Scene;
 
-			int bounce = 0;
+			Float3 radiance = Float3.zero;
+			TraceQuery query = scene.camera.GetRay(uv);
 
-			TraceQuery query = new TraceQuery();
+			return scene.Trace(ref query) ? scene.Interact(query, out _).normal : Float3.zero;
 
-			while (bounce < profile.BounceLimit && scene.Trace(ref query))
-			{
-
-			}
+			// if (!scene.Trace(ref query))
+			// {
+			// 	scene.Interact()
+			// }
 
 			throw new NotImplementedException();
 		}
 
 		protected override Distribution CreateDistribution(RenderProfile profile)
 		{
-			var distribution =  new UniformDistribution(profile.TotalSample);
+			var distribution = new UniformDistribution(profile.TotalSample);
 
 			for (int i = 0; i < profile.BounceLimit; i++)
 			{

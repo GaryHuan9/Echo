@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures.DimensionTwo;

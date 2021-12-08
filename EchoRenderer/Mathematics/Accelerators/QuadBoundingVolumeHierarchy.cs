@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Mathematics.Accelerators

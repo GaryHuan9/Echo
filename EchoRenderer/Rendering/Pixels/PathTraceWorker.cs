@@ -1,7 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Randomization;
-using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
@@ -63,13 +62,13 @@ namespace EchoRenderer.Rendering.Pixels
 				colors += energy * emission;
 				energy *= albedo;
 
-				if (energy <= profile.EnergyEpsilon) break;
+				if (energy <= profile.RadianceEpsilon) break;
 				query = query.Next(incidentWorld);
 			}
 
 #if DEBUG
 			//The bounce limit is supposed to be significantly higher than the average bounce count
-			if (bounce >= Profile.BounceLimit) CodeHelpers.Diagnostics.DebugHelper.Log("Bounce limit reached!");
+			if (bounce >= profile.BounceLimit) CodeHelpers.Diagnostics.DebugHelper.Log("Bounce limit reached!");
 #endif
 
 			var cubemap = scene.cubemap;
