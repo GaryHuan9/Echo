@@ -1,8 +1,5 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics;
-using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures.Cubemaps;
 

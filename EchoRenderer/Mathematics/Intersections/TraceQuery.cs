@@ -1,6 +1,5 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Accelerators;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -14,10 +13,10 @@ namespace EchoRenderer.Mathematics.Intersections
 			this.ray = ray;
 			this.previous = previous;
 
-			instance = null;
+			current = default;
+			token = default;
 			distance = float.PositiveInfinity;
 			uv = default;
-			token = default;
 		}
 
 		/// <summary>
@@ -33,10 +32,16 @@ namespace EchoRenderer.Mathematics.Intersections
 		public readonly GeometryToken previous;
 
 		/// <summary>
-		/// Used during intersection test. Assigned to the <see cref="PressedInstance"/> that the
-		/// query is currently travelling through and assigned to null once the test is concluded
+		/// Used during intersection test; undefined after the test is concluded (do not use upon completion).
+		/// Records the intermediate instancing layers as the query travels through the scene and geometries.
 		/// </summary>
-		public PressedInstance instance;
+		public GeometryToken current;
+
+		/// <summary>
+		/// After tracing completes, this field will be assigned the <see cref="GeometryToken"/>
+		/// of the intersected surface. NOTE: if no intersection occurs, this field is undefined.
+		/// </summary>
+		public GeometryToken token;
 
 		/// <summary>
 		/// After tracing completes, this field will be assigned the distance of the intersection to the <see cref="ray"/> origin.
@@ -49,12 +54,6 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// parametrization of the intersected surface. NOTE: if no intersection occurs, this field is undefined.
 		/// </summary>
 		public Float2 uv;
-
-		/// <summary>
-		/// After tracing completes, this field will be assigned the <see cref="GeometryToken"/>
-		/// of the intersected surface. NOTE: if no intersection occurs, this field is undefined.
-		/// </summary>
-		public GeometryToken token;
 
 		/// <summary>
 		/// Returns whether this <see cref="TraceQuery"/> has intersected with anything.

@@ -18,7 +18,7 @@ namespace EchoRenderer.Terminals
 			statusGrid[0][1] = "Tile";
 			statusGrid[0][2] = "Pixel";
 			statusGrid[0][3] = "Sample";
-			statusGrid[0][4] = "Intersection";
+			statusGrid[0][4] = "Trace";
 
 			statusGrid[1][0] = "Per Second";
 			statusGrid[2][0] = "Total Done";
@@ -122,7 +122,7 @@ namespace EchoRenderer.Terminals
 			numbers[0] = Engine.CompletedTileCount;
 			numbers[1] = Engine.CompletedPixel;
 			numbers[2] = Engine.CompletedSample;
-			numbers[3] = Engine.CurrentProfile.Scene.Intersections;
+			numbers[3] = Engine.CurrentProfile.Scene.TraceCount;
 
 			for (int x = 1; x < gridSize.x; x++)
 			{

@@ -54,15 +54,15 @@ namespace EchoRenderer.Rendering.Profiles
 		public int BounceLimit { get; init; } = 128;
 
 		/// <summary>
-		/// Epsilon lower bound value to determine when an energy is essentially zero.
+		/// Epsilon lower bound value to determine when a radiance is essentially zero.
 		/// </summary>
-		public Float3 EnergyEpsilon { get; init; } = Utilities.ToFloat3(Utilities.CreateLuminance(12E-3f));
+		public Float3 RadianceEpsilon { get; init; } = Utilities.ToFloat3(Utilities.CreateLuminance(12E-3f));
 
 		/// <summary>
-		/// Returns whether <paramref name="energy"/> is considered as empty or zero
-		/// based on the <see cref="EnergyEpsilon"/> of this <see cref="RenderProfile"/>.
+		/// Returns whether <paramref name="radiance"/> is considered as empty or zero
+		/// based on the <see cref="RadianceEpsilon"/> of this <see cref="RenderProfile"/>.
 		/// </summary>
-		public bool IsZero(in Float3 energy) => energy <= EnergyEpsilon;
+		public bool IsZero(in Float3 radiance) => radiance <= RadianceEpsilon;
 
 		public virtual void Validate()
 		{
@@ -75,7 +75,7 @@ namespace EchoRenderer.Rendering.Profiles
 
 			if (WorkerSize <= 0) throw ExceptionHelper.Invalid(nameof(WorkerSize), WorkerSize, InvalidType.outOfBounds);
 			if (BounceLimit < 0) throw ExceptionHelper.Invalid(nameof(BounceLimit), BounceLimit, InvalidType.outOfBounds);
-			if (EnergyEpsilon.MinComponent < 0f) throw ExceptionHelper.Invalid(nameof(EnergyEpsilon), EnergyEpsilon, InvalidType.outOfBounds);
+			if (RadianceEpsilon.MinComponent < 0f) throw ExceptionHelper.Invalid(nameof(RadianceEpsilon), RadianceEpsilon, InvalidType.outOfBounds);
 		}
 	}
 }

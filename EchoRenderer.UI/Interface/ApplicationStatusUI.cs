@@ -36,8 +36,8 @@ namespace EchoRenderer.UI.Interface
 			}
 			else if (engine.CurrentState == ProgressiveRenderEngine.State.rendering)
 			{
-				long intersection = engine.CurrentProfile.Scene.Intersections;
-				double rate = intersection / engine.Elapsed.TotalSeconds;
+				long traceCount = engine.CurrentProfile.Scene.TraceCount;
+				double rate = traceCount / engine.Elapsed.TotalSeconds;
 
 				builder.Append($"Rate: {rate:F2}");
 				AppendGap();
