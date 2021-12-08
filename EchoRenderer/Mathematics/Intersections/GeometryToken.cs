@@ -1,7 +1,9 @@
 ﻿using System;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Objects;
+using EchoRenderer.Objects.Scenes;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -50,17 +52,18 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
-		/// Fills <paramref name="span"/> with all the id of all the <see cref="PressedInstance"/> that is required to reach this <see cref="geometry"/>.
+		/// Applies the local space to world space transform of <see cref="geometry"/> to <paramref name="direction"/>.
 		/// </summary>
-		public readonly int FillInstanceIds(Span<uint> span)
+		public readonly void ApplyWorldTransform(ScenePresser presser, ref Float3 direction)
 		{
-			Assert.IsTrue(span.Length >= instanceCount);
-			for (int i = 0; i < instanceCount; i++)
+			for (int i = instanceCount - 1; i >= 0; i--)
 			{
-				span[i] = instances[i];
+				uint id = instances[i];
+				var instance = presser.GetPressedPackInstance(id);
+				instance.TransformInverse(ref direction);
 			}
 
-			return instanceCount;
+			direction = direction.Normalized;
 		}
 
 		/// <summary>
