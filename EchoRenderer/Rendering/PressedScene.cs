@@ -95,8 +95,9 @@ namespace EchoRenderer.Rendering
 		public Interaction Interact(in TraceQuery query, out Material material)
 		{
 			Assert.IsTrue(query.Hit);
+			ref readonly var token = ref query.token;
 
-			var instance = presser.GetPressedPackInstance(query.token.FinalInstanceId);
+			var instance = token.InstanceCount == 0 ? rootInstance : presser.GetPressedPackInstance(token.FinalInstanceId);
 			return instance.pack.Interact(query, presser, instance, out material);
 		}
 

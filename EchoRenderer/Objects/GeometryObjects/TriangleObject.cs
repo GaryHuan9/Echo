@@ -167,7 +167,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// <summary>
 		/// Returns the geometric normal of this <see cref="PressedTriangle"/>.
 		/// </summary>
-		public Float3 GeometryNormal => Float3.Cross(edge1, edge2);
+		public Float3 GeometryNormal => Float3.Cross(edge1, edge2).Normalized;
 
 		const float Epsilon = 1E-7f; //Tiny number used to check for zero
 		const float Margin = 0f;     //Used to easily differentiate adjacent triangles by creating an outline effect
