@@ -186,6 +186,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			return head;
 		}
 
+		[SkipLocalsInit]
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 		unsafe void Traverse(ref TraceQuery query)
 		{
