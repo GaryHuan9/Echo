@@ -27,6 +27,7 @@ namespace EchoRenderer.Rendering.Memory
 		public readonly Allocator allocator = new();
 		public readonly RenderProfile profile;
 		public readonly Distribution distribution;
+		public PressedScene Scene => profile.Scene;
 
 		IRandom _random;
 

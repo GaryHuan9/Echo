@@ -104,7 +104,7 @@ namespace EchoRenderer
 
 			RenderBuffer buffer = new RenderBuffer(resolutions[2]);  //Selects resolution and create buffer
 			TiledRenderProfile renderProfile = pathTraceFastProfile; //Selects or creates render profile
-			Scene scene = new TestInstancing();                      //Selects or creates scene
+			Scene scene = new SingleBunny();                         //Selects or creates scene
 
 			DebugHelper.Log("Assets loaded");
 
