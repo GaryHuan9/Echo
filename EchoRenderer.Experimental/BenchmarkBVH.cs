@@ -86,14 +86,18 @@ namespace EchoRenderer.Experimental
 		// | GetIntersection |     Regular | 61.47 ms | 0.581 ms | 0.543 ms |
 
 		[Benchmark]
-		public void GetIntersection()
+		public bool GetIntersection()
 		{
+			bool result = default;
+
 			for (int i = 0; i < queries.Length; i++)
 			{
-				ref TraceQuery query = ref queries[i];
-				CurrentPair.scene.Trace(ref query);
-				query.distance = float.PositiveInfinity;
+				ref readonly TraceQuery old = ref queries[i];
+				TraceQuery query = old;
+				result ^= CurrentPair.scene.Trace(ref query);
 			}
+
+			return result;
 		}
 
 		public readonly struct Pair
