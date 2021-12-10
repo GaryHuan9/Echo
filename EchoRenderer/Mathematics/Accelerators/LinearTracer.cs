@@ -7,7 +7,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 	/// <summary>
 	/// A simple linear search trace finder.
 	/// </summary>
-	public class LinearTracer : TraceAccelerator
+	public class LinearTracer : Accelerator
 	{
 		public LinearTracer(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens) { }
 
