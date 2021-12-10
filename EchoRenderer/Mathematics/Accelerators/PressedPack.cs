@@ -160,7 +160,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				if (distance >= hit.distance) return false;
 
 				hit.current.geometry = token;
-				if (distance < DistanceMin && hit.previous.Equals(hit.current)) return false;
+				if (distance < DistanceMin && hit.ignore.Equals(hit.current)) return false;
 
 				hit.token = hit.current;
 				hit.distance = distance;

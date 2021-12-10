@@ -81,11 +81,23 @@ namespace EchoRenderer.Rendering
 		/// </summary>
 		public bool Trace(ref TraceQuery query)
 		{
-			Assert.IsFalse(query.Hit);
+			float original = query.distance;
 
 			rootInstance.TraceRoot(ref query);
 			Interlocked.Increment(ref _traceCount);
-			return query.Hit;
+			return query.distance < original;
+		}
+
+		/// <summary>
+		/// Processes the <paramref name="query"/> and returns whether it is occluded by something.
+		/// </summary>
+		public bool Occlude(ref OccludeQuery query)
+		{
+			//TODO: We need a separate implementation that calculates intersection with any geometry (occlusion: boolean true/false return)
+			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
+
+			var traceQuery = new TraceQuery(query.ray, query.travel, query.ignore);
+			return Trace(ref traceQuery) && traceQuery.distance < query.travel;
 		}
 
 		/// <summary>
@@ -94,23 +106,11 @@ namespace EchoRenderer.Rendering
 		/// </summary>
 		public Interaction Interact(in TraceQuery query, out Material material)
 		{
-			Assert.IsTrue(query.Hit);
+			query.AssertHit();
 			ref readonly var token = ref query.token;
 
 			var instance = token.InstanceCount == 0 ? rootInstance : presser.GetPressedPackInstance(token.FinalInstanceId);
 			return instance.pack.Interact(query, presser, instance, out material);
-		}
-
-		/// <summary>
-		/// Returns whether <paramref name="ray"/> traveling <paramref name="distance"/> will be occluded.
-		/// </summary>
-		public bool Occlude(in Ray ray, float distance)
-		{
-			//TODO: We need a separate implementation that calculates intersection with any geometry (occlusion: boolean true/false return)
-			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
-
-			var query = new TraceQuery(ray);
-			return Trace(ref query) && query.distance <= distance;
 		}
 
 		/// <summary>
