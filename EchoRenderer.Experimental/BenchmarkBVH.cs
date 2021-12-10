@@ -85,6 +85,12 @@ namespace EchoRenderer.Experimental
 		// | GetIntersection |        Quad | 42.93 ms | 0.192 ms | 0.170 ms |
 		// | GetIntersection |     Regular | 61.47 ms | 0.581 ms | 0.543 ms |
 
+		// New intersection system only calculating distance and uv without auxiliary data
+		// |          Method | CurrentPair |     Mean |    Error |   StdDev |
+		// |---------------- |------------ |---------:|---------:|---------:|
+		// | GetIntersection |        Quad | 40.81 ms | 0.297 ms | 0.248 ms |
+		// | GetIntersection |     Regular | 59.21 ms | 0.289 ms | 0.270 ms |
+
 		[Benchmark]
 		public bool GetIntersection()
 		{
@@ -92,8 +98,8 @@ namespace EchoRenderer.Experimental
 
 			for (int i = 0; i < queries.Length; i++)
 			{
-				ref readonly TraceQuery old = ref queries[i];
-				TraceQuery query = old;
+				ref readonly TraceQuery source = ref queries[i];
+				TraceQuery query = source;
 				result ^= CurrentPair.scene.Trace(ref query);
 			}
 

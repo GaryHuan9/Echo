@@ -22,6 +22,7 @@ namespace EchoRenderer.Rendering.Profiles
 		public TraceAccelerator CreateAccelerator(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
 		{
 			if (AcceleratorType == typeof(LinearTracer)) return new LinearTracer(pack, aabbs, tokens);
+			if (AcceleratorType == typeof(BoundingVolumeHierarchy)) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
 			if (AcceleratorType == typeof(QuadBoundingVolumeHierarchy)) return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
 
 			return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
