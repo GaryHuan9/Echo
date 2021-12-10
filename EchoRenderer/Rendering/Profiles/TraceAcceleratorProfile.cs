@@ -9,17 +9,17 @@ namespace EchoRenderer.Rendering.Profiles
 	public record TraceAcceleratorProfile : IProfile
 	{
 		/// <summary>
-		/// Explicitly indicate the type of <see cref="TraceAccelerator"/> to use.
+		/// Explicitly indicate the type of <see cref="Accelerator"/> to use.
 		/// This can be left as null for automatic accelerator determination.
 		/// </summary>
 		public Type AcceleratorType { get; init; }
 
 		public void Validate()
 		{
-			if (AcceleratorType?.IsSubclassOf(typeof(TraceAccelerator)) == false) throw ExceptionHelper.Invalid(nameof(AcceleratorType), AcceleratorType, $"is not of type {nameof(TraceAccelerator)}");
+			if (AcceleratorType?.IsSubclassOf(typeof(Accelerator)) == false) throw ExceptionHelper.Invalid(nameof(AcceleratorType), AcceleratorType, $"is not of type {nameof(Accelerator)}");
 		}
 
-		public TraceAccelerator CreateAccelerator(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
+		public Accelerator CreateAccelerator(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
 		{
 			if (AcceleratorType == typeof(LinearTracer)) return new LinearTracer(pack, aabbs, tokens);
 			if (AcceleratorType == typeof(BoundingVolumeHierarchy)) return new BoundingVolumeHierarchy(pack, aabbs, tokens);

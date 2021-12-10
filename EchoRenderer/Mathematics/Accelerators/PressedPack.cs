@@ -99,7 +99,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			accelerator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
 		}
 
-		public readonly TraceAccelerator accelerator;
+		public readonly Accelerator accelerator;
 		public readonly GeometryCounts geometryCounts;
 
 		readonly PressedTriangle[] triangles; //Indices: [0x4000_0000 to 0x8000_0000)
@@ -113,7 +113,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// </summary>
 		public const float DistanceMin = 6e-4f;
 
-		const uint NodeThreshold = TraceAccelerator.NodeThreshold;
+		const uint NodeThreshold = Accelerator.NodeThreshold;
 		const uint TrianglesThreshold = 0x4000_0000u;
 		const uint SpheresThreshold = 0x2000_0000u;
 

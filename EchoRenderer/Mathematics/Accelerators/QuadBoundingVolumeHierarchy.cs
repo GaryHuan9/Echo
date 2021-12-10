@@ -16,7 +16,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 	/// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
 	/// ref: https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf
 	/// </summary>
-	public class QuadBoundingVolumeHierarchy : TraceAccelerator
+	public class QuadBoundingVolumeHierarchy : Accelerator
 	{
 		public QuadBoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
 		{
