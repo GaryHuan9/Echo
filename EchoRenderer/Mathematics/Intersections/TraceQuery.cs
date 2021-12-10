@@ -1,35 +1,44 @@
-﻿using CodeHelpers.Diagnostics;
+﻿using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Rendering;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
 	/// <summary>
-	/// Query for the trace of a <see cref="Ray"/>.
+	/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PressedScene"/>
+	/// exists, and if it does, the exact distance of that intersections and other specific information about it.
 	/// </summary>
 	public struct TraceQuery
 	{
-		public TraceQuery(in Ray ray, GeometryToken previous = default)
+		public TraceQuery(in Ray ray, float distance = float.PositiveInfinity, in GeometryToken ignore = default)
 		{
 			this.ray = ray;
-			this.previous = previous;
+			this.ignore = ignore;
 
 			current = default;
-			token = default;
-			distance = float.PositiveInfinity;
-			uv = default;
+			Unsafe.SkipInit(out token);
+			this.distance = distance;
+			Unsafe.SkipInit(out uv);
+
+#if DEBUG
+			originalDistance = distance;
+#endif
 		}
 
 		/// <summary>
 		/// The main ray of this <see cref="TraceQuery"/>. Note that this will be changed and updated
-		/// as we trace through the scene when we go from a parent coordinate system to a child system.
+		/// as we traverse through the scene when we go from a parent coordinate system to a child system.
 		/// </summary>
 		public Ray ray;
 
 		/// <summary>
-		/// The <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/>. Or default initialize this if
-		/// there is no previous <see cref="TraceQuery"/>. This is used to determine and avoid duplicated intersections.
+		/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore
+		/// if we come in very close (<see cref="PressedPack.DistanceMin"/>) contact with it. This should mainly be assigned
+		/// to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to avoid origin intersections.
 		/// </summary>
-		public readonly GeometryToken previous;
+		public readonly GeometryToken ignore;
 
 		/// <summary>
 		/// Used during intersection test; undefined after the test is concluded (do not use upon completion).
@@ -55,24 +64,56 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		public Float2 uv;
 
+#if DEBUG
+		/// <summary>
+		/// The immutable original distance to determine whether this <see cref="TraceQuery"/> actually <see cref="Hit"/> something.
+		/// </summary>
+		readonly float originalDistance;
+
 		/// <summary>
 		/// Returns whether this <see cref="TraceQuery"/> has intersected with anything.
 		/// </summary>
-		public readonly bool Hit => distance < float.PositiveInfinity;
+		public readonly bool Hit => distance < originalDistance;
+#endif
 
 		/// <summary>
 		/// Spawns and returns a new <see cref="TraceQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 		/// </summary>
-		public readonly TraceQuery Next(Float3 direction)
+		public readonly TraceQuery Next(in Float3 direction)
 		{
-			Assert.IsTrue(Hit);
-			return new TraceQuery(new Ray(ray.GetPoint(distance), direction), token);
+			AssertHit();
+			return new TraceQuery(new Ray(ray.GetPoint(distance), direction), float.PositiveInfinity, token);
 		}
 
 		/// <summary>
 		/// Spans and returns a new <see cref="TraceQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
 		/// </summary>
 		public readonly TraceQuery Next() => Next(ray.direction);
+
+		/// <summary>
+		/// Spawns and returns a new <see cref="OccludeQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
+		/// </summary>
+		public readonly OccludeQuery Occlude(in Float3 direction, float travel = float.PositiveInfinity)
+		{
+			AssertHit();
+			return new OccludeQuery(new Ray(ray.GetPoint(distance), direction), travel, token);
+		}
+
+		/// <summary>
+		/// Spans and returns a new <see cref="OccludeQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
+		/// </summary>
+		public readonly OccludeQuery Occlude(float travel = float.PositiveInfinity) => Occlude(ray.direction, travel);
+
+		/// <summary>
+		/// Ensures that this <see cref="TraceQuery"/> has <see cref="Hit"/> something.
+		/// </summary>
+		[Conditional("DEBUG")]
+		public readonly void AssertHit()
+		{
+#if DEBUG
+			CodeHelpers.Diagnostics.Assert.IsTrue(Hit);
+#endif
+		}
 
 		public static implicit operator TraceQuery(in Ray ray) => new(ray);
 	}

@@ -8,7 +8,7 @@ namespace EchoRenderer.Mathematics.Intersections
 	{
 		public Interaction(in TraceQuery query, in Float3 geometryNormal, in Float3 normal, in Float2 texcoord)
 		{
-			Assert.IsTrue(query.Hit);
+			query.AssertHit();
 
 			uv = query.uv;
 			outgoingWorld = -query.ray.direction;
