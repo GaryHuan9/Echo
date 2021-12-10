@@ -23,7 +23,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			Assert.IsTrue(max >= min);
 		}
 
-		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabb)
+		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabbs)
 		{
 			Unsafe.SkipInit(out minVector);
 			Unsafe.SkipInit(out maxVector);
@@ -31,12 +31,12 @@ namespace EchoRenderer.Mathematics.Intersections
 			min = Float3.positiveInfinity;
 			max = Float3.negativeInfinity;
 
-			for (int i = 0; i < aabb.Count; i++)
+			for (int i = 0; i < aabbs.Count; i++)
 			{
-				AxisAlignedBoundingBox box = aabb[i];
+				AxisAlignedBoundingBox aabb = aabbs[i];
 
-				min = box.min.Min(min);
-				max = box.max.Max(max);
+				min = aabb.min.Min(min);
+				max = aabb.max.Max(max);
 			}
 
 			Assert.IsTrue(max >= min);
@@ -50,10 +50,8 @@ namespace EchoRenderer.Mathematics.Intersections
 			min = Float3.positiveInfinity;
 			max = Float3.negativeInfinity;
 
-			for (int i = 0; i < points.Length; i++)
+			foreach (ref readonly Float3 point in points)
 			{
-				Float3 point = points[i];
-
 				min = min.Min(point);
 				max = max.Max(point);
 			}
