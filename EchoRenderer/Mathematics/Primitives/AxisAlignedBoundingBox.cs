@@ -7,7 +7,7 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Primitives
 {
 	[StructLayout(LayoutKind.Explicit, Size = 28)]
 	public readonly struct AxisAlignedBoundingBox
@@ -35,6 +35,23 @@ namespace EchoRenderer.Mathematics.Intersections
 			{
 				AxisAlignedBoundingBox aabb = aabbs[i];
 
+				min = aabb.min.Min(min);
+				max = aabb.max.Max(max);
+			}
+
+			Assert.IsTrue(max >= min);
+		}
+
+		public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
+		{
+			Unsafe.SkipInit(out minVector);
+			Unsafe.SkipInit(out maxVector);
+
+			min = Float3.positiveInfinity;
+			max = Float3.negativeInfinity;
+
+			foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
+			{
 				min = aabb.min.Min(min);
 				max = aabb.max.Max(max);
 			}

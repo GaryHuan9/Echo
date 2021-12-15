@@ -1,10 +1,10 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
 	/// Represents a unique geometry in the pressed scene. Note that this uniqueness transcends object instancing.

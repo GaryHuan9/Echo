@@ -6,7 +6,7 @@ using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Pooling;
-using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Rendering.Profiles;
 

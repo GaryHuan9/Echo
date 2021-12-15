@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 

@@ -6,7 +6,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using static EchoRenderer.Mathematics.Utilities;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Primitives
 {
 	[StructLayout(LayoutKind.Explicit, Size = 40)]
 	public readonly struct Ray
@@ -40,17 +40,13 @@ namespace EchoRenderer.Mathematics.Intersections
 		[FieldOffset(12)] public readonly Vector128<float> directionVector;
 		[FieldOffset(24)] public readonly Vector128<float> inverseDirectionVector;
 
+		/// <summary>
+		/// Returns the point this <see cref="Ray"/> points at <paramref name="distance"/>.
+		/// </summary>
 		public unsafe Float3 GetPoint(float distance)
 		{
 			Vector128<float> length = Vector128.Create(distance);
-			Vector128<float> result;
-
-			if (!Fma.IsSupported)
-			{
-				result = Sse.Multiply(directionVector, length);
-				result = Sse.Add(originVector, result);
-			}
-			else result = Fma.MultiplyAdd(directionVector, length, originVector);
+			Vector128<float> result = Fused(directionVector, length, originVector);
 
 			return *(Float3*)&result;
 		}
