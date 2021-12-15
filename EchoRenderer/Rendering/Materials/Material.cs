@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Textures;
 

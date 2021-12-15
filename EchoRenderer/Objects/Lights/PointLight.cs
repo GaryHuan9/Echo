@@ -1,4 +1,5 @@
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Objects.Lights
@@ -7,16 +8,18 @@ namespace EchoRenderer.Objects.Lights
 	{
 		public override Float3 Power => 2f * Scalars.TAU * Intensity;
 
-		public override Float3 Sample(in Float3 position, in Distro2 distro, out Float3 incident, out float pdf, out float distance)
+		public override bool IsDelta => true;
+
+		public override Float3 Sample(in Interaction interaction, in Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel)
 		{
 			pdf = 1f;
 
-			Float3 difference = Position - position;
+			Float3 difference = Position - interaction.position;
 
-			distance = difference.Magnitude;
-			incident = difference / distance;
+			travel = difference.Magnitude;
 
-			return Intensity / (distance * distance);
+			incidentWorld = difference / travel;
+			return Intensity / (travel * travel);
 		}
 
 		public override float ProbabilityDensity(in Float3 position, in Float3 incident) => 0f;

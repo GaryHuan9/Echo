@@ -6,7 +6,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
-using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
@@ -88,9 +88,9 @@ namespace EchoRenderer
 
 		static readonly ScenePressProfile scenePressProfile = new()
 															  {
-																  AcceleratorProfile = new TraceAcceleratorProfile
+																  AcceleratorProfile = new AggregatorProfile
 																					   {
-																						   AcceleratorType = typeof(QuadBoundingVolumeHierarchy)
+																						   AggregatorType = typeof(QuadBoundingVolumeHierarchy)
 																					   }
 															  };
 

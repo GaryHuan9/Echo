@@ -4,8 +4,8 @@ using BenchmarkDotNet.Attributes;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
@@ -51,8 +51,8 @@ namespace EchoRenderer.Experimental
 
 			Pairs = new[]
 					{
-						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
-						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new TraceAcceleratorProfile { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
+						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 					};
 		}
 

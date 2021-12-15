@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 
-namespace EchoRenderer.Mathematics.Accelerators
+namespace EchoRenderer.Mathematics.Intersections
 {
 	/// <summary>
 	/// A four-way hierarchical spacial partitioning acceleration structure.
@@ -16,7 +16,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 	/// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
 	/// ref: https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf
 	/// </summary>
-	public class QuadBoundingVolumeHierarchy : Accelerator
+	public class QuadBoundingVolumeHierarchy : Aggregator
 	{
 		public QuadBoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
 		{

@@ -1,10 +1,10 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
 	/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PressedScene"/>
@@ -64,6 +64,19 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		public Float2 uv;
 
+		/// <summary>
+		/// After tracing completes, returns the <see cref="Position"/> at which the intersection occurred.
+		/// NOTE: if no intersection occurs, this field is undefined.
+		/// </summary>
+		public readonly Float3 Position
+		{
+			get
+			{
+				AssertHit();
+				return ray.GetPoint(distance);
+			}
+		}
+
 #if DEBUG
 		/// <summary>
 		/// The immutable original distance to determine whether this <see cref="TraceQuery"/> actually <see cref="Hit"/> something.
@@ -79,30 +92,22 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <summary>
 		/// Spawns and returns a new <see cref="TraceQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 		/// </summary>
-		public readonly TraceQuery Next(in Float3 direction)
-		{
-			AssertHit();
-			return new TraceQuery(new Ray(ray.GetPoint(distance), direction), float.PositiveInfinity, token);
-		}
+		public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(Position, direction), float.PositiveInfinity, token);
 
 		/// <summary>
 		/// Spans and returns a new <see cref="TraceQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
 		/// </summary>
-		public readonly TraceQuery Next() => Next(ray.direction);
+		public readonly TraceQuery SpawnTrace() => SpawnTrace(ray.direction);
 
 		/// <summary>
 		/// Spawns and returns a new <see cref="OccludeQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 		/// </summary>
-		public readonly OccludeQuery Occlude(in Float3 direction, float travel = float.PositiveInfinity)
-		{
-			AssertHit();
-			return new OccludeQuery(new Ray(ray.GetPoint(distance), direction), travel, token);
-		}
+		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) =>  new(new Ray(Position, direction), travel, token);
 
 		/// <summary>
 		/// Spans and returns a new <see cref="OccludeQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
 		/// </summary>
-		public readonly OccludeQuery Occlude(float travel = float.PositiveInfinity) => Occlude(ray.direction, travel);
+		public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(ray.direction, travel);
 
 		/// <summary>
 		/// Ensures that this <see cref="TraceQuery"/> has <see cref="Hit"/> something.
