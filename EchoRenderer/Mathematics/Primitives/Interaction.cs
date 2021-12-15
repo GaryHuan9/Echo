@@ -2,7 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Scattering;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Primitives
 {
 	public struct Interaction
 	{
@@ -10,7 +10,8 @@ namespace EchoRenderer.Mathematics.Intersections
 		{
 			query.AssertHit();
 
-			uv = query.uv;
+			token = query.token;
+			position = query.Position;
 			outgoingWorld = -query.ray.direction;
 
 			this.geometryNormal = geometryNormal;
@@ -20,10 +21,14 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
-		/// The local coordinate of this <see cref="Interaction"/> on the
-		/// intersected surface based on its specific parametrization.
+		/// The <see cref="GeometryToken"/> that represents the geometry that we are interacting with.
 		/// </summary>
-		public readonly Float2 uv;
+		public readonly GeometryToken token;
+
+		/// <summary>
+		/// The <see cref="position"/> at which the <see cref="Interaction"/> occured.
+		/// </summary>
+		public readonly Float3 position;
 
 		/// <summary>
 		/// The outgoing direction of this <see cref="Interaction"/> in world space.
@@ -49,5 +54,15 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// The <see cref="BSDF"/> of this <see cref="Interaction"/>.
 		/// </summary>
 		public BSDF bsdf;
+
+		/// <summary>
+		/// Spawns a new <see cref="OccludeQuery"/> with <paramref name="direction"/> and <paramref name="travel"/>.
+		/// </summary>
+		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(position, direction), travel, token);
+
+		/// <summary>
+		/// Spawns a new <see cref="OccludeQuery"/> directly opposite to <see cref="outgoingWorld"/> with <paramref name="travel"/>.
+		/// </summary>
+		public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(-outgoingWorld, travel);
 	}
 }

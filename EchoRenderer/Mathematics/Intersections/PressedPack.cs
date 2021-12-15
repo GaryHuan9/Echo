@@ -7,7 +7,7 @@ using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
@@ -15,7 +15,7 @@ using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 using Object = EchoRenderer.Objects.Object;
 
-namespace EchoRenderer.Mathematics.Accelerators
+namespace EchoRenderer.Mathematics.Intersections
 {
 	public class PressedPack
 	{
@@ -96,10 +96,10 @@ namespace EchoRenderer.Mathematics.Accelerators
 				tokens[target] = (uint)index;
 			}
 
-			accelerator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
+			aggregator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
 		}
 
-		public readonly Accelerator accelerator;
+		public readonly Aggregator aggregator;
 		public readonly GeometryCounts geometryCounts;
 
 		readonly PressedTriangle[] triangles; //Indices: [0x4000_0000 to 0x8000_0000)
@@ -113,7 +113,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		/// </summary>
 		public const float DistanceMin = 6e-4f;
 
-		const uint NodeThreshold = Accelerator.NodeThreshold;
+		const uint NodeThreshold = Aggregator.NodeThreshold;
 		const uint TrianglesThreshold = 0x4000_0000u;
 		const uint SpheresThreshold = 0x2000_0000u;
 

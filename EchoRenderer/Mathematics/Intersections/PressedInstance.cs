@@ -1,11 +1,11 @@
 ﻿using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
 
-namespace EchoRenderer.Mathematics.Accelerators
+namespace EchoRenderer.Mathematics.Intersections
 {
 	public class PressedInstance
 	{
@@ -58,7 +58,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 				const uint FetchDepth = 6; //How deep do we go into the accelerator to get the AABB of the nodes
 				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (int)FetchDepth];
 
-				int count = pack.accelerator.FillAABB(FetchDepth, aabbs);
+				int count = pack.aggregator.FillAABB(FetchDepth, aabbs);
 				Float4x4 absoluteTransform = inverseTransform.Absoluted;
 
 				Float3 min = Float3.positiveInfinity;
@@ -103,7 +103,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			query.current.Push(this);
 
 			//Gets intersection from accelerator in local space
-			pack.accelerator.Trace(ref query);
+			pack.aggregator.Trace(ref query);
 
 			//Convert back to parent space
 			query.ray = oldRay;
@@ -117,7 +117,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 		public void TraceRoot(ref TraceQuery query)
 		{
 			Assert.IsTrue(query.current.Equals(default));
-			pack.accelerator.Trace(ref query);
+			pack.aggregator.Trace(ref query);
 		}
 
 		/// <summary>
@@ -132,7 +132,7 @@ namespace EchoRenderer.Mathematics.Accelerators
 			Ray transformed = ray;
 			TransformForward(ref transformed);
 
-			int cost = pack.accelerator.TraceCost(transformed, ref distance);
+			int cost = pack.aggregator.TraceCost(transformed, ref distance);
 
 			//Transforms distance back to parent space
 			distance *= inverseScale;

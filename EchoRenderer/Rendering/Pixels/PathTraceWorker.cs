@@ -1,5 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
@@ -46,7 +46,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 				if (HitPassThrough(query, albedo, incidentWorld))
 				{
-					query = query.Next();
+					query = query.SpawnTrace();
 					continue;
 				}
 
@@ -63,7 +63,7 @@ namespace EchoRenderer.Rendering.Pixels
 				energy *= albedo;
 
 				if (energy <= profile.RadianceEpsilon) break;
-				query = query.Next(incidentWorld);
+				query = query.SpawnTrace(incidentWorld);
 			}
 
 #if DEBUG

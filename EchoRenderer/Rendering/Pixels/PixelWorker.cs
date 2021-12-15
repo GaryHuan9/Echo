@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;

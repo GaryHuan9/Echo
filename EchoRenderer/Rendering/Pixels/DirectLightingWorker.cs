@@ -1,7 +1,7 @@
 using System;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Memory;
@@ -29,7 +29,7 @@ namespace EchoRenderer.Rendering.Pixels
 			Interaction interaction = arena.Scene.Interact(query, out Material material);
 
 			material.Scatter(ref interaction, arena);
-			if (interaction.bsdf == null) return Render(query.Next(), arena);
+			if (interaction.bsdf == null) return Render(query.SpawnTrace(), arena);
 
 			//TODO: area lights/emissive materials
 

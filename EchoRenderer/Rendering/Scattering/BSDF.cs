@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Rendering.Scattering
@@ -73,7 +73,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/>.
 		/// See <see cref="BxDF.Sample(in Float3, in Float3)"/> for more information.
 		/// </summary>
-		public Float3 Sample(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type)
+		public Float3 Sample(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
 		{
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 			Float3 incident = transform.WorldToLocal(incidentWorld);
@@ -98,21 +98,20 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/> with an output direction.
 		/// See <see cref="BxDF.Sample(in Float3, in Distribution2, out Float3, out float)"/> for more information.
 		/// </summary>
-		public Float3 Sample(in Float3 outgoingWorld, Distro2 distro, FunctionType type, out Float3 incidentWorld, out float pdf, out FunctionType sampledType)
+		public Float3 Sample(in Float3 outgoingWorld, Distro2 distro, ref FunctionType type, out Float3 incidentWorld, out float pdf)
 		{
 			int index = FindFunction(type, ref distro, out int matched);
 
 			if (index < 0)
 			{
 				incidentWorld = Float3.zero;
+				type = FunctionType.none;
 				pdf = 0f;
-				sampledType = FunctionType.none;
 				return Float3.zero;
 			}
 
 			BxDF selected = functions[index];
-
-			sampledType = selected.functionType;
+			type = selected.functionType;
 
 			//Sample the selected function
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
@@ -187,7 +186,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Returns the aggregated probability density for all <see cref="BxDF"/> that matches with
 		/// <paramref name="type"/>. See <see cref="BxDF.ProbabilityDensity"/> for more information.
 		/// </summary>
-		public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type)
+		public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
 		{
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 			Float3 incident = transform.WorldToLocal(incidentWorld);

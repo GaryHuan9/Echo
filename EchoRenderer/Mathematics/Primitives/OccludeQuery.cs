@@ -1,7 +1,7 @@
-﻿using EchoRenderer.Mathematics.Accelerators;
+﻿using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Rendering;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
 	/// Query for the traverse of a <see cref="Ray"/> to find out whether anything inside <see cref="PressedScene"/> occludes its <see cref="travel"/> (distance).
