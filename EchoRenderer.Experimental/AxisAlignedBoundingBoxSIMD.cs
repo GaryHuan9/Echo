@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 
 namespace EchoRenderer.Experimental
 {

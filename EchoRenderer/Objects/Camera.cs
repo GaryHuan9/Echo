@@ -1,6 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 
 namespace EchoRenderer.Objects

@@ -4,16 +4,16 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CodeHelpers;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 
-namespace EchoRenderer.Mathematics.Accelerators
+namespace EchoRenderer.Mathematics.Intersections
 {
 	/// <summary>
 	/// A binary hierarchical spacial partitioning acceleration structure.
 	/// Works best with medium sized quantities of geometries and tokens.
 	/// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
 	/// </summary>
-	public class BoundingVolumeHierarchy : Accelerator
+	public class BoundingVolumeHierarchy : Aggregator
 	{
 		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
 		{

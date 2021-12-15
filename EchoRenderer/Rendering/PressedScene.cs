@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Objects.Scenes;

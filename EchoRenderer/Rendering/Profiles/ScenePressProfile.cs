@@ -1,19 +1,19 @@
 ﻿using CodeHelpers;
-using EchoRenderer.Mathematics.Accelerators;
+using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Rendering.Profiles
 {
 	public record ScenePressProfile : IProfile
 	{
 		/// <summary>
-		/// The <see cref="TraceAcceleratorProfile"/> used for this <see cref="ScenePressProfile"/>.
-		/// This determines the kind of <see cref="Accelerator"/> to build. Must not be null.
+		/// The <see cref="AggregatorProfile"/> used for this <see cref="ScenePressProfile"/>.
+		/// This determines the kind of <see cref="Aggregator"/> to build. Must not be null.
 		/// </summary>
-		public TraceAcceleratorProfile AcceleratorProfile { get; init; } = new();
+		public AggregatorProfile AcceleratorProfile { get; init; } = new();
 
 		/// <summary>
 		/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
-		/// Fragmentation can cause the construction of better <see cref="Accelerator"/>, however it can also backfire.
+		/// Fragmentation can cause the construction of better <see cref="Aggregator"/>, however it can also backfire.
 		/// </summary>
 		public float FragmentationThresholdMultiplier { get; init; } = 4.8f;
 

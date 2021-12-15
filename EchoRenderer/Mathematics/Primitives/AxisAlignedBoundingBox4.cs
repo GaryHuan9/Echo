@@ -2,7 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Primitives
 {
 	public readonly struct AxisAlignedBoundingBox4
 	{

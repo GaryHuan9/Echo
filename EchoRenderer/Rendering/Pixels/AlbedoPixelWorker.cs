@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
@@ -23,7 +23,7 @@ namespace EchoRenderer.Rendering.Pixels
 				Float3 albedo = Utilities.ToFloat3(material.Albedo[interaction.texcoord]);
 				if (!HitPassThrough(query, albedo, interaction.outgoingWorld)) return albedo; //Return intersected albedo color
 
-				query = query.Next(query.ray.direction);
+				query = query.SpawnTrace(query.ray.direction);
 			}
 
 			return scene.cubemap?.Sample(query.ray.direction) ?? Float3.zero;

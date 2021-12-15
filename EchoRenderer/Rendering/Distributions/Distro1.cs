@@ -1,4 +1,5 @@
-﻿using EchoRenderer.Mathematics;
+﻿using CodeHelpers.Diagnostics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.Distributions
 {
@@ -10,5 +11,23 @@ namespace EchoRenderer.Rendering.Distributions
 		public Distro1(float u) => this.u = FastMath.ClampEpsilon(u);
 
 		public readonly float u;
+
+		/// <summary>
+		/// Maps this <see cref="Distro1"/> to be between zero (inclusive) and <paramref name="max"/> (exclusive).
+		/// </summary>
+		public int Range(int max)
+		{
+			Assert.IsTrue(max > 0);
+			return (int)(u * max);
+		}
+
+		/// <summary>
+		/// Maps this <see cref="Distro1"/> to be between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
+		/// </summary>
+		public int Range(int min, int max)
+		{
+			Assert.IsTrue(min < max);
+			return Range(max - min) + min;
+		}
 	}
 }

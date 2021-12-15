@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Diagnostics;
-using EchoRenderer.Mathematics.Accelerators;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Memory;
 
 namespace EchoRenderer.Rendering.Materials

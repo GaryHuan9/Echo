@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 
-namespace EchoRenderer.Mathematics.Accelerators
+namespace EchoRenderer.Mathematics.Intersections
 {
 	/// <summary>
 	/// A simple linear search trace finder.
 	/// </summary>
-	public class LinearTracer : Accelerator
+	public class LinearAggregator : Aggregator
 	{
-		public LinearTracer(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens) { }
+		public LinearAggregator(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
+		{
+
+		}
 
 		public override int Hash { get; }
 
