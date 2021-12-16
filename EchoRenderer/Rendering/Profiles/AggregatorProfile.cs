@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CodeHelpers;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
@@ -19,13 +18,14 @@ namespace EchoRenderer.Rendering.Profiles
 			if (AggregatorType?.IsSubclassOf(typeof(Aggregator)) == false) throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, $"is not of type {nameof(Aggregator)}");
 		}
 
-		public Aggregator CreateAccelerator(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
+		public Aggregator CreateAccelerator(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens)
 		{
 			if (AggregatorType == typeof(LinearAggregator)) return new LinearAggregator(pack, aabbs, tokens);
 			if (AggregatorType == typeof(BoundingVolumeHierarchy)) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
 			if (AggregatorType == typeof(QuadBoundingVolumeHierarchy)) return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
+			if (AggregatorType == null) return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
 
-			return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
+			throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, InvalidType.unexpected);
 		}
 	}
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using CodeHelpers;
 using EchoRenderer.Mathematics.Primitives;
 
@@ -10,20 +9,14 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public abstract class Aggregator
 	{
-		protected Aggregator(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens)
+		protected Aggregator(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens)
 		{
 			this.pack = pack;
 
-			if (aabbs.Count != tokens.Count) throw ExceptionHelper.Invalid(nameof(aabbs), $"does not have a matching size with {nameof(tokens)}");
+			if (aabbs.Length != tokens.Length) throw ExceptionHelper.Invalid(nameof(aabbs), $"does not have a matching size with {nameof(tokens)}");
 
 #if DEBUG
-			int count = tokens.Count;
-
-			for (int i = 0; i < count; i++)
-			{
-				uint token = tokens[i];
-				Assert.IsTrue(token < NodeThreshold);
-			}
+			foreach (uint token in tokens) CodeHelpers.Diagnostics.Assert.IsTrue(token < NodeThreshold);
 #endif
 		}
 

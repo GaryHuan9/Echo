@@ -18,11 +18,11 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public class QuadBoundingVolumeHierarchy : Aggregator
 	{
-		public QuadBoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
+		public QuadBoundingVolumeHierarchy(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens) : base(pack, aabbs, tokens)
 		{
-			if (tokens.Count <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Count), tokens.Count, "does not contain more than one token");
+			if (tokens.Length <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "does not contain more than one token");
 
-			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
+			int[] indices = Enumerable.Range(0, aabbs.Length).ToArray();
 
 			BranchBuilder builder = new BranchBuilder(aabbs);
 			BranchBuilder.Node root = builder.Build(indices);
@@ -30,56 +30,13 @@ namespace EchoRenderer.Mathematics.Intersections
 			int count = 0;
 			var buildRoot = new BuildNode(root, ref count);
 
-			int nodeIndex = 0;
+			int nodeIndex = 1;
 
 			nodes = new Node[count];
-			nodes[0] = CreateNode(buildRoot, out int maxDepth);
+			nodes[0] = CreateNode(buildRoot, tokens, ref nodeIndex, out int maxDepth);
 
 			stackSize = maxDepth * 3;
 			aabbRoot = root.aabb;
-
-			Node CreateNode(BuildNode buildNode, out int depth)
-			{
-				Assert.IsNotNull(buildNode.child);
-				BuildNode current = buildNode.child;
-
-				Span<uint> children = stackalloc uint[Width];
-
-				depth = 0;
-
-				for (int i = 0; i < Width; i++)
-				{
-					uint nodeChild;
-					int nodeDepth;
-
-					if (current.IsEmpty)
-					{
-						nodeChild = EmptyNode;
-						nodeDepth = 0;
-					}
-					else if (current.IsLeaf)
-					{
-						nodeChild = tokens[current.source.index];
-						nodeDepth = 1;
-					}
-					else
-					{
-						uint index = (uint)++nodeIndex;
-						ref Node node = ref nodes[index];
-
-						node = CreateNode(current, out nodeDepth);
-						nodeChild = index + NodeThreshold;
-					}
-
-					children[i] = nodeChild;
-					depth = Math.Max(depth, nodeDepth);
-
-					current = current.sibling;
-				}
-
-				++depth;
-				return new Node(buildNode, children);
-			}
 		}
 
 		readonly Node[] nodes;
@@ -333,6 +290,49 @@ namespace EchoRenderer.Mathematics.Intersections
 			}
 
 			return cost;
+		}
+
+		Node CreateNode(BuildNode buildNode, ReadOnlySpan<uint> tokens, ref int nodeIndex, out int depth)
+		{
+			Assert.IsNotNull(buildNode.child);
+			BuildNode current = buildNode.child;
+
+			Span<uint> children = stackalloc uint[Width];
+
+			depth = 0;
+
+			for (int i = 0; i < Width; i++)
+			{
+				uint nodeChild;
+				int nodeDepth;
+
+				if (current.IsEmpty)
+				{
+					nodeChild = EmptyNode;
+					nodeDepth = 0;
+				}
+				else if (current.IsLeaf)
+				{
+					nodeChild = tokens[current.source.index];
+					nodeDepth = 1;
+				}
+				else
+				{
+					uint index = (uint)nodeIndex++;
+					ref Node node = ref nodes[index];
+
+					node = CreateNode(current, tokens, ref nodeIndex, out nodeDepth);
+					nodeChild = index + NodeThreshold;
+				}
+
+				children[i] = nodeChild;
+				depth = Math.Max(depth, nodeDepth);
+
+				current = current.sibling;
+			}
+
+			++depth;
+			return new Node(buildNode, children);
 		}
 
 		/// <summary>
