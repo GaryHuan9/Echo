@@ -15,17 +15,20 @@ namespace EchoRenderer.Mathematics.Intersections
 		public BoxSorter(int capacity)
 		{
 			this.capacity = capacity;
-			counts = new int[256];
 			keys0 = new uint[capacity];
 		}
 
 		readonly int capacity;
-		readonly int[] counts;
 		readonly uint[] keys0;
 
+		int[] counts;
 		uint[] keys1;
 		int[] buffer;
 
+		/// <summary>
+		/// Sorts <paramref name="indices"/> based on the <see cref="axis"/> location value of the corresponding <see cref="AxisAlignedBoundingBox"/>
+		/// they point at. NOTE: <paramref name="indices.Length"/> must be equal to or less than <see cref="capacity"/>.
+		/// </summary>
 		public void Sort(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, Span<int> indices, int axis)
 		{
 			int length = indices.Length;
@@ -43,8 +46,9 @@ namespace EchoRenderer.Mathematics.Intersections
 			//Sort using the best strategy
 			switch (length)
 			{
-				case > 8: //TODO: change to something higher once we add quick sort
+				case > 32: //TODO: change to something higher once we add quick sort
 				{
+					counts ??= new int[256];
 					keys1 ??= new uint[capacity];
 					buffer ??= new int[capacity];
 
@@ -55,8 +59,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 				default:
 				{
-					var sorter = new InsertionSorter(keys0, indices);
-					sorter.Sort();
+					InsertionSort(keys0.AsSpan(0, indices.Length), indices);
 					break;
 				}
 			}
@@ -88,49 +91,37 @@ namespace EchoRenderer.Mathematics.Intersections
 			return converted ^ (flip + HeadBit);
 		}
 
-		readonly ref struct InsertionSorter
+		/// <summary>
+		/// A simple stable insertion sort that acts on <paramref name="keys"/> and <paramref name="values"/> pairs.
+		/// </summary>
+		static void InsertionSort(Span<uint> keys, Span<int> values)
 		{
-			public InsertionSorter(Span<uint> keys, Span<int> values)
+			Assert.AreEqual(keys.Length, values.Length);
+
+			//Run for every key value pair except the first one
+			for (int i = 1; i < keys.Length; i++)
 			{
-				length = values.Length;
-				Assert.IsTrue(keys.Length >= length);
+				uint key = keys[i];
+				int value = values[i];
 
-				this.keys = keys;
-				this.values = values;
-			}
-
-			readonly int length;
-			readonly Span<uint> keys;
-			readonly Span<int> values;
-
-			public void Sort()
-			{
-				//Run for the entire length
-				for (int i = 1; i < length; i++)
+				//Look back and search for appropriate position
+				for (int scan = i;; --scan)
 				{
-					uint key = keys[i];
-
-					//Look back and search for appropriate position
-					for (int j = i; j > 0; j--)
+					if (scan > 0 && key < keys[scan - 1])
 					{
-						uint next = keys[j - 1];
+						//Shift keys forward
+						keys[scan] = keys[scan - 1];
+						values[scan] = values[scan - 1];
+					}
+					else
+					{
+						//Found position, stop
+						if (scan == i) break;
 
-						if (key < next)
-						{
-							//Shift keys forward
-							keys[j] = next;
-							values[j] = values[j - 1];
-						}
-						else
-						{
-							//Found position, break
-							if (j == i) break;
+						keys[scan] = key;
+						values[scan] = value;
 
-							keys[j] = key;
-							values[j] = values[i];
-
-							break;
-						}
+						break;
 					}
 				}
 			}
@@ -140,10 +131,14 @@ namespace EchoRenderer.Mathematics.Intersections
 		{
 			public RadixSorter(Span<int> counts, Span<uint> keys0, Span<uint> keys1, Span<int> values0, Span<int> values1)
 			{
-				Assert.AreEqual(counts.Length, 256);
-				this.counts = counts;
+#if DEBUG
+				Span<int> empty = stackalloc int[256];
+				empty.Clear();
+				Assert.IsTrue(counts.SequenceEqual(empty));
+#endif
 
 				length = values0.Length;
+				this.counts = counts;
 
 				this.keys0 = keys0[..length];
 				this.keys1 = keys1[..length];
@@ -176,7 +171,7 @@ namespace EchoRenderer.Mathematics.Intersections
 					{
 						RebuildKeysAndValues(shift);
 						Swap(ref keys0, ref keys1);
-						Swap(ref values1, ref values0);
+						Swap(ref values0, ref values1);
 					}
 					else RebuildValuesOnly(shift);
 
@@ -215,7 +210,7 @@ namespace EchoRenderer.Mathematics.Intersections
 					int index = --counts[(byte)(key >> shift)];
 
 					keys1[index] = key;
-					values1[index] = values0[index];
+					values1[index] = values0[i];
 				}
 			}
 
@@ -226,7 +221,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					ref readonly uint key = ref keys0[i];
 					int index = --counts[(byte)(key >> shift)];
-					values1[index] = values0[index];
+					values1[index] = values0[i];
 				}
 			}
 		}

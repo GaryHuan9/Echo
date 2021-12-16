@@ -92,7 +92,7 @@ namespace EchoRenderer
 															  {
 																  AcceleratorProfile = new AggregatorProfile
 																					   {
-																						   AggregatorType = typeof(QuadBoundingVolumeHierarchy)
+																						   AggregatorType = typeof(BoundingVolumeHierarchy)
 																					   }
 															  };
 
