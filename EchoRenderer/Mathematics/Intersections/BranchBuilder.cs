@@ -84,23 +84,14 @@ namespace EchoRenderer.Mathematics.Intersections
 			else
 			{
 				var builder = BuildChildParallel(headData, headVolume, axis);
-				child0 = BuildChild(tailData, tailVolume, axis);
-				child1 = builder.WaitForNode();
+				child1 = BuildChild(tailData, tailVolume, axis);
+				child0 = builder.WaitForNode();
 			}
 
 			//Places the child with the larger surface area first to improve branch prediction
 			if (headVolume.Area < tailVolume.Area) CodeHelper.Swap(ref child0, ref child1);
 
 			return new Node(child0, child1, aabb, axis);
-		}
-
-		LayerBuilder BuildChildParallel(in LayerData data, in AxisAlignedBoundingBox aabb, int parentAxis)
-		{
-			Assert.AreNotEqual(data.Length, 1);
-
-			int axis = aabb.MajorAxis;
-			if (axis == parentAxis) axis = -1; //No need to sort because it is already sorted
-			return new LayerBuilder(this, data.indicesMemory, axis);
 		}
 
 		Node BuildChild(in LayerData data, in AxisAlignedBoundingBox aabb, int parentAxis)
@@ -110,6 +101,15 @@ namespace EchoRenderer.Mathematics.Intersections
 			int axis = aabb.MajorAxis;
 			if (axis != parentAxis) SortIndices(data, axis);
 			return BuildLayer(data);
+		}
+
+		LayerBuilder BuildChildParallel(in LayerData data, in AxisAlignedBoundingBox aabb, int parentAxis)
+		{
+			Assert.IsTrue(data.Length > 1);
+
+			int axis = aabb.MajorAxis;
+			if (axis == parentAxis) axis = -1; //No need to sort because it is already sorted
+			return new LayerBuilder(this, data.indicesMemory, axis);
 		}
 
 		/// <summary>
