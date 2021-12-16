@@ -162,7 +162,7 @@ namespace EchoRenderer.Mathematics.Primitives
 			return far >= near && far >= 0f ? near : float.PositiveInfinity;
 		}
 
-		public AxisAlignedBoundingBox Encapsulate(AxisAlignedBoundingBox other) => new(min.Min(other.min), max.Max(other.max));
+		public AxisAlignedBoundingBox Encapsulate(in AxisAlignedBoundingBox other) => new(min.Min(other.min), max.Max(other.max));
 
 		public override int    GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
 		public override string ToString()    => $"{nameof(Center)}: {Center}, {nameof(Extend)}: {Extend}";

@@ -9,7 +9,7 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public class LinearAggregator : Aggregator
 	{
-		public LinearAggregator(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
+		public LinearAggregator(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens) : base(pack, aabbs, tokens)
 		{
 
 		}
