@@ -4,48 +4,33 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Primitives;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
 	/// <summary>
 	/// A binary hierarchical spacial partitioning acceleration structure.
-	/// Works best with medium sized quantities of geometries and tokens.
+	/// Works best with medium-level quantities of geometries and tokens.
 	/// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
 	/// </summary>
 	public class BoundingVolumeHierarchy : Aggregator
 	{
-		public BoundingVolumeHierarchy(PressedPack pack, IReadOnlyList<AxisAlignedBoundingBox> aabbs, IReadOnlyList<uint> tokens) : base(pack, aabbs, tokens)
+		public BoundingVolumeHierarchy(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens) : base(pack, aabbs, tokens)
 		{
-			if (tokens.Count <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Count), tokens.Count, "does not contain more than one token");
+			if (tokens.Length <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "does not contain more than one token");
 
-			int[] indices = Enumerable.Range(0, aabbs.Count).ToArray();
+			int[] indices = Enumerable.Range(0, aabbs.Length).ToArray();
 
 			BranchBuilder builder = new BranchBuilder(aabbs);
 			BranchBuilder.Node root = builder.Build(indices);
 
-			int index = 1;
+			int nodeIndex = 1;
 
-			nodes = new Node[builder.NodeCount];
-			nodes[0] = CreateNode(root, out maxDepth);
+			nodes = new Node[indices.Length * 2 - 1];
+			nodes[0] = CreateNode(root, tokens, ref nodeIndex, out maxDepth);
 
-			Node CreateNode(BranchBuilder.Node node, out int depth)
-			{
-				if (node.IsLeaf)
-				{
-					depth = 1;
-					return Node.CreateLeaf(node.aabb, tokens[node.index]);
-				}
-
-				int children = index;
-				index += 2;
-
-				nodes[children] = CreateNode(node.child0, out int depth0);
-				nodes[children + 1] = CreateNode(node.child1, out int depth1);
-
-				depth = Math.Max(depth0, depth1) + 1;
-				return Node.CreateNode(node.aabb, children);
-			}
+			Assert.AreEqual(nodeIndex, nodes.Length);
 		}
 
 		public override int Hash
@@ -233,6 +218,24 @@ namespace EchoRenderer.Mathematics.Intersections
 			}
 
 			return cost;
+		}
+
+		Node CreateNode(BranchBuilder.Node node, ReadOnlySpan<uint> tokens, ref int nodeIndex, out int depth)
+		{
+			if (node.IsLeaf)
+			{
+				depth = 1;
+				return Node.CreateLeaf(node.aabb, tokens[node.index]);
+			}
+
+			int children = nodeIndex;
+			nodeIndex += 2;
+
+			nodes[children] = CreateNode(node.child0, tokens, ref nodeIndex, out int depth0);
+			nodes[children + 1] = CreateNode(node.child1, tokens, ref nodeIndex, out int depth1);
+
+			depth = Math.Max(depth0, depth1) + 1;
+			return Node.CreateNode(node.aabb, children);
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
