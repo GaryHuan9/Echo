@@ -7,7 +7,7 @@ namespace EchoRenderer.Rendering.Distributions
 	{
 		public UniformDistribution(int sampleCount) : base(sampleCount) { }
 
-		UniformDistribution(UniformDistribution distribution) : base(distribution) { }
+		UniformDistribution(UniformDistribution distribution) : base(distribution) => Jitter = distribution.Jitter;
 
 		/// <summary>
 		/// Whether the <see cref="Distribution"/> randomly varies.
@@ -32,8 +32,8 @@ namespace EchoRenderer.Rendering.Distributions
 			}
 		}
 
-		public override Distro1 NextOne() => new(PRNG.Next1());
-		public override Distro2 NextTwo() => new(PRNG.Next2());
+		public override Distro1 NextOne() => new(Jitter ? PRNG.Next1() : 0.5f);
+		public override Distro2 NextTwo() => new(Jitter ? PRNG.Next2() : Float2.half);
 
 		public override Distribution Replicate() => new UniformDistribution(this);
 	}
