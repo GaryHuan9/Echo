@@ -44,8 +44,8 @@ namespace EchoRenderer.Objects.Lights
 
 		/// <summary>
 		/// Returns the sampled probability density (pdf) for a given pair of
-		/// <paramref name="position"/> and <paramref name="incident"/> directions.
+		/// <paramref name="interaction"/> and <paramref name="incident"/> direction.
 		/// </summary>
-		public abstract float ProbabilityDensity(in Float3 position, in Float3 incident);
+		public abstract float ProbabilityDensity(in Interaction interaction, in Float3 incident);
 	}
 }

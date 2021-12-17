@@ -40,7 +40,7 @@ namespace EchoRenderer.Rendering.Memory
 				Assert.IsNotNull(value);
 
 				_random = value;
-				distribution.PRNG = value;
+				distribution.Random = value;
 			}
 		}
 	}
