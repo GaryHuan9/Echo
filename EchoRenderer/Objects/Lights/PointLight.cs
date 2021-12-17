@@ -22,6 +22,6 @@ namespace EchoRenderer.Objects.Lights
 			return Intensity / (travel * travel);
 		}
 
-		public override float ProbabilityDensity(in Float3 position, in Float3 incident) => 0f;
+		public override float ProbabilityDensity(in Interaction interaction, in Float3 incident) => 0f;
 	}
 }

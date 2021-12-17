@@ -1,9 +1,10 @@
-﻿using System;
-using CodeHelpers.Diagnostics;
+﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Distributions;
+using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
 
@@ -13,10 +14,55 @@ namespace EchoRenderer.Rendering.Pixels
 	{
 		public override Sample Render(Float2 uv, Arena arena)
 		{
-			throw new NotImplementedException();
+			Float3 energy = Float3.one;
+			Float3 radiance = Float3.zero;
+
+			bool specularBounce = false;
+
+			TraceQuery query = arena.Scene.camera.GetRay(uv);
+
+			for (int bounce = 1;; ++bounce)
+			{
+				bool intersected = arena.Scene.Trace(ref query);
+
+				if (bounce == 0 || specularBounce)
+				{
+					//Take care of emitted light at this path vertex or from the environment
+				}
+
+				if (!intersected || bounce > arena.profile.BounceLimit) break;
+
+				Interaction interaction = arena.Scene.Interact(query, out Material material);
+				material.Scatter(ref interaction, arena);
+
+				if (interaction.bsdf == null)
+				{
+					arena.allocator.Release();
+					query = query.SpawnTrace();
+					--bounce;
+					continue;
+				}
+
+				radiance += energy * UniformSampleOneLight(interaction, arena);
+
+				FunctionType type = FunctionType.all;
+				Float3 scatter = interaction.bsdf.Sample(interaction.outgoingWorld, arena.distribution.NextTwo(), ref type, out Float3 incidentWorld, out float pdf);
+				if (arena.profile.IsZero(scatter) || pdf <= 0f) break;
+
+				energy *= FastMath.Abs(incidentWorld.Dot(interaction.normal)) / pdf * scatter;
+				specularBounce = type.HasFlag(FunctionType.specular);
+
+				query = query.SpawnTrace(incidentWorld);
+
+				//Path termination with Russian Roulette
+
+				arena.allocator.Release();
+			}
+
+			return radiance;
 		}
 
-		static Float3 UniformSampleOneLight(ref Interaction interaction, Arena arena)
+		static Float3 UniformSampleOneLight(in Interaction interaction, Arena arena)
 		{
 			//Handle degenerate cases
 			var lights = arena.Scene.Lights;
@@ -28,19 +74,18 @@ namespace EchoRenderer.Rendering.Pixels
 			Distro1 distro = arena.distribution.NextOne();
 			Light source = lights[distro.Range(lightCount)];
 
-			return lightCount * EstimateDirect(ref interaction, source, arena);
+			return lightCount * EstimateDirect(interaction, source, arena);
 		}
 
-		static Float3 EstimateDirect(ref Interaction interaction, Light source, Arena arena)
+		static Float3 EstimateDirect(in Interaction interaction, Light source, Arena arena)
 		{
-			Assert.IsNotNull(interaction.bsdf);
-
 			//Fetch needed stuff
 			Distro2 distroLight = arena.distribution.NextTwo();
 			Distro2 distroScatter = arena.distribution.NextTwo();
 
 			Float3 radiance = Float3.zero;
 			BSDF bsdf = interaction.bsdf;
+			Assert.IsNotNull(bsdf);
 
 			ref readonly Float3 outgoingWorld = ref interaction.outgoingWorld;
 
@@ -49,8 +94,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			if (lightPDF > 0f && !arena.profile.IsZero(light))
 			{
-				float cos = incidentWorld.Dot(interaction.normal);
-
+				float cos = FastMath.Abs(incidentWorld.Dot(interaction.normal));
 				Float3 scatter = bsdf.Sample(outgoingWorld, incidentWorld) * cos;
 				float pdf = bsdf.ProbabilityDensity(outgoingWorld, incidentWorld);
 
@@ -70,7 +114,20 @@ namespace EchoRenderer.Rendering.Pixels
 			//Sample BSDF with multiple importance sampling
 			if (!source.IsDelta)
 			{
-				// Float3 scatter = bsdf.Sample(outgoingWorld,distroScatter,FunctionType.all, out Float3 incidentWorld, out float pdf, );
+				// FunctionType type = FunctionType.all;
+				// Float3 scatter = bsdf.Sample(outgoingWorld, distroScatter, ref type, out incidentWorld, out float pdf);
+				//
+				// scatter *= FastMath.Abs(incidentWorld.Dot(interaction.normal));
+				//
+				// float weight = 1f;
+				//
+				// if (!type.HasFlag(FunctionType.specular))
+				// {
+				// 	lightPDF = source.ProbabilityDensity(interaction, incidentWorld);
+				// 	if (lightPDF <= 0f) return radiance;
+				// 	weight = PowerHeuristic(1, pdf, 1, lightPDF);
+				// }
+				//
 			}
 
 			return radiance;

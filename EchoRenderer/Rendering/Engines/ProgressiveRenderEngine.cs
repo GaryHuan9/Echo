@@ -138,6 +138,7 @@ namespace EchoRenderer.Rendering.Engines
 			double sampleCount = profile.EpochSample;
 
 			//TODO: switch from progressive epoch sampling to regular pixel sampling after scene stopped changing
+			throw new NotImplementedException();
 
 			if (Epoch > profile.EpochLength)
 			{

@@ -54,8 +54,12 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Counts how many <see cref="BSDF"/> in this
-		/// <see cref="BSDF"/> have <paramref name="type"/>.
+		/// Returns the total number of <see cref="BxDF"/> included int his <see cref="BSDF"/>.
+		/// </summary>
+		public int Count() => count;
+
+		/// <summary>
+		/// Counts how many <see cref="BxDF"/> in this <see cref="BSDF"/> are <paramref name="type"/>.
 		/// </summary>
 		public int Count(FunctionType type)
 		{

@@ -138,6 +138,7 @@ namespace EchoRenderer.Rendering.Engines
 			RenderPixel pixel = new RenderPixel();
 
 			//Regular pixel sampling
+			arena.distribution.BeginPixel(position);
 			Sample(profile.PixelSample);
 
 			//Adaptive sampling (temporary)
@@ -153,6 +154,7 @@ namespace EchoRenderer.Rendering.Engines
 			{
 				for (int i = 0; i < count; i++)
 				{
+					arena.distribution.BeginSample();
 					Float2 offset = arena.distribution.NextTwo().u;
 
 					//Sample radiance
