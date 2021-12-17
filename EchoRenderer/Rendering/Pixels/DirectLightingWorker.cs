@@ -1,6 +1,5 @@
 using System;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects.Lights;
@@ -13,12 +12,7 @@ namespace EchoRenderer.Rendering.Pixels
 {
 	public class DirectLightingWorker : PixelWorker
 	{
-		public override Arena CreateArena(RenderProfile profile, uint seed)
-		{
-			Arena arena = base.CreateArena(profile, seed);
-			arena.Random = new SystemRandom(seed);
-			return arena;
-		}
+		protected override IRandom CreateRandom(uint seed) => new SystemRandom(seed);
 
 		public override Sample Render(Float2 uv, Arena arena) => Render(arena.Scene.camera.GetRay(uv), arena);
 

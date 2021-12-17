@@ -24,19 +24,19 @@ namespace EchoRenderer.Rendering.Distributions
 		public override void BeginPixel(Int2 position)
 		{
 			base.BeginPixel(position);
-			Assert.IsNotNull(PRNG);
+			Assert.IsNotNull(Random);
 
 			//Fill single samples
 			foreach (SpanAggregate<Distro1> aggregate in singleOnes)
 			{
 				FillStratum(aggregate.array);
-				PRNG.Shuffle<Distro1>(aggregate.array);
+				Random.Shuffle<Distro1>(aggregate.array);
 			}
 
 			foreach (SpanAggregate<Distro2> aggregate in singleTwos)
 			{
 				FillStratum(aggregate.array, sampleSize);
-				PRNG.Shuffle<Distro2>(aggregate.array);
+				Random.Shuffle<Distro2>(aggregate.array);
 			}
 		}
 
@@ -50,7 +50,7 @@ namespace EchoRenderer.Rendering.Distributions
 				Span<Distro1> span = arrayOnes[i][SampleIndex];
 
 				FillStratum(span);
-				PRNG.Shuffle(span);
+				Random.Shuffle(span);
 			}
 
 			for (int i = 0; i < arrayTwos.Count; i++)
@@ -66,7 +66,7 @@ namespace EchoRenderer.Rendering.Distributions
 			for (int i = 0; i < span.Length; i++)
 			{
 				ref Distro1 distro = ref span[i];
-				float offset = Jitter ? PRNG.Next1() : 0.5f;
+				float offset = Jitter ? Random.Next1() : 0.5f;
 				distro = new Distro1((i + offset) * scale);
 			}
 		}
@@ -82,7 +82,7 @@ namespace EchoRenderer.Rendering.Distributions
 			{
 				ref Distro2 distro = ref span[i];
 
-				Float2 offset = Jitter ? PRNG.Next2() : Float2.half;
+				Float2 offset = Jitter ? Random.Next2() : Float2.half;
 				distro = new Distro2((position + offset) * scale);
 
 				if (position.x < size.x - 1) position += Int2.right;
@@ -101,13 +101,13 @@ namespace EchoRenderer.Rendering.Distributions
 			for (int i = 0; i < length; i++) spanX[i] = i;
 			for (int i = 0; i < length; i++) spanY[i] = i;
 
-			PRNG.Shuffle(spanX);
-			PRNG.Shuffle(spanY);
+			Random.Shuffle(spanX);
+			Random.Shuffle(spanY);
 
 			for (int i = 0; i < span.Length; i++)
 			{
 				ref Distro2 distro = ref span[i];
-				Float2 offset = Jitter ? PRNG.Next2() : Float2.half;
+				Float2 offset = Jitter ? Random.Next2() : Float2.half;
 				Float2 position = new Float2(spanX[i], spanY[i]);
 				distro = new Distro2((position + offset) * scale);
 			}

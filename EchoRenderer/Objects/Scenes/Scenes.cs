@@ -4,7 +4,9 @@ using CodeHelpers.Mathematics.Enumerables;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Textures;
 using EchoRenderer.Textures.Cubemaps;
 
 namespace EchoRenderer.Objects.Scenes
@@ -15,12 +17,14 @@ namespace EchoRenderer.Objects.Scenes
 		{
 			var mesh = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
 			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
-			var material = new Matte();
+			var material = new Matte { Albedo = Texture.white };
 
-			children.Add(new Camera(110f) {Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f)});
+			children.Add(new Camera(110f) { Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f) });
 
 			// children.Add(new MeshObject(mesh, materials) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 			children.Add(new MeshObject(mesh, material) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
+
+			children.Add(new PointLight { Intensity = Float3.one * 10f, Position = new Float3(2f, 1f, -6f) });
 		}
 	}
 
@@ -120,28 +124,28 @@ namespace EchoRenderer.Objects.Scenes
 			ObjectPack bunny = new ObjectPack();
 			ObjectPack bunnyWall = new ObjectPack();
 
-			bunny.children.Add(new MeshObject(mesh, material) {Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f});
-			bunny.children.Add(new SphereObject(material, 0.1f) {Position = new Float3(-0.3f, 0.2f, -0.3f)});
+			bunny.children.Add(new MeshObject(mesh, material) { Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f });
+			bunny.children.Add(new SphereObject(material, 0.1f) { Position = new Float3(-0.3f, 0.2f, -0.3f) });
 
 			foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))
 			{
-				bunnyWall.children.Add(new ObjectInstance(bunny) {Position = offset.XY_});
+				bunnyWall.children.Add(new ObjectInstance(bunny) { Position = offset.XY_ });
 			}
 
 			for (int z = 0; z < 4; z++)
 			{
-				children.Add(new ObjectInstance(bunnyWall) {Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f)});
+				children.Add(new ObjectInstance(bunnyWall) { Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f) });
 			}
 
-			bunnyWall.children.Add(new PlaneObject(material, Float2.one) {Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f)});
+			bunnyWall.children.Add(new PlaneObject(material, Float2.one) { Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });
 			// bunnyWall.children.Add(new ObjectPackInstance(bunnyWall)); //Tests recursive instancing
 
 			children.Add(new BoxObject(material, Float3.one));
-			children.Add(new PlaneObject(material, Float2.one * 0.9f) {Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f)});
+			children.Add(new PlaneObject(material, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
 
 			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.5f);
 
-			var camera = new Camera(110f) {Position = new Float3(4f, 27f, -25f)};
+			var camera = new Camera(110f) { Position = new Float3(4f, 27f, -25f) };
 
 			camera.LookAt(Float3.zero);
 			children.Add(camera);

@@ -58,7 +58,7 @@ namespace EchoRenderer.Rendering.Distributions
 		/// <summary>
 		/// The specific pseudo random number generator associated with this <see cref="Distribution"/>.
 		/// </summary>
-		public IRandom PRNG { get; set; }
+		public IRandom Random { get; set; }
 
 		/// <summary>
 		/// Requests a span of one dimensional values with <paramref name="length"/> to be available.
@@ -104,12 +104,12 @@ namespace EchoRenderer.Rendering.Distributions
 		/// <summary>
 		/// Returns the next span of one dimensional values of this sample.
 		/// </summary>
-		public ReadOnlySpan<Distro1> NextSpanOne() => ++arrayOneIndex < arrayOnes.Count ?  arrayOnes[arrayOneIndex][SampleIndex] : Span<Distro1>.Empty;
+		public ReadOnlySpan<Distro1> NextSpanOne() => ++arrayOneIndex < arrayOnes.Count ? arrayOnes[arrayOneIndex][SampleIndex] : Span<Distro1>.Empty;
 
 		/// <summary>
 		/// Returns the next span of two dimensional values of this sample.
 		/// </summary>
-		public ReadOnlySpan<Distro2> NextSpanTwo() => ++arrayTwoIndex < arrayTwos.Count ?  arrayTwos[arrayTwoIndex][SampleIndex] : Span<Distro2>.Empty;
+		public ReadOnlySpan<Distro2> NextSpanTwo() => ++arrayTwoIndex < arrayTwos.Count ? arrayTwos[arrayTwoIndex][SampleIndex] : Span<Distro2>.Empty;
 
 		/// <summary>
 		/// Produces and returns another copy of this <see cref="Distribution"/> of the same <see cref="Object.GetType()"/> to be used for other threads.
