@@ -2,6 +2,7 @@
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
+using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
@@ -24,8 +25,10 @@ namespace EchoRenderer.Rendering.Pixels
 		/// </summary>
 		public virtual Arena CreateArena(RenderProfile profile, uint seed)
 		{
-			Assert.IsNotNull(SourceDistribution);
-			return new Arena(profile, SourceDistribution.Replicate());
+			Distribution distribution = SourceDistribution.Replicate();
+
+			distribution.Random = CreateRandom(seed);
+			return new Arena(profile, distribution);
 		}
 
 		/// <summary>
@@ -44,6 +47,12 @@ namespace EchoRenderer.Rendering.Pixels
 		/// Should create and return a source <see cref="Distribution"/> that will be used.
 		/// </summary>
 		protected virtual Distribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
+
+		/// <summary>
+		/// Optionally creates a <see cref="IRandom"/> with <paramref name="seed"/>. If this method does not return null,
+		/// the random it returned will be assigned to the <see cref="Distribution"/> created in <see cref="CreateArena"/>.
+		/// </summary>
+		protected virtual IRandom CreateRandom(uint seed) => new SquirrelRandom(seed);
 
 		/// <summary>
 		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit

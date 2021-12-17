@@ -15,7 +15,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public readonly FunctionType functionType;
 
-		public bool MatchType(FunctionType type) => (functionType & type) == type;
+		public bool MatchType(FunctionType type) => (functionType & type) == functionType;
 		public bool HasType(FunctionType   type) => (functionType & type) != 0;
 
 		/// <summary>
