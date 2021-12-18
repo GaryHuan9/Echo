@@ -50,7 +50,7 @@ namespace EchoRenderer
 
 		static readonly TiledRenderProfile pathTraceFastProfile = new()
 																  {
-																	  Method = new PathTraceNewWorker(),
+																	  Method = new PathTraceWorker(),
 																	  TilePattern = new CheckerboardPattern(),
 																	  PixelSample = 16,
 																	  AdaptiveSample = 80
@@ -104,9 +104,17 @@ namespace EchoRenderer
 				new(3840, 2160), new(1024, 1024), new(512, 512)
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]);  //Selects resolution and create buffer
-			TiledRenderProfile renderProfile = pathTraceFastProfile; //Selects or creates render profile
-			Scene scene = new SingleBunny();                         //Selects or creates scene
+			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
+			TiledRenderProfile renderProfile;                       //Selects or creates render profile
+			Scene scene = new SingleBunny();                        //Selects or creates scene
+
+			renderProfile = new TiledRenderProfile
+							{
+								Method = new PathTraceNewWorker(),
+								TilePattern = new CheckerboardPattern(),
+								PixelSample = 64,
+								BounceLimit = 128
+							};
 
 			DebugHelper.Log("Assets loaded");
 

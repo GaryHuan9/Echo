@@ -38,6 +38,16 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
+		/// Returns the sampled probability density (pdf) for a given pair of
+		/// <paramref name="outgoing"/> and <paramref name="incident"/> directions.
+		/// </summary>
+		public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
+		{
+			if (!SameHemisphere(outgoing, incident)) return 0f;
+			return AbsoluteCosine(incident) * (1f / Scalars.PI);
+		}
+
+		/// <summary>
 		/// Returns the hemispherical-directional reflectance, the total reflectance in direction
 		/// <paramref name="outgoing"/> due to a constant illumination over the doming hemisphere
 		/// </summary>
@@ -77,16 +87,6 @@ namespace EchoRenderer.Rendering.Scattering
 			}
 
 			return result / length;
-		}
-
-		/// <summary>
-		/// Returns the sampled probability density (pdf) for a given pair of
-		/// <paramref name="outgoing"/> and <paramref name="incident"/> directions.
-		/// </summary>
-		public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
-		{
-			if (!SameHemisphere(outgoing, incident)) return 0f;
-			return AbsoluteCosine(incident) * (1f / Scalars.PI);
 		}
 
 		/// <summary>

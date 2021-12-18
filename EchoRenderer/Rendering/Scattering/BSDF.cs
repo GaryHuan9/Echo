@@ -150,6 +150,30 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
+		/// Returns the aggregated probability density for all <see cref="BxDF"/> that matches with
+		/// <paramref name="type"/>. See <see cref="BxDF.ProbabilityDensity"/> for more information.
+		/// </summary>
+		public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
+		{
+			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
+			Float3 incident = transform.WorldToLocal(incidentWorld);
+
+			int matched = 0;
+			float pdf = 0f;
+
+			for (int i = 0; i < count; i++)
+			{
+				BxDF function = functions[i];
+				if (!function.MatchType(type)) continue;
+
+				pdf += function.ProbabilityDensity(outgoing, incident);
+				++matched;
+			}
+
+			return matched == 0 ? 0f : pdf / matched;
+		}
+
+		/// <summary>
 		/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
 		/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Distribution2})"/> for more information.
 		/// </summary>
@@ -184,30 +208,6 @@ namespace EchoRenderer.Rendering.Scattering
 			}
 
 			return reflectance;
-		}
-
-		/// <summary>
-		/// Returns the aggregated probability density for all <see cref="BxDF"/> that matches with
-		/// <paramref name="type"/>. See <see cref="BxDF.ProbabilityDensity"/> for more information.
-		/// </summary>
-		public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
-		{
-			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-			Float3 incident = transform.WorldToLocal(incidentWorld);
-
-			int matched = 0;
-			float pdf = 0f;
-
-			for (int i = 0; i < count; i++)
-			{
-				BxDF function = functions[i];
-				if (!function.MatchType(type)) continue;
-
-				pdf += function.ProbabilityDensity(outgoing, incident);
-				++matched;
-			}
-
-			return matched == 0 ? 0f : pdf / matched;
 		}
 
 		/// <summary>
