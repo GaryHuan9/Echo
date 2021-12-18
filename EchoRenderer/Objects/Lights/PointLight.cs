@@ -6,8 +6,6 @@ namespace EchoRenderer.Objects.Lights
 {
 	public class PointLight : Light
 	{
-		public override Float3 Power => 2f * Scalars.TAU * Intensity;
-
 		public override bool IsDelta => true;
 
 		public override Float3 Sample(in Interaction interaction, in Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel)
