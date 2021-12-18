@@ -21,11 +21,6 @@ namespace EchoRenderer.Objects.Lights
 		public int SampleCount { get; set; } = 1;
 
 		/// <summary>
-		/// The approximated outputting power of this <see cref="Light"/>.
-		/// </summary>
-		public abstract Float3 Power { get; }
-
-		/// <summary>
 		/// Returns whether this <see cref="Light"/> is a delta <see cref="Light"/>,
 		/// which means it only starts at a point or only exists in one direction.
 		/// </summary>

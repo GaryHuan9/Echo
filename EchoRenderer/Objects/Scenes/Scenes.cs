@@ -11,20 +11,19 @@ using EchoRenderer.Textures.Cubemaps;
 
 namespace EchoRenderer.Objects.Scenes
 {
-	public class SingleBunny : Scene
+	public class SingleBunny : StandardScene
 	{
 		public SingleBunny()
 		{
-			var mesh = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
+			var mesh = new Mesh("Assets/Models/StanfordBunny/highPoly.obj");
 			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
 			var material = new Matte { Albedo = Texture.white };
-
-			children.Add(new Camera(110f) { Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f) });
 
 			// children.Add(new MeshObject(mesh, materials) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 			children.Add(new MeshObject(mesh, material) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 
-			children.Add(new PointLight { Intensity = Float3.one * 10f, Position = new Float3(2f, 1f, -6f) });
+			children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
+			children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
 		}
 	}
 
@@ -115,7 +114,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public TestInstancing()
 		{
-			var mesh = new Mesh("Assets/Models/StanfordBunny/bunny.obj");
+			var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 			var material = new Matte();
 
 			// var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
