@@ -9,7 +9,7 @@ using EchoRenderer.Objects.Lights;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Textures.Cubemaps;
+using EchoRenderer.Textures.Directional;
 using Object = EchoRenderer.Objects.Object;
 
 namespace EchoRenderer.Rendering
@@ -22,9 +22,9 @@ namespace EchoRenderer.Rendering
 		public PressedScene(Scene source, ScenePressProfile profile)
 		{
 			this.source = source;
-			cubemap = source.Cubemap;
 
-			var lightsList = new List<Light>();
+			_skyboxes = source.skyboxes.ToArray();
+			var lightsList = new List<LightSource>();
 
 			//Gather important objects
 			foreach (Object child in source.LoopChildren(true))
@@ -38,7 +38,7 @@ namespace EchoRenderer.Rendering
 
 						break;
 					}
-					case Light value:
+					case LightSource value:
 					{
 						lightsList.Add(value);
 						break;
@@ -48,7 +48,7 @@ namespace EchoRenderer.Rendering
 				if (child.Scale.MinComponent <= 0f) throw new Exception($"Cannot have non-positive scales! '{child.Scale}'");
 			}
 
-			lights = lightsList.ToArray();
+			_lightSources = lightsList.ToArray();
 			presser = new ScenePresser(source, profile);
 
 			//Create root instance and press materials
@@ -56,21 +56,22 @@ namespace EchoRenderer.Rendering
 			presser.materials.Press();
 
 			//Press lights
-			foreach (Light light in lights) light.Press(this);
+			foreach (LightSource light in LightSources) light.Press(this);
 
 			DebugHelper.Log("Pressed scene");
 		}
 
-		public readonly Scene source;
 		public readonly ScenePresser presser;
-
+		public readonly Scene source;
 		public readonly Camera camera;
-		public readonly Cubemap cubemap;
-		readonly Light[] lights;
 
-		long _traceCount; //Intersection count
+		readonly DirectionalTexture[] _skyboxes;
+		readonly LightSource[] _lightSources;
 
-		public ReadOnlySpan<Light> Lights => lights;
+		public ReadOnlySpan<DirectionalTexture> Skyboxes => _skyboxes;
+		public ReadOnlySpan<LightSource> LightSources => _lightSources;
+
+		long _traceCount;
 
 		public long TraceCount => Interlocked.Read(ref _traceCount);
 

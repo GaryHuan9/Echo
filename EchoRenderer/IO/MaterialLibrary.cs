@@ -10,7 +10,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Pooling;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.IO
 {
@@ -171,7 +171,7 @@ namespace EchoRenderer.IO
 			public void Operate()
 			{
 				bool normal = Property.Name.Contains("normal", StringComparison.InvariantCultureIgnoreCase);
-				Property.SetValue(Target, Texture2D.Load(path, !normal)); //Special case for normal maps to not use sRGB
+				Property.SetValue(Target, TextureGrid.Load(path, !normal)); //Special case for normal maps to not use sRGB
 			}
 		}
 	}

@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.PostProcessing.Operators;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -15,7 +15,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public float Threshold { get; set; } = 0.95f;
 
 		readonly float deviation;
-		Array2D workerBuffer;
+		ArrayGrid workerBuffer;
 
 		public override void Dispatch()
 		{

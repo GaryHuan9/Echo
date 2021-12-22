@@ -4,7 +4,7 @@ using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Pooling;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -72,7 +72,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 			lock (processLocker) Monitor.PulseAll(processLocker);
 		}
 
-		public class Array2DPooler : PoolerBase<Array2D>
+		public class Array2DPooler : PoolerBase<ArrayGrid>
 		{
 			public Array2DPooler(Int2 size) => this.size = size;
 
@@ -80,8 +80,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 
 			protected override int MaxPoolSize => 16;
 
-			protected override Array2D GetNewObject() => new(size);
-			protected override void Reset(Array2D target) { }
+			protected override ArrayGrid GetNewObject() => new(size);
+			protected override void Reset(ArrayGrid target) { }
 		}
 	}
 }

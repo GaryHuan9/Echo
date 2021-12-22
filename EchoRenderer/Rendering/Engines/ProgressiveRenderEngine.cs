@@ -8,7 +8,7 @@ using CodeHelpers.Threads;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 using ThreadState = System.Threading.ThreadState;
 
 namespace EchoRenderer.Rendering.Engines
@@ -199,8 +199,8 @@ namespace EchoRenderer.Rendering.Engines
 
 			public void Recreate(RenderBuffer newBuffer)
 			{
-				RebuildMajor(ref patternMajor, newBuffer.size[Array2D.MajorAxis]);
-				RebuildPattern(ref patternMinor, newBuffer.size[Array2D.MinorAxis]);
+				RebuildMajor(ref patternMajor, newBuffer.size[ArrayGrid.MajorAxis]);
+				RebuildPattern(ref patternMinor, newBuffer.size[ArrayGrid.MinorAxis]);
 
 				int oldLength = Buffer?.size.Product ?? 0;
 				int newLength = newBuffer.size.Product;
@@ -215,7 +215,7 @@ namespace EchoRenderer.Rendering.Engines
 
 			public Int2 GetPosition(int index) => Int2.Create
 			(
-				Array2D.MajorAxis,
+				ArrayGrid.MajorAxis,
 				patternMajor[index / patternMinor.Length],
 				patternMinor[index % patternMinor.Length]
 			);

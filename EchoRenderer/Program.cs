@@ -18,7 +18,8 @@ using EchoRenderer.Rendering.PostProcessing.ToneMappers;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Generative;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer
 {
@@ -181,7 +182,7 @@ namespace EchoRenderer
 		static void SimplexNoise()
 		{
 			TestGenerative simplex = new TestGenerative(42, 4);
-			Array2D texture = new Array2D((Int2)1080);
+			ArrayGrid texture = new ArrayGrid((Int2)1080);
 
 			simplex.Tiling = (Float2)1f;
 			simplex.Offset = (Float2)1f;
@@ -193,7 +194,7 @@ namespace EchoRenderer
 		static void FontTesting()
 		{
 			Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
-			Array2D output = new Array2D((Int2)2048);
+			ArrayGrid output = new ArrayGrid((Int2)2048);
 
 			foreach (Int2 position in output.size.Loop()) output[position] = Vector128.Create(0f, 0f, 1f, 1f);
 			font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.one));
@@ -203,7 +204,7 @@ namespace EchoRenderer
 
 		static void PostProcessTesting()
 		{
-			Array2D texture = Texture2D.Load("render.fpi");
+			ArrayGrid texture = TextureGrid.Load("render.fpi");
 			RenderBuffer buffer = new RenderBuffer(texture.size);
 
 			buffer.CopyFrom(texture);

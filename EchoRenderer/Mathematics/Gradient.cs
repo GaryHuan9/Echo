@@ -2,22 +2,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Generative;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Mathematics
 {
-	public class Gradient : IEnumerable<float>
+	/// <summary>
+	/// A blend of colors defined at specific percentages which linearly fade between each other.
+	/// </summary>
+	public class Gradient : IEnumerable<float>, ISealable
 	{
+		static Gradient()
+		{
+			black.Seal();
+			white.Seal();
+		}
+
+		public bool IsSealed { get; private set; }
+
 		readonly List<Anchor> anchors = new();
+
+		public static readonly Gradient black = new() { { 0f, Float4.ana } };
+		public static readonly Gradient white = new() { { 0f, Float4.one } };
 
 		public Float4 this[float percent] => Utilities.ToFloat4(SampleVector(percent));
 
-		public void Add(float percent, Float4 color)
+		/// <summary>
+		/// Inserts a new <paramref name="color"/> at <paramref name="percent"/> to this <see cref="Gradient"/>.
+		/// </summary>
+		public void Add(float percent, in Float4 color)
 		{
+			this.AssertNotSealed();
+
 			int index = anchors.BinarySearch(percent, Comparer.instance);
 			Anchor anchor = new Anchor(percent, color);
 
@@ -25,8 +45,14 @@ namespace EchoRenderer.Mathematics
 			else anchors.Insert(~index, anchor);
 		}
 
+		/// <summary>
+		/// Removes a color that was added with <see cref="Add"/> at <paramref name="percent"/>.
+		/// Returns whether the <see cref="Remove"/> operation was successfully completed.
+		/// </summary>
 		public bool Remove(float percent)
 		{
+			this.AssertNotSealed();
+
 			int index = anchors.BinarySearch(percent, Comparer.instance);
 			if (index < 0) return false;
 
@@ -34,7 +60,9 @@ namespace EchoRenderer.Mathematics
 			return true;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		/// <summary>
+		/// Samples this <see cref="Gradient"/> and returns the vector color value at <paramref name="percent"/>.
+		/// </summary>
 		public Vector128<float> SampleVector(float percent)
 		{
 			if (anchors.Count == 0) throw new Exception("Cannot sample with zero anchor!");
@@ -50,20 +78,23 @@ namespace EchoRenderer.Mathematics
 			return Utilities.Lerp(head.vector, tail.vector, Vector128.Create(time));
 		}
 
-		public void Draw(Texture2D texture, Float2 point0, Float2 point1)
-		{
-			Segment2 segment = new Segment2(point0, point1);
-			texture.ForEach(SamplePixel);
+		/// <summary>
+		/// Draws this <see cref="Gradient"/> on <paramref name="texture"/> from <paramref name="point0"/> to <paramref name="point1"/>.
+		/// </summary>
+		public void Draw(TextureGrid texture, Float2 point0, Float2 point1) => texture.CopyFrom(new GradientTexture(this, point0, point1));
 
-			void SamplePixel(Int2 position)
-			{
-				float percent = segment.ClosestInverseLerpUnclamped(position + Float2.half);
-				texture[position] = SampleVector(percent);
-			}
+		/// <summary>
+		/// Seals this <see cref="Gradient"/> so it cannot be modified anymore.
+		/// </summary>
+		public void Seal()
+		{
+			this.AssertNotSealed();
+			IsSealed = true;
 		}
 
-		public IEnumerator<float> GetEnumerator() => anchors.Select(anchor => anchor.percent).GetEnumerator();
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		IEnumerator<float> IEnumerable<float>.GetEnumerator() => anchors.Select(anchor => anchor.percent).GetEnumerator();
+
+		IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<float>)this).GetEnumerator();
 
 		class Comparer : IDoubleComparer<Anchor, float>
 		{
@@ -78,10 +109,10 @@ namespace EchoRenderer.Mathematics
 
 		readonly struct Anchor
 		{
-			public Anchor(float percent, Float4 color)
+			public Anchor(float percent, in Float4 color)
 			{
 				this.percent = percent;
-				vector = Unsafe.As<Float4, Vector128<float>>(ref color);
+				vector = Utilities.ToVector(color);
 			}
 
 			public readonly float percent;

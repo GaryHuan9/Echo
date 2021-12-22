@@ -9,12 +9,12 @@ namespace EchoRenderer.Objects.GeometryObjects
 	{
 		protected GeometryObject(Material material) => Material = material;
 
-		Material _material;
+		NotNull<Material> _material;
 
-		public virtual Material Material
+		public Material Material
 		{
 			get => _material;
-			set => _material = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
+			set => _material = value;
 		}
 
 		/// <summary>

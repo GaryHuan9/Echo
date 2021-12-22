@@ -4,7 +4,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.PostProcessing.Operators;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -15,8 +15,8 @@ namespace EchoRenderer.Rendering.PostProcessing
 	{
 		public Watermark(PostProcessingEngine engine) : base(engine) { }
 
-		Crop2D cropWorker;
-		Crop2D cropTarget;
+		CropGrid cropWorker;
+		CropGrid cropTarget;
 
 		Vector128<float> tintVector;
 
@@ -47,12 +47,12 @@ namespace EchoRenderer.Rendering.PostProcessing
 			//Allocate resources for full resolution Gaussian blur
 			float deviation = height * BlurDeviation;
 
-			using var handle = CopyTemporaryBuffer(out Array2D workerBuffer);
+			using var handle = CopyTemporaryBuffer(out ArrayGrid workerBuffer);
 			using var blur = new GaussianBlur(this, workerBuffer, deviation);
 
 			//Start watermark stamping passes
-			cropWorker = new Crop2D(workerBuffer, min, max);
-			cropTarget = new Crop2D(renderBuffer, min, max);
+			cropWorker = new CropGrid(workerBuffer, min, max);
+			cropTarget = new CropGrid(renderBuffer, min, max);
 
 			var grab = new LuminanceGrab(this, cropWorker);
 

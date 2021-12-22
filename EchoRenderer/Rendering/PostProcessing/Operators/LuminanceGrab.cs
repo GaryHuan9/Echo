@@ -3,13 +3,13 @@ using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.PostProcessing.Operators
 {
 	public class LuminanceGrab
 	{
-		public LuminanceGrab(PostProcessingWorker worker, Texture2D sourceBuffer)
+		public LuminanceGrab(PostProcessingWorker worker, TextureGrid sourceBuffer)
 		{
 			this.worker = worker;
 			this.sourceBuffer = sourceBuffer;
@@ -18,7 +18,7 @@ namespace EchoRenderer.Rendering.PostProcessing.Operators
 		public float Luminance { get; private set; }
 
 		readonly PostProcessingWorker worker;
-		readonly Texture2D sourceBuffer;
+		readonly TextureGrid sourceBuffer;
 
 		double luminanceTotal;
 

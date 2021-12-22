@@ -1,7 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Textures.Cubemaps;
+using EchoRenderer.Textures.Directional;
 
 namespace EchoRenderer.Objects.Scenes
 {
@@ -9,7 +9,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public BallRoom()
 		{
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)0.02f);
+			Skybox = new Cubemap("Assets/Cubemaps/OutsideDayTime", (Float3)0.02f);
 
 			var mesh = new Mesh("Assets/Models/Excluded/BallRoom/ballRoom.obj");
 			var materials = new MaterialLibrary("Assets/Models/Excluded/BallRoom/ballRoom.mat");
