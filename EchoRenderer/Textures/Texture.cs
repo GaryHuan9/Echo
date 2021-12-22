@@ -5,7 +5,7 @@ using CodeHelpers.Mathematics;
 namespace EchoRenderer.Textures
 {
 	/// <summary>
-	/// A rectangular area of RGBA four channeled pixel colors.
+	/// An infinite area of RGBA four channeled pixel colors.
 	/// </summary>
 	public abstract class Texture
 	{

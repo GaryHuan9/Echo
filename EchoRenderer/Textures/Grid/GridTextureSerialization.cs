@@ -11,9 +11,9 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures.DimensionTwo
+namespace EchoRenderer.Textures.Grid
 {
-	public partial class Texture2D
+	public partial class TextureGrid
 	{
 		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif", FloatingPointImageExtension});
 		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif, null});
@@ -81,7 +81,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 			bitmap.Save(path, compatibleFormats[extensionIndex]);
 		}
 
-		public static unsafe Array2D Load(string path, bool sRGB = true)
+		public static unsafe ArrayGrid Load(string path, bool sRGB = true)
 		{
 			path = AssetsUtility.GetAbsolutePath(acceptableFileExtensions, path);
 
@@ -91,7 +91,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 			PixelFormat format = source.PixelFormat;
 			Int2 size = new Int2(source.Width, source.Height);
 
-			Array2D texture = new Array2D(size);
+			ArrayGrid texture = new ArrayGrid(size);
 
 			Rectangle rectangle = new Rectangle(0, 0, texture.size.x, texture.size.y);
 			BitmapData data = source.LockBits(rectangle, ImageLockMode.ReadOnly, format);
@@ -180,7 +180,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 			Write(writer);
 		}
 
-		static Array2D ReadFloatingPointImage(string path)
+		static ArrayGrid ReadFloatingPointImage(string path)
 		{
 			using DataReader reader = new DataReader(File.Open(path, FileMode.Open));
 
@@ -209,10 +209,10 @@ namespace EchoRenderer.Textures.DimensionTwo
 			}
 		}
 
-		static unsafe Array2D Read(DataReader reader)
+		static unsafe ArrayGrid Read(DataReader reader)
 		{
 			Int2 size = reader.ReadInt2Compact();
-			Array2D texture = new Array2D(size);
+			ArrayGrid texture = new ArrayGrid(size);
 
 			var sequence = Vector128<uint>.Zero;
 			uint* read = stackalloc uint[4];

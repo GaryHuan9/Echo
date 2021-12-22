@@ -7,7 +7,7 @@ using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
-using EchoRenderer.Textures.Cubemaps;
+using EchoRenderer.Textures.Directional;
 
 namespace EchoRenderer.Objects.Scenes
 {
@@ -15,7 +15,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public SingleBunny()
 		{
-			var mesh = new Mesh("Assets/Models/StanfordBunny/highPoly.obj");
+			var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
 			var material = new Matte { Albedo = Texture.white };
 
@@ -89,7 +89,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public GridSpheres()
 		{
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime");
+			Skybox = new Cubemap("Assets/Cubemaps/OutsideDayTime");
 			children.Add(new Camera(100f) { Position = new Float3(0f, 0f, -3f), Rotation = Float3.zero });
 
 			const int Width = 10;
@@ -142,7 +142,7 @@ namespace EchoRenderer.Objects.Scenes
 			children.Add(new BoxObject(material, Float3.one));
 			children.Add(new PlaneObject(material, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
 
-			Cubemap = new SixSideCubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.5f);
+			Skybox = new Cubemap("Assets/Cubemaps/OutsideDayTime", (Float3)1.5f);
 
 			var camera = new Camera(110f) { Position = new Float3(4f, 27f, -25f) };
 

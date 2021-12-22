@@ -71,9 +71,8 @@ namespace EchoRenderer.Rendering.Pixels
 			if (bounce >= profile.BounceLimit) CodeHelpers.Diagnostics.DebugHelper.Log("Bounce limit reached!");
 #endif
 
-			var cubemap = scene.cubemap;
-
-			if (cubemap != null) colors += energy * cubemap.Sample(query.ray.direction);
+			// var cubemap = scene.cubemap;
+			// if (cubemap != null) colors += energy * cubemap.Sample(query.ray.direction);
 
 			if (bounce > 0)
 			{

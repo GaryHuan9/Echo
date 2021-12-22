@@ -5,13 +5,13 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Pooling;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.PostProcessing.Operators
 {
 	public class GaussianBlur : IDisposable
 	{
-		public GaussianBlur(PostProcessingWorker worker, Texture2D sourceBuffer, float deviation = 1f, int quality = 4)
+		public GaussianBlur(PostProcessingWorker worker, TextureGrid sourceBuffer, float deviation = 1f, int quality = 4)
 		{
 			this.worker = worker;
 			this.sourceBuffer = sourceBuffer;
@@ -24,8 +24,8 @@ namespace EchoRenderer.Rendering.PostProcessing.Operators
 
 		readonly PostProcessingWorker worker;
 
-		readonly Texture2D sourceBuffer;
-		readonly Texture2D workerBuffer;
+		readonly TextureGrid sourceBuffer;
+		readonly TextureGrid workerBuffer;
 
 		public readonly float deviation;
 		public readonly int quality;
@@ -49,7 +49,7 @@ namespace EchoRenderer.Rendering.PostProcessing.Operators
 		int radius;
 
 		Vector128<float> radiusDivisor;
-		ReleaseHandle<Array2D> handle;
+		ReleaseHandle<ArrayGrid> handle;
 
 		public void Run()
 		{
@@ -71,7 +71,7 @@ namespace EchoRenderer.Rendering.PostProcessing.Operators
 		void HorizontalBlurPass(int vertical)
 		{
 			Vector128<float> accumulator = Utilities.vector0;
-			Texture2D texture = sourceBuffer;
+			TextureGrid texture = sourceBuffer;
 
 			for (int x = -radius; x < radius; x++) accumulator = Sse.Add(accumulator, Get(x));
 
@@ -94,7 +94,7 @@ namespace EchoRenderer.Rendering.PostProcessing.Operators
 		void VerticalBlurPass(int horizontal)
 		{
 			Vector128<float> accumulator = Utilities.vector0;
-			Texture2D texture = workerBuffer;
+			TextureGrid texture = workerBuffer;
 
 			for (int y = -radius; y < radius; y++) accumulator = Sse.Add(accumulator, Get(y));
 

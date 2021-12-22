@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures.DimensionTwo
+namespace EchoRenderer.Textures.Grid
 {
 	/// <summary>
-	/// A regular <see cref="Array2D"/> with albedo and normal auxiliary data.
+	/// A regular <see cref="ArrayGrid"/> with albedo and normal auxiliary data.
 	/// </summary>
-	public class RenderBuffer : Array2D
+	public class RenderBuffer : ArrayGrid
 	{
 		public RenderBuffer(Int2 size) : base(size)
 		{
@@ -31,14 +31,14 @@ namespace EchoRenderer.Textures.DimensionTwo
 		public void SetZDepth(Int2 position, float value) => zDepths[ToIndex(position)] = value;
 
 		/// <summary>
-		/// Creates and returns an <see cref="Array2D"/> texture to visualize the <see cref="albedos"/> data.
+		/// Creates and returns an <see cref="ArrayGrid"/> texture to visualize the <see cref="albedos"/> data.
 		/// </summary>
-		public Array2D CreateAlbedoTexture() => CreateTexture(albedos);
+		public ArrayGrid CreateAlbedoTexture() => CreateTexture(albedos);
 
 		/// <summary>
-		/// Creates and returns an <see cref="Array2D"/> texture to visualize the <see cref="normals"/> data.
+		/// Creates and returns an <see cref="ArrayGrid"/> texture to visualize the <see cref="normals"/> data.
 		/// </summary>
-		public Array2D CreateNormalTexture() => CreateTexture(normals);
+		public ArrayGrid CreateNormalTexture() => CreateTexture(normals);
 
 		public override void CopyFrom(Texture texture, bool parallel = true)
 		{
@@ -68,9 +68,9 @@ namespace EchoRenderer.Textures.DimensionTwo
 		/// </summary>
 		public Pin CreatePin() => new(this);
 
-		Array2D CreateTexture(IReadOnlyList<Float3> data)
+		ArrayGrid CreateTexture(IReadOnlyList<Float3> data)
 		{
-			Array2D texture = new Array2D(size);
+			ArrayGrid texture = new ArrayGrid(size);
 			texture.ForEach(SetPixel);
 
 			return texture;

@@ -8,7 +8,7 @@ using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface
