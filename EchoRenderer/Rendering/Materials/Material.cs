@@ -52,5 +52,10 @@ namespace EchoRenderer.Rendering.Materials
 			normal -= delta * NormalIntensity;
 			normal = normal.Normalized;
 		}
+
+		/// <summary>
+		/// Samples <paramref name="texture"/> at <paramref name="interaction"/> as a <see cref="Float4"/>.
+		/// </summary>
+		protected Float4 Sample(Texture texture, in Interaction interaction) => ToFloat4(texture[interaction.texcoord]);
 	}
 }

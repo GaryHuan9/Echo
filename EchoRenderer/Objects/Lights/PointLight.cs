@@ -4,7 +4,7 @@ using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Objects.Lights
 {
-	public class PointLight : Light
+	public class PointLight : LightSource
 	{
 		public override bool IsDelta => true;
 

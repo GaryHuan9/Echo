@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
-namespace EchoRenderer.Textures.Cubemaps
+namespace EchoRenderer.Textures.Directional
 {
-	public class SixSideCubemap : Cubemap
+	public class Cubemap : DirectionalTexture
 	{
-		public SixSideCubemap(string path) : this(path, Float3.one) { }
+		public Cubemap(string path) : this(path, Float3.one) { }
 
-		public SixSideCubemap(string path, Float3 multiplier)
+		public Cubemap(string path, Float3 multiplier)
 		{
 			var names = IndividualTextureNames;
 			Texture[] sources = new Texture[names.Count];
@@ -23,13 +26,13 @@ namespace EchoRenderer.Textures.Cubemaps
 			if (error != null) throw error;
 
 			textures = new ReadOnlyCollection<Texture>(sources);
-			this.multiplier = multiplier;
+			multiplierVector = Utilities.ToVector(multiplier);
 
 			void Load(int index, ParallelLoopState state)
 			{
 				try
 				{
-					sources[index] = Texture2D.Load(Path.Combine(path, names[index]));
+					sources[index] = TextureGrid.Load(Path.Combine(path, names[index]));
 				}
 				catch (FileNotFoundException exception)
 				{
@@ -40,11 +43,11 @@ namespace EchoRenderer.Textures.Cubemaps
 		}
 
 		readonly ReadOnlyCollection<Texture> textures;
-		readonly Float3 multiplier;
+		readonly Vector128<float> multiplierVector;
 
 		public static readonly ReadOnlyCollection<string> IndividualTextureNames = new(new[] {"px", "py", "pz", "nx", "ny", "nz"});
 
-		public override Float3 Sample(in Float3 direction)
+		public override Vector128<float> Sample(in Float3 direction)
 		{
 			int index = direction.Absoluted.MaxIndex;
 
@@ -69,6 +72,7 @@ namespace EchoRenderer.Textures.Cubemaps
 		/// Samples a specific bitmap at <paramref name="uv"/>.
 		/// <paramref name="uv"/> is between -0.5 to 0.5 with zero in the middle.
 		/// </summary>
-		Float3 Sample(int index, Float2 uv) => Utilities.ToFloat4(textures[index][uv + Float2.half]).XYZ * multiplier;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		Vector128<float> Sample(int index, Float2 uv) => Sse.Multiply(textures[index][uv + Float2.half], multiplierVector);
 	}
 }

@@ -2,7 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.PostProcessing.Operators;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.PostProcessing
 {
@@ -21,7 +21,7 @@ namespace EchoRenderer.Rendering.PostProcessing
 		public float FarStart { get; set; } = 15f;
 		public float FarEnd { get; set; } = 20f;
 
-		Array2D workerBuffer;
+		ArrayGrid workerBuffer;
 
 		MinMax nearMinMax;
 		MinMax farMinMax;

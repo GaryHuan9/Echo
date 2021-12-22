@@ -5,7 +5,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Pixels;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.Engines
 {

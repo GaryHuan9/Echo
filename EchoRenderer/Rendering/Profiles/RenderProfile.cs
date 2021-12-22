@@ -3,7 +3,7 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Rendering.Pixels;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.Profiles
 {

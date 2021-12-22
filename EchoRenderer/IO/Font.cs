@@ -7,7 +7,7 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerables;
 using EchoRenderer.Mathematics;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.IO
 {
@@ -15,7 +15,7 @@ namespace EchoRenderer.IO
 	{
 		Font(string path)
 		{
-			texture = Texture2D.Load(path);
+			texture = TextureGrid.Load(path);
 
 			Int2 size = texture.size;
 			Int2 glyph = size / MapSize;
@@ -55,7 +55,7 @@ namespace EchoRenderer.IO
 			}
 		}
 
-		readonly Texture2D texture;
+		readonly TextureGrid texture;
 		readonly Glyph[] glyphs;
 
 		readonly float glyphAspect;
@@ -68,7 +68,7 @@ namespace EchoRenderer.IO
 		/// Draws <paramref name="character"/> to <paramref name="destination"/> at <see cref="center"/>
 		/// with this <see cref="Font"/> and <paramref name="style"/>.
 		/// </summary>
-		public void Draw(Texture2D destination, char character, Float2 center, Style style)
+		public void Draw(TextureGrid destination, char character, Float2 center, Style style)
 		{
 			Glyph glyph = glyphs[GetIndex(character)];
 			float multiplier = MapSize * style.Height;
@@ -109,7 +109,7 @@ namespace EchoRenderer.IO
 		/// Draws <paramref name="text"/> to <paramref name="destination"/> at <see cref="center"/>
 		/// with this <see cref="Font"/> and <paramref name="style"/>.
 		/// </summary>
-		public void Draw(Texture2D destination, string text, Float2 center, Style style)
+		public void Draw(TextureGrid destination, string text, Float2 center, Style style)
 		{
 			float offset = text.Length / 2f - 0.5f;
 			float aspect = style.GlyphWidth * glyphAspect;

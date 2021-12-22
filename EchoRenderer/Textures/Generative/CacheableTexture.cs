@@ -1,11 +1,11 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.Generative
 {
-	public abstract class Generative : Texture
+	public abstract class CacheableTexture : Texture
 	{
-		protected Generative() : base(Wrappers.unbound) { }
+		protected CacheableTexture() : base(Wrappers.unbound) { }
 
 		public Float2 Tiling { get; set; } = Float2.one;
 		public Float2 Offset { get; set; } = Float2.zero;

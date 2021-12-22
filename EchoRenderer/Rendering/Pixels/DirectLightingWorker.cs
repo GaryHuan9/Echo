@@ -40,7 +40,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			Distribution distribution = arena.distribution;
 
-			foreach (Light light in arena.Scene.Lights)
+			foreach (LightSource light in arena.Scene.LightSources)
 			{
 				ReadOnlySpan<Distro2> distrosLight = distribution.NextSpanTwo();
 				ReadOnlySpan<Distro2> distrosScatter = distribution.NextSpanTwo();
@@ -67,7 +67,7 @@ namespace EchoRenderer.Rendering.Pixels
 			return radiance;
 		}
 
-		static Float3 EstimateDirect(in Interaction interaction, Light light, in Distro2 distroLight, in Distro2 distroScatter, Arena arena)
+		static Float3 EstimateDirect(in Interaction interaction, LightSource light, in Distro2 distroLight, in Distro2 distroScatter, Arena arena)
 		{
 			throw new NotImplementedException();
 		}
@@ -78,7 +78,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			for (int i = 0; i < profile.BounceLimit; i++)
 			{
-				foreach (Light light in profile.Scene.Lights)
+				foreach (LightSource light in profile.Scene.LightSources)
 				{
 					int count = light.SampleCount;
 

@@ -1,9 +1,12 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Textures.Directional;
 
 namespace EchoRenderer.Rendering.Pixels
 {
@@ -16,6 +19,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			TraceQuery query = scene.camera.GetRay(uv, random);
 
+			//Trace for intersection
 			while (scene.Trace(ref query))
 			{
 				Interaction interaction = scene.Interact(query, out Material material);
@@ -26,7 +30,15 @@ namespace EchoRenderer.Rendering.Pixels
 				query = query.SpawnTrace(query.ray.direction);
 			}
 
-			return scene.cubemap?.Sample(query.ray.direction) ?? Float3.zero;
+			//Sample skybox
+			Vector128<float> radiance = Vector128<float>.Zero;
+
+			foreach (DirectionalTexture skybox in scene.Skyboxes)
+			{
+				radiance = Sse.Add(radiance, skybox.Sample(query.ray.direction));
+			}
+
+			return Utilities.ToFloat3(radiance);
 		}
 	}
 }
