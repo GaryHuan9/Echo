@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Diagnostics;
+﻿using System;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
@@ -65,19 +66,19 @@ namespace EchoRenderer.Rendering.Pixels
 		static Float3 UniformSampleOneLight(in Interaction interaction, Arena arena)
 		{
 			//Handle degenerate cases
-			var lights = arena.Scene.Lights;
-			int lightCount = lights.Length;
+			ReadOnlySpan<LightSource> sources = arena.Scene.LightSources;
 
-			if (lightCount == 0) return Float3.zero;
+			int count = sources.Length;
+			if (count == 0) return Float3.zero;
 
 			//Finds one light to sample
 			Distro1 distro = arena.distribution.NextOne();
-			Light source = lights[distro.Range(lightCount)];
+			LightSource source = sources[distro.Range(count)];
 
-			return lightCount * EstimateDirect(interaction, source, arena);
+			return count * EstimateDirect(interaction, source, arena);
 		}
 
-		static Float3 EstimateDirect(in Interaction interaction, Light source, Arena arena)
+		static Float3 EstimateDirect(in Interaction interaction, LightSource source, Arena arena)
 		{
 			//Fetch needed stuff
 			Distro2 distroLight = arena.distribution.NextTwo();

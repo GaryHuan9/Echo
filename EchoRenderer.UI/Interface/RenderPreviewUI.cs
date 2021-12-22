@@ -1,5 +1,5 @@
 ﻿using EchoRenderer.Textures;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
 using Texture = SFML.Graphics.Texture;

@@ -4,14 +4,14 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures.DimensionTwo
+namespace EchoRenderer.Textures.Grid
 {
 	/// <summary>
-	/// A <see cref="Texture"/> only defined by integer positional pixel data.
+	/// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and size (exclusive).
 	/// </summary>
-	public abstract partial class Texture2D : Texture
+	public abstract partial class TextureGrid : Texture
 	{
-		protected Texture2D(Int2 size, IFilter filter) : base(Wrappers.repeat)
+		protected TextureGrid(Int2 size, IFilter filter) : base(Wrappers.repeat)
 		{
 			this.size = size;
 			oneLess = size - Int2.one;
@@ -57,12 +57,12 @@ namespace EchoRenderer.Textures.DimensionTwo
 		protected sealed override Vector128<float> GetPixel(Float2 uv) => Filter.Convert(this, uv);
 
 		/// <summary>
-		/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="Texture2D.size"/>.
+		/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid.size"/>.
 		/// </summary>
 		public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.zero, oneLess);
 
 		/// <summary>
-		/// Converts a pixel integer <paramref name="position"/> to this <see cref="Texture2D"/>'s texture coordinate.
+		/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid"/>'s texture coordinate.
 		/// </summary>
 		public Float2 ToUV(Int2 position) => (position + Float2.half) / size;
 
@@ -72,7 +72,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 		/// </summary>
 		public virtual void CopyFrom(Texture texture, bool parallel = true)
 		{
-			if (texture is Texture2D texture2D)
+			if (texture is TextureGrid texture2D)
 			{
 				AssertAlignedSize(texture2D);
 				ForEach(position => this[position] = texture2D[position], parallel);
@@ -92,7 +92,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 			}
 		}
 
-		protected void AssertAlignedSize(Texture2D texture)
+		protected void AssertAlignedSize(TextureGrid texture)
 		{
 			if (texture.size == size) return;
 			throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");

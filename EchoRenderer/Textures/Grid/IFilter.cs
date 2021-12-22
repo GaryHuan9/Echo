@@ -4,10 +4,10 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures.DimensionTwo
+namespace EchoRenderer.Textures.Grid
 {
 	/// <summary>
-	/// Retrieves the pixel of a <see cref="Texture2D"/> using a texture coordinate.
+	/// Retrieves the pixel of a <see cref="TextureGrid"/> using a texture coordinate.
 	/// </summary>
 	public interface IFilter
 	{
@@ -16,16 +16,16 @@ namespace EchoRenderer.Textures.DimensionTwo
 		/// </summary>
 		/// <param name="texture">The target texture to retrieve the color from.</param>
 		/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-		Vector128<float> Convert(Texture2D texture, Float2 uv);
+		Vector128<float> Convert(TextureGrid texture, Float2 uv);
 	}
 
 	/// <summary>
-	/// A struct to temporarily change a <see cref="Texture2D.Filter"/>
+	/// A struct to temporarily change a <see cref="TextureGrid.Filter"/>
 	/// and reverts the change after <see cref="Dispose"/> is invoked
 	/// </summary>
 	public readonly struct ScopedFilter : IDisposable
 	{
-		public ScopedFilter(Texture2D texture, IFilter filter)
+		public ScopedFilter(TextureGrid texture, IFilter filter)
 		{
 			this.texture = texture;
 
@@ -33,7 +33,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 			texture.Filter = filter;
 		}
 
-		readonly Texture2D texture;
+		readonly TextureGrid texture;
 		readonly IFilter   original;
 
 		public void Dispose() => texture.Filter = original;
@@ -46,7 +46,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 
 		class Point : IFilter
 		{
-			public Vector128<float> Convert(Texture2D texture, Float2 uv)
+			public Vector128<float> Convert(TextureGrid texture, Float2 uv)
 			{
 				Int2 position = (uv * texture.size).Floored;
 				return texture[position.Min(texture.oneLess)];
@@ -58,7 +58,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 			//If the performance of this bilinear filter is not fast enough anymore, we could always move to a 'native'
 			//implementation for Texture2D and allow derived class to provide customized implementations with virtual methods
 
-			public Vector128<float> Convert(Texture2D texture, Float2 uv)
+			public Vector128<float> Convert(TextureGrid texture, Float2 uv)
 			{
 				uv *= texture.size;
 

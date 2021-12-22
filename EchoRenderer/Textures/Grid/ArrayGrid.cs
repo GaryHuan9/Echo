@@ -3,20 +3,20 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures.DimensionTwo
+namespace EchoRenderer.Textures.Grid
 {
 	/// <summary>
-	/// The default <see cref="Texture2D"/>; stores RGBA color information with 32 bits per channel, supports full float range.
+	/// The default <see cref="TextureGrid"/>; stores RGBA color information with 32 bits per channel, supports full float range.
 	/// </summary>
-	public class Array2D : Texture2D
+	public class ArrayGrid : TextureGrid
 	{
-		public Array2D(Int2 size) : base(size, Filters.bilinear)
+		public ArrayGrid(Int2 size) : base(size, Filters.bilinear)
 		{
 			length = size.Product;
 			pixels = new Vector128<float>[length];
 		}
 
-		protected readonly int                length;
+		protected readonly int length;
 		protected readonly Vector128<float>[] pixels;
 
 		/// <summary>
@@ -57,7 +57,7 @@ namespace EchoRenderer.Textures.DimensionTwo
 
 		public override void CopyFrom(Texture texture, bool parallel = true)
 		{
-			if (texture is Array2D array2D)
+			if (texture is ArrayGrid array2D)
 			{
 				AssertAlignedSize(array2D);
 				Array.Copy(array2D.pixels, pixels, length);

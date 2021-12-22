@@ -8,20 +8,20 @@ namespace EchoRenderer.Objects.Lights
 	/// <summary>
 	/// A directional light. Infinitely far away pointed towards the local positive z axis.
 	/// </summary>
-	public abstract class Light : Object
+	public abstract class LightSource : Object
 	{
 		/// <summary>
-		/// The main color and intensity of this <see cref="Light"/>.
+		/// The main color and intensity of this <see cref="LightSource"/>.
 		/// </summary>
 		public Float3 Intensity { get; set; } = Float3.one;
 
 		/// <summary>
-		/// The number of consecutive samples that should be used to sample this <see cref="Light"/>.
+		/// The number of consecutive samples that should be used to sample this <see cref="LightSource"/>.
 		/// </summary>
 		public int SampleCount { get; set; } = 1;
 
 		/// <summary>
-		/// Returns whether this <see cref="Light"/> is a delta <see cref="Light"/>,
+		/// Returns whether this <see cref="LightSource"/> is a delta <see cref="LightSource"/>,
 		/// which means it only starts at a point or only exists in one direction.
 		/// </summary>
 		public abstract bool IsDelta { get; }
@@ -33,7 +33,7 @@ namespace EchoRenderer.Objects.Lights
 		public virtual void Press(PressedScene scene) => Intensity = Intensity.Max(Float3.zero);
 
 		/// <summary>
-		/// Samples the contribution of this <see cref="Light"/> to <paramref name="interaction"/>.
+		/// Samples the contribution of this <see cref="LightSource"/> to <paramref name="interaction"/>.
 		/// </summary>
 		public abstract Float3 Sample(in Interaction interaction, in Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel);
 

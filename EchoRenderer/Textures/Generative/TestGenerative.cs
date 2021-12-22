@@ -3,9 +3,9 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Noises;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures.Generative
 {
-	public class TestGenerative : Generative
+	public class TestGenerative : CacheableTexture
 	{
 		public TestGenerative(int seed, int layer, float persistence = 0.5f)
 		{

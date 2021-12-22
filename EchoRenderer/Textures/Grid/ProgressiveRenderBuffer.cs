@@ -4,7 +4,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
-namespace EchoRenderer.Textures.DimensionTwo
+namespace EchoRenderer.Textures.Grid
 {
 	/// <summary>
 	/// A slower <see cref="RenderBuffer"/> that is designed to be rendered on

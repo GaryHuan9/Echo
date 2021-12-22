@@ -25,10 +25,10 @@ namespace EchoRenderer.Rendering.Materials
 			bsdf = arena.allocator.New<BSDF>();
 			bsdf.Reset(interaction);
 
-			Float3 albedo = Utilities.ToFloat3(Albedo[interaction.texcoord]);
+			Float3 albedo = Sample(Albedo, interaction).XYZ;
 			if (arena.profile.IsZero(albedo)) return;
 
-			float deviation = FastMath.Clamp01(Deviation[interaction.texcoord].GetElement(0));
+			float deviation = FastMath.Clamp01(Sample(Deviation, interaction).x);
 
 			BxDF function;
 

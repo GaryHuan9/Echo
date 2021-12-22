@@ -3,7 +3,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Textures.DimensionTwo;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Terminals
 {
@@ -84,7 +84,7 @@ namespace EchoRenderer.Terminals
 		{
 			TiledRenderProfile profile = Engine.CurrentProfile;
 			ScenePresser presser = profile.Scene.presser;
-			Texture2D buffer = profile.RenderBuffer;
+			TextureGrid buffer = profile.RenderBuffer;
 
 			//Display configuration information
 			int totalPixel = buffer.size.Product;
