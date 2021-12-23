@@ -5,7 +5,7 @@ using EchoRenderer.Mathematics;
 namespace EchoRenderer.Textures
 {
 	/// <summary>
-	/// A pure-color <see cref="Texture"/>.
+	/// A readonly pure-color <see cref="Texture"/>.
 	/// </summary>
 	public class Pure : Texture
 	{
@@ -13,7 +13,7 @@ namespace EchoRenderer.Textures
 
 		public Pure(in Float4 color) : this(Utilities.ToVector(color)) { }
 		public Pure(in Float3 color) : this(Utilities.ToColor(color)) { }
-		public Pure(float     color) : this((Float3)color) { }
+		public Pure(float     color) : this(Utilities.ToColor(color)) { }
 
 		readonly Vector128<float> color;
 
