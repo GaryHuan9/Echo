@@ -11,7 +11,7 @@ namespace EchoRenderer.Textures.Directional
 		public CylindricalTexture() : this(Texture.black) { }
 		public CylindricalTexture(Texture texture) => Texture = texture;
 
-		Texture _texture;
+		NotNull<Texture> _texture;
 
 		public Texture Texture
 		{
