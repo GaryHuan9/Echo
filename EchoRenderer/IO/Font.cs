@@ -5,7 +5,7 @@ using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerables;
+using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Textures.Grid;
 
