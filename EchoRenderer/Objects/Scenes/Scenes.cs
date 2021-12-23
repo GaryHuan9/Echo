@@ -1,6 +1,6 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerables;
+using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;

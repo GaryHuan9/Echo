@@ -26,7 +26,7 @@ namespace EchoRenderer.Textures.Grid
 
 		/// <summary>
 		/// An array buffer that stores the color information in a nicely serializable format (8 bit per channel RGBA).
-		/// NOTE: Should not be modified by outside sources! Alpha channel is always <see cref="byte.MaxValue"/>.
+		/// NOTE: should not be modified by outside sources! Alpha channel is always <see cref="byte.MaxValue"/>.
 		/// </summary>
 		public readonly byte[] bytes;
 
@@ -115,8 +115,8 @@ namespace EchoRenderer.Textures.Grid
 
 		unsafe void ClearSerializedByteArray()
 		{
-			Color32 color32 = new Color32(0, 0, 0);
 			if (bytes.Length == 0) return;
+			var color32 = new Color32(0, 0, 0);
 
 			fixed (byte* p = &bytes[0])
 			{
