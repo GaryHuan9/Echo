@@ -5,6 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
@@ -24,6 +25,8 @@ namespace EchoRenderer.Textures.Grid
 		const float GammaMultiplier = 12.92f;
 		const float GammaOffset = 0.055f;
 		const float GammaExponent = 2.4f;
+
+		public Task SaveAsync(string relativePath, bool sRGB = true) => Task.Run(() => Save(relativePath, sRGB));
 
 		public void Save(string relativePath, bool sRGB = true)
 		{
@@ -80,6 +83,8 @@ namespace EchoRenderer.Textures.Grid
 			bitmap.UnlockBits(bits);
 			bitmap.Save(path, compatibleFormats[extensionIndex]);
 		}
+
+		public static Task<ArrayGrid> LoadAsync(string path, bool sRGB = true) => Task.Run(() => Load(path, sRGB));
 
 		public static unsafe ArrayGrid Load(string path, bool sRGB = true)
 		{

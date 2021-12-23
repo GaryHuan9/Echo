@@ -12,32 +12,37 @@ namespace EchoRenderer.Textures.Directional
 {
 	public class Cubemap : DirectionalTexture
 	{
-		public Cubemap(string path) : this(path, Float3.one) { }
-
-		public Cubemap(string path, Float3 multiplier)
+		public Cubemap()
 		{
-			Exception error = null;
+			Multiplier = Float3.one;
+			int length = names.Length;
 
-			textures = new NotNull<Texture>[names.Length];
-			Parallel.For(0, names.Length, LoadSingle);
-			if (error != null) throw error;
-
-			multiplierVector = Utilities.ToVector(multiplier);
-
-			void LoadSingle(int index, ParallelLoopState state)
-			{
-				try
-				{
-					string fullPath = Path.Combine(path, names[index]);
-					textures[index] = TextureGrid.Load(fullPath);
-				}
-				catch (FileNotFoundException exception)
-				{
-					error = exception;
-					state.Stop();
-				}
-			}
+			textures = new NotNull<Texture>[length];
+			for (int i = 0; i < length; i++) textures[i] = Texture.black;
 		}
+
+		public Cubemap(ReadOnlySpan<Texture> textures) : this()
+		{
+			int length = Math.Min(names.Length, textures.Length);
+			for (int i = 0; i < length; i++) this.textures[i] = textures[i];
+		}
+
+		public Cubemap(string path) : this()
+		{
+			int length = names.Length;
+			var tasks = new Task<ArrayGrid>[length];
+
+			for (int i = 0; i < length; i++)
+			{
+				string fullPath = Path.Combine(path, names[i]);
+				tasks[i] = TextureGrid.LoadAsync(fullPath);
+			}
+
+			for (int i = 0; i < length; i++) textures[i] = tasks[i].Result;
+		}
+
+		readonly NotNull<Texture>[] textures;
+		Vector128<float> multiplierVector;
 
 		public Texture this[Direction direction]
 		{
@@ -45,8 +50,11 @@ namespace EchoRenderer.Textures.Directional
 			set => textures[direction.Index] = value;
 		}
 
-		readonly NotNull<Texture>[] textures;
-		readonly Vector128<float> multiplierVector;
+		public Float3 Multiplier
+		{
+			get => Utilities.ToFloat3(multiplierVector);
+			set => multiplierVector = Utilities.ToVector(value);
+		}
 
 		static readonly string[] names = { "px", "py", "pz", "nx", "ny", "nz" };
 
