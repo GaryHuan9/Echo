@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -12,32 +11,13 @@ namespace EchoRenderer.Mathematics.Primitives
 	[StructLayout(LayoutKind.Explicit, Size = 28)]
 	public readonly struct AxisAlignedBoundingBox
 	{
-		public AxisAlignedBoundingBox(Float3 min, Float3 max)
+		public AxisAlignedBoundingBox(in Float3 min, in Float3 max)
 		{
 			Unsafe.SkipInit(out minVector);
 			Unsafe.SkipInit(out maxVector);
 
 			this.min = min;
 			this.max = max;
-
-			Assert.IsTrue(max >= min);
-		}
-
-		public AxisAlignedBoundingBox(IReadOnlyList<AxisAlignedBoundingBox> aabbs)
-		{
-			Unsafe.SkipInit(out minVector);
-			Unsafe.SkipInit(out maxVector);
-
-			min = Float3.positiveInfinity;
-			max = Float3.negativeInfinity;
-
-			for (int i = 0; i < aabbs.Count; i++)
-			{
-				AxisAlignedBoundingBox aabb = aabbs[i];
-
-				min = aabb.min.Min(min);
-				max = aabb.max.Max(max);
-			}
 
 			Assert.IsTrue(max >= min);
 		}

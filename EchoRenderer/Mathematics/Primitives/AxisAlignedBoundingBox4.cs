@@ -1,4 +1,5 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System;
+using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 
@@ -16,6 +17,12 @@ namespace EchoRenderer.Mathematics.Primitives
 			maxY = Make(aabb0.max.y, aabb1.max.y, aabb2.max.y, aabb3.max.y);
 			maxZ = Make(aabb0.max.z, aabb1.max.z, aabb2.max.z, aabb3.max.z);
 		}
+
+		public AxisAlignedBoundingBox4(ReadOnlySpan<AxisAlignedBoundingBox> aabbs) : this
+		(
+			aabbs.TryGetValue(0), aabbs.TryGetValue(1),
+			aabbs.TryGetValue(2), aabbs.TryGetValue(3)
+		) { }
 
 		readonly Vector128<float> minX;
 		readonly Vector128<float> minY;
