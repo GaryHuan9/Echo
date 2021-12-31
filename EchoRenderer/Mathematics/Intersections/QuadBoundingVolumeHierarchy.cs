@@ -17,11 +17,10 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public class QuadBoundingVolumeHierarchy : Aggregator
 	{
-		public QuadBoundingVolumeHierarchy(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens) : base(pack, aabbs, tokens)
+		public QuadBoundingVolumeHierarchy(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
 		{
-			if (tokens.Length <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "does not contain more than one token");
-
-			int[] indices = Enumerable.Range(0, aabbs.Length).ToArray();
+			Validate(aabbs, tokens, length => length > 1);
+			int[] indices = CreateIndices(aabbs.Length);
 
 			BranchBuilder builder = new BranchBuilder(aabbs);
 			BranchBuilder.Node root = builder.Build(indices);
@@ -43,36 +42,31 @@ namespace EchoRenderer.Mathematics.Intersections
 		readonly AxisAlignedBoundingBox aabbRoot;
 
 		/// <summary>
-		/// If a child pointer in <see cref="Node"/> has this value,
-		/// it means that is a null pointer and there is no child.
-		/// </summary>
-		const uint EmptyNode = ~0u;
-
-		/// <summary>
 		/// This is the width of the multiple processing size.  
 		/// </summary>
 		const int Width = 4;
-
-		public override int Hash
-		{
-			get
-			{
-				int hash = stackSize;
-
-				foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
-
-				return hash;
-			}
-		}
 
 		public override void Trace(ref TraceQuery query)
 		{
 			Traverse(ref query);
 		}
 
-		public override int TraceCost(in Ray ray, ref float distance) => GetIntersectionCost(NodeThreshold, ray, ref distance);
+		public override void Occlude(ref OccludeQuery query)
+		{
+			throw new NotImplementedException();
+		}
 
-		public override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
+		public override int TraceCost(in Ray ray, ref float distance) => GetIntersectionCost(Token.root, ray, ref distance);
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return nodes.Aggregate(stackSize, (current, node) => (current * 397) ^ node.GetHashCode());
+			}
+		}
+
+		protected override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
 		{
 			int length = 1 << (int)depth;
 			if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
@@ -88,27 +82,27 @@ namespace EchoRenderer.Mathematics.Intersections
 			//Thus, we must carefully reduce the value of depth to make sure that we never exceed the span size
 			depth = depth / 2 - 1;
 
-			uint* stack0 = stackalloc uint[length];
-			uint* stack1 = stackalloc uint[length];
+			Token* stack0 = stackalloc Token[length];
+			Token* stack1 = stackalloc Token[length];
 
-			uint* next0 = stack0;
-			uint* next1 = stack1;
+			Token* next0 = stack0;
+			Token* next1 = stack1;
 
-			*next0++ = 0; //Root at 0
+			*next0++ = Token.root;
 			int head = 0; //Result head
 
 			for (int i = 0; i < depth; i++)
 			{
 				while (next0 != stack0)
 				{
-					ref readonly Node node = ref nodes[*--next0];
+					ref readonly Node node = ref nodes[(--next0)->NodeValue];
 
 					for (int j = 0; j < Width; j++)
 					{
-						uint child = node.children.GetElement(j);
-						if (child == EmptyNode) continue;
+						Token child = node.children[j];
+						if (child.IsEmpty) continue;
 
-						if (child >= NodeThreshold) *next1++ = child - NodeThreshold;
+						if (child.IsNode) *next1++ = child;
 						else span[head++] = node.aabb4.Extract(j);
 					}
 				}
@@ -116,25 +110,17 @@ namespace EchoRenderer.Mathematics.Intersections
 				//Swap the two stacks
 				Swap(ref next0, ref next1);
 				Swap(ref stack0, ref stack1);
-
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				void Swap(ref uint* pointer0, ref uint* pointer1)
-				{
-					var storage = pointer0;
-					pointer0 = pointer1;
-					pointer1 = storage;
-				}
 			}
 
 			//Export results
 			while (next0 != stack0)
 			{
-				ref readonly Node node = ref nodes[*--next0];
+				ref readonly Node node = ref nodes[(--next0)->NodeValue];
 
 				for (int i = 0; i < Width; i++)
 				{
-					uint child = node.children.GetElement(i);
-					if (child == EmptyNode) continue;
+					Token child = node.children[i];
+					if (!child.IsEmpty) continue;
 					span[head++] = node.aabb4.Extract(i);
 				}
 			}
@@ -146,13 +132,13 @@ namespace EchoRenderer.Mathematics.Intersections
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 		unsafe void Traverse(ref TraceQuery query)
 		{
-			uint* stack = stackalloc uint[stackSize];
+			Token* stack = stackalloc Token[stackSize];
 			float* hits = stackalloc float[stackSize];
 
-			uint* next = stack;
+			Token* next = stack;
 
-			*next++ = 0;  //Push the index of the root node to the stack
-			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
+			*next++ = Token.root;
+			*hits++ = 0f;
 
 			bool* orders = stackalloc bool[Width]
 			{
@@ -164,7 +150,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			while (next != stack)
 			{
-				uint index = *--next;
+				uint index = (--next)->NodeValue;
 
 				if (*--hits >= query.distance) continue;
 				ref readonly Node node = ref nodes[index];
@@ -222,14 +208,14 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-				void Push(float hit, uint child, ref TraceQuery hitQuery)
+				void Push(float hit, in Token child, ref TraceQuery traceQuery)
 				{
-					if (hit >= hitQuery.distance) return;
+					if (hit >= traceQuery.distance) return;
 
-					if (child < NodeThreshold)
+					if (child.IsGeometry)
 					{
 						//Child is leaf
-						pack.GetIntersection(ref hitQuery, child);
+						pack.GetIntersection(ref traceQuery, child);
 					}
 					else
 					{
@@ -241,12 +227,12 @@ namespace EchoRenderer.Mathematics.Intersections
 			}
 		}
 
-		int GetIntersectionCost(uint index, in Ray ray, ref float distance, float intersection = 0f)
+		int GetIntersectionCost(in Token token, in Ray ray, ref float distance, float intersection = 0f)
 		{
-			if (index == EmptyNode || intersection >= distance) return 0;
-			if (index < NodeThreshold) return pack.GetIntersectionCost(ray, ref distance, index);
+			if (token == EmptyNode || intersection >= distance) return 0;
+			if (token < NodeThreshold) return pack.GetIntersectionCost(ray, ref distance, token);
 
-			ref readonly Node node = ref nodes[index - NodeThreshold];
+			ref readonly Node node = ref nodes[token - NodeThreshold];
 			Vector128<float> intersections = node.aabb4.Intersect(ray);
 
 			Span<bool> orders = stackalloc bool[Width]
@@ -340,7 +326,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		[StructLayout(LayoutKind.Explicit, Size = 128)]
 		readonly struct Node
 		{
-			public Node(BuildNode node, ReadOnlySpan<uint> children)
+			public Node(BuildNode node, ReadOnlySpan<Token> children)
 			{
 				Assert.IsNotNull(node.child);
 				BuildNode child = node.child;

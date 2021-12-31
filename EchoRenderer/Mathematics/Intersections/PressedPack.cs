@@ -58,7 +58,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			geometryCounts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
 			//Construct bounding volume hierarchy acceleration structure
-			uint[] tokens = new uint[geometryCounts.Total];
+			Token[] tokens = new Token[geometryCounts.Total];
 			var aabbs = new AxisAlignedBoundingBox[tokens.Length];
 
 			Parallel.For(0, triangles.Length, FillTriangles);
@@ -71,7 +71,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				triangles[index] = triangle;
 
 				aabbs[index] = triangle.AABB;
-				tokens[index] = (uint)(index + TrianglesThreshold);
+				tokens[index] = Token.CreateTriangle((uint)index);
 			}
 
 			void FillSpheres(int index)
@@ -82,7 +82,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				int target = triangles.Length + index;
 
 				aabbs[target] = sphere.AABB;
-				tokens[target] = (uint)(index + SpheresThreshold);
+				tokens[target] = Token.CreateSphere((uint)index);
 			}
 
 			void FillInstances(int index)
@@ -93,7 +93,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				int target = triangles.Length + spheres.Length + index;
 
 				aabbs[target] = instance.AABB;
-				tokens[target] = (uint)index;
+				tokens[target] = Token.CreateSphere((uint)index);
 			}
 
 			aggregator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
@@ -113,49 +113,36 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		public const float DistanceMin = 6e-4f;
 
-		const uint NodeThreshold = Aggregator.NodeThreshold;
-		const uint TrianglesThreshold = 0x4000_0000u;
-		const uint SpheresThreshold = 0x2000_0000u;
-
 		/// <summary>
 		/// Calculates the intersection between <paramref name="query"/> and object with <paramref name="token"/>.
 		/// If the intersection occurs before the original <paramref name="query.distance"/>, then the intersection is recorded.
 		/// </summary>
-		public void GetIntersection(ref TraceQuery query, uint token)
+		public void GetIntersection(ref TraceQuery query, in Token token)
 		{
-			Assert.IsTrue(token < NodeThreshold);
+			Assert.IsTrue(token.IsGeometry);
 
-			switch (token)
+			if (token.IsTriangle)
 			{
-				case >= TrianglesThreshold:
-				{
-					ref readonly var triangle = ref triangles[token - TrianglesThreshold];
-					float distance = triangle.GetIntersection(query.ray, out Float2 uv);
+				ref readonly var triangle = ref triangles[token.TriangleValue];
+				float distance = triangle.GetIntersection(query.ray, out Float2 uv);
 
-					if (!ValidateDistance(distance, ref query, token)) return;
+				if (!ValidateDistance(distance, ref query, token)) return;
 
-					query.uv = uv;
-					break;
-				}
-				case >= SpheresThreshold:
-				{
-					ref readonly var sphere = ref spheres[token - SpheresThreshold];
-					float distance = sphere.GetIntersection(query.ray, out Float2 uv);
-
-					if (!ValidateDistance(distance, ref query, token)) return;
-
-					query.uv = uv;
-					break;
-				}
-				default:
-				{
-					instances[token].Trace(ref query);
-					break;
-				}
+				query.uv = uv;
 			}
+			else if (token.IsSphere)
+			{
+				ref readonly var sphere = ref spheres[token.SphereValue];
+				float distance = sphere.GetIntersection(query.ray, out Float2 uv);
+
+				if (!ValidateDistance(distance, ref query, token)) return;
+
+				query.uv = uv;
+			}
+			else instances[token.InstanceValue].Trace(ref query);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static bool ValidateDistance(float distance, ref TraceQuery hit, uint token)
+			static bool ValidateDistance(float distance, ref TraceQuery hit, in Token token)
 			{
 				if (distance >= hit.distance) return false;
 
@@ -172,30 +159,29 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <summary>
 		/// Returns the cost of an intersection calculation of <paramref name="ray"/> with this current <see cref="PressedPack"/>.
 		/// </summary>
-		public int GetIntersectionCost(in Ray ray, ref float distance, uint token)
+		public int GetIntersectionCost(in Ray ray, ref float distance, in Token token)
 		{
-			Assert.IsTrue(token < NodeThreshold);
+			Assert.IsTrue(token.IsGeometry);
 
-			switch (token)
+			if (token.IsTriangle)
 			{
-				case >= TrianglesThreshold:
-				{
-					ref readonly var triangle = ref triangles[token - TrianglesThreshold];
-					float hit = triangle.GetIntersection(ray, out Float2 _);
+				ref readonly var triangle = ref triangles[token.TriangleValue];
+				float hit = triangle.GetIntersection(ray, out Float2 _);
 
-					distance = Math.Min(distance, hit);
-					return 1;
-				}
-				case >= SpheresThreshold:
-				{
-					ref readonly var sphere = ref spheres[token - SpheresThreshold];
-					float hit = sphere.GetIntersection(ray, out Float2 _);
-
-					distance = Math.Min(distance, hit);
-					return 1;
-				}
-				default: return instances[token].TraceCost(ray, ref distance);
+				distance = Math.Min(distance, hit);
+				return 1;
 			}
+
+			if (token.IsSphere)
+			{
+				ref readonly var sphere = ref spheres[token.SphereValue];
+				float hit = sphere.GetIntersection(ray, out Float2 _);
+
+				distance = Math.Min(distance, hit);
+				return 1;
+			}
+
+			return instances[token.InstanceValue].TraceCost(ray, ref distance);
 		}
 
 		/// <summary>
@@ -204,9 +190,9 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		public Interaction Interact(in TraceQuery query, ScenePresser presser, PressedInstance instance, out Material material)
 		{
-			uint geometry = query.token.geometry;
+			Token token = query.token.geometry;
 
-			Assert.IsTrue(geometry < NodeThreshold);
+			Assert.IsTrue(token.IsGeometry);
 			Assert.AreEqual(instance.pack, this);
 
 			int materialToken;
@@ -214,38 +200,33 @@ namespace EchoRenderer.Mathematics.Intersections
 			Float3 normal;
 			Float2 texcoord;
 
-			switch (geometry)
+			if (token.IsTriangle)
 			{
-				case >= TrianglesThreshold:
-				{
-					ref readonly var triangle = ref triangles[geometry - TrianglesThreshold];
+				ref readonly var triangle = ref triangles[token.TriangleValue];
 
-					materialToken = triangle.materialToken;
-					geometryNormal = triangle.GeometryNormal;
-					normal = triangle.GetNormal(query.uv);
-					texcoord = triangle.GetTexcoord(query.uv);
+				materialToken = triangle.materialToken;
+				geometryNormal = triangle.GeometryNormal;
+				normal = triangle.GetNormal(query.uv);
+				texcoord = triangle.GetTexcoord(query.uv);
 
-					query.token.ApplyWorldTransform(presser, ref geometryNormal);
-					query.token.ApplyWorldTransform(presser, ref normal);
+				query.token.ApplyWorldTransform(presser, ref geometryNormal);
+				query.token.ApplyWorldTransform(presser, ref normal);
+			}
+			else if (token.IsSphere)
+			{
+				ref readonly var sphere = ref spheres[token.SphereValue];
 
-					break;
-				}
-				case >= SpheresThreshold:
-				{
-					ref readonly var sphere = ref spheres[geometry - SpheresThreshold];
+				materialToken = sphere.materialToken;
+				texcoord = query.uv; //Sphere directly uses the uv as texcoord
 
-					materialToken = sphere.materialToken;
-					texcoord = query.uv; //Sphere directly uses the uv as texcoord
-
-					normal = PressedSphere.GetGeometryNormal(query.uv);
-					query.token.ApplyWorldTransform(presser, ref normal);
-					geometryNormal = normal;
-
-					break;
-				}
-
-				//The default case handles tokens of PressedInstance, which is invalid since tokens should be resolved to pure geometry after intersection calculation
-				default: throw new Exception($"{nameof(Interact)} should be invoked on the base {nameof(PressedPack)}, not one with a token that is a pack instance!");
+				normal = PressedSphere.GetGeometryNormal(query.uv);
+				query.token.ApplyWorldTransform(presser, ref normal);
+				geometryNormal = normal;
+			}
+			else
+			{
+				//Handles tokens of PressedInstance, which is invalid since tokens should be resolved to pure geometry after intersection calculation
+				throw new Exception($"{nameof(Interact)} should be invoked on the base {nameof(PressedPack)}, not one with a token that is a pack instance!");
 			}
 
 			material = instance.mapper[materialToken];
