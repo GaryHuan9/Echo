@@ -131,6 +131,16 @@ namespace EchoRenderer.Mathematics
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Vector128<float> CreateLuminance(float luminance) => Sse.Multiply(luminanceVector, Vector128.Create(luminance));
 
+		/// <summary>
+		/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns
+		/// the item it points. Otherwise, <paramref name="defaultValue"/> is returned.
+		/// </summary>
+		public static ref readonly T TryGetValue<T>(this ReadOnlySpan<T> span, int index, in T defaultValue = default)
+		{
+			if (0 <= index && index < span.Length) return ref span[index];
+			return ref defaultValue;
+		}
+
 		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
 		public static Int2 Morton(int  index)    => new(Unsaw(index), Unsaw(index >> 1));
 

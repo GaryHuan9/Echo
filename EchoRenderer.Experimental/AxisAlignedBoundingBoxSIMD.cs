@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 
 namespace EchoRenderer.Experimental
 {
+	[DisassemblyDiagnoser]
 	public class AxisAlignedBoundingBoxSIMD
 	{
 		public AxisAlignedBoundingBoxSIMD()

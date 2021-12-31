@@ -14,7 +14,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// The unique token for one geometry inside a <see cref="PressedPack"/>.
 		/// </summary>
-		public uint geometry;
+		public Token geometry;
 
 		/// <summary>
 		/// The number of instances stored in <see cref="instances"/>.
