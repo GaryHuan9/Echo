@@ -18,7 +18,7 @@ namespace EchoRenderer.Rendering.Profiles
 			if (AggregatorType?.IsSubclassOf(typeof(Aggregator)) == false) throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, $"is not of type {nameof(Aggregator)}");
 		}
 
-		public Aggregator CreateAccelerator(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens)
+		public Aggregator CreateAccelerator(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
 		{
 			if (AggregatorType == typeof(LinearAggregator)) return new LinearAggregator(pack, aabbs, tokens);
 			if (AggregatorType == typeof(BoundingVolumeHierarchy)) return new BoundingVolumeHierarchy(pack, aabbs, tokens);

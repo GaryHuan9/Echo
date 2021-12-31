@@ -47,45 +47,18 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
-		/// Computes the AABB of all contents inside this instance based on its parent's coordinate system.
-		/// This AABB does not necessary enclose the root, only the enclosure of the content is guaranteed.
+		/// Computes the <see cref="AxisAlignedBoundingBox"/> of all contents inside this instance based on its parent's coordinate system.
+		/// This <see cref="AxisAlignedBoundingBox"/> does not necessary enclose the root, only the enclosure of the content is guaranteed.
 		/// NOTE: This property could be slow, so if performance issues arise try to memoize the result.
 		/// </summary>
-		public AxisAlignedBoundingBox AABB
-		{
-			get
-			{
-				const uint FetchDepth = 6; //How deep do we go into the accelerator to get the AABB of the nodes
-				Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (int)FetchDepth];
-
-				int count = pack.aggregator.FillAABB(FetchDepth, aabbs);
-				Float4x4 absoluteTransform = inverseTransform.Absoluted;
-
-				Float3 min = Float3.positiveInfinity;
-				Float3 max = Float3.negativeInfinity;
-
-				//Find a small AABB by encapsulating children nodes instead of the full accelerator
-				for (int i = 0; i < count; i++)
-				{
-					ref readonly var aabb = ref aabbs[i];
-
-					Float3 center = inverseTransform.MultiplyPoint(aabb.Center);
-					Float3 extend = absoluteTransform.MultiplyDirection(aabb.Extend);
-
-					min = min.Min(center - extend);
-					max = max.Max(center + extend);
-				}
-
-				return new AxisAlignedBoundingBox(min, max);
-			}
-		}
+		public AxisAlignedBoundingBox AABB => pack.aggregator.GetTransformedAABB(inverseTransform);
 
 		public readonly uint id;
 		public readonly PressedPack pack;
 		public readonly MaterialPresser.Mapper mapper;
 
-		readonly Float4x4 forwardTransform; //The parent to local transform matrix
-		readonly Float4x4 inverseTransform; //The local to parent transform matrix
+		readonly Float4x4 forwardTransform; //The parent to local transform
+		readonly Float4x4 inverseTransform; //The local to parent transform
 
 		readonly float forwardScale; //The parent to local scale multiplier
 		readonly float inverseScale; //The local to parent scale multiplier
@@ -119,6 +92,16 @@ namespace EchoRenderer.Mathematics.Intersections
 			Assert.IsTrue(query.current.Equals(default));
 			pack.aggregator.Trace(ref query);
 		}
+
+		/// <summary>
+		/// Processes <paramref name="query"/>.
+		/// </summary>
+		public void Occlude(ref OccludeQuery query) => throw new NotImplementedException();
+
+		/// <summary>
+		/// Processes <paramref name="query"/> as a <see cref="PressedInstance"/> root.
+		/// </summary>
+		public void OccludeRoot(ref OccludeQuery query) => throw new NotImplementedException();
 
 		/// <summary>
 		/// Returns the cost of tracing a <see cref="TraceQuery"/>.

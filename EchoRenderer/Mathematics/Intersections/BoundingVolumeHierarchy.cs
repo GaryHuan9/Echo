@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Primitives;
 
@@ -16,33 +14,20 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public class BoundingVolumeHierarchy : Aggregator
 	{
-		public BoundingVolumeHierarchy(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<uint> tokens) : base(pack, aabbs, tokens)
+		public BoundingVolumeHierarchy(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
 		{
-			if (tokens.Length <= 1) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "does not contain more than one token");
-
-			int[] indices = Enumerable.Range(0, aabbs.Length).ToArray();
+			Validate(aabbs, tokens, length => length > 1);
+			int[] indices = CreateIndices(aabbs.Length);
 
 			BranchBuilder builder = new BranchBuilder(aabbs);
 			BranchBuilder.Node root = builder.Build(indices);
 
-			int nodeIndex = 1;
+			uint nodeIndex = 1;
 
 			nodes = new Node[indices.Length * 2 - 1];
 			nodes[0] = CreateNode(root, tokens, ref nodeIndex, out maxDepth);
 
-			Assert.AreEqual(nodeIndex, nodes.Length);
-		}
-
-		public override int Hash
-		{
-			get
-			{
-				int hash = maxDepth;
-
-				foreach (Node node in nodes) hash = (hash * 397) ^ node.GetHashCode();
-
-				return hash;
-			}
+			Assert.AreEqual((long)nodeIndex, nodes.Length);
 		}
 
 		readonly Node[] nodes;
@@ -56,40 +41,53 @@ namespace EchoRenderer.Mathematics.Intersections
 			if (local < query.distance) Traverse(ref query);
 		}
 
+		public override void Occlude(ref OccludeQuery query)
+		{
+			throw new NotImplementedException();
+		}
+
 		public override int TraceCost(in Ray ray, ref float distance)
 		{
 			ref readonly Node root = ref nodes[0];
 			float hit = root.aabb.Intersect(ray);
 
 			if (hit >= distance) return 1;
-			return GetIntersectionCost(root, ray, ref distance) + 1;
+			return GetIntersectionCost(root.token, ray, ref distance) + 1;
 		}
 
-		public override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return nodes.Aggregate(maxDepth, (current, node) => (current * 397) ^ node.GetHashCode());
+			}
+		}
+
+		protected override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
 		{
 			int length = 1 << (int)depth;
 			if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
 
-			int* stack0 = stackalloc int[length];
-			int* stack1 = stackalloc int[length];
+			Token* stack0 = stackalloc Token[length];
+			Token* stack1 = stackalloc Token[length];
 
-			int* next0 = stack0;
-			int* next1 = stack1;
+			Token* next0 = stack0;
+			Token* next1 = stack1;
 
-			*next0++ = 0; //Root at 0
+			*next0++ = Token.root;
 			int head = 0; //Result head
 
 			for (uint i = 0; i < depth; i++)
 			{
 				while (next0 != stack0)
 				{
-					int index = *--next0;
+					uint index = (--next0)->NodeValue;
 					ref readonly Node node = ref nodes[index];
 
-					if (!node.IsLeaf)
+					if (node.token.IsNode)
 					{
-						*next1++ = node.children;
-						*next1++ = node.children + 1;
+						*next1++ = node.token;
+						*next1++ = node.token.Next;
 					}
 					else span[head++] = node.aabb; //If leaf then we write it to the result
 				}
@@ -97,20 +95,12 @@ namespace EchoRenderer.Mathematics.Intersections
 				//Swap the two stacks
 				Swap(ref next0, ref next1);
 				Swap(ref stack0, ref stack1);
-
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				void Swap(ref int* pointer0, ref int* pointer1)
-				{
-					var storage = pointer0;
-					pointer0 = pointer1;
-					pointer1 = storage;
-				}
 			}
 
 			//Export results
 			while (next0 != stack0)
 			{
-				ref readonly Node node = ref nodes[*--next0];
+				ref readonly Node node = ref nodes[(--next0)->NodeValue];
 				span[head++] = node.aabb;
 			}
 
@@ -121,17 +111,17 @@ namespace EchoRenderer.Mathematics.Intersections
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 		unsafe void Traverse(ref TraceQuery query)
 		{
-			int* stack = stackalloc int[maxDepth];
+			Token* stack = stackalloc Token[maxDepth];
 			float* hits = stackalloc float[maxDepth];
 
-			int* next = stack;
+			Token* next = stack; //A pointer pointing at the top of the stack
 
-			*next++ = 1;  //The root's first children is always at one
-			*hits++ = 0f; //stackalloc does not guarantee data to be zero, we have to manually assign it
+			*next++ = Token.root.Next;        //We have already tested with the root before this method is invoked
+			*hits++ = float.NegativeInfinity; //Explicitly initialize intersection distance
 
 			while (next != stack)
 			{
-				int index = *--next;
+				uint index = (--next)->NodeValue;
 				if (*--hits >= query.distance) continue;
 
 				ref readonly Node child0 = ref nodes[index];
@@ -145,132 +135,103 @@ namespace EchoRenderer.Mathematics.Intersections
 
 				if (hit0 < hit1)
 				{
-					if (hit1 < query.distance)
-					{
-						if (child1.IsLeaf) pack.GetIntersection(ref query, child1.token);
-						else
-						{
-							*next++ = child1.children;
-							*hits++ = hit1;
-						}
-					}
-
-					if (hit0 < query.distance)
-					{
-						if (child0.IsLeaf) pack.GetIntersection(ref query, child0.token);
-						else
-						{
-							*next++ = child0.children;
-							*hits++ = hit0;
-						}
-					}
+					Push(hit1, child1.token, ref query);
+					Push(hit0, child0.token, ref query);
 				}
 				else
 				{
-					if (hit0 < query.distance)
-					{
-						if (child0.IsLeaf) pack.GetIntersection(ref query, child0.token);
-						else
-						{
-							*next++ = child0.children;
-							*hits++ = hit0;
-						}
-					}
+					Push(hit0, child0.token, ref query);
+					Push(hit1, child1.token, ref query);
+				}
 
-					if (hit1 < query.distance)
+				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+				void Push(float hit, in Token token, ref TraceQuery traceQuery)
+				{
+					if (hit >= traceQuery.distance) return;
+
+					if (token.IsNode)
 					{
-						if (child1.IsLeaf) pack.GetIntersection(ref query, child1.token);
-						else
-						{
-							*next++ = child1.children;
-							*hits++ = hit1;
-						}
+						*next++ = token;
+						*hits++ = hit1;
 					}
+					else pack.GetIntersection(ref traceQuery, token);
 				}
 			}
 		}
 
-		int GetIntersectionCost(in Node node, in Ray ray, ref float distance)
+		int GetIntersectionCost(in Token token, in Ray ray, ref float distance)
 		{
-			if (node.IsLeaf)
+			if (token.IsGeometry)
 			{
-				//Now we finally calculate the intersection cost on the leaf
-				return pack.GetIntersectionCost(ray, ref distance, node.token);
+				//Calculate the intersection cost on the leaf
+				return pack.GetIntersectionCost(ray, ref distance, token);
 			}
 
-			ref Node child0 = ref nodes[node.children];
-			ref Node child1 = ref nodes[node.children + 1];
+			uint index = token.NodeValue;
+
+			ref readonly Node child0 = ref nodes[index];
+			ref readonly Node child1 = ref nodes[index + 1];
 
 			float hit0 = child0.aabb.Intersect(ray);
 			float hit1 = child1.aabb.Intersect(ray);
 
 			int cost = 2;
 
-			if (hit0 < hit1) //Orderly intersects the two children so that there is a higher chance of intersection on the first child
+			//Orderly intersects the two children so that there is a higher chance of intersection on the first child
+			if (hit0 < hit1)
 			{
-				if (hit0 < distance) cost += GetIntersectionCost(in child0, ray, ref distance);
-				if (hit1 < distance) cost += GetIntersectionCost(in child1, ray, ref distance);
+				if (hit0 < distance) cost += GetIntersectionCost(child0.token, ray, ref distance);
+				if (hit1 < distance) cost += GetIntersectionCost(child1.token, ray, ref distance);
 			}
 			else
 			{
-				if (hit1 < distance) cost += GetIntersectionCost(in child1, ray, ref distance);
-				if (hit0 < distance) cost += GetIntersectionCost(in child0, ray, ref distance);
+				if (hit1 < distance) cost += GetIntersectionCost(child1.token, ray, ref distance);
+				if (hit0 < distance) cost += GetIntersectionCost(child0.token, ray, ref distance);
 			}
 
 			return cost;
 		}
 
-		Node CreateNode(BranchBuilder.Node node, ReadOnlySpan<uint> tokens, ref int nodeIndex, out int depth)
+		Node CreateNode(BranchBuilder.Node node, ReadOnlySpan<Token> tokens, ref uint nodeIndex, out int depth)
 		{
 			if (node.IsLeaf)
 			{
 				depth = 1;
-				return Node.CreateLeaf(node.aabb, tokens[node.index]);
+				return new Node(node.aabb, tokens[node.index]);
 			}
 
-			int children = nodeIndex;
+			uint children = nodeIndex;
 			nodeIndex += 2;
 
 			nodes[children] = CreateNode(node.child0, tokens, ref nodeIndex, out int depth0);
 			nodes[children + 1] = CreateNode(node.child1, tokens, ref nodeIndex, out int depth1);
 
 			depth = Math.Max(depth0, depth1) + 1;
-			return Node.CreateNode(node.aabb, children);
+			return new Node(node.aabb, Token.CreateNode(children));
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
 		readonly struct Node
 		{
-			Node(in AxisAlignedBoundingBox aabb, uint token, int children)
+			public Node(in AxisAlignedBoundingBox aabb, in Token token)
 			{
-				this.aabb = aabb; //AABB is assigned before the last two fields
+				this.aabb = aabb;
 				this.token = token;
-				this.children = children;
 			}
-
-			[FieldOffset(0)] public readonly AxisAlignedBoundingBox aabb;
 
 			//NOTE: the AABB is 28 bytes large, but its last 4 bytes are not used and only occupied for SIMD loading
 			//So we can overlap the next four bytes onto the AABB and pay extra attention when first assigning the fields
+			//This technique is currently not used here
 
-			[FieldOffset(24)] public readonly uint token;   //Token will only be assigned if is leaf
-			[FieldOffset(28)] public readonly int children; //Index of first child, second child is right after first
+			[FieldOffset(0)] public readonly AxisAlignedBoundingBox aabb;
 
-			public bool IsLeaf => children == 0;
+			/// <summary>
+			/// This is the <see cref="Token"/> stored in this <see cref="Node"/>, which might represent either the leaf geometry if this <see cref="Token.IsGeometry"/>,
+			/// or the index of the first child of this <see cref="Node"/> if <see cref="Token.IsNode"/> (and the second child can be accessed using <see cref="Token.Next"/>.
+			/// </summary>
+			[FieldOffset(28)] public readonly Token token;
 
-			public static Node CreateLeaf(in AxisAlignedBoundingBox aabb, uint token)    => new(aabb, token, 0);
-			public static Node CreateNode(in AxisAlignedBoundingBox aabb, int  children) => new(aabb, default, children);
-
-			public override int GetHashCode()
-			{
-				unchecked
-				{
-					int hashCode = aabb.GetHashCode();
-					hashCode = (hashCode * 397) ^ (int)token;
-					hashCode = (hashCode * 397) ^ children;
-					return hashCode;
-				}
-			}
+			public override int GetHashCode() => unchecked((aabb.GetHashCode() * 397) ^ token.GetHashCode());
 		}
 	}
 }
