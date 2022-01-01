@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
@@ -15,6 +15,7 @@ using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Experimental
 {
+	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
 	public class BenchmarkBVH
 	{
 		public BenchmarkBVH()

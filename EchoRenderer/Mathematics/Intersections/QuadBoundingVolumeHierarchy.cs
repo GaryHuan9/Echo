@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
@@ -34,12 +33,12 @@ namespace EchoRenderer.Mathematics.Intersections
 			nodes[0] = CreateNode(buildRoot, tokens, ref nodeIndex, out int maxDepth);
 
 			stackSize = maxDepth * 3;
-			aabbRoot = root.aabb;
+			rootAABB = root.aabb;
 		}
 
 		readonly Node[] nodes;
 		readonly int stackSize;
-		readonly AxisAlignedBoundingBox aabbRoot;
+		readonly AxisAlignedBoundingBox rootAABB;
 
 		/// <summary>
 		/// This is the width of the multiple processing size.  
@@ -58,12 +57,9 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public override int TraceCost(in Ray ray, ref float distance) => GetIntersectionCost(Token.root, ray, ref distance);
 
-		public override int GetHashCode()
+		public override unsafe int GetHashCode()
 		{
-			unchecked
-			{
-				return nodes.Aggregate(stackSize, (current, node) => (current * 397) ^ node.GetHashCode());
-			}
+			fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, stackSize);
 		}
 
 		protected override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
@@ -74,7 +70,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			//Span is too small
 			if (length < Width)
 			{
-				span[0] = aabbRoot;
+				span[0] = rootAABB;
 				return 1;
 			}
 
@@ -99,11 +95,11 @@ namespace EchoRenderer.Mathematics.Intersections
 
 					for (int j = 0; j < Width; j++)
 					{
-						Token child = node.children[j];
-						if (child.IsEmpty) continue;
+						ref readonly Token child = ref node.token4[j];
 
+						if (child.IsEmpty) continue;
 						if (child.IsNode) *next1++ = child;
-						else span[head++] = node.aabb4.Extract(j);
+						else span[head++] = node.aabb4[j];
 					}
 				}
 
@@ -119,9 +115,8 @@ namespace EchoRenderer.Mathematics.Intersections
 
 				for (int i = 0; i < Width; i++)
 				{
-					Token child = node.children[i];
-					if (!child.IsEmpty) continue;
-					span[head++] = node.aabb4.Extract(i);
+					ref readonly Token child = ref node.token4[i];
+					if (!child.IsEmpty) span[head++] = node.aabb4[i];
 				}
 			}
 
@@ -156,61 +151,62 @@ namespace EchoRenderer.Mathematics.Intersections
 				ref readonly Node node = ref nodes[index];
 
 				Vector128<float> intersections = node.aabb4.Intersect(query.ray);
-				float* i = (float*)&intersections;
 
 				if (orders[node.axisMajor])
 				{
 					if (orders[node.axisMinor1])
 					{
-						Push(i[3], node.child3, ref query);
-						Push(i[2], node.child2, ref query);
+						Push(intersections, node.token4, 3, ref query);
+						Push(intersections, node.token4, 2, ref query);
 					}
 					else
 					{
-						Push(i[2], node.child2, ref query);
-						Push(i[3], node.child3, ref query);
+						Push(intersections, node.token4, 2, ref query);
+						Push(intersections, node.token4, 3, ref query);
 					}
 
 					if (orders[node.axisMinor0])
 					{
-						Push(i[1], node.child1, ref query);
-						Push(i[0], node.child0, ref query);
+						Push(intersections, node.token4, 1, ref query);
+						Push(intersections, node.token4, 0, ref query);
 					}
 					else
 					{
-						Push(i[0], node.child0, ref query);
-						Push(i[1], node.child1, ref query);
+						Push(intersections, node.token4, 0, ref query);
+						Push(intersections, node.token4, 1, ref query);
 					}
 				}
 				else
 				{
 					if (orders[node.axisMinor0])
 					{
-						Push(i[1], node.child1, ref query);
-						Push(i[0], node.child0, ref query);
+						Push(intersections, node.token4, 1, ref query);
+						Push(intersections, node.token4, 0, ref query);
 					}
 					else
 					{
-						Push(i[0], node.child0, ref query);
-						Push(i[1], node.child1, ref query);
+						Push(intersections, node.token4, 0, ref query);
+						Push(intersections, node.token4, 1, ref query);
 					}
 
 					if (orders[node.axisMinor1])
 					{
-						Push(i[3], node.child3, ref query);
-						Push(i[2], node.child2, ref query);
+						Push(intersections, node.token4, 3, ref query);
+						Push(intersections, node.token4, 2, ref query);
 					}
 					else
 					{
-						Push(i[2], node.child2, ref query);
-						Push(i[3], node.child3, ref query);
+						Push(intersections, node.token4, 2, ref query);
+						Push(intersections, node.token4, 3, ref query);
 					}
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-				void Push(float hit, in Token child, ref TraceQuery traceQuery)
+				void Push(in Vector128<float> hit4, in Token4 child4, int offset, ref TraceQuery traceQuery)
 				{
+					float hit = hit4.GetElement(offset);
 					if (hit >= traceQuery.distance) return;
+					ref readonly Token child = ref child4[offset];
 
 					if (child.IsGeometry)
 					{
@@ -220,19 +216,19 @@ namespace EchoRenderer.Mathematics.Intersections
 					else
 					{
 						//Child is branch
-						*next++ = child - NodeThreshold;
+						*next++ = child;
 						*hits++ = hit;
 					}
 				}
 			}
 		}
 
-		int GetIntersectionCost(in Token token, in Ray ray, ref float distance, float intersection = 0f)
+		int GetIntersectionCost(in Token token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 		{
-			if (token == EmptyNode || intersection >= distance) return 0;
-			if (token < NodeThreshold) return pack.GetIntersectionCost(ray, ref distance, token);
+			if (token.IsEmpty || intersection >= distance) return 0;
+			if (token.IsGeometry) return pack.GetIntersectionCost(ray, ref distance, token);
 
-			ref readonly Node node = ref nodes[token - NodeThreshold];
+			ref readonly Node node = ref nodes[token.NodeValue];
 			Vector128<float> intersections = node.aabb4.Intersect(ray);
 
 			Span<bool> orders = stackalloc bool[Width]
@@ -243,62 +239,62 @@ namespace EchoRenderer.Mathematics.Intersections
 				true
 			};
 
-			int cost = 4;
+			int cost = Width;
 
 			if (orders[node.axisMajor])
 			{
-				cost += GetIntersectionCost2(orders[node.axisMinor0], intersections.GetLower(), node.children.GetLower(), ray, ref distance);
-				cost += GetIntersectionCost2(orders[node.axisMinor1], intersections.GetUpper(), node.children.GetUpper(), ray, ref distance);
+				cost += GetIntersectionCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
+				cost += GetIntersectionCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
 			}
 			else
 			{
-				cost += GetIntersectionCost2(orders[node.axisMinor1], intersections.GetUpper(), node.children.GetUpper(), ray, ref distance);
-				cost += GetIntersectionCost2(orders[node.axisMinor0], intersections.GetLower(), node.children.GetLower(), ray, ref distance);
+				cost += GetIntersectionCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
+				cost += GetIntersectionCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
 			}
 
 			return cost;
 		}
 
-		int GetIntersectionCost2(bool order, in Vector64<float> intersections, in Vector64<uint> children, in Ray ray, ref float distance)
+		int GetIntersectionCost2(bool order, int offset, in Token4 child4, in Vector128<float> intersections, in Ray ray, ref float distance)
 		{
 			int cost = 0;
 
 			if (order)
 			{
-				cost += GetIntersectionCost(children.GetElement(0), ray, ref distance, intersections.GetElement(0));
-				cost += GetIntersectionCost(children.GetElement(1), ray, ref distance, intersections.GetElement(1));
+				cost += GetIntersectionCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
+				cost += GetIntersectionCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
 			}
 			else
 			{
-				cost += GetIntersectionCost(children.GetElement(1), ray, ref distance, intersections.GetElement(1));
-				cost += GetIntersectionCost(children.GetElement(0), ray, ref distance, intersections.GetElement(0));
+				cost += GetIntersectionCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
+				cost += GetIntersectionCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
 			}
 
 			return cost;
 		}
 
-		Node CreateNode(BuildNode buildNode, ReadOnlySpan<uint> tokens, ref int nodeIndex, out int depth)
+		Node CreateNode(BuildNode buildNode, ReadOnlySpan<Token> tokens, ref int nodeIndex, out int depth)
 		{
 			Assert.IsNotNull(buildNode.child);
 			BuildNode current = buildNode.child;
 
-			Span<uint> children = stackalloc uint[Width];
+			Span<Token> token4 = stackalloc Token[Width];
 
 			depth = 0;
 
 			for (int i = 0; i < Width; i++)
 			{
-				uint nodeChild;
+				Token nodeToken;
 				int nodeDepth;
 
 				if (current.IsEmpty)
 				{
-					nodeChild = EmptyNode;
+					nodeToken = Token.empty;
 					nodeDepth = 0;
 				}
 				else if (current.IsLeaf)
 				{
-					nodeChild = tokens[current.source.index];
+					nodeToken = tokens[current.source.index];
 					nodeDepth = 1;
 				}
 				else
@@ -307,17 +303,17 @@ namespace EchoRenderer.Mathematics.Intersections
 					ref Node node = ref nodes[index];
 
 					node = CreateNode(current, tokens, ref nodeIndex, out nodeDepth);
-					nodeChild = index + NodeThreshold;
+					nodeToken = Token.CreateNode(index);
 				}
 
-				children[i] = nodeChild;
+				token4[i] = nodeToken;
 				depth = Math.Max(depth, nodeDepth);
 
 				current = current.sibling;
 			}
 
 			++depth;
-			return new Node(buildNode, children);
+			return new Node(buildNode, token4);
 		}
 
 		/// <summary>
@@ -326,7 +322,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		[StructLayout(LayoutKind.Explicit, Size = 128)]
 		readonly struct Node
 		{
-			public Node(BuildNode node, ReadOnlySpan<Token> children)
+			public Node(BuildNode node, ReadOnlySpan<Token> token4)
 			{
 				Assert.IsNotNull(node.child);
 				BuildNode child = node.child;
@@ -336,19 +332,14 @@ namespace EchoRenderer.Mathematics.Intersections
 				ref readonly var aabb2 = ref GetAABB(ref child);
 				ref readonly var aabb3 = ref GetAABB(ref child);
 
-				child0 = children[0];
-				child1 = children[1];
-				child2 = children[2];
-				child3 = children[3];
-
 				aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
+				this.token4 = new Token4(token4);
 
 				axisMajor = node.axisMajor;
 				axisMinor0 = node.axisMinor0;
 				axisMinor1 = node.axisMinor1;
 
-				Unsafe.SkipInit(out padding);
-				Unsafe.SkipInit(out this.children);
+				padding = default;
 
 				static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 				{
@@ -360,46 +351,47 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 			}
 
-			[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
-			[FieldOffset(096)] public readonly Vector128<uint> children;
-
-			[FieldOffset(096)] public readonly uint child0;
-			[FieldOffset(100)] public readonly uint child1;
-			[FieldOffset(104)] public readonly uint child2;
-			[FieldOffset(108)] public readonly uint child3;
-
 			/// <summary>
-			/// The integer value of the axis that divided the two primary nodes
+			/// Static check to ensure our currently layout is correctly updated if <see cref="Token4"/> size is changed.
 			/// </summary>
-			[FieldOffset(112)] public readonly int axisMajor;
-
-			/// <summary>
-			/// The integer value of the axis that divided the first two secondary nodes
-			/// </summary>
-			[FieldOffset(116)] public readonly int axisMinor0;
-
-			/// <summary>
-			/// The integer value of the axis that divided the second two secondary nodes
-			/// </summary>
-			[FieldOffset(120)] public readonly int axisMinor1;
-
-			[FieldOffset(124)] readonly int padding;
-
-			public override int GetHashCode()
+			static unsafe Node()
 			{
-				unchecked
-				{
-					int hashCode = aabb4.GetHashCode();
-					hashCode = (hashCode * 397) ^ (int)child0;
-					hashCode = (hashCode * 397) ^ (int)child1;
-					hashCode = (hashCode * 397) ^ (int)child2;
-					hashCode = (hashCode * 397) ^ (int)child3;
-					hashCode = (hashCode * 397) ^ axisMajor;
-					hashCode = (hashCode * 397) ^ axisMinor0;
-					hashCode = (hashCode * 397) ^ axisMinor1;
-					return hashCode;
-				}
+				int size = sizeof(Token4);
+
+				if (size is Width * Token.Size and 16) return;
+				throw new Exception("Invalid layout or size!");
 			}
+
+			/// <summary>
+			/// The <see cref="AxisAlignedBoundingBox"/>s of the four children contained in this <see cref="Node"/>.
+			/// </summary>
+			[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
+
+			/// <summary>
+			/// The <see cref="Token"/> representing the four branches off from this <see cref="Node"/>,
+			/// which is either a leaf geometry object or another <see cref="Node"/> child branch.
+			/// </summary>
+			[FieldOffset(096)] public readonly Token4 token4;
+
+			/// <summary>
+			/// Unused memory padding.
+			/// </summary>
+			[FieldOffset(112)] readonly int padding;
+
+			/// <summary>
+			/// The integer value of the axis that divided the two primary nodes.
+			/// </summary>
+			[FieldOffset(116)] public readonly int axisMajor;
+
+			/// <summary>
+			/// The integer value of the axis that divided the first two secondary nodes.
+			/// </summary>
+			[FieldOffset(120)] public readonly int axisMinor0;
+
+			/// <summary>
+			/// The integer value of the axis that divided the second two secondary nodes.
+			/// </summary>
+			[FieldOffset(124)] public readonly int axisMinor1;
 		}
 
 		class BuildNode

@@ -20,8 +20,8 @@ namespace EchoRenderer.Mathematics.Primitives
 
 		public AxisAlignedBoundingBox4(ReadOnlySpan<AxisAlignedBoundingBox> aabbs) : this
 		(
-			aabbs.TryGetValue(0), aabbs.TryGetValue(1),
-			aabbs.TryGetValue(2), aabbs.TryGetValue(3)
+			aabbs.TryGetValue(0, AxisAlignedBoundingBox.none), aabbs.TryGetValue(1, AxisAlignedBoundingBox.none),
+			aabbs.TryGetValue(2, AxisAlignedBoundingBox.none), aabbs.TryGetValue(3, AxisAlignedBoundingBox.none)
 		) { }
 
 		readonly Vector128<float> minX;
@@ -33,6 +33,16 @@ namespace EchoRenderer.Mathematics.Primitives
 		readonly Vector128<float> maxZ;
 
 		static readonly Vector128<float> farMultiplier = Make(AxisAlignedBoundingBox.FarMultiplier);
+
+		/// <summary>
+		/// Extracts out and returns a particular <see cref="AxisAlignedBoundingBox"/> at
+		/// <paramref name="index"/>, which should be between 0 (inclusive) and 4 (exclusive).
+		/// </summary>
+		public AxisAlignedBoundingBox this[int index] => new
+		(
+			new Float3(minX.GetElement(index), minY.GetElement(index), minZ.GetElement(index)),
+			new Float3(maxX.GetElement(index), maxY.GetElement(index), maxZ.GetElement(index))
+		);
 
 		/// <summary>
 		/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
@@ -83,31 +93,13 @@ namespace EchoRenderer.Mathematics.Primitives
 			);
 		}
 
-		/// <summary>
-		/// Extracts out a particular <see cref="AxisAlignedBoundingBox"/> at
-		/// <paramref name="index"/>, which should be between 0 and 3 (both inclusive).
-		/// </summary>
-		public AxisAlignedBoundingBox Extract(int index) => new
-		(
-			new Float3(minX.GetElement(index), minY.GetElement(index), minZ.GetElement(index)),
-			new Float3(maxX.GetElement(index), maxY.GetElement(index), maxZ.GetElement(index))
-		);
-
-		public override int GetHashCode()
+		public override unsafe int GetHashCode()
 		{
-			unchecked
-			{
-				int hashCode = Utilities.GetHashCode(minX);
-				hashCode = (hashCode * 397) ^ Utilities.GetHashCode(minY);
-				hashCode = (hashCode * 397) ^ Utilities.GetHashCode(minZ);
-				hashCode = (hashCode * 397) ^ Utilities.GetHashCode(maxX);
-				hashCode = (hashCode * 397) ^ Utilities.GetHashCode(maxY);
-				hashCode = (hashCode * 397) ^ Utilities.GetHashCode(maxZ);
-				return hashCode;
-			}
+			fixed (AxisAlignedBoundingBox4* ptr = &this) return Utilities.GetHashCode(ptr);
 		}
 
-		static Vector128<float> Make(float value)                                            => Vector128.Create(value);
+		static Vector128<float> Make(float value) => Vector128.Create(value);
+
 		static Vector128<float> Make(float value0, float value1, float value2, float value3) => Vector128.Create(value0, value1, value2, value3);
 	}
 }

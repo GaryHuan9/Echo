@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics
@@ -141,20 +143,36 @@ namespace EchoRenderer.Mathematics
 			return ref defaultValue;
 		}
 
-		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
-		public static Int2 Morton(int  index)    => new(Unsaw(index), Unsaw(index >> 1));
+		/// <summary>
+		/// Calculates and returns a deterministic hash code for <paramref name="value"/>.
+		/// </summary>
+		public static unsafe int GetHashCode<T>(Vector128<T> value) where T : struct => GetHashCode(&value);
 
-		public static int GetHashCode<T>(in Vector128<T> value) where T : struct
+		/// <inheritdoc cref="GetHashCode(byte*,uint,int)"/>
+		public static unsafe int GetHashCode<T>(T* ptr, uint length = 1, int initial = 0) where T : unmanaged => GetHashCode((byte*)ptr, length * (uint)sizeof(T), initial);
+
+		/// <summary>
+		/// Calculates and returns a deterministic hash code from <paramref name="ptr"/> to <paramref name="length"/>.
+		/// The entire memory domain defined by the two parameters is scanned, and any change to it will alter the result.
+		/// </summary>
+		public static unsafe int GetHashCode(byte* ptr, uint length = 1, int initial = 0)
 		{
+			int hashCode = initial;
+
 			unchecked
 			{
-				int hashCode = value.GetElement(0).GetHashCode();
-				hashCode = (hashCode * 397) ^ value.GetElement(1).GetHashCode();
-				hashCode = (hashCode * 397) ^ value.GetElement(2).GetHashCode();
-				hashCode = (hashCode * 397) ^ value.GetElement(3).GetHashCode();
-				return hashCode;
+				int* intPtr = (int*)ptr - 1;
+				uint intLength = length / 4;
+
+				for (uint i = 0; i < intLength; i++) hashCode = (hashCode * 397) ^ *++intPtr;
+				for (uint i = intLength * 4; i < length; i++) hashCode = (hashCode * 397) ^ ptr[i];
 			}
+
+			return hashCode;
 		}
+
+		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
+		public static Int2 Morton(int  index)    => new(Unsaw(index), Unsaw(index >> 1));
 
 		/// <summary>
 		/// Transforms a number into a saw blade shape:

@@ -8,7 +8,8 @@ using EchoRenderer.Mathematics.Primitives;
 
 namespace EchoRenderer.Experimental
 {
-	[DisassemblyDiagnoser]
+	// [DisassemblyDiagnoser(10)]
+	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
 	public class AxisAlignedBoundingBoxSIMD
 	{
 		public AxisAlignedBoundingBoxSIMD()
