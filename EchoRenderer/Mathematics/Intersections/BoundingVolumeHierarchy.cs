@@ -55,12 +55,9 @@ namespace EchoRenderer.Mathematics.Intersections
 			return GetIntersectionCost(root.token, ray, ref distance) + 1;
 		}
 
-		public override int GetHashCode()
+		public override unsafe int GetHashCode()
 		{
-			unchecked
-			{
-				return nodes.Aggregate(maxDepth, (current, node) => (current * 397) ^ node.GetHashCode());
-			}
+			fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, maxDepth);
 		}
 
 		protected override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
@@ -200,14 +197,15 @@ namespace EchoRenderer.Mathematics.Intersections
 				return new Node(node.aabb, tokens[node.index]);
 			}
 
-			uint children = nodeIndex;
+			uint child0 = nodeIndex;
+			uint child1 = child0 + 1;
 			nodeIndex += 2;
 
-			nodes[children] = CreateNode(node.child0, tokens, ref nodeIndex, out int depth0);
-			nodes[children + 1] = CreateNode(node.child1, tokens, ref nodeIndex, out int depth1);
+			nodes[child0] = CreateNode(node.child0, tokens, ref nodeIndex, out int depth0);
+			nodes[child1] = CreateNode(node.child1, tokens, ref nodeIndex, out int depth1);
 
 			depth = Math.Max(depth0, depth1) + 1;
-			return new Node(node.aabb, Token.CreateNode(children));
+			return new Node(node.aabb, Token.CreateNode(child0));
 		}
 
 		[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
@@ -230,8 +228,6 @@ namespace EchoRenderer.Mathematics.Intersections
 			/// or the index of the first child of this <see cref="Node"/> if <see cref="Token.IsNode"/> (and the second child can be accessed using <see cref="Token.Next"/>.
 			/// </summary>
 			[FieldOffset(28)] public readonly Token token;
-
-			public override int GetHashCode() => unchecked((aabb.GetHashCode() * 397) ^ token.GetHashCode());
 		}
 	}
 }

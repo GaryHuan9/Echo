@@ -142,9 +142,20 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
-		/// The <see cref="Token"/> that represents the root node in an <see cref="Aggregator"/>.
+		/// The <see cref="Token"/> that represents the root node in an <see cref="Aggregator"/>,
+		/// which contains an internal <see cref="data"/> of zero.
 		/// </summary>
 		public static readonly Token root = CreateNode(0);
+
+		/// <summary>
+		/// A <see cref="Token"/> that <see cref="IsEmpty"/> (an <see cref="Aggregator"/> node that is null).
+		/// </summary>
+		public static readonly Token empty = new(EmptyNode);
+
+		/// <summary>
+		/// The number of bytes a <see cref="Token"/> occupies in memory.
+		/// </summary>
+		public const int Size = sizeof(uint);
 
 		/// <summary>
 		/// If the internal <see cref="data"/> is greater than or equals to this value, then this <see cref="Token"/>

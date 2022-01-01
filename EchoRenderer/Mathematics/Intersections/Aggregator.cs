@@ -69,7 +69,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// Fills <paramref name="span"/> with the <see cref="AxisAlignedBoundingBox"/> of nodes in this <see cref="Aggregator"/>
 		/// at <paramref name="depth"/>, with the root node having a <paramref name="depth"/> of 1. Returns the actual length of
 		/// <paramref name="span"/> used to store the <see cref="AxisAlignedBoundingBox"/>. NOTE: <paramref name="span"/> should
-		/// not be smaller than 2 ^ depth.
+		/// not be smaller than 2 ^ depth, and the returned value will not be greater than <paramref name="span.Length"/>.
 		/// </summary>
 		protected abstract int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span);
 
