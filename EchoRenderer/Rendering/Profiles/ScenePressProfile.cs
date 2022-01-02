@@ -6,10 +6,10 @@ namespace EchoRenderer.Rendering.Profiles
 	public record ScenePressProfile : IProfile
 	{
 		/// <summary>
-		/// The <see cref="AggregatorProfile"/> used for this <see cref="ScenePressProfile"/>.
+		/// The <see cref="Profiles.AggregatorProfile"/> used for this <see cref="ScenePressProfile"/>.
 		/// This determines the kind of <see cref="Aggregator"/> to build. Must not be null.
 		/// </summary>
-		public AggregatorProfile AcceleratorProfile { get; init; } = new();
+		public AggregatorProfile AggregatorProfile { get; init; } = new();
 
 		/// <summary>
 		/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
@@ -25,7 +25,7 @@ namespace EchoRenderer.Rendering.Profiles
 
 		public void Validate()
 		{
-			if (AcceleratorProfile == null) throw ExceptionHelper.Invalid(nameof(AcceleratorProfile), InvalidType.isNull);
+			if (AggregatorProfile == null) throw ExceptionHelper.Invalid(nameof(AggregatorProfile), InvalidType.isNull);
 		}
 	}
 }

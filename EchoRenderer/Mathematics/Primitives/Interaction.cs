@@ -1,5 +1,4 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Scattering;
 
 namespace EchoRenderer.Mathematics.Primitives
