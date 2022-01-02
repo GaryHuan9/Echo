@@ -6,7 +6,8 @@ using EchoRenderer.Mathematics.Primitives;
 namespace EchoRenderer.Mathematics.Intersections
 {
 	/// <summary>
-	/// A simple linear search trace finder.
+	/// A simple linear aggregator. Utilities four-wide SIMD parallelization.
+	/// Optimal for small numbers of geometries and tokens, but works with any.
 	/// </summary>
 	public class LinearAggregator : Aggregator
 	{

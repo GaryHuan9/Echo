@@ -27,13 +27,15 @@ namespace EchoRenderer.Mathematics.Intersections
 			int count = 0;
 			var buildRoot = new BuildNode(root, ref count);
 
-			int nodeIndex = 1;
+			uint nodeIndex = 1;
 
 			nodes = new Node[count];
 			nodes[0] = CreateNode(buildRoot, tokens, ref nodeIndex, out int maxDepth);
 
 			stackSize = maxDepth * 3;
 			rootAABB = root.aabb;
+
+			Assert.AreEqual((long)nodeIndex, nodes.Length);
 		}
 
 		readonly Node[] nodes;
@@ -273,7 +275,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			return cost;
 		}
 
-		Node CreateNode(BuildNode buildNode, ReadOnlySpan<Token> tokens, ref int nodeIndex, out int depth)
+		Node CreateNode(BuildNode buildNode, ReadOnlySpan<Token> tokens, ref uint nodeIndex, out int depth)
 		{
 			Assert.IsNotNull(buildNode.child);
 			BuildNode current = buildNode.child;
@@ -299,7 +301,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 				else
 				{
-					uint index = (uint)nodeIndex++;
+					uint index = nodeIndex++;
 					ref Node node = ref nodes[index];
 
 					node = CreateNode(current, tokens, ref nodeIndex, out nodeDepth);

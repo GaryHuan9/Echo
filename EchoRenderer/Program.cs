@@ -9,6 +9,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics.Intersections;
+using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
@@ -93,7 +94,7 @@ namespace EchoRenderer
 															  {
 																  AcceleratorProfile = new AggregatorProfile
 																					   {
-																						   AggregatorType = typeof(BoundingVolumeHierarchy)
+																						   AggregatorType = typeof(LinearAggregator)
 																					   }
 															  };
 
@@ -116,6 +117,8 @@ namespace EchoRenderer
 								PixelSample = 64,
 								BounceLimit = 128
 							};
+
+			renderProfile = acceleratorQualityProfile;
 
 			DebugHelper.Log("Assets loaded");
 

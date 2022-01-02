@@ -93,7 +93,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				int target = triangles.Length + spheres.Length + index;
 
 				aabbs[target] = instance.AABB;
-				tokens[target] = Token.CreateSphere((uint)index);
+				tokens[target] = Token.CreateInstance((uint)index);
 			}
 
 			aggregator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
