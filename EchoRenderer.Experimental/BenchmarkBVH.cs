@@ -52,8 +52,8 @@ namespace EchoRenderer.Experimental
 
 			Pairs = new[]
 					{
-						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
-						new Pair(new PressedScene(scene, new ScenePressProfile { AcceleratorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
+						new Pair(new PressedScene(scene, new ScenePressProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+						new Pair(new PressedScene(scene, new ScenePressProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 					};
 		}
 

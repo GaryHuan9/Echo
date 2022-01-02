@@ -96,15 +96,15 @@ namespace EchoRenderer.Mathematics.Intersections
 				tokens[target] = Token.CreateInstance((uint)index);
 			}
 
-			aggregator = presser.profile.AcceleratorProfile.CreateAccelerator(this, aabbs, tokens);
+			aggregator = presser.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
 		}
 
 		public readonly Aggregator aggregator;
 		public readonly GeometryCounts geometryCounts;
 
-		readonly PressedTriangle[] triangles; //Indices: [0x4000_0000 to 0x8000_0000)
-		readonly PressedSphere[] spheres;     //Indices: [0x2000_0000 to 0x4000_0000)
-		readonly PressedInstance[] instances; //Indices: [0 to 0x2000_0000)
+		readonly PressedTriangle[] triangles;
+		readonly PressedSphere[] spheres;
+		readonly PressedInstance[] instances;
 
 		/// <summary>
 		/// If an intersection has a distance under this value and we just intersected the exactly same geometry with the last query,

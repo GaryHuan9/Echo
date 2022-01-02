@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Linq;
 using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
@@ -18,7 +15,6 @@ using EchoRenderer.Rendering.PostProcessing;
 using EchoRenderer.Rendering.PostProcessing.ToneMappers;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Terminals;
-using EchoRenderer.Textures;
 using EchoRenderer.Textures.Generative;
 using EchoRenderer.Textures.Grid;
 
@@ -90,13 +86,7 @@ namespace EchoRenderer
 																		   AdaptiveSample = 0
 																	   };
 
-		static readonly ScenePressProfile scenePressProfile = new()
-															  {
-																  AcceleratorProfile = new AggregatorProfile
-																					   {
-																						   AggregatorType = typeof(LinearAggregator)
-																					   }
-															  };
+		static readonly ScenePressProfile scenePressProfile = new();
 
 		static void PerformRender()
 		{
@@ -117,8 +107,6 @@ namespace EchoRenderer
 								PixelSample = 64,
 								BounceLimit = 128
 							};
-
-			renderProfile = acceleratorQualityProfile;
 
 			DebugHelper.Log("Assets loaded");
 
