@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Rendering.Materials;

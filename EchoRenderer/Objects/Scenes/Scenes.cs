@@ -2,7 +2,6 @@
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.IO;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;

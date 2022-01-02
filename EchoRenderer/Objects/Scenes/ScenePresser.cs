@@ -115,17 +115,17 @@ namespace EchoRenderer.Objects.Scenes
 			public GeometryCounts UniqueCounts { get; private set; }
 
 			readonly HashSet<Node> parents = new();
-			readonly Dictionary<Node, int> children = new(); //Maps child to the number of duplicated instances
+			readonly Dictionary<Node, uint> children = new(); //Maps child to the number of duplicated instances
 
 			/// <summary>
 			/// Tries to add <paramref name="child"/>, returns true if the child has not been added before.
 			/// </summary>
 			public bool AddChild(Node child)
 			{
-				int number = children.TryGetValue(child);
-				children[child] = number + 1;
+				uint count = children.TryGetValue(child);
+				children[child] = count + 1;
 
-				return number == 0; //TryGetValue defaults to zero if does not exist
+				return count == 0; //TryGetValue defaults to zero if does not exist
 			}
 
 			/// <summary>
@@ -163,7 +163,7 @@ namespace EchoRenderer.Objects.Scenes
 				Assert.IsNull(PressedPack);
 				PressedPack = pressedPack;
 
-				foreach ((Node child, int number) in children)
+				foreach ((Node child, uint number) in children)
 				{
 					InstancedCounts += child.InstancedCounts * number;
 					UniqueCounts += child.UniqueCounts;
@@ -173,7 +173,7 @@ namespace EchoRenderer.Objects.Scenes
 				UniqueCounts += pressedPack.geometryCounts;
 			}
 
-			Dictionary<Node, int>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();
+			Dictionary<Node, uint>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();
 
 			IEnumerator<Node> IEnumerable<Node>.GetEnumerator() => GetEnumerator();
 			IEnumerator IEnumerable.            GetEnumerator() => GetEnumerator();
