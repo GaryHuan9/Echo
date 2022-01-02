@@ -72,10 +72,10 @@ namespace EchoRenderer.Textures.Grid
 		/// </summary>
 		public virtual void CopyFrom(Texture texture, bool parallel = true)
 		{
-			if (texture is TextureGrid texture2D)
+			if (texture is TextureGrid textureGrid)
 			{
-				AssertAlignedSize(texture2D);
-				ForEach(position => this[position] = texture2D[position], parallel);
+				AssertAlignedSize(textureGrid);
+				ForEach(position => this[position] = textureGrid[position], parallel);
 			}
 			else ForEach(position => this[position] = texture[ToUV(position)], parallel);
 		}
@@ -83,7 +83,7 @@ namespace EchoRenderer.Textures.Grid
 		/// <summary>
 		/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
 		/// </summary>
-		public void ForEach(Action<Int2> action, bool parallel = true)
+		public virtual void ForEach(Action<Int2> action, bool parallel = true)
 		{
 			if (parallel) Parallel.ForEach(size.Loop(), action);
 			else

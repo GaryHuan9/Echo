@@ -149,7 +149,7 @@ namespace EchoRenderer.Mathematics.Intersections
 					if (token.IsNode)
 					{
 						*next++ = token;
-						*hits++ = hit1;
+						*hits++ = hit;
 					}
 					else pack.GetIntersection(ref traceQuery, token);
 				}
