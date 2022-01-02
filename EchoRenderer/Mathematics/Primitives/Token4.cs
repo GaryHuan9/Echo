@@ -9,17 +9,10 @@ namespace EchoRenderer.Mathematics.Primitives
 		{
 			ref Token ptr = ref Unsafe.As<byte, Token>(ref data[0]);
 
-			Advance(ref ptr) = token0;
-			Advance(ref ptr) = token1;
-			Advance(ref ptr) = token2;
-			Advance(ref ptr) = token3;
-
-			static ref Token Advance(ref Token ptr)
-			{
-				ref Token reference = ref ptr;
-				ptr = ref Unsafe.Add(ref ptr, 1);
-				return ref reference;
-			}
+			Unsafe.Add(ref ptr, 0) = token0;
+			Unsafe.Add(ref ptr, 1) = token1;
+			Unsafe.Add(ref ptr, 2) = token2;
+			Unsafe.Add(ref ptr, 3) = token3;
 		}
 
 		public Token4(ReadOnlySpan<Token> tokens) : this
