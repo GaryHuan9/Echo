@@ -45,7 +45,7 @@ namespace EchoRenderer.Textures
 		}
 
 		/// <summary>
-		/// Gets and returns the pixel data at the indicated texture coordinate <paramref name="uv"/>.
+		/// Gets the pixel data at the indicated texture coordinate <paramref name="uv"/>.
 		/// NOTE: the uv is boundless and the specific range is based on <see cref="Wrapper"/>.
 		/// </summary>
 		protected abstract Vector128<float> GetPixel(Float2 uv);

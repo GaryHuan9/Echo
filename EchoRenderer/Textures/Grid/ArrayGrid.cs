@@ -27,7 +27,7 @@ namespace EchoRenderer.Textures.Grid
 		/// <summary>
 		/// The opposite axis of <see cref="MajorAxis"/>.
 		/// </summary>
-		public const int MinorAxis = 1 - MajorAxis;
+		public const int MinorAxis = MajorAxis ^ 1;
 
 		public override Vector128<float> this[Int2 position]
 		{

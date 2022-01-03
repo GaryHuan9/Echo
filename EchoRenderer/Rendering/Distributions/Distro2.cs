@@ -9,7 +9,7 @@ namespace EchoRenderer.Rendering.Distributions
 	/// </summary>
 	public readonly struct Distro2
 	{
-		public Distro2(Float2 u) : this(new Distro1(u.x), new Distro1(u.y)) { }
+		Distro2(Float2 u) : this((Distro1)u.x, (Distro1)u.y) { }
 
 		public Distro2(Distro1 x, Distro1 y)
 		{
@@ -50,6 +50,19 @@ namespace EchoRenderer.Rendering.Distributions
 				float radius = FastMath.Sqrt0(x);
 				float angle = Scalars.TAU * y;
 				return ProjectDisk(radius, angle);
+			}
+		}
+
+		/// <summary>
+		/// Returns a uniformly sampled barycentric coordinate for a triangle.
+		/// NOTE: the pdf is simply one over the area of the triangle.
+		/// </summary>
+		public Float2 UniformTriangle
+		{
+			get
+			{
+				float v = MathF.Sqrt(x);
+				return new Float2(1f - v, y * v);
 			}
 		}
 
@@ -98,6 +111,7 @@ namespace EchoRenderer.Rendering.Distributions
 		}
 
 		public static implicit operator Float2(Distro2 distro) => new(distro.x, distro.y);
+		public static explicit operator Distro2(Float2 value)  => new(value);
 
 		static Float3 ProjectSphere(float z, float u)
 		{

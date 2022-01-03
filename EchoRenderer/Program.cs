@@ -8,6 +8,7 @@ using CodeHelpers.Threads;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.PostProcessing;

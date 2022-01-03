@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Distributions;
@@ -10,6 +11,10 @@ namespace EchoRenderer.Objects.Lights
 	/// </summary>
 	public abstract class LightSource : Object
 	{
+		protected LightSource(LightType type) => this.type = type;
+
+		public readonly LightType type;
+
 		/// <summary>
 		/// The main color and intensity of this <see cref="LightSource"/>.
 		/// </summary>
@@ -21,10 +26,9 @@ namespace EchoRenderer.Objects.Lights
 		public int SampleCount { get; set; } = 1;
 
 		/// <summary>
-		/// Returns whether this <see cref="LightSource"/> is a delta <see cref="LightSource"/>,
-		/// which means it only starts at a point or only exists in one direction.
+		/// The approximated total emitted power of this <see cref="LightSource"/>.
 		/// </summary>
-		public abstract bool IsDelta { get; }
+		public virtual Float3 Power => throw new NotSupportedException();
 
 		/// <summary>
 		/// Invoked before rendering; after geometry and materials are pressed.
@@ -38,9 +42,9 @@ namespace EchoRenderer.Objects.Lights
 		public abstract Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel);
 
 		/// <summary>
-		/// Returns the sampled probability density (pdf) for a given pair of
-		/// <paramref name="interaction"/> and <paramref name="incident"/> direction.
+		/// Returns the sampled probability density (pdf) for <paramref name="incidentWorld"/>
+		/// to occur at <paramref name="interaction"/> for this <see cref="LightSource"/>.
 		/// </summary>
-		public abstract float ProbabilityDensity(in Interaction interaction, in Float3 incident);
+		public abstract float ProbabilityDensity(in Interaction interaction, in Float3 incidentWorld);
 	}
 }
