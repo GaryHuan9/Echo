@@ -45,13 +45,28 @@ namespace EchoRenderer.Mathematics.Randomization
 
 		void Mangle(ref uint source)
 		{
-			source *= 0x773598E9;
-			source += seed;
+			source *= 0x773598E9u;
+			source += seed /*  */;
 			source ^= source >> 8;
-			source += 0x3B9AEE2B;
+			source += 0x3B9AEE2Bu;
 			source ^= source << 8;
-			source *= 0x6B49DCD5;
+			source *= 0x6B49DCD5u;
 			source ^= source >> 8;
+		}
+
+		/// <summary>
+		/// Returns a randomly hashed and mangled value from <paramref name="source"/>.
+		/// </summary>
+		public static uint Mangle(uint source)
+		{
+			source *= 0xED7D6509u;
+			source ^= source >> 8;
+			source += 0x6A5F4471u;
+			source ^= source << 8;
+			source *= 0x2D96212Bu;
+			source ^= source >> 8;
+
+			return source;
 		}
 	}
 }

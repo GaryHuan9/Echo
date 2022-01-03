@@ -35,7 +35,7 @@ namespace EchoRenderer.Objects.Lights
 		/// <summary>
 		/// Samples the contribution of this <see cref="LightSource"/> to <paramref name="interaction"/>.
 		/// </summary>
-		public abstract Float3 Sample(in Interaction interaction, in Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel);
+		public abstract Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel);
 
 		/// <summary>
 		/// Returns the sampled probability density (pdf) for a given pair of
