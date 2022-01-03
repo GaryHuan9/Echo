@@ -22,18 +22,18 @@ namespace EchoRenderer.Rendering.Distributions
 			foreach (SpanAggregate<Distro1> aggregate in arrayOnes)
 			foreach (ref Distro1 distro in aggregate[SampleIndex])
 			{
-				distro = Jitter ? new Distro1(Random.Next1()) : new Distro1(0.5f);
+				distro = (Distro1)(Jitter ? Random.Next1() : 0.5f);
 			}
 
 			foreach (SpanAggregate<Distro2> aggregate in arrayTwos)
 			foreach (ref Distro2 distro in aggregate[SampleIndex])
 			{
-				distro = Jitter ? new Distro2(Random.Next2()) : new Distro2(Float2.half);
+				distro = (Distro2)(Jitter ? Random.Next2() : Float2.half);
 			}
 		}
 
-		public override Distro1 NextOne() => new(Jitter ? Random.Next1() : 0.5f);
-		public override Distro2 NextTwo() => new(Jitter ? Random.Next2() : Float2.half);
+		public override Distro1 NextOne() => (Distro1)(Jitter ? Random.Next1() : 0.5f);
+		public override Distro2 NextTwo() => (Distro2)(Jitter ? Random.Next2() : Float2.half);
 
 		public override Distribution Replicate() => new UniformDistribution(this);
 	}

@@ -147,22 +147,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 		}
 
 		/// <summary>
-		/// Returns the area of this <see cref="PressedTriangle"/> using Heron's formula.
+		/// Returns the area of this <see cref="PressedTriangle"/>.
 		/// </summary>
-		public float Area
-		{
-			get
-			{
-				float distance0 = (edge1 - edge2).Magnitude;
-				float distance1 = edge1.Magnitude;
-				float distance2 = edge2.Magnitude;
-
-				float sum = (distance0 + distance1 + distance2) / 2f;
-				float value = sum * (sum - distance0) * (sum - distance1) * (sum - distance2);
-
-				return FastMath.Sqrt0(value);
-			}
-		}
+		public float Area => Float3.Cross(edge1, edge2).Magnitude / 2f;
 
 		/// <summary>
 		/// Returns the geometric normal of this <see cref="PressedTriangle"/>.

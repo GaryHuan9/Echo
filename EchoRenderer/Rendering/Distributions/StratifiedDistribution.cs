@@ -67,7 +67,7 @@ namespace EchoRenderer.Rendering.Distributions
 			{
 				ref Distro1 distro = ref span[i];
 				float offset = Jitter ? Random.Next1() : 0.5f;
-				distro = new Distro1((i + offset) * scale);
+				distro = (Distro1)((i + offset) * scale);
 			}
 		}
 
@@ -83,7 +83,7 @@ namespace EchoRenderer.Rendering.Distributions
 				ref Distro2 distro = ref span[i];
 
 				Float2 offset = Jitter ? Random.Next2() : Float2.half;
-				distro = new Distro2((position + offset) * scale);
+				distro = (Distro2)((position + offset) * scale);
 
 				if (position.x < size.x - 1) position += Int2.right;
 				else position = new Int2(0, position.y + 1);
@@ -109,7 +109,7 @@ namespace EchoRenderer.Rendering.Distributions
 				ref Distro2 distro = ref span[i];
 				Float2 offset = Jitter ? Random.Next2() : Float2.half;
 				Float2 position = new Float2(spanX[i], spanY[i]);
-				distro = new Distro2((position + offset) * scale);
+				distro = (Distro2)((position + offset) * scale);
 			}
 		}
 
