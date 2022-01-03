@@ -155,7 +155,7 @@ namespace EchoRenderer.Rendering.Engines
 				for (int i = 0; i < count; i++)
 				{
 					arena.distribution.BeginSample();
-					Float2 offset = arena.distribution.NextTwo().u;
+					Float2 offset = arena.distribution.NextTwo();
 
 					//Sample radiance
 					Float2 uv = (position + offset) / renderBuffer.size - Float2.half;

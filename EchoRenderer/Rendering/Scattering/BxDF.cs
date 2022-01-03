@@ -11,40 +11,38 @@ namespace EchoRenderer.Rendering.Scattering
 	/// </summary>
 	public abstract class BxDF
 	{
-		protected BxDF(FunctionType type) => functionType = type;
+		protected BxDF(FunctionType type) => this.type = type;
 
-		public readonly FunctionType functionType;
-
-		public bool MatchType(FunctionType type) => (functionType & type) == functionType;
-		public bool HasType(FunctionType   type) => (functionType & type) != 0;
+		public readonly FunctionType type;
 
 		/// <summary>
-		/// Samples and returns the value of the distribution function from two pairs of
+		/// Evaluates and returns the value of this <see cref="BxDF"/> from two pairs of
 		/// directions, <paramref name="incident"/> and <paramref name="outgoing"/>.
 		/// </summary>
-		public abstract Float3 Sample(in Float3 outgoing, in Float3 incident);
+		public abstract Float3 Evaluate(in Float3 outgoing, in Float3 incident);
 
 		/// <summary>
-		/// Samples and returns the value of the distribution function from <paramref name="outgoing"/>, and outputs the scattering
-		/// direction to <paramref name="incident"/>. Should be overriden by delta distribution functions (eg. perfect specular)
-		/// </summary>
-		public virtual Float3 Sample(in Float3 outgoing, in Distro2 distro, out Float3 incident, out float pdf)
-		{
-			incident = distro.CosineHemisphere;
-			if (outgoing.z < 0f) incident = new Float3(incident.x, incident.y, -incident.z);
-
-			pdf = ProbabilityDensity(outgoing, incident);
-			return Sample(outgoing, incident);
-		}
-
-		/// <summary>
-		/// Returns the sampled probability density (pdf) for a given pair of
+		/// Returns the sampling probability density (pdf) for a given pair of
 		/// <paramref name="outgoing"/> and <paramref name="incident"/> directions.
 		/// </summary>
 		public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 		{
 			if (!SameHemisphere(outgoing, incident)) return 0f;
 			return AbsoluteCosine(incident) * (1f / Scalars.PI);
+		}
+
+		/// <summary>
+		/// Selects an output <paramref name="incident"/> direction from <paramref name="distro"/>, evaluates the value of
+		/// this <see cref="BxDF"/> from the two directions, and outputs the probability density to <paramref name="pdf"/>.
+		/// NOTE: should be overriden by delta distribution functions (eg. <see cref="FunctionType.specular"/>).
+		/// </summary>
+		public virtual Float3 Sample(in Float3 outgoing, Distro2 distro, out Float3 incident, out float pdf)
+		{
+			incident = distro.CosineHemisphere;
+			if (outgoing.z < 0f) incident = new Float3(incident.x, incident.y, -incident.z);
+
+			pdf = ProbabilityDensity(outgoing, incident);
+			return Evaluate(outgoing, incident);
 		}
 
 		/// <summary>
@@ -76,12 +74,13 @@ namespace EchoRenderer.Rendering.Scattering
 			Assert.AreEqual(length, distros1.Length);
 			for (int i = 0; i < distros0.Length; i++)
 			{
-				ref readonly Distro2 distro = ref distros0[i];
+				ref readonly Distro2 distro0 = ref distros0[i];
+				ref readonly Distro2 distro1 = ref distros1[i];
 
-				Float3 outgoing = distro.UniformHemisphere;
-				Float3 sampled = Sample(outgoing, distros1[i], out Float3 incident, out float pdf);
+				Float3 outgoing = distro0.UniformHemisphere;
+				Float3 sampled = Sample(outgoing, distro1, out Float3 incident, out float pdf);
 
-				pdf *= distro.UniformHemispherePDF;
+				pdf *= distro0.UniformHemispherePDF;
 
 				if (pdf > 0f) result += sampled * AbsoluteCosine(outgoing) * AbsoluteCosine(incident) / pdf;
 			}
