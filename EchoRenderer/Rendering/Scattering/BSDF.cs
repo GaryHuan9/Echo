@@ -68,7 +68,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 			for (int i = 0; i < count; i++)
 			{
-				result += functions[i].type.Fit(type) ? 0 : 1;
+				result += functions[i].type.Fits(type) ? 0 : 1;
 			}
 
 			return result;
@@ -89,7 +89,7 @@ namespace EchoRenderer.Rendering.Scattering
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-				if (!function.type.Fit(type) || !function.type.Has(reflect)) continue;
+				if (!function.type.Fits(type) || !function.type.Any(reflect)) continue;
 				evaluation += function.Evaluate(outgoing, incident);
 			}
 
@@ -111,7 +111,7 @@ namespace EchoRenderer.Rendering.Scattering
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-				if (!function.type.Fit(type)) continue;
+				if (!function.type.Fits(type)) continue;
 
 				pdf += function.ProbabilityDensity(outgoing, incident);
 				++matched;
@@ -162,7 +162,7 @@ namespace EchoRenderer.Rendering.Scattering
 			Assert.IsTrue(matched > 1);
 
 			//If the selected function is specular, we are also finished
-			if (selected.type.Has(FunctionType.specular))
+			if (selected.type.Any(FunctionType.specular))
 			{
 				Assert.AreEqual(pdf, 1f); //This is because specular functions are Dirac delta distributions
 
@@ -177,10 +177,10 @@ namespace EchoRenderer.Rendering.Scattering
 			{
 				BxDF function = functions[i];
 
-				if (function == selected || !function.type.Fit(type)) continue;
+				if (function == selected || !function.type.Fits(type)) continue;
 				pdf += function.ProbabilityDensity(outgoing, incident);
 
-				if (function.type.Has(reflect)) value += function.Evaluate(outgoing, incident);
+				if (function.type.Any(reflect)) value += function.Evaluate(outgoing, incident);
 			}
 
 			if (matched > 1) pdf /= matched;
@@ -199,7 +199,7 @@ namespace EchoRenderer.Rendering.Scattering
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-				if (!function.type.Fit(type)) continue;
+				if (!function.type.Fits(type)) continue;
 				reflectance += function.GetReflectance(outgoing, distros);
 			}
 
@@ -217,7 +217,7 @@ namespace EchoRenderer.Rendering.Scattering
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-				if (!function.type.Fit(type)) continue;
+				if (!function.type.Fits(type)) continue;
 				reflectance += function.GetReflectance(distros0, distros1);
 			}
 
@@ -247,11 +247,11 @@ namespace EchoRenderer.Rendering.Scattering
 
 			int matched; //The number of functions matching type
 
-			if (FunctionType.all.Fit(type))
+			if (FunctionType.all.Fits(type))
 			{
-				//All stored functions match type
+				//All stored functions match
 				matched = count;
-				index = (distro.u * matched).Floor();
+				index = distro.Range(matched);
 			}
 			else
 			{
@@ -262,7 +262,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 				for (int i = 0; i < count; i++)
 				{
-					if (!functions[i].type.Fit(type)) continue;
+					if (!functions[i].type.Fits(type)) continue;
 					stack[matched++] = i;
 				}
 
@@ -272,11 +272,11 @@ namespace EchoRenderer.Rendering.Scattering
 					return 0;
 				}
 
-				index = stack[(distro.u * matched).Floor()];
+				index = stack[distro.Range(matched)];
 			}
 
 			//Remaps distro by "zooming in" because we just used it to find index
-			distro = new Distro1(MathF.FusedMultiplyAdd(distro.u, matched, -index));
+			distro = (Distro1)MathF.FusedMultiplyAdd(distro.u, matched, -index);
 
 			return matched;
 		}

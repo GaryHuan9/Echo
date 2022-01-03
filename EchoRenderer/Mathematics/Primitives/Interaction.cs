@@ -55,6 +55,16 @@ namespace EchoRenderer.Mathematics.Primitives
 		public BSDF bsdf;
 
 		/// <summary>
+		/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> towards <paramref name="direction"/>.
+		/// </summary>
+		public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(position, direction), float.PositiveInfinity, token);
+
+		/// <summary>
+		/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> with a direction directly opposite to <see cref="outgoingWorld"/>.
+		/// </summary>
+		public readonly TraceQuery SpawnTrace() => SpawnTrace(-outgoingWorld);
+
+		/// <summary>
 		/// Spawns a new <see cref="OccludeQuery"/> with <paramref name="direction"/> and <paramref name="travel"/>.
 		/// </summary>
 		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(position, direction), travel, token);

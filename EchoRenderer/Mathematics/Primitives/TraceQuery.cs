@@ -90,22 +90,22 @@ namespace EchoRenderer.Mathematics.Primitives
 #endif
 
 		/// <summary>
-		/// Spawns and returns a new <see cref="TraceQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
+		/// Spawns a new <see cref="TraceQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 		/// </summary>
 		public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(Position, direction), float.PositiveInfinity, token);
 
 		/// <summary>
-		/// Spans and returns a new <see cref="TraceQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
+		/// Spawns a new <see cref="TraceQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
 		/// </summary>
 		public readonly TraceQuery SpawnTrace() => SpawnTrace(ray.direction);
 
 		/// <summary>
-		/// Spawns and returns a new <see cref="OccludeQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
+		/// Spawns a new <see cref="OccludeQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 		/// </summary>
 		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) =>  new(new Ray(Position, direction), travel, token);
 
 		/// <summary>
-		/// Spans and returns a new <see cref="OccludeQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
+		/// Spawns a new <see cref="OccludeQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
 		/// </summary>
 		public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(ray.direction, travel);
 
