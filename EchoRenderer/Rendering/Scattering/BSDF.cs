@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
@@ -59,7 +60,7 @@ namespace EchoRenderer.Rendering.Scattering
 		public int Count() => count;
 
 		/// <summary>
-		/// Counts how many <see cref="BxDF"/> in this <see cref="BSDF"/> are <paramref name="type"/>.
+		/// Counts how many <see cref="BxDF"/> in this <see cref="BSDF"/> fits the attributes outlined by <paramref name="type"/>.
 		/// </summary>
 		public int Count(FunctionType type)
 		{
@@ -67,86 +68,32 @@ namespace EchoRenderer.Rendering.Scattering
 
 			for (int i = 0; i < count; i++)
 			{
-				result += functions[i].MatchType(type) ? 0 : 1;
+				result += functions[i].type.Fit(type) ? 0 : 1;
 			}
 
 			return result;
 		}
 
 		/// <summary>
-		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-		/// See <see cref="BxDF.Sample(in Float3, in Float3)"/> for more information.
+		/// Evaluates all <see cref="BxDF"/> contained in this <see cref="BSDF"/> that matches
+		/// <paramref name="type"/>. See <see cref="BxDF.Evaluate"/> for more information.
 		/// </summary>
-		public Float3 Sample(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
+		public Float3 Evaluate(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
 		{
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 			Float3 incident = transform.WorldToLocal(incidentWorld);
 
-			bool reflect = Reflect(outgoingWorld, incidentWorld);
-
-			Float3 sampled = Float3.zero;
+			Float3 evaluation = Float3.zero;
+			FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
 
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-
-				if (!function.MatchType(type)) continue;
-				if (reflect && function.HasType(FunctionType.reflection) ||
-					!reflect && function.HasType(FunctionType.transmission)) sampled += function.Sample(outgoing, incident);
+				if (!function.type.Fit(type) || !function.type.Has(reflect)) continue;
+				evaluation += function.Evaluate(outgoing, incident);
 			}
 
-			return sampled;
-		}
-
-		/// <summary>
-		/// Samples all <see cref="BxDF"/> that matches with <paramref name="type"/> with an output direction.
-		/// See <see cref="BxDF.Sample(in Float3, in Distribution2, out Float3, out float)"/> for more information.
-		/// </summary>
-		public Float3 Sample(in Float3 outgoingWorld, Distro2 distro, ref FunctionType type, out Float3 incidentWorld, out float pdf)
-		{
-			int index = FindFunction(type, ref distro, out int matched);
-
-			if (index < 0)
-			{
-				incidentWorld = Float3.zero;
-				type = FunctionType.none;
-				pdf = 0f;
-				return Float3.zero;
-			}
-
-			BxDF selected = functions[index];
-			type = selected.functionType;
-
-			//Sample the selected function
-			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-			Float3 sampled = selected.Sample(outgoing, distro, out Float3 incident, out pdf);
-
-			if (pdf.AlmostEquals())
-			{
-				incidentWorld = Float3.zero;
-				return Float3.zero;
-			}
-
-			incidentWorld = transform.LocalToWorld(incident);
-
-			//Sample the other matching functions
-			if (!selected.HasType(FunctionType.specular) && matched > 1)
-			{
-				bool reflect = Reflect(outgoingWorld, incidentWorld);
-
-				for (int i = 0; i < count; i++)
-				{
-					BxDF function = functions[i];
-					if (function == selected || !function.MatchType(type)) continue;
-
-					pdf += function.ProbabilityDensity(outgoing, incident);
-					if (reflect && function.HasType(FunctionType.reflection) ||
-						!reflect && function.HasType(FunctionType.transmission)) sampled += function.Sample(outgoing, incident);
-				}
-			}
-
-			pdf /= matched;
-			return sampled;
+			return evaluation;
 		}
 
 		/// <summary>
@@ -164,7 +111,7 @@ namespace EchoRenderer.Rendering.Scattering
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-				if (!function.MatchType(type)) continue;
+				if (!function.type.Fit(type)) continue;
 
 				pdf += function.ProbabilityDensity(outgoing, incident);
 				++matched;
@@ -174,8 +121,75 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
+		/// Samples all <see cref="BxDF"/> that matches <paramref name="type"/>.
+		/// See <see cref="BxDF.Sample"/> for more information.
+		/// </summary>
+		public Float3 Sample(in  Float3       outgoingWorld, Distro2      distro,
+							 out Float3       incidentWorld, out float    pdf,
+							 out FunctionType sampledType,   FunctionType type = FunctionType.all)
+		{
+			//Uniformly select a matching function
+			Distro1 distroFind = distro.x;
+			int matched = FindFunction(type, ref distroFind, out int index);
+
+			if (matched == 0)
+			{
+				incidentWorld = Float3.zero;
+				pdf = 0f;
+				sampledType = FunctionType.none;
+				return Float3.zero;
+			}
+
+			distro = new Distro2(distroFind, distro.y);
+
+			BxDF selected = functions[index];
+			sampledType = selected.type;
+
+			//Sample the selected function
+			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
+			Float3 value = selected.Sample(outgoing, distro, out Float3 incident, out pdf);
+
+			if (pdf.AlmostEquals())
+			{
+				incidentWorld = Float3.zero;
+				return Float3.zero;
+			}
+
+			incidentWorld = transform.LocalToWorld(incident);
+
+			//If there is only one function, we have finished
+			if (matched == 1) return value;
+			Assert.IsTrue(matched > 1);
+
+			//If the selected function is specular, we are also finished
+			if (selected.type.Has(FunctionType.specular))
+			{
+				Assert.AreEqual(pdf, 1f); //This is because specular functions are Dirac delta distributions
+
+				pdf /= matched;
+				return value;
+			}
+
+			//Sample the other matching functions
+			FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
+
+			for (int i = 0; i < count; i++)
+			{
+				BxDF function = functions[i];
+
+				if (function == selected || !function.type.Fit(type)) continue;
+				pdf += function.ProbabilityDensity(outgoing, incident);
+
+				if (function.type.Has(reflect)) value += function.Evaluate(outgoing, incident);
+			}
+
+			if (matched > 1) pdf /= matched;
+			return value;
+		}
+
+		/// <summary>
 		/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-		/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Distribution2})"/> for more information.
+		/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Distro2})"/> for more information.
 		/// </summary>
 		public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Distro2> distros, FunctionType type)
 		{
@@ -185,7 +199,7 @@ namespace EchoRenderer.Rendering.Scattering
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-				if (!function.MatchType(type)) continue;
+				if (!function.type.Fit(type)) continue;
 				reflectance += function.GetReflectance(outgoing, distros);
 			}
 
@@ -203,7 +217,7 @@ namespace EchoRenderer.Rendering.Scattering
 			for (int i = 0; i < count; i++)
 			{
 				BxDF function = functions[i];
-				if (!function.MatchType(type)) continue;
+				if (!function.type.Fit(type)) continue;
 				reflectance += function.GetReflectance(distros0, distros1);
 			}
 
@@ -212,29 +226,59 @@ namespace EchoRenderer.Rendering.Scattering
 
 		/// <summary>
 		/// Determines whether the direction pair <paramref name="outgoingWorld"/> and <paramref name="incidentWorld"/>
-		/// is a reflection transport or a transmission transport using our geometry normal to avoid light leak.
+		/// is a reflective transport or a transmissive transport using our geometry normal to avoid light leak.
 		/// </summary>
-		bool Reflect(in Float3 outgoingWorld, in Float3 incidentWorld) => outgoingWorld.Dot(geometryNormal) * incidentWorld.Dot(geometryNormal) > 0f;
-
-		int FindFunction(FunctionType type, ref Distro2 distro, out int matched)
+		FunctionType Reflect(in Float3 outgoingWorld, in Float3 incidentWorld)
 		{
-			Span<int> stack = stackalloc int[count];
+			float dot0 = outgoingWorld.Dot(geometryNormal);
+			float dot1 = incidentWorld.Dot(geometryNormal);
 
-			matched = 0; //The number of functions matching type
+			//Returns based on whether the two directions are on the same side of the normal
+			return dot0 * dot1 > 0f ? FunctionType.reflective : FunctionType.transmissive;
+		}
 
-			for (int i = 0; i < count; i++)
+		int FindFunction(FunctionType type, ref Distro1 distro, out int index)
+		{
+			if (count == 0)
 			{
-				if (!functions[i].MatchType(type)) continue;
-				stack[matched++] = i;
+				index = default;
+				return 0;
 			}
 
-			if (matched == 0) return -1;
+			int matched; //The number of functions matching type
 
-			//Finds the index and remaps sample to a uniformed distribution because we just used it to find a function
-			int index = stack[(distro.u.x * matched).Floor()];
-			distro = new Distro2(distro.u.x * matched - index, distro.u.y);
+			if (FunctionType.all.Fit(type))
+			{
+				//All stored functions match type
+				matched = count;
+				index = (distro.u * matched).Floor();
+			}
+			else
+			{
+				//Count the number of matched and select
+				Span<int> stack = stackalloc int[count];
 
-			return index;
+				matched = 0;
+
+				for (int i = 0; i < count; i++)
+				{
+					if (!functions[i].type.Fit(type)) continue;
+					stack[matched++] = i;
+				}
+
+				if (matched == 0)
+				{
+					index = default;
+					return 0;
+				}
+
+				index = stack[(distro.u * matched).Floor()];
+			}
+
+			//Remaps distro by "zooming in" because we just used it to find index
+			distro = new Distro1(MathF.FusedMultiplyAdd(distro.u, matched, -index));
+
+			return matched;
 		}
 	}
 }

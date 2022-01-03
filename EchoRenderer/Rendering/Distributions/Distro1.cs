@@ -29,5 +29,7 @@ namespace EchoRenderer.Rendering.Distributions
 			Assert.IsTrue(min < max);
 			return Range(max - min) + min;
 		}
+
+		public static implicit operator float(Distro1 distro) => distro.u;
 	}
 }

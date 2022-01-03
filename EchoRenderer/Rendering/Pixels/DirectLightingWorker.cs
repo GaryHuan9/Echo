@@ -67,7 +67,7 @@ namespace EchoRenderer.Rendering.Pixels
 			return radiance;
 		}
 
-		static Float3 EstimateDirect(in Interaction interaction, LightSource light, in Distro2 distroLight, in Distro2 distroScatter, Arena arena)
+		static Float3 EstimateDirect(in Interaction interaction, LightSource light, Distro2 distroLight, Distro2 distroScatter, Arena arena)
 		{
 			throw new NotImplementedException();
 		}

@@ -10,7 +10,7 @@ namespace EchoRenderer.Rendering.Scattering
 	{
 		public OrenNayar() : base
 		(
-			FunctionType.reflection |
+			FunctionType.reflective |
 			FunctionType.diffuse
 		) { }
 
@@ -31,7 +31,7 @@ namespace EchoRenderer.Rendering.Scattering
 		float a;
 		float b;
 
-		public override Float3 Sample(in Float3 outgoing, in Float3 incident)
+		public override Float3 Evaluate(in Float3 outgoing, in Float3 incident)
 		{
 			float sinO = Sine(outgoing);
 			float sinI = Sine(incident);
