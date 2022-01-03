@@ -7,7 +7,7 @@ using CodeHelpers.Mathematics;
 namespace EchoRenderer.Textures.Grid
 {
 	/// <summary>
-	/// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and size (exclusive).
+	/// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and <see cref="size"/> (exclusive).
 	/// </summary>
 	public abstract partial class TextureGrid : Texture
 	{

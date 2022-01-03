@@ -8,7 +8,7 @@ namespace EchoRenderer.Rendering.Distributions
 	/// </summary>
 	public readonly struct Distro1
 	{
-		public Distro1(float u) => this.u = FastMath.ClampEpsilon(u);
+		Distro1(float u) => this.u = FastMath.ClampEpsilon(u);
 
 		public readonly float u;
 
@@ -31,5 +31,6 @@ namespace EchoRenderer.Rendering.Distributions
 		}
 
 		public static implicit operator float(Distro1 distro) => distro.u;
+		public static explicit operator Distro1(float value)  => new(value);
 	}
 }
