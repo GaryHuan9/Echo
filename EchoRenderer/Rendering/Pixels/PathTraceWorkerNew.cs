@@ -46,12 +46,11 @@ namespace EchoRenderer.Rendering.Pixels
 
 				radiance += energy * UniformSampleOneLight(interaction, arena);
 
-				FunctionType type = FunctionType.all;
-				Float3 scatter = interaction.bsdf.Sample(interaction.outgoingWorld, arena.distribution.NextTwo(), ref type, out Float3 incidentWorld, out float pdf);
+				Float3 scatter = interaction.bsdf.Sample(interaction.outgoingWorld, arena.distribution.NextTwo(), out Float3 incidentWorld, out float pdf, out FunctionType sampledType);
 				if (arena.profile.IsZero(scatter) || pdf <= 0f) break;
 
 				energy *= FastMath.Abs(incidentWorld.Dot(interaction.normal)) / pdf * scatter;
-				specularBounce = type.HasFlag(FunctionType.specular);
+				specularBounce = sampledType.Has(FunctionType.specular);
 
 				query = query.SpawnTrace(incidentWorld);
 
@@ -96,7 +95,7 @@ namespace EchoRenderer.Rendering.Pixels
 			if (lightPDF > 0f && !arena.profile.IsZero(light))
 			{
 				float cos = FastMath.Abs(incidentWorld.Dot(interaction.normal));
-				Float3 scatter = bsdf.Sample(outgoingWorld, incidentWorld) * cos;
+				Float3 scatter = bsdf.Evaluate(outgoingWorld, incidentWorld) * cos;
 				float pdf = bsdf.ProbabilityDensity(outgoingWorld, incidentWorld);
 
 				if (!arena.profile.IsZero(scatter))

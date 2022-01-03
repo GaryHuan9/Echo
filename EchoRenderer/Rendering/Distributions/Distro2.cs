@@ -9,20 +9,21 @@ namespace EchoRenderer.Rendering.Distributions
 	/// </summary>
 	public readonly struct Distro2
 	{
-		public Distro2(float x, float y) : this(new Float2(x, y)) { }
+		public Distro2(Float2 u) : this(new Distro1(u.x), new Distro1(u.y)) { }
 
-		public Distro2(Float2 u) => this.u = new Float2
-									(
-										FastMath.ClampEpsilon(u.x),
-										FastMath.ClampEpsilon(u.y)
-									);
+		public Distro2(Distro1 x, Distro1 y)
+		{
+			this.x = x;
+			this.y = y;
+		}
 
-		public readonly Float2 u;
+		public readonly Distro1 x;
+		public readonly Distro1 y;
 
 		/// <summary>
 		/// Returns a uniformly sampled point on a unit hemisphere surface.
 		/// </summary>
-		public Float3 UniformHemisphere => ProjectSphere(u.x, u.y);
+		public Float3 UniformHemisphere => ProjectSphere(x, y);
 
 		/// <summary>
 		/// Returns the probability density function for <see cref="UniformHemisphere"/>.
@@ -32,7 +33,7 @@ namespace EchoRenderer.Rendering.Distributions
 		/// <summary>
 		/// Returns a uniformly sampled point on a unit sphere surface.
 		/// </summary>
-		public Float3 UniformSphere => ProjectSphere(1f - u.x * 2f, u.y);
+		public Float3 UniformSphere => ProjectSphere(1f - x * 2f, y);
 
 		/// <summary>
 		/// Returns the probability density function for <see cref="UniformSphere"/>.
@@ -46,8 +47,8 @@ namespace EchoRenderer.Rendering.Distributions
 		{
 			get
 			{
-				float radius = FastMath.Sqrt0(u.x);
-				float angle = Scalars.TAU * u.y;
+				float radius = FastMath.Sqrt0(x);
+				float angle = Scalars.TAU * y;
 				return ProjectDisk(radius, angle);
 			}
 		}
@@ -59,21 +60,23 @@ namespace EchoRenderer.Rendering.Distributions
 		{
 			get
 			{
-				if (u.EqualsExact(Float2.half)) return Float2.zero;
-				Float2 mapped = u * 2f - Float2.one;
+				Float2 xy = this;
+
+				if (xy.EqualsExact(Float2.half)) return Float2.zero;
+				xy = xy * 2f - Float2.one;
 
 				float radius;
 				float angle;
 
-				if (FastMath.Abs(mapped.x) > FastMath.Abs(mapped.y))
+				if (FastMath.Abs(xy.x) > FastMath.Abs(xy.y))
 				{
-					radius = mapped.x;
-					angle = Scalars.PI / 4f * mapped.y / mapped.x;
+					radius = xy.x;
+					angle = Scalars.PI / 4f * xy.y / xy.x;
 				}
 				else
 				{
-					radius = mapped.y;
-					angle = Scalars.PI / 2f * (1f - mapped.x / mapped.y / 2f);
+					radius = xy.y;
+					angle = Scalars.PI / 2f * (1f - xy.x / xy.y / 2f);
 				}
 
 				return ProjectDisk(radius, angle);
@@ -93,6 +96,8 @@ namespace EchoRenderer.Rendering.Distributions
 				return disk.CreateXY(FastMath.Sqrt0(1f - z));
 			}
 		}
+
+		public static implicit operator Float2(Distro2 distro) => new(distro.x, distro.y);
 
 		static Float3 ProjectSphere(float z, float u)
 		{

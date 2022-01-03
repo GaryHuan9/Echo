@@ -56,7 +56,7 @@ namespace EchoRenderer.Mathematics.Primitives
 			Assert.IsTrue(max >= min);
 		}
 
-		public static readonly AxisAlignedBoundingBox none = new(Float3.negativeInfinity, Float3.negativeInfinity);
+		public static readonly AxisAlignedBoundingBox none = new(Float3.positiveInfinity, Float3.positiveInfinity);
 
 		[FieldOffset(0)] public readonly Float3 min;
 		[FieldOffset(12)] public readonly Float3 max;

@@ -11,7 +11,7 @@ namespace EchoRenderer.Rendering.Scattering
 	{
 		public LambertianReflection() : base
 		(
-			FunctionType.reflection |
+			FunctionType.reflective |
 			FunctionType.diffuse
 		) { }
 
@@ -19,7 +19,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		Float3 reflectance;
 
-		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => reflectance * (1f / Scalars.PI);
+		public override Float3 Evaluate(in Float3 outgoing, in Float3 incident) => reflectance * (1f / Scalars.PI);
 
 		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Distro2> distros)  => reflectance;
 		public override Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1) => reflectance;
@@ -32,7 +32,7 @@ namespace EchoRenderer.Rendering.Scattering
 	{
 		public LambertianTransmission() : base
 		(
-			FunctionType.transmission |
+			FunctionType.transmissive |
 			FunctionType.diffuse
 		) { }
 
@@ -40,7 +40,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 		Float3 transmittance;
 
-		public override Float3 Sample(in Float3 outgoing, in Float3 incident) => transmittance * (1f / Scalars.PI);
+		public override Float3 Evaluate(in Float3 outgoing, in Float3 incident) => transmittance * (1f / Scalars.PI);
 
 		public override Float3 GetReflectance(in Float3             outgoing, ReadOnlySpan<Distro2> distros)  => transmittance;
 		public override Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1) => transmittance;
