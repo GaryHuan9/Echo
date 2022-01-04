@@ -3,16 +3,17 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Rendering;
 
 namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
-	/// Represents a unique geometry in the pressed scene. Note that this uniqueness transcends object instancing.
+	/// Represents a unique geometry in the <see cref="PreparedScene"/>. Note that this uniqueness transcends object instancing.
 	/// </summary>
 	public unsafe struct GeometryToken
 	{
 		/// <summary>
-		/// The unique token for one geometry inside a <see cref="PressedPack"/>.
+		/// The unique token for one geometry inside a <see cref="PreparedPack"/>.
 		/// </summary>
 		public Token geometry;
 
@@ -22,12 +23,12 @@ namespace EchoRenderer.Mathematics.Primitives
 		public int InstanceCount { get; private set; }
 
 		/// <summary>
-		/// A stack that holds the different <see cref="PressedInstance.id"/> branches to reach this <see cref="geometry"/>.
+		/// A stack that holds the different <see cref="PreparedInstance.id"/> branches to reach this <see cref="geometry"/>.
 		/// </summary>
 		fixed uint instances[ObjectPack.MaxLayer];
 
 		/// <summary>
-		/// Returns the <see cref="PressedInstance.id"/> of the topmost <see cref="PressedInstance"/>,
+		/// Returns the <see cref="PreparedInstance.id"/> of the topmost <see cref="PreparedInstance"/>,
 		/// which is the one that immediately contains <see cref="geometry"/> in its pack.
 		/// </summary>
 		public uint FinalInstanceId
@@ -42,14 +43,14 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// Pushes a new <paramref name="instance"/> onto this <see cref="GeometryToken"/> as a new layer.
 		/// </summary>
-		public void Push(PressedInstance instance)
+		public void Push(PreparedInstance instance)
 		{
 			Assert.IsTrue(InstanceCount < ObjectPack.MaxLayer);
 			instances[InstanceCount++] = instance.id;
 		}
 
 		/// <summary>
-		/// Pops a <see cref="PressedInstance"/> from the top of this <see cref="GeometryToken"/>.
+		/// Pops a <see cref="PreparedInstance"/> from the top of this <see cref="GeometryToken"/>.
 		/// </summary>
 		public void Pop()
 		{
@@ -60,12 +61,12 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// Applies the local space to world space transform of <see cref="geometry"/> to <paramref name="direction"/>.
 		/// </summary>
-		public readonly void ApplyWorldTransform(ScenePresser presser, ref Float3 direction)
+		public readonly void ApplyWorldTransform(ScenePreparer preparer, ref Float3 direction)
 		{
 			for (int i = InstanceCount - 1; i >= 0; i--)
 			{
 				uint id = instances[i];
-				var instance = presser.GetPressedPackInstance(id);
+				var instance = preparer.GetPreparedInstance(id);
 				instance.TransformInverse(ref direction);
 			}
 

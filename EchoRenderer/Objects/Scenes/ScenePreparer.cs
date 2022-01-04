@@ -12,21 +12,21 @@ using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Objects.Scenes
 {
-	public class ScenePresser
+	public class ScenePreparer
 	{
-		public ScenePresser(Scene scene, ScenePressProfile profile)
+		public ScenePreparer(Scene scene, ScenePrepareProfile profile)
 		{
 			this.profile = profile;
-			materials = new MaterialPresser();
+			materials = new MaterialPreparer();
 			root = CreateNode(scene, null);
 
 			threadId = Thread.CurrentThread.ManagedThreadId;
 
-			PressPacks(root);
+			PreparePacks(root);
 		}
 
-		public readonly ScenePressProfile profile;
-		public readonly MaterialPresser materials;
+		public readonly ScenePrepareProfile profile;
+		public readonly MaterialPreparer materials;
 		public readonly Node root;
 
 		public Dictionary<ObjectPack, Node>.KeyCollection UniquePacks => objectPacks.Keys;
@@ -34,26 +34,13 @@ namespace EchoRenderer.Objects.Scenes
 		readonly int threadId;
 
 		readonly Dictionary<ObjectPack, Node> objectPacks = new();
-		readonly List<PressedInstance> packInstances = new();
+		readonly List<PreparedInstance> packInstances = new();
 
 		/// <summary>
-		/// Creates or retrieves and returns the <see cref="PressedPack"/> for <paramref name="pack"/>.
+		/// Returns a unique id for the newly created <paramref name="instance"/> and register it into this <see cref="ScenePreparer"/>.
+		/// NOTE: This method must be invoked on the same thread as the constructor of this <see cref="ScenePreparer"/>!
 		/// </summary>
-		public PressedPack GetPressedPack(ObjectPack pack)
-		{
-			Node node = objectPacks.TryGetValue(pack);
-
-			if (node == null) throw ExceptionHelper.Invalid(nameof(pack), pack, "is not linked in the input scene in any way");
-			if (node.PressedPack == null) throw new Exception("Pack not pressed yet! Are you sure the pressing order is correct?");
-
-			return node.PressedPack;
-		}
-
-		/// <summary>
-		/// Returns a unique id for the newly created <paramref name="instance"/> and register it into this <see cref="ScenePresser"/>.
-		/// NOTE: This method must be invoked on the same thread as the constructor of this <see cref="ScenePresser"/>!
-		/// </summary>
-		public uint RegisterPressedPackInstance(PressedInstance instance)
+		public uint RegisterPreparedInstance(PreparedInstance instance)
 		{
 			if (threadId != Thread.CurrentThread.ManagedThreadId) throw new Exception($"Invalid thread {threadId}!");
 
@@ -62,10 +49,23 @@ namespace EchoRenderer.Objects.Scenes
 		}
 
 		/// <summary>
-		/// Retrieves a registered <see cref="PressedInstance"/> with
-		/// <paramref name="id"/> from this <see cref="ScenePresser"/>.
+		/// Creates or retrieves and returns the <see cref="PreparedPack"/> for <paramref name="pack"/>.
 		/// </summary>
-		public PressedInstance GetPressedPackInstance(uint id) => packInstances[(int)id];
+		public PreparedPack GetPreparedPack(ObjectPack pack)
+		{
+			Node node = objectPacks.TryGetValue(pack);
+
+			if (node == null) throw ExceptionHelper.Invalid(nameof(pack), pack, "is not linked in the input scene in any way");
+			if (node.PreparedPack == null) throw new Exception("Pack not prepared! Are you sure the preparing order is correct?");
+
+			return node.PreparedPack;
+		}
+
+		/// <summary>
+		/// Retrieves a registered <see cref="PreparedInstance"/> with
+		/// <paramref name="id"/> from this <see cref="ScenePreparer"/>.
+		/// </summary>
+		public PreparedInstance GetPreparedInstance(uint id) => packInstances[(int)id];
 
 		Node CreateNode(ObjectPack pack, Node parent)
 		{
@@ -92,12 +92,12 @@ namespace EchoRenderer.Objects.Scenes
 			return node;
 		}
 
-		void PressPacks(Node node)
+		void PreparePacks(Node node)
 		{
-			//Head recursion to make sure that all children is pressed before the parent
+			//Head recursion to make sure that all children are prepared before the parent
 
-			foreach (Node child in node) PressPacks(child);
-			node.AssignPack(new PressedPack(this, node.objectPack));
+			foreach (Node child in node) PreparePacks(child);
+			node.AssignPack(new PreparedPack(this, node.objectPack));
 		}
 
 		public class Node : IEnumerable<Node>
@@ -109,7 +109,7 @@ namespace EchoRenderer.Objects.Scenes
 			}
 
 			public readonly ObjectPack objectPack;
-			public PressedPack PressedPack { get; private set; }
+			public PreparedPack PreparedPack { get; private set; }
 
 			public GeometryCounts InstancedCounts { get; private set; }
 			public GeometryCounts UniqueCounts { get; private set; }
@@ -158,10 +158,10 @@ namespace EchoRenderer.Objects.Scenes
 				}
 			}
 
-			public void AssignPack(PressedPack pressedPack)
+			public void AssignPack(PreparedPack preparedPack)
 			{
-				Assert.IsNull(PressedPack);
-				PressedPack = pressedPack;
+				Assert.IsNull(PreparedPack);
+				PreparedPack = preparedPack;
 
 				foreach ((Node child, uint number) in children)
 				{
@@ -169,8 +169,8 @@ namespace EchoRenderer.Objects.Scenes
 					UniqueCounts += child.UniqueCounts;
 				}
 
-				InstancedCounts += pressedPack.geometryCounts;
-				UniqueCounts += pressedPack.geometryCounts;
+				InstancedCounts += preparedPack.geometryCounts;
+				UniqueCounts += preparedPack.geometryCounts;
 			}
 
 			Dictionary<Node, uint>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();

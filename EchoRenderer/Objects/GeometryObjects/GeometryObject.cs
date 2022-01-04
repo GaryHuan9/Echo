@@ -21,12 +21,12 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// Enumerates through all of the triangles that can be extracted from this <see cref="GeometryObject"/>.
 		/// NOTE: Can simply return empty enumerable if this object does not have any triangle.
 		/// </summary>
-		public abstract IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser);
+		public abstract IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer);
 
 		/// <summary>
 		/// Enumerates through all of the spheres that can be extracted from this <see cref="GeometryObject"/>.
 		/// NOTE: Can simply return empty enumerable if this object does not have any sphere.
 		/// </summary>
-		public abstract IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser);
+		public abstract IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer);
 	}
 }

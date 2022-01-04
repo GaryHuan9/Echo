@@ -16,7 +16,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Mesh Mesh { get; set; }
 		public MaterialLibrary MaterialLibrary { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser)
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer)
 		{
 			if (Mesh == null) yield break;
 
@@ -24,7 +24,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
 				Material material = MaterialLibrary?[triangle.materialName] ?? Material;
-				int materialToken = presser.GetToken(material);
+				int materialToken = preparer.GetToken(material);
 
 				bool hasNormal = triangle.normalIndices.MinComponent >= 0;
 				bool hasTexcoord = triangle.texcoordIndices.MinComponent >= 0;
@@ -33,7 +33,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 				{
 					if (hasTexcoord)
 					{
-						yield return new PressedTriangle
+						yield return new PreparedTriangle
 						(
 							GetVertex(0), GetVertex(1), GetVertex(2),
 							GetNormal(0), GetNormal(1), GetNormal(2),
@@ -42,7 +42,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 					}
 					else
 					{
-						yield return new PressedTriangle
+						yield return new PreparedTriangle
 						(
 							GetVertex(0), GetVertex(1), GetVertex(2),
 							GetNormal(0), GetNormal(1), GetNormal(2), materialToken
@@ -53,7 +53,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 				{
 					if (hasTexcoord)
 					{
-						yield return new PressedTriangle
+						yield return new PreparedTriangle
 						(
 							GetVertex(0), GetVertex(1), GetVertex(2),
 							GetTexcoord(0), GetTexcoord(1), GetTexcoord(2), materialToken
@@ -61,7 +61,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 					}
 					else
 					{
-						yield return new PressedTriangle
+						yield return new PreparedTriangle
 						(
 							GetVertex(0), GetVertex(1), GetVertex(2), materialToken
 						);
@@ -84,6 +84,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 		}
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser) => Enumerable.Empty<PressedSphere>();
+		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer) => Enumerable.Empty<PreparedSphere>();
 	}
 }

@@ -31,10 +31,10 @@ namespace EchoRenderer.Objects.Lights
 		public virtual Float3 Power => throw new NotSupportedException();
 
 		/// <summary>
-		/// Invoked before rendering; after geometry and materials are pressed.
+		/// Invoked before rendering; after geometry and materials are prepared.
 		/// Can be used to initialize this light to prepare it for rendering.
 		/// </summary>
-		public virtual void Press(PressedScene scene) => Intensity = Intensity.Max(Float3.zero);
+		public virtual void Prepare(PreparedScene scene) => Intensity = Intensity.Max(Float3.zero);
 
 		/// <summary>
 		/// Samples the contribution of this <see cref="LightSource"/> to <paramref name="interaction"/>.

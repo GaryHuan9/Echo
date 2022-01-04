@@ -52,8 +52,8 @@ namespace EchoRenderer.Experimental
 
 			Pairs = new[]
 					{
-						new Pair(new PressedScene(scene, new ScenePressProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
-						new Pair(new PressedScene(scene, new ScenePressProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
+						new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+						new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 					};
 		}
 
@@ -109,13 +109,13 @@ namespace EchoRenderer.Experimental
 
 		public readonly struct Pair
 		{
-			public Pair(PressedScene scene, string name)
+			public Pair(PreparedScene scene, string name)
 			{
 				this.scene = scene;
 				this.name = name;
 			}
 
-			public readonly PressedScene scene;
+			public readonly PreparedScene scene;
 			public readonly string name;
 
 			public override string ToString() => name;

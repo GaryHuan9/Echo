@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
@@ -21,7 +22,7 @@ namespace EchoRenderer.Textures.Grid
 
 	/// <summary>
 	/// A struct to temporarily change a <see cref="TextureGrid.Filter"/>
-	/// and reverts the change after <see cref="Dispose"/> is invoked
+	/// and reverts the change after <see cref="Dispose"/> is invoked.
 	/// </summary>
 	public readonly struct ScopedFilter : IDisposable
 	{
@@ -34,14 +35,14 @@ namespace EchoRenderer.Textures.Grid
 		}
 
 		readonly TextureGrid texture;
-		readonly IFilter   original;
+		readonly IFilter original;
 
 		public void Dispose() => texture.Filter = original;
 	}
 
 	public static class Filters
 	{
-		public static readonly IFilter point    = new Point();
+		public static readonly IFilter point = new Point();
 		public static readonly IFilter bilinear = new Bilinear();
 
 		class Point : IFilter
@@ -56,7 +57,7 @@ namespace EchoRenderer.Textures.Grid
 		class Bilinear : IFilter
 		{
 			//If the performance of this bilinear filter is not fast enough anymore, we could always move to a 'native'
-			//implementation for Texture2D and allow derived class to provide customized implementations with virtual methods
+			//implementation for TextureGrid and allow derived class to provide customized implementations with virtual methods
 
 			public Vector128<float> Convert(TextureGrid texture, Float2 uv)
 			{
@@ -83,13 +84,14 @@ namespace EchoRenderer.Textures.Grid
 				Vector128<float> y1 = Utilities.Lerp(y1x0, y1x1, timeX);
 
 				return Utilities.Lerp(y0, y1, timeY);
-			}
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static float InverseLerp(int left, int right, float value)
-			{
-				if (left == right) return 0f;
-				return value - left;
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				static float InverseLerp(int left, int right, float value)
+				{
+					if (left == right) return 0f;
+					Assert.AreEqual(right, left + 1);
+					return value - left; //Gap is always one
+				}
 			}
 		}
 	}

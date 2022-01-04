@@ -14,7 +14,7 @@ namespace EchoRenderer.Rendering.Profiles
 		public Type AggregatorType { get; init; }
 
 		/// <summary>
-		/// If this is true, <see cref="LinearAggregator"/> can be used for <see cref="PressedPack"/> that contains <see cref="ObjectInstance"/>.
+		/// If this is true, <see cref="LinearAggregator"/> can be used for <see cref="PreparedPack"/> that contains <see cref="ObjectInstance"/>.
 		/// NOTE: normally this should be false because we should avoid actually intersecting with an <see cref="ObjectInstance"/> as much as possible.
 		/// </summary>
 		public bool LinearForInstances { get; init; } = false;
@@ -28,7 +28,7 @@ namespace EchoRenderer.Rendering.Profiles
 			if (AggregatorType?.IsSubclassOf(typeof(Aggregator)) == false) throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, $"is not of type {nameof(Aggregator)}");
 		}
 
-		public Aggregator CreateAggregator(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
+		public Aggregator CreateAggregator(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
 		{
 			if (AggregatorType != null) return CreateExplicit(AggregatorType, pack, aabbs, tokens);
 
@@ -48,7 +48,7 @@ namespace EchoRenderer.Rendering.Profiles
 			return new LinearAggregator(pack, aabbs, tokens);
 		}
 
-		static Aggregator CreateExplicit(Type type, PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
+		static Aggregator CreateExplicit(Type type, PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
 		{
 			if (type == typeof(LinearAggregator)) return new LinearAggregator(pack, aabbs, tokens);
 			if (type == typeof(BoundingVolumeHierarchy)) return new BoundingVolumeHierarchy(pack, aabbs, tokens);

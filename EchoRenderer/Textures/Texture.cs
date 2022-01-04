@@ -38,7 +38,7 @@ namespace EchoRenderer.Textures
 		{
 			get
 			{
-				var pixel = GetPixel(Wrapper.Convert(uv));
+				var pixel = Evaluate(Wrapper.Convert(uv));
 				Tint.Apply(ref pixel);
 				return pixel;
 			}
@@ -48,6 +48,6 @@ namespace EchoRenderer.Textures
 		/// Gets the pixel data at the indicated texture coordinate <paramref name="uv"/>.
 		/// NOTE: the uv is boundless and the specific range is based on <see cref="Wrapper"/>.
 		/// </summary>
-		protected abstract Vector128<float> GetPixel(Float2 uv);
+		protected abstract Vector128<float> Evaluate(Float2 uv);
 	}
 }

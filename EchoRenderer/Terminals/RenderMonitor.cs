@@ -83,16 +83,16 @@ namespace EchoRenderer.Terminals
 		void DisplayMonitoredStatus()
 		{
 			TiledRenderProfile profile = Engine.CurrentProfile;
-			ScenePresser presser = profile.Scene.presser;
+			ScenePreparer preparer = profile.Scene.preparer;
 			TextureGrid buffer = profile.RenderBuffer;
 
 			//Display configuration information
 			int totalPixel = buffer.size.Product;
-			GeometryCounts instanced = presser.root.InstancedCounts;
-			GeometryCounts unique = presser.root.UniqueCounts;
+			GeometryCounts instanced = preparer.root.InstancedCounts;
+			GeometryCounts unique = preparer.root.UniqueCounts;
 
 			builders.SetLine(0, $" / Worker {profile.WorkerSize} / Resolution {buffer.size} / Total Pixel {totalPixel:N0} / Total Tile {Engine.TotalTileCount:N0} / Method {profile.Method} / Pixel Sample {profile.PixelSample:N0} / Adaptive Sample {profile.AdaptiveSample:N0} / Tile Size {profile.TileSize:N0} /");
-			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.instance:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.instance:N0} / Material {presser.materials.Count:N0} /");
+			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.instance:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.instance:N0} / Material {preparer.materials.Count:N0} /");
 
 			//Display dynamic information
 			DrawDynamicLabels();
