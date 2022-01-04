@@ -16,7 +16,7 @@ namespace EchoRenderer.Textures
 
 	/// <summary>
 	/// A struct to temporarily change a <see cref="Texture.Wrapper"/>
-	/// and reverts the change after <see cref="Dispose"/> is invoked
+	/// and reverts the change after <see cref="Dispose"/> is invoked.
 	/// </summary>
 	public readonly struct ScopedWrapper : IDisposable
 	{

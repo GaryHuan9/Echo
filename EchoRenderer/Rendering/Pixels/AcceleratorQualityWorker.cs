@@ -14,7 +14,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 		public override Sample Render(Float2 uv, Arena arena)
 		{
-			PressedScene scene = arena.profile.Scene;
+			PreparedScene scene = arena.profile.Scene;
 			Ray ray = scene.camera.GetRay(uv);
 
 			int cost = scene.TraceCost(ray);

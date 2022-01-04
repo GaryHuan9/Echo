@@ -7,12 +7,12 @@ using EchoRenderer.Objects.Scenes;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
-	public class PressedInstance
+	public class PreparedInstance
 	{
 		/// <summary>
-		/// Creates a regular <see cref="PressedInstance"/>.
+		/// Creates a regular <see cref="PreparedInstance"/>.
 		/// </summary>
-		public PressedInstance(ScenePresser presser, ObjectInstance instance) : this(presser, instance.ObjectPack, instance.Mapper)
+		public PreparedInstance(ScenePreparer preparer, ObjectInstance instance) : this(preparer, instance.ObjectPack, instance.Mapper)
 		{
 			forwardTransform = instance.WorldToLocal;
 			inverseTransform = instance.LocalToWorld;
@@ -28,9 +28,9 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
-		/// Creates a root <see cref="PressedInstance"/> with <paramref name="scene"/>.
+		/// Creates a root <see cref="PreparedInstance"/> with <paramref name="scene"/>.
 		/// </summary>
-		public PressedInstance(ScenePresser presser, Scene scene) : this(presser, scene, null)
+		public PreparedInstance(ScenePreparer preparer, Scene scene) : this(preparer, scene, null)
 		{
 			forwardTransform = Float4x4.identity;
 			inverseTransform = Float4x4.identity;
@@ -39,11 +39,11 @@ namespace EchoRenderer.Mathematics.Intersections
 			inverseScale = 1f;
 		}
 
-		PressedInstance(ScenePresser presser, ObjectPack pack, MaterialMapper mapper)
+		PreparedInstance(ScenePreparer preparer, ObjectPack pack, MaterialMapper mapper)
 		{
-			id = presser.RegisterPressedPackInstance(this);
-			this.pack = presser.GetPressedPack(pack);
-			this.mapper = presser.materials.GetMapper(mapper);
+			id = preparer.RegisterPreparedInstance(this);
+			this.pack = preparer.GetPreparedPack(pack);
+			this.mapper = preparer.materials.GetMapper(mapper);
 		}
 
 		/// <summary>
@@ -54,8 +54,8 @@ namespace EchoRenderer.Mathematics.Intersections
 		public AxisAlignedBoundingBox AABB => pack.aggregator.GetTransformedAABB(inverseTransform);
 
 		public readonly uint id;
-		public readonly PressedPack pack;
-		public readonly MaterialPresser.Mapper mapper;
+		public readonly PreparedPack pack;
+		public readonly MaterialPreparer.Mapper mapper;
 
 		readonly Float4x4 forwardTransform; //The parent to local transform
 		readonly Float4x4 inverseTransform; //The local to parent transform
@@ -85,7 +85,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
-		/// Processes <paramref name="query"/> as a <see cref="PressedInstance"/> root.
+		/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root.
 		/// </summary>
 		public void TraceRoot(ref TraceQuery query)
 		{
@@ -99,7 +99,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		public void Occlude(ref OccludeQuery query) => throw new NotImplementedException();
 
 		/// <summary>
-		/// Processes <paramref name="query"/> as a <see cref="PressedInstance"/> root.
+		/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root.
 		/// </summary>
 		public void OccludeRoot(ref OccludeQuery query) => throw new NotImplementedException();
 

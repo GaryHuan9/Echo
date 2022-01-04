@@ -13,7 +13,7 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public class BoundingVolumeHierarchy : Aggregator
 	{
-		public BoundingVolumeHierarchy(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
+		public BoundingVolumeHierarchy(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
 		{
 			Validate(aabbs, tokens, length => length > 1);
 			int[] indices = CreateIndices(aabbs.Length);

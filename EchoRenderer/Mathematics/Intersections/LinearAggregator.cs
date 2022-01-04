@@ -11,7 +11,7 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public class LinearAggregator : Aggregator
 	{
-		public LinearAggregator(PressedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
+		public LinearAggregator(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
 		{
 			Validate(aabbs, tokens);
 

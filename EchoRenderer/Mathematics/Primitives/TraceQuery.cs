@@ -7,7 +7,7 @@ using EchoRenderer.Rendering;
 namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
-	/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PressedScene"/>
+	/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PreparedScene"/>
 	/// exists, and if it does, the exact distance of that intersections and other specific information about it.
 	/// </summary>
 	public struct TraceQuery
@@ -35,7 +35,7 @@ namespace EchoRenderer.Mathematics.Primitives
 
 		/// <summary>
 		/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore
-		/// if we come in very close (<see cref="PressedPack.DistanceMin"/>) contact with it. This should mainly be assigned
+		/// if we come in very close (<see cref="PreparedPack.DistanceMin"/>) contact with it. This should mainly be assigned
 		/// to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to avoid origin intersections.
 		/// </summary>
 		public readonly GeometryToken ignore;

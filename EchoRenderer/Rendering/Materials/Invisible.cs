@@ -6,7 +6,7 @@ using EchoRenderer.Rendering.Memory;
 namespace EchoRenderer.Rendering.Materials
 {
 	/// <summary>
-	/// Represents a completely invisible material. <see cref="PressedPack"/> Will omit all geometry tagged with this material.
+	/// Represents a completely invisible material. <see cref="PreparedPack"/> Will omit all geometry tagged with this material.
 	/// </summary>
 	public class Invisible : Material
 	{

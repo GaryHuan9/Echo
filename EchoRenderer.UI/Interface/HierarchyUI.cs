@@ -37,9 +37,9 @@ namespace EchoRenderer.UI.Interface
 			packs.Clear();
 			nodes.Clear();
 
-			ScenePresser presser = sceneView.Profile.Scene.presser;
+			ScenePreparer preparer = sceneView.Profile.Scene.preparer;
 
-			foreach (ObjectPack pack in presser.UniquePacks)
+			foreach (ObjectPack pack in preparer.UniquePacks)
 			{
 				Assert.IsFalse(packs.Contains(pack));
 				var node = new HierarchyNodeUI(pack);
