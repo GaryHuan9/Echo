@@ -16,8 +16,8 @@ namespace EchoRenderer.Textures.Grid
 {
 	public partial class TextureGrid
 	{
-		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] {".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif", FloatingPointImageExtension});
-		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new(new[] {ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif, null});
+		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] { ".png", ".jpg", ".tiff", ".bmp", ".gif", ".exif", FloatingPointImageExtension });
+		static readonly ReadOnlyCollection<ImageFormat> compatibleFormats = new(new[] { ImageFormat.Png, ImageFormat.Jpeg, ImageFormat.Tiff, ImageFormat.Bmp, ImageFormat.Gif, ImageFormat.Exif, null });
 
 		const string FloatingPointImageExtension = ".fpi";
 
@@ -210,7 +210,7 @@ namespace EchoRenderer.Textures.Grid
 				sequence = current;
 				uint* pointer = (uint*)&xor;
 
-				for (int j = 0; j < 4; j++) writer.WriteCompact(pointer[j]);
+				for (int i = 0; i < 4; i++) writer.WriteCompact(pointer[i]);
 			}
 		}
 
@@ -226,7 +226,7 @@ namespace EchoRenderer.Textures.Grid
 
 			foreach (Int2 position in size.Loop())
 			{
-				for (int j = 0; j < 4; j++) read[j] = reader.ReadUInt32Compact();
+				for (int i = 0; i < 4; i++) read[i] = reader.ReadUInt32Compact();
 
 				Vector128<uint> xor = *(Vector128<uint>*)read;
 				Vector128<uint> current = Sse2.Xor(sequence, xor);

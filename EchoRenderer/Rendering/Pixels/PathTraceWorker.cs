@@ -13,7 +13,7 @@ namespace EchoRenderer.Rendering.Pixels
 		public override Sample Render(Float2 uv, Arena arena)
 		{
 			RenderProfile profile = arena.profile;
-			PressedScene scene = profile.Scene;
+			PreparedScene scene = profile.Scene;
 			IRandom random = arena.Random;
 
 			TraceQuery query = scene.camera.GetRay(uv, random);

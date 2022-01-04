@@ -54,7 +54,7 @@ namespace EchoRenderer.Textures.Grid
 		/// </summary>
 		public abstract Vector128<float> this[Int2 position] { get; set; }
 
-		protected sealed override Vector128<float> GetPixel(Float2 uv) => Filter.Convert(this, uv);
+		protected sealed override Vector128<float> Evaluate(Float2 uv) => Filter.Convert(this, uv);
 
 		/// <summary>
 		/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid.size"/>.

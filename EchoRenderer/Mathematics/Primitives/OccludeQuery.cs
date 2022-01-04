@@ -4,7 +4,7 @@ using EchoRenderer.Rendering;
 namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
-	/// Query for the traverse of a <see cref="Ray"/> to find out whether anything inside <see cref="PressedScene"/> occludes its <see cref="travel"/> (distance).
+	/// Query for the traverse of a <see cref="Ray"/> to find out whether anything inside <see cref="PreparedScene"/> occludes its <see cref="travel"/> (distance).
 	/// NOTE: the only output of this query is a <see cref="bool"/> indicating any occlusion; more information can be accessed using a <see cref="TraceQuery"/>.
 	/// </summary>
 	public struct OccludeQuery
@@ -30,7 +30,7 @@ namespace EchoRenderer.Mathematics.Primitives
 
 		/// <summary>
 		/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="OccludeQuery"/> should ignore
-		/// if we come in very close (<see cref="PressedPack.DistanceMin"/>) contact with it. This should mainly be assigned
+		/// if we come in very close (<see cref="PreparedPack.DistanceMin"/>) contact with it. This should mainly be assigned
 		/// to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to avoid origin intersections.
 		/// </summary>
 		public readonly GeometryToken ignore;

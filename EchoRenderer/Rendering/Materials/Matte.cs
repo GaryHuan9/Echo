@@ -11,9 +11,9 @@ namespace EchoRenderer.Rendering.Materials
 	{
 		public Texture Deviation { get; set; }
 
-		public override void Press()
+		public override void Prepare()
 		{
-			base.Press();
+			base.Prepare();
 
 			Deviation ??= Texture.black;
 		}

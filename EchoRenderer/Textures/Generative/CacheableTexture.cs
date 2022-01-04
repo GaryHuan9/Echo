@@ -10,7 +10,7 @@ namespace EchoRenderer.Textures.Generative
 		public Float2 Tiling { get; set; } = Float2.one;
 		public Float2 Offset { get; set; } = Float2.zero;
 
-		protected sealed override Vector128<float> GetPixel(Float2 uv) => Sample(uv * Tiling + Offset);
+		protected sealed override Vector128<float> Evaluate(Float2 uv) => Sample(uv * Tiling + Offset);
 
 		protected abstract Vector128<float> Sample(Float2 position);
 

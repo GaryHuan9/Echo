@@ -14,7 +14,7 @@ namespace EchoRenderer.Rendering.Pixels
 	{
 		public override Sample Render(Float2 uv, Arena arena)
 		{
-			PressedScene scene = arena.profile.Scene;
+			PreparedScene scene = arena.profile.Scene;
 			IRandom random = arena.Random;
 
 			TraceQuery query = scene.camera.GetRay(uv, random);
@@ -35,7 +35,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			foreach (DirectionalTexture skybox in scene.Skyboxes)
 			{
-				radiance = Sse.Add(radiance, skybox.Sample(query.ray.direction));
+				radiance = Sse.Add(radiance, skybox.Evaluate(query.ray.direction));
 			}
 
 			return Utilities.ToFloat3(radiance);

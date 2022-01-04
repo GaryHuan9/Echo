@@ -3,10 +3,10 @@ using EchoRenderer.Mathematics.Intersections;
 
 namespace EchoRenderer.Rendering.Profiles
 {
-	public record ScenePressProfile : IProfile
+	public record ScenePrepareProfile : IProfile
 	{
 		/// <summary>
-		/// The <see cref="Profiles.AggregatorProfile"/> used for this <see cref="ScenePressProfile"/>.
+		/// The <see cref="Profiles.AggregatorProfile"/> used for this <see cref="ScenePrepareProfile"/>.
 		/// This determines the kind of <see cref="Aggregator"/> to build. Must not be null.
 		/// </summary>
 		public AggregatorProfile AggregatorProfile { get; init; } = new();

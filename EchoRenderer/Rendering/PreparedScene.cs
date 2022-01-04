@@ -10,16 +10,15 @@ using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Textures.Directional;
-using Object = EchoRenderer.Objects.Object;
 
 namespace EchoRenderer.Rendering
 {
 	/// <summary>
-	/// A flattened out/pressed down record version of a scene for fast interactions.
+	/// A <see cref="Scene"/> prepared ready for fast interactions.
 	/// </summary>
-	public class PressedScene
+	public class PreparedScene
 	{
-		public PressedScene(Scene source, ScenePressProfile profile)
+		public PreparedScene(Scene source, ScenePrepareProfile profile)
 		{
 			this.source = source;
 
@@ -27,7 +26,7 @@ namespace EchoRenderer.Rendering
 			var lightsList = new List<LightSource>();
 
 			//Gather important objects
-			foreach (Object child in source.LoopChildren(true))
+			foreach (Objects.Object child in source.LoopChildren(true))
 			{
 				switch (child)
 				{
@@ -49,19 +48,19 @@ namespace EchoRenderer.Rendering
 			}
 
 			_lightSources = lightsList.ToArray();
-			presser = new ScenePresser(source, profile);
+			preparer = new ScenePreparer(source, profile);
 
-			//Create root instance and press materials
-			rootInstance = new PressedInstance(presser, source);
-			presser.materials.Press();
+			//Create root instance and prepare materials
+			rootInstance = new PreparedInstance(preparer, source);
+			preparer.materials.Prepare();
 
-			//Press lights
-			foreach (LightSource light in LightSources) light.Press(this);
+			//Prepare lights
+			foreach (LightSource light in LightSources) light.Prepare(this);
 
-			DebugHelper.Log("Pressed scene");
+			DebugHelper.Log("Prepared scene");
 		}
 
-		public readonly ScenePresser presser;
+		public readonly ScenePreparer preparer;
 		public readonly Scene source;
 		public readonly Camera camera;
 
@@ -75,7 +74,7 @@ namespace EchoRenderer.Rendering
 
 		public long TraceCount => Interlocked.Read(ref _traceCount);
 
-		readonly PressedInstance rootInstance;
+		readonly PreparedInstance rootInstance;
 
 		/// <summary>
 		/// Processes the <paramref name="query"/> and returns whether it intersected with something.
@@ -110,8 +109,8 @@ namespace EchoRenderer.Rendering
 			query.AssertHit();
 			ref readonly var token = ref query.token;
 
-			var instance = token.InstanceCount == 0 ? rootInstance : presser.GetPressedPackInstance(token.FinalInstanceId);
-			return instance.pack.Interact(query, presser, instance, out material);
+			var instance = token.InstanceCount == 0 ? rootInstance : preparer.GetPreparedInstance(token.FinalInstanceId);
+			return instance.pack.Interact(query, preparer, instance, out material);
 		}
 
 		/// <summary>

@@ -22,7 +22,7 @@ namespace EchoRenderer.Rendering.Materials
 		/// Invoked before a new render session begins; can be used to execute
 		/// any kind of preprocessing work for this <see cref="Material"/>.
 		/// </summary>
-		public virtual void Press()
+		public virtual void Prepare()
 		{
 			Albedo ??= Texture.black;
 			Normal ??= Texture.normal;

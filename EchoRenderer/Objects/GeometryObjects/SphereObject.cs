@@ -16,25 +16,25 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public float Radius { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser) => Enumerable.Empty<PressedTriangle>();
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer) => Enumerable.Empty<PreparedTriangle>();
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser)
+		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer)
 		{
-			int materialToken = presser.GetToken(Material);
-			yield return new PressedSphere(this, materialToken);
+			int materialToken = preparer.GetToken(Material);
+			yield return new PreparedSphere(this, materialToken);
 		}
 	}
 
-	public readonly struct PressedSphere
+	public readonly struct PreparedSphere
 	{
-		public PressedSphere(SphereObject sphere, int materialToken) : this
+		public PreparedSphere(SphereObject sphere, int materialToken) : this
 		(
 			sphere.LocalToWorld.MultiplyPoint(Float3.zero),
 			sphere.Scale.MaxComponent * sphere.Radius,
 			materialToken
 		) { }
 
-		public PressedSphere(Float3 position, float radius, int materialToken)
+		public PreparedSphere(Float3 position, float radius, int materialToken)
 		{
 			this.position = position;
 			this.radius = radius;
@@ -51,7 +51,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
 
-		const float DistanceMin = PressedPack.DistanceMin;
+		const float DistanceMin = PreparedPack.DistanceMin;
 
 		/// <summary>
 		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.

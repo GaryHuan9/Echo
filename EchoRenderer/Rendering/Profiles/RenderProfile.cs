@@ -16,7 +16,7 @@ namespace EchoRenderer.Rendering.Profiles
 		/// <summary>
 		/// The target scene to render.
 		/// </summary>
-		public PressedScene Scene { get; init; }
+		public PreparedScene Scene { get; init; }
 
 		/// <summary>
 		/// The fundamental rendering method used for each pixel.
