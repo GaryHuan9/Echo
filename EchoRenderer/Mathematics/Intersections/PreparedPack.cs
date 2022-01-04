@@ -17,13 +17,13 @@ using Object = EchoRenderer.Objects.Object;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
-	public class PressedPack
+	public class PreparedPack
 	{
-		public PressedPack(ScenePresser presser, ObjectPack source)
+		public PreparedPack(ScenePreparer preparer, ObjectPack source)
 		{
-			var trianglesList = new ConcurrentList<PressedTriangle>();
-			var spheresList = new List<PressedSphere>();
-			var instancesList = new List<PressedInstance>();
+			var trianglesList = new ConcurrentList<PreparedTriangle>();
+			var spheresList = new List<PreparedSphere>();
+			var instancesList = new List<PreparedInstance>();
 
 			trianglesList.BeginAdd();
 
@@ -33,14 +33,14 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					case GeometryObject geometry:
 					{
-						trianglesList.AddRange(geometry.ExtractTriangles(presser.materials).Where(triangle => triangle.materialToken >= 0));
-						spheresList.AddRange(geometry.ExtractSpheres(presser.materials).Where(sphere => sphere.materialToken >= 0));
+						trianglesList.AddRange(geometry.ExtractTriangles(preparer.materials).Where(triangle => triangle.materialToken >= 0));
+						spheresList.AddRange(geometry.ExtractSpheres(preparer.materials).Where(sphere => sphere.materialToken >= 0));
 
 						break;
 					}
 					case ObjectInstance packInstance:
 					{
-						instancesList.Add(new PressedInstance(presser, packInstance));
+						instancesList.Add(new PreparedInstance(preparer, packInstance));
 						break;
 					}
 				}
@@ -48,12 +48,12 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			trianglesList.EndAdd();
 
-			SubdivideTriangles(trianglesList, presser.profile);
+			SubdivideTriangles(trianglesList, preparer.profile);
 
-			//Extract pressed data
-			triangles = new PressedTriangle[trianglesList.Count];
-			spheres = new PressedSphere[spheresList.Count];
-			instances = new PressedInstance[instancesList.Count];
+			//Extract prepared data
+			triangles = new PreparedTriangle[trianglesList.Count];
+			spheres = new PreparedSphere[spheresList.Count];
+			instances = new PreparedInstance[instancesList.Count];
 
 			geometryCounts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
@@ -96,19 +96,19 @@ namespace EchoRenderer.Mathematics.Intersections
 				tokens[target] = Token.CreateInstance((uint)index);
 			}
 
-			aggregator = presser.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
+			aggregator = preparer.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
 		}
 
 		public readonly Aggregator aggregator;
 		public readonly GeometryCounts geometryCounts;
 
-		readonly PressedTriangle[] triangles;
-		readonly PressedSphere[] spheres;
-		readonly PressedInstance[] instances;
+		readonly PreparedTriangle[] triangles;
+		readonly PreparedSphere[] spheres;
+		readonly PreparedInstance[] instances;
 
 		/// <summary>
 		/// If an intersection has a distance under this value and we just intersected the exactly same geometry with the last query,
-		/// we will ignore this intersection. NOTE: because spheres have two intersection points, <see cref="PressedSphere"/>'s get
+		/// we will ignore this intersection. NOTE: because spheres have two intersection points, <see cref="PreparedSphere"/>'s get
 		/// intersection method must return the point with a distance larger than or equals to this value.
 		/// </summary>
 		public const float DistanceMin = 6e-4f;
@@ -157,7 +157,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		}
 
 		/// <summary>
-		/// Returns the cost of an intersection calculation of <paramref name="ray"/> with this current <see cref="PressedPack"/>.
+		/// Returns the cost of an intersection calculation of <paramref name="ray"/> with this current <see cref="PreparedPack"/>.
 		/// </summary>
 		public int GetIntersectionCost(in Ray ray, ref float distance, in Token token)
 		{
@@ -188,7 +188,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// Begins interacting with the result of <paramref name="query"/> by returning
 		/// the <see cref="Interaction"/> and outputting the <paramref name="material"/>.
 		/// </summary>
-		public Interaction Interact(in TraceQuery query, ScenePresser presser, PressedInstance instance, out Material material)
+		public Interaction Interact(in TraceQuery query, ScenePreparer preparer, PreparedInstance instance, out Material material)
 		{
 			Token token = query.token.geometry;
 
@@ -209,8 +209,8 @@ namespace EchoRenderer.Mathematics.Intersections
 				normal = triangle.GetNormal(query.uv);
 				texcoord = triangle.GetTexcoord(query.uv);
 
-				query.token.ApplyWorldTransform(presser, ref geometryNormal);
-				query.token.ApplyWorldTransform(presser, ref normal);
+				query.token.ApplyWorldTransform(preparer, ref geometryNormal);
+				query.token.ApplyWorldTransform(preparer, ref normal);
 			}
 			else if (token.IsSphere)
 			{
@@ -219,14 +219,14 @@ namespace EchoRenderer.Mathematics.Intersections
 				materialToken = sphere.materialToken;
 				texcoord = query.uv; //Sphere directly uses the uv as texcoord
 
-				normal = PressedSphere.GetGeometryNormal(query.uv);
-				query.token.ApplyWorldTransform(presser, ref normal);
+				normal = PreparedSphere.GetGeometryNormal(query.uv);
+				query.token.ApplyWorldTransform(preparer, ref normal);
 				geometryNormal = normal;
 			}
 			else
 			{
-				//Handles tokens of PressedInstance, which is invalid since tokens should be resolved to pure geometry after intersection calculation
-				throw new Exception($"{nameof(Interact)} should be invoked on the base {nameof(PressedPack)}, not one with a token that is a pack instance!");
+				//Handles tokens of PreparedInstance, which is invalid since tokens should be resolved to pure geometry after intersection calculation
+				throw new Exception($"{nameof(Interact)} should be invoked on the base {nameof(PreparedPack)}, not one with a token that is a pack instance!");
 			}
 
 			material = instance.mapper[materialToken];
@@ -237,7 +237,7 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// <summary>
 		/// Divides large triangles for better space partitioning.
 		/// </summary>
-		static void SubdivideTriangles(ConcurrentList<PressedTriangle> triangles, ScenePressProfile profile)
+		static void SubdivideTriangles(ConcurrentList<PreparedTriangle> triangles, ScenePrepareProfile profile)
 		{
 			double totalArea = 0d;
 
@@ -249,14 +249,14 @@ namespace EchoRenderer.Mathematics.Intersections
 			Parallel.For(0, triangles.Count, index => SubdivideTriangle(triangles, ref triangles[index], threshold, profile.FragmentationMaxIteration));
 		}
 
-		static void SubdivideTriangle(ConcurrentList<PressedTriangle> triangles, ref PressedTriangle triangle, float threshold, int maxIteration)
+		static void SubdivideTriangle(ConcurrentList<PreparedTriangle> triangles, ref PreparedTriangle triangle, float threshold, int maxIteration)
 		{
 			float multiplier = MathF.Log2(triangle.Area / threshold);
 			int iteration = Math.Min(multiplier.Ceil(), maxIteration);
 			if (iteration <= 0) return;
 
 			int subdivision = 1 << (iteration * 2);
-			Span<PressedTriangle> divided = stackalloc PressedTriangle[subdivision];
+			Span<PreparedTriangle> divided = stackalloc PreparedTriangle[subdivision];
 
 			triangle.GetSubdivided(divided, iteration);
 

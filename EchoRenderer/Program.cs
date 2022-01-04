@@ -86,7 +86,7 @@ namespace EchoRenderer
 																		   AdaptiveSample = 0
 																	   };
 
-		static readonly ScenePressProfile scenePressProfile = new();
+		static readonly ScenePrepareProfile scenePrepareProfile = new();
 
 		static void PerformRender()
 		{
@@ -118,12 +118,12 @@ namespace EchoRenderer
 
 			using (setupTest.Start())
 			{
-				var pressed = new PressedScene(scene, scenePressProfile);
+				var prepared = new PreparedScene(scene, scenePrepareProfile);
 
 				renderProfile = renderProfile with
 								{
 									RenderBuffer = buffer,
-									Scene = pressed
+									Scene = prepared
 								};
 
 				engine.Begin(renderProfile); //Initializes render

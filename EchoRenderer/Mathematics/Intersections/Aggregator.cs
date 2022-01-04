@@ -13,9 +13,9 @@ namespace EchoRenderer.Mathematics.Intersections
 	/// </summary>
 	public abstract class Aggregator
 	{
-		protected Aggregator(PressedPack pack) => this.pack = pack;
+		protected Aggregator(PreparedPack pack) => this.pack = pack;
 
-		protected readonly PressedPack pack;
+		protected readonly PreparedPack pack;
 
 		/// <summary>
 		/// Calculates and returns the <see cref="AxisAlignedBoundingBox"/> of this <see cref="Aggregator"/> as if it was transformed

@@ -138,7 +138,7 @@ namespace EchoRenderer.UI.Interface
 
 		void LoadScene<T>() where T : Scene, new()
 		{
-			var scene = new PressedScene(new T(), new ScenePressProfile());
+			var scene = new PreparedScene(new T(), new ScenePrepareProfile());
 			Profile = Profile with { Scene = scene };
 		}
 	}

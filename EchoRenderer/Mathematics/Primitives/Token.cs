@@ -35,7 +35,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
-		/// Returns whether this <see cref="Token"/> represents a <see cref="PressedTriangle"/>.
+		/// Returns whether this <see cref="Token"/> represents a <see cref="PreparedTriangle"/>.
 		/// NOTE: <see cref="IsGeometry"/> must be true or the result of this property is undefined.
 		/// </summary>
 		public bool IsTriangle
@@ -48,7 +48,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
-		/// Returns whether this <see cref="Token"/> represents a <see cref="PressedSphere"/>.
+		/// Returns whether this <see cref="Token"/> represents a <see cref="PreparedSphere"/>.
 		/// NOTE: <see cref="IsTriangle"/> must be false or the result of this property is undefined.
 		/// </summary>
 		public bool IsSphere
@@ -62,7 +62,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
-		/// Returns whether this <see cref="Token"/> represents a <see cref="PressedInstance"/>.
+		/// Returns whether this <see cref="Token"/> represents a <see cref="PreparedInstance"/>.
 		/// NOTE: <see cref="IsSphere"/> must be false or the result of this property is undefined.
 		/// </summary>
 		public bool IsInstance
@@ -165,19 +165,19 @@ namespace EchoRenderer.Mathematics.Primitives
 
 		/// <summary>
 		/// If the internal <see cref="data"/> is greater than or equals to this value, and is less than the value
-		/// for the next threshold, then this <see cref="Token"/> represents a <see cref="PressedTriangle"/>.
+		/// for the next threshold, then this <see cref="Token"/> represents a <see cref="PreparedTriangle"/>.
 		/// </summary>
 		const uint TriangleThreshold = 0x4000_0000u;
 
 		/// <summary>
 		/// If the internal <see cref="data"/> is greater than or equals to this value, and is less than the value
-		/// for the next threshold, then this <see cref="Token"/> represents a <see cref="PressedSphere"/>.
+		/// for the next threshold, then this <see cref="Token"/> represents a <see cref="PreparedSphere"/>.
 		/// </summary>
 		const uint SphereThreshold = 0x2000_0000u;
 
 		/// <summary>
 		/// If the internal <see cref="data"/> is greater than or equals to this value, and is less than the value
-		/// for the next threshold, then this <see cref="Token"/> represents a <see cref="PressedInstance"/>.
+		/// for the next threshold, then this <see cref="Token"/> represents a <see cref="PreparedInstance"/>.
 		/// </summary>
 		const uint InstanceThreshold = 0x0000_0000u;
 
@@ -205,7 +205,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Token"/> that represents a <see cref="PressedTriangle"/> with <paramref name="value"/>.
+		/// Creates a <see cref="Token"/> that represents a <see cref="PreparedTriangle"/> with <paramref name="value"/>.
 		/// </summary>
 		public static Token CreateTriangle(uint value)
 		{
@@ -214,7 +214,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Token"/> that represents a <see cref="PressedSphere"/> with <paramref name="value"/>.
+		/// Creates a <see cref="Token"/> that represents a <see cref="PreparedSphere"/> with <paramref name="value"/>.
 		/// </summary>
 		public static Token CreateSphere(uint value)
 		{
@@ -223,7 +223,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
-		/// Creates a <see cref="Token"/> that represents a <see cref="PressedInstance"/> with <paramref name="value"/>.
+		/// Creates a <see cref="Token"/> that represents a <see cref="PreparedInstance"/> with <paramref name="value"/>.
 		/// </summary>
 		public static Token CreateInstance(uint value)
 		{

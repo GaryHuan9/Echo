@@ -5,7 +5,7 @@ using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.Scenes
 {
-	public class MaterialPresser
+	public class MaterialPreparer
 	{
 		public int Count => sourceMaterials.Count;
 
@@ -15,15 +15,15 @@ namespace EchoRenderer.Objects.Scenes
 		Material[] materials;
 		Mapper emptyMapper;
 
-		bool pressed;
+		bool prepared;
 
 		/// <summary>
-		/// Adds <paramref name="material"/> to this presser to press and returns an internal token
-		/// that can be used to identify that material. -1 is returned if material <see cref="Invisible"/> is passed.
+		/// Adds <paramref name="material"/> to this <see cref="MaterialPreparer"/> to prepare and returns an internal token
+		/// that can be used to identify this <paramref name="material"/>. -1 is returned if <see cref="Invisible"/> is passed.
 		/// </summary>
 		public int GetToken(Material material)
 		{
-			AssertNotPressed();
+			AssertNotPrepared();
 			if (material is Invisible) return -1; //Negative token used to omit invisible materials
 
 			if (!sourceMaterials.TryGetValue(material, out int materialToken))
@@ -41,7 +41,7 @@ namespace EchoRenderer.Objects.Scenes
 		/// </summary>
 		public Mapper GetMapper(MaterialMapper source)
 		{
-			AssertNotPressed();
+			AssertNotPrepared();
 
 			if (source == null) return emptyMapper ??= new Mapper(this, null);
 			if (mappers.TryGetValue(source, out Mapper mapper)) return mapper;
@@ -53,55 +53,55 @@ namespace EchoRenderer.Objects.Scenes
 		}
 
 		/// <summary>
-		/// Presses this presser and all of its mappers to be ready for data fetching.
+		/// Executes this <see cref="MaterialPreparer"/> so all of its mappers are ready for data fetching.
 		/// </summary>
-		public void Press()
+		public void Prepare()
 		{
-			AssertNotPressed();
+			AssertNotPrepared();
 
 			materials = (from pair in sourceMaterials
 						 orderby pair.Value
 						 select pair.Key).ToArray();
 
-			foreach (Material material in materials) material.Press();
-			foreach (var pair in mappers) pair.Value.Press();
+			foreach (Material material in materials) material.Prepare();
+			foreach (var pair in mappers) pair.Value.Prepare();
 
-			emptyMapper?.Press();
-			pressed = true;
+			emptyMapper?.Prepare();
+			prepared = true;
 		}
 
-		void AssertNotPressed()
+		void AssertNotPrepared()
 		{
-			if (!pressed) return;
-			throw new Exception($"Operation unavailable on a pressed {nameof(MaterialPresser)}!");
+			if (!prepared) return;
+			throw new Exception($"Operation unavailable on a prepared {nameof(MaterialPreparer)}!");
 		}
 
 		public class Mapper
 		{
-			public Mapper(MaterialPresser presser, MaterialMapper mapper)
+			public Mapper(MaterialPreparer preparer, MaterialMapper mapper)
 			{
-				this.presser = presser;
+				this.preparer = preparer;
 				this.mapper = mapper;
 			}
 
-			readonly MaterialPresser presser;
+			readonly MaterialPreparer preparer;
 			readonly MaterialMapper mapper;
 
 			Material[] materials;
 
 			public Material this[int token] => materials[token];
 
-			public void Press()
+			public void Prepare()
 			{
-				materials = (Material[])presser.materials.Clone();
+				materials = (Material[])preparer.materials.Clone();
 				if (mapper == null) return;
 
 				foreach (Material from in mapper.Keys)
 				{
 					Material material = mapper[from];
 
-					if (!presser.sourceMaterials.TryGetValue(from, out int token)) continue;
-					if (presser.sourceMaterials.TryAdd(material, token)) material.Press();
+					if (!preparer.sourceMaterials.TryGetValue(from, out int token)) continue;
+					if (preparer.sourceMaterials.TryAdd(material, token)) material.Prepare();
 
 					materials[token] = material;
 				}

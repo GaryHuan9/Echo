@@ -9,9 +9,9 @@ namespace EchoRenderer.Textures.Directional
 	public abstract class DirectionalTexture
 	{
 		/// <summary>
-		/// Samples this <see cref="DirectionalTexture"/> at <paramref name="direction"/>.
+		/// Evaluates this <see cref="DirectionalTexture"/> at <paramref name="direction"/>.
 		/// NOTE: <paramref name="direction"/> should be normalized and is not zero.
 		/// </summary>
-		public abstract Vector128<float> Sample(in Float3 direction);
+		public abstract Vector128<float> Evaluate(in Float3 direction);
 	}
 }

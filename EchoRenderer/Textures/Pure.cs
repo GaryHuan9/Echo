@@ -19,7 +19,7 @@ namespace EchoRenderer.Textures
 
 		public Float3 Color => Utilities.ToFloat3(color);
 
-		protected override Vector128<float> GetPixel(Float2 uv) => color;
+		protected override Vector128<float> Evaluate(Float2 uv) => color;
 
 		public static explicit operator Pure(in Float3 color) => new(color);
 		public static explicit operator Pure(in Float4 color) => new(color);

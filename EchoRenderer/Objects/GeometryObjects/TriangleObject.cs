@@ -28,13 +28,13 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float3 Normal1 { get; set; }
 		public Float3 Normal2 { get; set; }
 
-		public override IEnumerable<PressedTriangle> ExtractTriangles(MaterialPresser presser)
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer)
 		{
-			int materialToken = presser.GetToken(Material);
+			int materialToken = preparer.GetToken(Material);
 
 			if (Normal0 == Float3.zero || Normal1 == Float3.zero || Normal2 == Float3.zero)
 			{
-				yield return new PressedTriangle
+				yield return new PreparedTriangle
 				(
 					LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
 					materialToken
@@ -42,7 +42,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 			else
 			{
-				yield return new PressedTriangle
+				yield return new PreparedTriangle
 				(
 					LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
 					LocalToWorld.MultiplyDirection(Normal0), LocalToWorld.MultiplyDirection(Normal1), LocalToWorld.MultiplyDirection(Normal2),
@@ -51,24 +51,24 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 		}
 
-		public override IEnumerable<PressedSphere> ExtractSpheres(MaterialPresser presser) => Enumerable.Empty<PressedSphere>();
+		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer) => Enumerable.Empty<PreparedSphere>();
 	}
 
-	public readonly struct PressedTriangle //Winding order for triangles is CLOCKWISE
+	public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWISE
 	{
-		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, int materialToken) : this
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			Float3.Cross(vertex1 - vertex0, vertex2 - vertex0), materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, int materialToken) : this
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			normal, normal, normal, materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
+		public PreparedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
 							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
@@ -76,7 +76,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			texcoord0, texcoord1, texcoord2, materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 							   Float3 normal,
 							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
 		(
@@ -85,7 +85,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			texcoord0, texcoord1, texcoord2, materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 							   Float3 normal0, Float3 normal1, Float3 normal2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
@@ -93,7 +93,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float2.zero, Float2.zero, Float2.zero, materialToken
 		) { }
 
-		public PressedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
+		public PreparedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
 							   Float3 normal0,   Float3 normal1,   Float3 normal2,
 							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken)
 		{
@@ -130,7 +130,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float3 Vertex2 => vertex0 + edge2;
 
 		/// <summary>
-		/// Returns the smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PressedTriangle"/>.
+		/// Returns the smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedTriangle"/>.
 		/// </summary>
 		public AxisAlignedBoundingBox AABB
 		{
@@ -147,12 +147,12 @@ namespace EchoRenderer.Objects.GeometryObjects
 		}
 
 		/// <summary>
-		/// Returns the area of this <see cref="PressedTriangle"/>.
+		/// Returns the area of this <see cref="PreparedTriangle"/>.
 		/// </summary>
 		public float Area => Float3.Cross(edge1, edge2).Magnitude / 2f;
 
 		/// <summary>
-		/// Returns the geometric normal of this <see cref="PressedTriangle"/>.
+		/// Returns the geometric normal of this <see cref="PreparedTriangle"/>.
 		/// </summary>
 		public Float3 GeometryNormal => Float3.Cross(edge1, edge2).Normalized;
 
@@ -223,7 +223,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float3 GetNormal(Float2   uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
 		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
 
-		public void GetSubdivided(Span<PressedTriangle> triangles, int iteration)
+		public void GetSubdivided(Span<PreparedTriangle> triangles, int iteration)
 		{
 			int requiredLength = 1 << (iteration * 2);
 
@@ -244,10 +244,10 @@ namespace EchoRenderer.Objects.GeometryObjects
 		static readonly Float2 uv02 = new(0f, 0.5f);
 		static readonly Float2 uv12 = new(0.5f, 0.5f);
 
-		static void GetSubdivided(Span<PressedTriangle> triangles, Float3 normal0, Float3 normal1, Float3 normal2)
+		static void GetSubdivided(Span<PreparedTriangle> triangles, Float3 normal0, Float3 normal1, Float3 normal2)
 		{
 			if (triangles.Length <= 1) return;
-			PressedTriangle triangle = triangles[0];
+			PreparedTriangle triangle = triangles[0];
 
 			Float3 vertex01 = triangle.InterpolateVertex(uv01);
 			Float3 vertex02 = triangle.InterpolateVertex(uv02);
@@ -269,7 +269,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
 			Float3 GetInterpolatedNormal(Float2 uv) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
 
-			static void Fill(Span<PressedTriangle> span,      int       index,     int       materialToken,
+			static void Fill(Span<PreparedTriangle> span,      int       index,     int       materialToken,
 							 in Float3             vertex0,   in Float3 vertex1,   in Float3 vertex2,
 							 in Float3             normal0,   in Float3 normal1,   in Float3 normal2,
 							 Float2                texcoord0, Float2    texcoord1, Float2    texcoord2)
@@ -277,7 +277,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 				int gap = span.Length / 4;
 				var slice = span.Slice(gap * index, gap);
 
-				slice[0] = new PressedTriangle
+				slice[0] = new PreparedTriangle
 				(
 					vertex0, vertex1, vertex2,
 					normal0, normal1, normal2,

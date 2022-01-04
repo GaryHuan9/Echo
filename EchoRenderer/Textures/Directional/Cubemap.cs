@@ -58,7 +58,7 @@ namespace EchoRenderer.Textures.Directional
 
 		static readonly string[] names = { "px", "py", "pz", "nx", "ny", "nz" };
 
-		public override Vector128<float> Sample(in Float3 direction)
+		public override Vector128<float> Evaluate(in Float3 direction)
 		{
 			Direction source = (Direction)direction;
 			Float2 uv = source.Project(direction);

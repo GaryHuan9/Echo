@@ -21,7 +21,7 @@ namespace EchoRenderer.Textures.Directional
 
 		public Mode SampleMode { get; set; } = Mode.exact;
 
-		public override Vector128<float> Sample(in Float3 direction)
+		public override Vector128<float> Evaluate(in Float3 direction)
 		{
 			Float2 uv = SampleMode switch
 			{
