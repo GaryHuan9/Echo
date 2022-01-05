@@ -27,12 +27,12 @@ namespace EchoRenderer.UI.Interface
 			Add(renderPreview);
 
 			Profile = new ProgressiveRenderProfile
-					  {
-						  Method = new PathTraceWorker(),
-						  EpochSample = 2,
-						  EpochLength = 24,
-						  AdaptiveSample = 35
-					  };
+			{
+				Method = new PathTraceWorker(),
+				EpochSample = 2,
+				EpochLength = 24,
+				AdaptiveSample = 35
+			};
 
 			new Thread(LoadScene<SingleBunny>)
 			{

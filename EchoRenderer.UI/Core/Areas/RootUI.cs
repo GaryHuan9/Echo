@@ -175,11 +175,11 @@ void main()
 		void OnMouseWheelScrolled(object sender, MouseWheelScrollEventArgs args)
 		{
 			int axis = args.Wheel switch
-					   {
-						   Mouse.Wheel.HorizontalWheel => 0,
-						   Mouse.Wheel.VerticalWheel => 1,
-						   _ => throw ExceptionHelper.Invalid(nameof(args.Wheel), args.Wheel, InvalidType.unexpected)
-					   };
+			{
+				Mouse.Wheel.HorizontalWheel => 0,
+				Mouse.Wheel.VerticalWheel => 1,
+				_ => throw ExceptionHelper.Invalid(nameof(args.Wheel), args.Wheel, InvalidType.unexpected)
+			};
 
 			MouseHovering?.OnMouseScrolled(Float2.Create(axis, args.Delta));
 		}

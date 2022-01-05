@@ -15,11 +15,11 @@ namespace EchoRenderer.Rendering.PostProcessing
 			this.renderBuffer = renderBuffer;
 			workThread = new Thread(Work);
 
-			texturePooler = new Array2DPooler(renderBuffer.size);
+			texturePooler = new ArrayGridPooler(renderBuffer.size);
 		}
 
 		public readonly RenderBuffer renderBuffer;
-		public readonly Array2DPooler texturePooler;
+		public readonly ArrayGridPooler texturePooler;
 
 		readonly List<PostProcessingWorker> workers = new();
 
@@ -72,9 +72,9 @@ namespace EchoRenderer.Rendering.PostProcessing
 			lock (processLocker) Monitor.PulseAll(processLocker);
 		}
 
-		public class Array2DPooler : PoolerBase<ArrayGrid>
+		public class ArrayGridPooler : PoolerBase<ArrayGrid>
 		{
-			public Array2DPooler(Int2 size) => this.size = size;
+			public ArrayGridPooler(Int2 size) => this.size = size;
 
 			readonly Int2 size;
 

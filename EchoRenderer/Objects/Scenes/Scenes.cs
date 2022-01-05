@@ -88,7 +88,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public GridSpheres()
 		{
-			Skybox = new Cubemap("Assets/Cubemaps/OutsideDayTime");
+			AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime"));
 			children.Add(new Camera(100f) { Position = new Float3(0f, 0f, -3f), Rotation = Float3.zero });
 
 			const int Width = 10;
@@ -141,7 +141,7 @@ namespace EchoRenderer.Objects.Scenes
 			children.Add(new BoxObject(material, Float3.one));
 			children.Add(new PlaneObject(material, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
 
-			Skybox = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Multiplier = (Float3)1.5f };
+			AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime") { Multiplier = (Float3)1.5f });
 
 			var camera = new Camera(110f) { Position = new Float3(4f, 27f, -25f) };
 

@@ -33,10 +33,10 @@ namespace EchoRenderer.Rendering.Pixels
 			//Sample skybox
 			Vector128<float> radiance = Vector128<float>.Zero;
 
-			foreach (DirectionalTexture skybox in scene.Skyboxes)
-			{
-				radiance = Sse.Add(radiance, skybox.Evaluate(query.ray.direction));
-			}
+			// foreach (DirectionalTexture skybox in scene.Skyboxes)
+			// {
+			// 	radiance = Sse.Add(radiance, skybox.Evaluate(query.ray.direction));
+			// }
 
 			return Utilities.ToFloat3(radiance);
 		}
