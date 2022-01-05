@@ -9,22 +9,22 @@ namespace EchoRenderer.UI.Core
 	public record Theme
 	{
 		public readonly static Theme darkTheme = new()
-												 {
-													 ContrastColor = GetColor(245, 245, 250),
-													 BackgroundColor = GetColor(3, 3, 4),
-													 PanelColor = GetColor(12, 12, 14),
-													 SpecialColor = GetColor(0.0250f, 0.1416f, 0.3736f),
+		{
+			ContrastColor = GetColor(245, 245, 250),
+			BackgroundColor = GetColor(3, 3, 4),
+			PanelColor = GetColor(12, 12, 14),
+			SpecialColor = GetColor(0.0250f, 0.1416f, 0.3736f),
 
-													 HoverColor = GetColor(10, 10, 11),
-													 PressColor = GetColor(8, 8, 9),
+			HoverColor = GetColor(10, 10, 11),
+			PressColor = GetColor(8, 8, 9),
 
-													 SmallMargin = 2f,
-													 MediumMargin = 5f,
-													 LargeMargin = 9f,
-													 LayoutHeight = 18f,
+			SmallMargin = 2f,
+			MediumMargin = 5f,
+			LargeMargin = 9f,
+			LayoutHeight = 18f,
 
-													 Culture = CultureInfo.InvariantCulture
-												 };
+			Culture = CultureInfo.InvariantCulture
+		};
 
 		//TODO: Add light theme (eww)
 
@@ -52,6 +52,7 @@ namespace EchoRenderer.UI.Core
 		static Color GetColor(Float4 color) => GetColor((Color32)color);
 
 		static Color GetColor(float r, float g, float b) => GetColor(new Color32(r, g, b));
+
 		static Color GetColor(ReadOnlySpan<char> hex) => GetColor(Utilities.ToColor(hex));
 	}
 }

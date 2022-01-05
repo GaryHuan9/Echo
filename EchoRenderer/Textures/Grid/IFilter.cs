@@ -56,8 +56,8 @@ namespace EchoRenderer.Textures.Grid
 
 		class Bilinear : IFilter
 		{
-			//If the performance of this bilinear filter is not fast enough anymore, we could always move to a 'native'
-			//implementation for TextureGrid and allow derived class to provide customized implementations with virtual methods
+			// If the performance of this bilinear filter is not fast enough anymore, we could always move to a more
+			// 'native' approach by allowing derived class to provide customized implementations with virtual methods
 
 			public Vector128<float> Convert(TextureGrid texture, Float2 uv)
 			{

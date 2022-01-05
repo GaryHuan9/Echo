@@ -57,10 +57,10 @@ namespace EchoRenderer.Textures.Grid
 
 		public override void CopyFrom(Texture texture, bool parallel = true)
 		{
-			if (texture is ArrayGrid array2D)
+			if (texture is ArrayGrid array)
 			{
-				AssertAlignedSize(array2D);
-				Array.Copy(array2D.pixels, pixels, length);
+				AssertAlignedSize(array);
+				Array.Copy(array.pixels, pixels, length);
 			}
 			else base.CopyFrom(texture, parallel);
 		}

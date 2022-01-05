@@ -48,6 +48,8 @@ namespace EchoRenderer.Textures.Grid
 			}
 		}
 
+		public override Int2 ImportanceSamplingResolution => size;
+
 		/// <summary>
 		/// Gets and sets the <see cref="Vector128{T}"/> pixel data at a specific <paramref name="position"/>.
 		/// The input <paramref name="position"/> must be between zero and <see cref="oneLess"/> (both inclusive).

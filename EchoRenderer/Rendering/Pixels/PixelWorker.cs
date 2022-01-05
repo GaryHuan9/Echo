@@ -15,11 +15,11 @@ namespace EchoRenderer.Rendering.Pixels
 		/// <summary>
 		/// Invoked once before a new rendering process begin on this <see cref="PixelWorker"/>.
 		/// </summary>
-		public void BeforeRender(RenderProfile profile) => SourceDistribution = CreateDistribution(profile);
+		public void Prepare(RenderProfile profile) => SourceDistribution = CreateDistribution(profile);
 
 		/// <summary>
 		/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Render"/>.
-		/// NOTE: This method will be invoked after <see cref="BeforeRender"/>, and it will be invoked once on every rendering thread.
+		/// NOTE: This method will be invoked after <see cref="Prepare"/>, and it will be invoked once on every rendering thread.
 		/// <param name="seed">Should be a fairly unique number that varies based on each rendering thread.</param>
 		/// </summary>
 		public virtual Arena CreateArena(RenderProfile profile, uint seed)
