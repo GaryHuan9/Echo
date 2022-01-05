@@ -21,8 +21,6 @@ namespace EchoRenderer.Rendering
 		public PreparedScene(Scene source, ScenePrepareProfile profile)
 		{
 			this.source = source;
-
-			_skyboxes = source.skyboxes.ToArray();
 			var lightsList = new List<LightSource>();
 
 			//Gather important objects
@@ -64,10 +62,8 @@ namespace EchoRenderer.Rendering
 		public readonly Scene source;
 		public readonly Camera camera;
 
-		readonly DirectionalTexture[] _skyboxes;
 		readonly LightSource[] _lightSources;
 
-		public ReadOnlySpan<DirectionalTexture> Skyboxes => _skyboxes;
 		public ReadOnlySpan<LightSource> LightSources => _lightSources;
 
 		long _traceCount;

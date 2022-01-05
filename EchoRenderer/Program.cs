@@ -47,44 +47,44 @@ namespace EchoRenderer
 		static RenderMonitor renderMonitor;
 
 		static readonly TiledRenderProfile pathTraceFastProfile = new()
-																  {
-																	  Method = new PathTraceWorker(),
-																	  TilePattern = new CheckerboardPattern(),
-																	  PixelSample = 16,
-																	  AdaptiveSample = 80
-																  };
+		{
+			Method = new PathTraceWorker(),
+			TilePattern = new CheckerboardPattern(),
+			PixelSample = 16,
+			AdaptiveSample = 80
+		};
 
 		static readonly TiledRenderProfile pathTraceProfile = new()
-															  {
-																  Method = new PathTraceWorker(),
-																  TilePattern = new CheckerboardPattern(),
-																  PixelSample = 40,
-																  AdaptiveSample = 400
-															  };
+		{
+			Method = new PathTraceWorker(),
+			TilePattern = new CheckerboardPattern(),
+			PixelSample = 40,
+			AdaptiveSample = 400
+		};
 
 		static readonly TiledRenderProfile pathTraceExportProfile = new()
-																	{
-																		Method = new PathTraceWorker(),
-																		TilePattern = new CheckerboardPattern(),
-																		PixelSample = 64,
-																		AdaptiveSample = 1600
-																	};
+		{
+			Method = new PathTraceWorker(),
+			TilePattern = new CheckerboardPattern(),
+			PixelSample = 64,
+			AdaptiveSample = 1600
+		};
 
 		static readonly TiledRenderProfile albedoProfile = new()
-														   {
-															   Method = new AlbedoPixelWorker(),
-															   TilePattern = new ScrambledPattern(),
-															   PixelSample = 12,
-															   AdaptiveSample = 80
-														   };
+		{
+			Method = new AlbedoPixelWorker(),
+			TilePattern = new ScrambledPattern(),
+			PixelSample = 12,
+			AdaptiveSample = 80
+		};
 
 		static readonly TiledRenderProfile acceleratorQualityProfile = new()
-																	   {
-																		   Method = new AcceleratorQualityWorker(),
-																		   TilePattern = new OrderedPattern(),
-																		   PixelSample = 1,
-																		   AdaptiveSample = 0
-																	   };
+		{
+			Method = new AcceleratorQualityWorker(),
+			TilePattern = new OrderedPattern(),
+			PixelSample = 1,
+			AdaptiveSample = 0
+		};
 
 		static readonly ScenePrepareProfile scenePrepareProfile = new();
 
@@ -101,12 +101,12 @@ namespace EchoRenderer
 			Scene scene = new SingleBunny();                        //Selects or creates scene
 
 			renderProfile = new TiledRenderProfile
-							{
-								Method = new PathTraceNewWorker(),
-								TilePattern = new CheckerboardPattern(),
-								PixelSample = 64,
-								BounceLimit = 128
-							};
+			{
+				Method = new PathTraceNewWorker(),
+				TilePattern = new CheckerboardPattern(),
+				PixelSample = 64,
+				BounceLimit = 128
+			};
 
 			DebugHelper.Log("Assets loaded");
 
@@ -121,10 +121,10 @@ namespace EchoRenderer
 				var prepared = new PreparedScene(scene, scenePrepareProfile);
 
 				renderProfile = renderProfile with
-								{
-									RenderBuffer = buffer,
-									Scene = prepared
-								};
+				{
+					RenderBuffer = buffer,
+					Scene = prepared
+				};
 
 				engine.Begin(renderProfile); //Initializes render
 			}

@@ -9,7 +9,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public BallRoom()
 		{
-			Skybox = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Multiplier = (Float3)0.02f };
+			AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime") { Multiplier = (Float3)0.02f });
 
 			var mesh = new Mesh("Assets/Models/Excluded/BallRoom/ballRoom.obj");
 			var materials = new MaterialLibrary("Assets/Models/Excluded/BallRoom/ballRoom.mat");
