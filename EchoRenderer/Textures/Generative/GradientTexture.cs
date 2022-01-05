@@ -8,19 +8,7 @@ namespace EchoRenderer.Textures.Generative
 {
 	public class GradientTexture : CacheableTexture
 	{
-		public GradientTexture() : this(Gradient.black, Float2.zero, Float2.one) {}
-		public GradientTexture(Gradient gradient) : this(gradient, Float2.zero, Float2.one) {}
-
-		public GradientTexture(Gradient gradient, Float2 point0, Float2 point1)
-		{
-			Gradient = gradient;
-			_point0 = point0;
-			_point1 = point1;
-
-			UpdateSegment();
-		}
-
-		NotNull<Gradient> _gradient;
+		NotNull<Gradient> _gradient = Gradient.black;
 
 		public Gradient Gradient
 		{
@@ -28,8 +16,8 @@ namespace EchoRenderer.Textures.Generative
 			set => _gradient = value;
 		}
 
-		Float2 _point0;
-		Float2 _point1;
+		Float2 _point0 = Float2.zero;
+		Float2 _point1 = Float2.one;
 
 		public Float2 Point0
 		{

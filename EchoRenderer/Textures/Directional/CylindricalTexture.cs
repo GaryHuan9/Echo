@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
@@ -6,12 +7,9 @@ using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Textures.Directional
 {
-	public class CylindricalTexture : DirectionalTexture
+	public class CylindricalTexture : IDirectionalTexture
 	{
-		public CylindricalTexture() : this(Texture.black) { }
-		public CylindricalTexture(Texture texture) => Texture = texture;
-
-		NotNull<Texture> _texture;
+		NotNull<Texture> _texture = Texture.black;
 
 		public Texture Texture
 		{
@@ -21,7 +19,14 @@ namespace EchoRenderer.Textures.Directional
 
 		public Mode SampleMode { get; set; } = Mode.exact;
 
-		public override Vector128<float> Evaluate(in Float3 direction)
+		public void Prepare()
+		{
+			Int2 size = Texture.ImportanceSamplingResolution;
+
+			// ArrayPool<float>.Shared.Rent()
+		}
+
+		public Vector128<float> Evaluate(in Float3 direction)
 		{
 			Float2 uv = SampleMode switch
 			{
@@ -34,12 +39,21 @@ namespace EchoRenderer.Textures.Directional
 				_ => throw ExceptionHelper.Invalid(nameof(SampleMode), SampleMode, InvalidType.unexpected)
 			};
 
+			Prepare();
+
 			return Texture[uv];
 		}
 
 		public enum Mode : byte
 		{
+			/// <summary>
+			/// Evaluates <see cref="Texture"/> based on exact solid angle of directions.
+			/// </summary>
 			exact,
+
+			/// <summary>
+			/// Evaluates <see cref="Texture"/> only based on the Y component of directions.
+			/// </summary>
 			height
 		}
 	}

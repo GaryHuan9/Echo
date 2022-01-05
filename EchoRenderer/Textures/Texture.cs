@@ -27,9 +27,14 @@ namespace EchoRenderer.Textures
 		/// </summary>
 		public Tint Tint { get; set; } = Tint.identity;
 
-		public static readonly Pure white = new(Float4.one);
-		public static readonly Pure black = new(Float4.ana);
-		public static readonly Pure normal = new(new Float4(0.5f, 0.5f, 1f, 1f));
+		/// <summary>
+		/// The resolution that should be used if we are performing importance sampling on this <see cref="Texture"/>.
+		/// </summary>
+		public virtual Int2 ImportanceSamplingResolution => (Int2)512;
+
+		public static readonly Pure white = new(Float3.one);
+		public static readonly Pure black = new(Float3.zero);
+		public static readonly Pure normal = new(new Float3(0.5f, 0.5f, 1f));
 
 		/// <summary>
 		/// Access the content of this <see cref="Texture"/> at <paramref name="uv"/>.

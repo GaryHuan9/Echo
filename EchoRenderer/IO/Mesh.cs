@@ -47,23 +47,25 @@ namespace EchoRenderer.IO
 				int index = span.IndexOf(' ');
 				if (index < 0) continue;
 
-				(span[0] switch
-				 {
-					 'v' => index switch
-							{
-								1 => vertexLines,
-								2 => span[1] switch
-									 {
-										 'n' => normalLines,
-										 't' => texcoordLines,
-										 _ => null
-									 },
-								_ => null
-							},
-					 'f' when index == 1 => faceLines,
-					 'u' when span.StartsWith("usemtl ") => usemtlLines,
-					 _ => null
-				 })?.Add(new Line(line, height++, Range.StartAt(index + 1)));
+				var list = span[0] switch
+				{
+					'v' => index switch
+					{
+						1 => vertexLines,
+						2 => span[1] switch
+						{
+							'n' => normalLines,
+							't' => texcoordLines,
+							_ => null
+						},
+						_ => null
+					},
+					'f' when index == 1 => faceLines,
+					'u' when span.StartsWith("usemtl ") => usemtlLines,
+					_ => null
+				};
+
+				list?.Add(new Line(line, height++, Range.StartAt(index + 1)));
 			}
 
 			//Structure usemtl usages
@@ -194,7 +196,7 @@ namespace EchoRenderer.IO
 			}
 		}
 
-		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] {".obj", ".zip"});
+		static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] { ".obj", ".zip" });
 
 		readonly Triangle[] triangles0; //Triangles are stored in two different arrays to support loading quads
 		readonly Triangle[] triangles1;

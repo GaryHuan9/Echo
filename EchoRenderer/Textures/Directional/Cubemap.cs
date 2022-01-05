@@ -10,7 +10,7 @@ using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Textures.Directional
 {
-	public class Cubemap : DirectionalTexture
+	public class Cubemap : IDirectionalTexture
 	{
 		public Cubemap()
 		{
@@ -58,7 +58,7 @@ namespace EchoRenderer.Textures.Directional
 
 		static readonly string[] names = { "px", "py", "pz", "nx", "ny", "nz" };
 
-		public override Vector128<float> Evaluate(in Float3 direction)
+		public Vector128<float> Evaluate(in Float3 direction)
 		{
 			Direction source = (Direction)direction;
 			Float2 uv = source.Project(direction);

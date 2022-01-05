@@ -69,7 +69,7 @@ namespace EchoRenderer.Rendering.Engines
 			Epoch = 0;
 			threadArena = new ThreadLocal<Arena>(CreateArena);
 
-			profile.Method.BeforeRender(profile);
+			profile.Method.Prepare(profile);
 			profile.Scene.ResetIntersectionCount();
 
 			renderData.Recreate(profile.RenderBuffer);
