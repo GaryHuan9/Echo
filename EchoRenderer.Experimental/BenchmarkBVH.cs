@@ -7,7 +7,9 @@ using EchoRenderer.IO;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
+using EchoRenderer.Objects;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Materials;
@@ -51,10 +53,10 @@ namespace EchoRenderer.Experimental
 			}
 
 			Pairs = new[]
-					{
-						new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
-						new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
-					};
+			{
+				new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+				new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
+			};
 		}
 
 		readonly TraceQuery[] queries;
@@ -89,8 +91,8 @@ namespace EchoRenderer.Experimental
 		// New intersection system only calculating distance and uv without auxiliary data
 		// |          Method | CurrentPair |     Mean |    Error |   StdDev |
 		// |---------------- |------------ |---------:|---------:|---------:|
-		// | GetIntersection |        Quad | 40.81 ms | 0.297 ms | 0.248 ms |
-		// | GetIntersection |     Regular | 59.21 ms | 0.289 ms | 0.270 ms |
+		// | GetIntersection |        Quad | 41.83 ms | 0.414 ms | 0.387 ms |
+		// | GetIntersection |     Regular | 59.66 ms | 0.252 ms | 0.236 ms |
 
 		[Benchmark]
 		public bool GetIntersection()
@@ -99,8 +101,7 @@ namespace EchoRenderer.Experimental
 
 			for (int i = 0; i < queries.Length; i++)
 			{
-				ref readonly TraceQuery source = ref queries[i];
-				TraceQuery query = source;
+				TraceQuery query = queries[i];
 				result ^= CurrentPair.scene.Trace(ref query);
 			}
 
