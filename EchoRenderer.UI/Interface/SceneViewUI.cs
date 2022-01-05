@@ -2,6 +2,8 @@
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Objects;
+using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
