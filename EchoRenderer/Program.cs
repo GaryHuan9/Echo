@@ -6,13 +6,13 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
+using EchoRenderer.Objects;
+using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Rendering;
-using EchoRenderer.Rendering.Distributions;
+using EchoRenderer.PostProcess;
+using EchoRenderer.PostProcess.ToneMappers;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
-using EchoRenderer.Rendering.PostProcessing;
-using EchoRenderer.Rendering.PostProcessing.ToneMappers;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Terminals;
 using EchoRenderer.Textures.Generative;
@@ -202,7 +202,7 @@ namespace EchoRenderer
 
 			using PostProcessingEngine engine = new PostProcessingEngine(buffer);
 
-			//NOTE: Oidn do not have normal and albedo data here, so its quality might be pretty bad
+			//NOTE: Oidn does not have normal and albedo data here, so its quality might be pretty bad
 			// engine.AddWorker(new DenoiseOidn(engine));
 
 			engine.AddWorker(new Bloom(engine));

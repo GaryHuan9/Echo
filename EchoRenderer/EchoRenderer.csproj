@@ -10,12 +10,12 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED; </DefineConstants>
+        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED;</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED; </DefineConstants>
+        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED;</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
@@ -37,14 +37,19 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Rendering\Materials\Diffuse.cs" />
-      <Compile Remove="Rendering\Materials\Glass.cs" />
-      <Compile Remove="Rendering\Materials\Glossy.cs" />
-      <Compile Remove="Rendering\Materials\MaterialOld.cs" />
-      <Compile Remove="Rendering\Materials\Emissive.cs" />
-      <Compile Remove="Objects\Scenes\BMWs.cs" />
-      <Compile Remove="Objects\Scenes\CornellBox.cs" />
-      <Compile Remove="Objects\Scenes\TestScenes.cs" />
+        <Compile Remove="src\Rendering\Materials\Diffuse.cs" />
+        <Compile Remove="src\Rendering\Materials\Glass.cs" />
+        <Compile Remove="src\Rendering\Materials\Glossy.cs" />
+        <Compile Remove="src\Rendering\Materials\MaterialOld.cs" />
+        <Compile Remove="src\Rendering\Materials\Emissive.cs" />
+        <Compile Remove="src\Objects\Scenes\BMWs.cs" />
+        <Compile Remove="src\Objects\Scenes\CornellBox.cs" />
+        <Compile Remove="src\Objects\Scenes\TestScenes.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Renders\V5 - Path Tracing Improved" />
+        <Folder Include="src" />
     </ItemGroup>
 
 </Project>
