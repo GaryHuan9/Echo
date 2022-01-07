@@ -15,7 +15,7 @@ namespace EchoRenderer.Textures
 		IWrapper _wrapper;
 
 		/// <summary>
-		/// The <see cref="IWrapper"/> used for this <see cref="Texture"/>.
+		/// The <see cref="IWrapper"/> used on this <see cref="Texture"/> to control uv texture coordinates.
 		/// </summary>
 		public IWrapper Wrapper
 		{

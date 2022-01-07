@@ -158,7 +158,7 @@ namespace EchoRenderer.Rendering.Engines
 					Float2 offset = arena.distribution.NextTwo();
 
 					//Sample radiance
-					Float2 uv = (position + offset) / renderBuffer.size - Float2.half;
+					Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.half;
 					var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), arena);
 
 					arena.allocator.Release();

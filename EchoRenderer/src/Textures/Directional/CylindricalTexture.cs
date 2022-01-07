@@ -2,7 +2,9 @@
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
+using EchoRenderer.Rendering.Distributions;
 
 namespace EchoRenderer.Textures.Directional
 {
@@ -18,11 +20,33 @@ namespace EchoRenderer.Textures.Directional
 
 		public Mode SampleMode { get; set; } = Mode.exact;
 
+		Piecewise2 distribution;
+
 		public void Prepare()
 		{
-			Int2 size = Texture.ImportanceSamplingResolution;
+			Texture texture = Texture;
 
-			// ArrayPool<float>.Shared.Rent()
+			Int2 size = texture.ImportanceSamplingResolution;
+			Float2 sizeR = 1f / (size - Int2.one).Max(Int2.one);
+
+			using var _ = SpanPool<float>.Fetch(size.Product, out Span<float> luminance);
+
+			int index = -1;
+
+			for (int y = 0; y < size.y; y++)
+			{
+				float v = sizeR.y * y;
+
+				for (int x = 0; x < size.x; x++)
+				{
+					float u = sizeR.x * x;
+
+					var color = texture[new Float2(u, v) * sizeR];
+					luminance[++index] = Utilities.GetLuminance(color);
+				}
+			}
+
+			distribution = new Piecewise2(luminance, size.x);
 		}
 
 		public Vector128<float> Evaluate(in Float3 direction)

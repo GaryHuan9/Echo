@@ -13,13 +13,7 @@ namespace EchoRenderer.PostProcess
 		public float Intensity { get; set; } = 0.57f;
 		public float FilmGrain { get; set; } = 0.01f; //A little bit of film grain helps with the color banding
 
-		Float2 scale;
-
-		public override void Dispatch()
-		{
-			scale = 1f / renderBuffer.size;
-			RunPassHorizontal(HorizontalPass);
-		}
+		public override void Dispatch() => RunPassHorizontal(HorizontalPass);
 
 		void HorizontalPass(int horizontal)
 		{
@@ -28,8 +22,9 @@ namespace EchoRenderer.PostProcess
 			for (int y = 0; y < renderBuffer.size.y; y++)
 			{
 				Int2 position = new Int2(horizontal, y);
+				Float2 uv = position * renderBuffer.sizeR;
 
-				float distance = (position * scale - Float2.half).SquaredMagnitude * Intensity;
+				float distance = (uv - Float2.half).SquaredMagnitude * Intensity;
 				float multiplier = 1f + random.Next1(-FilmGrain, FilmGrain) - distance;
 
 				Vector128<float> target = Utilities.Clamp01(renderBuffer[position]);

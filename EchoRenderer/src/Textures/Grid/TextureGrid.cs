@@ -14,19 +14,38 @@ namespace EchoRenderer.Textures.Grid
 		protected TextureGrid(Int2 size, IFilter filter) : base(Wrappers.repeat)
 		{
 			this.size = size;
+			sizeR = 1f / size;
 			oneLess = size - Int2.one;
 
 			aspect = (float)size.x / size.y;
 			Filter = filter;
 		}
 
+		/// <summary>
+		/// The size of this <see cref="Texture"/> (exclusive),
+		/// </summary>
 		public readonly Int2 size;
+
+		/// <summary>
+		/// The reciprocal of <see cref="size"/>.
+		/// </summary>
+		public readonly Float2 sizeR;
+
+		/// <summary>
+		/// The <see cref="size"/> of this <see cref="Texture"/> minus one.
+		/// </summary>
 		public readonly Int2 oneLess;
 
-		public readonly float aspect; //Width over height
+		/// <summary>
+		/// The aspect ratio of this <see cref="Texture"/>, equals to width over height.
+		/// </summary>
+		public readonly float aspect;
 
 		IFilter _filter;
 
+		/// <summary>
+		/// The <see cref="IFilter"/> used on this <see cref="TextureGrid"/> to retrieve pixels.
+		/// </summary>
 		public IFilter Filter
 		{
 			get => _filter;
@@ -66,21 +85,17 @@ namespace EchoRenderer.Textures.Grid
 		/// <summary>
 		/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid"/>'s texture coordinate.
 		/// </summary>
-		public Float2 ToUV(Int2 position) => (position + Float2.half) / size;
+		public Float2 ToUV(Int2 position) => (position + Float2.half) * sizeR;
 
 		/// <summary>
-		/// Copies the data of a <see cref="Texture"/> of the same size pixel by pixel.
-		/// An exception will be thrown if the sizes mismatch.
+		/// Copies as much data from <paramref name="texture"/> to this <see cref="TextureGrid"/> as fast as possible.
 		/// </summary>
-		public virtual void CopyFrom(Texture texture, bool parallel = true)
-		{
-			if (texture is TextureGrid textureGrid)
-			{
-				AssertAlignedSize(textureGrid);
-				ForEach(position => this[position] = textureGrid[position], parallel);
-			}
-			else ForEach(position => this[position] = texture[ToUV(position)], parallel);
-		}
+		public virtual void CopyFrom(Texture texture, bool parallel = true) => ForEach
+		(
+			texture is TextureGrid grid && grid.size == size ?
+				position => this[position] = grid[position] :
+				position => this[position] = texture[ToUV(position)], parallel
+		);
 
 		/// <summary>
 		/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
