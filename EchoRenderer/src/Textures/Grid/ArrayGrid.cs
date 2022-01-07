@@ -57,10 +57,14 @@ namespace EchoRenderer.Textures.Grid
 
 		public override void CopyFrom(Texture texture, bool parallel = true)
 		{
-			if (texture is ArrayGrid array)
+			if (texture is ArrayGrid array && array.size == size)
 			{
-				AssertAlignedSize(array);
+				//Span is faster on dotnet core
+#if NETCOREAPP
+				array.pixels.AsSpan().CopyTo(pixels);
+#else
 				Array.Copy(array.pixels, pixels, length);
+#endif
 			}
 			else base.CopyFrom(texture, parallel);
 		}

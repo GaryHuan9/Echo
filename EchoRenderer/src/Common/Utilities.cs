@@ -15,8 +15,8 @@ namespace EchoRenderer.Common
 		public static ref Float4 ToFloat4(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref pixel);
 		public static ref Float3 ToFloat3(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float3>(ref pixel);
 
-		public static Vector128<float> ToVector(Float4 pixel) => Unsafe.As<Float4, Vector128<float>>(ref pixel);
-		public static Vector128<float> ToVector(Float3 pixel) => Unsafe.As<Float3, Vector128<float>>(ref pixel);
+		public static Vector128<float> ToVector(Float4 value) => Unsafe.As<Float4, Vector128<float>>(ref value);
+		public static Vector128<float> ToVector(Float3 value) => Unsafe.As<Float3, Vector128<float>>(ref value);
 
 		//NOTE: to vector with ref values is unsafe and not provided here since we can access weird memory with it.
 
