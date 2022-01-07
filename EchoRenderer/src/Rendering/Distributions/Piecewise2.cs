@@ -1,6 +1,7 @@
 using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 
 namespace EchoRenderer.Rendering.Distributions
 {
@@ -9,6 +10,10 @@ namespace EchoRenderer.Rendering.Distributions
 	/// </summary>
 	public class Piecewise2
 	{
+		/// <summary>
+		/// Constructs a <see cref="Piecewise2"/> from discrete points on a 2D <see cref="function"/>,
+		/// which should be provided in an x-axis major order, with <paramref name="width"/> columns.
+		/// </summary>
 		public Piecewise2(ReadOnlySpan<float> function, int width)
 		{
 			//Calculate size and create arrays
@@ -16,7 +21,7 @@ namespace EchoRenderer.Rendering.Distributions
 			Assert.AreEqual(function.Length, size.Product);
 
 			layers = new Piecewise1[size.y];
-			Span<float> singles = stackalloc float[size.y];
+			using var _ = SpanPool<float>.Fetch(size.y, out Span<float> values);
 
 			//Create single dimensional functions and collect integrals
 			for (int y = 0; y < size.y; y++)
@@ -24,10 +29,10 @@ namespace EchoRenderer.Rendering.Distributions
 				var piecewise = new Piecewise1(function.Slice(y * width, width));
 
 				layers[y] = piecewise;
-				singles[y] = piecewise.integral;
+				values[y] = piecewise.integral;
 			}
 
-			integrals = new Piecewise1(singles);
+			integrals = new Piecewise1(values);
 		}
 
 		public readonly Int2 size;
