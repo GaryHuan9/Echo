@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 
@@ -45,6 +46,7 @@ namespace EchoRenderer.Textures.Grid
 			base.CopyFrom(texture, parallel);
 
 			if (texture is not RenderBuffer buffer) return;
+			AssertAlignedSize(buffer); //TODO: remove this assert and interpolate the axillary data as well
 
 			Array.Copy(buffer.albedos, albedos, length);
 			Array.Copy(buffer.normals, normals, length);
