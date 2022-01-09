@@ -5,9 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Common;
 using EchoRenderer.IO;
-using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Objects.Scenes;
@@ -169,7 +167,6 @@ namespace EchoRenderer
 			long completedSample = engine.CompletedSample;
 
 			DebugHelper.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
-			renderEngine = null;
 		}
 
 		static void SimplexNoise()

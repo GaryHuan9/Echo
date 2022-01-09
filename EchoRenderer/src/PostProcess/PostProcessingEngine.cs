@@ -28,6 +28,7 @@ namespace EchoRenderer.PostProcess
 		readonly object processLocker = new();
 
 		public bool Aborted { get; private set; }
+		public bool Finished { get; private set; }
 
 		public void AddWorker(PostProcessingWorker worker)
 		{
@@ -59,7 +60,11 @@ namespace EchoRenderer.PostProcess
 
 		public void WaitForProcess()
 		{
-			lock (processLocker) Monitor.Wait(processLocker);
+			lock (processLocker)
+			{
+				if (Finished) return;
+				Monitor.Wait(processLocker);
+			}
 		}
 
 		void Work()
@@ -70,7 +75,11 @@ namespace EchoRenderer.PostProcess
 				worker.Dispatch();
 			}
 
-			lock (processLocker) Monitor.PulseAll(processLocker);
+			lock (processLocker)
+			{
+				Finished = true;
+				Monitor.PulseAll(processLocker);
+			}
 		}
 
 		public class ArrayGridPooler : PoolerBase<ArrayGrid>
@@ -81,8 +90,8 @@ namespace EchoRenderer.PostProcess
 
 			protected override int MaxPoolSize => 16;
 
-			protected override ArrayGrid GetNewObject() => new(size);
-			protected override void Reset(ArrayGrid target) { }
+			protected override ArrayGrid GetNewObject()          => new(size);
+			protected override void      Reset(ArrayGrid target) { }
 		}
 	}
 }
