@@ -21,8 +21,8 @@ namespace EchoRenderer.Objects.Scenes
 			// children.Add(new MeshObject(mesh, materials) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 			children.Add(new MeshObject(mesh, material) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 
-			children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
-			children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
+			// children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
+			// children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
 		}
 	}
 

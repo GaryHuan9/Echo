@@ -1,8 +1,13 @@
 using System;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics
 {
+	/// <summary>
+	/// A class containing methods that can perform fast mathematical operations.
+	/// NOTE: all of the methods in this class should be automatically inlined.
+	/// </summary>
 	public static class FastMath
 	{
 		static readonly float oneMinusEpsilon = Scalars.UInt32ToSingleBits(Scalars.SingleToUInt32Bits(1f) - 1u);
@@ -47,6 +52,12 @@ namespace EchoRenderer.Mathematics
 		/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
 		/// </summary>
-		public static float Identity(float value) => Sqrt0(MathF.FusedMultiplyAdd(value, -value, 1f));
+		public static float Identity(float value) => Sqrt0(FMA(value, -value, 1f));
+
+		/// <summary>
+		/// Computes and returns <paramref name="value"/> * <paramref name="multiplier"/> + <paramref name="adder"/> in one instruction.
+		/// NOTE: while the performance benefit is nice, the main reason that we perform FMA operations is because of the better precision.
+		/// </summary>
+		public static float FMA(float value, float multiplier, float adder) => MathF.FusedMultiplyAdd(value, multiplier, adder);
 	}
 }

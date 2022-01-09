@@ -80,7 +80,7 @@ namespace EchoRenderer.Rendering.Scattering
 				Float3 outgoing = distro0.UniformHemisphere;
 				Float3 sampled = Sample(outgoing, distro1, out Float3 incident, out float pdf);
 
-				pdf *= distro0.UniformHemispherePDF;
+				pdf *= Distro2.UniformHemispherePDF;
 
 				if (pdf > 0f) result += sampled * AbsoluteCosine(outgoing) * AbsoluteCosine(incident) / pdf;
 			}
