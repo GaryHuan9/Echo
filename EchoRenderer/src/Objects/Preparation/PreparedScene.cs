@@ -18,7 +18,9 @@ namespace EchoRenderer.Objects.Preparation
 		public PreparedScene(Scene source, ScenePrepareProfile profile)
 		{
 			this.source = source;
+
 			var lightsList = new List<LightSource>();
+			var ambientList = new List<AmbientLight>();
 
 			//Gather important objects
 			foreach (Object child in source.LoopChildren(true))
@@ -35,6 +37,8 @@ namespace EchoRenderer.Objects.Preparation
 					case LightSource value:
 					{
 						lightsList.Add(value);
+						if (value is AmbientLight ambient) ambientList.Add(ambient);
+
 						break;
 					}
 				}
@@ -43,6 +47,8 @@ namespace EchoRenderer.Objects.Preparation
 			}
 
 			_lightSources = lightsList.ToArray();
+			_ambientSources = ambientList.ToArray();
+
 			preparer = new ScenePreparer(source, profile);
 
 			//Create root instance and prepare materials
@@ -60,8 +66,10 @@ namespace EchoRenderer.Objects.Preparation
 		public readonly Camera camera;
 
 		readonly LightSource[] _lightSources;
+		readonly AmbientLight[] _ambientSources;
 
 		public ReadOnlySpan<LightSource> LightSources => _lightSources;
+		public ReadOnlySpan<AmbientLight> AmbientSources => _ambientSources;
 
 		long _traceCount;
 

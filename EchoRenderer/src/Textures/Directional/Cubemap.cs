@@ -46,8 +46,8 @@ namespace EchoRenderer.Textures.Directional
 
 		public Texture this[Direction direction]
 		{
-			get => textures[direction.Index];
-			set => textures[direction.Index] = value;
+			get => this[direction.Index];
+			set => this[direction.Index] = value;
 		}
 
 		public Float3 Multiplier
@@ -56,17 +56,34 @@ namespace EchoRenderer.Textures.Directional
 			set => multiplierVector = Utilities.ToVector(value);
 		}
 
-		static readonly string[] names = { "px", "py", "pz", "nx", "ny", "nz" };
+		Texture this[int index]
+		{
+			get => textures[index];
+			set => textures[index] = value;
+		}
+
+		static readonly string[] names = { "px", "nx", "py", "ny", "pz", "nz" };
 
 		public Vector128<float> Evaluate(in Float3 direction)
 		{
-			Direction source = (Direction)direction;
-			Float2 uv = source.Project(direction);
+			Direction target = (Direction)direction;
 
-			uv *= 0.5f / source.Absoluted.ExtractComponent(direction);
+			int index = target.Index;
+			Float2 uv = index switch
+			{
+				0 => new Float2(-direction.z, direction.y),
+				1 => direction.ZY,
+				2 => new Float2(direction.x, -direction.z),
+				3 => direction.XZ,
+				4 => direction.XY,
+				5 => new Float2(-direction.x, direction.y),
+				_ => throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.unexpected)
+			};
+
+			uv *= 0.5f / target.ExtractComponent(direction);
 			uv += Float2.half;
 
-			Vector128<float> sample = this[source][uv];
+			Vector128<float> sample = this[index][uv];
 			return Sse.Multiply(sample, multiplierVector);
 		}
 	}

@@ -26,19 +26,9 @@ namespace EchoRenderer.Rendering.Distributions
 		public Float3 UniformHemisphere => ProjectSphere(x, y);
 
 		/// <summary>
-		/// Returns the probability density function for <see cref="UniformHemisphere"/>.
-		/// </summary>
-		public float UniformHemispherePDF => 1f / Scalars.TAU;
-
-		/// <summary>
 		/// Returns a uniformly sampled point on a unit sphere surface.
 		/// </summary>
-		public Float3 UniformSphere => ProjectSphere(1f - x * 2f, y);
-
-		/// <summary>
-		/// Returns the probability density function for <see cref="UniformSphere"/>.
-		/// </summary>
-		public float UniformSpherePDF => 1f / 2f / Scalars.TAU;
+		public Float3 UniformSphere => ProjectSphere(FastMath.FMA(x, -2f, 1f), y);
 
 		/// <summary>
 		/// Returns a uniformly sampled point inside a unit disk.
@@ -89,7 +79,7 @@ namespace EchoRenderer.Rendering.Distributions
 				else
 				{
 					radius = xy.y;
-					angle = Scalars.PI / 2f * (1f - xy.x / xy.y / 2f);
+					angle = Scalars.PI / 2f * FastMath.FMA(xy.x / xy.y, -0.5f, 1f);
 				}
 
 				return ProjectDisk(radius, angle);
@@ -109,6 +99,16 @@ namespace EchoRenderer.Rendering.Distributions
 				return disk.CreateXY(FastMath.Sqrt0(1f - z));
 			}
 		}
+
+		/// <summary>
+		/// The probability density function for <see cref="UniformHemisphere"/>.
+		/// </summary>
+		public const float UniformHemispherePDF = 1f / Scalars.TAU;
+
+		/// <summary>
+		/// The probability density function for <see cref="UniformSphere"/>.
+		/// </summary>
+		public const float UniformSpherePDF = 1f / 2f / Scalars.TAU;
 
 		public static implicit operator Float2(Distro2 distro) => new(distro.x, distro.y);
 		public static explicit operator Distro2(Float2 value)  => new(value);

@@ -27,26 +27,24 @@ namespace EchoRenderer.Textures.Directional
 			Texture texture = Texture;
 
 			Int2 size = texture.ImportanceSamplingResolution;
-			Float2 sizeR = 1f / (size - Int2.one).Max(Int2.one);
+			Float2 sizeR = 1f / size.Max(Int2.one);
 
-			using var _ = SpanPool<float>.Fetch(size.Product, out Span<float> luminance);
-
-			int index = -1;
+			using var _ = SpanPool<float>.Fetch(size.Product, out Span<float> values);
 
 			for (int y = 0; y < size.y; y++)
 			{
-				float v = sizeR.y * y;
+				float sin = MathF.Sin(Scalars.PI * (y  + 0.5f) * sizeR.y);
 
 				for (int x = 0; x < size.x; x++)
 				{
-					float u = sizeR.x * x;
+					Float2 uv = new Float2(x, y) * sizeR;
 
-					var color = texture[new Float2(u, v) * sizeR];
-					luminance[++index] = Utilities.GetLuminance(color);
+					float luminance = Utilities.GetLuminance(texture[uv]);
+					values[y * size.x + x] = luminance * sin;
 				}
 			}
 
-			distribution = new Piecewise2(luminance, size.x);
+			distribution = new Piecewise2(values, size.x);
 		}
 
 		public Vector128<float> Evaluate(in Float3 direction)

@@ -68,7 +68,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		) { }
 
 		public PreparedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
-							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
+								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			Float3.Cross(vertex1 - vertex0, vertex2 - vertex0),
@@ -76,8 +76,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 		) { }
 
 		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							   Float3 normal,
-							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
+								Float3 normal,
+								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			normal, normal, normal,
@@ -85,7 +85,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		) { }
 
 		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							   Float3 normal0, Float3 normal1, Float3 normal2, int materialToken) : this
+								Float3 normal0, Float3 normal1, Float3 normal2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			normal0, normal1, normal2,
@@ -93,8 +93,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 		) { }
 
 		public PreparedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
-							   Float3 normal0,   Float3 normal1,   Float3 normal2,
-							   Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken)
+								Float3 normal0,   Float3 normal1,   Float3 normal2,
+								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken)
 		{
 			this.vertex0 = vertex0;
 			edge1 = vertex1 - vertex0;
@@ -269,9 +269,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float3 GetInterpolatedNormal(Float2 uv) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
 
 			static void Fill(Span<PreparedTriangle> span,      int       index,     int       materialToken,
-							 in Float3             vertex0,   in Float3 vertex1,   in Float3 vertex2,
-							 in Float3             normal0,   in Float3 normal1,   in Float3 normal2,
-							 Float2                texcoord0, Float2    texcoord1, Float2    texcoord2)
+							 in Float3              vertex0,   in Float3 vertex1,   in Float3 vertex2,
+							 in Float3              normal0,   in Float3 normal1,   in Float3 normal2,
+							 Float2                 texcoord0, Float2    texcoord1, Float2    texcoord2)
 			{
 				int gap = span.Length / 4;
 				var slice = span.Slice(gap * index, gap);

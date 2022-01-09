@@ -22,7 +22,7 @@ namespace EchoRenderer.Mathematics.Randomization
 		public sealed float Next1(float min, float max)
 		{
 			float distance = max - min;
-			return MathF.FusedMultiplyAdd(distance, Next1(), min);
+			return FastMath.FMA(distance, Next1(), min);
 		}
 
 		/// <summary>
