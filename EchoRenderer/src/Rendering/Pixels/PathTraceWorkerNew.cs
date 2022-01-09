@@ -22,13 +22,25 @@ namespace EchoRenderer.Rendering.Pixels
 
 			TraceQuery query = arena.Scene.camera.GetRay(uv);
 
-			for (int bounce = 1;; ++bounce)
+			for (int bounce = 0;; bounce++)
 			{
 				bool intersected = arena.Scene.Trace(ref query);
 
 				if (bounce == 0 || specularBounce)
 				{
 					//TODO: Take care of emitted light at this path vertex or from the environment
+
+					if (intersected)
+					{
+
+					}
+					else
+					{
+						foreach (AmbientLight ambient in arena.Scene.AmbientSources)
+						{
+							radiance += ambient.Evaluate(query.ray);
+						}
+					}
 				}
 
 				if (!intersected || bounce > arena.profile.BounceLimit) break;

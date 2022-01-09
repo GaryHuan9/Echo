@@ -9,9 +9,9 @@ namespace EchoRenderer.Objects
 {
 	public class Scene : ObjectPack
 	{
-		public EnvironmentalLight AddSkybox(IDirectionalTexture texture)
+		public AmbientLight AddSkybox(IDirectionalTexture texture)
 		{
-			var light = new EnvironmentalLight { Texture = texture };
+			var light = new AmbientLight { Texture = texture };
 
 			children.Add(light);
 			return light;

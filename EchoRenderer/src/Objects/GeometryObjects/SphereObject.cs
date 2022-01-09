@@ -82,7 +82,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 			return result;
 
-			noIntersection:
+		noIntersection:
 			Unsafe.SkipInit(out uv);
 			return float.PositiveInfinity;
 		}

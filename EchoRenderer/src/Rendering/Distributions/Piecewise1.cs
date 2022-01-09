@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.Distributions
 {
@@ -23,7 +24,7 @@ namespace EchoRenderer.Rendering.Distributions
 			for (int i = 0; i < length; i++)
 			{
 				Assert.IsFalse(function[i] < 0f); //Probability should not be negative
-				cdf[i] = sum = MathF.FusedMultiplyAdd(function[i], countR, sum);
+				cdf[i] = sum = FastMath.FMA(function[i], countR, sum);
 			}
 
 			integral = cdf[length - 1];

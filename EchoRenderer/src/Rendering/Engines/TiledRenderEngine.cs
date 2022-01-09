@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 
@@ -297,10 +298,8 @@ namespace EchoRenderer.Rendering.Engines
 		{
 			if (workers == null) return;
 
-			for (int i = 0; i < workers.Length; i++)
+			foreach (var worker in workers)
 			{
-				TileWorker worker = workers[i];
-
 				worker.OnWorkCompletedMethods -= OnTileWorkCompleted;
 				worker.Dispose();
 			}

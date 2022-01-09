@@ -276,7 +276,7 @@ namespace EchoRenderer.Rendering.Scattering
 			}
 
 			//Remaps distro by "zooming in" because we just used it to find index
-			distro = (Distro1)MathF.FusedMultiplyAdd(distro.u, matched, -index);
+			distro = (Distro1)FastMath.FMA(distro.u, matched, -index);
 
 			return matched;
 		}

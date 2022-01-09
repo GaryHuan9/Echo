@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Rendering.Memory;
@@ -27,10 +28,10 @@ namespace EchoRenderer.Rendering.Engines
 
 			//Allocate thread
 			worker = new Thread(WorkThread)
-					 {
-						 IsBackground = true,
-						 Name = $"Tile Worker #{id} {size}x{size}"
-					 };
+			{
+				IsBackground = true,
+				Name = $"Tile Worker #{id} {size}x{size}"
+			};
 
 			//Create arena for thread. NOTE that HashCode returns a different value every runtime!
 			int seed = HashCode.Combine(Environment.TickCount64, id, size);
@@ -68,8 +69,8 @@ namespace EchoRenderer.Rendering.Engines
 		readonly ManualResetEventSlim dispatchEvent = new(); //Event sets when the worker is dispatched
 		public bool Working => dispatchEvent.IsSet;
 
-		static volatile int workerIdAccumulator;
-		bool aborted;
+		static int workerIdAccumulator;
+		volatile bool aborted;
 
 		/// <summary>
 		/// Invoked on worker thread when all rendered pixels are stored in the buffer.
@@ -125,7 +126,7 @@ namespace EchoRenderer.Rendering.Engines
 				if (!aborted) OnWorkCompletedMethods?.Invoke(this);
 			}
 
-			end:
+		end:
 			{ }
 		}
 
