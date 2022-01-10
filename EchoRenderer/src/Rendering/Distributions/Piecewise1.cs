@@ -14,21 +14,18 @@ namespace EchoRenderer.Rendering.Distributions
 		public Piecewise1(ReadOnlySpan<float> function)
 		{
 			int length = function.Length;
-			values = function.ToArray();
-			cdf = new float[length];
-			countR = 1f / length;
+			pdfValues = function.ToArray();
+			cdfValues = new float[length];
+			lengthR = 1f / length;
 
 			//Find the integral across function
-			float sum = 0f;
+			integral = 0f;
 
 			for (int i = 0; i < length; i++)
 			{
 				Assert.IsFalse(function[i] < 0f); //Probability should not be negative
-				cdf[i] = sum = FastMath.FMA(function[i], countR, sum);
+				cdfValues[i] = integral = FastMath.FMA(function[i], lengthR, integral);
 			}
-
-			integral = cdf[length - 1];
-			integralR = 1f / integral;
 
 			//Normalize the cumulative distribution function (cdf)
 			if (integral.AlmostEquals())
@@ -37,41 +34,44 @@ namespace EchoRenderer.Rendering.Distributions
 
 				for (int i = 0; i < length; i++)
 				{
-					values[i] = 0f;
-					cdf[i] = i * countR;
+					pdfValues[i] = lengthR;
+					cdfValues[i] = i * lengthR;
 				}
+
+				integral = 0f;
 			}
 			else
 			{
 				//Normalizes the cdf by dividing by the total integral
-				for (int i = 0; i < length; i++) cdf[i] *= integralR;
+				float sumR = 1f / integral;
+
+				for (int i = 0; i < length; i++)
+				{
+					pdfValues[i] *= sumR;
+					cdfValues[i] *= sumR;
+				}
 			}
 
-			cdf[length - 1] = 1f;
+			cdfValues[length - 1] = 1f;
 		}
 
 		/// <summary>
-		/// The integral across the function defined by <see cref="values"/>.
+		/// The integral across the input function that was used to construct this <see cref="Piecewise1"/>.
 		/// </summary>
 		public readonly float integral;
 
-		readonly float[] values;
-		readonly float[] cdf;
-
-		/// <summary>
-		/// The reciprocal of <see cref="integral"/>.
-		/// </summary>
-		readonly float integralR;
+		readonly float[] pdfValues; //Probability density functions
+		readonly float[] cdfValues; //Cumulated density functions
 
 		/// <summary>
 		/// The reciprocal of <see cref="Length"/>.
 		/// </summary>
-		readonly float countR;
+		readonly float lengthR;
 
 		/// <summary>
-		/// The total number of values in thi s<see cref="Piecewise1"/>.
+		/// The total number of discrete values in this <see cref="Piecewise1"/>.
 		/// </summary>
-		public int Length => values.Length;
+		public int Length => pdfValues.Length;
 
 		/// <summary>
 		/// Samples this <see cref="Piecewise1"/> at continuous linear intervals based on <paramref name="distro"/>.
@@ -80,11 +80,11 @@ namespace EchoRenderer.Rendering.Distributions
 		{
 			FindIndex(distro, out int index);
 
-			float min = index == 0 ? 0f : cdf[index - 1];
-			float shift = Scalars.InverseLerp(min, cdf[index], distro);
+			float min = index == 0 ? 0f : cdfValues[index - 1];
+			float shift = Scalars.InverseLerp(min, cdfValues[index], distro);
 
-			pdf = values[index] * integralR;
-			return (Distro1)((shift + index) * countR);
+			pdf = pdfValues[index];
+			return (Distro1)((shift + index) * lengthR);
 		}
 
 		/// <summary>
@@ -93,14 +93,20 @@ namespace EchoRenderer.Rendering.Distributions
 		public int SampleDiscrete(Distro1 distro, out float pdf)
 		{
 			FindIndex(distro, out int index);
-			pdf = values[index] * integralR * countR;
+			pdf = pdfValues[index] * lengthR;
 			return index;
 		}
+
+		/// <summary>
+		/// Returns the probability destiny function of this <see cref="Piecewise2"/>
+		/// from the <see cref="SampleContinuous"/> <paramref name="distro"/>.
+		/// </summary>
+		public float ProbabilityDensity(Distro1 distro) => pdfValues[distro.Range(Length)];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void FindIndex(Distro1 distro, out int index)
 		{
-			index = new ReadOnlySpan<float>(cdf).BinarySearch(distro.u);
+			index = new ReadOnlySpan<float>(cdfValues).BinarySearch(distro.u);
 			if (index < 0) index = ~index;
 			Assert.IsTrue(index < Length);
 		}

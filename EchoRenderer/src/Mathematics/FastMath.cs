@@ -49,7 +49,8 @@ namespace EchoRenderer.Mathematics
 		public static float Sqrt0(float value) => value <= 0f ? 0f : MathF.Sqrt(value);
 
 		/// <summary>
-		/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1
+		/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1.
+		/// The value returned is always positive, unlike regular trigonometric functions.
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
 		/// </summary>
 		public static float Identity(float value) => Sqrt0(FMA(value, -value, 1f));
@@ -59,5 +60,16 @@ namespace EchoRenderer.Mathematics
 		/// NOTE: while the performance benefit is nice, the main reason that we perform FMA operations is because of the better precision.
 		/// </summary>
 		public static float FMA(float value, float multiplier, float adder) => MathF.FusedMultiplyAdd(value, multiplier, adder);
+
+		/// <summary>
+		/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
+		/// </summary>
+		public static void SinCos(float radians, out float sin, out float cos)
+		{
+			//TODO: replace with MathF.SinCos
+
+			sin = MathF.Sin(radians);
+			cos = MathF.Cos(radians);
+		}
 	}
 }
