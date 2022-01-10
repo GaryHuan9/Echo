@@ -14,23 +14,28 @@ namespace EchoRenderer.Textures.Directional
 	{
 		public Cubemap()
 		{
-			Multiplier = Float3.one;
 			int length = names.Length;
 
 			textures = new NotNull<Texture>[length];
 			for (int i = 0; i < length; i++) textures[i] = Texture.black;
 		}
 
-		public Cubemap(ReadOnlySpan<Texture> textures) : this()
-		{
-			int length = Math.Min(names.Length, textures.Length);
-			for (int i = 0; i < length; i++) this.textures[i] = textures[i];
-		}
-
-		public Cubemap(string path) : this()
+		public Cubemap(ReadOnlySpan<Texture> textures)
 		{
 			int length = names.Length;
+
+			int min = Math.Min(length, textures.Length);
+			this.textures = new NotNull<Texture>[length];
+
+			for (int i = 0; i < length; i++) this.textures[i] = i < min ? textures[i] : Texture.black;
+		}
+
+		public Cubemap(string path)
+		{
+			int length = names.Length;
+
 			var tasks = new Task<ArrayGrid>[length];
+			textures = new NotNull<Texture>[length];
 
 			for (int i = 0; i < length; i++)
 			{
@@ -42,18 +47,22 @@ namespace EchoRenderer.Textures.Directional
 		}
 
 		readonly NotNull<Texture>[] textures;
-		Vector128<float> multiplierVector;
 
+		/// <summary>
+		/// Accesses the <see cref="Texture"/> at a specific <paramref name="direction"/>.
+		/// </summary>
 		public Texture this[Direction direction]
 		{
 			get => this[direction.Index];
 			set => this[direction.Index] = value;
 		}
 
-		public Float3 Multiplier
+		public Tint Tint
 		{
-			get => Utilities.ToFloat3(multiplierVector);
-			set => multiplierVector = Utilities.ToVector(value);
+			set
+			{
+				foreach (var texture in textures) texture.Value.Tint = value;
+			}
 		}
 
 		Texture this[int index]
@@ -80,11 +89,8 @@ namespace EchoRenderer.Textures.Directional
 				_ => throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.unexpected)
 			};
 
-			uv *= 0.5f / target.ExtractComponent(direction);
-			uv += Float2.half;
-
-			Vector128<float> sample = this[index][uv];
-			return Sse.Multiply(sample, multiplierVector);
+			uv /= target.ExtractComponent(direction);
+			return this[index][uv / 2f + Float2.half];
 		}
 	}
 }
