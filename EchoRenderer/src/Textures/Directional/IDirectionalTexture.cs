@@ -1,9 +1,6 @@
 using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Common;
-using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
-using EchoRenderer.Rendering.Pixels;
 
 namespace EchoRenderer.Textures.Directional
 {
