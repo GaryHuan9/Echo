@@ -3,6 +3,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.Directional;
@@ -16,7 +17,7 @@ namespace EchoRenderer.Objects.Scenes
 		{
 			var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
-			var material = new Matte { Albedo = (Pure)0.25f };
+			var material = new Matte { Albedo = Texture.white };
 
 			// AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime"));
 			AddSkybox(new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") });
