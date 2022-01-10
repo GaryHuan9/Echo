@@ -11,7 +11,7 @@ using EchoRenderer.Rendering.Scattering;
 
 namespace EchoRenderer.Rendering.Pixels
 {
-	public class PathTraceNewWorker : PixelWorker
+	public class PathTraceWorker : PixelWorker
 	{
 		public override Sample Render(Float2 uv, Arena arena)
 		{
@@ -30,15 +30,12 @@ namespace EchoRenderer.Rendering.Pixels
 				{
 					//TODO: Take care of emitted light at this path vertex or from the environment
 
-					if (intersected)
-					{
-
-					}
+					if (intersected) { }
 					else
 					{
 						foreach (AmbientLight ambient in arena.Scene.AmbientSources)
 						{
-							radiance += ambient.Evaluate(query.ray);
+							radiance += ambient.Evaluate(query.ray.direction);
 						}
 					}
 				}
@@ -131,24 +128,30 @@ namespace EchoRenderer.Rendering.Pixels
 
 				scatter *= FastMath.Abs(incidentWorld.Dot(interaction.normal));
 
-				float weight = 1f;
-
-				if (!sampledType.Any(FunctionType.specular))
+				if (!arena.profile.IsZero(scatter) && pdf > 0f)
 				{
-					pdfLight = source.ProbabilityDensity(interaction, incidentWorld);
-					if (pdfLight <= 0f) return radiance;
-					weight = PowerHeuristic(pdf, pdfLight);
-				}
+					float weight = 1f;
 
-				TraceQuery query = interaction.SpawnTrace(incidentWorld);
+					if (!sampledType.Any(FunctionType.specular))
+					{
+						pdfLight = source.ProbabilityDensity(interaction, incidentWorld);
+						if (pdfLight <= 0f) return radiance;
+						weight = PowerHeuristic(pdf, pdfLight);
+					}
 
-				if (arena.Scene.Trace(ref query))
-				{
-					//TODO: evaluate light at intersection if area light is our source
-				}
-				else
-				{
-					//TODO: evaluate infinite lights
+					TraceQuery query = interaction.SpawnTrace(incidentWorld);
+
+					if (arena.Scene.Trace(ref query))
+					{
+						//TODO: evaluate light at intersection if area light is our source
+						light = Float3.zero;
+					}
+					else if (source is AmbientLight ambient)
+					{
+						light = ambient.Evaluate(query.ray.direction);
+					}
+
+					if (!arena.profile.IsZero(light)) radiance += weight / pdf * scatter * light;
 				}
 			}
 

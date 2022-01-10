@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
@@ -24,6 +25,24 @@ namespace EchoRenderer.Objects.Lights
 			set => _texture = new NotNull<object>(value);
 		}
 
+		public override Float3 Position
+		{
+			set
+			{
+				if (value.EqualsExact(Position)) return;
+				ThrowModifyTransformException();
+			}
+		}
+
+		public override Float3 Scale
+		{
+			set
+			{
+				if (value.EqualsExact(Scale)) return;
+				ThrowModifyTransformException();
+			}
+		}
+
 		public override void Prepare(PreparedScene scene)
 		{
 			base.Prepare(scene);
@@ -31,9 +50,9 @@ namespace EchoRenderer.Objects.Lights
 		}
 
 		/// <summary>
-		/// Evaluates this <see cref="AmbientLight"/> for <paramref name="ray"/> that escaped the <see cref="PreparedScene"/> geometries.
+		/// Evaluates this <see cref="AmbientLight"/> at <paramref name="direction"/> that escaped the <see cref="PreparedScene"/> geometries.
 		/// </summary>
-		public Float3 Evaluate(in Ray ray) => Utilities.ToFloat3(Texture.Evaluate(ray.direction));
+		public Float3 Evaluate(in Float3 direction) => Utilities.ToFloat3(Texture.Evaluate(direction));
 
 		public override Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel)
 		{
@@ -43,5 +62,7 @@ namespace EchoRenderer.Objects.Lights
 		}
 
 		public override float ProbabilityDensity(in Interaction interaction, in Float3 incidentWorld) => Texture.ProbabilityDensity(incidentWorld);
+
+		static void ThrowModifyTransformException() => throw new Exception($"Cannot modify {nameof(AmbientLight)} transform!");
 	}
 }
