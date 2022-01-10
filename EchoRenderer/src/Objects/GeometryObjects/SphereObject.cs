@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Materials;
@@ -113,15 +114,17 @@ namespace EchoRenderer.Objects.GeometryObjects
 		{
 			//TODO: account for rotation during uv calculation, and in turn normal calculation
 
-			float theta = Scalars.TAU * (uv.x - 0.5f);
-			float phi = Scalars.PI * (uv.y - 0.5f);
-			float cos = MathF.Cos(phi);
+			float angle0 = Scalars.TAU * (uv.x - 0.5f);
+			float angle1 = Scalars.PI * (uv.y - 0.5f);
+
+			FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
+			FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
 
 			return new Float3
 			(
-				MathF.Sin(theta) * cos,
-				MathF.Sin(phi),
-				MathF.Cos(theta) * cos
+				sinT * cosP,
+				sinP,
+				cosT * cosP
 			).Normalized;
 		}
 	}

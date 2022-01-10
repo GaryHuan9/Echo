@@ -1,4 +1,5 @@
 using System;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 
@@ -110,8 +111,26 @@ namespace EchoRenderer.Rendering.Distributions
 		/// </summary>
 		public const float UniformSpherePDF = 1f / 2f / Scalars.TAU;
 
+		/// <summary>
+		/// Maps this <see cref="Distro2"/> to be between zero (inclusive) and <paramref name="max"/> (exclusive).
+		/// </summary>
+		public Int2 Range(Int2 max)
+		{
+			Assert.IsTrue(max >= Int2.zero);
+			return (Int2)((Float2)this * max);
+		}
+
+		/// <summary>
+		/// Maps this <see cref="Distro2"/> to be between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
+		/// </summary>
+		public Int2 Range(Int2 min, Int2 max)
+		{
+			Assert.IsTrue(min < max);
+			return Range(max - min) + min;
+		}
+
 		public static implicit operator Float2(Distro2 distro) => new(distro.x, distro.y);
-		public static explicit operator Distro2(Float2 value)  => new(value);
+		public static explicit operator Distro2(Float2 value) => new(value);
 
 		static Float3 ProjectSphere(float z, float u)
 		{
@@ -122,11 +141,7 @@ namespace EchoRenderer.Rendering.Distributions
 
 		static Float2 ProjectDisk(float radius, float angle)
 		{
-			float cos = MathF.Cos(angle);
-			float sin = FastMath.Identity(cos);
-
-			//We use the trigonometry identity to calculate sine because square root is faster than sine
-
+			FastMath.SinCos(angle, out float sin, out float cos);
 			return new Float2(cos, sin) * radius;
 		}
 	}

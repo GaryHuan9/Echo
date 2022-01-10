@@ -102,7 +102,7 @@ namespace EchoRenderer
 
 			renderProfile = new TiledRenderProfile
 			{
-				Method = new PathTraceNewWorker(),
+				Method = new PathTraceWorker(),
 				TilePattern = new CheckerboardPattern(),
 				PixelSample = 64,
 				BounceLimit = 128

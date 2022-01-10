@@ -20,7 +20,7 @@ namespace EchoRenderer.Rendering.Distributions
 			size = new Int2(width, function.Length / width);
 			Assert.AreEqual(function.Length, size.Product);
 
-			layers = new Piecewise1[size.y];
+			slices = new Piecewise1[size.y];
 			using var _ = SpanPool<float>.Fetch(size.y, out Span<float> values);
 
 			//Create single dimensional functions and collect integrals
@@ -28,16 +28,25 @@ namespace EchoRenderer.Rendering.Distributions
 			{
 				var piecewise = new Piecewise1(function.Slice(y * width, width));
 
-				layers[y] = piecewise;
+				slices[y] = piecewise;
 				values[y] = piecewise.integral;
 			}
 
 			integrals = new Piecewise1(values);
+			integral = integrals.integral;
 		}
 
+		/// <summary>
+		/// The total size of discretely defined values in this <see cref="Piecewise2"/>.
+		/// </summary>
 		public readonly Int2 size;
 
-		readonly Piecewise1[] layers;
+		/// <summary>
+		/// The integral across the input function that was used to construct this <see cref="Piecewise2"/>.
+		/// </summary>
+		public readonly float integral;
+
+		readonly Piecewise1[] slices;
 		readonly Piecewise1 integrals;
 
 		/// <summary>
@@ -46,7 +55,7 @@ namespace EchoRenderer.Rendering.Distributions
 		public Distro2 SampleContinuous(Distro2 distro, out float pdf)
 		{
 			Distro1 y = integrals.SampleContinuous(distro.y, out float pdfY);
-			Distro1 x = layers[y.Range(size.y)].SampleContinuous(distro.x, out pdf);
+			Distro1 x = slices[y.Range(size.y)].SampleContinuous(distro.x, out pdf);
 
 			pdf *= pdfY;
 			return new Distro2(x, y);
@@ -58,10 +67,24 @@ namespace EchoRenderer.Rendering.Distributions
 		public Int2 SampleDiscrete(Distro2 distro, out float pdf)
 		{
 			int y = integrals.SampleDiscrete(distro.y, out float pdfY);
-			int x = layers[y].SampleDiscrete(distro.x, out pdf);
+			int x = slices[y].SampleDiscrete(distro.x, out pdf);
 
 			pdf *= pdfY;
 			return new Int2(x, y);
+		}
+
+		/// <summary>
+		/// Returns the probability destiny function of this <see cref="Piecewise2"/>
+		/// from the <see cref="SampleContinuous"/> <paramref name="distro"/>.
+		/// </summary>
+		public float ProbabilityDensity(Distro2 distro)
+		{
+			Piecewise1 slice = slices[distro.y.Range(size.y)];
+
+			float pdfX = slice.ProbabilityDensity(distro.x);
+			float pdfY = integrals.ProbabilityDensity(distro.y);
+
+			return pdfX * pdfY;
 		}
 	}
 }

@@ -37,6 +37,7 @@ namespace EchoRenderer.Rendering.Pixels
 				if (interaction.bsdf == null)
 				{
 					query = query.SpawnTrace();
+					arena.allocator.Release();
 					continue;
 				}
 
@@ -47,6 +48,8 @@ namespace EchoRenderer.Rendering.Pixels
 
 				if (energy <= profile.RadianceEpsilon) break;
 				query = query.SpawnTrace(incidentWorld);
+
+				arena.allocator.Release();
 			}
 
 #if DEBUG
