@@ -207,7 +207,7 @@ namespace EchoRenderer.Terminals
 					}
 					else character = '\u2593';
 				}
-				else character = '_';
+				else character = '`';
 
 				builders[position + offset] = character;
 			}

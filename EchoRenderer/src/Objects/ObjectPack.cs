@@ -9,7 +9,7 @@ namespace EchoRenderer.Objects
 		{
 			set
 			{
-				if (value == Position) return;
+				if (value.EqualsExact(Position)) return;
 				ThrowModifyTransformException();
 			}
 		}
@@ -18,7 +18,7 @@ namespace EchoRenderer.Objects
 		{
 			set
 			{
-				if (value == Rotation) return;
+				if (value.EqualsExact(Rotation)) return;
 				ThrowModifyTransformException();
 			}
 		}
@@ -27,14 +27,14 @@ namespace EchoRenderer.Objects
 		{
 			set
 			{
-				if (value == Scale) return;
+				if (value.EqualsExact(Scale)) return;
 				ThrowModifyTransformException();
 			}
 		}
 
 		/// <summary>
 		/// The maximum number of instanced layers allowed (excluding the root).
-		/// This number can be increased if needed at a performance penalty.
+		/// Can be increased if needed at a performance and memory penalty.
 		/// </summary>
 		public const int MaxLayer = 6;
 

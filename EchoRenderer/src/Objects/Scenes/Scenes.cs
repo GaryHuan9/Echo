@@ -3,10 +3,10 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.Directional;
+using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Objects.Scenes
 {
@@ -16,7 +16,10 @@ namespace EchoRenderer.Objects.Scenes
 		{
 			var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
-			var material = new Matte { Albedo = Texture.white };
+			var material = new Matte { Albedo = (Pure)0.25f };
+
+			// AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime"));
+			AddSkybox(new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") });
 
 			// children.Add(new MeshObject(mesh, materials) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 			children.Add(new MeshObject(mesh, material) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
@@ -141,7 +144,7 @@ namespace EchoRenderer.Objects.Scenes
 			children.Add(new BoxObject(material, Float3.one));
 			children.Add(new PlaneObject(material, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
 
-			AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime") { Multiplier = (Float3)1.5f });
+			AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale((Float3)1.5f) });
 
 			var camera = new Camera(110f) { Position = new Float3(4f, 27f, -25f) };
 

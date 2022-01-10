@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
