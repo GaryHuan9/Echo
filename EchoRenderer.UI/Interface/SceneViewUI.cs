@@ -30,7 +30,7 @@ namespace EchoRenderer.UI.Interface
 
 			Profile = new ProgressiveRenderProfile
 			{
-				Method = new PathTraceWorkerOld(),
+				Method = new BruteForceWorker(),
 				EpochSample = 2,
 				EpochLength = 24,
 				AdaptiveSample = 35
