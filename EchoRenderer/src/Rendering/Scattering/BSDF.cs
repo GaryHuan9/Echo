@@ -124,9 +124,9 @@ namespace EchoRenderer.Rendering.Scattering
 		/// Samples all <see cref="BxDF"/> that matches <paramref name="type"/>.
 		/// See <see cref="BxDF.Sample"/> for more information.
 		/// </summary>
-		public Float3 Sample(in  Float3       outgoingWorld, Distro2      distro,
-							 out Float3       incidentWorld, out float    pdf,
-							 out FunctionType sampledType,   FunctionType type = FunctionType.all)
+		public Float3 Sample(in Float3 outgoingWorld, Distro2 distro,
+							 out Float3 incidentWorld, out float pdf,
+							 out FunctionType sampledType, FunctionType type = FunctionType.all)
 		{
 			//Uniformly select a matching function
 			Distro1 distroFind = distro.x;

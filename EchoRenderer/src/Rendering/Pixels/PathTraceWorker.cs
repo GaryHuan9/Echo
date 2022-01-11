@@ -141,10 +141,11 @@ namespace EchoRenderer.Rendering.Pixels
 
 					TraceQuery query = interaction.SpawnTrace(incidentWorld);
 
+					light = Float3.zero;
+
 					if (arena.Scene.Trace(ref query))
 					{
 						//TODO: evaluate light at intersection if area light is our source
-						light = Float3.zero;
 					}
 					else if (source is AmbientLight ambient)
 					{

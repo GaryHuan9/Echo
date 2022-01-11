@@ -73,23 +73,19 @@ namespace EchoRenderer.Textures.Directional
 
 			incidentWorld = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
 
-			if (sinP <= 0f)
-			{
-				pdf = 0f;
-				return Vector128<float>.Zero;
-			}
+			if (sinP <= 0f) pdf = 0f;
+			else pdf *= Jacobian / sinP;
 
-			pdf *= Jacobian / sinP;
 			return Texture[uv];
 		}
 
 		public float ProbabilityDensity(in Float3 incidentWorld)
 		{
 			Float2 uv = ToUV(incidentWorld);
-			float phi = FastMath.FMA(uv.y, -Scalars.PI, 1f);
+			float cosP = -incidentWorld.y;
+			float sinP = FastMath.Identity(cosP);
 
-			if (phi == 0f) return 0f;
-			float sinP = MathF.Sin(phi);
+			if (sinP <= 0f) return 0f;
 
 			return piecewise.ProbabilityDensity((Distro2)uv) * Jacobian / sinP;
 		}

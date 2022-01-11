@@ -177,6 +177,10 @@ namespace EchoRenderer.Textures.Grid
 			}
 		}
 
+		//Fast gamma correction (gamma = 2.0)
+		// static Vector128<float> ForwardGammaCorrect(Vector128<float> value) => Sse.Sqrt(value);
+		// static Vector128<float> InverseGammaCorrect(Vector128<float> value) => Sse.Multiply(value, value);
+
 		void SaveFloatingPointImage(string path)
 		{
 			using DataWriter writer = new DataWriter(File.Open(path, FileMode.Create));
