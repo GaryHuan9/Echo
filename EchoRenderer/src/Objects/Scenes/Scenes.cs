@@ -3,7 +3,6 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.Directional;
