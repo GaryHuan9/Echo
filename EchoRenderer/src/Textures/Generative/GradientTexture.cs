@@ -7,6 +7,8 @@ namespace EchoRenderer.Textures.Generative
 {
 	public class GradientTexture : CacheableTexture
 	{
+		public GradientTexture() => UpdateSegment();
+
 		NotNull<Gradient> _gradient = Gradient.black;
 
 		public Gradient Gradient
