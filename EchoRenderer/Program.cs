@@ -38,6 +38,10 @@ namespace EchoRenderer
 			ThreadHelper.MainThread = Thread.CurrentThread;
 			RandomHelper.Seed = 47;
 
+#if DEBUG
+			DebugHelper.LogWarning("Performing render in DEBUG mode");
+#endif
+
 			PerformRender();
 			Console.ReadKey();
 		}
@@ -102,10 +106,10 @@ namespace EchoRenderer
 
 			renderProfile = new TiledRenderProfile
 			{
-				Method = new BruteForceWorker(),
+				Method = new PathTraceWorker(),
 				TilePattern = new CheckerboardPattern(),
 				PixelSample = 64,
-				AdaptiveSample = 400,
+				// AdaptiveSample = 400,
 				BounceLimit = 128
 			};
 

@@ -21,6 +21,7 @@ namespace EchoRenderer.Textures
 		{
 			black.Seal();
 			white.Seal();
+			blend.Seal();
 		}
 
 		public bool IsSealed { get; private set; }
@@ -29,6 +30,7 @@ namespace EchoRenderer.Textures
 
 		public static readonly Gradient black = new() { { 0f, Float4.ana } };
 		public static readonly Gradient white = new() { { 0f, Float4.one } };
+		public static readonly Gradient blend = new() { { 0f, Float4.ana }, { 1f, Float4.one } };
 
 		public Float4 this[float percent] => Utilities.ToFloat4(SampleVector(percent));
 
