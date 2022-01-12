@@ -39,14 +39,7 @@ namespace EchoRenderer.Textures
 		/// <summary>
 		/// Access the content of this <see cref="Texture"/> at <paramref name="uv"/>.
 		/// </summary>
-		public Vector128<float> this[Float2 uv]
-		{
-			get
-			{
-				uv = Wrapper.Convert(uv);
-				return Tint.Apply(Evaluate(uv));
-			}
-		}
+		public Vector128<float> this[Float2 uv] => Tint.Apply(Evaluate(Wrapper.Convert(uv)));
 
 		/// <summary>
 		/// Gets the pixel data at the indicated texture coordinate <paramref name="uv"/>.
