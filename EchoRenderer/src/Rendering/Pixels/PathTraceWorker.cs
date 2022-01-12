@@ -35,7 +35,7 @@ namespace EchoRenderer.Rendering.Pixels
 					{
 						foreach (AmbientLight ambient in arena.Scene.AmbientSources)
 						{
-							radiance += ambient.Evaluate(query.ray.direction);
+							radiance += energy * ambient.Evaluate(query.ray.direction);
 						}
 					}
 				}
@@ -115,7 +115,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 					if (!arena.profile.IsZero(light))
 					{
-						float weight = source.type.IsDelta() ? 1f : PowerHeuristic(pdf, pdfLight);
+						float weight = source.type.IsDelta() ? 1f : PowerHeuristic(pdfLight, pdf);
 						radiance += scatter * light * (weight / pdfLight);
 					}
 				}
@@ -184,7 +184,8 @@ namespace EchoRenderer.Rendering.Pixels
 		// }
 
 		/// <summary>
-		/// Power heuristic with a constant power of two used for multiple importance sampling
+		/// Power heuristic with a constant power of two used for multiple importance sampling.
+		/// NOTE: <paramref name="pdf0"/> will become the numerator, not <paramref name="pdf1"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static float PowerHeuristic(float pdf0, float pdf1, int count0 = 1, int count1 = 1)

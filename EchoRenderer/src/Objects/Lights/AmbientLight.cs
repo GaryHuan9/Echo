@@ -56,6 +56,8 @@ namespace EchoRenderer.Objects.Lights
 
 		public override Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel)
 		{
+			//TODO: add rotation
+
 			Vector128<float> value = Texture.Sample(distro, out incidentWorld, out pdf);
 			travel = float.PositiveInfinity;
 			return Utilities.ToFloat3(value);
