@@ -1,22 +1,11 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
-using EchoRenderer.Textures.Directional;
 
 namespace EchoRenderer.Objects
 {
-	public class Scene : ObjectPack
-	{
-		public AmbientLight AddSkybox(IDirectionalTexture texture)
-		{
-			var light = new AmbientLight { Texture = texture };
-
-			children.Add(light);
-			return light;
-		}
-	}
+	public class Scene : ObjectPack { }
 
 	public class StandardScene : Scene
 	{

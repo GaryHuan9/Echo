@@ -12,11 +12,11 @@ namespace EchoRenderer.Objects.Lights
 
 		public override Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel)
 		{
-			pdf = 1f;
-
 			Float3 difference = Position - interaction.position;
 
 			travel = difference.Magnitude;
+
+			pdf = 1f;
 
 			incidentWorld = difference / travel;
 			return Intensity / (travel * travel);
