@@ -1,6 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Lights;
 using EchoRenderer.Textures;
 using EchoRenderer.Textures.Directional;
 
@@ -10,7 +11,7 @@ namespace EchoRenderer.Objects.Scenes
 	{
 		public BallRoom()
 		{
-			AddSkybox(new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale((Float3)0.02f) });
+			children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale((Float3)0.02f) } });
 
 			var mesh = new Mesh("Assets/Models/Excluded/BallRoom/ballRoom.obj");
 			var materials = new MaterialLibrary("Assets/Models/Excluded/BallRoom/ballRoom.mat");
