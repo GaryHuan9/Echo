@@ -32,20 +32,20 @@ namespace EchoRenderer.Rendering.Pixels
 					continue;
 				}
 
-				Float3 scatter = interaction.bsdf.Sample(interaction.outgoingWorld, arena.distribution.NextTwo(), out Float3 incidentWorld, out float pdf, out FunctionType sampledType);
+				Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, arena.distribution.NextTwo(), out Float3 incident, out float pdf, out FunctionType sampledType);
 
 				// radiance += energy * emission;
 
-				if (pdf <= 0f) energy = Float3.zero;
-				else energy *= scatter * (FastMath.Abs(incidentWorld.Dot(interaction.normal)) / pdf);
+				if (!ShortMath.PositiveRadiance(scatter)) energy = Float3.zero;
+				else energy *= interaction.NormalDot(incident) / pdf * scatter;
 
-				if (arena.profile.IsZero(energy)) break;
-				query = query.SpawnTrace(incidentWorld);
+				if (!ShortMath.PositiveRadiance(energy)) break;
+				query = query.SpawnTrace(incident);
 
 				arena.allocator.Release();
 			}
 
-			if (!arena.profile.IsZero(energy))
+			if (ShortMath.PositiveRadiance(energy))
 			{
 				foreach (AmbientLight ambient in arena.Scene.AmbientSources) radiance += energy * ambient.Evaluate(query.ray.direction);
 			}

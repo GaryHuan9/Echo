@@ -73,13 +73,13 @@ namespace EchoRenderer.Textures.Directional
 
 		public Vector128<float> Evaluate(in Float3 direction) => Texture[ToUV(direction)];
 
-		public Vector128<float> Sample(Distro2 distro, out Float3 incidentWorld, out float pdf)
+		public Vector128<float> Sample(Distro2 distro, out Float3 incident, out float pdf)
 		{
 			Float2 uv = piecewise.SampleContinuous(distro, out pdf);
 
 			if (pdf <= 0f)
 			{
-				incidentWorld = default;
+				incident = default;
 				return Vector128<float>.Zero;
 			}
 
@@ -89,7 +89,7 @@ namespace EchoRenderer.Textures.Directional
 			FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
 			FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
 
-			incidentWorld = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
+			incident = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
 
 			if (sinP <= 0f) pdf = 0f;
 			else pdf *= Jacobian / sinP;
@@ -97,10 +97,10 @@ namespace EchoRenderer.Textures.Directional
 			return Texture[uv];
 		}
 
-		public float ProbabilityDensity(in Float3 incidentWorld)
+		public float ProbabilityDensity(in Float3 incident)
 		{
-			Float2 uv = ToUV(incidentWorld);
-			float cosP = -incidentWorld.y;
+			Float2 uv = ToUV(incident);
+			float cosP = -incident.y;
 			float sinP = FastMath.Identity(cosP);
 
 			if (sinP <= 0f) return 0f;

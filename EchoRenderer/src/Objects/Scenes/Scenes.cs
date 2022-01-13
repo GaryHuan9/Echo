@@ -17,7 +17,7 @@ namespace EchoRenderer.Objects.Scenes
 		{
 			var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
-			var material = new Matte { Albedo = Texture.white };
+			var material = new Matte { Albedo = (Pure)new Float3(1f, 0.68f, 0.16f) };
 
 			// children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
 			children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });

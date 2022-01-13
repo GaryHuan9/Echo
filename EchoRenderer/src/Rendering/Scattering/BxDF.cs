@@ -7,7 +7,10 @@ using EchoRenderer.Rendering.Distributions;
 namespace EchoRenderer.Rendering.Scattering
 {
 	/// <summary>
-	/// The base class to either bidirectional reflectance distribution function or bidirectional transmittance distribution function.
+	/// The base class for either a bidirectional reflectance or transmittance distribution function.
+	/// NOTE: all directions in this class is in local space, meaning <see cref="Float3.forward"/> is
+	/// the surface normal at our point of interest, and incident and outgoing directions should also
+	/// point away from that point.
 	/// </summary>
 	public abstract class BxDF
 	{
@@ -17,12 +20,12 @@ namespace EchoRenderer.Rendering.Scattering
 
 		/// <summary>
 		/// Evaluates and returns the value of this <see cref="BxDF"/> from two pairs of
-		/// directions, <paramref name="incident"/> and <paramref name="outgoing"/>.
+		/// local directions, <paramref name="incident"/> and <paramref name="outgoing"/>.
 		/// </summary>
 		public abstract Float3 Evaluate(in Float3 outgoing, in Float3 incident);
 
 		/// <summary>
-		/// Returns the sampling probability density (pdf) for a given pair of
+		/// Returns the sampling probability density (pdf) for a given pair of local
 		/// <paramref name="outgoing"/> and <paramref name="incident"/> directions.
 		/// </summary>
 		public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
@@ -32,9 +35,8 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		/// <summary>
-		/// Selects an output <paramref name="incident"/> direction from <paramref name="distro"/>, evaluates the value of
-		/// this <see cref="BxDF"/> from the two directions, and outputs the probability density to <paramref name="pdf"/>.
-		/// NOTE: should be overriden by delta distribution functions (eg. <see cref="FunctionType.specular"/>).
+		/// Selects a local output <paramref name="incident"/> direction from <paramref name="distro"/>, evaluates the value of
+		/// this <see cref="BxDF"/> from the two local directions, and outputs the probability density to <paramref name="pdf"/>.
 		/// </summary>
 		public virtual Float3 Sample(in Float3 outgoing, Distro2 distro, out Float3 incident, out float pdf)
 		{
