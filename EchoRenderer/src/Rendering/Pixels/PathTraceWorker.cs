@@ -55,13 +55,15 @@ namespace EchoRenderer.Rendering.Pixels
 
 				radiance += energy * UniformSampleOneLight(interaction, arena);
 
-				Float3 scatter = interaction.bsdf.Sample(interaction.outgoingWorld, arena.distribution.NextTwo(), out Float3 incidentWorld, out float pdf, out FunctionType sampledType);
-				if (arena.profile.IsZero(scatter) || pdf <= 0f) break;
+				Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, arena.distribution.NextTwo(), out Float3 incident, out float pdf, out FunctionType sampledType);
+				if (!ShortMath.PositiveRadiance(scatter) || !ShortMath.PositivePDF(pdf)) break;
 
-				energy *= FastMath.Abs(incidentWorld.Dot(interaction.normal)) / pdf * scatter;
+				energy *= interaction.NormalDot(incident) / pdf * scatter;
 				specularBounce = sampledType.Any(FunctionType.specular);
 
-				query = query.SpawnTrace(incidentWorld);
+				if (!ShortMath.PositiveRadiance(energy)) break;
+
+				query = query.SpawnTrace(incident);
 
 				//TODO: Path termination with Russian Roulette
 
@@ -86,114 +88,81 @@ namespace EchoRenderer.Rendering.Pixels
 			return count * EstimateDirect(interaction, source, arena);
 		}
 
-		static Float3 EstimateDirect(in Interaction interaction, LightSource source, Arena arena)
+		static Float3 EstimateDirect(in Interaction interaction, LightSource source, Arena arena) => ImportanceSampleLight(interaction, source, arena) + ImportanceSampleBSDF(interaction, source, arena);
+
+		/// <summary>
+		/// Importance samples <paramref name="source"/> at <paramref name="interaction"/> and returns the combined radiance.
+		/// </summary>
+		static Float3 ImportanceSampleLight(in Interaction interaction, LightSource source, Arena arena)
 		{
-			//Fetch needed stuff
-			Distro2 distroLight = arena.distribution.NextTwo();
-			Distro2 distroScatter = arena.distribution.NextTwo();
+			//Sample light source
+			Distro2 distro = arena.distribution.NextTwo();
 
-			Float3 radiance = Float3.zero;
-			BSDF bsdf = interaction.bsdf;
-			Assert.IsNotNull(bsdf);
+			Float3 light = source.Sample(interaction, distro, out Float3 incident, out float pdf, out float travel);
+			if (!ShortMath.PositivePDF(pdf) || !ShortMath.PositiveRadiance(light)) return Float3.zero;
 
-			ref readonly Float3 outgoingWorld = ref interaction.outgoingWorld;
+			//Evaluate bsdf at light source's directions
+			ref readonly Float3 outgoing = ref interaction.outgoing;
+			Float3 scatter = interaction.bsdf.Evaluate(outgoing, incident) * interaction.NormalDot(incident);
 
-			//Sample light with importance sampling
-			Float3 light = source.Sample(interaction, distroLight, out Float3 incidentWorld, out float pdfLight, out float travel);
+			//Conditionally terminate if radiance is non-positive
+			if (!ShortMath.PositiveRadiance(scatter)) return Float3.zero;
+			OccludeQuery query = interaction.SpawnOcclude(incident, travel);
+			if (arena.Scene.Occlude(ref query)) return Float3.zero;
 
-			if (pdfLight > 0f && !arena.profile.IsZero(light))
-			{
-				Float3 scatter = bsdf.Evaluate(outgoingWorld, incidentWorld);
-				float pdf = bsdf.ProbabilityDensity(outgoingWorld, incidentWorld);
-
-				scatter *= FastMath.Abs(incidentWorld.Dot(interaction.normal));
-
-				if (!arena.profile.IsZero(scatter))
-				{
-					OccludeQuery query = interaction.SpawnOcclude(incidentWorld, travel);
-					if (arena.Scene.Occlude(ref query)) light = Float3.zero;
-
-					if (!arena.profile.IsZero(light))
-					{
-						float weight = source.type.IsDelta() ? 1f : PowerHeuristic(pdfLight, pdf);
-						radiance += scatter * light * (weight / pdfLight);
-					}
-				}
-			}
-
-			//Sample BSDF with importance sampling
-			if (!source.type.IsDelta())
-			{
-				Float3 scatter = bsdf.Sample(outgoingWorld, distroScatter, out incidentWorld, out float pdf, out FunctionType sampledType);
-
-				scatter *= FastMath.Abs(incidentWorld.Dot(interaction.normal));
-
-				if (!arena.profile.IsZero(scatter) && pdf > 0f)
-				{
-					float weight = 1f;
-
-					if (!sampledType.Any(FunctionType.specular))
-					{
-						pdfLight = source.ProbabilityDensity(interaction, incidentWorld);
-						if (pdfLight <= 0f) return radiance;
-						weight = PowerHeuristic(pdf, pdfLight);
-					}
-
-					TraceQuery query = interaction.SpawnTrace(incidentWorld);
-
-					light = Float3.zero;
-
-					if (arena.Scene.Trace(ref query))
-					{
-						//TODO: evaluate light at intersection if area light is our source
-					}
-					else if (source is AmbientLight ambient)
-					{
-						light = ambient.Evaluate(query.ray.direction);
-					}
-
-					if (!arena.profile.IsZero(light)) radiance += weight / pdf * scatter * light;
-				}
-			}
-
-			return radiance;
+			//Calculate final radiance
+			float pdfScatter = interaction.bsdf.ProbabilityDensity(outgoing, incident);
+			float weight = source.type.IsDelta() ? 1f : PowerHeuristic(pdf, pdfScatter);
+			return scatter * light * (weight / pdf);
 		}
 
-		// static Float3 SampleLight()
-		// {
-		// 	Float3 light = source.Sample(interaction, distroLight, out Float3 incidentWorld, out float pdfLight, out float travel);
-		//
-		// 	if (pdfLight > 0f && !arena.profile.IsZero(light))
-		// 	{
-		// 		float cos = FastMath.Abs(incidentWorld.Dot(interaction.normal));
-		// 		Float3 scatter = bsdf.Evaluate(outgoingWorld, incidentWorld) * cos;
-		//
-		// 		if (!arena.profile.IsZero(scatter))
-		// 		{
-		// 			OccludeQuery query = interaction.SpawnOcclude(incidentWorld, travel);
-		// 			if (arena.Scene.Occlude(ref query)) light = Float3.zero;
-		//
-		// 			if (!arena.profile.IsZero(light))
-		// 			{
-		// 				float pdf = bsdf.ProbabilityDensity(outgoingWorld, incidentWorld);
-		// 				float weight = delta ? 1f : PowerHeuristic(pdf, pdfLight);
-		// 				radiance += scatter * light * (weight / pdfLight);
-		// 			}
-		// 		}
-		// 	}
-		// }
+		/// <summary>
+		/// Importance samples <paramref name="interaction.bsdf"/> with <paramref name="source"/> and returns the combined radiance.
+		/// </summary>
+		static Float3 ImportanceSampleBSDF(in Interaction interaction, LightSource source, Arena arena)
+		{
+			//TODO: sort this mess
+
+			Distro2 distro = arena.distribution.NextTwo();
+			if (source.type.IsDelta()) return Float3.zero;
+
+			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, distro, out Float3 incident, out float pdf, out FunctionType sampledType);
+
+			scatter *= FastMath.Abs(incident.Dot(interaction.normal));
+
+			if (!ShortMath.PositiveRadiance(scatter) || !ShortMath.PositivePDF(pdf)) return Float3.zero;
+
+			float weight = 1f;
+
+			if (!sampledType.Any(FunctionType.specular))
+			{
+				float pdfLight = source.ProbabilityDensity(interaction, incident);
+				if (!ShortMath.PositivePDF(pdfLight)) return Float3.zero;
+				weight = PowerHeuristic(pdf, pdfLight);
+			}
+
+			TraceQuery query = interaction.SpawnTrace(incident);
+
+			Float3 light = Float3.zero;
+
+			if (arena.Scene.Trace(ref query))
+			{
+				//TODO: evaluate light at intersection if area light is our source
+			}
+			else if (source is AmbientLight ambient)
+			{
+				light = ambient.Evaluate(query.ray.direction);
+			}
+
+			if (ShortMath.PositiveRadiance(light)) return weight / pdf * scatter * light;
+			return Float3.zero;
+		}
 
 		/// <summary>
 		/// Power heuristic with a constant power of two used for multiple importance sampling.
 		/// NOTE: <paramref name="pdf0"/> will become the numerator, not <paramref name="pdf1"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static float PowerHeuristic(float pdf0, float pdf1, int count0 = 1, int count1 = 1)
-		{
-			float product0 = pdf0 * count0;
-			float product1 = pdf1 * count1;
-
-			return product0 * product0 / (product0 * product0 + product1 * product1);
-		}
+		static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
 	}
 }

@@ -1,7 +1,5 @@
 ﻿using System;
 using CodeHelpers;
-using CodeHelpers.Mathematics;
-using EchoRenderer.Common;
 using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Textures.Grid;
@@ -54,17 +52,6 @@ namespace EchoRenderer.Rendering.Profiles
 		/// </summary>
 		public int BounceLimit { get; init; } = 128;
 
-		/// <summary>
-		/// Epsilon lower bound value to determine when a radiance is essentially zero.
-		/// </summary>
-		public Float3 RadianceEpsilon { get; init; } = Utilities.ToFloat3(Utilities.CreateLuminance(12E-3f));
-
-		/// <summary>
-		/// Returns whether <paramref name="radiance"/> is considered as empty or zero
-		/// based on the <see cref="RadianceEpsilon"/> of this <see cref="RenderProfile"/>.
-		/// </summary>
-		public bool IsZero(in Float3 radiance) => radiance <= RadianceEpsilon;
-
 		public virtual void Validate()
 		{
 			if (Scene == null) throw ExceptionHelper.Invalid(nameof(Scene), InvalidType.isNull);
@@ -76,7 +63,6 @@ namespace EchoRenderer.Rendering.Profiles
 
 			if (WorkerSize <= 0) throw ExceptionHelper.Invalid(nameof(WorkerSize), WorkerSize, InvalidType.outOfBounds);
 			if (BounceLimit < 0) throw ExceptionHelper.Invalid(nameof(BounceLimit), BounceLimit, InvalidType.outOfBounds);
-			if (RadianceEpsilon.MinComponent < 0f) throw ExceptionHelper.Invalid(nameof(RadianceEpsilon), RadianceEpsilon, InvalidType.outOfBounds);
 		}
 	}
 }

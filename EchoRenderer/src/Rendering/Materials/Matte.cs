@@ -25,7 +25,7 @@ namespace EchoRenderer.Rendering.Materials
 			bsdf.Reset(interaction);
 
 			Float3 albedo = Sample(Albedo, interaction).XYZ;
-			if (arena.profile.IsZero(albedo)) return;
+			if (!ShortMath.PositiveRadiance(albedo)) return;
 
 			float deviation = FastMath.Clamp01(Sample(Deviation, interaction).x);
 
