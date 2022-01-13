@@ -11,7 +11,7 @@ namespace EchoRenderer.Mathematics.Primitives
 
 			token = query.token;
 			position = query.Position;
-			outgoingWorld = -query.ray.direction;
+			outgoing = -query.ray.direction;
 
 			this.geometryNormal = geometryNormal;
 			this.normal = normal;
@@ -32,7 +32,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// The outgoing direction of this <see cref="Interaction"/> in world space.
 		/// </summary>
-		public readonly Float3 outgoingWorld;
+		public readonly Float3 outgoing;
 
 		/// <summary>
 		/// The pure geometry normal of this <see cref="Interaction"/>.
@@ -60,9 +60,9 @@ namespace EchoRenderer.Mathematics.Primitives
 		public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(position, direction), float.PositiveInfinity, token);
 
 		/// <summary>
-		/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> with a direction directly opposite to <see cref="outgoingWorld"/>.
+		/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> with a direction directly opposite to <see cref="outgoing"/>.
 		/// </summary>
-		public readonly TraceQuery SpawnTrace() => SpawnTrace(-outgoingWorld);
+		public readonly TraceQuery SpawnTrace() => SpawnTrace(-outgoing);
 
 		/// <summary>
 		/// Spawns a new <see cref="OccludeQuery"/> with <paramref name="direction"/> and <paramref name="travel"/>.
@@ -70,8 +70,13 @@ namespace EchoRenderer.Mathematics.Primitives
 		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(position, direction), travel, token);
 
 		/// <summary>
-		/// Spawns a new <see cref="OccludeQuery"/> directly opposite to <see cref="outgoingWorld"/> with <paramref name="travel"/>.
+		/// Spawns a new <see cref="OccludeQuery"/> directly opposite to <see cref="outgoing"/> with <paramref name="travel"/>.
 		/// </summary>
-		public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(-outgoingWorld, travel);
+		public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(-outgoing, travel);
+
+		/// <summary>
+		/// Returns the absolute value of the dot product between <paramref name="direction"/> and <see cref="normal"/>.
+		/// </summary>
+		public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(normal));
 	}
 }

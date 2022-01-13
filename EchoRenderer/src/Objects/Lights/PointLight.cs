@@ -10,7 +10,7 @@ namespace EchoRenderer.Objects.Lights
 
 		public override Float3 Power => 4f * Scalars.PI * Intensity;
 
-		public override Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incidentWorld, out float pdf, out float travel)
+		public override Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incident, out float pdf, out float travel)
 		{
 			Float3 difference = Position - interaction.position;
 
@@ -18,10 +18,10 @@ namespace EchoRenderer.Objects.Lights
 
 			pdf = 1f;
 
-			incidentWorld = difference / travel;
+			incident = difference / travel;
 			return Intensity / (travel * travel);
 		}
 
-		public override float ProbabilityDensity(in Interaction interaction, in Float3 incidentWorld) => 0f;
+		public override float ProbabilityDensity(in Interaction interaction, in Float3 incident) => 0f;
 	}
 }

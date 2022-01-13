@@ -53,13 +53,6 @@ namespace EchoRenderer.Rendering.Pixels
 		/// </summary>
 		protected virtual IRandom CreateRandom(uint seed) => new SquirrelRandom(seed);
 
-		/// <summary>
-		/// Returns whether <paramref name="query"/> is on an invisible surface and we should just continue through, ignoring this hit
-		/// NOTE: this works with 1 IOR white <see cref="Glass"/> materials as well because they are essentially invisible too.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static bool HitPassThrough(in TraceQuery query, in Float3 albedo, in Float3 outgoingWorld) => query.ray.direction == -outgoingWorld && albedo == Float3.one;
-
 		public readonly struct Sample
 		{
 			public Sample(in Float3 colour, in Float3 albedo = default, in Float3 normal = default, float zDepth = default)
