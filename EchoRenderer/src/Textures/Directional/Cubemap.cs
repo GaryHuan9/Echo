@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Common;
 using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Textures.Directional
