@@ -88,19 +88,19 @@ namespace EchoRenderer.Objects.Preparation
 		/// </summary>
 		public void TraceRoot(ref TraceQuery query)
 		{
-			Assert.IsTrue(query.current.Equals(default));
+			Assert.IsTrue(query.current.EqualsFast(default));
 			pack.aggregator.Trace(ref query);
 		}
 
 		/// <summary>
-		/// Processes <paramref name="query"/>.
+		/// Processes <paramref name="query"/> and returns the result.
 		/// </summary>
-		public void Occlude(ref OccludeQuery query) => throw new NotImplementedException();
+		public bool Occlude(ref OccludeQuery query) => throw new NotImplementedException();
 
 		/// <summary>
-		/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root.
+		/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root and returns the result.
 		/// </summary>
-		public void OccludeRoot(ref OccludeQuery query) => throw new NotImplementedException();
+		public bool OccludeRoot(ref OccludeQuery query) => throw new NotImplementedException();
 
 		/// <summary>
 		/// Returns the cost of tracing a <see cref="TraceQuery"/>.
