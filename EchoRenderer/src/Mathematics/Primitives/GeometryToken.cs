@@ -1,15 +1,18 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using CodeHelpers.Diagnostics;
+using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Preparation;
-using EchoRenderer.Objects.Scenes;
 
 namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
 	/// Represents a unique geometry in the <see cref="PreparedScene"/>. Note that this uniqueness transcends object instancing.
 	/// </summary>
-	public unsafe struct GeometryToken
+	public unsafe struct GeometryToken : IEquatable<GeometryToken>
 	{
 		/// <summary>
 		/// The unique token for one geometry inside a <see cref="PreparedPack"/>.
@@ -22,6 +25,11 @@ namespace EchoRenderer.Mathematics.Primitives
 		public int InstanceCount { get; private set; }
 
 		/// <summary>
+		/// The hash value of <see cref="instances"/>.
+		/// </summary>
+		uint instancesHash;
+
+		/// <summary>
 		/// A stack that holds the different <see cref="PreparedInstance.id"/> branches to reach this <see cref="geometry"/>.
 		/// </summary>
 		fixed uint instances[ObjectPack.MaxLayer];
@@ -30,7 +38,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// Returns the <see cref="PreparedInstance.id"/> of the topmost <see cref="PreparedInstance"/>,
 		/// which is the one that immediately contains <see cref="geometry"/> in its pack.
 		/// </summary>
-		public uint FinalInstanceId
+		public readonly uint FinalInstanceId
 		{
 			get
 			{
@@ -40,12 +48,20 @@ namespace EchoRenderer.Mathematics.Primitives
 		}
 
 		/// <summary>
+		/// Returns the <see cref="PreparedInstance.id"/> of the <see cref="PreparedInstance"/> branches held in this <see cref="Token"/>.
+		/// </summary>
+		public readonly ReadOnlySpan<uint> Instances => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in instances[0]), InstanceCount);
+
+		/// <summary>
 		/// Pushes a new <paramref name="instance"/> onto this <see cref="GeometryToken"/> as a new layer.
 		/// </summary>
 		public void Push(PreparedInstance instance)
 		{
 			Assert.IsTrue(InstanceCount < ObjectPack.MaxLayer);
-			instances[InstanceCount++] = instance.id;
+
+			int layer = InstanceCount++;
+			instances[layer] = instance.id;
+			instancesHash ^= Hash(instance.id, layer);
 		}
 
 		/// <summary>
@@ -54,39 +70,44 @@ namespace EchoRenderer.Mathematics.Primitives
 		public void Pop()
 		{
 			Assert.IsTrue(InstanceCount > 0);
-			--InstanceCount;
+
+			int layer = --InstanceCount;
+			uint id = instances[layer];
+			instancesHash ^= Hash(id, layer);
 		}
 
 		/// <summary>
-		/// Applies the local space to world space transform of <see cref="geometry"/> to <paramref name="direction"/>.
+		/// Hashes the <paramref name="id"/> of a <see cref="PreparedInstance"/> at <paramref name="layer"/>.
 		/// </summary>
-		public readonly void ApplyWorldTransform(ScenePreparer preparer, ref Float3 direction)
+		static uint Hash(uint id, int layer)
 		{
-			for (int i = InstanceCount - 1; i >= 0; i--)
-			{
-				uint id = instances[i];
-				var instance = preparer.GetPreparedInstance(id);
-				instance.TransformInverse(ref direction);
-			}
-
-			direction = direction.Normalized;
+			uint hash = SquirrelRandom.Mangle(id);
+			return BitOperations.RotateLeft(hash, layer);
 		}
 
 		/// <summary>
 		/// Returns whether this <see cref="GeometryToken"/> equals <paramref name="other"/> exactly.
 		/// </summary>
-		public readonly bool Equals(in GeometryToken other)
+		public readonly bool EqualsFast(in GeometryToken other) =>
+			geometry == other.geometry && InstanceCount == other.InstanceCount &&
+			instancesHash == other.instancesHash && Instances.SequenceEqual(other.Instances);
+
+		public readonly bool Equals(GeometryToken other) => EqualsFast(other);
+
+		public override readonly bool Equals(object obj) => obj is GeometryToken other && EqualsFast(other);
+
+		public override readonly int GetHashCode()
 		{
-			if (geometry != other.geometry || InstanceCount != other.InstanceCount) return false;
-
-			//TODO: create a hash for the token so we can push back sequential comparison one more step
-
-			for (int i = 0; i < InstanceCount; i++)
+			unchecked
 			{
-				if (instances[i] != other.instances[i]) return false;
+				int hashCode = geometry.GetHashCode();
+				hashCode = (hashCode * 397) ^ (int)instancesHash;
+				hashCode = (hashCode * 397) ^ InstanceCount;
+				return hashCode;
 			}
-
-			return true;
 		}
+
+		public static bool operator ==(in GeometryToken left, in GeometryToken right) => left.Equals(right);
+		public static bool operator !=(in GeometryToken left, in GeometryToken right) => !left.Equals(right);
 	}
 }
