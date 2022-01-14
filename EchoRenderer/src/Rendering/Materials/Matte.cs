@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Memory;
@@ -20,12 +21,10 @@ namespace EchoRenderer.Rendering.Materials
 
 		public override void Scatter(ref Interaction interaction, Arena arena)
 		{
-			ref BSDF bsdf = ref interaction.bsdf;
-			bsdf = arena.allocator.New<BSDF>();
-			bsdf.Reset(interaction);
+			BSDF bsdf = interaction.CreateBSDF(arena);
 
 			Float3 albedo = Sample(Albedo, interaction).XYZ;
-			if (!ShortMath.PositiveRadiance(albedo)) return;
+			if (!albedo.PositiveRadiance()) return;
 
 			float deviation = FastMath.Clamp01(Sample(Deviation, interaction).x);
 

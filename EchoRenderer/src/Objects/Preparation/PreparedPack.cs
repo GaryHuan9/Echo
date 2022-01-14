@@ -113,17 +113,17 @@ namespace EchoRenderer.Objects.Preparation
 		public const float DistanceMin = 6e-4f;
 
 		/// <summary>
-		/// Calculates the intersection between <paramref name="query"/> and object with <paramref name="token"/>.
+		/// Calculates the intersection between <paramref name="query"/> and object represented with <paramref name="token"/>.
 		/// If the intersection occurs before the original <paramref name="query.distance"/>, then the intersection is recorded.
 		/// </summary>
-		public void GetIntersection(ref TraceQuery query, in Token token)
+		public void Trace(ref TraceQuery query, in Token token)
 		{
 			Assert.IsTrue(token.IsGeometry);
 
 			if (token.IsTriangle)
 			{
 				ref readonly var triangle = ref triangles[token.TriangleValue];
-				float distance = triangle.GetIntersection(query.ray, out Float2 uv);
+				float distance = triangle.Intersect(query.ray, out Float2 uv);
 
 				if (!ValidateDistance(distance, ref query, token)) return;
 
@@ -132,7 +132,7 @@ namespace EchoRenderer.Objects.Preparation
 			else if (token.IsSphere)
 			{
 				ref readonly var sphere = ref spheres[token.SphereValue];
-				float distance = sphere.GetIntersection(query.ray, out Float2 uv);
+				float distance = sphere.Intersect(query.ray, out Float2 uv);
 
 				if (!ValidateDistance(distance, ref query, token)) return;
 
@@ -156,16 +156,25 @@ namespace EchoRenderer.Objects.Preparation
 		}
 
 		/// <summary>
+		/// Calculates and returns whether <paramref name="query"/> is
+		/// occluded by the object represented with <paramref name="token"/>.
+		/// </summary>
+		public bool Occlude(ref OccludeQuery query, in Token token)
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <summary>
 		/// Returns the cost of an intersection calculation of <paramref name="ray"/> with this current <see cref="PreparedPack"/>.
 		/// </summary>
-		public int GetIntersectionCost(in Ray ray, ref float distance, in Token token)
+		public int GetTraceCost(in Ray ray, ref float distance, in Token token)
 		{
 			Assert.IsTrue(token.IsGeometry);
 
 			if (token.IsTriangle)
 			{
 				ref readonly var triangle = ref triangles[token.TriangleValue];
-				float hit = triangle.GetIntersection(ray, out Float2 _);
+				float hit = triangle.Intersect(ray, out Float2 _);
 
 				distance = Math.Min(distance, hit);
 				return 1;
@@ -174,7 +183,7 @@ namespace EchoRenderer.Objects.Preparation
 			if (token.IsSphere)
 			{
 				ref readonly var sphere = ref spheres[token.SphereValue];
-				float hit = sphere.GetIntersection(ray, out Float2 _);
+				float hit = sphere.Intersect(ray, out Float2 _);
 
 				distance = Math.Min(distance, hit);
 				return 1;

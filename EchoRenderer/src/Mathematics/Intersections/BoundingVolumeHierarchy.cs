@@ -39,10 +39,10 @@ namespace EchoRenderer.Mathematics.Intersections
 			ref readonly Node root = ref nodes[0];
 			float local = root.aabb.Intersect(query.ray);
 
-			if (local < query.distance) Traverse(ref query);
+			if (local < query.distance) TraceCore(ref query);
 		}
 
-		public override void Occlude(ref OccludeQuery query)
+		public override bool Occlude(ref OccludeQuery query)
 		{
 			throw new NotImplementedException();
 		}
@@ -53,7 +53,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			float hit = root.aabb.Intersect(ray);
 
 			if (hit >= distance) return 1;
-			return GetIntersectionCost(root.token, ray, ref distance) + 1;
+			return GetTraceCost(root.token, ray, ref distance) + 1;
 		}
 
 		public override unsafe int GetHashCode()
@@ -107,7 +107,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		[SkipLocalsInit]
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-		unsafe void Traverse(ref TraceQuery query)
+		unsafe void TraceCore(ref TraceQuery query)
 		{
 			Token* stack = stackalloc Token[maxDepth];
 			float* hits = stackalloc float[maxDepth];
@@ -143,26 +143,26 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-				void Push(float hit, in Token token, ref TraceQuery traceQuery)
+				void Push(float hit, in Token token, ref TraceQuery refQuery)
 				{
-					if (hit >= traceQuery.distance) return;
+					if (hit >= refQuery.distance) return;
 
 					if (token.IsNode)
 					{
 						*next++ = token;
 						*hits++ = hit;
 					}
-					else pack.GetIntersection(ref traceQuery, token);
+					else pack.Trace(ref refQuery, token);
 				}
 			}
 		}
 
-		int GetIntersectionCost(in Token token, in Ray ray, ref float distance)
+		int GetTraceCost(in Token token, in Ray ray, ref float distance)
 		{
 			if (token.IsGeometry)
 			{
 				//Calculate the intersection cost on the leaf
-				return pack.GetIntersectionCost(ray, ref distance, token);
+				return pack.GetTraceCost(ray, ref distance, token);
 			}
 
 			uint index = token.NodeValue;
@@ -178,13 +178,13 @@ namespace EchoRenderer.Mathematics.Intersections
 			//Orderly intersects the two children so that there is a higher chance of intersection on the first child
 			if (hit0 < hit1)
 			{
-				if (hit0 < distance) cost += GetIntersectionCost(child0.token, ray, ref distance);
-				if (hit1 < distance) cost += GetIntersectionCost(child1.token, ray, ref distance);
+				if (hit0 < distance) cost += GetTraceCost(child0.token, ray, ref distance);
+				if (hit1 < distance) cost += GetTraceCost(child1.token, ray, ref distance);
 			}
 			else
 			{
-				if (hit1 < distance) cost += GetIntersectionCost(child1.token, ray, ref distance);
-				if (hit0 < distance) cost += GetIntersectionCost(child0.token, ray, ref distance);
+				if (hit1 < distance) cost += GetTraceCost(child1.token, ray, ref distance);
+				if (hit0 < distance) cost += GetTraceCost(child0.token, ray, ref distance);
 			}
 
 			return cost;

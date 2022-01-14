@@ -161,8 +161,6 @@ namespace EchoRenderer.Rendering.Engines
 					Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.half;
 					var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), arena);
 
-					arena.allocator.Release();
-
 					//Write to pixel
 					bool successful = pixel.Accumulate(sample);
 					Interlocked.Increment(ref _completedSample);
