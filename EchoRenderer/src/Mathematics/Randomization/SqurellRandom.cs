@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace EchoRenderer.Mathematics.Randomization
@@ -43,6 +44,7 @@ namespace EchoRenderer.Mathematics.Randomization
 			return state;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void Mangle(ref uint source)
 		{
 			source *= 0x773598E9u;
@@ -57,6 +59,7 @@ namespace EchoRenderer.Mathematics.Randomization
 		/// <summary>
 		/// Returns a randomly hashed and mangled value from <paramref name="source"/>.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static uint Mangle(uint source)
 		{
 			source *= 0xED7D6509u;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
@@ -122,11 +123,14 @@ namespace EchoRenderer.Objects.Preparation
 
 			if (token.IsTriangle)
 			{
+				query.current.geometry = token;
+				if (query.current == query.ignore) return;
+
 				ref readonly var triangle = ref triangles[token.TriangleValue];
 				float distance = triangle.Intersect(query.ray, out Float2 uv);
 
-				if (!ValidateDistance(distance, ref query, token)) return;
-
+				query.token = query.current;
+				query.distance = distance;
 				query.uv = uv;
 			}
 			else if (token.IsSphere)
@@ -134,25 +138,16 @@ namespace EchoRenderer.Objects.Preparation
 				ref readonly var sphere = ref spheres[token.SphereValue];
 				float distance = sphere.Intersect(query.ray, out Float2 uv);
 
-				if (!ValidateDistance(distance, ref query, token)) return;
+				if (distance >= query.distance) return;
 
+				query.current.geometry = token;
+				if (distance < DistanceMin && query.ignore == query.current) return;
+
+				query.token = query.current;
+				query.distance = distance;
 				query.uv = uv;
 			}
 			else instances[token.InstanceValue].Trace(ref query);
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static bool ValidateDistance(float distance, ref TraceQuery hit, in Token token)
-			{
-				if (distance >= hit.distance) return false;
-
-				hit.current.geometry = token;
-				if (distance < DistanceMin && hit.ignore.Equals(hit.current)) return false;
-
-				hit.token = hit.current;
-				hit.distance = distance;
-
-				return true;
-			}
 		}
 
 		/// <summary>
@@ -161,7 +156,38 @@ namespace EchoRenderer.Objects.Preparation
 		/// </summary>
 		public bool Occlude(ref OccludeQuery query, in Token token)
 		{
+			Assert.IsTrue(token.IsGeometry);
+
 			throw new NotImplementedException();
+
+			// if (token.IsTriangle)
+			// {
+			// 	query.current.geometry = token;
+			// 	if (query.current == query.ignore) return;
+			//
+			// 	ref readonly var triangle = ref triangles[token.TriangleValue];
+			// 	float distance = triangle.Intersect(query.ray, out Float2 uv);
+			//
+			// 	query.token = query.current;
+			// 	query.distance = distance;
+			// 	query.uv = uv;
+			// }
+			// else if (token.IsSphere)
+			// {
+			// 	ref readonly var sphere = ref spheres[token.SphereValue];
+			// 	float distance = sphere.Intersect(query.ray, out Float2 uv);
+			//
+			// 	if (distance >= query.distance) return;
+			//
+			// 	query.current.geometry = token;
+			// 	if (distance < DistanceMin && query.ignore == query.current) return;
+			//
+			// 	query.token = query.current;
+			// 	query.distance = distance;
+			// 	query.uv = uv;
+			// }
+
+			return instances[token.InstanceValue].Occlude(ref query);
 		}
 
 		/// <summary>
@@ -217,8 +243,8 @@ namespace EchoRenderer.Objects.Preparation
 				normal = triangle.GetNormal(query.uv);
 				texcoord = triangle.GetTexcoord(query.uv);
 
-				query.token.ApplyWorldTransform(preparer, ref geometryNormal);
-				query.token.ApplyWorldTransform(preparer, ref normal);
+				ApplyWorldTransform(query.token, preparer, ref geometryNormal);
+				ApplyWorldTransform(query.token, preparer, ref normal);
 			}
 			else if (token.IsSphere)
 			{
@@ -228,7 +254,7 @@ namespace EchoRenderer.Objects.Preparation
 				texcoord = query.uv; //Sphere directly uses the uv as texcoord
 
 				normal = PreparedSphere.GetGeometryNormal(query.uv);
-				query.token.ApplyWorldTransform(preparer, ref normal);
+				ApplyWorldTransform(query.token, preparer, ref normal);
 				geometryNormal = normal;
 			}
 			else
@@ -240,6 +266,19 @@ namespace EchoRenderer.Objects.Preparation
 			material = instance.mapper[materialToken];
 			material.ApplyNormalMapping(texcoord, ref normal);
 			return new Interaction(query, geometryNormal, normal, texcoord);
+
+			static void ApplyWorldTransform(in GeometryToken token, ScenePreparer preparer, ref Float3 direction)
+			{
+				ReadOnlySpan<uint> ids = token.Instances;
+
+				for (int i = ids.Length - 1; i >= 0; i--)
+				{
+					var instance = preparer.GetPreparedInstance(ids[i]);
+					instance.TransformInverse(ref direction);
+				}
+
+				direction = direction.Normalized;
+			}
 		}
 
 		/// <summary>
