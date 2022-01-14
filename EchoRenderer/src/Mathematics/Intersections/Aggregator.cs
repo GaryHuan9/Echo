@@ -56,9 +56,10 @@ namespace EchoRenderer.Mathematics.Intersections
 		public abstract void Trace(ref TraceQuery query);
 
 		/// <summary>
-		///
+		/// Traverses this <see cref="Aggregator"/> and returns whether <paramref name="query"/> is occluded by anything.
+		/// NOTE: this operation will terminate at any occlusion, so it will be more performant than <see cref="Trace"/>.
 		/// </summary>
-		public abstract void Occlude(ref OccludeQuery query);
+		public abstract bool Occlude(ref OccludeQuery query);
 
 		/// <summary>
 		/// Calculates and returns the number of approximated intersection tests performed before a result is determined.

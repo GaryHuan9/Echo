@@ -18,6 +18,11 @@ namespace EchoRenderer.Rendering.Memory
 		/// </summary>
 		int utilization;
 
+		/// <summary>
+		/// Whether we are currently allocating using this <see cref="Allocator"/>.
+		/// </summary>
+		bool allocating;
+
 		readonly int poolerCapacity;
 		static int tokenCount;
 
@@ -29,10 +34,35 @@ namespace EchoRenderer.Rendering.Memory
 		const int InitialSize = 8;
 
 		/// <summary>
+		/// Begins a new allocation session on this <see cref="Allocator"/> and returns a
+		/// <see cref="ReleaseHandle"/> which should be used to <see cref="Release"/> this session.
+		/// </summary>
+		public ReleaseHandle Begin()
+		{
+			if (allocating) throw new Exception($"Cannot {nameof(Begin)} this {nameof(Allocator)} when it is already {nameof(allocating)}!");
+
+			allocating = true;
+			return new ReleaseHandle(this);
+		}
+
+		/// <summary>
+		/// Releases all allocated objects and prepares for a new allocation session.
+		/// </summary>
+		public void Release()
+		{
+			if (!allocating) throw new Exception($"Cannot {nameof(Release)} this {nameof(Allocator)} when it is not {nameof(allocating)}!");
+
+			allocating = false;
+			Array.Clear(pointers, 0, utilization);
+		}
+
+		/// <summary>
 		/// Allocates new object of type <typeparamref name="T"/>.
 		/// </summary>
 		public T New<T>() where T : class, new()
 		{
+			if (!allocating) throw new Exception($"Cannot allocate without starting a session using {nameof(Begin)}!");
+
 			int token = TokenStorage<T>.Fetch();
 			int count = token + 1;
 
@@ -47,11 +77,6 @@ namespace EchoRenderer.Rendering.Memory
 			ref T target = ref ((T[])pooler)[pointer++];
 			return target ??= new T();
 		}
-
-		/// <summary>
-		/// Releases all allocated objects and prepares for new allocations.
-		/// </summary>
-		public void Release() => Array.Clear(pointers, 0, utilization);
 
 		void EnsureCapacity(int capacity)
 		{
@@ -88,6 +113,19 @@ namespace EchoRenderer.Rendering.Memory
 
 				Interlocked.Exchange(ref tokenCount, 0);
 				tokens = new ConcurrentList<Token>();
+			}
+		}
+
+		public struct ReleaseHandle : IDisposable
+		{
+			public ReleaseHandle(Allocator allocator) => this.allocator = allocator;
+
+			Allocator allocator;
+
+			public void Dispose()
+			{
+				allocator?.Release();
+				allocator = null;
 			}
 		}
 

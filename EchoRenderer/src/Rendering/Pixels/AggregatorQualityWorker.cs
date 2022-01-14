@@ -8,7 +8,7 @@ using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Rendering.Pixels
 {
-	public class AcceleratorQualityWorker : PixelWorker
+	public class AggregatorQualityWorker : PixelWorker
 	{
 		long totalCost;
 		long totalSample;

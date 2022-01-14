@@ -20,7 +20,7 @@ namespace EchoRenderer.Common
 
 		//NOTE: to vector with ref values is unsafe and not provided here since we can access weird memory with it.
 
-		public static Float4 ToColor(float     value) => ToColor((Float4)value);
+		public static Float4 ToColor(float value) => ToColor((Float4)value);
 		public static Float4 ToColor(in Float3 value) => ToColor((Float4)value);
 		public static Float4 ToColor(in Float4 value) => value.Replace(3, 1f);
 
@@ -57,6 +57,13 @@ namespace EchoRenderer.Common
 				throw ExceptionHelper.Invalid(nameof(value), value, "is not valid hex");
 			}
 		}
+
+		/// <summary>
+		/// Returns whether we should consider <paramref name="radiance"/> as positive.
+		/// NOTE: this is only a temporary solution, we should move to a property after
+		/// Spectrum or some thing for color is introduced.
+		/// </summary>
+		public static bool PositiveRadiance(this in Float3 radiance) => radiance > Constants.radianceEpsilon;
 
 		/// <summary>
 		/// Linearly interpolates between <paramref name="left"/> and <paramref name="right"/> based on <paramref name="time"/>.
@@ -146,8 +153,8 @@ namespace EchoRenderer.Common
 			return hashCode;
 		}
 
-		public static int  Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
-		public static Int2 Morton(int  index)    => new(Unsaw(index), Unsaw(index >> 1));
+		public static int Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
+		public static Int2 Morton(int index) => new(Unsaw(index), Unsaw(index >> 1));
 
 		/// <summary>
 		/// Transforms a number into a saw blade shape:

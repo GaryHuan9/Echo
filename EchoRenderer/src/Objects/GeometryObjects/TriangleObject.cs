@@ -67,7 +67,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			normal, normal, normal, materialToken
 		) { }
 
-		public PreparedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
@@ -92,8 +92,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float2.zero, Float2.zero, Float2.zero, materialToken
 		) { }
 
-		public PreparedTriangle(Float3 vertex0,   Float3 vertex1,   Float3 vertex2,
-								Float3 normal0,   Float3 normal1,   Float3 normal2,
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+								Float3 normal0, Float3 normal1, Float3 normal2,
 								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken)
 		{
 			this.vertex0 = vertex0;
@@ -155,71 +155,77 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// </summary>
 		public Float3 GeometryNormal => Float3.Cross(edge1, edge2).Normalized;
 
-		const float Epsilon = 1E-7f; //Tiny number used to check for zero
-		const float Margin = 0f;     //Used to easily differentiate adjacent triangles by creating an outline effect
+		const float Epsilon = Scalars.Epsilon;
+		const float Infinity = float.PositiveInfinity;
 
 		/// <summary>
-		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
-		/// Uses the famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf.
-		/// <paramref name="uv"/> contains the barycentric position of the intersection.
-		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
+		/// Returns the distance of intersection between this <see cref="PreparedTriangle"/> and <paramref name="ray"/> without
+		/// backface culling. If the intersection exists, the distance is returned and <paramref name="uv"/> will contain the
+		/// barycentric coordinate of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
+		/// The famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
 		/// </summary>
-		public float GetIntersection(in Ray ray, out Float2 uv)
+		public float Intersect(in Ray ray, out Float2 uv)
 		{
 			Unsafe.SkipInit(out uv);
 
-			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
-			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
+			//Calculate determinant and u
+			Float3 cross2 = Float3.Cross(ray.direction, edge2);
+			float determinant = Float3.Dot(edge1, cross2);
 
-			if (determinant > -Epsilon && determinant < Epsilon) return float.PositiveInfinity;
-			float inverse = 1f / determinant;
+			//If determinant is close to zero, ray is parallel to triangle
+			if (determinant is > -Epsilon and < Epsilon) return Infinity;
 
 			Float3 offset = ray.origin - vertex0;
-			float u = offset.Dot(cross2) * inverse;
+			float u = offset.Dot(cross2);
 
-			if (u < Margin || u > 1f - Margin) return float.PositiveInfinity; //Outside barycentric bounds
+			//Check if is outside barycentric bounds
+			if (u < 0f || u > determinant) return Infinity;
 
 			Float3 cross1 = Float3.Cross(offset, edge1);
-			float v = ray.direction.Dot(cross1) * inverse;
+			float v = ray.direction.Dot(cross1);
 
-			if (v < Margin || u + v > 1f - Margin) return float.PositiveInfinity; //Outside barycentric bounds
+			//Check if is outside barycentric bounds
+			if (v < 0f || u + v > determinant) return Infinity;
 
-			float distance = edge2.Dot(cross1) * inverse;
-			if (distance < 0f) return float.PositiveInfinity; //Ray pointing away from triangle = negative distance
+			//Check if ray is pointing away from triangle
+			float distance = edge2.Dot(cross1);
+			if (distance < 0f) return Infinity;
 
-			uv = new Float2(u, v);
-			return distance;
+			float determinantR = 1f / determinant;
+			uv = new Float2(u, v) * determinantR;
+			return distance * determinantR;
 		}
 
 		/// <summary>
-		/// Returns the distance of intersection between this triangle and <paramref name="ray"/> without backface culling.
-		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
+		/// Returns whether <paramref name="ray"/> will intersect with this <see cref="PreparedTriangle"/> after <paramref name="travel"/>.
+		/// The famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
 		/// </summary>
-		public float GetIntersection(in Ray ray)
+		public bool Intersect(in Ray ray, float travel)
 		{
-			Float3 cross2 = Float3.Cross(ray.direction, edge2); //Calculating determinant and u
-			float determinant = Float3.Dot(edge1, cross2);      //If determinant is close to zero, ray is parallel to triangle
+			//Calculate determinant and u
+			Float3 cross2 = Float3.Cross(ray.direction, edge2);
+			float determinant = Float3.Dot(edge1, cross2);
 
-			if (determinant > -Epsilon && determinant < Epsilon) return float.PositiveInfinity;
-			float inverse = 1f / determinant;
+			//If determinant is close to zero, ray is parallel to triangle
+			if (determinant is > -Epsilon and < Epsilon) return false;
 
 			Float3 offset = ray.origin - vertex0;
-			float u = offset.Dot(cross2) * inverse;
+			float u = offset.Dot(cross2);
 
-			if (u < Margin || u > 1f - Margin) return float.PositiveInfinity; //Outside barycentric bounds
+			//Check if is outside barycentric bounds
+			if (u < 0f || u > determinant) return false;
 
 			Float3 cross1 = Float3.Cross(offset, edge1);
-			float v = ray.direction.Dot(cross1) * inverse;
+			float v = ray.direction.Dot(cross1);
 
-			if (v < Margin || u + v > 1f - Margin) return float.PositiveInfinity; //Outside barycentric bounds
+			//Check if is outside barycentric bounds
+			if (v < 0f || u + v > determinant) return false;
 
-			float distance = edge2.Dot(cross1) * inverse;
-			if (distance < 0f) return float.PositiveInfinity; //Ray pointing away from triangle = negative distance
-
-			return distance;
+			float distance = edge2.Dot(cross1);
+			return distance <= travel * determinant;
 		}
 
-		public Float3 GetNormal(Float2   uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
+		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
 		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
 
 		public void GetSubdivided(Span<PreparedTriangle> triangles, int iteration)
@@ -268,10 +274,10 @@ namespace EchoRenderer.Objects.GeometryObjects
 			//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
 			Float3 GetInterpolatedNormal(Float2 uv) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
 
-			static void Fill(Span<PreparedTriangle> span,      int       index,     int       materialToken,
-							 in Float3              vertex0,   in Float3 vertex1,   in Float3 vertex2,
-							 in Float3              normal0,   in Float3 normal1,   in Float3 normal2,
-							 Float2                 texcoord0, Float2    texcoord1, Float2    texcoord2)
+			static void Fill(Span<PreparedTriangle> span, int index, int materialToken,
+							 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
+							 in Float3 normal0, in Float3 normal1, in Float3 normal2,
+							 Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
 			{
 				int gap = span.Length / 4;
 				var slice = span.Slice(gap * index, gap);

@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 
 namespace EchoRenderer.Mathematics
 {
@@ -71,5 +72,10 @@ namespace EchoRenderer.Mathematics
 			sin = MathF.Sin(radians);
 			cos = MathF.Cos(radians);
 		}
+
+		/// <summary>
+		/// Returns whether <paramref name="value"/> is positive.
+		/// </summary>
+		public static bool Positive(float value) => value > Scalars.Epsilon;
 	}
 }
