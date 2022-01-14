@@ -74,7 +74,7 @@ namespace EchoRenderer.Objects.Preparation
 			query.distance *= forwardScale;
 			query.current.Push(this);
 
-			//Gets intersection from accelerator in local space
+			//Gets intersection from aggregator in local space
 			pack.aggregator.Trace(ref query);
 
 			//Convert back to parent space

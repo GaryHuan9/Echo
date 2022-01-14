@@ -58,7 +58,7 @@ namespace EchoRenderer.Rendering.Scattering
 			foreach (ref readonly Distro2 distro in distros)
 			{
 				Float3 sampled = Sample(outgoing, distro, out Float3 incident, out float pdf);
-				if (pdf > 0f) result += sampled * AbsoluteCosine(incident) / pdf;
+				if (FastMath.Positive(pdf)) result += sampled * AbsoluteCosine(incident) / pdf;
 			}
 
 			return result / distros.Length;
@@ -84,7 +84,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 				pdf *= Distro2.UniformHemispherePDF;
 
-				if (pdf > 0f) result += sampled * AbsoluteCosine(outgoing) * AbsoluteCosine(incident) / pdf;
+				if (FastMath.Positive(pdf)) result += sampled * AbsoluteCosine(outgoing) * AbsoluteCosine(incident) / pdf;
 			}
 
 			return result / length;

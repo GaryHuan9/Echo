@@ -52,28 +52,32 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
 
 		const float DistanceMin = PreparedPack.DistanceMin;
+		const float Infinity = float.PositiveInfinity;
 
 		/// <summary>
-		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.
-		/// <paramref name="uv"/> contains the barycentric position of the intersection.
+		/// Returns the distance of intersection between this <see cref="PreparedSphere"/> and <paramref name="ray"/> without
+		/// backface culling. If the intersection exists, the distance is returned and <paramref name="uv"/> will contain the
+		/// barycentric coordinate of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
 		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
 		/// </summary>
-		public float GetIntersection(in Ray ray, out Float2 uv)
+		public float Intersect(in Ray ray, out Float2 uv)
 		{
+			Unsafe.SkipInit(out uv);
+
 			Float3 offset = ray.origin - position;
+			float point0 = -offset.Dot(ray.direction);
 
-			float point1 = -offset.Dot(ray.direction);
-			float point2Squared = point1 * point1 - offset.SquaredMagnitude + radiusSquared;
+			float point1Squared = point0 * point0 - offset.SquaredMagnitude + radiusSquared;
 
-			if (point2Squared < 0f) goto noIntersection;
+			if (point1Squared < 0f) return Infinity;
 
-			float point2 = MathF.Sqrt(point2Squared);
-			float result = point1 - point2;
+			float point1 = FastMath.Sqrt0(point1Squared);
+			float distance = point0 - point1;
 
-			if (result < DistanceMin) result = point1 + point2;
-			if (result < DistanceMin) goto noIntersection;
+			if (distance < DistanceMin) distance = point0 + point1;
+			if (distance < DistanceMin) return Infinity;
 
-			Float3 point = offset + ray.direction * result;
+			Float3 point = offset + ray.direction * distance;
 
 			uv = new Float2
 			(
@@ -81,33 +85,26 @@ namespace EchoRenderer.Objects.GeometryObjects
 				0.5f + MathF.Asin((point.y / radius).Clamp(-1f)) / Scalars.PI
 			);
 
-			return result;
-
-		noIntersection:
-			Unsafe.SkipInit(out uv);
-			return float.PositiveInfinity;
+			return distance;
 		}
 
 		/// <summary>
-		/// Returns the distance of intersection between this sphere and <paramref name="ray"/> without backface culling.
-		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
+		/// Returns whether <paramref name="ray"/> will intersect with this <see cref="PreparedSphere"/> after <paramref name="travel"/>.
 		/// </summary>
-		public float GetIntersection(in Ray ray)
+		public bool Intersect(in Ray ray, float travel)
 		{
 			Float3 offset = ray.origin - position;
+			float point0 = -offset.Dot(ray.direction);
 
-			float point1 = -offset.Dot(ray.direction);
-			float point2Squared = point1 * point1 - offset.SquaredMagnitude + radiusSquared;
+			float point1Squared = point0 * point0 - offset.SquaredMagnitude + radiusSquared;
 
-			if (point2Squared < 0f) return float.PositiveInfinity;
+			if (point1Squared < 0f) return false;
 
-			float point2 = MathF.Sqrt(point2Squared);
-			float result = point1 - point2;
+			float point1 = FastMath.Sqrt0(point1Squared);
+			float distance = point0 - point1;
 
-			if (result < DistanceMin) result = point1 + point2;
-			if (result < DistanceMin) return float.PositiveInfinity;
-
-			return result;
+			if (distance < DistanceMin) distance = point0 + point1;
+			return distance >= DistanceMin && distance <= travel;
 		}
 
 		public static Float3 GetGeometryNormal(Float2 uv)

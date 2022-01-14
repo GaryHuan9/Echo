@@ -8,9 +8,9 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.PostProcess
 {
-	public class AcceleratorQualityVisualizer : PostProcessingWorker
+	public class AggregatorQualityVisualizer : PostProcessingWorker
 	{
-		public AcceleratorQualityVisualizer(PostProcessingEngine engine) : base(engine)
+		public AggregatorQualityVisualizer(PostProcessingEngine engine) : base(engine)
 		{
 			ReadOnlySpan<Float4> colors = stackalloc Float4[]
 			{

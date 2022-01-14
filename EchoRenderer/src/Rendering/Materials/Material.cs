@@ -19,7 +19,6 @@ namespace EchoRenderer.Rendering.Materials
 
 		static Vector128<float> NormalShift => Vector128.Create(-1f, -1f, -2f, 0f);
 
-
 		/// <summary>
 		/// Invoked before a new render session begins; can be used to execute
 		/// any kind of preprocessing work for this <see cref="Material"/>.
@@ -58,6 +57,6 @@ namespace EchoRenderer.Rendering.Materials
 		/// <summary>
 		/// Samples <paramref name="texture"/> at <paramref name="interaction"/> as a <see cref="Float4"/>.
 		/// </summary>
-		protected Float4 Sample(Texture texture, in Interaction interaction) => ToFloat4(texture[interaction.texcoord]);
+		protected static Float4 Sample(Texture texture, in Interaction interaction) => ToFloat4(texture[interaction.texcoord]);
 	}
 }

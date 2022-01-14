@@ -82,9 +82,9 @@ namespace EchoRenderer
 			AdaptiveSample = 80
 		};
 
-		static readonly TiledRenderProfile acceleratorQualityProfile = new()
+		static readonly TiledRenderProfile aggregatorQualityProfile = new()
 		{
-			Method = new AcceleratorQualityWorker(),
+			Method = new AggregatorQualityWorker(),
 			TilePattern = new OrderedPattern(),
 			PixelSample = 1,
 			AdaptiveSample = 0
@@ -141,9 +141,9 @@ namespace EchoRenderer
 
 			using var postProcess = new PostProcessingEngine(buffer);
 
-			if (renderProfile.Method is AcceleratorQualityWorker) //Creates different post processing workers based on render method
+			if (renderProfile.Method is AggregatorQualityWorker) //Creates different post processing workers based on render method
 			{
-				postProcess.AddWorker(new AcceleratorQualityVisualizer(postProcess)); //Only used for accelerator quality testing
+				postProcess.AddWorker(new AggregatorQualityVisualizer(postProcess)); //Only used for aggregator quality testing
 			}
 			else if (false) //Enable or disable post processing
 			{

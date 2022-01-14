@@ -77,7 +77,7 @@ namespace EchoRenderer.Textures.Directional
 		{
 			Float2 uv = piecewise.SampleContinuous(distro, out pdf);
 
-			if (pdf <= 0f)
+			if (!FastMath.Positive(pdf))
 			{
 				incident = default;
 				return Vector128<float>.Zero;
