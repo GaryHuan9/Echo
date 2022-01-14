@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
@@ -23,12 +24,12 @@ namespace EchoRenderer.Rendering.Pixels
 
 				Interaction interaction = arena.Scene.Interact(query, out Material material);
 
+				using var _ = arena.allocator.Begin();
 				material.Scatter(ref interaction, arena);
 
 				if (interaction.bsdf == null)
 				{
 					query = query.SpawnTrace();
-					arena.allocator.Release();
 					continue;
 				}
 
@@ -36,16 +37,14 @@ namespace EchoRenderer.Rendering.Pixels
 
 				// radiance += energy * emission;
 
-				if (!ShortMath.PositiveRadiance(scatter)) energy = Float3.zero;
+				if (!scatter.PositiveRadiance()) energy = Float3.zero;
 				else energy *= interaction.NormalDot(incident) / pdf * scatter;
 
-				if (!ShortMath.PositiveRadiance(energy)) break;
+				if (!energy.PositiveRadiance()) break;
 				query = query.SpawnTrace(incident);
-
-				arena.allocator.Release();
 			}
 
-			if (ShortMath.PositiveRadiance(energy))
+			if (energy.PositiveRadiance())
 			{
 				foreach (AmbientLight ambient in arena.Scene.AmbientSources) radiance += energy * ambient.Evaluate(query.ray.direction);
 			}

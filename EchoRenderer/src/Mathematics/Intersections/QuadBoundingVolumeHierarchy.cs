@@ -49,15 +49,9 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// </summary>
 		const int Width = 4;
 
-		public override void Trace(ref TraceQuery query)
-		{
-			Traverse(ref query);
-		}
+		public override void Trace(ref TraceQuery query) => TraceCore(ref query);
 
-		public override void Occlude(ref OccludeQuery query)
-		{
-			throw new NotImplementedException();
-		}
+		public override bool Occlude(ref OccludeQuery query) => OccludeCore(ref query);
 
 		public override int TraceCost(in Ray ray, ref float distance) => GetIntersectionCost(Token.root, ray, ref distance);
 
@@ -129,7 +123,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		[SkipLocalsInit]
 		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-		unsafe void Traverse(ref TraceQuery query)
+		unsafe void TraceCore(ref TraceQuery query)
 		{
 			Token* stack = stackalloc Token[stackSize];
 			float* hits = stackalloc float[stackSize];
@@ -206,16 +200,16 @@ namespace EchoRenderer.Mathematics.Intersections
 				}
 
 				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-				void Push(in Vector128<float> hit4, in Token4 child4, int offset, ref TraceQuery traceQuery)
+				void Push(in Vector128<float> hit4, in Token4 child4, int offset, ref TraceQuery refQuery)
 				{
 					float hit = hit4.GetElement(offset);
-					if (hit >= traceQuery.distance) return;
+					if (hit >= refQuery.distance) return;
 					ref readonly Token child = ref child4[offset];
 
 					if (child.IsGeometry)
 					{
 						//Child is leaf
-						pack.GetIntersection(ref traceQuery, child);
+						pack.Trace(ref refQuery, child);
 					}
 					else
 					{
@@ -227,10 +221,99 @@ namespace EchoRenderer.Mathematics.Intersections
 			}
 		}
 
+		[SkipLocalsInit]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+		unsafe bool OccludeCore(ref OccludeQuery query)
+		{
+			Token* stack = stackalloc Token[stackSize];
+
+			Token* next = stack;
+			*next++ = Token.root;
+
+			bool* orders = stackalloc bool[Width]
+			{
+				query.ray.inverseDirection.x > 0,
+				query.ray.inverseDirection.y > 0,
+				query.ray.inverseDirection.z > 0,
+				true
+			};
+
+			while (next != stack)
+			{
+				ref readonly Node node = ref nodes[(--next)->NodeValue];
+				Vector128<float> intersections = node.aabb4.Intersect(query.ray);
+
+				if (orders[node.axisMajor])
+				{
+					if (orders[node.axisMinor1])
+					{
+						if (Push(intersections, node.token4, 3, ref query)) return true;
+						if (Push(intersections, node.token4, 2, ref query)) return true;
+					}
+					else
+					{
+						if (Push(intersections, node.token4, 2, ref query)) return true;
+						if (Push(intersections, node.token4, 3, ref query)) return true;
+					}
+
+					if (orders[node.axisMinor0])
+					{
+						if (Push(intersections, node.token4, 1, ref query)) return true;
+						if (Push(intersections, node.token4, 0, ref query)) return true;
+					}
+					else
+					{
+						if (Push(intersections, node.token4, 0, ref query)) return true;
+						if (Push(intersections, node.token4, 1, ref query)) return true;
+					}
+				}
+				else
+				{
+					if (orders[node.axisMinor0])
+					{
+						if (Push(intersections, node.token4, 1, ref query)) return true;
+						if (Push(intersections, node.token4, 0, ref query)) return true;
+					}
+					else
+					{
+						if (Push(intersections, node.token4, 0, ref query)) return true;
+						if (Push(intersections, node.token4, 1, ref query)) return true;
+					}
+
+					if (orders[node.axisMinor1])
+					{
+						if (Push(intersections, node.token4, 3, ref query)) return true;
+						if (Push(intersections, node.token4, 2, ref query)) return true;
+					}
+					else
+					{
+						if (Push(intersections, node.token4, 2, ref query)) return true;
+						if (Push(intersections, node.token4, 3, ref query)) return true;
+					}
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+				bool Push(in Vector128<float> hit4, in Token4 child4, int offset, ref OccludeQuery refQuery)
+				{
+					float hit = hit4.GetElement(offset);
+					if (hit > refQuery.travel) return false;
+					ref readonly Token child = ref child4[offset];
+
+					if (child.IsGeometry) return pack.Occlude(ref refQuery, child); //Child is leaf
+
+					//Child is branch
+					*next++ = child;
+					return false;
+				}
+			}
+
+			return false;
+		}
+
 		int GetIntersectionCost(in Token token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 		{
 			if (token.IsEmpty || intersection >= distance) return 0;
-			if (token.IsGeometry) return pack.GetIntersectionCost(ray, ref distance, token);
+			if (token.IsGeometry) return pack.GetTraceCost(ray, ref distance, token);
 
 			ref readonly Node node = ref nodes[token.NodeValue];
 			Vector128<float> intersections = node.aabb4.Intersect(ray);

@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
 
 namespace EchoRenderer.Mathematics.Primitives
@@ -78,5 +79,15 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// Returns the absolute value of the dot product between <paramref name="direction"/> and <see cref="normal"/>.
 		/// </summary>
 		public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(normal));
+
+		/// <summary>
+		/// Creates and returns a new <see cref="BSDF"/> using <paramref name="arena"/> and assign it to <see cref="bsdf"/>.
+		/// </summary>
+		public BSDF CreateBSDF(Arena arena)
+		{
+			bsdf = arena.allocator.New<BSDF>();
+			bsdf.Reset(this);
+			return bsdf;
+		}
 	}
 }

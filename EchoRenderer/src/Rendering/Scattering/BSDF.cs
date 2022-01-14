@@ -149,7 +149,7 @@ namespace EchoRenderer.Rendering.Scattering
 			Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 			Float3 value = selected.Sample(outgoing, distro, out Float3 incident, out pdf);
 
-			if (pdf.AlmostEquals())
+			if (!FastMath.Positive(pdf))
 			{
 				incidentWorld = Float3.zero;
 				return Float3.zero;

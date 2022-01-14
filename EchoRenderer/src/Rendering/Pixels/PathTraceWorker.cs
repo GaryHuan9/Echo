@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
@@ -43,71 +43,85 @@ namespace EchoRenderer.Rendering.Pixels
 				if (!intersected || bounce > arena.profile.BounceLimit) break;
 
 				Interaction interaction = arena.Scene.Interact(query, out Material material);
+
+				using var _ = arena.allocator.Begin();
 				material.Scatter(ref interaction, arena);
 
-				if (interaction.bsdf == null)
+				if (interaction.bsdf.Count() == 0)
 				{
-					arena.allocator.Release();
 					query = query.SpawnTrace();
 					--bounce;
 					continue;
 				}
 
-				radiance += energy * UniformSampleOneLight(interaction, arena);
+				Float3 scatter = interaction.bsdf.Sample
+				(
+					interaction.outgoing, arena.distribution.NextTwo(),
+					out Float3 incident, out float pdf, out FunctionType sampledType
+				);
 
-				Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, arena.distribution.NextTwo(), out Float3 incident, out float pdf, out FunctionType sampledType);
-				if (!ShortMath.PositiveRadiance(scatter) || !ShortMath.PositivePDF(pdf)) break;
+				//TODO: this is a mess
+
+				if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) break;
+
+				Float3 light = ImportanceSampleOneLight(interaction, out LightSource source, arena);
+				radiance += energy * (light + ImportanceSampleBSDF(interaction, source, arena));
 
 				energy *= interaction.NormalDot(incident) / pdf * scatter;
 				specularBounce = sampledType.Any(FunctionType.specular);
 
-				if (!ShortMath.PositiveRadiance(energy)) break;
+				if (!energy.PositiveRadiance()) break;
 
 				query = query.SpawnTrace(incident);
 
 				//TODO: Path termination with Russian Roulette
-
-				arena.allocator.Release();
 			}
 
 			return radiance;
 		}
 
-		static Float3 UniformSampleOneLight(in Interaction interaction, Arena arena)
+		/// <summary>
+		/// Importance samples one <see cref="LightSource"/> in <paramref name="arena.Scene"/> and returns its radiance.
+		/// </summary>
+		static Float3 ImportanceSampleOneLight(in Interaction interaction, out LightSource source, Arena arena)
 		{
 			//Handle degenerate cases
 			var sources = arena.Scene.LightSources;
+			int length = sources.Length;
 
-			int count = sources.Length;
-			if (count == 0) return Float3.zero;
+			if (length == 0)
+			{
+				source = null;
+				return Float3.zero;
+			}
 
 			//Finds one light to sample
-			Distro1 distro = arena.distribution.NextOne();
-			LightSource source = sources[distro.Range(count)];
-
-			return count * EstimateDirect(interaction, source, arena);
+			source = sources[arena.distribution.NextOne().Range(length)];
+			return length * ImportanceSampleOneLight(interaction, source, arena);
 		}
-
-		static Float3 EstimateDirect(in Interaction interaction, LightSource source, Arena arena) => ImportanceSampleLight(interaction, source, arena) + ImportanceSampleBSDF(interaction, source, arena);
 
 		/// <summary>
 		/// Importance samples <paramref name="source"/> at <paramref name="interaction"/> and returns the combined radiance.
 		/// </summary>
-		static Float3 ImportanceSampleLight(in Interaction interaction, LightSource source, Arena arena)
+		static Float3 ImportanceSampleOneLight(in Interaction interaction, LightSource source, Arena arena)
 		{
 			//Sample light source
-			Distro2 distro = arena.distribution.NextTwo();
+			Float3 light = source.Sample
+			(
+				interaction, arena.distribution.NextTwo(),
+				out Float3 incident, out float pdf, out float travel
+			);
 
-			Float3 light = source.Sample(interaction, distro, out Float3 incident, out float pdf, out float travel);
-			if (!ShortMath.PositivePDF(pdf) || !ShortMath.PositiveRadiance(light)) return Float3.zero;
+			if (!FastMath.Positive(pdf) || !light.PositiveRadiance()) return Float3.zero;
 
 			//Evaluate bsdf at light source's directions
 			ref readonly Float3 outgoing = ref interaction.outgoing;
-			Float3 scatter = interaction.bsdf.Evaluate(outgoing, incident) * interaction.NormalDot(incident);
+			Float3 scatter = interaction.bsdf.Evaluate(outgoing, incident);
+			scatter *= interaction.NormalDot(incident);
 
 			//Conditionally terminate if radiance is non-positive
-			if (!ShortMath.PositiveRadiance(scatter)) return Float3.zero;
-			OccludeQuery query = interaction.SpawnOcclude(incident, travel);
+			if (!scatter.PositiveRadiance()) return Float3.zero;
+			var query = interaction.SpawnOcclude(incident, travel);
 			if (arena.Scene.Occlude(ref query)) return Float3.zero;
 
 			//Calculate final radiance
@@ -130,14 +144,14 @@ namespace EchoRenderer.Rendering.Pixels
 
 			scatter *= FastMath.Abs(incident.Dot(interaction.normal));
 
-			if (!ShortMath.PositiveRadiance(scatter) || !ShortMath.PositivePDF(pdf)) return Float3.zero;
+			if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) return Float3.zero;
 
 			float weight = 1f;
 
 			if (!sampledType.Any(FunctionType.specular))
 			{
 				float pdfLight = source.ProbabilityDensity(interaction, incident);
-				if (!ShortMath.PositivePDF(pdfLight)) return Float3.zero;
+				if (!FastMath.Positive(pdfLight)) return Float3.zero;
 				weight = PowerHeuristic(pdf, pdfLight);
 			}
 
@@ -154,7 +168,7 @@ namespace EchoRenderer.Rendering.Pixels
 				light = ambient.Evaluate(query.ray.direction);
 			}
 
-			if (ShortMath.PositiveRadiance(light)) return weight / pdf * scatter * light;
+			if (light.PositiveRadiance()) return weight / pdf * scatter * light;
 			return Float3.zero;
 		}
 

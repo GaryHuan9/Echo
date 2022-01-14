@@ -48,14 +48,26 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					if (intersections.GetElement(i) >= query.distance) continue;
 					ref readonly Token token = ref node.token4[i];
-					pack.GetIntersection(ref query, token);
+					pack.Trace(ref query, token);
 				}
 			}
 		}
 
-		public override void Occlude(ref OccludeQuery query)
+		public override bool Occlude(ref OccludeQuery query)
 		{
-			throw new NotImplementedException();
+			foreach (ref readonly Node node in nodes.AsSpan())
+			{
+				Vector128<float> intersections = node.aabb4.Intersect(query.ray);
+
+				for (int i = 0; i < Width; i++)
+				{
+					if (intersections.GetElement(i) > query.travel) continue;
+					ref readonly Token token = ref node.token4[i];
+					if (pack.Occlude(ref query, token)) return true;
+				}
+			}
+
+			return false;
 		}
 
 		public override int TraceCost(in Ray ray, ref float distance)
@@ -70,7 +82,7 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					if (intersections.GetElement(i) >= distance) continue;
 					ref readonly Token token = ref node.token4[i];
-					cost += pack.GetIntersectionCost(ray, ref distance, token);
+					cost += pack.GetTraceCost(ray, ref distance, token);
 				}
 			}
 
