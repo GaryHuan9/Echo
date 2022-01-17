@@ -107,27 +107,22 @@ namespace EchoRenderer.Objects.Preparation
 		readonly PreparedInstance[] instances;
 
 		/// <summary>
-		/// If an intersection has a distance under this value and we just intersected the exactly same geometry with the last query,
-		/// we will ignore this intersection. NOTE: because spheres have two intersection points, <see cref="PreparedSphere"/>'s get
-		/// intersection method must return the point with a distance larger than or equals to this value.
-		/// </summary>
-		public const float DistanceMin = 6e-4f;
-
-		/// <summary>
 		/// Calculates the intersection between <paramref name="query"/> and object represented with <paramref name="token"/>.
 		/// If the intersection occurs before the original <paramref name="query.distance"/>, then the intersection is recorded.
 		/// </summary>
 		public void Trace(ref TraceQuery query, in Token token)
 		{
 			Assert.IsTrue(token.IsGeometry);
+			query.current.Geometry = token;
 
 			if (token.IsTriangle)
 			{
-				query.current.geometry = token;
-				if (query.current == query.ignore) return;
+				if (query.ignore == query.current) return;
 
 				ref readonly var triangle = ref triangles[token.TriangleValue];
 				float distance = triangle.Intersect(query.ray, out Float2 uv);
+
+				if (distance >= query.distance) return;
 
 				query.token = query.current;
 				query.distance = distance;
@@ -135,13 +130,12 @@ namespace EchoRenderer.Objects.Preparation
 			}
 			else if (token.IsSphere)
 			{
-				ref readonly var sphere = ref spheres[token.SphereValue];
-				float distance = sphere.Intersect(query.ray, out Float2 uv);
+				bool findFar = query.ignore == query.current;
+
+				ref readonly PreparedSphere sphere = ref spheres[token.SphereValue];
+				float distance = sphere.Intersect(query.ray, out Float2 uv, findFar);
 
 				if (distance >= query.distance) return;
-
-				query.current.geometry = token;
-				if (distance < DistanceMin && query.ignore == query.current) return;
 
 				query.token = query.current;
 				query.distance = distance;
@@ -157,35 +151,23 @@ namespace EchoRenderer.Objects.Preparation
 		public bool Occlude(ref OccludeQuery query, in Token token)
 		{
 			Assert.IsTrue(token.IsGeometry);
+			query.current.Geometry = token;
 
-			throw new NotImplementedException();
+			if (token.IsTriangle)
+			{
+				if (query.ignore == query.current) return false;
 
-			// if (token.IsTriangle)
-			// {
-			// 	query.current.geometry = token;
-			// 	if (query.current == query.ignore) return;
-			//
-			// 	ref readonly var triangle = ref triangles[token.TriangleValue];
-			// 	float distance = triangle.Intersect(query.ray, out Float2 uv);
-			//
-			// 	query.token = query.current;
-			// 	query.distance = distance;
-			// 	query.uv = uv;
-			// }
-			// else if (token.IsSphere)
-			// {
-			// 	ref readonly var sphere = ref spheres[token.SphereValue];
-			// 	float distance = sphere.Intersect(query.ray, out Float2 uv);
-			//
-			// 	if (distance >= query.distance) return;
-			//
-			// 	query.current.geometry = token;
-			// 	if (distance < DistanceMin && query.ignore == query.current) return;
-			//
-			// 	query.token = query.current;
-			// 	query.distance = distance;
-			// 	query.uv = uv;
-			// }
+				ref readonly var triangle = ref triangles[token.TriangleValue];
+				return triangle.Intersect(query.ray, query.travel);
+			}
+
+			if (token.IsSphere)
+			{
+				bool findFar = query.ignore == query.current;
+
+				ref readonly var sphere = ref spheres[token.SphereValue];
+				return sphere.Intersect(query.ray, query.travel, findFar);
+			}
 
 			return instances[token.InstanceValue].Occlude(ref query);
 		}
@@ -200,18 +182,14 @@ namespace EchoRenderer.Objects.Preparation
 			if (token.IsTriangle)
 			{
 				ref readonly var triangle = ref triangles[token.TriangleValue];
-				float hit = triangle.Intersect(ray, out Float2 _);
-
-				distance = Math.Min(distance, hit);
+				distance = Math.Min(distance, triangle.Intersect(ray, out _));
 				return 1;
 			}
 
 			if (token.IsSphere)
 			{
 				ref readonly var sphere = ref spheres[token.SphereValue];
-				float hit = sphere.Intersect(ray, out Float2 _);
-
-				distance = Math.Min(distance, hit);
+				distance = Math.Min(distance, sphere.Intersect(ray, out _));
 				return 1;
 			}
 
@@ -224,7 +202,7 @@ namespace EchoRenderer.Objects.Preparation
 		/// </summary>
 		public Interaction Interact(in TraceQuery query, ScenePreparer preparer, PreparedInstance instance, out Material material)
 		{
-			Token token = query.token.geometry;
+			Token token = query.token.Geometry;
 
 			Assert.IsTrue(token.IsGeometry);
 			Assert.AreEqual(instance.pack, this);
