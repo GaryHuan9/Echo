@@ -53,7 +53,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 		public override bool Occlude(ref OccludeQuery query) => OccludeCore(ref query);
 
-		public override int TraceCost(in Ray ray, ref float distance) => GetIntersectionCost(Token.root, ray, ref distance);
+		public override int TraceCost(in Ray ray, ref float distance) => GetTraceCost(Token.root, ray, ref distance);
 
 		public override unsafe int GetHashCode()
 		{
@@ -204,17 +204,17 @@ namespace EchoRenderer.Mathematics.Intersections
 				{
 					float hit = hit4.GetElement(offset);
 					if (hit >= refQuery.distance) return;
-					ref readonly Token child = ref child4[offset];
+					ref readonly Token token = ref child4[offset];
 
-					if (child.IsGeometry)
+					if (token.IsGeometry)
 					{
 						//Child is leaf
-						pack.Trace(ref refQuery, child);
+						pack.Trace(ref refQuery, token);
 					}
 					else
 					{
 						//Child is branch
-						*next++ = child;
+						*next++ = token;
 						*hits++ = hit;
 					}
 				}
@@ -296,13 +296,13 @@ namespace EchoRenderer.Mathematics.Intersections
 				bool Push(in Vector128<float> hit4, in Token4 child4, int offset, ref OccludeQuery refQuery)
 				{
 					float hit = hit4.GetElement(offset);
-					if (hit > refQuery.travel) return false;
-					ref readonly Token child = ref child4[offset];
+					if (hit >= refQuery.travel) return false;
+					ref readonly Token token = ref child4[offset];
 
-					if (child.IsGeometry) return pack.Occlude(ref refQuery, child); //Child is leaf
+					if (token.IsGeometry) return pack.Occlude(ref refQuery, token); //Child is leaf
 
 					//Child is branch
-					*next++ = child;
+					*next++ = token;
 					return false;
 				}
 			}
@@ -310,7 +310,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			return false;
 		}
 
-		int GetIntersectionCost(in Token token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
+		int GetTraceCost(in Token token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 		{
 			if (token.IsEmpty || intersection >= distance) return 0;
 			if (token.IsGeometry) return pack.GetTraceCost(ray, ref distance, token);
@@ -330,31 +330,31 @@ namespace EchoRenderer.Mathematics.Intersections
 
 			if (orders[node.axisMajor])
 			{
-				cost += GetIntersectionCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
-				cost += GetIntersectionCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
+				cost += GetTraceCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
+				cost += GetTraceCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
 			}
 			else
 			{
-				cost += GetIntersectionCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
-				cost += GetIntersectionCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
+				cost += GetTraceCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
+				cost += GetTraceCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
 			}
 
 			return cost;
 		}
 
-		int GetIntersectionCost2(bool order, int offset, in Token4 child4, in Vector128<float> intersections, in Ray ray, ref float distance)
+		int GetTraceCost2(bool order, int offset, in Token4 child4, in Vector128<float> intersections, in Ray ray, ref float distance)
 		{
 			int cost = 0;
 
 			if (order)
 			{
-				cost += GetIntersectionCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
-				cost += GetIntersectionCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
+				cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
+				cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
 			}
 			else
 			{
-				cost += GetIntersectionCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
-				cost += GetIntersectionCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
+				cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
+				cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
 			}
 
 			return cost;

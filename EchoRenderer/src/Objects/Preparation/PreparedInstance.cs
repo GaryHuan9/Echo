@@ -68,6 +68,7 @@ namespace EchoRenderer.Objects.Preparation
 		public void Trace(ref TraceQuery query)
 		{
 			var oldRay = query.ray;
+			var oldDistance = query.distance;
 
 			//Convert from parent space to local space
 			TransformForward(ref query.ray);
@@ -79,8 +80,32 @@ namespace EchoRenderer.Objects.Preparation
 
 			//Convert back to parent space
 			query.ray = oldRay;
-			query.distance *= inverseScale;
+			query.distance = oldDistance;
 			query.current.Pop();
+		}
+
+		/// <summary>
+		/// Processes <paramref name="query"/> and returns the result.
+		/// </summary>
+		public bool Occlude(ref OccludeQuery query)
+		{
+			var oldRay = query.ray;
+			var oldTravel = query.travel;
+
+			//Convert from parent space to local space
+			TransformForward(ref query.ray);
+			query.travel *= forwardScale;
+			query.current.Push(this);
+
+			//Gets intersection from aggregator in local space
+			if (pack.aggregator.Occlude(ref query)) return true;
+
+			//Convert back to parent space
+			query.ray = oldRay;
+			query.travel = oldTravel;
+			query.current.Pop();
+
+			return false;
 		}
 
 		/// <summary>
@@ -88,36 +113,35 @@ namespace EchoRenderer.Objects.Preparation
 		/// </summary>
 		public void TraceRoot(ref TraceQuery query)
 		{
-			Assert.IsTrue(query.current.EqualsFast(default));
+			Assert.AreEqual(query.current, default);
 			pack.aggregator.Trace(ref query);
 		}
 
 		/// <summary>
-		/// Processes <paramref name="query"/> and returns the result.
-		/// </summary>
-		public bool Occlude(ref OccludeQuery query) => throw new NotImplementedException();
-
-		/// <summary>
 		/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root and returns the result.
 		/// </summary>
-		public bool OccludeRoot(ref OccludeQuery query) => throw new NotImplementedException();
+		public bool OccludeRoot(ref OccludeQuery query)
+		{
+			Assert.AreEqual(query.current, default);
+			return pack.aggregator.Occlude(ref query);
+		}
 
 		/// <summary>
 		/// Returns the cost of tracing a <see cref="TraceQuery"/>.
 		/// </summary>
-		public int TraceCost(in Ray ray, ref float distance)
+		public int TraceCost(Ray ray, ref float distance)
 		{
 			//Forward transform distance to local space
+			var oldDistance = distance;
 			distance *= forwardScale;
 
-			//Gets intersection cost from bvh, calculation done in local space
-			Ray transformed = ray;
-			TransformForward(ref transformed);
+			//Gets intersection cost, calculation done in local space
+			TransformForward(ref ray);
 
-			int cost = pack.aggregator.TraceCost(transformed, ref distance);
+			int cost = pack.aggregator.TraceCost(ray, ref distance);
 
-			//Transforms distance back to parent space
-			distance *= inverseScale;
+			//Restore distance back to parent space
+			distance = oldDistance;
 			return cost;
 		}
 

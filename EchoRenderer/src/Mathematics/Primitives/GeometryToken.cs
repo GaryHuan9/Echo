@@ -14,10 +14,20 @@ namespace EchoRenderer.Mathematics.Primitives
 	/// </summary>
 	public unsafe struct GeometryToken : IEquatable<GeometryToken>
 	{
+		Token _geometry;
+
 		/// <summary>
 		/// The unique token for one geometry inside a <see cref="PreparedPack"/>.
 		/// </summary>
-		public Token geometry;
+		public Token Geometry
+		{
+			get => _geometry;
+			set
+			{
+				Assert.IsTrue(value.IsGeometry);
+				_geometry = value;
+			}
+		}
 
 		/// <summary>
 		/// The number of instances stored in <see cref="instances"/>.
@@ -30,13 +40,13 @@ namespace EchoRenderer.Mathematics.Primitives
 		uint instancesHash;
 
 		/// <summary>
-		/// A stack that holds the different <see cref="PreparedInstance.id"/> branches to reach this <see cref="geometry"/>.
+		/// A stack that holds the different <see cref="PreparedInstance.id"/> branches to reach this <see cref="Geometry"/>.
 		/// </summary>
 		fixed uint instances[ObjectPack.MaxLayer];
 
 		/// <summary>
 		/// Returns the <see cref="PreparedInstance.id"/> of the topmost <see cref="PreparedInstance"/>,
-		/// which is the one that immediately contains <see cref="geometry"/> in its pack.
+		/// which is the one that immediately contains <see cref="Geometry"/> in its pack.
 		/// </summary>
 		public readonly uint FinalInstanceId
 		{
@@ -85,27 +95,24 @@ namespace EchoRenderer.Mathematics.Primitives
 			return BitOperations.RotateLeft(hash, layer);
 		}
 
-		/// <summary>
-		/// Returns whether this <see cref="GeometryToken"/> equals <paramref name="other"/> exactly.
-		/// </summary>
-		public readonly bool EqualsFast(in GeometryToken other) =>
-			geometry == other.geometry && InstanceCount == other.InstanceCount &&
+		public readonly bool Equals(in GeometryToken other) =>
+			Geometry == other.Geometry && InstanceCount == other.InstanceCount &&
 			instancesHash == other.instancesHash && Instances.SequenceEqual(other.Instances);
 
-		public readonly bool Equals(GeometryToken other) => EqualsFast(other);
-
-		public override readonly bool Equals(object obj) => obj is GeometryToken other && EqualsFast(other);
+		public override readonly bool Equals(object obj) => obj is GeometryToken other && Equals(other);
 
 		public override readonly int GetHashCode()
 		{
 			unchecked
 			{
-				int hashCode = geometry.GetHashCode();
+				int hashCode = Geometry.GetHashCode();
 				hashCode = (hashCode * 397) ^ (int)instancesHash;
 				hashCode = (hashCode * 397) ^ InstanceCount;
 				return hashCode;
 			}
 		}
+
+		readonly bool IEquatable<GeometryToken>.Equals(GeometryToken other) => Equals(other);
 
 		public static bool operator ==(in GeometryToken left, in GeometryToken right) => left.Equals(right);
 		public static bool operator !=(in GeometryToken left, in GeometryToken right) => !left.Equals(right);

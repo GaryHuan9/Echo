@@ -221,8 +221,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 			//Check if is outside barycentric bounds
 			if (v < 0f || u + v > determinant) return false;
 
+			//Check if ray is pointing away from triangle
 			float distance = edge2.Dot(cross1);
-			return distance <= travel * determinant;
+			return distance >= 0f && distance < travel * determinant;
 		}
 
 		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
