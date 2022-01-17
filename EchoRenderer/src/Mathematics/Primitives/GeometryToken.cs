@@ -21,7 +21,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// </summary>
 		public Token Geometry
 		{
-			get => _geometry;
+			readonly get => _geometry;
 			set
 			{
 				Assert.IsTrue(value.IsGeometry);

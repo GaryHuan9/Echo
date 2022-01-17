@@ -102,10 +102,10 @@ namespace EchoRenderer.Experimental
 		// Added occlusion
 		// |  Method | CurrentPair |     Mean |    Error |   StdDev |
 		// |-------- |------------ |---------:|---------:|---------:|
-		// |   Trace |        Quad | 47.23 ms | 0.276 ms | 0.258 ms |
-		// | Occlude |        Quad | 40.25 ms | 0.175 ms | 0.155 ms |
-		// |   Trace |     Regular | 68.82 ms | 0.356 ms | 0.333 ms |
-		// | Occlude |     Regular | 57.29 ms | 0.319 ms | 0.298 ms |
+		// |   Trace |        Quad | 42.66 ms | 0.401 ms | 0.335 ms |
+		// | Occlude |        Quad | 35.47 ms | 0.187 ms | 0.175 ms |
+		// |   Trace |     Regular | 60.68 ms | 0.236 ms | 0.197 ms |
+		// | Occlude |     Regular | 49.08 ms | 0.257 ms | 0.227 ms |
 
 		[Benchmark]
 		public bool Trace()
