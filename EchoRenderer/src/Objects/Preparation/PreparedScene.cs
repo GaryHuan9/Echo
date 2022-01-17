@@ -72,8 +72,10 @@ namespace EchoRenderer.Objects.Preparation
 		public ReadOnlySpan<AmbientLight> AmbientSources => _ambientSources;
 
 		long _traceCount;
+		long _occludeCount;
 
 		public long TraceCount => Interlocked.Read(ref _traceCount);
+		public long OccludeCount => Interlocked.Read(ref _occludeCount);
 
 		readonly PreparedInstance rootInstance;
 
@@ -94,11 +96,8 @@ namespace EchoRenderer.Objects.Preparation
 		/// </summary>
 		public bool Occlude(ref OccludeQuery query)
 		{
-			//TODO: We need a separate implementation that calculates intersection with any geometry (occlusion: boolean true/false return)
-			//TODO: This will significantly improve the performance of shadow rays since any intersection is enough to exit the calculation
-
-			var traceQuery = new TraceQuery(query.ray, query.travel, query.ignore);
-			return Trace(ref traceQuery) && traceQuery.distance < query.travel;
+			Interlocked.Increment(ref _occludeCount);
+			return rootInstance.OccludeRoot(ref query);
 		}
 
 		/// <summary>

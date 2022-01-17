@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Preparation;
 
 namespace EchoRenderer.Mathematics.Primitives
@@ -15,10 +16,10 @@ namespace EchoRenderer.Mathematics.Primitives
 		{
 			this.ray = ray;
 			this.ignore = ignore;
+			this.distance = distance;
 
 			current = default;
 			Unsafe.SkipInit(out token);
-			this.distance = distance;
 			Unsafe.SkipInit(out uv);
 
 #if DEBUG
@@ -33,9 +34,10 @@ namespace EchoRenderer.Mathematics.Primitives
 		public Ray ray;
 
 		/// <summary>
-		/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore
-		/// if we come in very close (<see cref="PreparedPack.DistanceMin"/>) contact with it. This should mainly be assigned
-		/// to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to avoid origin intersections.
+		/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore.
+		/// This should mainly be assigned to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to
+		/// avoid self intersections. Note that if the geometry is a <see cref="PreparedSphere"/>, then it will only be
+		/// ignored if its farthest distance is shorter than <see cref="PreparedSphere.DistanceThreshold"/>.
 		/// </summary>
 		public readonly GeometryToken ignore;
 
@@ -101,7 +103,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// Spawns a new <see cref="OccludeQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 		/// </summary>
-		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) =>  new(new Ray(Position, direction), travel, token);
+		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(Position, direction), travel, token);
 
 		/// <summary>
 		/// Spawns a new <see cref="OccludeQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
