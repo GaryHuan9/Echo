@@ -14,11 +14,11 @@ namespace EchoRenderer.Terminals
 		public Terminal()
 		{
 			displayThread = new Thread(DisplayThread)
-							{
-								IsBackground = true,
-								Priority = ThreadPriority.AboveNormal,
-								Name = "Terminal"
-							};
+			{
+				IsBackground = true,
+				Priority = ThreadPriority.AboveNormal,
+				Name = "Terminal"
+			};
 
 			stopwatch = Stopwatch.StartNew();
 			displayThread.Start();
@@ -189,7 +189,7 @@ namespace EchoRenderer.Terminals
 				SetSlice(Int2.up * index, slice);
 			}
 
-			public void Insert(Int2 index, char value) => Insert(index, stackalloc char[1] {value});
+			public void Insert(Int2 index, char value) => Insert(index, stackalloc char[1] { value });
 
 			public void Insert(Int2 index, ReadOnlySpan<char> value)
 			{
@@ -257,15 +257,18 @@ namespace EchoRenderer.Terminals
 				}
 
 				line.ClearDirtied();
-				int width = Console.WindowWidth - 1;
+				int windowWidth = Console.WindowWidth - 1;
 
-				if (writeBuffer?.Length != width) writeBuffer = new char[width];
-				else Array.Clear(writeBuffer, 0, writeBuffer.Length);
+				if (writeBuffer == null || writeBuffer.Length < windowWidth) writeBuffer = new char[windowWidth];
 
-				line.GetSlice(0, Math.Min(line.Count, writeBuffer.Length)).CopyTo(writeBuffer);
+				var buffer = writeBuffer.AsSpan(0, windowWidth);
+				int width = Math.Min(line.Count, windowWidth);
+
+				line.GetSlice(0, width).CopyTo(buffer);
+				buffer[width..].Fill(' ');
 
 				Console.Write('\r');
-				Console.WriteLine(writeBuffer);
+				Console.WriteLine(writeBuffer, 0, windowWidth);
 			}
 
 			void CheckHeight(Int2 index) => CheckHeight(index.y);

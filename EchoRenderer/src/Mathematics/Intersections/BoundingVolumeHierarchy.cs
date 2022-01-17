@@ -37,14 +37,17 @@ namespace EchoRenderer.Mathematics.Intersections
 		public override void Trace(ref TraceQuery query)
 		{
 			ref readonly Node root = ref nodes[0];
-			float local = root.aabb.Intersect(query.ray);
+			float hit = root.aabb.Intersect(query.ray);
 
-			if (local < query.distance) TraceCore(ref query);
+			if (hit < query.distance) TraceCore(ref query);
 		}
 
 		public override bool Occlude(ref OccludeQuery query)
 		{
-			throw new NotImplementedException();
+			ref readonly Node root = ref nodes[0];
+			float hit = root.aabb.Intersect(query.ray);
+
+			return hit <= query.travel && OccludeCore(ref query);
 		}
 
 		public override int TraceCost(in Ray ray, ref float distance)
@@ -149,12 +152,66 @@ namespace EchoRenderer.Mathematics.Intersections
 
 					if (token.IsNode)
 					{
+						//Child is branch
 						*next++ = token;
 						*hits++ = hit;
 					}
 					else pack.Trace(ref refQuery, token);
 				}
 			}
+		}
+
+		[SkipLocalsInit]
+		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+		unsafe bool OccludeCore(ref OccludeQuery query)
+		{
+			Token* stack = stackalloc Token[maxDepth];
+			Token* next = stack; //A pointer pointing at the top of the stack
+
+			*next++ = Token.root.Next; //Push the child of the root because we have already tested with the root
+
+			while (next != stack)
+			{
+				uint index = (--next)->NodeValue;
+
+				ref readonly Node child0 = ref nodes[index];
+				ref readonly Node child1 = ref nodes[index + 1];
+
+				float hit0 = child0.aabb.Intersect(query.ray);
+				float hit1 = child1.aabb.Intersect(query.ray);
+
+				//Orderly intersects the two children so that there is a higher chance of intersection on the first child.
+				//Although the order of leaf intersection is wrong, the performance is actually better than reversing to correct it.
+
+				if (hit0 < hit1)
+				{
+					if (Push(hit1, child1.token, ref query)) return true;
+					if (Push(hit0, child0.token, ref query)) return true;
+				}
+				else
+				{
+					if (Push(hit0, child0.token, ref query)) return true;
+					if (Push(hit1, child1.token, ref query)) return true;
+				}
+
+				[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+				bool Push(float hit, in Token token, ref OccludeQuery refQuery)
+				{
+					if (hit >= refQuery.travel) return false;
+
+					if (token.IsNode)
+					{
+						//Branch
+						*next++ = token;
+						return false;
+					}
+
+					//Leaf
+					return pack.Occlude(ref refQuery, token);
+				}
+			}
+
+			return false;
 		}
 
 		int GetTraceCost(in Token token, in Ray ray, ref float distance)

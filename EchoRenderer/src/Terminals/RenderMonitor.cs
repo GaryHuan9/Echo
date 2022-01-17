@@ -1,4 +1,5 @@
 using System;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Scenes;
@@ -19,6 +20,7 @@ namespace EchoRenderer.Terminals
 			statusGrid[0][2] = "Pixel";
 			statusGrid[0][3] = "Sample";
 			statusGrid[0][4] = "Trace";
+			statusGrid[0][5] = "Occlude";
 
 			statusGrid[1][0] = "Per Second";
 			statusGrid[2][0] = "Total Done";
@@ -35,7 +37,7 @@ namespace EchoRenderer.Terminals
 		readonly string[][] statusGrid;
 
 		const int StatusHeight = 7;         //Lines of text used to display the current status
-		readonly Int2 gridSize = new(5, 4); //4 rows; 5 columns: Name, Tile, Pixel, Sample, Intersection
+		readonly Int2 gridSize = new(6, 4); //4 rows; 6 columns: Name, Tile, Pixel, Sample, Trace, Occlude
 
 		public override void Update()
 		{
@@ -116,13 +118,18 @@ namespace EchoRenderer.Terminals
 		void DrawStatusGrid()
 		{
 			//Fill the numbers
-			Span<long> numbers = stackalloc long[gridSize.x - 1];
 			double seconds = Engine.Elapsed.TotalSeconds;
 
-			numbers[0] = Engine.CompletedTileCount;
-			numbers[1] = Engine.CompletedPixel;
-			numbers[2] = Engine.CompletedSample;
-			numbers[3] = Engine.CurrentProfile.Scene.TraceCount;
+			Span<long> numbers = stackalloc long[]
+			{
+				Engine.CompletedTileCount,
+				Engine.CompletedPixel,
+				Engine.CompletedSample,
+				Engine.CurrentProfile.Scene.TraceCount,
+				Engine.CurrentProfile.Scene.OccludeCount
+			};
+
+			Assert.AreEqual(numbers.Length, gridSize.x);
 
 			for (int x = 1; x < gridSize.x; x++)
 			{
@@ -189,7 +196,7 @@ namespace EchoRenderer.Terminals
 			//Display margin
 			Span<char> margin = stackalloc char[MarginX];
 
-			for (int i = 0; i < MarginX - 1; i++) margin[i] = '>';
+			for (int i = 0; i < MarginX - 1; i++) margin[i] = '=';
 			for (int i = 0; i < tileSize.y; i++) builders.SetSlice(Int2.up * (i + StatusHeight), margin);
 
 			//Display rendering monitor
@@ -207,7 +214,7 @@ namespace EchoRenderer.Terminals
 					}
 					else character = '\u2593';
 				}
-				else character = '`';
+				else character = ' ';
 
 				builders[position + offset] = character;
 			}

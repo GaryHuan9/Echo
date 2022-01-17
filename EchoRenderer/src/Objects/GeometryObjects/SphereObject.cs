@@ -51,7 +51,13 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
 
-		const float DistanceMin = PreparedPack.DistanceMin;
+		/// <summary>
+		/// Because spheres have two intersection points, if an intersection distance is going to be under this value,
+		/// we have the option to attempt to find the intersection that is further away. This is used to avoid self
+		/// intersections along with <see cref="TraceQuery.ignore"/> and <see cref="OccludeQuery.ignore"/>.
+		/// </summary>
+		const float DistanceThreshold = 6e-4f;
+
 		const float Infinity = float.PositiveInfinity;
 
 		/// <summary>
@@ -59,11 +65,13 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// backface culling. If the intersection exists, the distance is returned and <paramref name="uv"/> will contain the
 		/// barycentric coordinate of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
 		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
+		/// NOTE: if <paramref name="findFar"/> is true, any intersection distance under <see cref="DistanceThreshold"/> is ignored.
 		/// </summary>
-		public float Intersect(in Ray ray, out Float2 uv)
+		public float Intersect(in Ray ray, out Float2 uv, bool findFar = false)
 		{
 			Unsafe.SkipInit(out uv);
 
+			//Test ray direction
 			Float3 offset = ray.origin - position;
 			float point0 = -offset.Dot(ray.direction);
 
@@ -71,18 +79,22 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 			if (point1Squared < 0f) return Infinity;
 
+			//Find appropriate distance
 			float point1 = FastMath.Sqrt0(point1Squared);
 			float distance = point0 - point1;
 
-			if (distance < DistanceMin) distance = point0 + point1;
-			if (distance < DistanceMin) return Infinity;
+			float threshold = findFar ? 0f : DistanceThreshold;
 
+			if (distance < threshold) distance = point0 + point1;
+			if (distance < threshold) return Infinity;
+
+			//Calculate uv
 			Float3 point = offset + ray.direction * distance;
 
 			uv = new Float2
 			(
 				0.5f + MathF.Atan2(point.x, point.z) / Scalars.TAU,
-				0.5f + MathF.Asin((point.y / radius).Clamp(-1f)) / Scalars.PI
+				0.5f + MathF.Asin(FastMath.Clamp11(point.y / radius)) / Scalars.PI
 			);
 
 			return distance;
@@ -90,9 +102,11 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		/// <summary>
 		/// Returns whether <paramref name="ray"/> will intersect with this <see cref="PreparedSphere"/> after <paramref name="travel"/>.
+		/// NOTE: if <paramref name="findFar"/> is true, any intersection distance under <see cref="DistanceThreshold"/> is ignored.
 		/// </summary>
-		public bool Intersect(in Ray ray, float travel)
+		public bool Intersect(in Ray ray, float travel, bool findFar = false)
 		{
+			//Test ray direction
 			Float3 offset = ray.origin - position;
 			float point0 = -offset.Dot(ray.direction);
 
@@ -100,11 +114,14 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 			if (point1Squared < 0f) return false;
 
+			//Find appropriate distance
 			float point1 = FastMath.Sqrt0(point1Squared);
 			float distance = point0 - point1;
 
-			if (distance < DistanceMin) distance = point0 + point1;
-			return distance >= DistanceMin && distance <= travel;
+			float threshold = findFar ? 0f : DistanceThreshold;
+
+			if (distance < threshold) distance = point0 + point1;
+			return distance >= threshold && distance < travel;
 		}
 
 		public static Float3 GetGeometryNormal(Float2 uv)

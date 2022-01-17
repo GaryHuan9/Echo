@@ -6,6 +6,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.IO;
+using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Objects.Scenes;
@@ -90,7 +91,7 @@ namespace EchoRenderer
 			AdaptiveSample = 0
 		};
 
-		static readonly ScenePrepareProfile scenePrepareProfile = new();
+		static readonly ScenePrepareProfile scenePrepareProfile = new() { AggregatorProfile = new AggregatorProfile() };
 
 		static void PerformRender()
 		{
@@ -108,6 +109,7 @@ namespace EchoRenderer
 			{
 				Method = new PathTraceWorker(),
 				TilePattern = new CheckerboardPattern(),
+				// WorkerSize = 1,
 				PixelSample = 64,
 				// AdaptiveSample = 400,
 				BounceLimit = 128
