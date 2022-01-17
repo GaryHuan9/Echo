@@ -27,14 +27,15 @@ namespace EchoRenderer.Experimental
 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
 			scene.children.Add(new MeshObject(mesh, new Matte()));
 
-			queries = new TraceQuery[65536];
+			traceQueries = new TraceQuery[65536];
+			occludeQueries = new OccludeQuery[65536];
 
 			IRandom random = new SystemRandom(42);
 
 			const float Radius = 9f;
 			const float Height = 5f;
 
-			for (int i = 0; i < queries.Length; i++)
+			for (int i = 0; i < traceQueries.Length; i++)
 			{
 				Float2 point = new Float2(MathF.Sqrt(random.Next1()) * Radius, random.Next1() * Height);
 				Float3 position = point.X_Y.RotateXZ(random.Next1() * 360f);
@@ -49,7 +50,10 @@ namespace EchoRenderer.Experimental
 					position += offset;
 				}
 
-				queries[i] = new Ray(position, (target - position).Normalized);
+				Ray ray = new Ray(position, (target - position).Normalized);
+
+				traceQueries[i] = ray;
+				occludeQueries[i] = ray;
 			}
 
 			Pairs = new[]
@@ -59,7 +63,8 @@ namespace EchoRenderer.Experimental
 			};
 		}
 
-		readonly TraceQuery[] queries;
+		readonly TraceQuery[] traceQueries;
+		readonly OccludeQuery[] occludeQueries;
 
 		[ParamsSource(nameof(Pairs))]
 		public Pair CurrentPair { get; set; }
@@ -94,15 +99,37 @@ namespace EchoRenderer.Experimental
 		// | GetIntersection |        Quad | 41.83 ms | 0.414 ms | 0.387 ms |
 		// | GetIntersection |     Regular | 59.66 ms | 0.252 ms | 0.236 ms |
 
+		// Added occlusion
+		// |  Method | CurrentPair |     Mean |    Error |   StdDev |
+		// |-------- |------------ |---------:|---------:|---------:|
+		// |   Trace |        Quad | 47.23 ms | 0.276 ms | 0.258 ms |
+		// | Occlude |        Quad | 40.25 ms | 0.175 ms | 0.155 ms |
+		// |   Trace |     Regular | 68.82 ms | 0.356 ms | 0.333 ms |
+		// | Occlude |     Regular | 57.29 ms | 0.319 ms | 0.298 ms |
+
 		[Benchmark]
-		public bool GetIntersection()
+		public bool Trace()
 		{
 			bool result = default;
 
-			for (int i = 0; i < queries.Length; i++)
+			for (int i = 0; i < traceQueries.Length; i++)
 			{
-				TraceQuery query = queries[i];
+				TraceQuery query = traceQueries[i];
 				result ^= CurrentPair.scene.Trace(ref query);
+			}
+
+			return result;
+		}
+
+		[Benchmark]
+		public bool Occlude()
+		{
+			bool result = default;
+
+			for (int i = 0; i < traceQueries.Length; i++)
+			{
+				OccludeQuery query = occludeQueries[i];
+				result ^= CurrentPair.scene.Occlude(ref query);
 			}
 
 			return result;
