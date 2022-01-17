@@ -155,7 +155,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// </summary>
 		public Float3 GeometryNormal => Float3.Cross(edge1, edge2).Normalized;
 
-		const float Epsilon = Scalars.Epsilon;
 		const float Infinity = float.PositiveInfinity;
 
 		/// <summary>
@@ -173,27 +172,27 @@ namespace EchoRenderer.Objects.GeometryObjects
 			float determinant = Float3.Dot(edge1, cross2);
 
 			//If determinant is close to zero, ray is parallel to triangle
-			if (determinant is > -Epsilon and < Epsilon) return Infinity;
+			if (determinant == 0f) return Infinity;
+			float determinantR = 1f / determinant;
 
 			Float3 offset = ray.origin - vertex0;
-			float u = offset.Dot(cross2);
+			float u = offset.Dot(cross2) * determinantR;
 
 			//Check if is outside barycentric bounds
-			if (u < 0f || u > determinant) return Infinity;
+			if (u is < 0f or > 1f) return Infinity;
 
 			Float3 cross1 = Float3.Cross(offset, edge1);
-			float v = ray.direction.Dot(cross1);
+			float v = ray.direction.Dot(cross1) * determinantR;
 
 			//Check if is outside barycentric bounds
-			if (v < 0f || u + v > determinant) return Infinity;
+			if (v < 0f || u + v > 1f) return Infinity;
 
 			//Check if ray is pointing away from triangle
-			float distance = edge2.Dot(cross1);
+			float distance = edge2.Dot(cross1) * determinantR;
 			if (distance < 0f) return Infinity;
 
-			float determinantR = 1f / determinant;
-			uv = new Float2(u, v) * determinantR;
-			return distance * determinantR;
+			uv = new Float2(u, v);
+			return distance;
 		}
 
 		/// <summary>
@@ -207,22 +206,24 @@ namespace EchoRenderer.Objects.GeometryObjects
 			float determinant = Float3.Dot(edge1, cross2);
 
 			//If determinant is close to zero, ray is parallel to triangle
-			if (determinant is > -Epsilon and < Epsilon) return false;
+			if (determinant == 0f) return false;
+			float sign = MathF.Sign(determinant);
+			determinant *= sign;
 
 			Float3 offset = ray.origin - vertex0;
-			float u = offset.Dot(cross2);
+			float u = offset.Dot(cross2) * sign;
 
 			//Check if is outside barycentric bounds
 			if (u < 0f || u > determinant) return false;
 
 			Float3 cross1 = Float3.Cross(offset, edge1);
-			float v = ray.direction.Dot(cross1);
+			float v = ray.direction.Dot(cross1) * sign;
 
 			//Check if is outside barycentric bounds
 			if (v < 0f || u + v > determinant) return false;
 
 			//Check if ray is pointing away from triangle
-			float distance = edge2.Dot(cross1);
+			float distance = edge2.Dot(cross1) * sign;
 			return distance >= 0f && distance < travel * determinant;
 		}
 
