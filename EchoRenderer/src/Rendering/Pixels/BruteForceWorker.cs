@@ -1,6 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;

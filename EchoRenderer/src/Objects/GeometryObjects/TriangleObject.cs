@@ -155,8 +155,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// </summary>
 		public Float3 GeometryNormal => Float3.Cross(edge1, edge2).Normalized;
 
-		const float Infinity = float.PositiveInfinity;
-
 		/// <summary>
 		/// Returns the distance of intersection between this <see cref="PreparedTriangle"/> and <paramref name="ray"/> without
 		/// backface culling. If the intersection exists, the distance is returned and <paramref name="uv"/> will contain the
@@ -165,6 +163,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// </summary>
 		public float Intersect(in Ray ray, out Float2 uv)
 		{
+			const float Infinity = float.PositiveInfinity;
 			Unsafe.SkipInit(out uv);
 
 			//Calculate determinant and u
