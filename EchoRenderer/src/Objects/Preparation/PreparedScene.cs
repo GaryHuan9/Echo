@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
+using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Objects.Scenes;
@@ -52,7 +53,7 @@ namespace EchoRenderer.Objects.Preparation
 			preparer = new ScenePreparer(source, profile);
 
 			//Create root instance and prepare materials
-			rootInstance = new PreparedInstance(preparer, source);
+			rootInstance = new PreparedInstanceRoot(preparer, source);
 			preparer.materials.Prepare();
 
 			//Prepare lights
@@ -77,7 +78,7 @@ namespace EchoRenderer.Objects.Preparation
 		public long TraceCount => Interlocked.Read(ref _traceCount);
 		public long OccludeCount => Interlocked.Read(ref _occludeCount);
 
-		readonly PreparedInstance rootInstance;
+		readonly PreparedInstanceRoot rootInstance;
 
 		/// <summary>
 		/// Processes the <paramref name="query"/> and returns whether it intersected with something.
@@ -107,10 +108,23 @@ namespace EchoRenderer.Objects.Preparation
 		public Interaction Interact(in TraceQuery query, out Material material)
 		{
 			query.AssertHit();
-			ref readonly var token = ref query.token;
 
-			var instance = token.InstanceCount == 0 ? rootInstance : preparer.GetPreparedInstance(token.FinalInstanceId);
-			return instance.pack.Interact(query, preparer, instance, out material);
+			ref readonly GeometryToken token = ref query.token;
+
+			ReadOnlySpan<uint> ids = token.Instances;
+			PreparedInstance current = rootInstance;
+
+			using var _ = SpanPool<PreparedInstance>.Fetch(ids.Length + 1, out var layers);
+
+			layers[0] = rootInstance;
+
+			for (int i = 0; i < ids.Length; i++)
+			{
+				current = current.pack.GetInstance(ids[i]);
+				layers[i + 1] = current;
+			}
+
+			return current.pack.Interact(query, layers, out material);
 		}
 
 		/// <summary>

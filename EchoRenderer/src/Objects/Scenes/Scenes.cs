@@ -120,7 +120,8 @@ namespace EchoRenderer.Objects.Scenes
 		public TestInstancing()
 		{
 			var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
-			var material = new Matte();
+			var material0 = new Matte { Albedo = Texture.white };
+			var material1 = new Matte { Albedo = Texture.normal };
 
 			// var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
 			// var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");
@@ -128,8 +129,8 @@ namespace EchoRenderer.Objects.Scenes
 			ObjectPack bunny = new ObjectPack();
 			ObjectPack bunnyWall = new ObjectPack();
 
-			bunny.children.Add(new MeshObject(mesh, material) { Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f });
-			bunny.children.Add(new SphereObject(material, 0.1f) { Position = new Float3(-0.3f, 0.2f, -0.3f) });
+			bunny.children.Add(new MeshObject(mesh, material0) { Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f });
+			bunny.children.Add(new SphereObject(material1, 0.1f) { Position = new Float3(-0.3f, 0.2f, -0.3f) });
 
 			foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))
 			{
@@ -141,11 +142,11 @@ namespace EchoRenderer.Objects.Scenes
 				children.Add(new ObjectInstance(bunnyWall) { Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f) });
 			}
 
-			bunnyWall.children.Add(new PlaneObject(material, Float2.one) { Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });
-			// bunnyWall.children.Add(new ObjectPackInstance(bunnyWall)); //Tests recursive instancing
+			bunnyWall.children.Add(new PlaneObject(material0, Float2.one) { Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });
+			// bunnyWall.children.Add(new ObjectInstance(bunnyWall)); //Tests recursive instancing
 
-			children.Add(new BoxObject(material, Float3.one));
-			children.Add(new PlaneObject(material, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
+			children.Add(new BoxObject(material0, Float3.one));
+			children.Add(new PlaneObject(material1, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
 
 			children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale((Float3)1.5f) } });
 
