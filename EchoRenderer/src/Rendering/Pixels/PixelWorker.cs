@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Mathematics;
-using EchoRenderer.Common;
-using EchoRenderer.Mathematics.Primitives;
+﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Memory;

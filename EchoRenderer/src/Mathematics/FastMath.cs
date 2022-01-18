@@ -1,7 +1,5 @@
 using System;
-using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Common;
 
 namespace EchoRenderer.Mathematics
 {
