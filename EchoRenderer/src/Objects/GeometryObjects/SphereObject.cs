@@ -58,8 +58,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// </summary>
 		const float DistanceThreshold = 6e-4f;
 
-		const float Infinity = float.PositiveInfinity;
-
 		/// <summary>
 		/// Returns the distance of intersection between this <see cref="PreparedSphere"/> and <paramref name="ray"/> without
 		/// backface culling. If the intersection exists, the distance is returned and <paramref name="uv"/> will contain the
@@ -69,6 +67,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// </summary>
 		public float Intersect(in Ray ray, out Float2 uv, bool findFar = false)
 		{
+			const float Infinity = float.PositiveInfinity;
 			Unsafe.SkipInit(out uv);
 
 			//Test ray direction
@@ -83,7 +82,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			float point1 = FastMath.Sqrt0(point1Squared);
 			float distance = point0 - point1;
 
-			float threshold = findFar ? 0f : DistanceThreshold;
+			float threshold = findFar ? DistanceThreshold : 0f;
 
 			if (distance < threshold) distance = point0 + point1;
 			if (distance < threshold) return Infinity;
@@ -118,7 +117,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			float point1 = FastMath.Sqrt0(point1Squared);
 			float distance = point0 - point1;
 
-			float threshold = findFar ? 0f : DistanceThreshold;
+			float threshold = findFar ? DistanceThreshold : 0f;
 
 			if (distance < threshold) distance = point0 + point1;
 			return distance >= threshold && distance < travel;
