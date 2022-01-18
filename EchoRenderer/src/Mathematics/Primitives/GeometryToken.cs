@@ -42,7 +42,9 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// A stack that holds the different <see cref="PreparedInstance.id"/> branches to reach this <see cref="Geometry"/>.
 		/// </summary>
+#pragma warning disable CS0649
 		fixed uint instances[ObjectPack.MaxLayer];
+#pragma warning restore CS0649
 
 		/// <summary>
 		/// Returns the <see cref="PreparedInstance.id"/> of the topmost <see cref="PreparedInstance"/>,
