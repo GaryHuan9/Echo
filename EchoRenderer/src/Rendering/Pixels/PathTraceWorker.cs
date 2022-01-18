@@ -47,11 +47,17 @@ namespace EchoRenderer.Rendering.Pixels
 				using var _ = arena.allocator.Begin();
 				material.Scatter(ref interaction, arena);
 
-				if (interaction.bsdf.Count() == 0)
+				if (interaction.bsdf == null)
 				{
 					query = query.SpawnTrace();
 					--bounce;
 					continue;
+				}
+
+				if (interaction.bsdf.Count() == 0)
+				{
+					energy = Float3.zero;
+					break;
 				}
 
 				Float3 scatter = interaction.bsdf.Sample

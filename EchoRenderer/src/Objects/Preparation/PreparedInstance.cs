@@ -11,7 +11,7 @@ namespace EchoRenderer.Objects.Preparation
 		/// <summary>
 		/// Creates a regular <see cref="PreparedInstance"/>.
 		/// </summary>
-		public PreparedInstance(ScenePreparer preparer, ObjectInstance instance) : this(preparer, instance.ObjectPack, instance.Mapper)
+		public PreparedInstance(ScenePreparer preparer, ObjectInstance instance, uint id) : this(preparer, instance.ObjectPack, instance.Mapper, id)
 		{
 			forwardTransform = instance.WorldToLocal;
 			inverseTransform = instance.LocalToWorld;
@@ -26,21 +26,9 @@ namespace EchoRenderer.Objects.Preparation
 			else throw new Exception($"{nameof(ObjectInstance)} does not support none uniform scaling! '{scale}'");
 		}
 
-		/// <summary>
-		/// Creates a root <see cref="PreparedInstance"/> with <paramref name="scene"/>.
-		/// </summary>
-		public PreparedInstance(ScenePreparer preparer, Scene scene) : this(preparer, scene, null)
+		protected PreparedInstance(ScenePreparer preparer, ObjectPack pack, MaterialMapper mapper, uint id)
 		{
-			forwardTransform = Float4x4.identity;
-			inverseTransform = Float4x4.identity;
-
-			forwardScale = 1f;
-			inverseScale = 1f;
-		}
-
-		PreparedInstance(ScenePreparer preparer, ObjectPack pack, MaterialMapper mapper)
-		{
-			id = preparer.RegisterPreparedInstance(this);
+			this.id = id;
 			this.pack = preparer.GetPreparedPack(pack);
 			this.mapper = preparer.materials.GetMapper(mapper);
 		}
@@ -56,11 +44,11 @@ namespace EchoRenderer.Objects.Preparation
 		public readonly PreparedPack pack;
 		public readonly MaterialPreparer.Mapper mapper;
 
-		readonly Float4x4 forwardTransform; //The parent to local transform
-		readonly Float4x4 inverseTransform; //The local to parent transform
+		readonly Float4x4 forwardTransform = Float4x4.identity; //The parent to local transform
+		readonly Float4x4 inverseTransform = Float4x4.identity; //The local to parent transform
 
-		readonly float forwardScale; //The parent to local scale multiplier
-		readonly float inverseScale; //The local to parent scale multiplier
+		readonly float forwardScale = 1f; //The parent to local scale multiplier
+		readonly float inverseScale = 1f; //The local to parent scale multiplier
 
 		/// <summary>
 		/// Processes <paramref name="query"/>.
@@ -68,7 +56,6 @@ namespace EchoRenderer.Objects.Preparation
 		public void Trace(ref TraceQuery query)
 		{
 			var oldRay = query.ray;
-			var oldDistance = query.distance;
 
 			//Convert from parent space to local space
 			TransformForward(ref query.ray);
@@ -79,8 +66,8 @@ namespace EchoRenderer.Objects.Preparation
 			pack.aggregator.Trace(ref query);
 
 			//Convert back to parent space
+			query.distance *= inverseScale;
 			query.ray = oldRay;
-			query.distance = oldDistance;
 			query.current.Pop();
 		}
 
@@ -90,7 +77,6 @@ namespace EchoRenderer.Objects.Preparation
 		public bool Occlude(ref OccludeQuery query)
 		{
 			var oldRay = query.ray;
-			var oldTravel = query.travel;
 
 			//Convert from parent space to local space
 			TransformForward(ref query.ray);
@@ -101,29 +87,11 @@ namespace EchoRenderer.Objects.Preparation
 			if (pack.aggregator.Occlude(ref query)) return true;
 
 			//Convert back to parent space
+			query.travel *= inverseScale;
 			query.ray = oldRay;
-			query.travel = oldTravel;
 			query.current.Pop();
 
 			return false;
-		}
-
-		/// <summary>
-		/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root.
-		/// </summary>
-		public void TraceRoot(ref TraceQuery query)
-		{
-			Assert.AreEqual(query.current, default);
-			pack.aggregator.Trace(ref query);
-		}
-
-		/// <summary>
-		/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root and returns the result.
-		/// </summary>
-		public bool OccludeRoot(ref OccludeQuery query)
-		{
-			Assert.AreEqual(query.current, default);
-			return pack.aggregator.Occlude(ref query);
 		}
 
 		/// <summary>
@@ -132,7 +100,6 @@ namespace EchoRenderer.Objects.Preparation
 		public int TraceCost(Ray ray, ref float distance)
 		{
 			//Forward transform distance to local space
-			var oldDistance = distance;
 			distance *= forwardScale;
 
 			//Gets intersection cost, calculation done in local space
@@ -141,7 +108,7 @@ namespace EchoRenderer.Objects.Preparation
 			int cost = pack.aggregator.TraceCost(ray, ref distance);
 
 			//Restore distance back to parent space
-			distance = oldDistance;
+			distance *= inverseScale;
 			return cost;
 		}
 

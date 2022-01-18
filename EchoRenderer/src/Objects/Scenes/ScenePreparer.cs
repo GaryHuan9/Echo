@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
@@ -20,8 +19,6 @@ namespace EchoRenderer.Objects.Scenes
 			materials = new MaterialPreparer();
 			root = CreateNode(scene, null);
 
-			threadId = Thread.CurrentThread.ManagedThreadId;
-
 			PreparePacks(root);
 		}
 
@@ -29,24 +26,9 @@ namespace EchoRenderer.Objects.Scenes
 		public readonly MaterialPreparer materials;
 		public readonly Node root;
 
-		public Dictionary<ObjectPack, Node>.KeyCollection UniquePacks => objectPacks.Keys;
-
-		readonly int threadId;
-
 		readonly Dictionary<ObjectPack, Node> objectPacks = new();
-		readonly List<PreparedInstance> packInstances = new();
 
-		/// <summary>
-		/// Returns a unique id for the newly created <paramref name="instance"/> and register it into this <see cref="ScenePreparer"/>.
-		/// NOTE: This method must be invoked on the same thread as the constructor of this <see cref="ScenePreparer"/>!
-		/// </summary>
-		public uint RegisterPreparedInstance(PreparedInstance instance)
-		{
-			if (threadId != Thread.CurrentThread.ManagedThreadId) throw new Exception($"Invalid thread {threadId}!");
-
-			packInstances.Add(instance);
-			return (uint)(packInstances.Count - 1);
-		}
+		public Dictionary<ObjectPack, Node>.KeyCollection UniquePacks => objectPacks.Keys;
 
 		/// <summary>
 		/// Creates or retrieves and returns the <see cref="PreparedPack"/> for <paramref name="pack"/>.
@@ -60,12 +42,6 @@ namespace EchoRenderer.Objects.Scenes
 
 			return node.PreparedPack;
 		}
-
-		/// <summary>
-		/// Retrieves a registered <see cref="PreparedInstance"/> with
-		/// <paramref name="id"/> from this <see cref="ScenePreparer"/>.
-		/// </summary>
-		public PreparedInstance GetPreparedInstance(uint id) => packInstances[(int)id];
 
 		Node CreateNode(ObjectPack pack, Node parent)
 		{
@@ -176,7 +152,7 @@ namespace EchoRenderer.Objects.Scenes
 			Dictionary<Node, uint>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();
 
 			IEnumerator<Node> IEnumerable<Node>.GetEnumerator() => GetEnumerator();
-			IEnumerator IEnumerable.            GetEnumerator() => GetEnumerator();
+			IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 		}
 	}
 }
