@@ -6,6 +6,7 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.GeometryObjects
@@ -224,6 +225,12 @@ namespace EchoRenderer.Objects.GeometryObjects
 			//Check if ray is pointing away from triangle
 			float distance = edge2.Dot(cross1) * sign;
 			return distance >= 0f && distance < travel * determinant;
+		}
+
+		public Float3 Sample(Distro2 distro)
+		{
+			Float2 uv = distro.UniformTriangle;
+			return InterpolateVertex(uv);
 		}
 
 		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
