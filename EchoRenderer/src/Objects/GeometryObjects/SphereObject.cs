@@ -6,6 +6,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.GeometryObjects
@@ -123,10 +124,37 @@ namespace EchoRenderer.Objects.GeometryObjects
 			return distance >= threshold && distance < travel;
 		}
 
+		public Float3 Sample(Distro2 distro) => distro.UniformSphere * radius;
+
+		// public Float3 Sample(Distro2 distro, Float3 interaction)
+		// {
+		// 	Float3 difference = interaction - position;
+		// 	float distance2 = difference.SquaredMagnitude;
+		//
+		// 	if (distance2 <= radiusSquared) return Sample(distro);
+		//
+		// 	//Find cosine max
+		// 	float sinMaxT2 = radiusSquared / distance2;
+		// 	float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
+		//
+		// 	//Uniform sample cone, defined by theta and phi
+		// 	float cosT = FastMath.FMA(distro.x, cosMaxT - 1f, 1f);
+		// 	float sinT = FastMath.Identity(cosT);
+		// 	float phi = distro.y * Scalars.TAU;
+		//
+		// 	//Compute angle alpha from center of sphere to sample point
+		// 	float distance = FastMath.Sqrt0(distance2);
+		// 	float project = distance * cosT - FastMath.Sqrt0(radiusSquared - distance2 * sinT * sinT);
+		// 	float cosA = (distance2 + radiusSquared - project * project) / (2f * distance * radius);
+		// 	float sinA = FastMath.Identity(cosA);
+		//
+		// 	//Find point
+		// 	// Float3 point =radius *
+		// 	throw new NotImplementedException();
+		// }
+
 		public static Float3 GetGeometryNormal(Float2 uv)
 		{
-			//TODO: account for rotation during uv calculation, and in turn normal calculation
-
 			float angle0 = Scalars.TAU * (uv.x - 0.5f);
 			float angle1 = Scalars.PI * (uv.y - 0.5f);
 
