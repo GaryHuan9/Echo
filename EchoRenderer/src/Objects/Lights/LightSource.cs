@@ -8,7 +8,7 @@ namespace EchoRenderer.Objects.Lights
 {
 	/// <summary>
 	/// A light source that can create radiance and illuminate the scene.
-	/// NOTE: unless explicitly indicated, directions in <see cref="LightSource"/> are world space.
+	/// NOTE: directions in <see cref="LightSource"/> are world space.
 	/// </summary>
 	public abstract class LightSource : Object
 	{
@@ -20,11 +20,6 @@ namespace EchoRenderer.Objects.Lights
 		/// The main color and intensity of this <see cref="LightSource"/>.
 		/// </summary>
 		public Float3 Intensity { get; set; } = Float3.one;
-
-		/// <summary>
-		/// The number of consecutive samples that should be used to sample this <see cref="LightSource"/>.
-		/// </summary>
-		public int SampleCount { get; set; } = 1;
 
 		/// <summary>
 		/// The approximated total emitted power of this <see cref="LightSource"/>.
