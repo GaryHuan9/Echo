@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
+using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
 
@@ -6,17 +7,27 @@ namespace EchoRenderer.Mathematics.Primitives
 {
 	public struct Interaction
 	{
-		public Interaction(in TraceQuery query, in Float3 geometryNormal, in Float3 normal, in Float2 texcoord)
+		public Interaction(in TraceQuery query, in Float3 normal) : this
+		(
+			query, new GeometryPoint(query.Position, normal)
+		) { }
+
+		public Interaction(in TraceQuery query, in Float3 normal, Material material, Float2 texcoord) : this
+		(
+			query,
+			new GeometryPoint(query.Position, normal),
+			new GeometryShade(material, texcoord, normal)
+		) { }
+
+		public Interaction(in TraceQuery query, in GeometryPoint point, in GeometryShade shade = default)
 		{
 			query.AssertHit();
-
 			token = query.token;
-			position = query.Position;
 			outgoing = -query.ray.direction;
 
-			this.geometryNormal = geometryNormal;
-			this.normal = normal;
-			this.texcoord = texcoord;
+			this.point = point;
+			this.shade = shade;
+
 			bsdf = null;
 		}
 
@@ -26,29 +37,19 @@ namespace EchoRenderer.Mathematics.Primitives
 		public readonly GeometryToken token;
 
 		/// <summary>
-		/// The <see cref="position"/> at which the <see cref="Interaction"/> occured.
-		/// </summary>
-		public readonly Float3 position;
-
-		/// <summary>
-		/// The outgoing direction of this <see cref="Interaction"/> in world space.
+		/// World space outgoing direction of this <see cref="Interaction"/>.
 		/// </summary>
 		public readonly Float3 outgoing;
 
 		/// <summary>
-		/// The pure geometry normal of this <see cref="Interaction"/>.
+		/// Geometric information about our point of interest.
 		/// </summary>
-		public readonly Float3 geometryNormal;
+		public readonly GeometryPoint point;
 
 		/// <summary>
-		/// The shading normal of this <see cref="Interaction"/>.
+		/// Shading information about our point of interest.
 		/// </summary>
-		public readonly Float3 normal;
-
-		/// <summary>
-		/// The texture coordinate of this <see cref="Interaction"/>.
-		/// </summary>
-		public readonly Float2 texcoord;
+		public readonly GeometryShade shade;
 
 		/// <summary>
 		/// The <see cref="BSDF"/> of this <see cref="Interaction"/>.
@@ -58,7 +59,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> towards <paramref name="direction"/>.
 		/// </summary>
-		public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(position, direction), float.PositiveInfinity, token);
+		public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(point.position, direction), float.PositiveInfinity, token);
 
 		/// <summary>
 		/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> with a direction directly opposite to <see cref="outgoing"/>.
@@ -68,7 +69,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// Spawns a new <see cref="OccludeQuery"/> with <paramref name="direction"/> and <paramref name="travel"/>.
 		/// </summary>
-		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(position, direction), travel, token);
+		public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(point.position, direction), travel, token);
 
 		/// <summary>
 		/// Spawns a new <see cref="OccludeQuery"/> directly opposite to <see cref="outgoing"/> with <paramref name="travel"/>.
@@ -76,9 +77,9 @@ namespace EchoRenderer.Mathematics.Primitives
 		public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(-outgoing, travel);
 
 		/// <summary>
-		/// Returns the absolute value of the dot product between <paramref name="direction"/> and <see cref="normal"/>.
+		/// Returns the absolute value of the dot product between <paramref name="direction"/> and <see cref="GeometryShade.Normal"/>.
 		/// </summary>
-		public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(normal));
+		public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(shade.Normal));
 
 		/// <summary>
 		/// Creates and returns a new <see cref="BSDF"/> using <paramref name="arena"/> and assign it to <see cref="bsdf"/>.

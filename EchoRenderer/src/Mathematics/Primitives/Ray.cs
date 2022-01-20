@@ -4,7 +4,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using static EchoRenderer.Common.Utilities;
+using EchoRenderer.Common;
 
 namespace EchoRenderer.Mathematics.Primitives
 {
@@ -46,7 +46,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		public unsafe Float3 GetPoint(float distance)
 		{
 			Vector128<float> length = Vector128.Create(distance);
-			Vector128<float> result = Fused(directionVector, length, originVector);
+			Vector128<float> result = PackedMath.FMA(directionVector, length, originVector);
 
 			return *(Float3*)&result;
 		}

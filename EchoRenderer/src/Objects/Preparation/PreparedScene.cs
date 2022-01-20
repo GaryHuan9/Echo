@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
@@ -101,30 +102,23 @@ namespace EchoRenderer.Objects.Preparation
 			return rootInstance.OccludeRoot(ref query);
 		}
 
-		/// <summary>
-		/// Begins interacting with the result of <paramref name="query"/> by creating and
-		/// returning an <see cref="Interaction"/> and outputting <paramref name="material"/>.
-		/// </summary>
-		public Interaction Interact(in TraceQuery query, out Material material)
+		/// <inheritdoc cref="PreparedPack.Interact"/>
+		public Interaction Interact(in TraceQuery query)
 		{
 			query.AssertHit();
 
-			ref readonly GeometryToken token = ref query.token;
+			PreparedInstance instance = rootInstance;
+			Float4x4 transform = Float4x4.identity;
 
-			ReadOnlySpan<uint> ids = token.Instances;
-			PreparedInstance current = rootInstance;
-
-			using var _ = SpanPool<PreparedInstance>.Fetch(ids.Length + 1, out var layers);
-
-			layers[0] = rootInstance;
-
-			for (int i = 0; i < ids.Length; i++)
+			//Traverse down the instancing path
+			foreach (uint id in query.token.Instances)
 			{
-				current = current.pack.GetInstance(ids[i]);
-				layers[i + 1] = current;
+				//Because we traverse in reverse, we must also multiply the transform in reverse
+				transform = instance.inverseTransform * transform;
+				instance = instance.pack.GetInstance(id);
 			}
 
-			return current.pack.Interact(query, layers, out material);
+			return instance.pack.Interact(query, transform, instance);
 		}
 
 		/// <summary>

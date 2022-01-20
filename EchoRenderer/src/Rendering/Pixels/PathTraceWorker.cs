@@ -42,10 +42,10 @@ namespace EchoRenderer.Rendering.Pixels
 
 				if (!intersected || bounce > arena.profile.BounceLimit) break;
 
-				Interaction interaction = arena.Scene.Interact(query, out Material material);
-
 				using var _ = arena.allocator.Begin();
-				material.Scatter(ref interaction, arena);
+
+				Interaction interaction = arena.Scene.Interact(query);
+				interaction.shade.material.Scatter(ref interaction, arena);
 
 				if (interaction.bsdf == null)
 				{
@@ -148,7 +148,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, distro, out Float3 incident, out float pdf, out FunctionType sampledType);
 
-			scatter *= FastMath.Abs(incident.Dot(interaction.normal));
+			scatter *= interaction.NormalDot(incident);
 
 			if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) return Float3.zero;
 

@@ -21,9 +21,9 @@ namespace EchoRenderer.Rendering.Pixels
 			//Trace for intersection
 			while (scene.Trace(ref query))
 			{
-				Interaction interaction = scene.Interact(query, out Material material);
+				Interaction interaction = scene.Interact(query);
 
-				Float3 albedo = Utilities.ToFloat3(material.Albedo[interaction.texcoord]);
+				Float3 albedo = Utilities.ToFloat3(interaction.shade.material.Albedo[interaction.shade.Texcoord]);
 				/*if (!HitPassThrough(query, albedo, interaction.outgoing))*/ return albedo; //Return intersected albedo color
 
 				query = query.SpawnTrace(query.ray.direction);
