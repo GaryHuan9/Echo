@@ -8,7 +8,7 @@ using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Materials
 {
-	using static Utilities;
+	// using static Utilities;
 
 	public abstract class Material
 	{
@@ -36,27 +36,32 @@ namespace EchoRenderer.Rendering.Materials
 		public abstract void Scatter(ref Interaction interaction, Arena arena);
 
 		/// <summary>
-		/// Applies this <see cref="Material"/>'s <see cref="Normal"/>
-		/// mapping at <paramref name="texcoord"/> to <paramref name="normal"/>.
+		/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
+		/// to <paramref name="normal"/>. Returns whether this method caused <paramref name="normal"/> to change.
 		/// </summary>
-		public void ApplyNormalMapping(in Float2 texcoord, ref Float3 normal)
+		public bool ApplyNormalMapping(in Float2 texcoord, ref Float3 normal)
 		{
-			if (Normal == Texture.normal || NormalIntensity.AlmostEquals()) return;
+			if (Normal == Texture.normal || NormalIntensity.AlmostEquals()) return false;
 
-			Vector128<float> sample = Clamp01(Normal[texcoord]);
-			Vector128<float> local = Fused(sample, Vector128.Create(2f), NormalShift);
+			//Evaluate normal texture at texcoord
+			Vector128<float> sample = PackedMath.Clamp01(Normal[texcoord]);
+			Vector128<float> local = PackedMath.FMA(sample, Vector128.Create(2f), NormalShift);
+
+			if (PackedMath.AlmostZero(local)) return false;
 
 			//Create transform to move from local direction to world space based
 			NormalTransform transform = new NormalTransform(normal);
-			Float3 delta = transform.LocalToWorld(ToFloat3(ref local));
+			Float3 delta = transform.LocalToWorld(Utilities.ToFloat3(ref local));
 
 			normal -= delta * NormalIntensity;
 			normal = normal.Normalized;
+
+			return true;
 		}
 
 		/// <summary>
 		/// Samples <paramref name="texture"/> at <paramref name="interaction"/> as a <see cref="Float4"/>.
 		/// </summary>
-		protected static Float4 Sample(Texture texture, in Interaction interaction) => ToFloat4(texture[interaction.texcoord]);
+		protected static Float4 Sample(Texture texture, in Interaction interaction) => Utilities.ToFloat4(texture[interaction.shade.Texcoord]);
 	}
 }

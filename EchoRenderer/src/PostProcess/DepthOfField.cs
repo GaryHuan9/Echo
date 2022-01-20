@@ -53,7 +53,7 @@ namespace EchoRenderer.PostProcess
 			Vector128<float> worker = workerBuffer[position]; //Blurred
 
 			var percent = Vector128.Create(CurveHelper.Sigmoid(near - far));
-			renderBuffer[position] = Utilities.Lerp(worker, source, percent);
+			renderBuffer[position] = PackedMath.Lerp(worker, source, percent);
 		}
 	}
 }

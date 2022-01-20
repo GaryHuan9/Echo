@@ -101,7 +101,7 @@ namespace EchoRenderer.IO
 
 				//Assigns color based on alpha
 				total = Sse.Multiply(total, sizeInverse);
-				destination[position] = Utilities.Lerp(source, color, Sse.Multiply(alpha, total));
+				destination[position] = PackedMath.Lerp(source, color, Sse.Multiply(alpha, total));
 			}
 		}
 

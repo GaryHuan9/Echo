@@ -44,8 +44,8 @@ namespace EchoRenderer.Objects.Preparation
 		public readonly PreparedPack pack;
 		public readonly MaterialPreparer.Mapper mapper;
 
-		readonly Float4x4 forwardTransform = Float4x4.identity; //The parent to local transform
-		readonly Float4x4 inverseTransform = Float4x4.identity; //The local to parent transform
+		public readonly Float4x4 forwardTransform = Float4x4.identity; //The parent to local transform
+		public readonly Float4x4 inverseTransform = Float4x4.identity; //The local to parent transform
 
 		readonly float forwardScale = 1f; //The parent to local scale multiplier
 		readonly float inverseScale = 1f; //The local to parent scale multiplier

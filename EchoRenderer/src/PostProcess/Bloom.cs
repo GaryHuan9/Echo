@@ -36,7 +36,7 @@ namespace EchoRenderer.PostProcess
 		void LuminancePass(Int2 position)
 		{
 			Vector128<float> source = renderBuffer[position];
-			float luminance = Utilities.GetLuminance(source);
+			float luminance = PackedMath.GetLuminance(source);
 
 			float brightness = luminance - Threshold;
 			Vector128<float> result = Vector128<float>.Zero;

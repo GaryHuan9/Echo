@@ -23,15 +23,15 @@ namespace EchoRenderer.Rendering.Scattering
 			count = 0;
 			eta = newEta;
 
-			transform = new NormalTransform(interaction.normal);
-			geometryNormal = interaction.geometryNormal;
+			transform = new NormalTransform(interaction.shade.Normal);
+			geometricNormal = interaction.point.normal;
 		}
 
 		int count;
 		float eta;
 
 		NormalTransform transform;
-		Float3 geometryNormal;
+		Float3 geometricNormal;
 
 		BxDF[] functions = new BxDF[InitialSize];
 
@@ -230,8 +230,8 @@ namespace EchoRenderer.Rendering.Scattering
 		/// </summary>
 		FunctionType Reflect(in Float3 outgoingWorld, in Float3 incidentWorld)
 		{
-			float dot0 = outgoingWorld.Dot(geometryNormal);
-			float dot1 = incidentWorld.Dot(geometryNormal);
+			float dot0 = outgoingWorld.Dot(geometricNormal);
+			float dot1 = incidentWorld.Dot(geometricNormal);
 
 			//Returns based on whether the two directions are on the same side of the normal
 			return dot0 * dot1 > 0f ? FunctionType.reflective : FunctionType.transmissive;
