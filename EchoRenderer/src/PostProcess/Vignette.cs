@@ -27,7 +27,7 @@ namespace EchoRenderer.PostProcess
 				float distance = (uv - Float2.half).SquaredMagnitude * Intensity;
 				float multiplier = 1f + random.Next1(-FilmGrain, FilmGrain) - distance;
 
-				Vector128<float> target = Utilities.Clamp01(renderBuffer[position]);
+				Vector128<float> target = PackedMath.Clamp01(renderBuffer[position]);
 				renderBuffer[position] = Sse.Multiply(target, Vector128.Create(multiplier));
 			}
 		}

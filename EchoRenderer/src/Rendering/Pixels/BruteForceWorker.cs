@@ -20,11 +20,10 @@ namespace EchoRenderer.Rendering.Pixels
 			for (int bounce = 0; bounce < arena.profile.BounceLimit; bounce++)
 			{
 				if (!arena.Scene.Trace(ref query)) break;
-
-				Interaction interaction = arena.Scene.Interact(query, out Material material);
-
 				using var _ = arena.allocator.Begin();
-				material.Scatter(ref interaction, arena);
+
+				Interaction interaction = arena.Scene.Interact(query);
+				interaction.shade.material.Scatter(ref interaction, arena);
 
 				if (interaction.bsdf == null)
 				{

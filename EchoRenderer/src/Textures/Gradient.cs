@@ -78,7 +78,7 @@ namespace EchoRenderer.Textures
 			Anchor tail = index == anchors.Count ? anchors[index - 1] : anchors[index];
 
 			float time = Scalars.InverseLerp(head.percent, tail.percent, percent).Clamp();
-			return Utilities.Lerp(head.vector, tail.vector, Vector128.Create(time));
+			return PackedMath.Lerp(head.vector, tail.vector, Vector128.Create(time));
 		}
 
 		/// <summary>

@@ -152,11 +152,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public float Area => Float3.Cross(edge1, edge2).Magnitude / 2f;
 
 		/// <summary>
-		/// Returns the geometric normal of this <see cref="PreparedTriangle"/>.
-		/// </summary>
-		public Float3 GeometryNormal => Float3.Cross(edge1, edge2).Normalized;
-
-		/// <summary>
 		/// Returns the distance of intersection between this <see cref="PreparedTriangle"/> and <paramref name="ray"/> without
 		/// backface culling. If the intersection exists, the distance is returned and <paramref name="uv"/> will contain the
 		/// barycentric coordinate of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
@@ -227,11 +222,18 @@ namespace EchoRenderer.Objects.GeometryObjects
 			return distance >= 0f && distance < travel * determinant;
 		}
 
-		public Float3 Sample(Distro2 distro)
+		/// <summary>
+		/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="distro"/>.
+		/// </summary>
+		public GeometryPoint Sample(Distro2 distro)
 		{
 			Float2 uv = distro.UniformTriangle;
-			return InterpolateVertex(uv);
+			Float3 position = InterpolateVertex(uv);
+
+			return new GeometryPoint(position, GetNormal(uv));
 		}
+
+		// public float ProbabilityDensity() { }
 
 		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
 		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
@@ -252,23 +254,25 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		Float3 InterpolateVertex(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
 
-		//The uv locations right in the middle of two vertices
-		static readonly Float2 uv01 = new(0.5f, 0f);
-		static readonly Float2 uv02 = new(0f, 0.5f);
-		static readonly Float2 uv12 = new(0.5f, 0.5f);
-
-		static void GetSubdivided(Span<PreparedTriangle> triangles, Float3 normal0, Float3 normal1, Float3 normal2)
+		static void GetSubdivided(Span<PreparedTriangle> triangles, in Float3 normal0, in Float3 normal1, in Float3 normal2)
 		{
 			if (triangles.Length <= 1) return;
-			PreparedTriangle triangle = triangles[0];
+
+			//The uv locations right in the middle of two vertices
+			Float2 uv01 = new(0.5f, 0f);
+			Float2 uv02 = new(0f, 0.5f);
+			Float2 uv12 = new(0.5f, 0.5f);
+
+			//Begin dividing triangle
+			ref readonly PreparedTriangle triangle = ref triangles[0];
 
 			Float3 vertex01 = triangle.InterpolateVertex(uv01);
 			Float3 vertex02 = triangle.InterpolateVertex(uv02);
 			Float3 vertex12 = triangle.InterpolateVertex(uv12);
 
-			Float3 normal01 = GetInterpolatedNormal(uv01);
-			Float3 normal02 = GetInterpolatedNormal(uv02);
-			Float3 normal12 = GetInterpolatedNormal(uv12);
+			Float3 normal01 = GetInterpolatedNormal(uv01, normal0, normal1, normal2);
+			Float3 normal02 = GetInterpolatedNormal(uv02, normal0, normal1, normal2);
+			Float3 normal12 = GetInterpolatedNormal(uv12, normal0, normal1, normal2);
 
 			Float2 texcoord01 = triangle.GetTexcoord(uv01);
 			Float2 texcoord02 = triangle.GetTexcoord(uv02);
@@ -280,7 +284,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Fill(triangles, 3, triangle.materialToken, triangle.Vertex2, vertex02, vertex12, normal2, normal02, normal12, triangle.texcoord2, texcoord02, texcoord12);
 
 			//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
-			Float3 GetInterpolatedNormal(Float2 uv) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
+			static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal0, in Float3 normal1, in Float3 normal2) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
 
 			static void Fill(Span<PreparedTriangle> span, int index, int materialToken,
 							 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,

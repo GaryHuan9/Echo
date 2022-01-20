@@ -34,7 +34,7 @@ namespace EchoRenderer.PostProcess.ToneMappers
 		void MainPass(Int2 position)
 		{
 			Vector128<float> source = renderBuffer[position];
-			float luminance = Utilities.GetLuminance(source);
+			float luminance = PackedMath.GetLuminance(source);
 
 			float mapped = MapLuminance(luminance * luminanceInverse) * luminanceForward;
 			float multiplier = luminance.AlmostEquals() ? mapped : mapped / luminance;

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
-using static EchoRenderer.Common.Utilities;
+using EchoRenderer.Common;
 
 namespace EchoRenderer.PostProcess
 {
@@ -12,7 +12,7 @@ namespace EchoRenderer.PostProcess
 
 		unsafe void BarrierPass(Int2 position)
 		{
-			Vector128<float> source = Clamp01(renderBuffer[position]);
+			Vector128<float> source = PackedMath.Clamp01(renderBuffer[position]);
 
 			float* pointer = (float*)&source;
 
