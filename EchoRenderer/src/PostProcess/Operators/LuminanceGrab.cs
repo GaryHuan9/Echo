@@ -42,7 +42,7 @@ namespace EchoRenderer.PostProcess.Operators
 
 		void LuminancePass(Int2 position)
 		{
-			float luminance = Utilities.GetLuminance(sourceBuffer[position]);
+			float luminance = PackedMath.GetLuminance(sourceBuffer[position]);
 			InterlockedHelper.Add(ref luminanceTotal, luminance);
 		}
 
@@ -53,7 +53,7 @@ namespace EchoRenderer.PostProcess.Operators
 			for (int x = 0; x < sourceBuffer.size.x; x++)
 			{
 				var color = sourceBuffer[new Int2(x, vertical)];
-				luminance += Utilities.GetLuminance(color);
+				luminance += PackedMath.GetLuminance(color);
 			}
 
 			InterlockedHelper.Add(ref luminanceTotal, luminance);

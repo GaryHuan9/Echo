@@ -68,7 +68,7 @@ namespace EchoRenderer.Textures.Directional
 			piecewise = new Piecewise2(weights, size.x);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			float GetWeight(in Float2 uv) => Utilities.GetLuminance(texture[uv]);
+			float GetWeight(in Float2 uv) => PackedMath.GetLuminance(texture[uv]);
 		}
 
 		public Vector128<float> Evaluate(in Float3 direction) => Texture[ToUV(direction)];

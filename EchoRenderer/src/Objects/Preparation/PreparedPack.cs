@@ -200,21 +200,25 @@ namespace EchoRenderer.Objects.Preparation
 		/// </summary>
 		public PreparedInstance GetInstance(uint id) => instances[id];
 
+		// /// <summary>
+		// ///
+		// /// </summary>
+		// public GeometryPoint GetPoint(in Token token, Float2 uv)
+		// {
+		//
+		// }
+
 		/// <summary>
-		/// Begins interacting with the result of <paramref name="query"/> by returning
-		/// the <see cref="Interaction"/> and outputting the <paramref name="material"/>.
+		/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Interaction"/>.
 		/// </summary>
-		public Interaction Interact(in TraceQuery query, ReadOnlySpan<PreparedInstance> layers, out Material material)
+		public Interaction Interact(in TraceQuery query, in Float4x4 transform, PreparedInstance instance)
 		{
 			Token token = query.token.Geometry;
-			PreparedInstance instance = layers[^1];
 
 			Assert.IsTrue(token.IsGeometry);
 			Assert.AreEqual(instance.pack, this);
-			Assert.IsTrue(layers[0] is PreparedInstanceRoot);
 
 			int materialToken;
-			Float3 geometryNormal;
 			Float3 normal;
 			Float2 texcoord;
 
@@ -223,27 +227,16 @@ namespace EchoRenderer.Objects.Preparation
 				ref readonly var triangle = ref triangles[token.TriangleValue];
 
 				materialToken = triangle.materialToken;
-				geometryNormal = triangle.GeometryNormal;
 				normal = triangle.GetNormal(query.uv);
 				texcoord = triangle.GetTexcoord(query.uv);
-
-				//Apply world transform to normals
-				bool equal = geometryNormal == normal;
-				ApplyWorldTransform(layers, ref geometryNormal);
-
-				if (equal) normal = geometryNormal;
-				else ApplyWorldTransform(layers, ref normal);
 			}
 			else if (token.IsSphere)
 			{
 				ref readonly var sphere = ref spheres[token.SphereValue];
 
 				materialToken = sphere.materialToken;
-				texcoord = query.uv; //Sphere directly uses the uv as texcoord
-
 				normal = PreparedSphere.GetGeometryNormal(query.uv);
-				ApplyWorldTransform(layers, ref normal);
-				geometryNormal = normal;
+				texcoord = query.uv; //Sphere directly uses the uv as texcoord
 			}
 			else
 			{
@@ -251,17 +244,12 @@ namespace EchoRenderer.Objects.Preparation
 				throw new Exception($"{nameof(Interact)} should be invoked on the base {nameof(PreparedPack)}, not one with a token that is a pack instance!");
 			}
 
-			material = instance.mapper[materialToken];
-			material.ApplyNormalMapping(texcoord, ref normal);
-			return new Interaction(query, geometryNormal, normal, texcoord);
+			normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
+			Material material = instance.mapper[materialToken];      //Find appropriate mapped material
 
-			static void ApplyWorldTransform(ReadOnlySpan<PreparedInstance> instances, ref Float3 direction)
-			{
-				//NOTE: we ignore the last instance because it should be the PreparedInstanceRoot
-				for (int i = instances.Length - 1; i > 0; i--) instances[i].TransformInverse(ref direction);
-
-				direction = direction.Normalized;
-			}
+			//Construct interaction
+			if (material == null) return new Interaction(query, normal);
+			return new Interaction(query, normal, material, texcoord);
 		}
 
 		/// <summary>

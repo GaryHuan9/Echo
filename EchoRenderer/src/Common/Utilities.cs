@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 
@@ -29,16 +28,14 @@ namespace EchoRenderer.Common
 			value = value.Trim();
 			if (value[0] == '#') value = value[1..];
 
-			switch (value.Length)
+			return value.Length switch
 			{
-				case 3: return (Float4)new Color32(ParseOne(value[0]), ParseOne(value[1]), ParseOne(value[2]));
-				case 4: return (Float4)new Color32(ParseOne(value[0]), ParseOne(value[1]), ParseOne(value[2]), ParseOne(value[3]));
-
-				case 6: return (Float4)new Color32(ParseTwo(value[..2]), ParseTwo(value[2..4]), ParseTwo(value[4..]));
-				case 8: return (Float4)new Color32(ParseTwo(value[..2]), ParseTwo(value[2..4]), ParseTwo(value[4..6]), ParseTwo(value[6..]));
-			}
-
-			throw ExceptionHelper.Invalid(nameof(value), value.ToString(), "is not valid hex");
+				3 => (Float4)new Color32(ParseOne(value[0]), ParseOne(value[1]), ParseOne(value[2])),
+				4 => (Float4)new Color32(ParseOne(value[0]), ParseOne(value[1]), ParseOne(value[2]), ParseOne(value[3])),
+				6 => (Float4)new Color32(ParseTwo(value[..2]), ParseTwo(value[2..4]), ParseTwo(value[4..])),
+				8 => (Float4)new Color32(ParseTwo(value[..2]), ParseTwo(value[2..4]), ParseTwo(value[4..6]), ParseTwo(value[6..])),
+				_ => throw ExceptionHelper.Invalid(nameof(value), value.ToString(), "is not valid hex")
+			};
 
 			static byte ParseOne(char value)
 			{
@@ -48,14 +45,13 @@ namespace EchoRenderer.Common
 
 			static byte ParseTwo(ReadOnlySpan<char> value) => (byte)(ParseHex(value[0]) * 16 + ParseHex(value[1]));
 
-			static int ParseHex(char value)
+			static int ParseHex(char value) => value switch
 			{
-				if ('0' <= value && value <= '9') return value & 0b1111;
-				if ('a' <= value && value <= 'f') value -= (char)('a' - 'A');
-
-				if ('A' <= value && value <= 'F') return value - 'A' + 10;
-				throw ExceptionHelper.Invalid(nameof(value), value, "is not valid hex");
-			}
+				>= '0' and <= '9' => value - '0',
+				>= 'A' and <= 'F' => value - 'A' + 10,
+				>= 'a' and <= 'f' => value - 'a' + 10,
+				_ => throw ExceptionHelper.Invalid(nameof(value), value, "is not valid hex")
+			};
 		}
 
 		/// <summary>
@@ -64,56 +60,6 @@ namespace EchoRenderer.Common
 		/// Spectrum or some thing for color is introduced.
 		/// </summary>
 		public static bool PositiveRadiance(this in Float3 radiance) => radiance > Constants.radianceEpsilon;
-
-		/// <summary>
-		/// Linearly interpolates between <paramref name="left"/> and <paramref name="right"/> based on <paramref name="time"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Vector128<float> Lerp(in Vector128<float> left, in Vector128<float> right, in Vector128<float> time)
-		{
-			var length = Sse.Subtract(right, left);
-			return Fused(length, time, left);
-		}
-
-		/// <summary>
-		/// Numerically clamps <paramref name="value"/> between <paramref name="min"/> and <paramref name="max"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Vector128<float> Clamp(in Vector128<float> value, in Vector128<float> min, in Vector128<float> max) => Sse.Min(max, Sse.Max(min, value));
-
-		/// <summary>
-		/// Numerically clamps <paramref name="value"/> between zero and one.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Vector128<float> Clamp01(in Vector128<float> value) => Clamp(value, Vector128.Create(0f), Vector128.Create(1f));
-
-		/// <summary>
-		/// Fused multiply and add <paramref name="value"/> with <paramref name="multiplier"/> first and then <paramref name="adder"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Vector128<float> Fused(in Vector128<float> value, in Vector128<float> multiplier, in Vector128<float> adder)
-		{
-			if (Fma.IsSupported) return Fma.MultiplyAdd(value, multiplier, adder);
-			return Sse.Add(Sse.Multiply(value, multiplier), adder);
-		}
-
-		/// <summary>
-		/// Returns the approximated luminance of <paramref name="color"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static float GetLuminance(in Vector128<float> color)
-		{
-			if (Sse41.IsSupported) return Sse41.DotProduct(color, Constants.LuminanceVector, 0b0111_0001).GetElement(0);
-
-			Vector128<float> result = Sse.Multiply(color, Constants.LuminanceVector);
-			return result.GetElement(0) + result.GetElement(1) + result.GetElement(2);
-		}
-
-		/// <summary>
-		/// Returns a color with minimal individual component sum that has <paramref name="luminance"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Vector128<float> CreateLuminance(float luminance) => Sse.Multiply(Constants.LuminanceVector, Vector128.Create(luminance));
 
 		/// <summary>
 		/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns
