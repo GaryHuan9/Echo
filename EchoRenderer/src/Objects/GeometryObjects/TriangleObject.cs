@@ -254,7 +254,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		Float3 InterpolateVertex(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
 
-		static void GetSubdivided(Span<PreparedTriangle> triangles, in Float3 normal0, in Float3 normal1, in Float3 normal2)
+		static void GetSubdivided(Span<PreparedTriangle> triangles, in Float3 normal00, in Float3 normal11, in Float3 normal22)
 		{
 			if (triangles.Length <= 1) return;
 
@@ -266,25 +266,34 @@ namespace EchoRenderer.Objects.GeometryObjects
 			//Begin dividing triangle
 			ref readonly PreparedTriangle triangle = ref triangles[0];
 
+			Float3 normal01 = GetInterpolatedNormal(uv01, normal00, normal11, normal22);
+			Float3 normal02 = GetInterpolatedNormal(uv02, normal00, normal11, normal22);
+			Float3 normal12 = GetInterpolatedNormal(uv12, normal00, normal11, normal22);
+
 			Float3 vertex01 = triangle.InterpolateVertex(uv01);
 			Float3 vertex02 = triangle.InterpolateVertex(uv02);
 			Float3 vertex12 = triangle.InterpolateVertex(uv12);
 
-			Float3 normal01 = GetInterpolatedNormal(uv01, normal0, normal1, normal2);
-			Float3 normal02 = GetInterpolatedNormal(uv02, normal0, normal1, normal2);
-			Float3 normal12 = GetInterpolatedNormal(uv12, normal0, normal1, normal2);
+			Float3 vertex00 = triangle.vertex0;
+			Float3 vertex11 = triangle.Vertex1;
+			Float3 vertex22 = triangle.Vertex2;
 
 			Float2 texcoord01 = triangle.GetTexcoord(uv01);
 			Float2 texcoord02 = triangle.GetTexcoord(uv02);
 			Float2 texcoord12 = triangle.GetTexcoord(uv12);
 
+			Float2 texcoord00 = triangle.texcoord0;
+			Float2 texcoord11 = triangle.texcoord1;
+			Float2 texcoord22 = triangle.texcoord2;
+
 			Fill(triangles, 0, triangle.materialToken, vertex01, vertex12, vertex02, normal01, normal12, normal02, texcoord01, texcoord12, texcoord02);
-			Fill(triangles, 1, triangle.materialToken, triangle.vertex0, vertex01, vertex02, normal0, normal01, normal02, triangle.texcoord0, texcoord01, texcoord02);
-			Fill(triangles, 2, triangle.materialToken, triangle.Vertex1, vertex12, vertex01, normal1, normal12, normal01, triangle.texcoord1, texcoord12, texcoord01);
-			Fill(triangles, 3, triangle.materialToken, triangle.Vertex2, vertex02, vertex12, normal2, normal02, normal12, triangle.texcoord2, texcoord02, texcoord12);
+			Fill(triangles, 1, triangle.materialToken, vertex00, vertex01, vertex02, normal00, normal01, normal02, texcoord00, texcoord01, texcoord02);
+			Fill(triangles, 2, triangle.materialToken, vertex11, vertex12, vertex01, normal11, normal12, normal01, texcoord11, texcoord12, texcoord01);
+			Fill(triangles, 3, triangle.materialToken, vertex22, vertex02, vertex12, normal22, normal02, normal12, texcoord22, texcoord02, texcoord12);
 
 			//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
-			static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal0, in Float3 normal1, in Float3 normal2) => (1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal00, in Float3 normal11, in Float3 normal22) => (1f - uv.x - uv.y) * normal00 + uv.x * normal11 + uv.y * normal22;
 
 			static void Fill(Span<PreparedTriangle> span, int index, int materialToken,
 							 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,

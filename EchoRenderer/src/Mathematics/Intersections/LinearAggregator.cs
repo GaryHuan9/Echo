@@ -61,7 +61,7 @@ namespace EchoRenderer.Mathematics.Intersections
 
 				for (int i = 0; i < Width; i++)
 				{
-					if (intersections.GetElement(i) > query.travel) continue;
+					if (intersections.GetElement(i) >= query.travel) continue;
 					ref readonly Token token = ref node.token4[i];
 					if (pack.Occlude(ref query, token)) return true;
 				}
