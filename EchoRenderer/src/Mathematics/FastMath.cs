@@ -61,6 +61,12 @@ namespace EchoRenderer.Mathematics
 		public static float FMA(float value, float multiplier, float adder) => MathF.FusedMultiplyAdd(value, multiplier, adder);
 
 		/// <summary>
+		/// Computes and returns <paramref name="value"/> squared + <paramref name="adder"/> in one instruction.
+		/// NOTE: this is only a shortcut for <see cref="FMA"/> and uses it internally to perform the operation.
+		/// </summary>
+		public static float FSA(float value, float adder) => FMA(value, value, adder);
+
+		/// <summary>
 		/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
 		/// </summary>
 		public static void SinCos(float radians, out float sin, out float cos)
