@@ -6,6 +6,14 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants>TRACE;</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants>TRACE;</DefineConstants>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="SFML.Net" Version="2.5.0" />
     </ItemGroup>
