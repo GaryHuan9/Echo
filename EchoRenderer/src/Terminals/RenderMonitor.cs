@@ -129,7 +129,7 @@ namespace EchoRenderer.Terminals
 				Engine.CurrentProfile.Scene.OccludeCount
 			};
 
-			Assert.AreEqual(numbers.Length, gridSize.x);
+			Assert.AreEqual(numbers.Length, gridSize.x - 1);
 
 			for (int x = 1; x < gridSize.x; x++)
 			{
