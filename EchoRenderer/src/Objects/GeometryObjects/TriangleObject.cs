@@ -259,9 +259,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 			if (triangles.Length <= 1) return;
 
 			//The uv locations right in the middle of two vertices
-			Float2 uv01 = new(0.5f, 0f);
-			Float2 uv02 = new(0f, 0.5f);
-			Float2 uv12 = new(0.5f, 0.5f);
+			Float2 uv01 = new Float2(0.5f, 0f);
+			Float2 uv02 = new Float2(0f, 0.5f);
+			Float2 uv12 = new Float2(0.5f, 0.5f);
 
 			//Begin dividing triangle
 			ref readonly PreparedTriangle triangle = ref triangles[0];
