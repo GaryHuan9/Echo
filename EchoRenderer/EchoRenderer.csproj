@@ -10,12 +10,12 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED;</DefineConstants>
+        <DefineConstants>TRACE;</DefineConstants>
         <Optimize>false</Optimize>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <DefineConstants>TRACE; UNSAFE_CODE_ENABLED;</DefineConstants>
+        <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>

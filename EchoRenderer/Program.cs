@@ -5,7 +5,6 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Common;
 using EchoRenderer.IO;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Preparation;

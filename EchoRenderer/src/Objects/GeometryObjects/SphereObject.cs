@@ -39,15 +39,11 @@ namespace EchoRenderer.Objects.GeometryObjects
 		{
 			this.position = position;
 			this.radius = radius;
-
-			radiusSquared = radius * radius;
 			this.materialToken = materialToken;
 		}
 
 		public readonly Float3 position;
 		public readonly float radius;
-
-		public readonly float radiusSquared;
 		public readonly int materialToken;
 
 		public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
@@ -73,19 +69,19 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 			//Test ray direction
 			Float3 offset = ray.origin - position;
-			float point0 = -offset.Dot(ray.direction);
+			float center = -offset.Dot(ray.direction);
 
-			float point1Squared = point0 * point0 - offset.SquaredMagnitude + radiusSquared;
+			float squared = FastMath.FSA(center, FastMath.FSA(radius, -offset.SquaredMagnitude));
 
-			if (point1Squared < 0f) return Infinity;
+			if (squared < 0f) return Infinity;
 
 			//Find appropriate distance
-			float point1 = FastMath.Sqrt0(point1Squared);
-			float distance = point0 - point1;
+			float extend = FastMath.Sqrt0(squared);
+			float distance = center - extend;
 
 			float threshold = findFar ? DistanceThreshold : 0f;
 
-			if (distance < threshold) distance = point0 + point1;
+			if (distance < threshold) distance = center + extend;
 			if (distance < threshold) return Infinity;
 
 			//Calculate uv
@@ -108,19 +104,19 @@ namespace EchoRenderer.Objects.GeometryObjects
 		{
 			//Test ray direction
 			Float3 offset = ray.origin - position;
-			float point0 = -offset.Dot(ray.direction);
+			float center = -offset.Dot(ray.direction);
 
-			float point1Squared = point0 * point0 - offset.SquaredMagnitude + radiusSquared;
+			float squared = FastMath.FSA(center, FastMath.FSA(radius, -offset.SquaredMagnitude));
 
-			if (point1Squared < 0f) return false;
+			if (squared < 0f) return false;
 
 			//Find appropriate distance
-			float point1 = FastMath.Sqrt0(point1Squared);
-			float distance = point0 - point1;
+			float extend = FastMath.Sqrt0(squared);
+			float distance = center - extend;
 
 			float threshold = findFar ? DistanceThreshold : 0f;
 
-			if (distance < threshold) distance = point0 + point1;
+			if (distance < threshold) distance = center + extend;
 			return distance >= threshold && distance < travel;
 		}
 
