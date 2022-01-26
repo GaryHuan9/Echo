@@ -2,6 +2,7 @@ using System;
 using System.Runtime.Intrinsics;
 using System.Threading.Tasks;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Textures.Grid
@@ -75,7 +76,12 @@ namespace EchoRenderer.Textures.Grid
 		/// </summary>
 		public abstract Vector128<float> this[Int2 position] { get; set; }
 
-		protected sealed override Vector128<float> Evaluate(Float2 uv) => Filter.Convert(this, uv);
+		protected sealed override Vector128<float> Evaluate(Float2 uv)
+		{
+			Assert.IsFalse(float.IsNaN(uv.x));
+			Assert.IsFalse(float.IsNaN(uv.y));
+			return Filter.Convert(this, uv);
+		}
 
 		/// <summary>
 		/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid.size"/>.

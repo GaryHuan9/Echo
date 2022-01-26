@@ -21,6 +21,8 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer)
 		{
+			if (Radius <= 0f || Radius.AlmostEquals()) yield break;
+
 			int materialToken = preparer.GetToken(Material);
 			yield return new PreparedSphere(this, materialToken);
 		}
@@ -58,8 +60,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		/// <summary>
 		/// Returns the distance of intersection between this <see cref="PreparedSphere"/> and <paramref name="ray"/> without
 		/// backface culling. If the intersection exists, the distance is returned and <paramref name="uv"/> will contain the
-		/// barycentric coordinate of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
-		/// If intersection does not exist, <see cref="float.PositiveInfinity"/> is returned.
+		/// a coordinate representing the surface location of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
 		/// NOTE: if <paramref name="findFar"/> is true, any intersection distance under <see cref="DistanceThreshold"/> is ignored.
 		/// </summary>
 		public float Intersect(in Ray ray, out Float2 uv, bool findFar = false)
@@ -71,12 +72,13 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float3 offset = ray.origin - position;
 			float center = -offset.Dot(ray.direction);
 
-			float squared = FastMath.FSA(center, FastMath.FSA(radius, -offset.SquaredMagnitude));
+			float radiusSquared = radius * radius;
+			float extend2 = FastMath.FSA(center, radiusSquared - offset.SquaredMagnitude);
 
-			if (squared < 0f) return Infinity;
+			if (extend2 < 0f) return Infinity;
 
 			//Find appropriate distance
-			float extend = FastMath.Sqrt0(squared);
+			float extend = FastMath.Sqrt0(extend2);
 			float distance = center - extend;
 
 			float threshold = findFar ? DistanceThreshold : 0f;
@@ -86,13 +88,15 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 			//Calculate uv
 			Float3 point = offset + ray.direction * distance;
+			float sinP = FastMath.Clamp11(point.y / radius);
+			float sinT = 0f;
 
-			uv = new Float2
-			(
-				0.5f + MathF.Atan2(point.x, point.z) / Scalars.TAU,
-				0.5f + MathF.Asin(FastMath.Clamp11(point.y / radius)) / Scalars.PI
-			);
+			float smallRadius = FastMath.FMA(-point.y, point.y, radiusSquared);
+			if (smallRadius > 0f) sinT = point.x * FastMath.SqrtR0(smallRadius);
+			if (point.z < 0f) sinT += 3f; //Move sinT out of domain when cosT should be negative
 
+			//Return
+			uv = new Float2(sinT, sinP);
 			return distance;
 		}
 
@@ -149,20 +153,42 @@ namespace EchoRenderer.Objects.GeometryObjects
 		// 	throw new NotImplementedException();
 		// }
 
-		public static Float3 GetGeometryNormal(Float2 uv)
+		public static Float3 GetNormal(Float2 uv)
 		{
-			float angle0 = Scalars.TAU * (uv.x - 0.5f);
-			float angle1 = Scalars.PI * (uv.y - 0.5f);
+			ToThetaPhi(uv, out float sinT, out float sinP, out float cosT);
+			float cosP = FastMath.Identity(sinP);
+			return new Float3(sinT * cosP, sinP, cosT * cosP).Normalized;
+		}
 
-			FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
-			FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
+		public static Float2 GetTexcoord(Float2 uv)
+		{
+			ToThetaPhi(uv, out float sinT, out float sinP, out float cosT);
 
-			return new Float3
+			return new Float2
 			(
-				sinT * cosP,
-				sinP,
-				cosT * cosP
-			).Normalized;
+				FastMath.FMA(MathF.Atan2(sinT, cosT), 1f / Scalars.TAU, 0.5f),
+				FastMath.FMA(MathF.Asin(FastMath.Clamp11(sinP)), 1f / Scalars.PI, 0.5f)
+			);
+		}
+
+		/// <summary>
+		/// Calculates and outputs the sines and cosines of theta and phi based on <paramref name="uv"/>.
+		/// NOTE: cosine phi can be easily calculated by using <see cref="FastMath.Identity"/>.
+		/// </summary>
+		static void ToThetaPhi(Float2 uv, out float sinT, out float sinP, out float cosT)
+		{
+			sinT = uv.x;
+			sinP = uv.y;
+
+			float sign = 1f;
+
+			if (sinT > 1.5f) //If sinT is out of domain, it means that cosT should be negative
+			{
+				sinT -= 3f;
+				sign = -1f;
+			}
+
+			cosT = FastMath.Identity(sinT) * sign;
 		}
 	}
 }
