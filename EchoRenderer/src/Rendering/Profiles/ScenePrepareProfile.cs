@@ -15,7 +15,7 @@ namespace EchoRenderer.Rendering.Profiles
 		/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
 		/// Fragmentation can cause the construction of better <see cref="Aggregator"/>, however it can also backfire.
 		/// </summary>
-		public float FragmentationThresholdMultiplier { get; init; } = 4.8f;
+		public float FragmentationThreshold { get; init; } = 5.8f;
 
 		/// <summary>
 		/// The maximum number of fragmentation that can happen to one source triangle.
@@ -26,6 +26,8 @@ namespace EchoRenderer.Rendering.Profiles
 		public void Validate()
 		{
 			if (AggregatorProfile == null) throw ExceptionHelper.Invalid(nameof(AggregatorProfile), InvalidType.isNull);
+			if (FragmentationThreshold < 1f) throw ExceptionHelper.Invalid(nameof(FragmentationThreshold), InvalidType.outOfBounds);
+			if (FragmentationMaxIteration < 0) throw ExceptionHelper.Invalid(nameof(FragmentationMaxIteration), InvalidType.outOfBounds);
 		}
 	}
 }

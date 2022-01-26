@@ -1,3 +1,4 @@
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics
@@ -14,7 +15,10 @@ namespace EchoRenderer.Mathematics
 			Float3 helper = FastMath.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
 
 			tangent = Float3.Cross(normal, helper).Normalized;
-			binormal = Float3.Cross(normal, tangent).Normalized;
+			binormal = Float3.Cross(normal, tangent);
+
+			Assert.AreEqual(normal.SquaredMagnitude, 1f);
+			Assert.AreEqual(binormal.SquaredMagnitude, 1f);
 		}
 
 		public readonly Float3 normal;
