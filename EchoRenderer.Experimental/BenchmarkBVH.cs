@@ -14,6 +14,7 @@ using EchoRenderer.Objects.Scenes;
 using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
+using EchoRenderer.Textures;
 
 namespace EchoRenderer.Experimental
 {
@@ -56,9 +57,12 @@ namespace EchoRenderer.Experimental
 				occludeQueries[i] = ray;
 			}
 
+			// scene.children.Add(new PlaneObject(new Matte { Albedo = (Pure)0.75f }, new Float2(32f, 24f)));
+
 			Pairs = new[]
 			{
 				new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
+				// new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDiv"),
 				new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 			};
 		}

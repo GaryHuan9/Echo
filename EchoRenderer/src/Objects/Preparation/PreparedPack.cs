@@ -257,10 +257,12 @@ namespace EchoRenderer.Objects.Preparation
 		/// </summary>
 		static void SubdivideTriangles(ConcurrentList<PreparedTriangle> triangles, ScenePrepareProfile profile)
 		{
+			if (profile.FragmentationMaxIteration == 0) return;
+
 			double totalArea = 0d;
 
 			Parallel.ForEach(triangles, triangle => InterlockedHelper.Add(ref totalArea, triangle.Area));
-			float threshold = (float)(totalArea / triangles.Count * profile.FragmentationThresholdMultiplier);
+			float threshold = (float)(totalArea / triangles.Count * profile.FragmentationThreshold);
 
 			using var _ = triangles.BeginAdd();
 
