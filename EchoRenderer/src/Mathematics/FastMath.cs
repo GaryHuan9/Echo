@@ -11,6 +11,8 @@ namespace EchoRenderer.Mathematics
 	{
 		static readonly float oneMinusEpsilon = Scalars.UInt32ToSingleBits(Scalars.SingleToUInt32Bits(1f) - 1u);
 
+		//NOTE: some methods in this class is not necessarily "fast", however fast alternatives can be implemented later on if needed.
+
 		/// <summary>
 		/// Returns <paramref name="value"/> if it is larger than zero, or zero otherwise.
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
@@ -46,6 +48,13 @@ namespace EchoRenderer.Mathematics
 		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
 		/// </summary>
 		public static float Sqrt0(float value) => value <= 0f ? 0f : MathF.Sqrt(value);
+
+		/// <summary>
+		/// Returns the inverse/reciprocal square root of <paramref name="value"/> if it is larger than zero.
+		/// If <paramref name="value"/> is zero, <see cref="float.PositiveInfinity"/> is returned.
+		/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+		/// </summary>
+		public static float SqrtR0(float value) => value <= 0f ? float.PositiveInfinity : 1f / MathF.Sqrt(value);
 
 		/// <summary>
 		/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1.
