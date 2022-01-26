@@ -235,8 +235,8 @@ namespace EchoRenderer.Objects.Preparation
 				ref readonly var sphere = ref spheres[token.SphereValue];
 
 				materialToken = sphere.materialToken;
-				normal = PreparedSphere.GetGeometryNormal(query.uv);
-				texcoord = query.uv; //Sphere directly uses the uv as texcoord
+				normal = PreparedSphere.GetNormal(query.uv);
+				texcoord = PreparedSphere.GetTexcoord(query.uv);
 			}
 			else
 			{
