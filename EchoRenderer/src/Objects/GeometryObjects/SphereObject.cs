@@ -37,7 +37,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			materialToken
 		) { }
 
-		public PreparedSphere(Float3 position, float radius, int materialToken)
+		public PreparedSphere(in Float3 position, float radius, int materialToken)
 		{
 			this.position = position;
 			this.radius = radius;
@@ -70,9 +70,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 			//Test ray direction
 			Float3 offset = ray.origin - position;
+			float radiusSquared = radius * radius;
 			float center = -offset.Dot(ray.direction);
 
-			float radiusSquared = radius * radius;
 			float extend2 = FastMath.FSA(center, radiusSquared - offset.SquaredMagnitude);
 
 			if (extend2 < 0f) return Infinity;
@@ -124,34 +124,40 @@ namespace EchoRenderer.Objects.GeometryObjects
 			return distance >= threshold && distance < travel;
 		}
 
-		public Float3 Sample(Distro2 distro) => distro.UniformSphere * radius;
+		public GeometryPoint Sample(Distro2 distro) => Sample(distro.UniformSphere);
 
-		// public Float3 Sample(Distro2 distro, Float3 interaction)
-		// {
-		// 	Float3 difference = interaction - position;
-		// 	float distance2 = difference.SquaredMagnitude;
-		//
-		// 	if (distance2 <= radiusSquared) return Sample(distro);
-		//
-		// 	//Find cosine max
-		// 	float sinMaxT2 = radiusSquared / distance2;
-		// 	float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
-		//
-		// 	//Uniform sample cone, defined by theta and phi
-		// 	float cosT = FastMath.FMA(distro.x, cosMaxT - 1f, 1f);
-		// 	float sinT = FastMath.Identity(cosT);
-		// 	float phi = distro.y * Scalars.TAU;
-		//
-		// 	//Compute angle alpha from center of sphere to sample point
-		// 	float distance = FastMath.Sqrt0(distance2);
-		// 	float project = distance * cosT - FastMath.Sqrt0(radiusSquared - distance2 * sinT * sinT);
-		// 	float cosA = (distance2 + radiusSquared - project * project) / (2f * distance * radius);
-		// 	float sinA = FastMath.Identity(cosA);
-		//
-		// 	//Find point
-		// 	// Float3 point =radius *
-		// 	throw new NotImplementedException();
-		// }
+		public GeometryPoint Sample(Distro2 distro, in Float3 point)
+		{
+			Float3 offset = point - position;
+			float radiusSquared = radius * radius;
+			float distance2 = offset.SquaredMagnitude;
+
+			if (distance2 <= radiusSquared) return Sample(distro);
+
+			//Find cosine max
+			float sinMaxT2 = radiusSquared / distance2;
+			float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
+
+			//Uniform sample cone, defined by theta and phi
+			float cosT = FastMath.FMA(distro.x, cosMaxT - 1f, 1f);
+			float sinT = FastMath.Identity(cosT);
+			float phi = distro.y * Scalars.TAU;
+
+			//Compute angle alpha from center of sphere to sample point
+			float distance = FastMath.Sqrt0(distance2);
+			float project = distance * cosT - FastMath.Sqrt0(radiusSquared - distance2 * sinT * sinT);
+			float cosA = (distance2 + radiusSquared - project * project) / (2f * distance * radius);
+			float sinA = FastMath.Identity(cosA);
+
+			//Find normal
+			FastMath.SinCos(phi, out float sinP, out float cosP);
+			Float3 normal = new Float3(sinA * cosP, sinA * sinP, cosA);
+
+			var transform = new NormalTransform(offset);
+			return Sample(transform.LocalToWorld(normal));
+		}
+
+		GeometryPoint Sample(in Float3 normal) => new(normal * radius + position, normal);
 
 		public static Float3 GetNormal(Float2 uv)
 		{

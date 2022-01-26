@@ -8,16 +8,12 @@ namespace EchoRenderer.Common
 {
 	public static class Utilities
 	{
-		public static Float4 ToFloat4(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float4>(ref pixel);
-		public static Float3 ToFloat3(Vector128<float> pixel) => Unsafe.As<Vector128<float>, Float3>(ref pixel);
+		public static ref readonly Float4 ToFloat4(in Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref Unsafe.AsRef(pixel));
+		public static ref readonly Float3 ToFloat3(in Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float3>(ref Unsafe.AsRef(pixel));
+		public static ref readonly Vector128<float> ToVector(in Float4 value) => ref Unsafe.As<Float4, Vector128<float>>(ref Unsafe.AsRef(value));
 
-		public static ref Float4 ToFloat4(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref pixel);
-		public static ref Float3 ToFloat3(ref Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float3>(ref pixel);
-
-		public static Vector128<float> ToVector(Float4 value) => Unsafe.As<Float4, Vector128<float>>(ref value);
+		//NOTE: to vector with ref values is unsafe and not provided for float3 since we can access weird memory with it.
 		public static Vector128<float> ToVector(Float3 value) => Unsafe.As<Float3, Vector128<float>>(ref value);
-
-		//NOTE: to vector with ref values is unsafe and not provided here since we can access weird memory with it.
 
 		public static Float4 ToColor(float value) => ToColor((Float4)value);
 		public static Float4 ToColor(in Float3 value) => ToColor((Float4)value);
