@@ -33,20 +33,20 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override Float3 Evaluate(in Float3 outgoing, in Float3 incident)
 		{
-			float sinO = Sine(outgoing);
-			float sinI = Sine(incident);
+			float sinO = SineP(outgoing);
+			float sinI = SineP(incident);
 
 			float cosMax = 0f;
 
 			if (!sinO.AlmostEquals() && !sinI.AlmostEquals())
 			{
-				float cos = CosinePhi(outgoing) * CosinePhi(incident);
-				float sin = SinePhi(outgoing) * SinePhi(incident);
+				float cos = CosineT(outgoing) * CosineT(incident);
+				float sin = SineT(outgoing) * SineT(incident);
 				cosMax = Math.Max(cos + sin, 0f);
 			}
 
-			float cosO = AbsoluteCosine(outgoing);
-			float cosI = AbsoluteCosine(incident);
+			float cosO = AbsoluteCosineP(outgoing);
+			float cosI = AbsoluteCosineP(incident);
 
 			float sinA;
 			float tanB;

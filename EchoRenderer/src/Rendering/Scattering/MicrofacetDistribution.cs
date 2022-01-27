@@ -54,21 +54,21 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override float DifferentialArea(in Float3 normal)
 		{
-			float tan2 = Tangent2(normal);
+			float tan2 = TangentP2(normal);
 			if (float.IsInfinity(tan2)) return 0f;
-			float cos2 = Cosine2(normal);
+			float cos2 = CosineP2(normal);
 
-			Float2 phi = new Float2(Cosine2Phi(normal), Sine2Phi(normal));
+			Float2 phi = new Float2(CosineT2(normal), SineT2(normal));
 			float  exp = MathF.Exp(-tan2 * (phi / (alpha * alpha)).Sum);
 			return exp / (Scalars.PI * alpha.Product * cos2 * cos2);
 		}
 
 		public override float MaskingShadowingVisible(in Float3 direction)
 		{
-			float tan = Math.Abs(Tangent(direction));
+			float tan = Math.Abs(TangentP(direction));
 			if (float.IsInfinity(tan)) return 0f;
 
-			Float2 phi = new Float2(Cosine2Phi(direction), Sine2Phi(direction));
+			Float2 phi = new Float2(CosineT2(direction), SineT2(direction));
 			float  a   = 1f / (MathF.Sqrt((phi * alpha * alpha).Sum) * tan);
 
 			throw new NotImplementedException();
@@ -89,11 +89,11 @@ namespace EchoRenderer.Rendering.Scattering
 
 		public override float DifferentialArea(in Float3 normal)
 		{
-			float tan2 = Tangent2(normal);
+			float tan2 = TangentP2(normal);
 			if (float.IsInfinity(tan2)) return 0f;
-			float cos2 = Cosine2(normal);
+			float cos2 = CosineP2(normal);
 
-			Float2 phi = new Float2(Cosine2Phi(normal), Sine2Phi(normal));
+			Float2 phi = new Float2(CosineT2(normal), SineT2(normal));
 			float  sum = cos2 + cos2 * tan2 * (phi / (alpha * alpha)).Sum;
 			return 1f / (sum * sum * alpha.Product * Scalars.PI);
 		}

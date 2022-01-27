@@ -117,7 +117,7 @@ namespace EchoRenderer.Rendering.Scattering
 				++matched;
 			}
 
-			return matched == 0 ? 0f : pdf / matched;
+			return matched < 2 ? pdf : pdf / matched;
 		}
 
 		/// <summary>
