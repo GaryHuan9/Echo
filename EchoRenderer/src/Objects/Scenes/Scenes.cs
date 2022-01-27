@@ -1,6 +1,7 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
+using EchoRenderer.Common;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Lights;
@@ -17,19 +18,19 @@ namespace EchoRenderer.Objects.Scenes
 		{
 			var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 			// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
-			var material0 = new Matte { Albedo = (Pure)new Float3(1f, 0.68f, 0.16f) };
-			var material1 = new Matte { Albedo = (Pure)new Float3(0.0250f, 0.1416f, 0.3736f) };
+			// var material0 = new Matte { Albedo = (Pure)new Float3(1f, 0.68f, 0.16f) };
+			// var material1 = new Matte { Albedo = (Pure)Utilities.ToColor("0x06245F") };
+			var material1 = new Matte { Albedo = Texture.white };
 
 			// children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
 			children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });
 
-			// children.Add(new MeshObject(mesh, materials) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
-			children.Add(new MeshObject(mesh, material0) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
+			children.Add(new MeshObject(mesh, material1) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 
 			children.Add(new SphereObject(material1, 1f) { Position = new Float3(-3f, 1f, -2f) });
 
-			children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
-			children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
+			// children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
+			// children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
 		}
 	}
 
