@@ -22,7 +22,8 @@ namespace EchoRenderer.Common
 		public static Float4 ToColor(ReadOnlySpan<char> value)
 		{
 			value = value.Trim();
-			if (value[0] == '#') value = value[1..];
+			value = value.Trim('#');
+			if (value.StartsWith("0x")) value = value[2..];
 
 			return value.Length switch
 			{
@@ -55,7 +56,7 @@ namespace EchoRenderer.Common
 		/// NOTE: this is only a temporary solution, we should move to a property after
 		/// Spectrum or some thing for color is introduced.
 		/// </summary>
-		public static bool PositiveRadiance(this in Float3 radiance) => radiance > Constants.radianceEpsilon;
+		public static bool PositiveRadiance(this in Float3 radiance) => !(radiance < Constants.radianceEpsilon);
 
 		/// <summary>
 		/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns
