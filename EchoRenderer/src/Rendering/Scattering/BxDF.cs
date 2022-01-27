@@ -31,7 +31,7 @@ namespace EchoRenderer.Rendering.Scattering
 		public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 		{
 			if (!SameHemisphere(outgoing, incident)) return 0f;
-			return AbsoluteCosine(incident) * (1f / Scalars.PI);
+			return AbsoluteCosineP(incident) * (1f / Scalars.PI);
 		}
 
 		/// <summary>
@@ -58,7 +58,7 @@ namespace EchoRenderer.Rendering.Scattering
 			foreach (ref readonly Distro2 distro in distros)
 			{
 				Float3 sampled = Sample(outgoing, distro, out Float3 incident, out float pdf);
-				if (FastMath.Positive(pdf)) result += sampled * AbsoluteCosine(incident) / pdf;
+				if (FastMath.Positive(pdf)) result += sampled * AbsoluteCosineP(incident) / pdf;
 			}
 
 			return result / distros.Length;
@@ -84,94 +84,89 @@ namespace EchoRenderer.Rendering.Scattering
 
 				pdf *= Distro2.UniformHemispherePDF;
 
-				if (FastMath.Positive(pdf)) result += sampled * AbsoluteCosine(outgoing) * AbsoluteCosine(incident) / pdf;
+				if (FastMath.Positive(pdf)) result += sampled * FastMath.Abs(CosineP(outgoing) * CosineP(incident)) / pdf;
 			}
 
 			return result / length;
 		}
 
 		/// <summary>
-		/// Returns the cosine value of the local <paramref name="direction"/> with the normal.
+		/// Returns the cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Cosine(in Float3 direction) => direction.z;
+		public static float CosineP(in Float3 direction) => direction.z;
 
 		/// <summary>
-		/// Returns the cosine squared value of the local <paramref name="direction"/> with the normal.
+		/// Returns the cosine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Cosine2(in Float3 direction) => direction.z * direction.z;
+		public static float CosineP2(in Float3 direction) => direction.z * direction.z;
 
 		/// <summary>
-		/// Returns the absolute cosine value of the local <paramref name="direction"/> with the normal.
+		/// Returns the absolute cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float AbsoluteCosine(in Float3 direction) => FastMath.Abs(direction.z);
+		public static float AbsoluteCosineP(in Float3 direction) => FastMath.Abs(direction.z);
 
 		/// <summary>
-		/// Returns the sine squared value of the local <paramref name="direction"/> with the normal.
+		/// Returns the sine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Sine2(in Float3 direction) => FastMath.Max0(1f - Cosine2(direction));
+		public static float SineP2(in Float3 direction) => FastMath.Max0(1f - CosineP2(direction));
 
 		/// <summary>
-		/// Returns the sine value of the local <paramref name="direction"/> with the normal.
+		/// Returns the sine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Sine(in Float3 direction) => MathF.Sqrt(Sine2(direction));
+		public static float SineP(in Float3 direction) => FastMath.Identity(CosineP(direction));
 
 		/// <summary>
-		/// Returns the tangent value of the local <paramref name="direction"/> with the normal.
+		/// Returns the tangent value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Tangent(in Float3 direction) => Sine(direction) / Cosine(direction);
+		public static float TangentP(in Float3 direction) => SineP(direction) / CosineP(direction);
 
 		/// <summary>
-		/// Returns the tangent squared value of the local <paramref name="direction"/> with the normal.
+		/// Returns the tangent squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Tangent2(in Float3 direction) => Sine2(direction) / Cosine2(direction);
+		public static float TangentP2(in Float3 direction) => SineP2(direction) / CosineP2(direction);
 
 		/// <summary>
-		/// Returns the cosine value of the local <paramref name="direction"/>
-		/// with the tangent direction in the horizontal/flat angle phi.
+		/// Returns the cosine value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float CosinePhi(in Float3 direction)
+		public static float CosineT(in Float3 direction)
 		{
-			float sin = Sine(direction);
+			float sin = SineP(direction);
 			if (sin == 0f) return 1f;
 			return FastMath.Clamp11(direction.x / sin);
 		}
 
 		/// <summary>
-		/// Returns the sine value of the local <paramref name="direction"/>
-		/// with the tangent direction in the horizontal/flat angle phi.
+		/// Returns the sine value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float SinePhi(in Float3 direction)
+		public static float SineT(in Float3 direction)
 		{
-			float sin = Sine(direction);
+			float sin = SineP(direction);
 			if (sin == 0f) return 0f;
 			return FastMath.Clamp11(direction.y / sin);
 		}
 
 		/// <summary>
-		/// Returns the cosine squared value of the local <paramref name="direction"/>
-		/// with the tangent direction in the horizontal/flat angle phi.
+		/// Returns the cosine squared value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Cosine2Phi(in Float3 direction)
+		public static float CosineT2(in Float3 direction)
 		{
-			float sin2 = Sine2(direction);
+			float sin2 = SineP2(direction);
 			if (sin2 == 0f) return 1f;
 			return FastMath.Clamp01(direction.x * direction.x / sin2);
 		}
 
 		/// <summary>
-		/// Returns the sine squared value of the local <paramref name="direction"/>
-		/// with the tangent direction in the horizontal/flat angle phi.
+		/// Returns the sine squared value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 		/// </summary>
-		public static float Sine2Phi(in Float3 direction)
+		public static float SineT2(in Float3 direction)
 		{
-			float sin2 = Sine2(direction);
+			float sin2 = SineP2(direction);
 			if (sin2 == 0f) return 0f;
 			return FastMath.Clamp01(direction.y * direction.y / sin2);
 		}
 
 		/// <summary>
-		/// Returns whether the local directions <paramref name="local0"/>
-		/// and <paramref name="local1"/> are in the same hemisphere.
+		/// Returns whether the local directions <paramref name="local0"/> and <paramref name="local1"/> are in the same hemisphere.
 		/// </summary>
 		public static bool SameHemisphere(in Float3 local0, in Float3 local1) => local0.z * local1.z > 0f;
 	}

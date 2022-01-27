@@ -39,10 +39,10 @@ namespace EchoRenderer.Rendering.Scattering
 			incident = new Float3(-outgoing.x, -outgoing.y, outgoing.z);
 
 			pdf = 1f;
-			float cosI = Cosine(incident);
+			float cosI = CosineP(incident);
 
 			Float3 evaluation = isDielectric ? dielectric.Evaluate(cosI) : conductor.Evaluate(cosI);
-			return evaluation * reflectance / AbsoluteCosine(incident);
+			return evaluation * reflectance / AbsoluteCosineP(incident);
 		}
 
 		public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;

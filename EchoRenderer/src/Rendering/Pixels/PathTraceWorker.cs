@@ -71,7 +71,7 @@ namespace EchoRenderer.Rendering.Pixels
 				if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) break;
 
 				Float3 light = ImportanceSampleOneLight(interaction, out LightSource source, arena);
-				radiance += energy * (light + ImportanceSampleBSDF(interaction, source, arena));
+				radiance += energy * (light + ImportanceSampleBSDF(interaction, source, arena) * arena.Scene.LightSources.Length);
 
 				energy *= interaction.NormalDot(incident) / pdf * scatter;
 				specularBounce = sampledType.Any(FunctionType.specular);
@@ -171,11 +171,11 @@ namespace EchoRenderer.Rendering.Pixels
 			}
 			else if (source is AmbientLight ambient)
 			{
-				light = ambient.Evaluate(query.ray.direction);
+				light = ambient.Evaluate(incident);
 			}
 
-			if (light.PositiveRadiance()) return weight / pdf * scatter * light;
-			return Float3.zero;
+			if (!light.PositiveRadiance()) return Float3.zero;
+			return weight / pdf * scatter * light;
 		}
 
 		/// <summary>
