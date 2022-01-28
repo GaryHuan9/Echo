@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
+using EchoRenderer.Mathematics;
 using EchoRenderer.PostProcess.Operators;
 
 namespace EchoRenderer.PostProcess.ToneMappers
@@ -37,7 +38,7 @@ namespace EchoRenderer.PostProcess.ToneMappers
 			float luminance = PackedMath.GetLuminance(source);
 
 			float mapped = MapLuminance(luminance * luminanceInverse) * luminanceForward;
-			float multiplier = luminance.AlmostEquals() ? mapped : mapped / luminance;
+			float multiplier = FastMath.AlmostZero(luminance) ? mapped : mapped / luminance;
 			renderBuffer[position] = Sse.Multiply(source, Vector128.Create(multiplier));
 		}
 	}

@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 
 namespace EchoRenderer.Rendering.Scattering
 {
@@ -17,7 +18,7 @@ namespace EchoRenderer.Rendering.Scattering
 		public void Reset(in Float3 newReflectance, float newSigma)
 		{
 			reflectance = newReflectance;
-			sigma = newSigma * Scalars.DegreeToRadian;
+			sigma = newSigma;
 
 			float sigma2 = sigma * sigma;
 
@@ -26,7 +27,7 @@ namespace EchoRenderer.Rendering.Scattering
 		}
 
 		Float3 reflectance;
-		float  sigma;
+		float sigma;
 
 		float a;
 		float b;
@@ -38,7 +39,7 @@ namespace EchoRenderer.Rendering.Scattering
 
 			float cosMax = 0f;
 
-			if (!sinO.AlmostEquals() && !sinI.AlmostEquals())
+			if (!FastMath.AlmostZero(sinO) && !FastMath.AlmostZero(sinI))
 			{
 				float cos = CosineT(outgoing) * CosineT(incident);
 				float sin = SineT(outgoing) * SineT(incident);

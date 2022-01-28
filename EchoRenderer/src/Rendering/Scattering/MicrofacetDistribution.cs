@@ -33,7 +33,7 @@ namespace EchoRenderer.Rendering.Scattering
 		/// </summary>
 		protected static float GetAlpha(float roughness)
 		{
-			float a  = MathF.Log(Math.Max(roughness, Scalars.Epsilon));
+			float a = MathF.Log(Math.Max(roughness, Scalars.Epsilon));
 			float a2 = a * a;
 
 			return 1.62142f + 0.819955f * a + 0.1734f * a2 + 0.0171201f * a2 * a + 0.000640711f * a2 * a2;
@@ -59,7 +59,7 @@ namespace EchoRenderer.Rendering.Scattering
 			float cos2 = CosineP2(normal);
 
 			Float2 phi = new Float2(CosineT2(normal), SineT2(normal));
-			float  exp = MathF.Exp(-tan2 * (phi / (alpha * alpha)).Sum);
+			float exp = MathF.Exp(-tan2 * (phi / (alpha * alpha)).Sum);
 			return exp / (Scalars.PI * alpha.Product * cos2 * cos2);
 		}
 
@@ -69,7 +69,7 @@ namespace EchoRenderer.Rendering.Scattering
 			if (float.IsInfinity(tan)) return 0f;
 
 			Float2 phi = new Float2(CosineT2(direction), SineT2(direction));
-			float  a   = 1f / (MathF.Sqrt((phi * alpha * alpha).Sum) * tan);
+			float a = 1f / (MathF.Sqrt((phi * alpha * alpha).Sum) * tan);
 
 			throw new NotImplementedException();
 		}
@@ -94,7 +94,7 @@ namespace EchoRenderer.Rendering.Scattering
 			float cos2 = CosineP2(normal);
 
 			Float2 phi = new Float2(CosineT2(normal), SineT2(normal));
-			float  sum = cos2 + cos2 * tan2 * (phi / (alpha * alpha)).Sum;
+			float sum = cos2 + cos2 * tan2 * (phi / (alpha * alpha)).Sum;
 			return 1f / (sum * sum * alpha.Product * Scalars.PI);
 		}
 
