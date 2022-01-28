@@ -61,7 +61,7 @@ namespace EchoRenderer.Rendering.Distributions
 		public readonly float integral;
 
 		readonly float[] pdfValues; //Probability density functions
-		readonly float[] cdfValues; //Cumulated density functions
+		readonly float[] cdfValues; //Cumulative density functions
 
 		/// <summary>
 		/// The reciprocal of <see cref="Length"/>.

@@ -7,6 +7,7 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.Common;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.IO
@@ -39,7 +40,7 @@ namespace EchoRenderer.IO
 					float strength = texture[local].GetElement(0);
 					texture[local] = Vector128.Create(strength);
 
-					if (strength.AlmostEquals()) continue;
+					if (FastMath.AlmostZero(strength)) continue;
 
 					min = min.Min(local);
 					max = max.Max(local);
