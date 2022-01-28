@@ -66,8 +66,8 @@ namespace EchoRenderer.Common
 		{
 			Vector128<float> compare = Sse.Or
 			(
-				Sse.CompareGreaterThanOrEqual(value, Vector128.Create(epsilon)),
-				Sse.CompareLessThanOrEqual(value, Vector128.Create(-epsilon))
+				Sse.CompareLessThanOrEqual(value, Vector128.Create(-epsilon)),
+				Sse.CompareGreaterThanOrEqual(value, Vector128.Create(epsilon))
 			);
 
 			return Sse.MoveMask(compare) == 0;

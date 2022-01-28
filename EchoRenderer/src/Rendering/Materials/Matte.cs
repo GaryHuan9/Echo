@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers;
+using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
@@ -10,38 +11,25 @@ namespace EchoRenderer.Rendering.Materials
 {
 	public class Matte : Material
 	{
-		public Texture Deviation { get; set; }
+		NotNull<Texture> _roughness = Texture.black;
 
-		public override void Prepare()
+		public Texture Roughness
 		{
-			base.Prepare();
-
-			Deviation ??= Texture.black;
+			get => _roughness;
+			set => _roughness = value;
 		}
 
 		public override void Scatter(ref Interaction interaction, Arena arena)
 		{
-			BSDF bsdf = interaction.CreateBSDF(arena);
+			var make = new MakeBSDF(ref interaction, arena);
 
 			Float3 albedo = Sample(Albedo, interaction).XYZ;
 			if (!albedo.PositiveRadiance()) return;
 
-			float deviation = FastMath.Clamp01(Sample(Deviation, interaction).x);
+			float roughness = FastMath.Clamp01(Sample(Roughness, interaction).x);
 
-			BxDF function;
-
-			if (deviation.AlmostEquals())
-			{
-				function = arena.allocator.New<LambertianReflection>();
-				((LambertianReflection)function).Reset(albedo);
-			}
-			else
-			{
-				function = arena.allocator.New<OrenNayar>();
-				((OrenNayar)function).Reset(albedo, deviation * 90f);
-			}
-
-			bsdf.Add(function);
+			if (FastMath.AlmostZero(roughness)) make.Add<LambertianReflection>().Reset(albedo);
+			else make.Add<OrenNayar>().Reset(albedo, roughness * 90f * Scalars.DegreeToRadian);
 		}
 	}
 }

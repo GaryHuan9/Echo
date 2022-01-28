@@ -70,8 +70,12 @@ namespace EchoRenderer.Rendering.Pixels
 
 				if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) break;
 
-				Float3 light = ImportanceSampleOneLight(interaction, out LightSource source, arena);
-				radiance += energy * (light + ImportanceSampleBSDF(interaction, source, arena) * arena.Scene.LightSources.Length);
+				LightSource source = FindLight(interaction, arena, out float pdfLight);
+
+				Float3 light = ImportanceSampleLight(interaction, source, arena);
+				light += ImportanceSampleBSDF(interaction, source, arena);
+
+				radiance += 1f / pdfLight * energy * light;
 
 				energy *= interaction.NormalDot(incident) / pdf * scatter;
 				specularBounce = sampledType.Any(FunctionType.specular);
@@ -87,9 +91,9 @@ namespace EchoRenderer.Rendering.Pixels
 		}
 
 		/// <summary>
-		/// Importance samples one <see cref="LightSource"/> in <paramref name="arena.Scene"/> and returns its radiance.
+		/// Returns a <see cref="LightSource"/> in <see cref="Arena.Scene"/> and outputs its <paramref name="pdf"/>.
 		/// </summary>
-		static Float3 ImportanceSampleOneLight(in Interaction interaction, out LightSource source, Arena arena)
+		static LightSource FindLight(in Interaction interaction, Arena arena, out float pdf)
 		{
 			//Handle degenerate cases
 			var sources = arena.Scene.LightSources;
@@ -97,19 +101,19 @@ namespace EchoRenderer.Rendering.Pixels
 
 			if (length == 0)
 			{
-				source = null;
-				return Float3.zero;
+				pdf = 0f;
+				return null;
 			}
 
 			//Finds one light to sample
-			source = sources[arena.distribution.NextOne().Range(length)];
-			return length * ImportanceSampleOneLight(interaction, source, arena);
+			pdf = 1f / length;
+			return sources[arena.distribution.NextOne().Range(length)];
 		}
 
 		/// <summary>
 		/// Importance samples <paramref name="source"/> at <paramref name="interaction"/> and returns the combined radiance.
 		/// </summary>
-		static Float3 ImportanceSampleOneLight(in Interaction interaction, LightSource source, Arena arena)
+		static Float3 ImportanceSampleLight(in Interaction interaction, LightSource source, Arena arena)
 		{
 			//Sample light source
 			Float3 light = source.Sample

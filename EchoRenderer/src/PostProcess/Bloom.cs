@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
+using EchoRenderer.Mathematics;
 using EchoRenderer.PostProcess.Operators;
 using EchoRenderer.Textures.Grid;
 
@@ -41,7 +42,7 @@ namespace EchoRenderer.PostProcess
 			float brightness = luminance - Threshold;
 			Vector128<float> result = Vector128<float>.Zero;
 
-			if (brightness > 0f && !luminance.AlmostEquals())
+			if (brightness > 0f && !FastMath.AlmostZero(luminance))
 			{
 				float multiplier = brightness / luminance * Intensity;
 				result = Sse.Multiply(source, Vector128.Create(multiplier));

@@ -5,12 +5,19 @@ using CodeHelpers.Diagnostics;
 
 namespace EchoRenderer.Rendering.Memory
 {
+	/// <summary>
+	/// A fast memory allocator that can be used to create any class with a default constructor.
+	/// This is essentially a heap memory pooler that reuses old objects, and thus newly created
+	/// objects have undefined state. Remember to explicitly invoke "reset" methods for them.
+	/// NOTE: All the static methods are thread safe, while the instance methods are unsafe.
+	/// </summary>
 	public class Allocator
 	{
-		public Allocator(int poolerCapacity = 8)
+		/// <param name="capacity">The maximum number of objects of the same type that the internal <see cref="poolers"/> can store.</param>
+		public Allocator(int capacity = 32)
 		{
-			this.poolerCapacity = poolerCapacity;
-			lock (tokens) { } //Wait for preparation
+			this.capacity = capacity;
+			lock (tokens) { } //Wait for token preparation
 		}
 
 		/// <summary>
@@ -23,7 +30,7 @@ namespace EchoRenderer.Rendering.Memory
 		/// </summary>
 		bool allocating;
 
-		readonly int poolerCapacity;
+		readonly int capacity;
 		static int tokenCount;
 
 		object[] poolers = new object[InitialSize];
@@ -58,11 +65,13 @@ namespace EchoRenderer.Rendering.Memory
 
 		/// <summary>
 		/// Allocates new object of type <typeparamref name="T"/>.
+		/// Note that the returned object will have undefined state.
 		/// </summary>
 		public T New<T>() where T : class, new()
 		{
 			if (!allocating) throw new Exception($"Cannot allocate without starting a session using {nameof(Begin)}!");
 
+			//Find pool based on token
 			int token = TokenStorage<T>.Fetch();
 			int count = token + 1;
 
@@ -72,21 +81,30 @@ namespace EchoRenderer.Rendering.Memory
 			ref object pooler = ref poolers[token];
 			ref ushort pointer = ref pointers[token];
 
-			pooler ??= new T[poolerCapacity];
+			int index = pointer++;
 
-			ref T target = ref ((T[])pooler)[pointer++];
-			return target ??= new T();
+			//Within capacity, use pooled object
+			if (index < capacity)
+			{
+				pooler ??= new T[capacity];
+
+				ref T target = ref ((T[])pooler)[index];
+				return target ??= new T();
+			}
+
+			DebugHelper.LogWarning($"Exceeding {nameof(capacity)}: consider setting a larger {nameof(capacity)} or expect a performance degradation!");
+			return new T();
 		}
 
-		void EnsureCapacity(int capacity)
+		void EnsureCapacity(int newCapacity)
 		{
 			object[] oldPoolers = poolers;
 			ushort[] oldPointers = pointers;
 
 			int length = oldPoolers.Length;
-			if (length >= capacity) return;
+			if (length >= newCapacity) return;
 
-			while (length < capacity) length *= 2;
+			while (length < newCapacity) length *= 2;
 
 			poolers = new object[length];
 			pointers = new ushort[length];
@@ -129,8 +147,14 @@ namespace EchoRenderer.Rendering.Memory
 			}
 		}
 
+		/// <summary>
+		/// Internally we use a field inside this generic static class to access the token that represents a generic type.
+		/// Note that this is incredibly fast compare to any kind of lookups since everything is untangled by the compiler.
+		/// </summary>
+		// ReSharper disable once UnusedTypeParameter
 		static class TokenStorage<T> where T : class, new()
 		{
+			// ReSharper disable once StaticMemberInGenericType
 			static readonly Token token = new();
 
 			public static int Fetch()
