@@ -21,7 +21,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer)
 		{
-			if (Radius <= 0f || Radius.AlmostEquals()) yield break;
+			if (Radius <= 0f || FastMath.AlmostZero(Radius)) yield break;
 
 			int materialToken = preparer.GetToken(Material);
 			yield return new PreparedSphere(this, materialToken);

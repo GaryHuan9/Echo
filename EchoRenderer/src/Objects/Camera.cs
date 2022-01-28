@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 
@@ -46,7 +47,7 @@ namespace EchoRenderer.Objects
 		{
 			Float3 direction = uv.CreateXY(fieldDistance);
 
-			if (Aperture.AlmostEquals() || random == null)
+			if (FastMath.AlmostZero(Aperture) || random == null)
 			{
 				//No depth of field
 

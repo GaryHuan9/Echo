@@ -87,8 +87,13 @@ namespace EchoRenderer.Mathematics
 		}
 
 		/// <summary>
-		/// Returns whether <paramref name="value"/> is positive.
+		/// Returns whether <paramref name="value"/> is positive based on <paramref name="epsilon"/>.
 		/// </summary>
-		public static bool Positive(float value) => value > Scalars.Epsilon;
+		public static bool Positive(float value, float epsilon = Scalars.Epsilon) => value > epsilon;
+
+		/// <summary>
+		/// Returns whether <paramref name="value"/> is almost zero based on <paramref name="epsilon"/>.
+		/// </summary>
+		public static bool AlmostZero(float value, float epsilon = Scalars.Epsilon) => -epsilon < value && value < epsilon;
 	}
 }

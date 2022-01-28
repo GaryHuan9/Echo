@@ -6,12 +6,11 @@ using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Rendering.Scattering;
 using EchoRenderer.Textures;
 
 namespace EchoRenderer.Rendering.Materials
 {
-	// using static Utilities;
-
 	public abstract class Material
 	{
 		NotNull<Texture> _albedo = Texture.black;
@@ -60,6 +59,8 @@ namespace EchoRenderer.Rendering.Materials
 		{
 			zeroEmission = !Emission.PositiveRadiance();
 			zeroNormal = Normal == Texture.normal || NormalIntensity == Float3.zero;
+
+			Emission = Float3.zero.Max(Emission);
 			normalIntensityVector = Utilities.ToVector(NormalIntensity);
 		}
 
@@ -96,5 +97,35 @@ namespace EchoRenderer.Rendering.Materials
 		/// Samples <paramref name="texture"/> at <paramref name="interaction"/> as a <see cref="Float4"/>.
 		/// </summary>
 		protected static Float4 Sample(Texture texture, in Interaction interaction) => Utilities.ToFloat4(texture[interaction.shade.Texcoord]);
+
+		/// <summary>
+		/// A wrapper struct used to easily create <see cref="BSDF"/> and add <see cref="BxDF"/> to it.
+		/// </summary>
+		protected readonly struct MakeBSDF
+		{
+			public MakeBSDF(ref Interaction interaction, Arena arena)
+			{
+				bsdf = arena.allocator.New<BSDF>();
+
+				interaction.bsdf = bsdf;
+				bsdf.Reset(interaction);
+
+				this.arena = arena;
+			}
+
+			readonly BSDF bsdf;
+			readonly Arena arena;
+
+			/// <summary>
+			/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Interaction.bsdf"/> and returns it.
+			/// </summary>
+			public T Add<T>() where T : BxDF, new()
+			{
+				T function = arena.allocator.New<T>();
+
+				bsdf.Add(function);
+				return function;
+			}
+		}
 	}
 }
