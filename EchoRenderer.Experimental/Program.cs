@@ -1,4 +1,10 @@
-﻿using BenchmarkDotNet.Running;
+﻿using System;
+using System.IO;
+using ILGPU;
+using ILGPU.Runtime;
+using ILGPU.Runtime.CPU;
+using ILGPU.Runtime.Cuda;
+using ILGPU.Runtime.OpenCL;
 
 namespace EchoRenderer.Experimental
 {
@@ -17,14 +23,6 @@ namespace EchoRenderer.Experimental
 	//
 	//
 	// }
-
-	using ILGPU;
-	using ILGPU.Runtime;
-	using ILGPU.Runtime.CPU;
-	using ILGPU.Runtime.Cuda;
-	using ILGPU.Runtime.OpenCL;
-	using System;
-	using System.IO;
 
 	public static class Program
 	{

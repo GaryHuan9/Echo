@@ -6,24 +6,22 @@ using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Pooling;
 using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Objects.Instancing;
 using EchoRenderer.Rendering.Profiles;
 
-namespace EchoRenderer.Objects.Scenes
+namespace EchoRenderer.Objects.Preparation
 {
 	public class ScenePreparer
 	{
 		public ScenePreparer(Scene scene, ScenePrepareProfile profile)
 		{
 			this.profile = profile;
-			materials = new MaterialPreparer();
 			root = CreateNode(scene, null);
 
 			PreparePacks(root);
 		}
 
 		public readonly ScenePrepareProfile profile;
-		public readonly MaterialPreparer materials;
 		public readonly Node root;
 
 		readonly Dictionary<ObjectPack, Node> objectPacks = new();
@@ -57,7 +55,7 @@ namespace EchoRenderer.Objects.Scenes
 			foreach (Object child in pack.LoopChildren(true))
 			{
 				if (child is ObjectPack) throw new Exception($"Cannot directly assign {child} as a child!");
-				if (child is not ObjectInstance instance || instance.ObjectPack == null) continue;
+				if (child is not PackInstance instance || instance.ObjectPack == null) continue;
 
 				Node childNode = CreateNode(instance.ObjectPack, node);
 

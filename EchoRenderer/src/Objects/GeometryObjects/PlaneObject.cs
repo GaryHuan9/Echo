@@ -29,7 +29,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		// 	Float4x4 rotation = Float4x4.Rotation(quaternion);
 		// }
 
-		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer)
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 		{
 			Float2 extend = Size / 2f;
 
@@ -38,12 +38,12 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float3 point10 = LocalToWorld.MultiplyPoint(new Float3(extend.x, 0f, -extend.y));
 			Float3 point11 = LocalToWorld.MultiplyPoint(new Float3(extend.x, 0f, extend.y));
 
-			int materialToken = preparer.GetToken(Material);
+			uint materialToken = extractor.Register(Material);
 
 			yield return new PreparedTriangle(point00, point11, point10, Texcoord00, Texcoord11, Texcoord10, materialToken);
 			yield return new PreparedTriangle(point00, point01, point11, Texcoord00, Texcoord01, Texcoord11, materialToken);
 		}
 
-		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer) => Enumerable.Empty<PreparedSphere>();
+		public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 	}
 }

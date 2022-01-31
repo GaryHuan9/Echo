@@ -10,11 +10,8 @@ using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Preparation;
-using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Textures;
 
 namespace EchoRenderer.Experimental
 {

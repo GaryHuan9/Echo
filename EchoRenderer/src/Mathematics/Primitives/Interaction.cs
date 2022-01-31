@@ -1,6 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Materials;
-using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
 
 namespace EchoRenderer.Mathematics.Primitives

@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Randomization;
-using EchoRenderer.Objects;
+using EchoRenderer.Objects.Instancing;
 using EchoRenderer.Objects.Preparation;
 
 namespace EchoRenderer.Mathematics.Primitives
