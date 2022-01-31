@@ -1,6 +1,5 @@
 ﻿using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Scenes;
 
 namespace EchoRenderer.Objects.Preparation
 {

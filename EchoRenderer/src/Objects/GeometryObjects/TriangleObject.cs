@@ -28,9 +28,9 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float3 Normal1 { get; set; }
 		public Float3 Normal2 { get; set; }
 
-		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer)
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 		{
-			int materialToken = preparer.GetToken(Material);
+			uint materialToken = extractor.Register(Material);
 
 			if (Normal0 == Float3.zero || Normal1 == Float3.zero || Normal2 == Float3.zero)
 			{
@@ -51,25 +51,25 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 		}
 
-		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer) => Enumerable.Empty<PreparedSphere>();
+		public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 	}
 
 	public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWISE
 	{
-		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, int materialToken) : this
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, uint materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			Float3.Cross(vertex1 - vertex0, vertex2 - vertex0), materialToken
 		) { }
 
-		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, int materialToken) : this
+		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, uint materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			normal, normal, normal, materialToken
 		) { }
 
 		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
+								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, uint materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			Float3.Cross(vertex1 - vertex0, vertex2 - vertex0),
@@ -78,7 +78,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 								Float3 normal,
-								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken) : this
+								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, uint materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			normal, normal, normal,
@@ -86,7 +86,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		) { }
 
 		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-								Float3 normal0, Float3 normal1, Float3 normal2, int materialToken) : this
+								Float3 normal0, Float3 normal1, Float3 normal2, uint materialToken) : this
 		(
 			vertex0, vertex1, vertex2,
 			normal0, normal1, normal2,
@@ -95,7 +95,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 								Float3 normal0, Float3 normal1, Float3 normal2,
-								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, int materialToken)
+								Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, uint materialToken)
 		{
 			this.vertex0 = vertex0;
 			edge1 = vertex1 - vertex0;
@@ -124,7 +124,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public readonly Float2 texcoord1;
 		public readonly Float2 texcoord2;
 
-		public readonly int materialToken;
+		public readonly uint materialToken;
 
 		public Float3 Vertex1 => vertex0 + edge1;
 		public Float3 Vertex2 => vertex0 + edge2;
@@ -295,7 +295,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal00, in Float3 normal11, in Float3 normal22) => (1f - uv.x - uv.y) * normal00 + uv.x * normal11 + uv.y * normal22;
 
-			static void Fill(Span<PreparedTriangle> span, int index, int materialToken,
+			static void Fill(Span<PreparedTriangle> span, int index, uint materialToken,
 							 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
 							 in Float3 normal0, in Float3 normal1, in Float3 normal2,
 							 Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)

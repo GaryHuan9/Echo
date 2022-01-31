@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
 using EchoRenderer.Objects.Preparation;
@@ -117,7 +118,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		public readonly void AssertHit()
 		{
 #if DEBUG
-			CodeHelpers.Diagnostics.Assert.IsTrue(Hit);
+			Assert.IsTrue(Hit);
 #endif
 		}
 

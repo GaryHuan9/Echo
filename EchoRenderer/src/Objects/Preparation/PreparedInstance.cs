@@ -1,8 +1,7 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Objects.Instancing;
 
 namespace EchoRenderer.Objects.Preparation
 {
@@ -11,7 +10,7 @@ namespace EchoRenderer.Objects.Preparation
 		/// <summary>
 		/// Creates a regular <see cref="PreparedInstance"/>.
 		/// </summary>
-		public PreparedInstance(ScenePreparer preparer, ObjectInstance instance, uint id) : this(preparer, instance.ObjectPack, instance.Mapper, id)
+		public PreparedInstance(ScenePreparer preparer, PackInstance instance, uint id) : this(preparer, instance.ObjectPack, instance.Swatch, id)
 		{
 			forwardTransform = instance.WorldToLocal;
 			inverseTransform = instance.LocalToWorld;
@@ -23,14 +22,17 @@ namespace EchoRenderer.Objects.Preparation
 				inverseScale = scale.Average;
 				forwardScale = 1f / inverseScale;
 			}
-			else throw new Exception($"{nameof(ObjectInstance)} does not support none uniform scaling! '{scale}'");
+			else throw new Exception($"{nameof(PackInstance)} does not support none uniform scaling! '{scale}'");
 		}
 
-		protected PreparedInstance(ScenePreparer preparer, ObjectPack pack, MaterialMapper mapper, uint id)
+		protected PreparedInstance(ScenePreparer preparer, ObjectPack pack, MaterialSwatch swatch, uint id)
 		{
 			this.id = id;
-			this.pack = preparer.GetPreparedPack(pack);
-			this.mapper = preparer.materials.GetMapper(mapper);
+
+			PreparedPack preparedPack = preparer.GetPreparedPack(pack);
+			this.swatch = preparedPack.swatchExtractor.Prepare(swatch);
+
+			this.pack = preparedPack;
 		}
 
 		/// <summary>
@@ -42,7 +44,7 @@ namespace EchoRenderer.Objects.Preparation
 
 		public readonly uint id;
 		public readonly PreparedPack pack;
-		public readonly MaterialPreparer.Mapper mapper;
+		public readonly PreparedSwatch swatch;
 
 		public readonly Float4x4 forwardTransform = Float4x4.identity; //The parent to local transform
 		public readonly Float4x4 inverseTransform = Float4x4.identity; //The local to parent transform
