@@ -2,7 +2,7 @@ using System;
 using CodeHelpers;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects;
+using EchoRenderer.Objects.Instancing;
 using EchoRenderer.Objects.Preparation;
 
 namespace EchoRenderer.Rendering.Profiles
@@ -15,8 +15,8 @@ namespace EchoRenderer.Rendering.Profiles
 		public Type AggregatorType { get; init; }
 
 		/// <summary>
-		/// If this is true, <see cref="LinearAggregator"/> can be used for <see cref="PreparedPack"/> that contains <see cref="ObjectInstance"/>.
-		/// NOTE: normally this should be false because we should avoid actually intersecting with an <see cref="ObjectInstance"/> as much as possible.
+		/// If this is true, <see cref="LinearAggregator"/> can be used for <see cref="PreparedPack"/> that contains <see cref="PackInstance"/>.
+		/// NOTE: normally this should be false because we should avoid actually intersecting with an <see cref="PackInstance"/> as much as possible.
 		/// </summary>
 		public bool LinearForInstances { get; init; } = false;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Objects
+namespace EchoRenderer.Objects.Instancing
 {
 	public class ObjectPack : Object
 	{

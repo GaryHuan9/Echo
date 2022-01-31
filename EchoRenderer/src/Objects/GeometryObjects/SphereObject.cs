@@ -17,27 +17,27 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public float Radius { get; set; }
 
-		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer) => Enumerable.Empty<PreparedTriangle>();
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor) => Enumerable.Empty<PreparedTriangle>();
 
-		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer)
+		public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor)
 		{
 			if (Radius <= 0f || FastMath.AlmostZero(Radius)) yield break;
 
-			int materialToken = preparer.GetToken(Material);
+			uint materialToken = extractor.Register(Material);
 			yield return new PreparedSphere(this, materialToken);
 		}
 	}
 
 	public readonly struct PreparedSphere
 	{
-		public PreparedSphere(SphereObject sphere, int materialToken) : this
+		public PreparedSphere(SphereObject sphere, uint materialToken) : this
 		(
 			sphere.LocalToWorld.MultiplyPoint(Float3.zero),
 			sphere.Scale.MaxComponent * sphere.Radius,
 			materialToken
 		) { }
 
-		public PreparedSphere(in Float3 position, float radius, int materialToken)
+		public PreparedSphere(in Float3 position, float radius, uint materialToken)
 		{
 			this.position = position;
 			this.radius = radius;
@@ -46,7 +46,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 
 		public readonly Float3 position;
 		public readonly float radius;
-		public readonly int materialToken;
+		public readonly uint materialToken;
 
 		public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
 

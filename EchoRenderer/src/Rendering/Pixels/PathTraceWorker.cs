@@ -5,7 +5,6 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Distributions;
-using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
 

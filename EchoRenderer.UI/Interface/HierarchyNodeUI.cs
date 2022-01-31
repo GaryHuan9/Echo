@@ -1,5 +1,4 @@
 ﻿using EchoRenderer.Objects;
-using EchoRenderer.Objects.Scenes;
 using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface

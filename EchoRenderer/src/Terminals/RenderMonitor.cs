@@ -2,7 +2,7 @@ using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Textures.Grid;
 
@@ -94,7 +94,7 @@ namespace EchoRenderer.Terminals
 			GeometryCounts unique = preparer.root.UniqueCounts;
 
 			builders.SetLine(0, $" / Worker {profile.WorkerSize} / Resolution {buffer.size} / Total Pixel {totalPixel:N0} / Total Tile {Engine.TotalTileCount:N0} / Method {profile.Method} / Pixel Sample {profile.PixelSample:N0} / Adaptive Sample {profile.AdaptiveSample:N0} / Tile Size {profile.TileSize:N0} /");
-			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.instance:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.instance:N0} / Material {preparer.materials.Count:N0} /");
+			builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.instance:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.instance:N0} / Material {0:N0} /"); //preparer.materials.Count
 
 			//Display dynamic information
 			DrawDynamicLabels();

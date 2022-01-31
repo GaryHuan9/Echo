@@ -1,8 +1,7 @@
-﻿using EchoRenderer.Textures;
-using EchoRenderer.Textures.Grid;
+﻿using EchoRenderer.Textures.Grid;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
-using Texture = SFML.Graphics.Texture;
+using SFML.Graphics;
 
 namespace EchoRenderer.UI.Interface
 {

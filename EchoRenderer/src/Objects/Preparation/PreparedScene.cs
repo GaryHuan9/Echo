@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.Lights;
-using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 
 namespace EchoRenderer.Objects.Preparation
@@ -52,10 +49,7 @@ namespace EchoRenderer.Objects.Preparation
 			_ambientSources = ambientList.ToArray();
 
 			preparer = new ScenePreparer(source, profile);
-
-			//Create root instance and prepare materials
 			rootInstance = new PreparedInstanceRoot(preparer, source);
-			preparer.materials.Prepare();
 
 			//Prepare lights
 			foreach (LightSource light in LightSources) light.Prepare(this);
@@ -63,7 +57,7 @@ namespace EchoRenderer.Objects.Preparation
 			DebugHelper.Log("Prepared scene");
 		}
 
-		public readonly ScenePreparer preparer;
+		public readonly ScenePreparer preparer; //NOTE: this field should be removed in the future, it is only here now for temporary access to scene preparation data
 		public readonly Scene source;
 		public readonly Camera camera;
 

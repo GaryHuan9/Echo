@@ -1,5 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Instancing;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
 

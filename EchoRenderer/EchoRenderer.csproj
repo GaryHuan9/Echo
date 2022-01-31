@@ -45,6 +45,7 @@
         <Compile Remove="src\Objects\Scenes\BMWs.cs" />
         <Compile Remove="src\Objects\Scenes\CornellBox.cs" />
         <Compile Remove="src\Objects\Scenes\TestScenes.cs" />
+        <Compile Remove="src\Objects\Scenes\MaterialBalls.cs" />
     </ItemGroup>
 
     <ItemGroup>

@@ -18,15 +18,15 @@ namespace EchoRenderer.Objects.GeometryObjects
 		}
 
 		/// <summary>
-		/// Enumerates through all of the triangles that can be extracted from this <see cref="GeometryObject"/>.
-		/// NOTE: Can simply return empty enumerable if this object does not have any triangle.
+		/// Returns all of the triangle that is necessary to represent this <see cref="GeometryObject"/>.
+		/// Use <paramref name="extractor"/> to register and retrieve tokens for <see cref="Material"/>.
 		/// </summary>
-		public abstract IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer);
+		public abstract IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor);
 
 		/// <summary>
-		/// Enumerates through all of the spheres that can be extracted from this <see cref="GeometryObject"/>.
-		/// NOTE: Can simply return empty enumerable if this object does not have any sphere.
+		/// Returns all of the sphere that is necessary to represent this <see cref="GeometryObject"/>.
+		/// Use <paramref name="extractor"/> to register and retrieve tokens for <see cref="Material"/>.
 		/// </summary>
-		public abstract IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer);
+		public abstract IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor);
 	}
 }

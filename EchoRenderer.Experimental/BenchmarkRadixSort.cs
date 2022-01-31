@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Collections;
-using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Experimental
 {

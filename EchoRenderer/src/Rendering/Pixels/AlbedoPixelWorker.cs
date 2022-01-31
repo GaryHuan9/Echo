@@ -4,7 +4,6 @@ using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Objects.Preparation;
-using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Memory;
 
 namespace EchoRenderer.Rendering.Pixels

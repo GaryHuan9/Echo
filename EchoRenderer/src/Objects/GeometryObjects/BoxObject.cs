@@ -17,10 +17,10 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Float2 Texcoord10 { get; set; } = Float2.up;
 		public Float2 Texcoord11 { get; set; } = Float2.one;
 
-		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer)
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 		{
 			Float3 extend = Size / 2f;
-			int materialToken = preparer.GetToken(Material);
+			uint materialToken = extractor.Register(Material);
 
 			Float3 nnn = GetVertex(-1, -1, -1);
 			Float3 nnp = GetVertex(-1, -1, 1);
@@ -56,6 +56,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 			Float3 GetVertex(int x, int y, int z) => LocalToWorld.MultiplyPoint(new Float3(x, y, z) * extend);
 		}
 
-		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer) => Enumerable.Empty<PreparedSphere>();
+		public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 	}
 }
