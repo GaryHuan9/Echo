@@ -3,6 +3,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.IO;
 using EchoRenderer.Objects.GeometryObjects;
+using EchoRenderer.Objects.Instancing;
 using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Textures;
@@ -134,12 +135,12 @@ namespace EchoRenderer.Objects.Scenes
 
 			foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))
 			{
-				bunnyWall.children.Add(new ObjectInstance(bunny) { Position = offset.XY_ });
+				bunnyWall.children.Add(new PackInstance { ObjectPack = bunny, Position = offset.XY_ });
 			}
 
 			for (int z = 0; z < 4; z++)
 			{
-				children.Add(new ObjectInstance(bunnyWall) { Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f) });
+				children.Add(new PackInstance { ObjectPack = bunnyWall, Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f) });
 			}
 
 			bunnyWall.children.Add(new PlaneObject(material0, Float2.one) { Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });

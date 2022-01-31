@@ -16,7 +16,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 		public Mesh Mesh { get; set; }
 		public MaterialLibrary MaterialLibrary { get; set; }
 
-		public override IEnumerable<PreparedTriangle> ExtractTriangles(MaterialPreparer preparer)
+		public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 		{
 			if (Mesh == null) yield break;
 
@@ -24,7 +24,7 @@ namespace EchoRenderer.Objects.GeometryObjects
 			{
 				Triangle triangle = Mesh.GetTriangle(i);
 				Material material = MaterialLibrary?[triangle.materialName] ?? Material;
-				int materialToken = preparer.GetToken(material);
+				uint materialToken = extractor.Register(material);
 
 				bool hasNormal = triangle.normalIndices.MinComponent >= 0;
 				bool hasTexcoord = triangle.texcoordIndices.MinComponent >= 0;
@@ -84,6 +84,6 @@ namespace EchoRenderer.Objects.GeometryObjects
 			}
 		}
 
-		public override IEnumerable<PreparedSphere> ExtractSpheres(MaterialPreparer preparer) => Enumerable.Empty<PreparedSphere>();
+		public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 	}
 }

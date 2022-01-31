@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
@@ -9,7 +8,7 @@ using CodeHelpers.Threads;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Scenes;
+using EchoRenderer.Objects.Instancing;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 
@@ -23,29 +22,32 @@ namespace EchoRenderer.Objects.Preparation
 			var spheresList = new List<PreparedSphere>();
 			var instancesList = new List<PreparedInstance>();
 
-			trianglesList.BeginAdd();
+			swatchExtractor = new SwatchExtractor();
 
-			foreach (Object child in source.LoopChildren(true))
+			using (trianglesList.BeginAdd())
 			{
-				switch (child)
+				foreach (Object child in source.LoopChildren(true))
 				{
-					case GeometryObject geometry:
+					switch (child)
 					{
-						trianglesList.AddRange(geometry.ExtractTriangles(preparer.materials).Where(triangle => triangle.materialToken >= 0));
-						spheresList.AddRange(geometry.ExtractSpheres(preparer.materials).Where(sphere => sphere.materialToken >= 0));
+						case GeometryObject geometry:
+						{
+							trianglesList.AddRange(geometry.ExtractTriangles(swatchExtractor));
+							spheresList.AddRange(geometry.ExtractSpheres(swatchExtractor));
 
-						break;
-					}
-					case ObjectInstance packInstance:
-					{
-						uint id = (uint)instancesList.Count;
-						instancesList.Add(new PreparedInstance(preparer, packInstance, id));
-						break;
+							break;
+						}
+						case PackInstance objectInstance:
+						{
+							uint id = (uint)instancesList.Count;
+							var instance = new PreparedInstance(preparer, objectInstance, id);
+							instancesList.Add(instance);
+
+							break;
+						}
 					}
 				}
 			}
-
-			trianglesList.EndAdd();
 
 			SubdivideTriangles(trianglesList, preparer.profile);
 
@@ -56,13 +58,15 @@ namespace EchoRenderer.Objects.Preparation
 
 			geometryCounts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
-			//Construct bounding volume hierarchy acceleration structure
+			//Construct aggregator
 			Token[] tokens = new Token[geometryCounts.Total];
 			var aabbs = new AxisAlignedBoundingBox[tokens.Length];
 
 			Parallel.For(0, triangles.Length, FillTriangles);
 			Parallel.For(0, spheres.Length, FillSpheres);
 			Parallel.For(0, instances.Length, FillInstances);
+
+			aggregator = preparer.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
 
 			void FillTriangles(int index)
 			{
@@ -94,12 +98,11 @@ namespace EchoRenderer.Objects.Preparation
 				aabbs[target] = instance.AABB;
 				tokens[target] = Token.CreateInstance((uint)index);
 			}
-
-			aggregator = preparer.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
 		}
 
 		public readonly Aggregator aggregator;
 		public readonly GeometryCounts geometryCounts;
+		public readonly SwatchExtractor swatchExtractor;
 
 		readonly PreparedTriangle[] triangles;
 		readonly PreparedSphere[] spheres;
@@ -218,25 +221,25 @@ namespace EchoRenderer.Objects.Preparation
 			Assert.IsTrue(token.IsGeometry);
 			Assert.AreEqual(instance.pack, this);
 
-			int materialToken;
 			Float3 normal;
 			Float2 texcoord;
+			uint materialToken;
 
 			if (token.IsTriangle)
 			{
 				ref readonly var triangle = ref triangles[token.TriangleValue];
 
-				materialToken = triangle.materialToken;
 				normal = triangle.GetNormal(query.uv);
 				texcoord = triangle.GetTexcoord(query.uv);
+				materialToken = triangle.materialToken;
 			}
 			else if (token.IsSphere)
 			{
 				ref readonly var sphere = ref spheres[token.SphereValue];
 
-				materialToken = sphere.materialToken;
 				normal = PreparedSphere.GetNormal(query.uv);
 				texcoord = PreparedSphere.GetTexcoord(query.uv);
+				materialToken = sphere.materialToken;
 			}
 			else
 			{
@@ -245,7 +248,7 @@ namespace EchoRenderer.Objects.Preparation
 			}
 
 			normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
-			Material material = instance.mapper[materialToken];      //Find appropriate mapped material
+			Material material = instance.swatch[materialToken];      //Find appropriate mapped material
 
 			//Construct interaction
 			if (material == null) return new Interaction(query, normal);

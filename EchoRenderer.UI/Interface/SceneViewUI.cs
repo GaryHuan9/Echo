@@ -5,11 +5,9 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Objects;
 using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Objects.Scenes;
-using EchoRenderer.Rendering;
 using EchoRenderer.Rendering.Engines;
 using EchoRenderer.Rendering.Pixels;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Textures;
 using EchoRenderer.Textures.Grid;
 using EchoRenderer.UI.Core.Areas;
 
