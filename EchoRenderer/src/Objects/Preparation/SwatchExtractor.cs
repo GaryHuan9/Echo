@@ -1,18 +1,33 @@
 ﻿using System.Collections.Generic;
+using CodeHelpers.Diagnostics;
 using EchoRenderer.Objects.Instancing;
 using EchoRenderer.Rendering.Materials;
 
 namespace EchoRenderer.Objects.Preparation
 {
+	/// <summary>
+	/// A class that is used to extract swatches from <see cref="Material"/> on <see cref="GeometryObjects"/>
+	/// and convert instanced <see cref="MaterialSwatch"/> into <see cref="PreparedSwatch"/> efficiently.
+	/// </summary>
 	public class SwatchExtractor
 	{
 		readonly Dictionary<Material, uint> map = new();
 		readonly List<Material> materials = new();
 
-		PreparedSwatch defaultSwatch;
+		PreparedSwatch emptySwatch;                                //Caches the default empty swatch with no mappings
+		Dictionary<MaterialSwatch, PreparedSwatch> cachedSwatches; //Caches all the prepared swatches and their originals
 
+		Seal seal;
+
+		/// <summary>
+		/// Registers <paramref name="material"/> into this <see cref="SwatchExtractor"/> and returns a token for this <paramref name="material"/>.
+		/// That token can be used to identify and retrieve this <paramref name="material"/> (or a mapped one) later on in <see cref="PreparedSwatch"/>.
+		/// NOTE: this method should not be invoked after we started invoking <see cref="Prepare"/>.
+		/// </summary>
 		public uint Register(Material material)
 		{
+			seal.AssertNotApplied();
+
 			if (map.TryGetValue(material, out uint token)) return token;
 
 			token = (uint)map.Count;
@@ -22,13 +37,28 @@ namespace EchoRenderer.Objects.Preparation
 			return token;
 		}
 
+		/// <summary>
+		/// Prepares <paramref name="swatch"/> into a <see cref="PreparedSwatch"/>.
+		/// Note that once this method is invoked, invocation to <see cref="Register"/> is no longer supported.
+		/// </summary>
 		public PreparedSwatch Prepare(MaterialSwatch swatch)
 		{
-			if (swatch == null || swatch.Equals(null)) return defaultSwatch ??= new PreparedSwatch(materials.ToArray());
+			seal.TryApply();
 
-			//TODO: prepared swatch caching
+			var valueComparer = MaterialSwatch.valueEqualityComparer; //We will compare the swatches based on their content, not reference
 
-			return new PreparedSwatch(CreateSwatch(swatch));
+			//If this swatch is empty or null, return the prepared default empty swatch
+			if (valueComparer.Equals(swatch, null)) return emptySwatch ??= new PreparedSwatch(materials.ToArray());
+
+			//Find cached swatch again, this time look through all the ones that are not empty
+			cachedSwatches ??= new Dictionary<MaterialSwatch, PreparedSwatch>(valueComparer);
+			if (cachedSwatches.TryGetValue(swatch, out PreparedSwatch prepared)) return prepared;
+
+			//Create and cache if none found
+			prepared = new PreparedSwatch(CreateSwatch(swatch));
+			cachedSwatches.Add(swatch, prepared);
+
+			return prepared;
 		}
 
 		Material[] CreateSwatch(MaterialSwatch swatch)
