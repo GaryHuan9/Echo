@@ -114,7 +114,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// <summary>
 		/// Ensures that this <see cref="TraceQuery"/> has <see cref="Hit"/> something.
 		/// </summary>
-		[Conditional("DEBUG")]
+		[Conditional(Assert.DebugSymbol)]
 		public readonly void AssertHit()
 		{
 #if DEBUG
