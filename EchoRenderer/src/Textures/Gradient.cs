@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Textures.Generative;
@@ -15,18 +16,18 @@ namespace EchoRenderer.Textures
 	/// <summary>
 	/// A blend of colors defined at specific percentages which linearly fade between each other.
 	/// </summary>
-	public class Gradient : IEnumerable<float>, ISealable
+	public class Gradient : IEnumerable<float>
 	{
 		static Gradient()
 		{
-			black.Seal();
-			white.Seal();
-			blend.Seal();
+			black.seal.Apply();
+			white.seal.Apply();
+			blend.seal.Apply();
 		}
 
-		public bool IsSealed { get; private set; }
-
 		readonly List<Anchor> anchors = new();
+
+		Seal seal;
 
 		public static readonly Gradient black = new() { { 0f, Float4.ana } };
 		public static readonly Gradient white = new() { { 0f, Float4.one } };
@@ -39,7 +40,7 @@ namespace EchoRenderer.Textures
 		/// </summary>
 		public void Add(float percent, in Float4 color)
 		{
-			this.AssertNotSealed();
+			seal.AssertNotApplied();
 
 			int index = anchors.BinarySearch(percent, Comparer.instance);
 			Anchor anchor = new Anchor(percent, color);
@@ -54,7 +55,7 @@ namespace EchoRenderer.Textures
 		/// </summary>
 		public bool Remove(float percent)
 		{
-			this.AssertNotSealed();
+			seal.AssertNotApplied();
 
 			int index = anchors.BinarySearch(percent, Comparer.instance);
 			if (index < 0) return false;
@@ -85,15 +86,6 @@ namespace EchoRenderer.Textures
 		/// Draws this <see cref="Gradient"/> on <paramref name="texture"/> from <paramref name="point0"/> to <paramref name="point1"/>.
 		/// </summary>
 		public void Draw(TextureGrid texture, Float2 point0, Float2 point1) => texture.CopyFrom(new GradientTexture { Gradient = this, Point0 = point0, Point1 = point1 });
-
-		/// <summary>
-		/// Seals this <see cref="Gradient"/> so it cannot be modified anymore.
-		/// </summary>
-		public void Seal()
-		{
-			this.AssertNotSealed();
-			IsSealed = true;
-		}
 
 		IEnumerator<float> IEnumerable<float>.GetEnumerator() => anchors.Select(anchor => anchor.percent).GetEnumerator();
 

@@ -144,7 +144,7 @@ namespace EchoRenderer.Mathematics.Primitives
 
 		public AxisAlignedBoundingBox Encapsulate(in AxisAlignedBoundingBox other) => new(min.Min(other.min), max.Max(other.max));
 
-		public override int    GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
-		public override string ToString()    => $"{nameof(Center)}: {Center}, {nameof(Extend)}: {Extend}";
+		public override int GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
+		public override string ToString() => $"{nameof(Center)}: {Center}, {nameof(Extend)}: {Extend}";
 	}
 }
