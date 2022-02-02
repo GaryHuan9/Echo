@@ -20,15 +20,15 @@ namespace EchoRenderer.Mathematics.Primitives
 		{
 			Assert.AreEqual(direction.SquaredMagnitude, 1f);
 
-			Unsafe.SkipInit(out originVector);
-			Unsafe.SkipInit(out directionVector);
+			Unsafe.SkipInit(out originV);
+			Unsafe.SkipInit(out directionV);
 			Unsafe.SkipInit(out inverseDirection);
 
 			this.origin = origin;
 			this.direction = direction;
 
 			//Because _mm_rcp_ps is only an approximation, we cannot use it here
-			inverseDirectionVector = Sse.Divide(Vector128.Create(1f), directionVector);
+			inverseDirectionV = Sse.Divide(Vector128.Create(1f), directionV);
 		}
 
 		[FieldOffset(0)] public readonly Float3 origin;
@@ -36,9 +36,9 @@ namespace EchoRenderer.Mathematics.Primitives
 		[FieldOffset(24)] public readonly Float3 inverseDirection;
 
 		//NOTE: these fields have overlapping memory offsets to reduce footprint. Pay extra attention when assigning them.
-		[FieldOffset(0)] public readonly Vector128<float> originVector;
-		[FieldOffset(12)] public readonly Vector128<float> directionVector;
-		[FieldOffset(24)] public readonly Vector128<float> inverseDirectionVector;
+		[FieldOffset(0)] public readonly Vector128<float> originV;
+		[FieldOffset(12)] public readonly Vector128<float> directionV;
+		[FieldOffset(24)] public readonly Vector128<float> inverseDirectionV;
 
 		/// <summary>
 		/// Returns the point this <see cref="Ray"/> points at <paramref name="distance"/>.
@@ -46,7 +46,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		public unsafe Float3 GetPoint(float distance)
 		{
 			Vector128<float> length = Vector128.Create(distance);
-			Vector128<float> result = PackedMath.FMA(directionVector, length, originVector);
+			Vector128<float> result = PackedMath.FMA(directionV, length, originV);
 
 			return *(Float3*)&result;
 		}

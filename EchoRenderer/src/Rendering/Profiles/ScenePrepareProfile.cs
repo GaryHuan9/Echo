@@ -23,6 +23,7 @@ namespace EchoRenderer.Rendering.Profiles
 		/// </summary>
 		public int FragmentationMaxIteration { get; init; } = 3;
 
+		/// <inheritdoc/>
 		public void Validate()
 		{
 			if (AggregatorProfile == null) throw ExceptionHelper.Invalid(nameof(AggregatorProfile), InvalidType.isNull);

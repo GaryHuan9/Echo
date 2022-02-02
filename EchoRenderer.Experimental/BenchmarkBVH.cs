@@ -7,11 +7,11 @@ using EchoRenderer.IO;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
-using EchoRenderer.Objects;
-using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
+using EchoRenderer.Scenic;
+using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Experimental
 {

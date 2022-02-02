@@ -1,6 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Objects;
+using EchoRenderer.Scenic;
 using EchoRenderer.UI.Core;
 using EchoRenderer.UI.Core.Areas;
 using EchoRenderer.UI.Core.Fields;

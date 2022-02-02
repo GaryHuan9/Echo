@@ -1,8 +1,8 @@
 using System;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Mathematics.Primitives
 {
@@ -23,17 +23,10 @@ namespace EchoRenderer.Mathematics.Primitives
 		public bool IsGeometry => data < NodeThreshold;
 
 		/// <summary>
-		/// If <see cref="IsNode"/>, returns whether this <see cref="Token"/> represents an empty
-		/// (null) node inside an <see cref="Aggregator"/>, otherwise the result is undefined.
+		/// Returns whether this <see cref="Token"/> represents an empty (null) node inside an <see cref="Aggregator"/>.
+		/// Note that if <see cref="IsGeometry"/>, which can never be empty, so the result of this property is always false.
 		/// </summary>
-		public bool IsEmpty
-		{
-			get
-			{
-				Assert.IsTrue(IsNode);
-				return data == EmptyNode;
-			}
-		}
+		public bool IsEmpty => data == EmptyNode;
 
 		/// <summary>
 		/// Returns whether this <see cref="Token"/> represents a <see cref="PreparedTriangle"/>.

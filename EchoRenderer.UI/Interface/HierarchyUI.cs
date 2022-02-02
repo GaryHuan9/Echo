@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using CodeHelpers.Diagnostics;
-using EchoRenderer.Objects;
-using EchoRenderer.Objects.Instancing;
-using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Scenic;
+using EchoRenderer.Scenic.Instancing;
+using EchoRenderer.Scenic.Preparation;
 using EchoRenderer.UI.Core.Areas;
 
 namespace EchoRenderer.UI.Interface
