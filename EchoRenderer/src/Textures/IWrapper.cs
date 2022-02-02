@@ -42,16 +42,19 @@ namespace EchoRenderer.Textures
 
 		class Clamp : IWrapper
 		{
+			/// <inheritdoc/>
 			public Float2 Convert(Float2 uv) => uv.Clamp();
 		}
 
 		class Repeat : IWrapper
 		{
+			/// <inheritdoc/>
 			public Float2 Convert(Float2 uv) => uv.Repeat(1f);
 		}
 
 		class Unbound : IWrapper
 		{
+			/// <inheritdoc/>
 			public Float2 Convert(Float2 uv) => uv;
 		}
 	}

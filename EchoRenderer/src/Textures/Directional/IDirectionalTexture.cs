@@ -17,7 +17,7 @@ namespace EchoRenderer.Textures.Directional
 
 		/// <summary>
 		/// Evaluates this <see cref="IDirectionalTexture"/> at <paramref name="direction"/>.
-		/// NOTE: <paramref name="direction"/> should be normalized and is not zero.
+		/// NOTE: <paramref name="direction"/> should have a squared magnitude of exactly one.
 		/// </summary>
 		Vector128<float> Evaluate(in Float3 direction);
 

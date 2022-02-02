@@ -30,10 +30,14 @@ namespace EchoRenderer.Mathematics.Randomization
 		static long globalSeed;
 
 		const double Scale = 1d / (uint.MaxValue + 1L);
+
+		/// <inheritdoc/>
 		public float Next1() => (float)(Next() * Scale);
 
+		/// <inheritdoc/>
 		public int Next1(int max) => Next(max);
 
+		/// <inheritdoc/>
 		public int Next1(int min, int max) => Next((long)max - min) + min;
 
 		int Next(long max) => (int)(Next() * Scale * max);

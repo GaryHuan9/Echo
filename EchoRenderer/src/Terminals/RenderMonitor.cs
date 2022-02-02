@@ -1,9 +1,9 @@
 using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Engines;
+using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Preparation;
 using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Terminals

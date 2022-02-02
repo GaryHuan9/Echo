@@ -71,6 +71,7 @@ namespace EchoRenderer.Textures.Directional
 
 		static readonly string[] names = { "px", "nx", "py", "ny", "pz", "nz" };
 
+		/// <inheritdoc/>
 		public Vector128<float> Evaluate(in Float3 direction)
 		{
 			Direction target = (Direction)direction;

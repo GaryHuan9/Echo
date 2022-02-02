@@ -13,8 +13,8 @@ namespace EchoRenderer.Mathematics.Primitives
 	{
 		public AxisAlignedBoundingBox(in Float3 min, in Float3 max)
 		{
-			Unsafe.SkipInit(out minVector);
-			Unsafe.SkipInit(out maxVector);
+			Unsafe.SkipInit(out minV);
+			Unsafe.SkipInit(out maxV);
 
 			this.min = min;
 			this.max = max;
@@ -24,8 +24,8 @@ namespace EchoRenderer.Mathematics.Primitives
 
 		public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
 		{
-			Unsafe.SkipInit(out minVector);
-			Unsafe.SkipInit(out maxVector);
+			Unsafe.SkipInit(out minV);
+			Unsafe.SkipInit(out maxV);
 
 			min = Float3.positiveInfinity;
 			max = Float3.negativeInfinity;
@@ -41,8 +41,8 @@ namespace EchoRenderer.Mathematics.Primitives
 
 		public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
 		{
-			Unsafe.SkipInit(out minVector);
-			Unsafe.SkipInit(out maxVector);
+			Unsafe.SkipInit(out minV);
+			Unsafe.SkipInit(out maxV);
 
 			min = Float3.positiveInfinity;
 			max = Float3.negativeInfinity;
@@ -61,8 +61,8 @@ namespace EchoRenderer.Mathematics.Primitives
 		[FieldOffset(0)] public readonly Float3 min;
 		[FieldOffset(12)] public readonly Float3 max;
 
-		[FieldOffset(0)] readonly Vector128<float> minVector;
-		[FieldOffset(12)] readonly Vector128<float> maxVector;
+		[FieldOffset(0)] readonly Vector128<float> minV;
+		[FieldOffset(12)] readonly Vector128<float> maxV;
 
 		public Float3 Center => (max + min) / 2f;
 		public Float3 Extend => (max - min) / 2f;
@@ -94,8 +94,8 @@ namespace EchoRenderer.Mathematics.Primitives
 		{
 			//The well known 'slab method'. Referenced from https://tavianator.com/2011/ray_box.html
 
-			Vector128<float> lengths0 = Sse.Multiply(Sse.Subtract(minVector, ray.originVector), ray.inverseDirectionVector);
-			Vector128<float> lengths1 = Sse.Multiply(Sse.Subtract(maxVector, ray.originVector), ray.inverseDirectionVector);
+			Vector128<float> lengths0 = Sse.Multiply(Sse.Subtract(minV, ray.originV), ray.inverseDirectionV);
+			Vector128<float> lengths1 = Sse.Multiply(Sse.Subtract(maxV, ray.originV), ray.inverseDirectionV);
 
 			Vector128<float> lengthsMin = Sse.Max(lengths0, lengths1);
 			Vector128<float> lengthsMax = Sse.Min(lengths0, lengths1);

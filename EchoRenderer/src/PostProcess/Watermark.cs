@@ -18,7 +18,7 @@ namespace EchoRenderer.PostProcess
 		CropGrid cropWorker;
 		CropGrid cropTarget;
 
-		Vector128<float> tintVector;
+		Vector128<float> tintV;
 
 		static readonly Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
 
@@ -62,7 +62,7 @@ namespace EchoRenderer.PostProcess
 			bool lightMode = grab.Luminance > LuminanceThreshold;
 			float tint = lightMode ? 1f + BackgroundTint : 1f - BackgroundTint;
 
-			tintVector = Vector128.Create(tint);
+			tintV = Vector128.Create(tint);
 			RunPass(TintPass, cropWorker); //Copies buffer
 
 			//Write label
@@ -73,7 +73,7 @@ namespace EchoRenderer.PostProcess
 		void TintPass(Int2 position)
 		{
 			Vector128<float> source = cropWorker[position];
-			cropTarget[position] = Sse.Multiply(source, tintVector);
+			cropTarget[position] = Sse.Multiply(source, tintV);
 		}
 	}
 }

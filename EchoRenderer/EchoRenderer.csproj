@@ -42,10 +42,10 @@
         <Compile Remove="src\Rendering\Materials\Glossy.cs" />
         <Compile Remove="src\Rendering\Materials\MaterialOld.cs" />
         <Compile Remove="src\Rendering\Materials\Emissive.cs" />
-        <Compile Remove="src\Objects\Scenes\BMWs.cs" />
-        <Compile Remove="src\Objects\Scenes\CornellBox.cs" />
-        <Compile Remove="src\Objects\Scenes\TestScenes.cs" />
-        <Compile Remove="src\Objects\Scenes\MaterialBalls.cs" />
+        <Compile Remove="src\Scenic\Examples\BMWs.cs" />
+        <Compile Remove="src\Scenic\Examples\CornellBox.cs" />
+        <Compile Remove="src\Scenic\Examples\TestScenes.cs" />
+        <Compile Remove="src\Scenic\Examples\MaterialBalls.cs" />
     </ItemGroup>
 
     <ItemGroup>

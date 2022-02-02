@@ -1,7 +1,7 @@
 ﻿using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Rendering.Materials
 {

@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -94,7 +94,7 @@ namespace EchoRenderer.Mathematics.Intersections
 			fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, totalCount);
 		}
 
-		protected override int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
+		public override int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
 		{
 			//If theres enough room to store every individual AABB
 			if (span.Length >= totalCount)

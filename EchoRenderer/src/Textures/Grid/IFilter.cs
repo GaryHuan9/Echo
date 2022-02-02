@@ -47,6 +47,7 @@ namespace EchoRenderer.Textures.Grid
 
 		class Point : IFilter
 		{
+			/// <inheritdoc/>
 			public Vector128<float> Convert(TextureGrid texture, Float2 uv)
 			{
 				Int2 position = (uv * texture.size).Floored;
@@ -59,6 +60,7 @@ namespace EchoRenderer.Textures.Grid
 			// If the performance of this bilinear filter is not fast enough anymore, we could always move to a more
 			// 'native' approach by allowing derived class to provide customized implementations with virtual methods
 
+			/// <inheritdoc/>
 			public Vector128<float> Convert(TextureGrid texture, Float2 uv)
 			{
 				uv *= texture.size;
