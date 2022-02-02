@@ -9,14 +9,14 @@ using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Instancing;
 
 namespace EchoRenderer.Scenic.Preparation
 {
 	public class PreparedPack
 	{
-		public PreparedPack(ScenePreparer preparer, ObjectPack source)
+		public PreparedPack(ScenePreparer preparer, EntityPack source)
 		{
 			var trianglesList = new ConcurrentList<PreparedTriangle>();
 			var spheresList = new List<PreparedSphere>();
@@ -26,11 +26,11 @@ namespace EchoRenderer.Scenic.Preparation
 
 			using (trianglesList.BeginAdd())
 			{
-				foreach (Object child in source.LoopChildren(true))
+				foreach (Entity child in source.LoopChildren(true))
 				{
 					switch (child)
 					{
-						case GeometryObject geometry:
+						case GeometryEntity geometry:
 						{
 							trianglesList.AddRange(geometry.ExtractTriangles(swatchExtractor));
 							spheresList.AddRange(geometry.ExtractSpheres(swatchExtractor));

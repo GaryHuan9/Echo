@@ -1,4 +1,4 @@
-﻿using EchoRenderer.Scenic.GeometryObjects;
+﻿using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Mathematics.Primitives

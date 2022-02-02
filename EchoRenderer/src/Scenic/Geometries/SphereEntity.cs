@@ -9,11 +9,11 @@ using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Scenic.Preparation;
 
-namespace EchoRenderer.Scenic.GeometryObjects
+namespace EchoRenderer.Scenic.Geometries
 {
-	public class SphereObject : GeometryObject
+	public class SphereEntity : GeometryEntity
 	{
-		public SphereObject(Material material, float radius) : base(material) => Radius = radius;
+		public SphereEntity(Material material, float radius) : base(material) => Radius = radius;
 
 		public float Radius { get; set; }
 
@@ -30,7 +30,7 @@ namespace EchoRenderer.Scenic.GeometryObjects
 
 	public readonly struct PreparedSphere
 	{
-		public PreparedSphere(SphereObject sphere, uint materialToken) : this
+		public PreparedSphere(SphereEntity sphere, uint materialToken) : this
 		(
 			sphere.LocalToWorld.MultiplyPoint(Float3.zero),
 			sphere.Scale.MaxComponent * sphere.Radius,

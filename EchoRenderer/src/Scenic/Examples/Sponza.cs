@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.IO;
-using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Lights;
 using EchoRenderer.Textures;
 
@@ -15,7 +15,7 @@ namespace EchoRenderer.Scenic.Examples
 
 			// materials["light"] = new Invisible();
 
-			children.Add(new MeshObject(mesh, materials) { Rotation = Float3.up * 90f });
+			children.Add(new MeshEntity(mesh, materials) { Rotation = Float3.up * 90f });
 
 			children.Add(new AmbientLight { Texture = (Pure)new Float3(10.3f, 8.9f, 6.3f) });
 
