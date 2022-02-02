@@ -7,7 +7,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Pooling;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Instancing;
 
 namespace EchoRenderer.Scenic.Preparation
@@ -25,17 +25,17 @@ namespace EchoRenderer.Scenic.Preparation
 		public readonly ScenePrepareProfile profile;
 		public readonly Node root; //This field can be made private once a better monitoring system is introduced
 
-		readonly Dictionary<ObjectPack, Node> objectPacks = new();
+		readonly Dictionary<EntityPack, Node> entityPacks = new();
 		readonly HashSet<Material> preparedMaterials = new();
 
-		public Dictionary<ObjectPack, Node>.KeyCollection UniquePacks => objectPacks.Keys;
+		public Dictionary<EntityPack, Node>.KeyCollection UniquePacks => entityPacks.Keys;
 
 		/// <summary>
 		/// Creates or retrieves and returns the <see cref="PreparedPack"/> for <paramref name="pack"/>.
 		/// </summary>
-		public PreparedPack GetPreparedPack(ObjectPack pack)
+		public PreparedPack GetPreparedPack(EntityPack pack)
 		{
-			Node node = objectPacks.TryGetValue(pack);
+			Node node = entityPacks.TryGetValue(pack);
 
 			if (node == null) throw ExceptionHelper.Invalid(nameof(pack), pack, "is not linked in the input scene in any way");
 			if (node.PreparedPack == null) throw new Exception("Pack not prepared! Are you sure the preparing order is correct?");
@@ -51,26 +51,26 @@ namespace EchoRenderer.Scenic.Preparation
 			if (preparedMaterials.Add(material)) material.Prepare();
 		}
 
-		Node CreateNode(ObjectPack pack, Node parent)
+		Node CreateNode(EntityPack pack, Node parent)
 		{
-			if (objectPacks.TryGetValue(pack, out Node node))
+			if (entityPacks.TryGetValue(pack, out Node node))
 			{
 				node.AddParent(parent);
 				return node;
 			}
 
 			node = new Node(pack, parent);
-			objectPacks.Add(pack, node);
+			entityPacks.Add(pack, node);
 
-			foreach (Object child in pack.LoopChildren(true))
+			foreach (Entity child in pack.LoopChildren(true))
 			{
-				if (child is ObjectPack) throw new Exception($"Cannot directly assign {child} as a child!");
-				if (child is not PackInstance instance || instance.ObjectPack == null) continue;
+				if (child is EntityPack) throw new Exception($"Cannot directly assign {child} as a child!");
+				if (child is not PackInstance instance || instance.EntityPack == null) continue;
 
-				Node childNode = CreateNode(instance.ObjectPack, node);
+				Node childNode = CreateNode(instance.EntityPack, node);
 
 				if (!node.AddChild(childNode)) continue; //If we did not add, then the node already existed
-				if (node.HasParent(childNode)) throw new Exception($"Recursive {nameof(ObjectPack)} instancing!");
+				if (node.HasParent(childNode)) throw new Exception($"Recursive {nameof(EntityPack)} instancing!");
 			}
 
 			return node;
@@ -81,18 +81,18 @@ namespace EchoRenderer.Scenic.Preparation
 			//Head recursion to make sure that all children are prepared before the parent
 
 			foreach (Node child in node) PreparePacks(child);
-			node.AssignPack(new PreparedPack(this, node.objectPack));
+			node.AssignPack(new PreparedPack(this, node.entityPack));
 		}
 
 		public class Node : IEnumerable<Node>
 		{
-			public Node(ObjectPack objectPack, Node parent)
+			public Node(EntityPack entityPack, Node parent)
 			{
-				this.objectPack = objectPack;
+				this.entityPack = entityPack;
 				if (parent != null) parents.Add(parent);
 			}
 
-			public readonly ObjectPack objectPack;
+			public readonly EntityPack entityPack;
 			public PreparedPack PreparedPack { get; private set; }
 
 			public GeometryCounts InstancedCounts { get; private set; }

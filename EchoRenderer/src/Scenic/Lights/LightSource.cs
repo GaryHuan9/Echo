@@ -8,10 +8,10 @@ using EchoRenderer.Scenic.Preparation;
 namespace EchoRenderer.Scenic.Lights
 {
 	/// <summary>
-	/// An <see cref="ILight"/> <see cref="Object"/> explicitly contained in the <see cref="Scene"/>.
-	/// Note that light sources created this way must be contained in the root <see cref="ObjectPack"/>.
+	/// An <see cref="ILight"/> <see cref="Entity"/> explicitly contained in the <see cref="Scene"/>.
+	/// Note that light sources created this way must be contained in the root <see cref="EntityPack"/>.
 	/// </summary>
-	public abstract class LightSource : Object, ILight
+	public abstract class LightSource : Entity, ILight
 	{
 		/// <summary>
 		/// The main color and intensity of this <see cref="LightSource"/>.
@@ -34,7 +34,7 @@ namespace EchoRenderer.Scenic.Lights
 	}
 
 	/// <summary>
-	/// An <see cref="IAreaLight"/> <see cref="Object"/> inheriting <see cref="LightSource"/>.
+	/// An <see cref="IAreaLight"/> <see cref="Entity"/> inheriting <see cref="LightSource"/>.
 	/// Can be used to define light sources that have area and are not singularities (delta).
 	/// </summary>
 	public abstract class AreaLightSource : LightSource, IAreaLight

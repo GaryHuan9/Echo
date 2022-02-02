@@ -22,7 +22,7 @@ namespace EchoRenderer.Scenic.Preparation
 			var ambientList = new List<AmbientLight>();
 
 			//Gather important objects
-			foreach (Object child in source.LoopChildren(true))
+			foreach (Entity child in source.LoopChildren(true))
 			{
 				switch (child)
 				{

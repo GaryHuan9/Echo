@@ -7,9 +7,9 @@ using CodeHelpers.Pooling;
 
 namespace EchoRenderer.Scenic
 {
-	public class Object
+	public class Entity
 	{
-		public Object() => children = new Children(this);
+		public Entity() => children = new Children(this);
 
 		Float3 _position;
 		Float3 _rotation;
@@ -64,19 +64,19 @@ namespace EchoRenderer.Scenic
 		//TODO: Currently child/parent relationship does not affect transformation
 		public readonly Children children;
 
-		public Object Parent { get; private set; }
+		public Entity Parent { get; private set; }
 		public int ParentIndex { get; private set; }
 
-		public IEnumerable<Object> LoopChildren(bool all)
+		public IEnumerable<Entity> LoopChildren(bool all)
 		{
 			if (children.Count == 0) yield break;
 
-			Queue<Object> frontier = CollectionPooler<Object>.queue.GetObject();
+			Queue<Entity> frontier = CollectionPooler<Entity>.queue.GetObject();
 			for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
 
 			while (frontier.Count > 0)
 			{
-				Object child = frontier.Dequeue();
+				Entity child = frontier.Dequeue();
 
 				yield return child;
 				if (!all) continue;
@@ -84,7 +84,7 @@ namespace EchoRenderer.Scenic
 				for (int i = 0; i < child.children.Count; i++) frontier.Enqueue(child.children[i]);
 			}
 
-			CollectionPooler<Object>.queue.ReleaseObject(frontier);
+			CollectionPooler<Entity>.queue.ReleaseObject(frontier);
 		}
 
 		void RecalculateTransformations()
@@ -95,19 +95,19 @@ namespace EchoRenderer.Scenic
 
 		public class Children
 		{
-			public Children(Object source) => this.source = source;
+			public Children(Entity source) => this.source = source;
 
-			readonly Object source;
-			readonly List<Object> children = new();
+			readonly Entity source;
+			readonly List<Entity> children = new();
 
 			public int Count => children.Count;
 
-			public Object this[int index]
+			public Entity this[int index]
 			{
 				get => children[index];
 				set
 				{
-					Object child = children[index];
+					Entity child = children[index];
 					if (child == value) return;
 
 					DisconnectChild(child);
@@ -123,7 +123,7 @@ namespace EchoRenderer.Scenic
 				}
 			}
 
-			public void Add(Object child)
+			public void Add(Entity child)
 			{
 				if (child == null) throw ExceptionHelper.Invalid(nameof(child), InvalidType.isNull);
 				if (children.Contains(child)) throw ExceptionHelper.Invalid(nameof(child), child, "already present!");
@@ -134,15 +134,15 @@ namespace EchoRenderer.Scenic
 
 			public void RemoveAt(int index)
 			{
-				Object child = children[index];
+				Entity child = children[index];
 				children.RemoveAt(index);
 
 				DisconnectChild(child);
 			}
 
-			public T FindFirst<T>() where T : Object => (T)children.FirstOrDefault(target => target is T);
+			public T FindFirst<T>() where T : Entity => (T)children.FirstOrDefault(target => target is T);
 
-			void ConnectChild(Object child, int index)
+			void ConnectChild(Entity child, int index)
 			{
 				child.ParentIndex = index;
 				child.Parent = source;
@@ -150,7 +150,7 @@ namespace EchoRenderer.Scenic
 				child.RecalculateTransformations();
 			}
 
-			static void DisconnectChild(Object child)
+			static void DisconnectChild(Entity child)
 			{
 				child.ParentIndex = 0;
 				child.Parent = null;

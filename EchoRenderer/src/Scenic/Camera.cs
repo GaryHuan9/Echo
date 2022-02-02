@@ -6,7 +6,7 @@ using EchoRenderer.Mathematics.Randomization;
 
 namespace EchoRenderer.Scenic
 {
-	public class Camera : Object
+	public class Camera : Entity
 	{
 		public Camera(float fieldOfView) => FieldOfView = fieldOfView;
 
@@ -66,7 +66,7 @@ namespace EchoRenderer.Scenic
 			return new Ray(origin, direction.Normalized);
 		}
 
-		public void LookAt(Object target) => LookAt(target.Position);
+		public void LookAt(Entity target) => LookAt(target.Position);
 
 		public void LookAt(Float3 target)
 		{

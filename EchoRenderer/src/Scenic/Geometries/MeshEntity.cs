@@ -5,13 +5,13 @@ using EchoRenderer.IO;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Scenic.Preparation;
 
-namespace EchoRenderer.Scenic.GeometryObjects
+namespace EchoRenderer.Scenic.Geometries
 {
-	public class MeshObject : GeometryObject
+	public class MeshEntity : GeometryEntity
 	{
-		public MeshObject(Mesh mesh, Material material) : base(material) => Mesh = mesh;
+		public MeshEntity(Mesh mesh, Material material) : base(material) => Mesh = mesh;
 
-		public MeshObject(Mesh mesh, MaterialLibrary materialLibrary) : this(mesh, materialLibrary.first) => MaterialLibrary = materialLibrary;
+		public MeshEntity(Mesh mesh, MaterialLibrary materialLibrary) : this(mesh, materialLibrary.first) => MaterialLibrary = materialLibrary;
 
 		public Mesh Mesh { get; set; }
 		public MaterialLibrary MaterialLibrary { get; set; }

@@ -4,11 +4,11 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Scenic.Preparation;
 
-namespace EchoRenderer.Scenic.GeometryObjects
+namespace EchoRenderer.Scenic.Geometries
 {
-	public class BoxObject : GeometryObject
+	public class BoxEntity : GeometryEntity
 	{
-		public BoxObject(Material material, Float3 size) : base(material) => Size = size;
+		public BoxEntity(Material material, Float3 size) : base(material) => Size = size;
 
 		public Float3 Size { get; set; }
 

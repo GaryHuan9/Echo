@@ -10,7 +10,7 @@ using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Scenic;
-using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Experimental
@@ -23,7 +23,7 @@ namespace EchoRenderer.Experimental
 			Scene scene = new Scene();
 
 			Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
-			scene.children.Add(new MeshObject(mesh, new Matte()));
+			scene.children.Add(new MeshEntity(mesh, new Matte()));
 
 			traceQueries = new TraceQuery[65536];
 			occludeQueries = new OccludeQuery[65536];

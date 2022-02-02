@@ -1,4 +1,4 @@
-﻿namespace EchoRenderer.Scenic.GeometryObjects
+﻿namespace EchoRenderer.Scenic.Geometries
 {
 	public readonly struct GeometryCounts
 	{
@@ -22,7 +22,7 @@
 
 		public ulong Total => triangle + sphere + instance;
 
-		public static GeometryCounts operator +(in GeometryCounts first,  in GeometryCounts second) => new(first.triangle + second.triangle, first.sphere + second.sphere, first.instance + second.instance);
-		public static GeometryCounts operator *(in GeometryCounts counts, uint              value)  => new(counts.triangle * value, counts.sphere * value, counts.instance * value);
+		public static GeometryCounts operator +(in GeometryCounts first, in GeometryCounts second) => new(first.triangle + second.triangle, first.sphere + second.sphere, first.instance + second.instance);
+		public static GeometryCounts operator *(in GeometryCounts counts, uint value) => new(counts.triangle * value, counts.sphere * value, counts.instance * value);
 	}
 }
