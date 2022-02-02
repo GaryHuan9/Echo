@@ -9,11 +9,11 @@ using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Scenic.Preparation;
 
-namespace EchoRenderer.Scenic.GeometryObjects
+namespace EchoRenderer.Scenic.Geometries
 {
-	public class TriangleObject : GeometryObject
+	public class TriangleEntity : GeometryEntity
 	{
-		public TriangleObject(Material material, Float3 vertex0, Float3 vertex1, Float3 vertex2) : base(material)
+		public TriangleEntity(Material material, Float3 vertex0, Float3 vertex1, Float3 vertex2) : base(material)
 		{
 			Vertex0 = vertex0;
 			Vertex1 = vertex1;

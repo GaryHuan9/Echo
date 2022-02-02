@@ -10,7 +10,7 @@ namespace EchoRenderer.Scenic.Preparation
 		/// <summary>
 		/// Creates a regular <see cref="PreparedInstance"/>.
 		/// </summary>
-		public PreparedInstance(ScenePreparer preparer, PackInstance instance, uint id) : this(preparer, instance.ObjectPack, instance.Swatch, id)
+		public PreparedInstance(ScenePreparer preparer, PackInstance instance, uint id) : this(preparer, instance.EntityPack, instance.Swatch, id)
 		{
 			forwardTransform = instance.WorldToLocal;
 			inverseTransform = instance.LocalToWorld;
@@ -25,7 +25,7 @@ namespace EchoRenderer.Scenic.Preparation
 			else throw new Exception($"{nameof(PackInstance)} does not support none uniform scaling! '{scale}'");
 		}
 
-		protected PreparedInstance(ScenePreparer preparer, ObjectPack pack, MaterialSwatch swatch, uint id)
+		protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, uint id)
 		{
 			this.id = id;
 

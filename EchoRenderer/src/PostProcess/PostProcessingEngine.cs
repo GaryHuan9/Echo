@@ -90,8 +90,8 @@ namespace EchoRenderer.PostProcess
 
 			protected override int MaxPoolSize => 16;
 
-			protected override ArrayGrid GetNewObject()          => new(size);
-			protected override void      Reset(ArrayGrid target) { }
+			protected override ArrayGrid GetNewObject() => new(size);
+			protected override void Reset(ArrayGrid target) { }
 		}
 	}
 }

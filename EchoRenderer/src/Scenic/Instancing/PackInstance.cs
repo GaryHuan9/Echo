@@ -3,7 +3,7 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Scenic.Instancing
 {
-	public class PackInstance : Object
+	public class PackInstance : Entity
 	{
 		public override Float3 Scale
 		{
@@ -15,7 +15,7 @@ namespace EchoRenderer.Scenic.Instancing
 			}
 		}
 
-		public ObjectPack ObjectPack { get; set; }
+		public EntityPack EntityPack { get; set; }
 		public MaterialSwatch Swatch { get; set; }
 	}
 }
