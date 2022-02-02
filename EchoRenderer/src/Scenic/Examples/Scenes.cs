@@ -3,7 +3,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using EchoRenderer.IO;
 using EchoRenderer.Rendering.Materials;
-using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Instancing;
 using EchoRenderer.Scenic.Lights;
 using EchoRenderer.Textures;
@@ -24,9 +24,9 @@ namespace EchoRenderer.Scenic.Examples
 			// children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
 			children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });
 
-			children.Add(new MeshObject(mesh, material0) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
+			children.Add(new MeshEntity(mesh, material0) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 
-			children.Add(new SphereObject(material1, 1f) { Position = new Float3(-3f, 1f, -2f) });
+			children.Add(new SphereEntity(material1, 1f) { Position = new Float3(-3f, 1f, -2f) });
 
 			children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
 			children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
@@ -72,7 +72,7 @@ namespace EchoRenderer.Scenic.Examples
 
 				material = new Matte();
 
-				children.Add(new SphereObject(material, radius) { Position = position });
+				children.Add(new SphereEntity(material, radius) { Position = position });
 			}
 		}
 
@@ -80,7 +80,7 @@ namespace EchoRenderer.Scenic.Examples
 		{
 			for (int i = 0; i < children.Count; i++)
 			{
-				var sphere = children[i] as SphereObject;
+				var sphere = children[i] as SphereEntity;
 				if (sphere == null) continue;
 
 				float distance = sphere.Radius + radius;
@@ -110,7 +110,7 @@ namespace EchoRenderer.Scenic.Examples
 
 					var material = new Matte();
 
-					children.Add(new SphereObject(material, 0.45f) { Position = new Float3(i - Width / 2f, j - Height / 2f, 2f) });
+					children.Add(new SphereEntity(material, 0.45f) { Position = new Float3(i - Width / 2f, j - Height / 2f, 2f) });
 				}
 			}
 		}
@@ -127,27 +127,27 @@ namespace EchoRenderer.Scenic.Examples
 			// var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
 			// var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");
 
-			ObjectPack bunny = new ObjectPack();
-			ObjectPack bunnyWall = new ObjectPack();
+			EntityPack bunny = new EntityPack();
+			EntityPack bunnyWall = new EntityPack();
 
-			bunny.children.Add(new MeshObject(mesh, material0) { Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f });
-			bunny.children.Add(new SphereObject(material1, 0.1f) { Position = new Float3(-0.3f, 0.2f, -0.3f) });
+			bunny.children.Add(new MeshEntity(mesh, material0) { Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)0.7f });
+			bunny.children.Add(new SphereEntity(material1, 0.1f) { Position = new Float3(-0.3f, 0.2f, -0.3f) });
 
 			foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))
 			{
-				bunnyWall.children.Add(new PackInstance { ObjectPack = bunny, Position = offset.XY_ });
+				bunnyWall.children.Add(new PackInstance { EntityPack = bunny, Position = offset.XY_ });
 			}
 
 			for (int z = 0; z < 4; z++)
 			{
-				children.Add(new PackInstance { ObjectPack = bunnyWall, Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f) });
+				children.Add(new PackInstance { EntityPack = bunnyWall, Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = (Float3)(z + 1f) });
 			}
 
-			bunnyWall.children.Add(new PlaneObject(material0, Float2.one) { Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });
+			bunnyWall.children.Add(new PlaneEntity(material0, Float2.one) { Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });
 			// bunnyWall.children.Add(new ObjectInstance(bunnyWall)); //Tests recursive instancing
 
-			children.Add(new BoxObject(material0, Float3.one));
-			children.Add(new PlaneObject(material1, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
+			children.Add(new BoxEntity(material0, Float3.one));
+			children.Add(new PlaneEntity(material1, Float2.one * 0.9f) { Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
 
 			children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale((Float3)1.5f) } });
 

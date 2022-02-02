@@ -2,7 +2,7 @@ using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Preparation;
 using EchoRenderer.Textures.Grid;
 

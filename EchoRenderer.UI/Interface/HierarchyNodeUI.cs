@@ -5,12 +5,12 @@ namespace EchoRenderer.UI.Interface
 {
 	public class HierarchyNodeUI : AutoLayoutAreaUI
 	{
-		public HierarchyNodeUI(Object nodeObject)
+		public HierarchyNodeUI(Entity nodeEntity)
 		{
-			this.nodeObject = nodeObject;
+			this.nodeEntity = nodeEntity;
 			float height = Theme.LayoutHeight;
 
-			selectButton = new ButtonUI(nodeObject.Name)
+			selectButton = new ButtonUI(nodeEntity.Name)
 						   {
 							   label =
 							   {
@@ -40,14 +40,14 @@ namespace EchoRenderer.UI.Interface
 			Add(container);
 
 			selectButton.Add(expandButton);
-			SetExpanded(nodeObject is Scene);
+			SetExpanded(nodeEntity is Scene);
 
 			Margins = false;
 
-			foreach (Object child in nodeObject.LoopChildren(false)) container.Add(new HierarchyNodeUI(child));
+			foreach (Entity child in nodeEntity.LoopChildren(false)) container.Add(new HierarchyNodeUI(child));
 		}
 
-		public readonly Object nodeObject;
+		public readonly Entity nodeEntity;
 
 		readonly ButtonUI selectButton;
 		readonly ButtonUI expandButton;
@@ -60,7 +60,7 @@ namespace EchoRenderer.UI.Interface
 		{
 			base.Update();
 
-			if (nodeObject.children.Count == 0)
+			if (nodeEntity.children.Count == 0)
 			{
 				expandButton.Enabled = false;
 				container.Enabled = false;

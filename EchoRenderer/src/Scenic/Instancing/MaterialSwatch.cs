@@ -9,7 +9,7 @@ namespace EchoRenderer.Scenic.Instancing
 {
 	/// <summary>
 	/// A swatch of <see cref="Material"/>s that can be used to optionally map some original materials to different alternative materials in a <see cref="PackInstance"/>.
-	/// Note that it can only exchange materials defined on geometries in the immediate <see cref="ObjectPack"/> and cannot be used to modify materials in subsequent instances!
+	/// Note that it can only exchange materials defined on geometries in the immediate <see cref="EntityPack"/> and cannot be used to modify materials in subsequent instances!
 	/// </summary>
 	public class MaterialSwatch
 	{

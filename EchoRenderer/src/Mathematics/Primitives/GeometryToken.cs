@@ -43,7 +43,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// A stack that holds the different <see cref="PreparedInstance.id"/> branches to reach this <see cref="Geometry"/>.
 		/// </summary>
 #pragma warning disable CS0649
-		fixed uint instances[ObjectPack.MaxLayer];
+		fixed uint instances[EntityPack.MaxLayer];
 #pragma warning restore CS0649
 
 		/// <summary>
@@ -69,7 +69,7 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// </summary>
 		public void Push(PreparedInstance instance)
 		{
-			Assert.IsTrue(InstanceCount < ObjectPack.MaxLayer);
+			Assert.IsTrue(InstanceCount < EntityPack.MaxLayer);
 
 			int layer = InstanceCount++;
 			instances[layer] = instance.id;

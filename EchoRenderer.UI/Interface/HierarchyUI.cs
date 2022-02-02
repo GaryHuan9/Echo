@@ -21,7 +21,7 @@ namespace EchoRenderer.UI.Interface
 
 		readonly ButtonUI rebuildButton;
 
-		readonly HashSet<ObjectPack> packs = new();
+		readonly HashSet<EntityPack> packs = new();
 		readonly List<HierarchyNodeUI> nodes = new();
 
 		public override void Update()
@@ -40,7 +40,7 @@ namespace EchoRenderer.UI.Interface
 
 			ScenePreparer preparer = sceneView.Profile.Scene.preparer;
 
-			foreach (ObjectPack pack in preparer.UniquePacks)
+			foreach (EntityPack pack in preparer.UniquePacks)
 			{
 				Assert.IsFalse(packs.Contains(pack));
 				var node = new HierarchyNodeUI(pack);

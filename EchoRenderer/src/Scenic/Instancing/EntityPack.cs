@@ -3,7 +3,7 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Scenic.Instancing
 {
-	public class ObjectPack : Object
+	public class EntityPack : Entity
 	{
 		public override Float3 Position
 		{
@@ -38,6 +38,6 @@ namespace EchoRenderer.Scenic.Instancing
 		/// </summary>
 		public const int MaxLayer = 5;
 
-		static void ThrowModifyTransformException() => throw new Exception($"Cannot modify {nameof(ObjectPack)} transform!");
+		static void ThrowModifyTransformException() => throw new Exception($"Cannot modify {nameof(EntityPack)} transform!");
 	}
 }
