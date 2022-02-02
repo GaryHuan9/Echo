@@ -3,8 +3,8 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
-using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Rendering.Pixels
 {

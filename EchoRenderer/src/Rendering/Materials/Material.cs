@@ -44,12 +44,16 @@ namespace EchoRenderer.Rendering.Materials
 		/// </summary>
 		public Float3 NormalIntensity { get; set; } = Float3.one;
 
-		bool zeroEmission;
+		/// <summary>
+		/// Returns whether this <see cref="Material"/> is emissive.
+		/// </summary>
+		public bool HasEmission { get; private set; }
+
 		bool zeroNormal;
 
-		Vector128<float> normalIntensityVector;
+		Vector128<float> normalIntensityV;
 
-		static Vector128<float> NormalShift => Vector128.Create(-1f, -1f, -2f, 0f);
+		static Vector128<float> NormalShiftV => Vector128.Create(-1f, -1f, -2f, 0f);
 
 		/// <summary>
 		/// Invoked before a new render session begins; can be used to execute any kind of preprocessing work for this <see cref="Material"/>.
@@ -57,11 +61,11 @@ namespace EchoRenderer.Rendering.Materials
 		/// </summary>
 		public virtual void Prepare()
 		{
-			zeroEmission = !Emission.PositiveRadiance();
-			zeroNormal = Normal == Texture.normal || NormalIntensity == Float3.zero;
-
 			Emission = Float3.zero.Max(Emission);
-			normalIntensityVector = Utilities.ToVector(NormalIntensity);
+			HasEmission = Emission.PositiveRadiance();
+
+			zeroNormal = Normal == Texture.normal || NormalIntensity == Float3.zero;
+			normalIntensityV = Utilities.ToVector(NormalIntensity);
 		}
 
 		/// <summary>
@@ -80,9 +84,9 @@ namespace EchoRenderer.Rendering.Materials
 
 			//Evaluate normal texture at texcoord
 			Vector128<float> local = PackedMath.Clamp01(Normal[texcoord]);
-			local = PackedMath.FMA(local, Vector128.Create(2f), NormalShift);
+			local = PackedMath.FMA(local, Vector128.Create(2f), NormalShiftV);
 
-			local = Sse.Multiply(local, normalIntensityVector);
+			local = Sse.Multiply(local, normalIntensityV);
 			if (PackedMath.AlmostZero(local)) return false;
 
 			//Create transform to move from local direction to world space based

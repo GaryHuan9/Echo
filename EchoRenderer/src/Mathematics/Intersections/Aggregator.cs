@@ -5,7 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Mathematics.Intersections
 {
@@ -71,9 +71,9 @@ namespace EchoRenderer.Mathematics.Intersections
 		/// Fills <paramref name="span"/> with the <see cref="AxisAlignedBoundingBox"/> of nodes in this <see cref="Aggregator"/>
 		/// at <paramref name="depth"/>, with the root node having a <paramref name="depth"/> of 1. Returns the actual length of
 		/// <paramref name="span"/> used to store the <see cref="AxisAlignedBoundingBox"/>. NOTE: <paramref name="span"/> should
-		/// not be smaller than 2 ^ depth, and the returned value will not be greater than <paramref name="span.Length"/>.
+		/// not be smaller than 2^depth, and the returned value will not be greater than <paramref name="span.Length"/>.
 		/// </summary>
-		protected abstract int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span);
+		public abstract int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span);
 
 		/// <summary>
 		/// Validates that <paramref name="aabbs"/> and <paramref name="tokens"/>

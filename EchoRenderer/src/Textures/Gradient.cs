@@ -73,13 +73,13 @@ namespace EchoRenderer.Textures
 			int index = anchors.BinarySearch(percent, Comparer.instance);
 
 			if (index < 0) index = ~index;
-			else return anchors[index].vector;
+			else return anchors[index].color;
 
 			Anchor head = index == 0 ? anchors[index] : anchors[index - 1];
 			Anchor tail = index == anchors.Count ? anchors[index - 1] : anchors[index];
 
 			float time = Scalars.InverseLerp(head.percent, tail.percent, percent).Clamp();
-			return PackedMath.Lerp(head.vector, tail.vector, Vector128.Create(time));
+			return PackedMath.Lerp(head.color, tail.color, Vector128.Create(time));
 		}
 
 		/// <summary>
@@ -107,11 +107,11 @@ namespace EchoRenderer.Textures
 			public Anchor(float percent, in Float4 color)
 			{
 				this.percent = percent;
-				vector = Utilities.ToVector(color);
+				this.color = Utilities.ToVector(color);
 			}
 
 			public readonly float percent;
-			public readonly Vector128<float> vector;
+			public readonly Vector128<float> color;
 		}
 	}
 }

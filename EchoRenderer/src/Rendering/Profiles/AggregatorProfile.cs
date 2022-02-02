@@ -2,8 +2,8 @@ using System;
 using CodeHelpers;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Instancing;
-using EchoRenderer.Objects.Preparation;
+using EchoRenderer.Scenic.Instancing;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Rendering.Profiles
 {
@@ -24,6 +24,7 @@ namespace EchoRenderer.Rendering.Profiles
 		const ulong ThresholdBVH = 32;
 		const ulong ThresholdQuadBVH = 512;
 
+		/// <inheritdoc/>
 		public void Validate()
 		{
 			if (AggregatorType?.IsSubclassOf(typeof(Aggregator)) == false) throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, $"is not of type {nameof(Aggregator)}");

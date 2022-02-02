@@ -1,9 +1,9 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
+using EchoRenderer.Scenic.Lights;
 
 namespace EchoRenderer.Rendering.Pixels
 {

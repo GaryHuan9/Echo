@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers;
-using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Pixels;
+using EchoRenderer.Scenic.Preparation;
 using EchoRenderer.Textures.Grid;
 
 namespace EchoRenderer.Rendering.Profiles
@@ -52,6 +52,7 @@ namespace EchoRenderer.Rendering.Profiles
 		/// </summary>
 		public int BounceLimit { get; init; } = 128;
 
+		/// <inheritdoc/>
 		public virtual void Validate()
 		{
 			if (Scene == null) throw ExceptionHelper.Invalid(nameof(Scene), InvalidType.isNull);
