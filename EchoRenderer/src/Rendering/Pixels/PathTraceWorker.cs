@@ -3,10 +3,10 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Lights;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Scattering;
+using EchoRenderer.Scenic.Lights;
 
 namespace EchoRenderer.Rendering.Pixels
 {
@@ -110,18 +110,18 @@ namespace EchoRenderer.Rendering.Pixels
 		}
 
 		/// <summary>
-		/// Importance samples <paramref name="source"/> at <paramref name="interaction"/> and returns the combined radiance.
+		/// Importance samples <paramref name="light"/> at <paramref name="interaction"/> and returns the combined radiance.
 		/// </summary>
-		static Float3 ImportanceSampleLight(in Interaction interaction, LightSource source, Arena arena)
+		static Float3 ImportanceSampleLight(in Interaction interaction, ILight light, Arena arena)
 		{
 			//Sample light source
-			Float3 light = source.Sample
+			Float3 emission = light.Sample
 			(
 				interaction, arena.distribution.NextTwo(),
 				out Float3 incident, out float pdf, out float travel
 			);
 
-			if (!FastMath.Positive(pdf) || !light.PositiveRadiance()) return Float3.zero;
+			if (!FastMath.Positive(pdf) || !emission.PositiveRadiance()) return Float3.zero;
 
 			//Evaluate bsdf at light source's directions
 			ref readonly Float3 outgoing = ref interaction.outgoing;
@@ -135,19 +135,19 @@ namespace EchoRenderer.Rendering.Pixels
 
 			//Calculate final radiance
 			float pdfScatter = interaction.bsdf.ProbabilityDensity(outgoing, incident);
-			float weight = source.type.IsDelta() ? 1f : PowerHeuristic(pdf, pdfScatter);
-			return scatter * light * (weight / pdf);
+			float weight = light is IAreaLight ? PowerHeuristic(pdf, pdfScatter) : 1f;
+			return scatter * emission * (weight / pdf);
 		}
 
 		/// <summary>
-		/// Importance samples <paramref name="interaction.bsdf"/> with <paramref name="source"/> and returns the combined radiance.
+		/// Importance samples <paramref name="interaction.bsdf"/> with <paramref name="light"/> and returns the combined radiance.
 		/// </summary>
-		static Float3 ImportanceSampleBSDF(in Interaction interaction, LightSource source, Arena arena)
+		static Float3 ImportanceSampleBSDF(in Interaction interaction, LightSource light, Arena arena)
 		{
 			//TODO: sort this mess
 
 			Distro2 distro = arena.distribution.NextTwo();
-			if (source.type.IsDelta()) return Float3.zero;
+			if (light is not IAreaLight areaLight) return Float3.zero;
 
 			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, distro, out Float3 incident, out float pdf, out FunctionType sampledType);
 
@@ -159,26 +159,26 @@ namespace EchoRenderer.Rendering.Pixels
 
 			if (!sampledType.Any(FunctionType.specular))
 			{
-				float pdfLight = source.ProbabilityDensity(interaction, incident);
+				float pdfLight = areaLight.ProbabilityDensity(interaction, incident);
 				if (!FastMath.Positive(pdfLight)) return Float3.zero;
 				weight = PowerHeuristic(pdf, pdfLight);
 			}
 
 			TraceQuery query = interaction.SpawnTrace(incident);
 
-			Float3 light = Float3.zero;
+			Float3 emission = Float3.zero;
 
 			if (arena.Scene.Trace(ref query))
 			{
 				//TODO: evaluate light at intersection if area light is our source
 			}
-			else if (source is AmbientLight ambient)
+			else if (areaLight is AmbientLight ambient)
 			{
-				light = ambient.Evaluate(incident);
+				emission = ambient.Evaluate(incident);
 			}
 
-			if (!light.PositiveRadiance()) return Float3.zero;
-			return weight / pdf * scatter * light;
+			if (!emission.PositiveRadiance()) return Float3.zero;
+			return weight / pdf * scatter * emission;
 		}
 
 		/// <summary>

@@ -16,6 +16,7 @@ namespace EchoRenderer.Rendering.Engines
 
 	public class OrderedPattern : ITilePattern
 	{
+		/// <inheritdoc/>
 		public virtual Int2[] GetPattern(Int2 totalSize) => totalSize.Loop().ToArray();
 	}
 
@@ -32,6 +33,7 @@ namespace EchoRenderer.Rendering.Engines
 
 	public class SpiralPattern : ITilePattern
 	{
+		/// <inheritdoc/>
 		public virtual Int2[] GetPattern(Int2 totalSize) => (from position in new EnumerableSpiral2D(totalSize.MaxComponent.CeiledDivide(2))
 															 let tile = position + totalSize / 2 - Int2.one
 															 where Int2.zero <= tile && tile < totalSize

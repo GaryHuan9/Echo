@@ -1,8 +1,8 @@
 ﻿using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Randomization;
-using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Profiles;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Rendering.Memory
 {

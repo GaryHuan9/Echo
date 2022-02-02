@@ -1,5 +1,5 @@
-﻿using EchoRenderer.Objects.GeometryObjects;
-using EchoRenderer.Objects.Preparation;
+﻿using EchoRenderer.Scenic.GeometryObjects;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Mathematics.Primitives
 {

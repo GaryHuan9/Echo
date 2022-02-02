@@ -1,10 +1,10 @@
 ﻿using System.Threading;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Objects.Preparation;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Rendering.Pixels
 {

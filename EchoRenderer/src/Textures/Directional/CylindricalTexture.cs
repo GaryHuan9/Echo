@@ -71,8 +71,10 @@ namespace EchoRenderer.Textures.Directional
 			float GetWeight(in Float2 uv) => PackedMath.GetLuminance(texture[uv]);
 		}
 
+		/// <inheritdoc/>
 		public Vector128<float> Evaluate(in Float3 direction) => Texture[ToUV(direction)];
 
+		/// <inheritdoc/>
 		public Vector128<float> Sample(Distro2 distro, out Float3 incident, out float pdf)
 		{
 			Float2 uv = piecewise.SampleContinuous(distro, out pdf);
@@ -97,6 +99,7 @@ namespace EchoRenderer.Textures.Directional
 			return Texture[uv];
 		}
 
+		/// <inheritdoc/>
 		public float ProbabilityDensity(in Float3 incident)
 		{
 			Float2 uv = ToUV(incident);
