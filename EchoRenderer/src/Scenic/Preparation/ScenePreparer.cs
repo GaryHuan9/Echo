@@ -18,8 +18,6 @@ namespace EchoRenderer.Scenic.Preparation
 		{
 			this.profile = profile;
 			root = CreateNode(scene, null);
-
-			PreparePacks(root);
 		}
 
 		public readonly ScenePrepareProfile profile;
@@ -29,6 +27,11 @@ namespace EchoRenderer.Scenic.Preparation
 		readonly HashSet<Material> preparedMaterials = new();
 
 		public Dictionary<EntityPack, Node>.KeyCollection UniquePacks => entityPacks.Keys;
+
+		/// <summary>
+		/// Prepares the entire scene.
+		/// </summary>
+		public void PrepareAll() => PreparePacks(root);
 
 		/// <summary>
 		/// Creates or retrieves and returns the <see cref="PreparedPack"/> for <paramref name="pack"/>.

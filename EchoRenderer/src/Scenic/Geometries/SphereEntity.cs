@@ -135,7 +135,7 @@ namespace EchoRenderer.Scenic.Geometries
 
 		/// <summary>
 		/// Samples this <see cref="PreparedSphere"/> based on <paramref name="distro"/> at <paramref name="origin"/> and
-		/// outputs the probability density function <paramref name="pdf"/> over solid angles at <paramref name="origin"/>.
+		/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 		/// </summary>
 		public GeometryPoint Sample(in Float3 origin, Distro2 distro, out float pdf)
 		{
@@ -172,7 +172,7 @@ namespace EchoRenderer.Scenic.Geometries
 			FastMath.SinCos(phi, out float sinP, out float cosP);
 			Float3 normal = new Float3(sinA * cosP, sinA * sinP, cosA);
 
-			pdf = 1f / Scalars.TAU / (1f - cosMaxT);
+			pdf = ProbabilityDensityCone(cosMaxT);
 
 			//Transform and returns point
 			var transform = new NormalTransform(offset / length);
@@ -180,7 +180,7 @@ namespace EchoRenderer.Scenic.Geometries
 		}
 
 		/// <summary>
-		/// Returns the probability density function of <paramref name="incident"/> over solid angles at <paramref name="origin"/>.
+		/// Returns the probability density function over solid angles of sampling <paramref name="incident"/> from <paramref name="origin"/>.
 		/// </summary>
 		public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 		{
@@ -211,7 +211,7 @@ namespace EchoRenderer.Scenic.Geometries
 
 			float sinMaxT2 = radius2 / length2;
 			float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
-			return 1f / Scalars.TAU / (1f - cosMaxT);
+			return ProbabilityDensityCone(cosMaxT);
 		}
 
 		GeometryPoint GetPoint(in Float3 normal) => new(normal * radius + position, normal);
@@ -253,5 +253,7 @@ namespace EchoRenderer.Scenic.Geometries
 
 			cosT = FastMath.Identity(sinT) * sign;
 		}
+
+		static float ProbabilityDensityCone(float cosMaxT) => 1f / Scalars.TAU / (1f - cosMaxT);
 	}
 }

@@ -21,7 +21,7 @@ namespace EchoRenderer.Rendering.Distributions
 			Assert.AreEqual(function.Length, size.Product);
 
 			slices = new Piecewise1[size.y];
-			using var _ = SpanPool<float>.Fetch(size.y, out Span<float> values);
+			using var _ = SpanPool<float>.Fetch(size.y, out Span<float> sums);
 
 			//Create single dimensional functions and collect integrals
 			for (int y = 0; y < size.y; y++)
@@ -29,11 +29,10 @@ namespace EchoRenderer.Rendering.Distributions
 				var piecewise = new Piecewise1(function.Slice(y * width, width));
 
 				slices[y] = piecewise;
-				values[y] = piecewise.integral;
+				sums[y] = piecewise.sum;
 			}
 
-			integrals = new Piecewise1(values);
-			integral = integrals.integral;
+			vertical = new Piecewise1(sums);
 		}
 
 		/// <summary>
@@ -41,20 +40,25 @@ namespace EchoRenderer.Rendering.Distributions
 		/// </summary>
 		public readonly Int2 size;
 
-		/// <summary>
-		/// The integral across the input function that was used to construct this <see cref="Piecewise2"/>.
-		/// </summary>
-		public readonly float integral;
-
 		readonly Piecewise1[] slices;
-		readonly Piecewise1 integrals;
+		readonly Piecewise1 vertical;
+
+		/// <summary>
+		/// The total sum of the input probability density function.
+		/// </summary>
+		public float Sum => vertical.sum;
+
+		/// <summary>
+		/// The integral across the input probability density function.
+		/// </summary>
+		public float Integral => vertical.integral;
 
 		/// <summary>
 		/// Samples this <see cref="Piecewise2"/> at continuous linear intervals based on <paramref name="distro"/>.
 		/// </summary>
 		public Distro2 SampleContinuous(Distro2 distro, out float pdf)
 		{
-			Distro1 y = integrals.SampleContinuous(distro.y, out float pdfY);
+			Distro1 y = vertical.SampleContinuous(distro.y, out float pdfY);
 			Distro1 x = slices[y.Range(size.y)].SampleContinuous(distro.x, out pdf);
 
 			pdf *= pdfY;
@@ -66,7 +70,7 @@ namespace EchoRenderer.Rendering.Distributions
 		/// </summary>
 		public Int2 SampleDiscrete(Distro2 distro, out float pdf)
 		{
-			int y = integrals.SampleDiscrete(distro.y, out float pdfY);
+			int y = vertical.SampleDiscrete(distro.y, out float pdfY);
 			int x = slices[y].SampleDiscrete(distro.x, out pdf);
 
 			pdf *= pdfY;
@@ -75,14 +79,28 @@ namespace EchoRenderer.Rendering.Distributions
 
 		/// <summary>
 		/// Returns the probability destiny function of this <see cref="Piecewise2"/>
-		/// from the <see cref="SampleContinuous"/> <paramref name="distro"/>.
+		/// if we sampled <paramref name="distro"/> from <see cref="SampleContinuous"/>.
 		/// </summary>
 		public float ProbabilityDensity(Distro2 distro)
 		{
 			Piecewise1 slice = slices[distro.y.Range(size.y)];
 
 			float pdfX = slice.ProbabilityDensity(distro.x);
-			float pdfY = integrals.ProbabilityDensity(distro.y);
+			float pdfY = vertical.ProbabilityDensity(distro.y);
+
+			return pdfX * pdfY;
+		}
+
+		/// <summary>
+		/// Returns the probability destiny function of this <see cref="Piecewise2"/>
+		/// if we sampled <paramref name="discrete"/> from <see cref="SampleDiscrete"/>.
+		/// </summary>
+		public float ProbabilityDensity(Int2 discrete)
+		{
+			Piecewise1 slice = slices[discrete.y];
+
+			float pdfX = slice.ProbabilityDensity(discrete.x);
+			float pdfY = vertical.ProbabilityDensity(discrete.y);
 
 			return pdfX * pdfY;
 		}
