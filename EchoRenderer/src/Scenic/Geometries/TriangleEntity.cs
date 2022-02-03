@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
@@ -130,24 +132,12 @@ namespace EchoRenderer.Scenic.Geometries
 		public Float3 Vertex2 => vertex0 + edge2;
 
 		/// <summary>
-		/// Returns the smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedTriangle"/>.
+		/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedTriangle"/>.
 		/// </summary>
-		public AxisAlignedBoundingBox AABB
-		{
-			get
-			{
-				Float3 vertex1 = Vertex1;
-				Float3 vertex2 = Vertex2;
-
-				Float3 min = vertex0.Min(vertex1).Min(vertex2);
-				Float3 max = vertex0.Max(vertex1).Max(vertex2);
-
-				return new AxisAlignedBoundingBox(min, max);
-			}
-		}
+		public AxisAlignedBoundingBox AABB => new(stackalloc[] { vertex0, Vertex1, Vertex2 });
 
 		/// <summary>
-		/// Returns the area of this <see cref="PreparedTriangle"/>.
+		/// The area of this <see cref="PreparedTriangle"/>.
 		/// </summary>
 		public float Area => Float3.Cross(edge1, edge2).Magnitude / 2f;
 
@@ -223,17 +213,34 @@ namespace EchoRenderer.Scenic.Geometries
 		}
 
 		/// <summary>
-		/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="distro"/>.
+		/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="distro"/> and outputs
+		/// the probability density function <paramref name="pdf"/> over solid angles at <paramref name="origin"/>.
 		/// </summary>
-		public GeometryPoint Sample(Distro2 distro)
+		public GeometryPoint Sample(in Float3 origin, Distro2 distro, out float pdf)
 		{
 			Float2 uv = distro.UniformTriangle;
-			Float3 position = InterpolateVertex(uv);
+			Float3 position = GetPoint(uv);
+			Float3 normal = GetPoint(uv);
 
-			return new GeometryPoint(position, GetNormal(uv));
+			var point = new GeometryPoint(position, normal);
+			pdf = point.ProbabilityDensity(origin, Area);
+
+			return point;
 		}
 
-		// public float ProbabilityDensity() { }
+		/// <summary>
+		/// Returns the probability density function of <paramref name="incident"/> over solid angles at <paramref name="origin"/>.
+		/// </summary>
+		public float ProbabilityDensity(in Float3 origin, in Float3 incident)
+		{
+			Ray ray = new Ray(origin, incident);
+
+			float distance = Intersect(ray, out Float2 uv);
+			if (float.IsPositiveInfinity(distance)) return 0f;
+			Assert.AreEqual(incident.SquaredMagnitude, 1f);
+
+			return distance * distance / FastMath.Abs(GetNormal(uv).Dot(incident) * Area);
+		}
 
 		public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
 		public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
@@ -252,7 +259,7 @@ namespace EchoRenderer.Scenic.Geometries
 
 		public override string ToString() => $"<{nameof(vertex0)}: {vertex0}, {nameof(Vertex1)}: {Vertex1}, {nameof(Vertex2)}: {Vertex2}>";
 
-		Float3 InterpolateVertex(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
+		Float3 GetPoint(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
 
 		static void GetSubdivided(Span<PreparedTriangle> triangles, in Float3 normal00, in Float3 normal11, in Float3 normal22)
 		{
@@ -270,9 +277,9 @@ namespace EchoRenderer.Scenic.Geometries
 			Float3 normal02 = GetInterpolatedNormal(uv02, normal00, normal11, normal22);
 			Float3 normal12 = GetInterpolatedNormal(uv12, normal00, normal11, normal22);
 
-			Float3 vertex01 = triangle.InterpolateVertex(uv01);
-			Float3 vertex02 = triangle.InterpolateVertex(uv02);
-			Float3 vertex12 = triangle.InterpolateVertex(uv12);
+			Float3 vertex01 = triangle.GetPoint(uv01);
+			Float3 vertex02 = triangle.GetPoint(uv02);
+			Float3 vertex12 = triangle.GetPoint(uv12);
 
 			Float3 vertex00 = triangle.vertex0;
 			Float3 vertex11 = triangle.Vertex1;

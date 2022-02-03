@@ -22,7 +22,9 @@ namespace EchoRenderer.Mathematics.Primitives
 			tokens.TryGetValue(2, Token.empty), tokens.TryGetValue(3, Token.empty)
 		) { }
 
+#pragma warning disable CS0649
 		fixed byte data[Width * Token.Size];
+#pragma warning restore CS0649
 
 		const int Width = 4;
 
