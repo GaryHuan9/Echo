@@ -13,11 +13,12 @@ namespace EchoRenderer.Scenic.Lights
 			Float3 difference = Position - interaction.point.position;
 
 			travel = difference.Magnitude;
+			float travelR = 1f / travel;
 
 			pdf = 1f;
 
-			incident = difference / travel;
-			return Intensity / (travel * travel);
+			incident = difference * travelR;
+			return Intensity * travelR * travelR;
 		}
 	}
 }
