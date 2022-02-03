@@ -214,7 +214,7 @@ namespace EchoRenderer.Scenic.Geometries
 
 		/// <summary>
 		/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="distro"/> and outputs
-		/// the probability density function <paramref name="pdf"/> over solid angles at <paramref name="origin"/>.
+		/// the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 		/// </summary>
 		public GeometryPoint Sample(in Float3 origin, Distro2 distro, out float pdf)
 		{
@@ -229,7 +229,7 @@ namespace EchoRenderer.Scenic.Geometries
 		}
 
 		/// <summary>
-		/// Returns the probability density function of <paramref name="incident"/> over solid angles at <paramref name="origin"/>.
+		/// Returns the probability density function over solid angles of sampling <paramref name="incident"/> from <paramref name="origin"/>.
 		/// </summary>
 		public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 		{

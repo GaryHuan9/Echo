@@ -1,5 +1,7 @@
 using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
@@ -7,61 +9,63 @@ using EchoRenderer.Mathematics;
 namespace EchoRenderer.Rendering.Distributions
 {
 	/// <summary>
-	/// A one dimensional piecewise distribution constructed from a function of discrete points.
+	/// A one dimensional piecewise distribution constructed from a function of discrete probability destiny values.
 	/// </summary>
 	public class Piecewise1
 	{
-		public Piecewise1(ReadOnlySpan<float> function)
+		public Piecewise1(ReadOnlySpan<float> pdfValues)
 		{
-			int length = function.Length;
-			pdfValues = function.ToArray();
+			int length = pdfValues.Length;
 			cdfValues = new float[length];
 			lengthR = 1f / length;
 
-			//Find the integral across function
-			integral = 0f;
+			//Find the total sum and initialize cdf
+			double rolling = 0d;
 
 			for (int i = 0; i < length; i++)
 			{
-				Assert.IsFalse(function[i] < 0f); //Probability should not be negative
-				cdfValues[i] = integral = FastMath.FMA(function[i], lengthR, integral);
+				Assert.IsFalse(pdfValues[i] < 0f); //PDF should not be negative
+				cdfValues[i] = (float)(rolling += pdfValues[i]);
 			}
 
-			//Normalize the cumulative distribution function (cdf)
-			if (integral.AlmostEquals())
+			sum = (float)rolling;
+
+			//Normalize the cdf
+			if (FastMath.AlmostZero(sum))
 			{
-				//If the total integral is zero, it means our function is a constant probability of zero
+				//If the total sum is zero, it means our function has a constant probability of zero, which is
+				//technically not a correct function, so we will handle it like a non-zero constant function.
 
-				for (int i = 0; i < length; i++)
-				{
-					pdfValues[i] = lengthR;
-					cdfValues[i] = i * lengthR;
-				}
+				for (int i = 0; i < length; i++) cdfValues[i] = FastMath.FMA(i, lengthR, lengthR);
 
-				integral = 0f;
+				sum = 0f; //Sum is still zero though
 			}
 			else
 			{
 				//Normalizes the cdf by dividing by the total integral
-				float sumR = 1f / integral;
+				float sumR = 1f / sum;
 
-				for (int i = 0; i < length; i++)
-				{
-					pdfValues[i] *= sumR;
-					cdfValues[i] *= sumR;
-				}
+				for (int i = 0; i < length; i++) cdfValues[i] *= sumR;
 			}
 
 			cdfValues[length - 1] = 1f;
+			integral = sum * lengthR;
 		}
 
 		/// <summary>
-		/// The integral across the input function that was used to construct this <see cref="Piecewise1"/>.
+		/// The total sum of the input probability density function.
+		/// </summary>
+		public readonly float sum;
+
+		/// <summary>
+		/// The integral across the input probability density function.
 		/// </summary>
 		public readonly float integral;
 
-		readonly float[] pdfValues; //Probability density functions
-		readonly float[] cdfValues; //Cumulative density functions
+		/// <summary>
+		/// Cumulative density function values.
+		/// </summary>
+		readonly float[] cdfValues;
 
 		/// <summary>
 		/// The reciprocal of <see cref="Length"/>.
@@ -71,19 +75,22 @@ namespace EchoRenderer.Rendering.Distributions
 		/// <summary>
 		/// The total number of discrete values in this <see cref="Piecewise1"/>.
 		/// </summary>
-		public int Length => pdfValues.Length;
+		public int Length => cdfValues.Length;
 
 		/// <summary>
 		/// Samples this <see cref="Piecewise1"/> at continuous linear intervals based on <paramref name="distro"/>.
 		/// </summary>
 		public Distro1 SampleContinuous(Distro1 distro, out float pdf)
 		{
+			//Find index and lower and upper bounds
 			FindIndex(distro, out int index);
+			GetBounds(index, out float lower, out float upper);
 
-			float min = index == 0 ? 0f : cdfValues[index - 1];
-			float shift = Scalars.InverseLerp(min, cdfValues[index], distro);
+			//Export values
+			pdf = (upper - lower) * Length;
+			Assert.AreNotEqual(pdf, 0f);
 
-			pdf = pdfValues[index];
+			float shift = Scalars.InverseLerp(lower, upper, distro);
 			return (Distro1)((shift + index) * lengthR);
 		}
 
@@ -93,15 +100,30 @@ namespace EchoRenderer.Rendering.Distributions
 		public int SampleDiscrete(Distro1 distro, out float pdf)
 		{
 			FindIndex(distro, out int index);
-			pdf = pdfValues[index] * lengthR;
+			GetBounds(index, out float lower, out float upper);
+			pdf = upper - lower;
 			return index;
 		}
 
 		/// <summary>
-		/// Returns the probability destiny function of this <see cref="Piecewise2"/>
-		/// from the <see cref="SampleContinuous"/> <paramref name="distro"/>.
+		/// Returns the probability destiny function of this <see cref="Piecewise1"/>
+		/// if we sampled <paramref name="distro"/> from <see cref="SampleContinuous"/>.
 		/// </summary>
-		public float ProbabilityDensity(Distro1 distro) => pdfValues[distro.Range(Length)];
+		public float ProbabilityDensity(Distro1 distro)
+		{
+			GetBounds(distro.Range(Length), out float lower, out float upper);
+			return (upper - lower) * Length;
+		}
+
+		/// <summary>
+		/// Returns the probability destiny function of this <see cref="Piecewise1"/>
+		/// if we sampled <paramref name="discrete"/> from <see cref="SampleDiscrete"/>.
+		/// </summary>
+		public float ProbabilityDensity(int discrete)
+		{
+			GetBounds(discrete, out float lower, out float upper);
+			return upper - lower;
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void FindIndex(Distro1 distro, out int index)
@@ -109,6 +131,14 @@ namespace EchoRenderer.Rendering.Distributions
 			index = new ReadOnlySpan<float>(cdfValues).BinarySearch(distro.u);
 			if (index < 0) index = ~index;
 			Assert.IsTrue(index < Length);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void GetBounds(int index, out float lower, out float upper)
+		{
+			Assert.IsTrue(cdfValues.IsIndexValid(index));
+			lower = index == 0 ? 0f : cdfValues[index - 1];
+			upper = cdfValues[index];
 		}
 	}
 }

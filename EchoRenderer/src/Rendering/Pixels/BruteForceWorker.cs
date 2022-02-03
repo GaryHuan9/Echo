@@ -43,7 +43,7 @@ namespace EchoRenderer.Rendering.Pixels
 
 			if (energy.PositiveRadiance())
 			{
-				foreach (AmbientLight ambient in arena.Scene.AmbientSources) radiance += energy * ambient.Evaluate(query.ray.direction);
+				foreach (AmbientLight ambient in arena.Scene.AmbientLights) radiance += energy * ambient.Evaluate(query.ray.direction);
 			}
 
 			return radiance;
