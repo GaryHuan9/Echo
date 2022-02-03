@@ -10,7 +10,8 @@ using EchoRenderer.Scenic.Preparation;
 namespace EchoRenderer.Mathematics.Primitives
 {
 	/// <summary>
-	/// Represents a unique geometry in the <see cref="PreparedScene"/>. Note that this uniqueness transcends object instancing.
+	/// Represents a unique geometry in the <see cref="PreparedScene"/>. Note that this
+	/// uniqueness transcends <see cref="EntityPack"/> and <see cref="PackInstance"/>.
 	/// </summary>
 	public unsafe struct GeometryToken : IEquatable<GeometryToken>
 	{

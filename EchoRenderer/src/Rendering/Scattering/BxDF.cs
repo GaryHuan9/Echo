@@ -25,7 +25,7 @@ namespace EchoRenderer.Rendering.Scattering
 		public abstract Float3 Evaluate(in Float3 outgoing, in Float3 incident);
 
 		/// <summary>
-		/// Returns the sampling probability density (pdf) for a given pair of local
+		/// Returns the probability density function (pdf) for a given pair of local
 		/// <paramref name="outgoing"/> and <paramref name="incident"/> directions.
 		/// </summary>
 		public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)

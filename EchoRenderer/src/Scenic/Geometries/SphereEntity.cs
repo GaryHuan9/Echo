@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
@@ -48,7 +49,15 @@ namespace EchoRenderer.Scenic.Geometries
 		public readonly float radius;
 		public readonly uint materialToken;
 
+		/// <summary>
+		/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedSphere"/>.
+		/// </summary>
 		public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
+
+		/// <summary>
+		/// The area of this <see cref="PreparedSphere"/>.
+		/// </summary>
+		public float Area => 2f * Scalars.TAU * radius * radius;
 
 		/// <summary>
 		/// Because spheres have two intersection points, if an intersection distance is going to be under this value,
@@ -70,10 +79,10 @@ namespace EchoRenderer.Scenic.Geometries
 
 			//Test ray direction
 			Float3 offset = ray.origin - position;
-			float radiusSquared = radius * radius;
+			float radius2 = radius * radius;
 			float center = -offset.Dot(ray.direction);
 
-			float extend2 = FastMath.FSA(center, radiusSquared - offset.SquaredMagnitude);
+			float extend2 = FastMath.FSA(center, radius2 - offset.SquaredMagnitude);
 
 			if (extend2 < 0f) return Infinity;
 
@@ -91,7 +100,7 @@ namespace EchoRenderer.Scenic.Geometries
 			float sinP = FastMath.Clamp11(point.y / radius);
 			float sinT = 0f;
 
-			float smallRadius = FastMath.FMA(-point.y, point.y, radiusSquared);
+			float smallRadius = FastMath.FMA(-point.y, point.y, radius2);
 			if (smallRadius > 0f) sinT = point.x * FastMath.SqrtR0(smallRadius);
 			if (point.z < 0f) sinT += 3f; //Move sinT out of domain when cosT should be negative
 
@@ -124,18 +133,28 @@ namespace EchoRenderer.Scenic.Geometries
 			return distance >= threshold && distance < travel;
 		}
 
-		public GeometryPoint Sample(Distro2 distro) => Sample(distro.UniformSphere);
-
-		public GeometryPoint Sample(Distro2 distro, in Float3 point)
+		/// <summary>
+		/// Samples this <see cref="PreparedSphere"/> based on <paramref name="distro"/> at <paramref name="origin"/> and
+		/// outputs the probability density function <paramref name="pdf"/> over solid angles at <paramref name="origin"/>.
+		/// </summary>
+		public GeometryPoint Sample(in Float3 origin, Distro2 distro, out float pdf)
 		{
-			Float3 offset = point - position;
-			float radiusSquared = radius * radius;
-			float distance2 = offset.SquaredMagnitude;
+			//Check whether origin is inside sphere
+			Float3 offset = origin - position;
+			float radius2 = radius * radius;
+			float length2 = offset.SquaredMagnitude;
 
-			if (distance2 <= radiusSquared) return Sample(distro);
+			if (length2 <= radius2)
+			{
+				//Sample uniformly if is inside
+				var sample = GetPoint(distro.UniformSphere);
+				pdf = sample.ProbabilityDensity(origin, Area);
+
+				return sample;
+			}
 
 			//Find cosine max
-			float sinMaxT2 = radiusSquared / distance2;
+			float sinMaxT2 = radius2 / length2;
 			float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
 
 			//Uniform sample cone, defined by theta and phi
@@ -144,20 +163,58 @@ namespace EchoRenderer.Scenic.Geometries
 			float phi = distro.y * Scalars.TAU;
 
 			//Compute angle alpha from center of sphere to sample point
-			float distance = FastMath.Sqrt0(distance2);
-			float project = distance * cosT - FastMath.Sqrt0(radiusSquared - distance2 * sinT * sinT);
-			float cosA = (distance2 + radiusSquared - project * project) / (2f * distance * radius);
+			float length = FastMath.Sqrt0(length2);
+			float project = length * cosT - FastMath.Sqrt0(radius2 - length2 * sinT * sinT);
+			float cosA = (length2 + radius2 - project * project) / (2f * length * radius);
 			float sinA = FastMath.Identity(cosA);
 
-			//Find normal
+			//Calculate normal and pdf
 			FastMath.SinCos(phi, out float sinP, out float cosP);
 			Float3 normal = new Float3(sinA * cosP, sinA * sinP, cosA);
 
-			var transform = new NormalTransform(offset);
-			return Sample(transform.LocalToWorld(normal));
+			pdf = 1f / Scalars.TAU / (1f - cosMaxT);
+
+			//Transform and returns point
+			var transform = new NormalTransform(offset / length);
+			return GetPoint(transform.LocalToWorld(normal));
 		}
 
-		GeometryPoint Sample(in Float3 normal) => new(normal * radius + position, normal);
+		/// <summary>
+		/// Returns the probability density function of <paramref name="incident"/> over solid angles at <paramref name="origin"/>.
+		/// </summary>
+		public float ProbabilityDensity(in Float3 origin, in Float3 incident)
+		{
+			//Check whether point is inside this sphere
+			Float3 offset = origin - position;
+			float radius2 = radius * radius;
+			float length2 = offset.SquaredMagnitude;
+
+			if (length2 <= radius2)
+			{
+				//Find intersection with sphere when is inside
+				float projected = offset.Dot(incident);
+				float extend2 = FastMath.FSA(projected, radius2 - length2);
+
+				//Find the un-normalized normal at our point of intersection
+				float distance = FastMath.Sqrt0(extend2) - projected; //The distance to our point on the sphere
+				Float3 normal = offset + incident * distance;         //The un-normalized normal of our point
+
+				float cosWeight = incident.Dot(normal) * radius;
+				if (FastMath.AlmostZero(cosWeight)) return 0f;
+
+				return distance * distance / FastMath.Abs(cosWeight) * Distro2.UniformSpherePDF;
+			}
+
+			//Since the point is not inside our sphere, the sampling is based on a cone is not uniform
+			// if (!Intersect(new Ray(origin, incident), float.PositiveInfinity)) return 0f;
+			//TODO: try and see if this line actually does something useful, and if it does, inline the intersection computation
+
+			float sinMaxT2 = radius2 / length2;
+			float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
+			return 1f / Scalars.TAU / (1f - cosMaxT);
+		}
+
+		GeometryPoint GetPoint(in Float3 normal) => new(normal * radius + position, normal);
 
 		public static Float3 GetNormal(Float2 uv)
 		{
