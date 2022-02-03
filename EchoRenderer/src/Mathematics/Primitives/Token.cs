@@ -6,6 +6,10 @@ using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Mathematics.Primitives
 {
+	/// <summary>
+	/// Represents either a geometry (including <see cref="PreparedInstance"/>) or a node, localized inside an <see cref="Aggregator"/>.
+	/// NOTE: this <see cref="Token"/> is local within a single <see cref="Aggregator"/> and is meaningless once taken out of the constrain.
+	/// </summary>
 	public readonly struct Token : IEquatable<Token>
 	{
 		Token(uint data) => this.data = data;

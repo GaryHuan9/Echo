@@ -1,12 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Materials;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Scenic.Geometries;
@@ -16,7 +20,7 @@ namespace EchoRenderer.Scenic.Preparation
 {
 	public class PreparedPack
 	{
-		public PreparedPack(ScenePreparer preparer, EntityPack source)
+		public PreparedPack(ScenePreparer preparer, EntityPack pack)
 		{
 			var trianglesList = new ConcurrentList<PreparedTriangle>();
 			var spheresList = new List<PreparedSphere>();
@@ -26,7 +30,7 @@ namespace EchoRenderer.Scenic.Preparation
 
 			using (trianglesList.BeginAdd())
 			{
-				foreach (Entity child in source.LoopChildren(true))
+				foreach (Entity child in pack.LoopChildren(true))
 				{
 					switch (child)
 					{
@@ -109,8 +113,8 @@ namespace EchoRenderer.Scenic.Preparation
 		readonly PreparedInstance[] instances;
 
 		/// <summary>
-		/// Calculates the intersection between <paramref name="query"/> and object represented with <paramref name="token"/>.
-		/// If the intersection occurs before the original <paramref name="query.distance"/>, then the intersection is recorded.
+		/// Calculates the intersection between <paramref name="query"/> and the object represented by <paramref name="token"/>.
+		/// The intersection is only recorded if it occurs before the original <paramref name="query.distance"/>.
 		/// </summary>
 		public void Trace(ref TraceQuery query, in Token token)
 		{
@@ -147,8 +151,7 @@ namespace EchoRenderer.Scenic.Preparation
 		}
 
 		/// <summary>
-		/// Calculates and returns whether <paramref name="query"/> is
-		/// occluded by the object represented with <paramref name="token"/>.
+		/// Calculates and returns whether <paramref name="query"/> is occluded by the object represented by <paramref name="token"/>.
 		/// </summary>
 		public bool Occlude(ref OccludeQuery query, in Token token)
 		{
@@ -175,7 +178,7 @@ namespace EchoRenderer.Scenic.Preparation
 		}
 
 		/// <summary>
-		/// Returns the cost of an intersection calculation of <paramref name="ray"/> with this current <see cref="PreparedPack"/>.
+		/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
 		/// </summary>
 		public int GetTraceCost(in Ray ray, ref float distance, in Token token)
 		{
@@ -202,14 +205,6 @@ namespace EchoRenderer.Scenic.Preparation
 		/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> with <paramref name="id"/>.
 		/// </summary>
 		public PreparedInstance GetInstance(uint id) => instances[id];
-
-		// /// <summary>
-		// ///
-		// /// </summary>
-		// public GeometryPoint GetPoint(in Token token, Float2 uv)
-		// {
-		//
-		// }
 
 		/// <summary>
 		/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Interaction"/>.
@@ -241,11 +236,7 @@ namespace EchoRenderer.Scenic.Preparation
 				texcoord = PreparedSphere.GetTexcoord(query.uv);
 				materialToken = sphere.materialToken;
 			}
-			else
-			{
-				//Handles tokens of PreparedInstance, which is invalid since tokens should be resolved to pure geometry after intersection calculation
-				throw new Exception($"{nameof(Interact)} should be invoked on the base {nameof(PreparedPack)}, not one with a token that is a pack instance!");
-			}
+			else throw NotBasePackException();
 
 			normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
 			Material material = instance.swatch[materialToken];      //Find appropriate mapped material
@@ -254,6 +245,59 @@ namespace EchoRenderer.Scenic.Preparation
 			if (material == null) return new Interaction(query, normal);
 			return new Interaction(query, normal, material, texcoord);
 		}
+
+		// public GeometryPoint Sample(in Token token, in Float3 point, Distro2 distro, out float pdf)
+		// {
+		// 	Assert.IsTrue(token.IsGeometry);
+		//
+		// 	if (token.IsTriangle)
+		// 	{
+		// 		ref readonly var triangle = ref triangles[token.TriangleValue];
+		// 		return triangle.Sample(distro);
+		// 	}
+		//
+		// 	if (token.IsSphere)
+		// 	{
+		// 		ref readonly var sphere = ref spheres[token.SphereValue];
+		// 		return sphere.Sample()
+		// 	}
+		//
+		// 	throw NotBasePackException();
+		// }
+
+		// public float ProbabilityDensity(in Token token, in Float3 point, in Float3 incident)
+		// {
+		// 	Assert.IsTrue(token.IsGeometry);
+		// 	Ray ray = new Ray(point, incident);
+		//
+		// 	float distance;
+		// 	Float3 normal;
+		// 	float area;
+		//
+		// 	if (token.IsTriangle)
+		// 	{
+		// 		ref readonly var triangle = ref triangles[token.TriangleValue];
+		//
+		// 		distance = triangle.Intersect(ray, out Float2 uv);
+		// 		if (float.IsPositiveInfinity(distance)) return 0f;
+		//
+		// 		normal = triangle.GetNormal(uv);
+		// 		area = triangle.Area;
+		// 	}
+		// 	else if (token.IsSphere)
+		// 	{
+		// 		ref readonly var sphere = ref spheres[token.SphereValue];
+		//
+		// 		distance = sphere.Intersect(ray, out Float2 uv);
+		// 		if (float.IsPositiveInfinity(distance)) return 0f;
+		//
+		// 		normal = PreparedSphere.GetNormal(uv);
+		// 		area = sphere.Area;
+		// 	}
+		// 	else throw NotBasePackException();
+		//
+		// 	return distance * distance / FastMath.Abs(normal.Dot(incident) * area);
+		// }
 
 		/// <summary>
 		/// Divides large triangles for better space partitioning.
@@ -286,5 +330,10 @@ namespace EchoRenderer.Scenic.Preparation
 			triangle = divided[0];
 			for (int i = 1; i < subdivision; i++) triangles.Add(divided[i]);
 		}
+
+		/// <summary>
+		/// Handles tokens of <see cref="PreparedInstance"/>, which is invalid since tokens should be resolved to pure geometry.
+		/// </summary>
+		static Exception NotBasePackException([CallerMemberName] string name = default) => new($"{name} should be invoked on the base {nameof(PreparedPack)}, not one with a token that is a {nameof(Token.IsInstance)}!");
 	}
 }
