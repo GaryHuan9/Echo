@@ -79,5 +79,10 @@ namespace EchoRenderer.Mathematics.Primitives
 		/// Returns the absolute value of the dot product between <paramref name="direction"/> and <see cref="GeometryShade.Normal"/>.
 		/// </summary>
 		public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(shade.Normal));
+
+		/// <summary>
+		/// Converts to the position of <paramref name="interaction"/>.
+		/// </summary>
+		public static implicit operator Float3(in Interaction interaction) => interaction.point.position;
 	}
 }

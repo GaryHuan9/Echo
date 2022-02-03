@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
@@ -28,30 +26,31 @@ namespace EchoRenderer.Scenic.Preparation
 
 			swatchExtractor = new SwatchExtractor(preparer);
 
-			using (trianglesList.BeginAdd())
+			trianglesList.BeginAdd();
+
+			foreach (Entity child in pack.LoopChildren(true))
 			{
-				foreach (Entity child in pack.LoopChildren(true))
+				switch (child)
 				{
-					switch (child)
+					case GeometryEntity geometry:
 					{
-						case GeometryEntity geometry:
-						{
-							trianglesList.AddRange(geometry.ExtractTriangles(swatchExtractor));
-							spheresList.AddRange(geometry.ExtractSpheres(swatchExtractor));
+						trianglesList.AddRange(geometry.ExtractTriangles(swatchExtractor));
+						spheresList.AddRange(geometry.ExtractSpheres(swatchExtractor));
 
-							break;
-						}
-						case PackInstance objectInstance:
-						{
-							uint id = (uint)instancesList.Count;
-							var instance = new PreparedInstance(preparer, objectInstance, id);
-							instancesList.Add(instance);
+						break;
+					}
+					case PackInstance objectInstance:
+					{
+						uint id = (uint)instancesList.Count;
+						var instance = new PreparedInstance(preparer, objectInstance, id);
+						instancesList.Add(instance);
 
-							break;
-						}
+						break;
 					}
 				}
 			}
+
+			trianglesList.EndAdd();
 
 			SubdivideTriangles(trianglesList, preparer.profile);
 
@@ -206,9 +205,7 @@ namespace EchoRenderer.Scenic.Preparation
 		/// </summary>
 		public PreparedInstance GetInstance(uint id) => instances[id];
 
-		/// <summary>
-		/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Interaction"/>.
-		/// </summary>
+		/// <inheritdoc cref="PreparedScene.Interact"/>
 		public Interaction Interact(in TraceQuery query, in Float4x4 transform, PreparedInstance instance)
 		{
 			Token token = query.token.Geometry;
@@ -246,58 +243,51 @@ namespace EchoRenderer.Scenic.Preparation
 			return new Interaction(query, normal, material, texcoord);
 		}
 
-		// public GeometryPoint Sample(in Token token, in Float3 point, Distro2 distro, out float pdf)
-		// {
-		// 	Assert.IsTrue(token.IsGeometry);
-		//
-		// 	if (token.IsTriangle)
-		// 	{
-		// 		ref readonly var triangle = ref triangles[token.TriangleValue];
-		// 		return triangle.Sample(distro);
-		// 	}
-		//
-		// 	if (token.IsSphere)
-		// 	{
-		// 		ref readonly var sphere = ref spheres[token.SphereValue];
-		// 		return sphere.Sample()
-		// 	}
-		//
-		// 	throw NotBasePackException();
-		// }
+		/// <summary>
+		/// <inheritdoc cref="PreparedScene.Sample"/>
+		/// NOTE: this method functions according to the local coordinate system of this <see cref="PreparedPack"/>.
+		/// </summary>
+		public GeometryPoint Sample(in Token token, in Float3 origin, Distro2 distro, out float pdf)
+		{
+			Assert.IsTrue(token.IsGeometry);
 
-		// public float ProbabilityDensity(in Token token, in Float3 point, in Float3 incident)
-		// {
-		// 	Assert.IsTrue(token.IsGeometry);
-		// 	Ray ray = new Ray(point, incident);
-		//
-		// 	float distance;
-		// 	Float3 normal;
-		// 	float area;
-		//
-		// 	if (token.IsTriangle)
-		// 	{
-		// 		ref readonly var triangle = ref triangles[token.TriangleValue];
-		//
-		// 		distance = triangle.Intersect(ray, out Float2 uv);
-		// 		if (float.IsPositiveInfinity(distance)) return 0f;
-		//
-		// 		normal = triangle.GetNormal(uv);
-		// 		area = triangle.Area;
-		// 	}
-		// 	else if (token.IsSphere)
-		// 	{
-		// 		ref readonly var sphere = ref spheres[token.SphereValue];
-		//
-		// 		distance = sphere.Intersect(ray, out Float2 uv);
-		// 		if (float.IsPositiveInfinity(distance)) return 0f;
-		//
-		// 		normal = PreparedSphere.GetNormal(uv);
-		// 		area = sphere.Area;
-		// 	}
-		// 	else throw NotBasePackException();
-		//
-		// 	return distance * distance / FastMath.Abs(normal.Dot(incident) * area);
-		// }
+			if (token.IsTriangle)
+			{
+				ref readonly var triangle = ref triangles[token.TriangleValue];
+				return triangle.Sample(origin, distro, out pdf);
+			}
+
+			if (token.IsSphere)
+			{
+				ref readonly var sphere = ref spheres[token.SphereValue];
+				return sphere.Sample(origin, distro, out pdf);
+			}
+
+			throw NotBasePackException();
+		}
+
+		/// <summary>
+		/// <inheritdoc cref="PreparedScene.ProbabilityDensity"/>
+		/// NOTE: this method functions according to the local coordinate system of this <see cref="PreparedPack"/>.
+		/// </summary>
+		public float ProbabilityDensity(in Token token, in Float3 origin, in Float3 incident)
+		{
+			Assert.IsTrue(token.IsGeometry);
+
+			if (token.IsTriangle)
+			{
+				ref readonly var triangle = ref triangles[token.TriangleValue];
+				return triangle.ProbabilityDensity(origin, incident);
+			}
+
+			if (token.IsSphere)
+			{
+				ref readonly var sphere = ref spheres[token.SphereValue];
+				return sphere.ProbabilityDensity(origin, incident);
+			}
+
+			throw NotBasePackException();
+		}
 
 		/// <summary>
 		/// Divides large triangles for better space partitioning.

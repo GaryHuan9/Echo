@@ -32,7 +32,7 @@ namespace EchoRenderer.Rendering.Pixels
 					if (intersected) { }
 					else
 					{
-						foreach (AmbientLight ambient in arena.Scene.AmbientSources)
+						foreach (AmbientLight ambient in arena.Scene.AmbientLights)
 						{
 							radiance += energy * ambient.Evaluate(query.ray.direction);
 						}
