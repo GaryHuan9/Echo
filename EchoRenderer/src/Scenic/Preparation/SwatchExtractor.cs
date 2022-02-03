@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Rendering.Materials;
+using EchoRenderer.Scenic.Geometries;
 using EchoRenderer.Scenic.Instancing;
 
 namespace EchoRenderer.Scenic.Preparation
 {
 	/// <summary>
-	/// A class that is used to extract swatches from <see cref="Material"/> on <see cref="GeometryObjects"/>
+	/// A class that is used to extract swatches from <see cref="Material"/> on <see cref="GeometryEntity"/>
 	/// and convert instanced <see cref="MaterialSwatch"/> into <see cref="PreparedSwatch"/> efficiently.
 	/// </summary>
 	public class SwatchExtractor

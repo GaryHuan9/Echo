@@ -4,6 +4,7 @@ using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Scenic.Lights;
 
@@ -46,9 +47,11 @@ namespace EchoRenderer.Scenic.Preparation
 			}
 
 			_lightSources = lightsList.ToArray();
-			_ambientSources = ambientList.ToArray();
+			_ambientLights = ambientList.ToArray();
 
 			preparer = new ScenePreparer(source, profile);
+			preparer.PrepareAll();
+
 			rootInstance = new PreparedInstanceRoot(preparer, source);
 
 			//Prepare lights
@@ -62,10 +65,10 @@ namespace EchoRenderer.Scenic.Preparation
 		public readonly Camera camera;
 
 		readonly LightSource[] _lightSources;
-		readonly AmbientLight[] _ambientSources;
+		readonly AmbientLight[] _ambientLights;
 
 		public ReadOnlySpan<LightSource> LightSources => _lightSources;
-		public ReadOnlySpan<AmbientLight> AmbientSources => _ambientSources;
+		public ReadOnlySpan<AmbientLight> AmbientLights => _ambientLights;
 
 		long _traceCount;
 		long _occludeCount;
@@ -96,7 +99,18 @@ namespace EchoRenderer.Scenic.Preparation
 			return rootInstance.OccludeRoot(ref query);
 		}
 
-		/// <inheritdoc cref="PreparedPack.Interact"/>
+		/// <summary>
+		/// Returns the approximated cost of computing a <see cref="TraceQuery"/> with <see cref="Trace"/>.
+		/// </summary>
+		public int TraceCost(in Ray ray)
+		{
+			float distance = float.PositiveInfinity;
+			return rootInstance.TraceCost(ray, ref distance);
+		}
+
+		/// <summary>
+		/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Interaction"/>.
+		/// </summary>
 		public Interaction Interact(in TraceQuery query)
 		{
 			query.AssertHit();
@@ -116,12 +130,27 @@ namespace EchoRenderer.Scenic.Preparation
 		}
 
 		/// <summary>
-		/// Returns the approximated cost of computing a <see cref="TraceQuery"/> with <see cref="Trace"/>.
+		/// Samples the object represented by <paramref name="token"/> from the perspective of <paramref name="origin"/> and
+		/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 		/// </summary>
-		public int TraceCost(in Ray ray)
+		public GeometryPoint Sample(in GeometryToken token, in Float3 origin, Distro2 distro, out float pdf)
 		{
-			float distance = float.PositiveInfinity;
-			return rootInstance.TraceCost(ray, ref distance);
+			if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.Geometry, origin, distro, out pdf);
+
+			//TODO: support the entire hierarchy
+			throw new NotImplementedException();
+		}
+
+		/// <summary>
+		/// On the object represented by <paramref name="token"/>, returns the probability density function
+		/// (pdf) over solid angles of sampling <paramref name="incident"/> from <paramref name="origin"/>.
+		/// </summary>
+		public float ProbabilityDensity(in GeometryToken token, in Float3 origin, in Float3 incident)
+		{
+			if (token.InstanceCount == 0) return rootInstance.pack.ProbabilityDensity(token.Geometry, origin, incident);
+
+			//TODO: support the entire hierarchy
+			throw new NotImplementedException();
 		}
 
 		public void ResetIntersectionCount() => Interlocked.Exchange(ref _traceCount, 0);
