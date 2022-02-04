@@ -1,44 +1,43 @@
 ﻿using CodeHelpers.Mathematics;
 using SFML.Window;
 
-namespace EchoRenderer.UserInterface.Core.Interactions
+namespace EchoRenderer.UserInterface.Core.Interactions;
+
+public readonly struct MouseHover
 {
-	public readonly struct MouseHover
+	public MouseHover(MouseMoveEventArgs args, Type type)
 	{
-		public MouseHover(MouseMoveEventArgs args, Type type)
-		{
-			point = args.As();
-			this.type = type;
-		}
-
-		public readonly Float2 point;
-		public readonly Type type;
-
-		public enum Type : byte
-		{
-			enter,
-			exit,
-			roam
-		}
+		point = args.As();
+		this.type = type;
 	}
 
-	public readonly struct MousePress
+	public readonly Float2 point;
+	public readonly Type type;
+
+	public enum Type : byte
 	{
-		public MousePress(MouseButtonEventArgs args, Type type)
-		{
-			button = args.Button;
-			point = args.As();
-			this.type = type;
-		}
+		enter,
+		exit,
+		roam
+	}
+}
 
-		public readonly Mouse.Button button;
-		public readonly Float2 point;
-		public readonly Type type;
+public readonly struct MousePress
+{
+	public MousePress(MouseButtonEventArgs args, Type type)
+	{
+		button = args.Button;
+		point = args.As();
+		this.type = type;
+	}
 
-		public enum Type : byte
-		{
-			down,
-			up
-		}
+	public readonly Mouse.Button button;
+	public readonly Float2 point;
+	public readonly Type type;
+
+	public enum Type : byte
+	{
+		down,
+		up
 	}
 }

@@ -1,15 +1,14 @@
 ﻿using EchoRenderer.UserInterface.Core.Areas;
 
-namespace EchoRenderer.UserInterface.Interface
-{
-	public class ExitButtonUI : ButtonUI
-	{
-		public ExitButtonUI() => label.Text = "Exit";
+namespace EchoRenderer.UserInterface.Interface;
 
-		protected override void OnMousePressed()
-		{
-			base.OnMousePressed();
-			Root.application.Close();
-		}
+public class ExitButtonUI : ButtonUI
+{
+	public ExitButtonUI() => label.Text = "Exit";
+
+	protected override void OnMousePressed()
+	{
+		base.OnMousePressed();
+		Root.application.Close();
 	}
 }
