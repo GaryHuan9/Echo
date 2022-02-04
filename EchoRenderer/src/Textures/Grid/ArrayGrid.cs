@@ -3,70 +3,69 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures.Grid
+namespace EchoRenderer.Textures.Grid;
+
+/// <summary>
+/// The default <see cref="TextureGrid"/>; stores RGBA color information with 32 bits per channel, supports full float range.
+/// </summary>
+public class ArrayGrid : TextureGrid
 {
-	/// <summary>
-	/// The default <see cref="TextureGrid"/>; stores RGBA color information with 32 bits per channel, supports full float range.
-	/// </summary>
-	public class ArrayGrid : TextureGrid
+	public ArrayGrid(Int2 size) : base(size, Filters.bilinear)
 	{
-		public ArrayGrid(Int2 size) : base(size, Filters.bilinear)
+		length = size.Product;
+		pixels = new Vector128<float>[length];
+	}
+
+	protected readonly int length;
+	protected readonly Vector128<float>[] pixels;
+
+	/// <summary>
+	/// This is the axis in which <see cref="ToPosition"/> is going to move first if you increment the input index.
+	/// </summary>
+	public const int MajorAxis = 0;
+
+	/// <summary>
+	/// The opposite axis of <see cref="MajorAxis"/>.
+	/// </summary>
+	public const int MinorAxis = MajorAxis ^ 1;
+
+	public override Vector128<float> this[Int2 position]
+	{
+		get => pixels[ToIndex(position)];
+		set => pixels[ToIndex(position)] = value;
+	}
+
+	/// <summary>
+	/// Converts the integer pixel <paramref name="position"/> to an index [0, <see cref="length"/>)
+	/// </summary>
+	public int ToIndex(Int2 position)
+	{
+		Assert.IsTrue(Int2.zero <= position);
+		Assert.IsTrue(position < size);
+
+		return position.x + position.y * size.x;
+	}
+
+	/// <summary>
+	/// Converts <paramref name="index"/> [0, <see cref="length"/>) to an integer pixel position
+	/// </summary>
+	public Int2 ToPosition(int index)
+	{
+		Assert.IsTrue(0 <= index && index < length);
+		return new Int2(index % size.x, index / size.x);
+	}
+
+	public override void CopyFrom(Texture texture, bool parallel = true)
+	{
+		if (texture is ArrayGrid array && array.size == size)
 		{
-			length = size.Product;
-			pixels = new Vector128<float>[length];
-		}
-
-		protected readonly int length;
-		protected readonly Vector128<float>[] pixels;
-
-		/// <summary>
-		/// This is the axis in which <see cref="ToPosition"/> is going to move first if you increment the input index.
-		/// </summary>
-		public const int MajorAxis = 0;
-
-		/// <summary>
-		/// The opposite axis of <see cref="MajorAxis"/>.
-		/// </summary>
-		public const int MinorAxis = MajorAxis ^ 1;
-
-		public override Vector128<float> this[Int2 position]
-		{
-			get => pixels[ToIndex(position)];
-			set => pixels[ToIndex(position)] = value;
-		}
-
-		/// <summary>
-		/// Converts the integer pixel <paramref name="position"/> to an index [0, <see cref="length"/>)
-		/// </summary>
-		public int ToIndex(Int2 position)
-		{
-			Assert.IsTrue(Int2.zero <= position);
-			Assert.IsTrue(position < size);
-
-			return position.x + position.y * size.x;
-		}
-
-		/// <summary>
-		/// Converts <paramref name="index"/> [0, <see cref="length"/>) to an integer pixel position
-		/// </summary>
-		public Int2 ToPosition(int index)
-		{
-			Assert.IsTrue(0 <= index && index < length);
-			return new Int2(index % size.x, index / size.x);
-		}
-
-		public override void CopyFrom(Texture texture, bool parallel = true)
-		{
-			if (texture is ArrayGrid array && array.size == size)
-			{
-				//Span is faster on dotnet core
+			//Span is faster on dotnet core
 #if NETCOREAPP
-				array.pixels.AsSpan().CopyTo(pixels);
+			array.pixels.AsSpan().CopyTo(pixels);
 #else
 				Array.Copy(array.pixels, pixels, length);
 #endif
-			}
-			else base.CopyFrom(texture, parallel);
 		}
+		else base.CopyFrom(texture, parallel);
 	}
 }

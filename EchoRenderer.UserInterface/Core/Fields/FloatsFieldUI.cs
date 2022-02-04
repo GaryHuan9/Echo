@@ -1,51 +1,50 @@
 ﻿using System;
 using EchoRenderer.UserInterface.Core.Areas;
 
-namespace EchoRenderer.UserInterface.Core.Fields
+namespace EchoRenderer.UserInterface.Core.Fields;
+
+public class FloatsFieldUI : AutoLayoutAreaUI
 {
-	public class FloatsFieldUI : AutoLayoutAreaUI
+	public FloatsFieldUI(int length)
 	{
-		public FloatsFieldUI(int length)
+		Horizontal = true;
+		Margins = false;
+
+		values = new Values(this);
+		fields = new FloatFieldUI[length];
+
+		for (int i = 0; i < length; i++)
 		{
-			Horizontal = true;
-			Margins = false;
+			var field = new FloatFieldUI();
 
-			values = new Values(this);
-			fields = new FloatFieldUI[length];
+			field.OnValueChangedMethods += OnValueChanged;
 
-			for (int i = 0; i < length; i++)
-			{
-				var field = new FloatFieldUI();
-
-				field.OnValueChangedMethods += OnValueChanged;
-
-				Add(fields[i] = field);
-			}
+			Add(fields[i] = field);
 		}
+	}
 
-		public readonly Values values;
-		public int Length => fields.Length;
+	public readonly Values values;
+	public int Length => fields.Length;
 
-		public event Action<FloatsFieldUI> OnValuesChangedMethods;
+	public event Action<FloatsFieldUI> OnValuesChangedMethods;
 
-		readonly FloatFieldUI[] fields;
+	readonly FloatFieldUI[] fields;
 
-		void OnValueChanged(FloatFieldUI field)
+	void OnValueChanged(FloatFieldUI field)
+	{
+		OnValuesChangedMethods?.Invoke(this);
+	}
+
+	public class Values
+	{
+		public Values(FloatsFieldUI field) => this.field = field;
+
+		readonly FloatsFieldUI field;
+
+		public float this[int index]
 		{
-			OnValuesChangedMethods?.Invoke(this);
-		}
-
-		public class Values
-		{
-			public Values(FloatsFieldUI field) => this.field = field;
-
-			readonly FloatsFieldUI field;
-
-			public float this[int index]
-			{
-				get => field.fields[index].Value;
-				set => field.fields[index].Value = value;
-			}
+			get => field.fields[index].Value;
+			set => field.fields[index].Value = value;
 		}
 	}
 }

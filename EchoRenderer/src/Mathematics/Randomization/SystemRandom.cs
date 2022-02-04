@@ -1,18 +1,17 @@
 using System;
 
-namespace EchoRenderer.Mathematics.Randomization
+namespace EchoRenderer.Mathematics.Randomization;
+
+public class SystemRandom : Random, IRandom
 {
-	public class SystemRandom : Random, IRandom
-	{
-		public SystemRandom(uint seed) : base((int)seed) { }
+	public SystemRandom(uint seed) : base((int)seed) { }
 
-		/// <inheritdoc/>
-		public float Next1() => (float)NextDouble();
+	/// <inheritdoc/>
+	public float Next1() => (float)NextDouble();
 
-		/// <inheritdoc/>
-		public int Next1(int max) => Next(max);
+	/// <inheritdoc/>
+	public int Next1(int max) => Next(max);
 
-		/// <inheritdoc/>
-		public int Next1(int min, int max) => Next(min, max);
-	}
+	/// <inheritdoc/>
+	public int Next1(int min, int max) => Next(min, max);
 }

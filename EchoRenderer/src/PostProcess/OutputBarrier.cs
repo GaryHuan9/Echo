@@ -2,31 +2,30 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 
-namespace EchoRenderer.PostProcess
+namespace EchoRenderer.PostProcess;
+
+public class OutputBarrier : PostProcessingWorker
 {
-	public class OutputBarrier : PostProcessingWorker
+	public OutputBarrier(PostProcessingEngine engine) : base(engine) { }
+
+	public override void Dispatch() => RunPass(BarrierPass);
+
+	unsafe void BarrierPass(Int2 position)
 	{
-		public OutputBarrier(PostProcessingEngine engine) : base(engine) { }
+		Vector128<float> source = PackedMath.Clamp01(renderBuffer[position]);
 
-		public override void Dispatch() => RunPass(BarrierPass);
+		float* pointer = (float*)&source;
 
-		unsafe void BarrierPass(Int2 position)
+		if (float.IsNaN(pointer[0]) || float.IsNaN(pointer[1]) || float.IsNaN(pointer[2]))
 		{
-			Vector128<float> source = PackedMath.Clamp01(renderBuffer[position]);
-
-			float* pointer = (float*)&source;
-
-			if (float.IsNaN(pointer[0]) || float.IsNaN(pointer[1]) || float.IsNaN(pointer[2]))
-			{
-				//NaN pixels are assigned an artificial magenta color
-				pointer[0] = 1f;
-				pointer[1] = 0f;
-				pointer[2] = 1f;
-			}
-
-			pointer[3] = 1f; //Assign alpha
-
-			renderBuffer[position] = source;
+			//NaN pixels are assigned an artificial magenta color
+			pointer[0] = 1f;
+			pointer[1] = 0f;
+			pointer[2] = 1f;
 		}
+
+		pointer[3] = 1f; //Assign alpha
+
+		renderBuffer[position] = source;
 	}
 }

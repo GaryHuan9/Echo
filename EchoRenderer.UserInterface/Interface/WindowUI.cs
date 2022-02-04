@@ -1,42 +1,41 @@
 ﻿using EchoRenderer.UserInterface.Core.Areas;
 
-namespace EchoRenderer.UserInterface.Interface
+namespace EchoRenderer.UserInterface.Interface;
+
+public class WindowUI : AreaUI
 {
-	public class WindowUI : AreaUI
+	public WindowUI(string name)
 	{
-		public WindowUI(string name)
+		transform.UniformMargins = Theme.LargeMargin;
+
+		title = new ButtonUI
 		{
-			transform.UniformMargins = Theme.LargeMargin;
+			transform =
+			{
+				BottomPercent = 1f,
+				BottomMargin = -Theme.LayoutHeight
+			},
+			label = {Text = name}
+		};
 
-			title = new ButtonUI
-					{
-						transform =
-						{
-							BottomPercent = 1f,
-							BottomMargin = -Theme.LayoutHeight
-						},
-						label = {Text = name}
-					};
-
-			group = new AutoLayoutAreaUI
-					{
-						transform = {TopMargin = Theme.LayoutHeight + Theme.MediumMargin},
-						PanelColor = Theme.BackgroundColor
-					};
-
-			Add(title);
-			Add(group);
-
-			title.OnPressedMethods += OnTitlePressed;
-		}
-
-		readonly ButtonUI title;
-
-		protected readonly AutoLayoutAreaUI group;
-
-		void OnTitlePressed()
+		group = new AutoLayoutAreaUI
 		{
-			group.Enabled = !group.Enabled;
-		}
+			transform = {TopMargin = Theme.LayoutHeight + Theme.MediumMargin},
+			PanelColor = Theme.BackgroundColor
+		};
+
+		Add(title);
+		Add(group);
+
+		title.OnPressedMethods += OnTitlePressed;
+	}
+
+	readonly ButtonUI title;
+
+	protected readonly AutoLayoutAreaUI group;
+
+	void OnTitlePressed()
+	{
+		group.Enabled = !group.Enabled;
 	}
 }

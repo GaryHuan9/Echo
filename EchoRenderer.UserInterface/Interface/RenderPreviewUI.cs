@@ -3,55 +3,54 @@ using EchoRenderer.UserInterface.Core;
 using EchoRenderer.UserInterface.Core.Areas;
 using SFML.Graphics;
 
-namespace EchoRenderer.UserInterface.Interface
+namespace EchoRenderer.UserInterface.Interface;
+
+public class RenderPreviewUI : AreaUI
 {
-	public class RenderPreviewUI : AreaUI
+	public RenderPreviewUI()
 	{
-		public RenderPreviewUI()
+		imageUI = new ImageUI {KeepAspect = false};
+
+		Add(imageUI);
+	}
+
+	ProgressiveRenderBuffer _renderBuffer;
+
+	public ProgressiveRenderBuffer RenderBuffer
+	{
+		get => _renderBuffer;
+		set
 		{
-			imageUI = new ImageUI {KeepAspect = false};
+			if (_renderBuffer == value) return;
+			Texture texture = imageUI.Texture;
 
-			Add(imageUI);
-		}
-
-		ProgressiveRenderBuffer _renderBuffer;
-
-		public ProgressiveRenderBuffer RenderBuffer
-		{
-			get => _renderBuffer;
-			set
+			if (texture != null && texture.Size.Cast() != value.size)
 			{
-				if (_renderBuffer == value) return;
-				Texture texture = imageUI.Texture;
-
-				if (texture != null && texture.Size.Cast() != value.size)
-				{
-					texture.Dispose();
-					texture = null;
-				}
-
-				if (texture == null)
-				{
-					uint width = (uint)value.size.x;
-					uint height = (uint)value.size.y;
-
-					imageUI.Texture = new Texture(width, height);
-				}
-
-				_renderBuffer = value;
+				texture.Dispose();
+				texture = null;
 			}
+
+			if (texture == null)
+			{
+				uint width = (uint)value.size.x;
+				uint height = (uint)value.size.y;
+
+				imageUI.Texture = new Texture(width, height);
+			}
+
+			_renderBuffer = value;
 		}
+	}
 
-		readonly ImageUI imageUI;
+	readonly ImageUI imageUI;
 
-		public override void Update()
-		{
-			base.Update();
+	public override void Update()
+	{
+		base.Update();
 
-			var buffer = RenderBuffer;
-			if (buffer == null) return;
+		var buffer = RenderBuffer;
+		if (buffer == null) return;
 
-			imageUI.Texture.Update(buffer.bytes);
-		}
+		imageUI.Texture.Update(buffer.bytes);
 	}
 }
