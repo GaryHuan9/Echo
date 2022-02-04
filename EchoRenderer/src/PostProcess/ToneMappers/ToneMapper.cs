@@ -5,41 +5,40 @@ using EchoRenderer.Common;
 using EchoRenderer.Mathematics;
 using EchoRenderer.PostProcess.Operators;
 
-namespace EchoRenderer.PostProcess.ToneMappers
+namespace EchoRenderer.PostProcess.ToneMappers;
+
+public abstract class ToneMapper : PostProcessingWorker
 {
-	public abstract class ToneMapper : PostProcessingWorker
+	protected ToneMapper(PostProcessingEngine engine) : base(engine) { }
+
+	float luminanceForward;
+	float luminanceInverse;
+
+	//https://bruop.github.io/tonemapping/
+
+	public override void Dispatch()
 	{
-		protected ToneMapper(PostProcessingEngine engine) : base(engine) { }
+		var grab = new LuminanceGrab(this, renderBuffer);
 
-		float luminanceForward;
-		float luminanceInverse;
+		grab.Run();
 
-		//https://bruop.github.io/tonemapping/
+		if (grab.Luminance.AlmostEquals()) return;
 
-		public override void Dispatch()
-		{
-			var grab = new LuminanceGrab(this, renderBuffer);
+		luminanceForward = 9.6f * grab.Luminance;
+		luminanceInverse = 1f / luminanceForward;
 
-			grab.Run();
+		RunPass(MainPass);
+	}
 
-			if (grab.Luminance.AlmostEquals()) return;
+	protected abstract float MapLuminance(float luminance);
 
-			luminanceForward = 9.6f * grab.Luminance;
-			luminanceInverse = 1f / luminanceForward;
+	void MainPass(Int2 position)
+	{
+		Vector128<float> source = renderBuffer[position];
+		float luminance = PackedMath.GetLuminance(source);
 
-			RunPass(MainPass);
-		}
-
-		protected abstract float MapLuminance(float luminance);
-
-		void MainPass(Int2 position)
-		{
-			Vector128<float> source = renderBuffer[position];
-			float luminance = PackedMath.GetLuminance(source);
-
-			float mapped = MapLuminance(luminance * luminanceInverse) * luminanceForward;
-			float multiplier = FastMath.AlmostZero(luminance) ? mapped : mapped / luminance;
-			renderBuffer[position] = Sse.Multiply(source, Vector128.Create(multiplier));
-		}
+		float mapped = MapLuminance(luminance * luminanceInverse) * luminanceForward;
+		float multiplier = FastMath.AlmostZero(luminance) ? mapped : mapped / luminance;
+		renderBuffer[position] = Sse.Multiply(source, Vector128.Create(multiplier));
 	}
 }

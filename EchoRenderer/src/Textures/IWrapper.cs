@@ -1,61 +1,60 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Textures
+namespace EchoRenderer.Textures;
+
+/// <summary>
+/// A way to manipulate the input texture coordinate to a <see cref="Texture"/> to the acceptable bounds.
+/// </summary>
+public interface IWrapper
 {
 	/// <summary>
-	/// A way to manipulate the input texture coordinate to a <see cref="Texture"/> to the acceptable bounds.
+	/// Converts a texture coordinate.
 	/// </summary>
-	public interface IWrapper
+	Float2 Convert(Float2 uv);
+}
+
+/// <summary>
+/// A struct to temporarily change a <see cref="Texture.Wrapper"/>
+/// and reverts the change after <see cref="Dispose"/> is invoked.
+/// </summary>
+public readonly struct ScopedWrapper : IDisposable
+{
+	public ScopedWrapper(Texture texture, IWrapper wrapper)
 	{
-		/// <summary>
-		/// Converts a texture coordinate.
-		/// </summary>
-		Float2 Convert(Float2 uv);
+		this.texture = texture;
+
+		original = texture.Wrapper;
+		texture.Wrapper = wrapper;
 	}
 
-	/// <summary>
-	/// A struct to temporarily change a <see cref="Texture.Wrapper"/>
-	/// and reverts the change after <see cref="Dispose"/> is invoked.
-	/// </summary>
-	public readonly struct ScopedWrapper : IDisposable
+	readonly Texture texture;
+	readonly IWrapper original;
+
+	public void Dispose() => texture.Wrapper = original;
+}
+
+public static class Wrappers
+{
+	public static readonly IWrapper clamp = new Clamp();
+	public static readonly IWrapper repeat = new Repeat();
+	public static readonly IWrapper unbound = new Unbound();
+
+	class Clamp : IWrapper
 	{
-		public ScopedWrapper(Texture texture, IWrapper wrapper)
-		{
-			this.texture = texture;
-
-			original = texture.Wrapper;
-			texture.Wrapper = wrapper;
-		}
-
-		readonly Texture texture;
-		readonly IWrapper original;
-
-		public void Dispose() => texture.Wrapper = original;
+		/// <inheritdoc/>
+		public Float2 Convert(Float2 uv) => uv.Clamp();
 	}
 
-	public static class Wrappers
+	class Repeat : IWrapper
 	{
-		public static readonly IWrapper clamp = new Clamp();
-		public static readonly IWrapper repeat = new Repeat();
-		public static readonly IWrapper unbound = new Unbound();
+		/// <inheritdoc/>
+		public Float2 Convert(Float2 uv) => uv.Repeat(1f);
+	}
 
-		class Clamp : IWrapper
-		{
-			/// <inheritdoc/>
-			public Float2 Convert(Float2 uv) => uv.Clamp();
-		}
-
-		class Repeat : IWrapper
-		{
-			/// <inheritdoc/>
-			public Float2 Convert(Float2 uv) => uv.Repeat(1f);
-		}
-
-		class Unbound : IWrapper
-		{
-			/// <inheritdoc/>
-			public Float2 Convert(Float2 uv) => uv;
-		}
+	class Unbound : IWrapper
+	{
+		/// <inheritdoc/>
+		public Float2 Convert(Float2 uv) => uv;
 	}
 }
