@@ -18,260 +18,259 @@ using EchoRenderer.Terminals;
 using EchoRenderer.Textures.Generative;
 using EchoRenderer.Textures.Grid;
 
-namespace EchoRenderer
+namespace EchoRenderer;
+
+public class Program
 {
-	public class Program
+	static void Main()
 	{
-		static void Main()
-		{
-			// SimplexNoise();
-			// FontTesting();
-			// PostProcessTesting();
+		// SimplexNoise();
+		// FontTesting();
+		// PostProcessTesting();
 
-			// return;
+		// return;
 
-			using Terminal terminal = renderTerminal = new Terminal();
+		using Terminal terminal = renderTerminal = new Terminal();
 
-			terminal.AddSection(new CommandsController(terminal));
-			terminal.AddSection(renderMonitor = new RenderMonitor(terminal));
+		terminal.AddSection(new CommandsController(terminal));
+		terminal.AddSection(renderMonitor = new RenderMonitor(terminal));
 
-			ThreadHelper.MainThread = Thread.CurrentThread;
-			RandomHelper.Seed = 47;
+		ThreadHelper.MainThread = Thread.CurrentThread;
+		RandomHelper.Seed = 47;
 
 #if DEBUG
 			DebugHelper.LogWarning("Performing render in DEBUG mode");
 #endif
 
-			PerformRender();
-			Console.ReadKey();
-		}
+		PerformRender();
+		Console.ReadKey();
+	}
 
-		static TiledRenderEngine renderEngine;
-		static Terminal renderTerminal;
-		static RenderMonitor renderMonitor;
+	static TiledRenderEngine renderEngine;
+	static Terminal renderTerminal;
+	static RenderMonitor renderMonitor;
 
-		static readonly TiledRenderProfile pathTraceFastProfile = new()
+	static readonly TiledRenderProfile pathTraceFastProfile = new()
+	{
+		Method = new PathTraceWorker(),
+		TilePattern = new CheckerboardPattern(),
+		PixelSample = 16,
+		AdaptiveSample = 80
+	};
+
+	static readonly TiledRenderProfile pathTraceProfile = new()
+	{
+		Method = new PathTraceWorker(),
+		TilePattern = new CheckerboardPattern(),
+		PixelSample = 40,
+		AdaptiveSample = 400
+	};
+
+	static readonly TiledRenderProfile pathTraceExportProfile = new()
+	{
+		Method = new PathTraceWorker(),
+		TilePattern = new CheckerboardPattern(),
+		PixelSample = 64,
+		AdaptiveSample = 1600
+	};
+
+	static readonly TiledRenderProfile albedoProfile = new()
+	{
+		Method = new AlbedoPixelWorker(),
+		TilePattern = new ScrambledPattern(),
+		PixelSample = 12,
+		AdaptiveSample = 80
+	};
+
+	static readonly TiledRenderProfile aggregatorQualityProfile = new()
+	{
+		Method = new AggregatorQualityWorker(),
+		TilePattern = new OrderedPattern(),
+		PixelSample = 1,
+		AdaptiveSample = 0
+	};
+
+	static readonly ScenePrepareProfile scenePrepareProfile = new() { AggregatorProfile = new AggregatorProfile() };
+
+	static void PerformRender()
+	{
+		Int2[] resolutions = //Different resolutions for easy selection
 		{
-			Method = new PathTraceWorker(),
-			TilePattern = new CheckerboardPattern(),
-			PixelSample = 16,
-			AdaptiveSample = 80
+			new(480, 270), new(960, 540), new(1920, 1080),
+			new(3840, 2160), new(1024, 1024), new(512, 512)
 		};
 
-		static readonly TiledRenderProfile pathTraceProfile = new()
-		{
-			Method = new PathTraceWorker(),
-			TilePattern = new CheckerboardPattern(),
-			PixelSample = 40,
-			AdaptiveSample = 400
-		};
+		RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
+		TiledRenderProfile renderProfile;                       //Selects or creates render profile
+		Scene scene = new SingleBunny();                        //Selects or creates scene
 
-		static readonly TiledRenderProfile pathTraceExportProfile = new()
+		renderProfile = new TiledRenderProfile
 		{
 			Method = new PathTraceWorker(),
 			TilePattern = new CheckerboardPattern(),
+			// WorkerSize = 1,
 			PixelSample = 64,
-			AdaptiveSample = 1600
+			// AdaptiveSample = 400,
+			BounceLimit = 128
 		};
 
-		static readonly TiledRenderProfile albedoProfile = new()
-		{
-			Method = new AlbedoPixelWorker(),
-			TilePattern = new ScrambledPattern(),
-			PixelSample = 12,
-			AdaptiveSample = 80
-		};
+		DebugHelper.Log("Assets loaded");
 
-		static readonly TiledRenderProfile aggregatorQualityProfile = new()
-		{
-			Method = new AggregatorQualityWorker(),
-			TilePattern = new OrderedPattern(),
-			PixelSample = 1,
-			AdaptiveSample = 0
-		};
+		PerformanceTest setupTest = new PerformanceTest();
+		using TiledRenderEngine engine = new TiledRenderEngine();
 
-		static readonly ScenePrepareProfile scenePrepareProfile = new() { AggregatorProfile = new AggregatorProfile() };
+		renderEngine = engine;
+		renderMonitor.Engine = engine;
 
-		static void PerformRender()
+		using (setupTest.Start())
 		{
-			Int2[] resolutions = //Different resolutions for easy selection
+			var prepared = new PreparedScene(scene, scenePrepareProfile);
+
+			renderProfile = renderProfile with
 			{
-				new(480, 270), new(960, 540), new(1920, 1080),
-				new(3840, 2160), new(1024, 1024), new(512, 512)
+				RenderBuffer = buffer,
+				Scene = prepared
 			};
 
-			RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-			TiledRenderProfile renderProfile;                       //Selects or creates render profile
-			Scene scene = new SingleBunny();                        //Selects or creates scene
+			engine.Begin(renderProfile); //Initializes render
+		}
 
-			renderProfile = new TiledRenderProfile
+		DebugHelper.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
+		engine.WaitForRender(); //Main thread wait for engine to complete render
+
+		buffer.Save("render.fpi"); //Save floating point image before post processing
+
+		using var postProcess = new PostProcessingEngine(buffer);
+
+		if (renderProfile.Method is AggregatorQualityWorker) //Creates different post processing workers based on render method
+		{
+			postProcess.AddWorker(new AggregatorQualityVisualizer(postProcess)); //Only used for aggregator quality testing
+		}
+		else if (false) //Enable or disable post processing
+		{
+			if (renderProfile.Method is PathTraceWorker)
 			{
-				Method = new PathTraceWorker(),
-				TilePattern = new CheckerboardPattern(),
-				// WorkerSize = 1,
-				PixelSample = 64,
-				// AdaptiveSample = 400,
-				BounceLimit = 128
-			};
-
-			DebugHelper.Log("Assets loaded");
-
-			PerformanceTest setupTest = new PerformanceTest();
-			using TiledRenderEngine engine = new TiledRenderEngine();
-
-			renderEngine = engine;
-			renderMonitor.Engine = engine;
-
-			using (setupTest.Start())
-			{
-				var prepared = new PreparedScene(scene, scenePrepareProfile);
-
-				renderProfile = renderProfile with
-				{
-					RenderBuffer = buffer,
-					Scene = prepared
-				};
-
-				engine.Begin(renderProfile); //Initializes render
+				// postProcess.AddWorker(new DenoiseOidn(postProcess));
 			}
 
-			DebugHelper.Log($"Engine Setup Complete: {setupTest.ElapsedMilliseconds}ms");
-			engine.WaitForRender(); //Main thread wait for engine to complete render
-
-			buffer.Save("render.fpi"); //Save floating point image before post processing
-
-			using var postProcess = new PostProcessingEngine(buffer);
-
-			if (renderProfile.Method is AggregatorQualityWorker) //Creates different post processing workers based on render method
-			{
-				postProcess.AddWorker(new AggregatorQualityVisualizer(postProcess)); //Only used for aggregator quality testing
-			}
-			else if (false) //Enable or disable post processing
-			{
-				if (renderProfile.Method is PathTraceWorker)
-				{
-					// postProcess.AddWorker(new DenoiseOidn(postProcess));
-				}
-
-				//Standard render post processing layers
-				postProcess.AddWorker(new Bloom(postProcess));
-				postProcess.AddWorker(new BasicShoulder(postProcess));
-				// postProcess.AddWorker(new DepthOfField(postProcess));
-				postProcess.AddWorker(new Vignette(postProcess));
-				postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
-			}
-
-			postProcess.AddWorker(new OutputBarrier(postProcess));
-
-			postProcess.Dispatch();
-			postProcess.WaitForProcess(); //Wait for post processing to finish
-
-			buffer.Save("render.png"); //Save final image
-
-			//Logs render stats
-			double elapsedSeconds = engine.Elapsed.TotalSeconds;
-			long completedSample = engine.CompletedSample;
-
-			DebugHelper.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
+			//Standard render post processing layers
+			postProcess.AddWorker(new Bloom(postProcess));
+			postProcess.AddWorker(new BasicShoulder(postProcess));
+			// postProcess.AddWorker(new DepthOfField(postProcess));
+			postProcess.AddWorker(new Vignette(postProcess));
+			postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 		}
 
-		static void SimplexNoise()
+		postProcess.AddWorker(new OutputBarrier(postProcess));
+
+		postProcess.Dispatch();
+		postProcess.WaitForProcess(); //Wait for post processing to finish
+
+		buffer.Save("render.png"); //Save final image
+
+		//Logs render stats
+		double elapsedSeconds = engine.Elapsed.TotalSeconds;
+		long completedSample = engine.CompletedSample;
+
+		DebugHelper.Log($"Completed after {elapsedSeconds:F2} seconds with {completedSample:N0} samples at {completedSample / elapsedSeconds:N0} samples per second.");
+	}
+
+	static void SimplexNoise()
+	{
+		TestGenerative simplex = new TestGenerative(42, 4);
+		ArrayGrid texture = new ArrayGrid((Int2)1080);
+
+		simplex.Tiling = (Float2)1f;
+		simplex.Offset = (Float2)1f;
+
+		texture.CopyFrom(simplex);
+		texture.Save("simplex.png");
+	}
+
+	static void FontTesting()
+	{
+		Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
+		ArrayGrid output = new ArrayGrid((Int2)2048);
+
+		foreach (Int2 position in output.size.Loop()) output[position] = Vector128.Create(0f, 0f, 1f, 1f);
+		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.one));
+
+		output.Save("render.png");
+	}
+
+	static void PostProcessTesting()
+	{
+		ArrayGrid texture = TextureGrid.Load("render.fpi");
+		RenderBuffer buffer = new RenderBuffer(texture.size);
+
+		buffer.CopyFrom(texture);
+
+		using PostProcessingEngine engine = new PostProcessingEngine(buffer);
+
+		//NOTE: Oidn does not have normal and albedo data here, so its quality might be pretty bad
+		// engine.AddWorker(new DenoiseOidn(engine));
+
+		engine.AddWorker(new Bloom(engine));
+		engine.AddWorker(new Reinhard(engine));
+		engine.AddWorker(new Vignette(engine));
+		engine.AddWorker(new OutputBarrier(engine));
+
+		engine.Dispatch();
+		engine.WaitForProcess();
+
+		buffer.Save("post process.png");
+	}
+
+	[Command]
+	static CommandResult Pause()
+	{
+		if (renderEngine.CurrentState == TiledRenderEngine.State.rendering)
 		{
-			TestGenerative simplex = new TestGenerative(42, 4);
-			ArrayGrid texture = new ArrayGrid((Int2)1080);
-
-			simplex.Tiling = (Float2)1f;
-			simplex.Offset = (Float2)1f;
-
-			texture.CopyFrom(simplex);
-			texture.Save("simplex.png");
+			renderEngine.Pause();
+			return new CommandResult("Render pausing...", true);
 		}
 
-		static void FontTesting()
+		return new CommandResult("Cannot pause: not rendering.", false);
+	}
+
+	[Command]
+	static CommandResult Resume()
+	{
+		if (renderEngine.CurrentState == TiledRenderEngine.State.paused)
 		{
-			Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
-			ArrayGrid output = new ArrayGrid((Int2)2048);
-
-			foreach (Int2 position in output.size.Loop()) output[position] = Vector128.Create(0f, 0f, 1f, 1f);
-			font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.one));
-
-			output.Save("render.png");
+			renderEngine.Resume();
+			return new CommandResult("Render resumed.", true);
 		}
 
-		static void PostProcessTesting()
+		return new CommandResult("Cannot resume: not paused.", false);
+	}
+
+	[Command]
+	static CommandResult Abort()
+	{
+		if (renderEngine.Rendering)
 		{
-			ArrayGrid texture = TextureGrid.Load("render.fpi");
-			RenderBuffer buffer = new RenderBuffer(texture.size);
-
-			buffer.CopyFrom(texture);
-
-			using PostProcessingEngine engine = new PostProcessingEngine(buffer);
-
-			//NOTE: Oidn does not have normal and albedo data here, so its quality might be pretty bad
-			// engine.AddWorker(new DenoiseOidn(engine));
-
-			engine.AddWorker(new Bloom(engine));
-			engine.AddWorker(new Reinhard(engine));
-			engine.AddWorker(new Vignette(engine));
-			engine.AddWorker(new OutputBarrier(engine));
-
-			engine.Dispatch();
-			engine.WaitForProcess();
-
-			buffer.Save("post process.png");
+			renderEngine.Abort();
+			return new CommandResult("Render aborted.", true);
 		}
 
-		[Command]
-		static CommandResult Pause()
-		{
-			if (renderEngine.CurrentState == TiledRenderEngine.State.rendering)
-			{
-				renderEngine.Pause();
-				return new CommandResult("Render pausing...", true);
-			}
+		return new CommandResult("Cannot abort: not rendering.", false);
+	}
 
-			return new CommandResult("Cannot pause: not rendering.", false);
-		}
+	[Command]
+	static CommandResult RewriteTerminal()
+	{
+		renderTerminal.Rewrite = true;
+		return new CommandResult("Terminal rewrote.", true);
+	}
 
-		[Command]
-		static CommandResult Resume()
-		{
-			if (renderEngine.CurrentState == TiledRenderEngine.State.paused)
-			{
-				renderEngine.Resume();
-				return new CommandResult("Render resumed.", true);
-			}
+	[Command]
+	static CommandResult SaveRenderBuffer()
+	{
+		RenderBuffer buffer = renderEngine.CurrentProfile.RenderBuffer;
+		if (buffer == null) return new CommandResult("No buffer assigned", false);
 
-			return new CommandResult("Cannot resume: not paused.", false);
-		}
-
-		[Command]
-		static CommandResult Abort()
-		{
-			if (renderEngine.Rendering)
-			{
-				renderEngine.Abort();
-				return new CommandResult("Render aborted.", true);
-			}
-
-			return new CommandResult("Cannot abort: not rendering.", false);
-		}
-
-		[Command]
-		static CommandResult RewriteTerminal()
-		{
-			renderTerminal.Rewrite = true;
-			return new CommandResult("Terminal rewrote.", true);
-		}
-
-		[Command]
-		static CommandResult SaveRenderBuffer()
-		{
-			RenderBuffer buffer = renderEngine.CurrentProfile.RenderBuffer;
-			if (buffer == null) return new CommandResult("No buffer assigned", false);
-
-			buffer.Save("render.png");
-			return new CommandResult("Render buffer saved.", true);
-		}
+		buffer.Save("render.png");
+		return new CommandResult("Render buffer saved.", true);
 	}
 }

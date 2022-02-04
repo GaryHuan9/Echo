@@ -4,260 +4,259 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Mathematics.Primitives;
 
-namespace EchoRenderer.Mathematics.Intersections
+namespace EchoRenderer.Mathematics.Intersections;
+
+/// <summary>
+/// Builds the branch of a <see cref="BoundingVolumeHierarchy"/>.
+/// </summary>
+public class BranchBuilder
 {
-	/// <summary>
-	/// Builds the branch of a <see cref="BoundingVolumeHierarchy"/>.
-	/// </summary>
-	public class BranchBuilder
+	public BranchBuilder(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs) : this(aabbs, aabbs.Length) { }
+
+	BranchBuilder(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, int capacity)
 	{
-		public BranchBuilder(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs) : this(aabbs, aabbs.Length) { }
+		this.aabbs = aabbs;
+		this.capacity = capacity;
+		sorter = new BoxSorter(capacity);
+	}
 
-		BranchBuilder(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, int capacity)
+	readonly ReadOnlyMemory<AxisAlignedBoundingBox> aabbs;
+	readonly int capacity;
+	readonly BoxSorter sorter;
+
+	AxisAlignedBoundingBox[] cutTailVolumes;
+
+	const int ParallelBuildThreshold = 4096; //We can increase this value to disable parallel building
+
+	/// <summary>
+	/// Initialize build on the root builder.
+	/// </summary>
+	public Node Build(Memory<int> indices)
+	{
+		Assert.IsTrue(indices.Length <= capacity);
+		LayerData data = new LayerData(aabbs, indices);
+
+		if (data.aabbs.Length != data.Length) throw new Exception("Not a root builder!");
+		if (data.Length == 1) return new Node(data[0], data.indices[0]);
+
+		int axis = new AxisAlignedBoundingBox(data.aabbs).MajorAxis;
+
+		SortIndices(data, axis);
+		return BuildLayer(data);
+	}
+
+	Node BuildLayer(in LayerData data)
+	{
+		Assert.IsFalse(data.Length < 2);
+		PrepareCutTailVolumes(data);
+
+		int minIndex = SearchSurfaceAreaHeuristics(data, out var headVolume, out var tailVolume);
+		AxisAlignedBoundingBox aabb = headVolume.Encapsulate(tailVolume);
+
+		int axis = aabb.MajorAxis;
+
+		//Split data based on minIndex; headData is always larger than tailData
+		LayerData headData;
+		LayerData tailData;
+
+		if (minIndex > data.Length / 2)
 		{
-			this.aabbs = aabbs;
-			this.capacity = capacity;
-			sorter = new BoxSorter(capacity);
+			headData = data[..minIndex];
+			tailData = data[minIndex..];
+		}
+		else
+		{
+			headData = data[minIndex..];
+			tailData = data[..minIndex];
+
+			CodeHelper.Swap(ref headVolume, ref tailVolume);
 		}
 
-		readonly ReadOnlyMemory<AxisAlignedBoundingBox> aabbs;
-		readonly int capacity;
-		readonly BoxSorter sorter;
+		//Recursively construct deeper layers
+		Node child0;
+		Node child1;
 
-		AxisAlignedBoundingBox[] cutTailVolumes;
-
-		const int ParallelBuildThreshold = 4096; //We can increase this value to disable parallel building
-
-		/// <summary>
-		/// Initialize build on the root builder.
-		/// </summary>
-		public Node Build(Memory<int> indices)
+		if (headData.Length < ParallelBuildThreshold)
 		{
-			Assert.IsTrue(indices.Length <= capacity);
-			LayerData data = new LayerData(aabbs, indices);
-
-			if (data.aabbs.Length != data.Length) throw new Exception("Not a root builder!");
-			if (data.Length == 1) return new Node(data[0], data.indices[0]);
-
-			int axis = new AxisAlignedBoundingBox(data.aabbs).MajorAxis;
-
-			SortIndices(data, axis);
-			return BuildLayer(data);
+			child0 = BuildChild(headData, headVolume, axis);
+			child1 = BuildChild(tailData, tailVolume, axis);
+		}
+		else
+		{
+			var builder = BuildChildParallel(headData, headVolume, axis);
+			child1 = BuildChild(tailData, tailVolume, axis);
+			child0 = builder.WaitForNode();
 		}
 
-		Node BuildLayer(in LayerData data)
+		//Places the child with the larger surface area first to improve branch prediction
+		if (headVolume.Area < tailVolume.Area) CodeHelper.Swap(ref child0, ref child1);
+
+		return new Node(child0, child1, aabb, axis);
+	}
+
+	Node BuildChild(in LayerData data, in AxisAlignedBoundingBox aabb, int parentAxis)
+	{
+		if (data.Length == 1) return new Node(aabb, data.indices[0]);
+
+		int axis = aabb.MajorAxis;
+		if (axis != parentAxis) SortIndices(data, axis);
+		return BuildLayer(data);
+	}
+
+	LayerBuilder BuildChildParallel(in LayerData data, in AxisAlignedBoundingBox aabb, int parentAxis)
+	{
+		Assert.IsTrue(data.Length > 1);
+
+		int axis = aabb.MajorAxis;
+		if (axis == parentAxis) axis = -1; //No need to sort because it is already sorted
+		return new LayerBuilder(this, data.indicesMemory, axis);
+	}
+
+	/// <summary>
+	/// Sorts the <see cref="LayerData.indices"/> of <paramref name="data"/> based on its
+	/// <see cref="LayerData.aabbs"/>'s individual locations on <paramref name="axis"/>.
+	/// </summary>
+	void SortIndices(in LayerData data, int axis) => sorter.Sort(data.aabbs, data.indices, axis);
+
+	/// <summary>
+	/// Calculates all of the tail volumes and stores them to <see cref="cutTailVolumes"/>.
+	/// The prepared data is then used by <see cref="SearchSurfaceAreaHeuristics"/>.
+	/// </summary>
+	void PrepareCutTailVolumes(in LayerData data)
+	{
+		int length = data.Length;
+
+		cutTailVolumes ??= new AxisAlignedBoundingBox[length];
+		AxisAlignedBoundingBox cutTailVolume = data[^1];
+
+		for (int i = length - 2; i >= 0; i--)
 		{
-			Assert.IsFalse(data.Length < 2);
-			PrepareCutTailVolumes(data);
+			cutTailVolumes[i + 1] = cutTailVolume;
+			cutTailVolume = cutTailVolume.Encapsulate(data[i]);
+		}
+	}
 
-			int minIndex = SearchSurfaceAreaHeuristics(data, out var headVolume, out var tailVolume);
-			AxisAlignedBoundingBox aabb = headVolume.Encapsulate(tailVolume);
+	/// <summary>
+	/// Searches the length of <paramref name="data"/> to find and return the spot where the SAH is the lowest.
+	/// Also returns the two volumes after cutting at the returned index. NOTE: Uses the prepared <see cref="cutTailVolumes"/>.
+	/// </summary>
+	int SearchSurfaceAreaHeuristics(in LayerData data, out AxisAlignedBoundingBox headVolume, out AxisAlignedBoundingBox tailVolume)
+	{
+		AxisAlignedBoundingBox cutHeadVolume = data[0];
 
-			int axis = aabb.MajorAxis;
+		float minCost = float.MaxValue;
+		int minIndex = -1;
 
-			//Split data based on minIndex; headData is always larger than tailData
-			LayerData headData;
-			LayerData tailData;
+		headVolume = default;
+		tailVolume = default;
 
-			if (minIndex > data.Length / 2)
+		int length = data.indices.Length;
+
+		for (int i = 1; i < length; i++)
+		{
+			ref readonly AxisAlignedBoundingBox cutTailVolume = ref cutTailVolumes[i];
+			float cost = cutHeadVolume.Area * i + cutTailVolume.Area * (length - i);
+
+			if (cost < minCost)
 			{
-				headData = data[..minIndex];
-				tailData = data[minIndex..];
-			}
-			else
-			{
-				headData = data[minIndex..];
-				tailData = data[..minIndex];
+				minCost = cost;
+				minIndex = i;
 
-				CodeHelper.Swap(ref headVolume, ref tailVolume);
-			}
-
-			//Recursively construct deeper layers
-			Node child0;
-			Node child1;
-
-			if (headData.Length < ParallelBuildThreshold)
-			{
-				child0 = BuildChild(headData, headVolume, axis);
-				child1 = BuildChild(tailData, tailVolume, axis);
-			}
-			else
-			{
-				var builder = BuildChildParallel(headData, headVolume, axis);
-				child1 = BuildChild(tailData, tailVolume, axis);
-				child0 = builder.WaitForNode();
+				headVolume = cutHeadVolume;
+				tailVolume = cutTailVolume;
 			}
 
-			//Places the child with the larger surface area first to improve branch prediction
-			if (headVolume.Area < tailVolume.Area) CodeHelper.Swap(ref child0, ref child1);
-
-			return new Node(child0, child1, aabb, axis);
+			cutHeadVolume = cutHeadVolume.Encapsulate(data[i]);
 		}
 
-		Node BuildChild(in LayerData data, in AxisAlignedBoundingBox aabb, int parentAxis)
-		{
-			if (data.Length == 1) return new Node(aabb, data.indices[0]);
+		return minIndex;
+	}
 
-			int axis = aabb.MajorAxis;
-			if (axis != parentAxis) SortIndices(data, axis);
-			return BuildLayer(data);
+	/// <summary>
+	/// A binary linked node that contains two children; contains the result of the branch construction.
+	/// </summary>
+	public class Node
+	{
+		public Node(Node child0, Node child1, in AxisAlignedBoundingBox aabb, int axis)
+		{
+			this.child0 = child0;
+			this.child1 = child1;
+			this.aabb = aabb;
+			this.axis = axis;
 		}
 
-		LayerBuilder BuildChildParallel(in LayerData data, in AxisAlignedBoundingBox aabb, int parentAxis)
+		public Node(in AxisAlignedBoundingBox aabb, int index)
 		{
-			Assert.IsTrue(data.Length > 1);
-
-			int axis = aabb.MajorAxis;
-			if (axis == parentAxis) axis = -1; //No need to sort because it is already sorted
-			return new LayerBuilder(this, data.indicesMemory, axis);
+			this.aabb = aabb;
+			this.index = index;
 		}
 
-		/// <summary>
-		/// Sorts the <see cref="LayerData.indices"/> of <paramref name="data"/> based on its
-		/// <see cref="LayerData.aabbs"/>'s individual locations on <paramref name="axis"/>.
-		/// </summary>
-		void SortIndices(in LayerData data, int axis) => sorter.Sort(data.aabbs, data.indices, axis);
+		public readonly Node child0;
+		public readonly Node child1;
 
-		/// <summary>
-		/// Calculates all of the tail volumes and stores them to <see cref="cutTailVolumes"/>.
-		/// The prepared data is then used by <see cref="SearchSurfaceAreaHeuristics"/>.
-		/// </summary>
-		void PrepareCutTailVolumes(in LayerData data)
+		public readonly AxisAlignedBoundingBox aabb;
+		public readonly int index; //If is leaf, this indicates the index of the token
+		public readonly int axis;  //The axis used to divide the two children in this node
+
+		public bool IsLeaf => child0 == null || child1 == null;
+	}
+
+	class LayerBuilder
+	{
+		public LayerBuilder(BranchBuilder parent, Memory<int> indices, int sortAxis)
 		{
-			int length = data.Length;
+			this.parent = parent;
+			this.indices = indices;
+			this.sortAxis = sortAxis;
 
-			cutTailVolumes ??= new AxisAlignedBoundingBox[length];
-			AxisAlignedBoundingBox cutTailVolume = data[^1];
-
-			for (int i = length - 2; i >= 0; i--)
-			{
-				cutTailVolumes[i + 1] = cutTailVolume;
-				cutTailVolume = cutTailVolume.Encapsulate(data[i]);
-			}
+			buildTask = Task.Run(Build);
 		}
 
-		/// <summary>
-		/// Searches the length of <paramref name="data"/> to find and return the spot where the SAH is the lowest.
-		/// Also returns the two volumes after cutting at the returned index. NOTE: Uses the prepared <see cref="cutTailVolumes"/>.
-		/// </summary>
-		int SearchSurfaceAreaHeuristics(in LayerData data, out AxisAlignedBoundingBox headVolume, out AxisAlignedBoundingBox tailVolume)
+		readonly Task<Node> buildTask;
+		readonly BranchBuilder parent;
+		readonly Memory<int> indices;
+		readonly int sortAxis;
+
+		public Node WaitForNode() => buildTask.Result;
+
+		Node Build()
 		{
-			AxisAlignedBoundingBox cutHeadVolume = data[0];
+			ReadOnlyMemory<AxisAlignedBoundingBox> aabbs = parent.aabbs;
 
-			float minCost = float.MaxValue;
-			int minIndex = -1;
+			var data = new LayerData(aabbs, indices);
+			var builder = new BranchBuilder(aabbs, data.Length);
 
-			headVolume = default;
-			tailVolume = default;
+			//Sort indices if requested by parent
+			if (sortAxis >= 0) builder.SortIndices(data, sortAxis);
 
-			int length = data.indices.Length;
+			return builder.BuildLayer(data);
+		}
+	}
 
-			for (int i = 1; i < length; i++)
-			{
-				ref readonly AxisAlignedBoundingBox cutTailVolume = ref cutTailVolumes[i];
-				float cost = cutHeadVolume.Area * i + cutTailVolume.Area * (length - i);
-
-				if (cost < minCost)
-				{
-					minCost = cost;
-					minIndex = i;
-
-					headVolume = cutHeadVolume;
-					tailVolume = cutTailVolume;
-				}
-
-				cutHeadVolume = cutHeadVolume.Encapsulate(data[i]);
-			}
-
-			return minIndex;
+	readonly ref struct LayerData
+	{
+		public LayerData(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, Memory<int> indices)
+		{
+			this.aabbs = aabbs.Span;
+			this.indices = indices.Span;
+			indicesMemory = indices;
 		}
 
-		/// <summary>
-		/// A binary linked node that contains two children; contains the result of the branch construction.
-		/// </summary>
-		public class Node
+		LayerData(in LayerData source, Range range)
 		{
-			public Node(Node child0, Node child1, in AxisAlignedBoundingBox aabb, int axis)
-			{
-				this.child0 = child0;
-				this.child1 = child1;
-				this.aabb = aabb;
-				this.axis = axis;
-			}
-
-			public Node(in AxisAlignedBoundingBox aabb, int index)
-			{
-				this.aabb = aabb;
-				this.index = index;
-			}
-
-			public readonly Node child0;
-			public readonly Node child1;
-
-			public readonly AxisAlignedBoundingBox aabb;
-			public readonly int index; //If is leaf, this indicates the index of the token
-			public readonly int axis;  //The axis used to divide the two children in this node
-
-			public bool IsLeaf => child0 == null || child1 == null;
+			aabbs = source.aabbs;
+			indices = source.indices[range];
+			indicesMemory = source.indicesMemory[range];
 		}
 
-		class LayerBuilder
-		{
-			public LayerBuilder(BranchBuilder parent, Memory<int> indices, int sortAxis)
-			{
-				this.parent = parent;
-				this.indices = indices;
-				this.sortAxis = sortAxis;
+		public readonly ReadOnlySpan<AxisAlignedBoundingBox> aabbs;
+		public readonly Span<int> indices;
+		public readonly Memory<int> indicesMemory;
 
-				buildTask = Task.Run(Build);
-			}
+		public int Length => indices.Length;
 
-			readonly Task<Node> buildTask;
-			readonly BranchBuilder parent;
-			readonly Memory<int> indices;
-			readonly int sortAxis;
+		public ref readonly AxisAlignedBoundingBox this[Index index] => ref aabbs[indices[index]];
 
-			public Node WaitForNode() => buildTask.Result;
-
-			Node Build()
-			{
-				ReadOnlyMemory<AxisAlignedBoundingBox> aabbs = parent.aabbs;
-
-				var data = new LayerData(aabbs, indices);
-				var builder = new BranchBuilder(aabbs, data.Length);
-
-				//Sort indices if requested by parent
-				if (sortAxis >= 0) builder.SortIndices(data, sortAxis);
-
-				return builder.BuildLayer(data);
-			}
-		}
-
-		readonly ref struct LayerData
-		{
-			public LayerData(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, Memory<int> indices)
-			{
-				this.aabbs = aabbs.Span;
-				this.indices = indices.Span;
-				indicesMemory = indices;
-			}
-
-			LayerData(in LayerData source, Range range)
-			{
-				aabbs = source.aabbs;
-				indices = source.indices[range];
-				indicesMemory = source.indicesMemory[range];
-			}
-
-			public readonly ReadOnlySpan<AxisAlignedBoundingBox> aabbs;
-			public readonly Span<int> indices;
-			public readonly Memory<int> indicesMemory;
-
-			public int Length => indices.Length;
-
-			public ref readonly AxisAlignedBoundingBox this[Index index] => ref aabbs[indices[index]];
-
-			public LayerData this[Range range] => new(this, range);
-		}
+		public LayerData this[Range range] => new(this, range);
 	}
 }

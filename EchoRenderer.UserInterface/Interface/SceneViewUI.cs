@@ -11,135 +11,134 @@ using EchoRenderer.Scenic.Preparation;
 using EchoRenderer.Textures.Grid;
 using EchoRenderer.UserInterface.Core.Areas;
 
-namespace EchoRenderer.UserInterface.Interface
+namespace EchoRenderer.UserInterface.Interface;
+
+public class SceneViewUI : AreaUI
 {
-	public class SceneViewUI : AreaUI
+	public SceneViewUI()
 	{
-		public SceneViewUI()
+		transform.LeftPercent = 0.16f;
+		transform.RightPercent = 0.28f;
+		transform.UniformMargins = Theme.LargeMargin;
+
+		engine = new ProgressiveRenderEngine();
+		renderPreview = new RenderPreviewUI();
+
+		Add(renderPreview);
+
+		Profile = new ProgressiveRenderProfile
 		{
-			transform.LeftPercent = 0.16f;
-			transform.RightPercent = 0.28f;
-			transform.UniformMargins = Theme.LargeMargin;
+			Method = new BruteForceWorker(),
+			EpochSample = 2,
+			EpochLength = 24,
+			AdaptiveSample = 35
+		};
 
-			engine = new ProgressiveRenderEngine();
-			renderPreview = new RenderPreviewUI();
-
-			Add(renderPreview);
-
-			Profile = new ProgressiveRenderProfile
-			{
-				Method = new BruteForceWorker(),
-				EpochSample = 2,
-				EpochLength = 24,
-				AdaptiveSample = 35
-			};
-
-			new Thread(LoadScene<SingleBunny>)
-			{
-				IsBackground = true,
-				Name = "Scene Loader"
-			}.Start();
-		}
-
-		public readonly ProgressiveRenderEngine engine;
-		public float RedrawInterval { get; set; } = 0.3f;
-
-		ProgressiveRenderProfile _profile;
-		float _resolutionMultiplier = 0.5f;
-
-		public ProgressiveRenderProfile Profile
+		new Thread(LoadScene<SingleBunny>)
 		{
-			get => _profile;
-			set => _profile = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
-		}
+			IsBackground = true,
+			Name = "Scene Loader"
+		}.Start();
+	}
 
-		public float ResolutionMultiplier
+	public readonly ProgressiveRenderEngine engine;
+	public float RedrawInterval { get; set; } = 0.3f;
+
+	ProgressiveRenderProfile _profile;
+	float _resolutionMultiplier = 0.5f;
+
+	public ProgressiveRenderProfile Profile
+	{
+		get => _profile;
+		set => _profile = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
+	}
+
+	public float ResolutionMultiplier
+	{
+		get => _resolutionMultiplier;
+		set
 		{
-			get => _resolutionMultiplier;
-			set
-			{
-				if (_resolutionMultiplier.AlmostEquals(value)) return;
+			if (_resolutionMultiplier.AlmostEquals(value)) return;
 
-				_resolutionMultiplier = value;
-				CheckResolutionChange();
-			}
-		}
-
-		readonly RenderPreviewUI renderPreview;
-
-		bool requestingRedraw;
-		float lastInterval;
-
-		public override void Update()
-		{
-			base.Update();
-
-			switch (engine.CurrentState)
-			{
-				case ProgressiveRenderEngine.State.waiting:
-				{
-					try
-					{
-						Profile.Validate();
-						engine.Begin(Profile);
-					}
-					catch (Exception)
-					{
-						// ignored
-					}
-
-					break;
-				}
-				case ProgressiveRenderEngine.State.rendering:
-				{
-					float time = (float)Root.application.TotalTime;
-
-					if (requestingRedraw && lastInterval + RedrawInterval < time)
-					{
-						engine.Stop();
-
-						requestingRedraw = false;
-						lastInterval = time;
-					}
-
-					break;
-				}
-			}
-		}
-
-		protected override void Reorient(Float2 position, Float2 dimension)
-		{
-			base.Reorient(position, dimension);
+			_resolutionMultiplier = value;
 			CheckResolutionChange();
 		}
+	}
 
-		public override void Dispose()
+	readonly RenderPreviewUI renderPreview;
+
+	bool requestingRedraw;
+	float lastInterval;
+
+	public override void Update()
+	{
+		base.Update();
+
+		switch (engine.CurrentState)
 		{
-			base.Dispose();
+			case ProgressiveRenderEngine.State.waiting:
+			{
+				try
+				{
+					Profile.Validate();
+					engine.Begin(Profile);
+				}
+				catch (Exception)
+				{
+					// ignored
+				}
 
-			engine.Stop();
-			engine.Dispose();
+				break;
+			}
+			case ProgressiveRenderEngine.State.rendering:
+			{
+				float time = (float)Root.application.TotalTime;
+
+				if (requestingRedraw && lastInterval + RedrawInterval < time)
+				{
+					engine.Stop();
+
+					requestingRedraw = false;
+					lastInterval = time;
+				}
+
+				break;
+			}
 		}
+	}
 
-		public void RequestRedraw() => requestingRedraw = true;
+	protected override void Reorient(Float2 position, Float2 dimension)
+	{
+		base.Reorient(position, dimension);
+		CheckResolutionChange();
+	}
 
-		void CheckResolutionChange()
-		{
-			Int2 resolution = (Dimension * ResolutionMultiplier).Rounded;
-			if (resolution == Profile.RenderBuffer?.size) return;
+	public override void Dispose()
+	{
+		base.Dispose();
 
-			var buffer = new ProgressiveRenderBuffer(resolution);
+		engine.Stop();
+		engine.Dispose();
+	}
 
-			Profile = Profile with { RenderBuffer = buffer };
-			renderPreview.RenderBuffer = buffer;
+	public void RequestRedraw() => requestingRedraw = true;
 
-			RequestRedraw();
-		}
+	void CheckResolutionChange()
+	{
+		Int2 resolution = (Dimension * ResolutionMultiplier).Rounded;
+		if (resolution == Profile.RenderBuffer?.size) return;
 
-		void LoadScene<T>() where T : Scene, new()
-		{
-			var scene = new PreparedScene(new T(), new ScenePrepareProfile());
-			Profile = Profile with { Scene = scene };
-		}
+		var buffer = new ProgressiveRenderBuffer(resolution);
+
+		Profile = Profile with { RenderBuffer = buffer };
+		renderPreview.RenderBuffer = buffer;
+
+		RequestRedraw();
+	}
+
+	void LoadScene<T>() where T : Scene, new()
+	{
+		var scene = new PreparedScene(new T(), new ScenePrepareProfile());
+		Profile = Profile with { Scene = scene };
 	}
 }

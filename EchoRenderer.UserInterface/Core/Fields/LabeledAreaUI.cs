@@ -1,62 +1,61 @@
 ﻿using EchoRenderer.UserInterface.Core.Areas;
 
-namespace EchoRenderer.UserInterface.Core.Fields
+namespace EchoRenderer.UserInterface.Core.Fields;
+
+public class LabeledAreaUI : AreaUI
 {
-	public class LabeledAreaUI : AreaUI
+	public LabeledAreaUI()
 	{
-		public LabeledAreaUI()
+		var left = new AreaUI
 		{
-			var left = new AreaUI
-					   {
-						   transform =
-						   {
-							   RightPercent = 0.6f,
-							   RightMargin = Theme.MediumMargin
-						   },
-						   PanelColor = Theme.PanelColor
-					   };
-
-			label = new LabelUI
-					{
-						transform =
-						{
-							UniformMargins = Theme.SmallMargin,
-							LeftMargin = Theme.MediumMargin
-						},
-						Align = LabelUI.Alignment.left
-					};
-
-			Add(left);
-			left.Add(label);
-		}
-
-		AreaUI _area;
-
-		public AreaUI Area
-		{
-			get => _area;
-			set
+			transform =
 			{
-				if (_area == value) return;
-				_area = value;
+				RightPercent = 0.6f,
+				RightMargin = Theme.MediumMargin
+			},
+			PanelColor = Theme.PanelColor
+		};
 
-				if (value != null)
-				{
-					Add(value);
+		label = new LabelUI
+		{
+			transform =
+			{
+				UniformMargins = Theme.SmallMargin,
+				LeftMargin = Theme.MediumMargin
+			},
+			Align = LabelUI.Alignment.left
+		};
 
-					value.transform.UniformPercents = 0f;
-					value.transform.UniformMargins = 0f;
+		Add(left);
+		left.Add(label);
+	}
 
-					value.transform.LeftPercent = 0.4f;
-				}
+	AreaUI _area;
+
+	public AreaUI Area
+	{
+		get => _area;
+		set
+		{
+			if (_area == value) return;
+			_area = value;
+
+			if (value != null)
+			{
+				Add(value);
+
+				value.transform.UniformPercents = 0f;
+				value.transform.UniformMargins = 0f;
+
+				value.transform.LeftPercent = 0.4f;
 			}
 		}
-
-		public readonly LabelUI label;
 	}
 
-	public static class LabeledAreaUIExtensions
-	{
-		public static LabeledAreaUI Label(this AreaUI area, string label) => new() {label = {Text = label}, Area = area};
-	}
+	public readonly LabelUI label;
+}
+
+public static class LabeledAreaUIExtensions
+{
+	public static LabeledAreaUI Label(this AreaUI area, string label) => new() {label = {Text = label}, Area = area};
 }
