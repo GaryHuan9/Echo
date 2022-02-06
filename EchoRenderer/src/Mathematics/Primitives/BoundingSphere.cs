@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
@@ -27,16 +26,18 @@ namespace EchoRenderer.Mathematics.Primitives;
  *      enclosing the current sphere and the point is computed (or you could say use the points outside the sphere as )
  */
 
-[StructLayout(LayoutKind.Explicit, Size = 16)]
 public readonly struct BoundingSphere
 {
 	public BoundingSphere(ReadOnlySpan<Float3> points)
 	{
 		Assert.IsTrue(points.Length > 2);
 
-		if(points.Length < ExtremalPoints)
+		if (points.Length < ExtremalPoints)
 		{
-			var extremes = new ReadOnlySpan<Float3>(FindExtremalPoints(in points));
+			Span<Float3> extremes = stackalloc Float3[_normals.Length * 2];
+
+			FillExtremes(points, extremes);
+
 			SolveExact(extremes, extremes.Length, out center, out radius);
 			return;
 		}
@@ -44,7 +45,7 @@ public readonly struct BoundingSphere
 		SolveExact(points, points.Length, out center, out radius);
 	}
 
-	public BoundingSphere(in Float3 center, in float radius)
+	public BoundingSphere(in Float3 center, float radius)
 	{
 		this.center = center;
 		this.radius = radius;
@@ -52,37 +53,37 @@ public readonly struct BoundingSphere
 
 	const int ExtremalPoints = 6;
 
-	static readonly Float3[] normals =
+	static readonly Float3[] _normals =
 	{
-		new(1, 0, 0), new(0, 1, 0), new(0, 0, 1)
+		Float3.right, Float3.up, Float3.forward
 	};
 
-	[FieldOffset(0)]  public readonly Float3 center;
-	[FieldOffset(12)] public readonly float  radius;
+	public readonly Float3 center;
+	public readonly float  radius;
 
-	static Float3[] FindExtremalPoints(in ReadOnlySpan<Float3> points)
+	// Finds extremes from given point and fills it into extremes span
+	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)
 	{
 		int current = 0;
-
-		var extremes = new Float3[normals.Length * 2];
-
-		foreach(Float3 normal in normals)
+		
+		foreach (Float3 normal in _normals)
 		{
 			float min = float.PositiveInfinity;
 			float max = float.NegativeInfinity;
 			Float3 min3 = Float3.zero;
 			Float3 max3 = Float3.zero;
 
-			foreach(Float3 point in points)
+			foreach (Float3 point in points)
 			{
 				// do dot product
 				float value = point.Dot(normal);
-				if(value < min)
+
+				if (value < min)
 				{
 					min = value;
 					min3 = point;
 				}
-				if(value > max)
+				if (value > max)
 				{
 					max = value;
 					max3 = point;
@@ -93,18 +94,16 @@ public readonly struct BoundingSphere
 			extremes[++current] = max3;
 			current++;
 		}
-
-		return extremes;
 	}
 
-	static void SolveExact(ReadOnlySpan<Float3> points, in int end, out Float3 center, out float radius, in int? pin1 = null, in int? pin2 = null)
+	static void SolveExact(ReadOnlySpan<Float3> points, int end, out Float3 center, out float radius, in int? pin1 = null, in int? pin2 = null)
 	{
 		int current = 0;
 
 		// Assume the given are correct points
-		if(pin1.HasValue)
+		if (pin1.HasValue)
 		{
-			if(pin2.HasValue) // pin1 && pin 2
+			if (pin2.HasValue) // pin1 && pin 2
 				SolveFromExtremePoints(points[pin1.Value], points[pin2.Value], out center, out radius);
 			else // pin1 only
 				SolveFromExtremePoints(points[++current], points[pin1.Value], out center, out radius);
@@ -116,15 +115,15 @@ public readonly struct BoundingSphere
 		}
 
 		// Double Check, and solve the circle again if out of bounds
-		for(; current < end; ++current)
+		for (; current < end; ++current)
 		{
-			if(InBound(points[current], in center, in radius)) continue;
+			if (InBound(points[current], in center, radius)) continue;
 			// else not in bounds
 
-			if(pin1.HasValue)
+			if (pin1.HasValue)
 			{
-				if(pin2.HasValue) // pin1 && pin2
-					SolveFromCircumCircle(points[pin1.Value], points[pin2.Value], points[current], out center, out radius);
+				if (pin2.HasValue) // pin1 && pin2
+					SolveFromTriangle(points[pin1.Value], points[pin2.Value], points[current], out center, out radius);
 				else // pin1 only
 					SolveExact(points, current, out center, out radius, pin1, current);
 			}
@@ -135,19 +134,19 @@ public readonly struct BoundingSphere
 		}
 	}
 
-	static bool InBound(in Float3 point, in Float3 center, in float radius) => point.SquaredDistance(center) - radius <= 0f;
+	static bool InBound(in Float3 point, in Float3 center, float radius) => point.SquaredDistance(center) - radius <= 0f;
 
-	static void SolveFromCircumCircle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius)
+	static void SolveFromTriangle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius)
 	{
 		Float3 pba = b - a;
 		Float3 pca = c - a;
 		Float3 planeNormal = pba.Cross(pca);
 
-		center = (pba.Dot(pba) * pca - pca.Dot(pca) * pba).Cross(planeNormal) * .5f / planeNormal.Dot(planeNormal) + a;
+		center = (pba.SquaredMagnitude * pca - pca.SquaredMagnitude * pba).Cross(planeNormal) * .5f / planeNormal.SquaredMagnitude + a;
 		radius = center.Distance(a);
 	}
 
-	static void SolveFromExtremePoints(Float3 a, Float3 b, out Float3 center, out float radius)
+	static void SolveFromExtremePoints(in Float3 a, in Float3 b, out Float3 center, out float radius)
 	{
 		center = (a + b) * .5f;
 		radius = (a - b).Magnitude * .5f;
