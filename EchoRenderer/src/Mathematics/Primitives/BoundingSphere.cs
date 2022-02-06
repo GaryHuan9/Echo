@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Mathematics.Primitives;
@@ -29,132 +30,126 @@ namespace EchoRenderer.Mathematics.Primitives;
 [StructLayout(LayoutKind.Explicit, Size = 16)]
 public readonly struct BoundingSphere
 {
-    public BoundingSphere(ReadOnlySpan<Float3> points)
-    {
-        if(points.Length < ExtremalPoints)
-        {
-            var extremes = new ReadOnlySpan<Float3>(FindExtremalPoints(in points));
-            SolveExact(extremes, extremes.Length, out center, out radius);
-            return;
-        }
-        // else
-        SolveExact(points, points.Length, out center, out radius);
-    }
+	public BoundingSphere(ReadOnlySpan<Float3> points)
+	{
+		Assert.IsTrue(points.Length > 2);
 
-    public BoundingSphere(in Float3 center, in float radius)
-    {
-        this.center = center;
-        this.radius = radius;
-    }
+		if(points.Length < ExtremalPoints)
+		{
+			var extremes = new ReadOnlySpan<Float3>(FindExtremalPoints(in points));
+			SolveExact(extremes, extremes.Length, out center, out radius);
+			return;
+		}
+		// else
+		SolveExact(points, points.Length, out center, out radius);
+	}
 
-    const int ExtremalPoints = 6;
+	public BoundingSphere(in Float3 center, in float radius)
+	{
+		this.center = center;
+		this.radius = radius;
+	}
 
-    static readonly Float3[] normals =
-    {
-        new(1, 0, 0), new(0, 1, 0), new(0, 0, 1)
-    };
+	const int ExtremalPoints = 6;
 
-    [FieldOffset(0)]  public readonly Float3 center;
-    [FieldOffset(12)] public readonly float  radius;
+	static readonly Float3[] normals =
+	{
+		new(1, 0, 0), new(0, 1, 0), new(0, 0, 1)
+	};
 
-    static Float3[] FindExtremalPoints(in ReadOnlySpan<Float3> points)
-    {
-        int current = 0;
+	[FieldOffset(0)]  public readonly Float3 center;
+	[FieldOffset(12)] public readonly float  radius;
 
-        var extremes = new Float3[normals.Length * 2];
+	static Float3[] FindExtremalPoints(in ReadOnlySpan<Float3> points)
+	{
+		int current = 0;
 
-        foreach(Float3 normal in normals)
-        {
-            float min = float.PositiveInfinity;
-            float max = float.NegativeInfinity;
-            Float3 min3 = Float3.zero;
-            Float3 max3 = Float3.zero;
+		var extremes = new Float3[normals.Length * 2];
 
-            foreach(Float3 point in points)
-            {
-                // do dot product
-                float value = point.Dot(normal);
-                if(value < min)
-                {
-                    min = value;
-                    min3 = point;
-                }
-                if(value > max)
-                {
-                    max = value;
-                    max3 = point;
-                }
-            }
+		foreach(Float3 normal in normals)
+		{
+			float min = float.PositiveInfinity;
+			float max = float.NegativeInfinity;
+			Float3 min3 = Float3.zero;
+			Float3 max3 = Float3.zero;
 
-            extremes[current] = min3;
-            extremes[++current] = max3;
-            current++;
-        }
+			foreach(Float3 point in points)
+			{
+				// do dot product
+				float value = point.Dot(normal);
+				if(value < min)
+				{
+					min = value;
+					min3 = point;
+				}
+				if(value > max)
+				{
+					max = value;
+					max3 = point;
+				}
+			}
 
-        return extremes;
-    }
+			extremes[current] = min3;
+			extremes[++current] = max3;
+			current++;
+		}
 
-    static void SolveExact(ReadOnlySpan<Float3> points, in int end, out Float3 center, out float radius, in int? pin1 = null, in int? pin2 = null)
-    {
-        int current = 0;
-        
-        // Assume the given are correct points
-        if(pin1.HasValue)
-        {
-            if(pin2.HasValue) // pin1 && pin 2
-            {
-                SolveFromExtremePoints(points[pin1.Value], points[pin2.Value], out center, out radius);
-            }
-            else // pin1 only
-            {
-                SolveFromExtremePoints(points[++current], points[pin1.Value], out center, out radius);
-            }
-        }
-        else // none
-        {
-            SolveFromExtremePoints(points[current], points[++current], out center, out radius);
-            current++;
-        }
+		return extremes;
+	}
 
-        // Double Check, and solve the circle again if out of bounds
-        for(; current < end; ++current)
-        {
-            if(InBound(points[current], in center, in radius)) continue;
-            // else not in bounds
+	static void SolveExact(ReadOnlySpan<Float3> points, in int end, out Float3 center, out float radius, in int? pin1 = null, in int? pin2 = null)
+	{
+		int current = 0;
 
-            if(pin1.HasValue)
-            {
-                if(pin2.HasValue) // pin1 && pin2
-                {
-                    SolveFromCircumCircle(points[pin1.Value], points[pin2.Value], points[current], out center, out radius);
-                }
-                else // pin1 only
-                {
-                    SolveExact(points, current, out center, out radius, pin1, current);
-                }
-            }
-            else // none
-            {
-                SolveExact(points, current, out center, out radius, current, current);
-            }
-        }
-    }
+		// Assume the given are correct points
+		if(pin1.HasValue)
+		{
+			if(pin2.HasValue) // pin1 && pin 2
+				SolveFromExtremePoints(points[pin1.Value], points[pin2.Value], out center, out radius);
+			else // pin1 only
+				SolveFromExtremePoints(points[++current], points[pin1.Value], out center, out radius);
+		}
+		else // none
+		{
+			SolveFromExtremePoints(points[current], points[++current], out center, out radius);
+			current++;
+		}
 
-    static bool InBound(in Float3 point, in Float3 center, in float radius) => point.SquaredDistance(center) - radius <= 0f;
+		// Double Check, and solve the circle again if out of bounds
+		for(; current < end; ++current)
+		{
+			if(InBound(points[current], in center, in radius)) continue;
+			// else not in bounds
 
-    static void SolveFromCircumCircle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius)
-    {
-        Float3 pba = b - a;
-        Float3 pca = c - a;
-        Float3 planeNormal = pba.Cross(pca);
+			if(pin1.HasValue)
+			{
+				if(pin2.HasValue) // pin1 && pin2
+					SolveFromCircumCircle(points[pin1.Value], points[pin2.Value], points[current], out center, out radius);
+				else // pin1 only
+					SolveExact(points, current, out center, out radius, pin1, current);
+			}
+			else // none
+			{
+				SolveExact(points, current, out center, out radius, current, current);
+			}
+		}
+	}
 
-        center = (pba.Dot(pba) * pca - pca.Dot(pca) * pba).Cross(planeNormal) * .5f / planeNormal.Dot(planeNormal) + a;
-        radius = center.Distance(a);
-    }
-    
-    static void SolveFromExtremePoints(Float3 a, Float3 b, out Float3 center, out float radius)
-    {
-        center = (a + b) * .5f;
-        radius = (a - b).Magnitude * .5f;
-    }
+	static bool InBound(in Float3 point, in Float3 center, in float radius) => point.SquaredDistance(center) - radius <= 0f;
+
+	static void SolveFromCircumCircle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius)
+	{
+		Float3 pba = b - a;
+		Float3 pca = c - a;
+		Float3 planeNormal = pba.Cross(pca);
+
+		center = (pba.Dot(pba) * pca - pca.Dot(pca) * pba).Cross(planeNormal) * .5f / planeNormal.Dot(planeNormal) + a;
+		radius = center.Distance(a);
+	}
+
+	static void SolveFromExtremePoints(Float3 a, Float3 b, out Float3 center, out float radius)
+	{
+		center = (a + b) * .5f;
+		radius = (a - b).Magnitude * .5f;
+	}
 }
