@@ -126,7 +126,7 @@ public readonly struct BoundingSphere
             {
                 if(pin2.HasValue) // pin1 && pin2
                 {
-                    SolveFromCircumCircle(points[pin1.Value], points[pin2.Value], points[current]);
+                    SolveFromCircumCircle(points[pin1.Value], points[pin2.Value], points[current], out center, out radius);
                 }
                 else // pin1 only
                 {
@@ -142,9 +142,14 @@ public readonly struct BoundingSphere
 
     static bool InBound(in Float3 point, in Float3 center, in float radius) => point.SquaredDistance(center) - radius <= 0f;
 
-    static void SolveFromCircumCircle(in Float3 a, in Float3 b, in Float3 c)
+    static void SolveFromCircumCircle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius)
     {
-        throw new NotImplementedException("I dunno how XD");
+        Float3 pba = b - a;
+        Float3 pca = c - a;
+        Float3 planeNormal = pba.Cross(pca);
+
+        center = (pba.Dot(pba) * pca - pca.Dot(pca) * pba).Cross(planeNormal) * .5f / planeNormal.Dot(planeNormal) + a;
+        radius = center.Distance(a);
     }
     
     static void SolveFromExtremePoints(Float3 a, Float3 b, out Float3 center, out float radius)
