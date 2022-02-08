@@ -38,11 +38,11 @@ public readonly struct BoundingSphere
 
 			FillExtremes(points, extremes);
 
-			SolveExact(extremes, extremes.Length, out center, out radius);
+			SolveExact(extremes, out center, out radius);
 			return;
 		}
 		// else
-		SolveExact(points, points.Length, out center, out radius);
+		SolveExact(points, out center, out radius);
 	}
 
 	public BoundingSphere(in Float3 center, float radius)
