@@ -65,7 +65,7 @@ public readonly struct BoundingSphere
 	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)
 	{
 		int current = 0;
-		
+
 		foreach (Float3 normal in _normals)
 		{
 			float min = float.PositiveInfinity;
@@ -96,41 +96,30 @@ public readonly struct BoundingSphere
 		}
 	}
 
-	static void SolveExact(ReadOnlySpan<Float3> points, int end, out Float3 center, out float radius, in int? pin1 = null, in int? pin2 = null)
+	static void SolveExact(ReadOnlySpan<Float3> points, out Float3 center, out float radius)
 	{
-		int current = 0;
-
-		// Assume the given are correct points
-		if (pin1.HasValue)
-		{
-			if (pin2.HasValue) // pin1 && pin 2
-				SolveFromExtremePoints(points[pin1.Value], points[pin2.Value], out center, out radius);
-			else // pin1 only
-				SolveFromExtremePoints(points[++current], points[pin1.Value], out center, out radius);
-		}
-		else // none
-		{
-			SolveFromExtremePoints(points[current], points[++current], out center, out radius);
-			current++;
-		}
-
+		SolveFromExtremePoints(points[0], points[1], out center, out radius);
+		
 		// Double Check, and solve the circle again if out of bounds
-		for (; current < end; ++current)
+		for (int current = 2; current < points.Length; ++current)
 		{
 			if (InBound(points[current], in center, radius)) continue;
 			// else not in bounds
 
-			if (pin1.HasValue)
-			{
-				if (pin2.HasValue) // pin1 && pin2
-					SolveFromTriangle(points[pin1.Value], points[pin2.Value], points[current], out center, out radius);
-				else // pin1 only
-					SolveExact(points, current, out center, out radius, pin1, current);
-			}
-			else // none
-			{
-				SolveExact(points, current, out center, out radius, current, current);
-			}
+			SolveExactWithPins(points, current, out center, out radius, current, current);
+		}
+	}
+
+	static void SolveExactWithPins(ReadOnlySpan<Float3> points, int end, out Float3 center, out float radius, int pin1, int pin2)
+	{
+		SolveFromExtremePoints(points[pin1], points[pin2], out center, out radius);
+
+		for (int current = 0; current < end; ++current)
+		{
+			if (InBound(points[current], in center, radius)) continue;
+			// else not in bounds
+
+			SolveFromTriangle(points[pin1], points[pin2], points[current], out center, out radius);
 		}
 	}
 
