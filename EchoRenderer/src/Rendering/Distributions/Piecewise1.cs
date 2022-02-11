@@ -14,9 +14,11 @@ public class Piecewise1
 {
 	public Piecewise1(ReadOnlySpan<float> pdfValues)
 	{
+		Assert.IsFalse(pdfValues.IsEmpty);
+
 		int length = pdfValues.Length;
 		cdfValues = new float[length];
-		lengthR = 1f / length;
+		countR = 1f / length;
 
 		//Find the total sum and initialize cdf
 		double rolling = 0d;
@@ -35,7 +37,7 @@ public class Piecewise1
 			//If the total sum is zero, it means our function has a constant probability of zero, which is
 			//technically not a correct function, so we will handle it like a non-zero constant function.
 
-			for (int i = 0; i < length; i++) cdfValues[i] = FastMath.FMA(i, lengthR, lengthR);
+			for (int i = 0; i < length; i++) cdfValues[i] = FastMath.FMA(i, countR, countR);
 
 			sum = 0f; //Sum is still zero though
 		}
@@ -48,7 +50,7 @@ public class Piecewise1
 		}
 
 		cdfValues[length - 1] = 1f;
-		integral = sum * lengthR;
+		integral = sum * countR;
 	}
 
 	/// <summary>
@@ -67,14 +69,14 @@ public class Piecewise1
 	readonly float[] cdfValues;
 
 	/// <summary>
-	/// The reciprocal of <see cref="Length"/>.
+	/// The reciprocal of <see cref="Count"/>.
 	/// </summary>
-	readonly float lengthR;
+	readonly float countR;
 
 	/// <summary>
 	/// The total number of discrete values in this <see cref="Piecewise1"/>.
 	/// </summary>
-	public int Length => cdfValues.Length;
+	public int Count => cdfValues.Length;
 
 	/// <summary>
 	/// Samples this <see cref="Piecewise1"/> at continuous linear intervals based on <paramref name="distro"/>.
@@ -86,11 +88,11 @@ public class Piecewise1
 		GetBounds(index, out float lower, out float upper);
 
 		//Export values
-		pdf = (upper - lower) * Length;
+		pdf = (upper - lower) * Count;
 		Assert.AreNotEqual(pdf, 0f);
 
 		float shift = Scalars.InverseLerp(lower, upper, distro);
-		return (Distro1)((shift + index) * lengthR);
+		return (Distro1)((shift + index) * countR);
 	}
 
 	/// <summary>
@@ -110,8 +112,8 @@ public class Piecewise1
 	/// </summary>
 	public float ProbabilityDensity(Distro1 distro)
 	{
-		GetBounds(distro.Range(Length), out float lower, out float upper);
-		return (upper - lower) * Length;
+		GetBounds(distro.Range(Count), out float lower, out float upper);
+		return (upper - lower) * Count;
 	}
 
 	/// <summary>
@@ -129,7 +131,7 @@ public class Piecewise1
 	{
 		index = new ReadOnlySpan<float>(cdfValues).BinarySearch(distro.u);
 		if (index < 0) index = ~index;
-		Assert.IsTrue(index < Length);
+		Assert.IsTrue(index < Count);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

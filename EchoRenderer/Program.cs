@@ -39,7 +39,7 @@ public class Program
 		RandomHelper.Seed = 47;
 
 #if DEBUG
-			DebugHelper.LogWarning("Performing render in DEBUG mode");
+		DebugHelper.LogWarning("Performing render in DEBUG mode");
 #endif
 
 		PerformRender();

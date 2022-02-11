@@ -78,13 +78,7 @@ public static class FastMath
 	/// <summary>
 	/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
 	/// </summary>
-	public static void SinCos(float radians, out float sin, out float cos)
-	{
-		//TODO: replace with MathF.SinCos
-
-		sin = MathF.Sin(radians);
-		cos = MathF.Cos(radians);
-	}
+	public static void SinCos(float radians, out float sin, out float cos) => (sin, cos) = MathF.SinCos(radians);
 
 	/// <summary>
 	/// Returns whether <paramref name="value"/> is positive based on <paramref name="epsilon"/>.
