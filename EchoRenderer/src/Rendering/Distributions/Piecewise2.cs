@@ -16,6 +16,8 @@ public class Piecewise2
 	/// </summary>
 	public Piecewise2(ReadOnlySpan<float> function, int width)
 	{
+		Assert.IsFalse(function.IsEmpty);
+
 		//Calculate size and create arrays
 		size = new Int2(width, function.Length / width);
 		Assert.AreEqual(function.Length, size.Product);
