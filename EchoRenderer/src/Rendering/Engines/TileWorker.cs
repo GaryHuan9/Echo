@@ -159,7 +159,7 @@ public class TileWorker : IDisposable
 
 				//Sample radiance
 				Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.half;
-				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), arena);
+				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), profile, arena);
 
 				//Write to pixel
 				bool successful = pixel.Accumulate(sample);
@@ -188,6 +188,6 @@ public class TileWorker : IDisposable
 		dispatchEvent.Dispose();
 	}
 
-	public override int    GetHashCode() => id;
-	public override string ToString()    => $"Tile Worker #{id} {size}x{size}";
+	public override int GetHashCode() => id;
+	public override string ToString() => $"Tile Worker #{id} {size}x{size}";
 }

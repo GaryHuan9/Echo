@@ -28,20 +28,20 @@ public class GeometryLight : IAreaLight
 	Material material;
 
 	/// <inheritdoc/>
-	public Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incident, out float pdf, out float travel)
+	public Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel)
 	{
-		GeometryPoint point = scene.Sample(token, interaction, distro, out pdf);
+		GeometryPoint sampled = scene.Sample(token, point, distro, out pdf);
 
-		incident = point.position - interaction;
+		incident = sampled.position - point;
 
 		travel = incident.Magnitude;
 		float travelR = 1f / travel;
 
 		incident *= travelR;
 
-		return incident.Dot(point.normal) > 0f ? Float3.zero : material.Emission;
+		return incident.Dot(sampled.normal) > 0f ? Float3.zero : material.Emission;
 	}
 
 	/// <inheritdoc/>
-	public float ProbabilityDensity(in Interaction interaction, in Float3 incident) => scene.ProbabilityDensity(token, interaction, incident);
+	public float ProbabilityDensity(in GeometryPoint point, in Float3 incident) => scene.ProbabilityDensity(token, point, incident);
 }

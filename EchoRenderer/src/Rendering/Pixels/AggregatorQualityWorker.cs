@@ -13,9 +13,9 @@ public class AggregatorQualityWorker : PixelWorker
 	long totalCost;
 	long totalSample;
 
-	public override Sample Render(Float2 uv, Arena arena)
+	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
-		PreparedScene scene = arena.profile.Scene;
+		PreparedScene scene = profile.Scene;
 		Ray ray = scene.camera.GetRay(uv);
 
 		int cost = scene.TraceCost(ray);

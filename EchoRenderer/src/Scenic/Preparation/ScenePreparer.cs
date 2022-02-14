@@ -47,7 +47,7 @@ public class ScenePreparer
 	}
 
 	/// <summary>
-	/// If needed prepares <paramref name="material"/> to be ready for rendering along with <see cref="Scene"/>.
+	/// If needed, prepares <paramref name="material"/> to be ready for rendering along with <see cref="Scene"/>.
 	/// </summary>
 	public void PrepareMaterial(Material material)
 	{
