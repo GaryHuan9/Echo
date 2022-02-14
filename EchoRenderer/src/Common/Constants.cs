@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Common;
 
