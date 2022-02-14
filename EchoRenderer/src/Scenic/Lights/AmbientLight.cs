@@ -62,7 +62,7 @@ public class AmbientLight : AreaLightSource
 		return Utilities.ToFloat3(Texture.Evaluate(transformed));
 	}
 
-	public override Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incident, out float pdf, out float travel)
+	public override Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel)
 	{
 		Vector128<float> value = Texture.Sample(distro, out incident, out pdf);
 
@@ -71,7 +71,7 @@ public class AmbientLight : AreaLightSource
 		return Utilities.ToFloat3(value);
 	}
 
-	public override float ProbabilityDensity(in Interaction interaction, in Float3 incident)
+	public override float ProbabilityDensity(in GeometryPoint point, in Float3 incident)
 	{
 		Float3 transformed = worldToLocal * incident;
 		return Texture.ProbabilityDensity(transformed);

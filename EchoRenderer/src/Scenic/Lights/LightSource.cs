@@ -30,7 +30,7 @@ public abstract class LightSource : Entity, ILight
 	public virtual void Prepare(PreparedScene scene) => Intensity = Intensity.Max(Float3.zero);
 
 	/// <inheritdoc/>
-	public abstract Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incident, out float pdf, out float travel);
+	public abstract Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel);
 }
 
 /// <summary>
@@ -40,7 +40,7 @@ public abstract class LightSource : Entity, ILight
 public abstract class AreaLightSource : LightSource, IAreaLight
 {
 	/// <inheritdoc/>
-	public abstract float ProbabilityDensity(in Interaction interaction, in Float3 incident);
+	public abstract float ProbabilityDensity(in GeometryPoint point, in Float3 incident);
 }
 
 /// <summary>
@@ -50,9 +50,9 @@ public abstract class AreaLightSource : LightSource, IAreaLight
 public interface ILight
 {
 	/// <summary>
-	/// Samples the contribution of this <see cref="ILight"/> to <paramref name="interaction"/>.
+	/// Samples the contribution of this <see cref="ILight"/> to <paramref name="point"/>.
 	/// </summary>
-	Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incident, out float pdf, out float travel);
+	Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel);
 }
 
 /// <summary>
@@ -62,7 +62,7 @@ public interface IAreaLight : ILight
 {
 	/// <summary>
 	/// Returns the probability density function (pdf) for <paramref name="incident"/>
-	/// to occur at <paramref name="interaction"/> to this <see cref="IAreaLight"/>.
+	/// to occur at <paramref name="point"/> to this <see cref="IAreaLight"/>.
 	/// </summary>
-	float ProbabilityDensity(in Interaction interaction, in Float3 incident);
+	float ProbabilityDensity(in GeometryPoint point, in Float3 incident);
 }

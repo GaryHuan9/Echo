@@ -16,19 +16,14 @@ public class Arena
 	/// <summary>
 	/// Creates a new <see cref="Arena"/>.
 	/// </summary>
-	public Arena(RenderProfile profile, Distribution distribution)
+	public Arena(Distribution distribution)
 	{
-		Assert.IsNotNull(profile);
 		Assert.IsNotNull(distribution);
-
-		this.profile = profile;
 		this.distribution = distribution;
 	}
 
 	public readonly Allocator allocator = new();
-	public readonly RenderProfile profile;
 	public readonly Distribution distribution;
-	public PreparedScene Scene => profile.Scene;
 
 	IRandom _random;
 
