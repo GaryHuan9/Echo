@@ -4,15 +4,16 @@ using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Mathematics.Randomization;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Rendering.Pixels;
 
 public class AlbedoPixelWorker : PixelWorker
 {
-	public override Sample Render(Float2 uv, Arena arena)
+	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
-		PreparedScene scene = arena.profile.Scene;
+		PreparedScene scene = profile.Scene;
 		IRandom random = arena.Random;
 
 		TraceQuery query = scene.camera.GetRay(uv, random);

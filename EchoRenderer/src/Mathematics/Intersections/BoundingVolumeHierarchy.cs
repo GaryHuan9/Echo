@@ -15,7 +15,7 @@ namespace EchoRenderer.Mathematics.Intersections;
 /// </summary>
 public class BoundingVolumeHierarchy : Aggregator
 {
-	public BoundingVolumeHierarchy(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
+	public BoundingVolumeHierarchy(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens, length => length > 1);
 		int[] indices = CreateIndices(aabbs.Length);
@@ -69,13 +69,13 @@ public class BoundingVolumeHierarchy : Aggregator
 		int length = 1 << (int)depth;
 		if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
 
-		Token* stack0 = stackalloc Token[length];
-		Token* stack1 = stackalloc Token[length];
+		NodeToken* stack0 = stackalloc NodeToken[length];
+		NodeToken* stack1 = stackalloc NodeToken[length];
 
-		Token* next0 = stack0;
-		Token* next1 = stack1;
+		NodeToken* next0 = stack0;
+		NodeToken* next1 = stack1;
 
-		*next0++ = Token.root;
+		*next0++ = NodeToken.root;
 		int head = 0; //Result head
 
 		for (uint i = 0; i < depth; i++)
@@ -112,12 +112,12 @@ public class BoundingVolumeHierarchy : Aggregator
 	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 	unsafe void TraceCore(ref TraceQuery query)
 	{
-		Token* stack = stackalloc Token[maxDepth];
+		NodeToken* stack = stackalloc NodeToken[maxDepth];
 		float* hits = stackalloc float[maxDepth];
 
-		Token* next = stack; //A pointer pointing at the top of the stack
+		NodeToken* next = stack; //A pointer pointing at the top of the stack
 
-		*next++ = Token.root.Next;        //We have already tested with the root before this method is invoked
+		*next++ = NodeToken.root.Next;        //We have already tested with the root before this method is invoked
 		*hits++ = float.NegativeInfinity; //Explicitly initialize intersection distance
 
 		while (next != stack)
@@ -146,7 +146,7 @@ public class BoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-			void Push(float hit, in Token token, ref TraceQuery refQuery)
+			void Push(float hit, in NodeToken token, ref TraceQuery refQuery)
 			{
 				if (hit >= refQuery.distance) return;
 
@@ -165,10 +165,10 @@ public class BoundingVolumeHierarchy : Aggregator
 	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 	unsafe bool OccludeCore(ref OccludeQuery query)
 	{
-		Token* stack = stackalloc Token[maxDepth];
-		Token* next = stack; //A pointer pointing at the top of the stack
+		NodeToken* stack = stackalloc NodeToken[maxDepth];
+		NodeToken* next = stack; //A pointer pointing at the top of the stack
 
-		*next++ = Token.root.Next; //Push the child of the root because we have already tested with the root
+		*next++ = NodeToken.root.Next; //Push the child of the root because we have already tested with the root
 
 		while (next != stack)
 		{
@@ -195,7 +195,7 @@ public class BoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-			bool Push(float hit, in Token token, ref OccludeQuery refQuery)
+			bool Push(float hit, in NodeToken token, ref OccludeQuery refQuery)
 			{
 				if (hit >= refQuery.travel) return false;
 
@@ -214,7 +214,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		return false;
 	}
 
-	int GetTraceCost(in Token token, in Ray ray, ref float distance)
+	int GetTraceCost(in NodeToken token, in Ray ray, ref float distance)
 	{
 		if (token.IsGeometry)
 		{
@@ -247,7 +247,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		return cost;
 	}
 
-	Node CreateNode(BranchBuilder.Node node, ReadOnlySpan<Token> tokens, ref uint nodeIndex, out int depth)
+	Node CreateNode(BranchBuilder.Node node, ReadOnlySpan<NodeToken> tokens, ref uint nodeIndex, out int depth)
 	{
 		if (node.IsLeaf)
 		{
@@ -263,13 +263,13 @@ public class BoundingVolumeHierarchy : Aggregator
 		nodes[child1] = CreateNode(node.child1, tokens, ref nodeIndex, out int depth1);
 
 		depth = Math.Max(depth0, depth1) + 1;
-		return new Node(node.aabb, Token.CreateNode(child0));
+		return new Node(node.aabb, NodeToken.CreateNode(child0));
 	}
 
 	[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
 	readonly struct Node
 	{
-		public Node(in AxisAlignedBoundingBox aabb, in Token token)
+		public Node(in AxisAlignedBoundingBox aabb, in NodeToken token)
 		{
 			this.aabb = aabb;
 			this.token = token;
@@ -282,9 +282,9 @@ public class BoundingVolumeHierarchy : Aggregator
 		[FieldOffset(0)] public readonly AxisAlignedBoundingBox aabb;
 
 		/// <summary>
-		/// This is the <see cref="Token"/> stored in this <see cref="Node"/>, which might represent either the leaf geometry if this <see cref="Token.IsGeometry"/>,
-		/// or the index of the first child of this <see cref="Node"/> if <see cref="Token.IsNode"/> (and the second child can be accessed using <see cref="Token.Next"/>.
+		/// This is the <see cref="NodeToken"/> stored in this <see cref="Node"/>, which might represent either the leaf geometry if this <see cref="NodeToken.IsGeometry"/>,
+		/// or the index of the first child of this <see cref="Node"/> if <see cref="NodeToken.IsNode"/> (and the second child can be accessed using <see cref="NodeToken.Next"/>.
 		/// </summary>
-		[FieldOffset(28)] public readonly Token token;
+		[FieldOffset(28)] public readonly NodeToken token;
 	}
 }

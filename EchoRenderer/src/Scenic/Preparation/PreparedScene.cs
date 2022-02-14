@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
+using EchoRenderer.Rendering.Memory;
 using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Scenic.Lights;
 
@@ -46,7 +48,7 @@ public class PreparedScene
 			if (child.Scale.MinComponent <= 0f) throw new Exception($"Cannot have non-positive scales! '{child.Scale}'");
 		}
 
-		_lightSources = lightsList.ToArray();
+		lightSources = lightsList.ToArray();
 		_ambientLights = ambientList.ToArray();
 
 		preparer = new ScenePreparer(source, profile);
@@ -55,7 +57,12 @@ public class PreparedScene
 		rootInstance = new PreparedInstanceRoot(preparer, source);
 
 		//Prepare lights
-		foreach (LightSource light in LightSources) light.Prepare(this);
+		foreach (LightSource light in lightSources)
+		{
+			light.Prepare(this);
+
+			float luminace = PackedMath.GetLuminance(Utilities.ToVector(light.Power));
+		}
 
 		DebugHelper.Log("Prepared scene");
 	}
@@ -64,10 +71,9 @@ public class PreparedScene
 	public readonly Scene source;
 	public readonly Camera camera;
 
-	readonly LightSource[] _lightSources;
+	readonly LightSource[] lightSources;
 	readonly AmbientLight[] _ambientLights;
 
-	public ReadOnlySpan<LightSource> LightSources => _lightSources;
 	public ReadOnlySpan<AmbientLight> AmbientLights => _ambientLights;
 
 	long _traceCount;
@@ -127,6 +133,24 @@ public class PreparedScene
 		}
 
 		return instance.pack.Interact(query, transform, instance);
+	}
+
+	public ILight PickLight(Arena arena, out float pdf)
+	{
+		//Handle degenerate cases
+		int length = lightSources.Length;
+
+		if (length == 0)
+		{
+			pdf = 0f;
+			return null;
+		}
+
+		//Finds one light to sample
+		pdf = 1f / length;
+
+		throw new NotImplementedException();
+		return lightSources[arena.distribution.NextOne().Range(length)];
 	}
 
 	/// <summary>

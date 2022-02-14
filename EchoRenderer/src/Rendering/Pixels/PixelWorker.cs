@@ -22,21 +22,21 @@ public abstract class PixelWorker
 	/// </summary>
 	public virtual Arena CreateArena(RenderProfile profile, uint seed)
 	{
-		Distribution distribution = SourceDistribution.Replicate();
-
+		var distribution = SourceDistribution.Replicate();
 		distribution.Random = CreateRandom(seed);
-		return new Arena(profile, distribution);
+		return new Arena(distribution);
 	}
 
 	/// <summary>
 	/// Renders a <see cref="Sample"/> at <paramref name="uv"/>.
 	/// </summary>
 	/// <param name="uv">
-	/// The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
-	/// Y should have the same scale as X and it would depend on the aspect ratio.
+	///     The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
+	///     Y should have the same scale as X and it would depend on the aspect ratio.
 	/// </param>
-	/// <param name="arena">The <see cref="Arena"/> to use for this sample.</param>
-	public abstract Sample Render(Float2 uv, Arena arena);
+	/// <param name="profile">The <see cref="RenderProfile"/> to be used.</param>
+	/// <param name="arena">The <see cref="Arena"/> to be used.</param>
+	public abstract Sample Render(Float2 uv, RenderProfile profile, Arena arena);
 
 	/// <summary>
 	/// Invoked once before a new rendering process begins on this <see cref="PixelWorker"/>.

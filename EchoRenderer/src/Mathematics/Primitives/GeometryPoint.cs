@@ -44,4 +44,9 @@ public readonly struct GeometryPoint
 		transform.MultiplyPoint(point.position),
 		transform.MultiplyDirection(point.normal).Normalized
 	);
+
+	/// <summary>
+	/// Implicitly converts to <paramref name="point"/> to <see cref="GeometryPoint.position"/>.
+	/// </summary>
+	public static implicit operator Float3(in GeometryPoint point) => point.position;
 }

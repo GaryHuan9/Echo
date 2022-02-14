@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using CodeHelpers.Threads;
 using EchoRenderer.Mathematics.Intersections;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
@@ -20,6 +20,7 @@ public class PreparedPack
 {
 	public PreparedPack(ScenePreparer preparer, EntityPack pack)
 	{
+		//Collect objects
 		var trianglesList = new ConcurrentList<PreparedTriangle>();
 		var spheresList = new List<PreparedSphere>();
 		var instancesList = new List<PreparedInstance>();
@@ -52,7 +53,7 @@ public class PreparedPack
 
 		trianglesList.EndAdd();
 
-		SubdivideTriangles(trianglesList, preparer.profile);
+		SubdivideTriangles(trianglesList, swatchExtractor, preparer.profile);
 
 		//Extract prepared data
 		triangles = new PreparedTriangle[trianglesList.Count];
@@ -62,45 +63,57 @@ public class PreparedPack
 		geometryCounts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
 		//Construct aggregator
-		Token[] tokens = new Token[geometryCounts.Total];
-		var aabbs = new AxisAlignedBoundingBox[tokens.Length];
+		Span<int> lengths = stackalloc int[swatchExtractor.Count + 1];
 
-		Parallel.For(0, triangles.Length, FillTriangles);
-		Parallel.For(0, spheres.Length, FillSpheres);
-		Parallel.For(0, instances.Length, FillInstances);
-
-		aggregator = preparer.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
-
-		void FillTriangles(int index)
+		for (int i = 0; i < lengths.Length; i++)
 		{
-			var triangle = trianglesList[index];
-			triangles[index] = triangle;
-
-			aabbs[index] = triangle.AABB;
-			tokens[index] = Token.CreateTriangle((uint)index);
+			// lengths[i] = swatchExtractor.GetRegistrationCount(i);
 		}
 
-		void FillSpheres(int index)
-		{
-			var sphere = spheresList[index];
-			spheres[index] = sphere;
+		throw new NotImplementedException();
 
-			int target = triangles.Length + index;
-
-			aabbs[target] = sphere.AABB;
-			tokens[target] = Token.CreateSphere((uint)index);
-		}
-
-		void FillInstances(int index)
-		{
-			var instance = instancesList[index];
-			instances[index] = instance;
-
-			int target = triangles.Length + spheres.Length + index;
-
-			aabbs[target] = instance.AABB;
-			tokens[target] = Token.CreateInstance((uint)index);
-		}
+		//Collect tokens
+		// var tokens = CreateTokenArray(swatchExtractor, )
+		// var aabbs = new AxisAlignedBoundingBox[tokens];
+		//
+		// Parallel.For(0, triangles.Length, FillTriangles);
+		// Parallel.For(0, spheres.Length, FillSpheres);
+		// Parallel.For(0, instances.Length, FillInstances);
+		//
+		// aggregator = preparer.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
+		//
+		// void FillTriangles(int index)
+		// {
+		// 	var triangle = trianglesList[index];
+		// 	triangles[index] = triangle;
+		//
+		// 	tokens.Add()
+		//
+		// 	aabbs[index] = triangle.AABB;
+		// 	tokens[index] = NodeToken.CreateTriangle((uint)index);
+		// }
+		//
+		// void FillSpheres(int index)
+		// {
+		// 	var sphere = spheresList[index];
+		// 	spheres[index] = sphere;
+		//
+		// 	int target = triangles.Length + index;
+		//
+		// 	aabbs[target] = sphere.AABB;
+		// 	tokens[target] = NodeToken.CreateSphere((uint)index);
+		// }
+		//
+		// void FillInstances(int index)
+		// {
+		// 	var instance = instancesList[index];
+		// 	instances[index] = instance;
+		//
+		// 	int target = triangles.Length + spheres.Length + index;
+		//
+		// 	aabbs[target] = instance.AABB;
+		// 	tokens[target] = NodeToken.CreateInstance((uint)index);
+		// }
 	}
 
 	public readonly Aggregator aggregator;
@@ -115,7 +128,7 @@ public class PreparedPack
 	/// Calculates the intersection between <paramref name="query"/> and the object represented by <paramref name="token"/>.
 	/// The intersection is only recorded if it occurs before the original <paramref name="query.distance"/>.
 	/// </summary>
-	public void Trace(ref TraceQuery query, in Token token)
+	public void Trace(ref TraceQuery query, in NodeToken token)
 	{
 		Assert.IsTrue(token.IsGeometry);
 		query.current.Geometry = token;
@@ -152,7 +165,7 @@ public class PreparedPack
 	/// <summary>
 	/// Calculates and returns whether <paramref name="query"/> is occluded by the object represented by <paramref name="token"/>.
 	/// </summary>
-	public bool Occlude(ref OccludeQuery query, in Token token)
+	public bool Occlude(ref OccludeQuery query, in NodeToken token)
 	{
 		Assert.IsTrue(token.IsGeometry);
 		query.current.Geometry = token;
@@ -179,7 +192,7 @@ public class PreparedPack
 	/// <summary>
 	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
 	/// </summary>
-	public int GetTraceCost(in Ray ray, ref float distance, in Token token)
+	public int GetTraceCost(in Ray ray, ref float distance, in NodeToken token)
 	{
 		Assert.IsTrue(token.IsGeometry);
 
@@ -208,7 +221,7 @@ public class PreparedPack
 	/// <inheritdoc cref="PreparedScene.Interact"/>
 	public Interaction Interact(in TraceQuery query, in Float4x4 transform, PreparedInstance instance)
 	{
-		Token token = query.token.Geometry;
+		NodeToken token = query.token.Geometry;
 
 		Assert.IsTrue(token.IsGeometry);
 		Assert.AreEqual(instance.pack, this);
@@ -247,7 +260,7 @@ public class PreparedPack
 	/// <inheritdoc cref="PreparedScene.Sample"/>
 	/// NOTE: this method functions according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
-	public GeometryPoint Sample(in Token token, in Float3 origin, Distro2 distro, out float pdf)
+	public GeometryPoint Sample(in NodeToken token, in Float3 origin, Distro2 distro, out float pdf)
 	{
 		Assert.IsTrue(token.IsGeometry);
 
@@ -270,7 +283,7 @@ public class PreparedPack
 	/// <inheritdoc cref="PreparedScene.ProbabilityDensity"/>
 	/// NOTE: this method functions according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
-	public float ProbabilityDensity(in Token token, in Float3 origin, in Float3 incident)
+	public float ProbabilityDensity(in NodeToken token, in Float3 origin, in Float3 incident)
 	{
 		Assert.IsTrue(token.IsGeometry);
 
@@ -292,37 +305,62 @@ public class PreparedPack
 	/// <summary>
 	/// Divides large triangles for better space partitioning.
 	/// </summary>
-	static void SubdivideTriangles(ConcurrentList<PreparedTriangle> triangles, ScenePrepareProfile profile)
+	static void SubdivideTriangles(ConcurrentList<PreparedTriangle> triangles, SwatchExtractor extractor, ScenePrepareProfile profile)
 	{
 		if (profile.FragmentationMaxIteration == 0) return;
 
-		double totalArea = 0d;
-
-		Parallel.ForEach(triangles, triangle => InterlockedHelper.Add(ref totalArea, triangle.Area));
+		double totalArea = triangles.AsParallel().Sum(triangle => (double)triangle.Area);
 		float threshold = (float)(totalArea / triangles.Count * profile.FragmentationThreshold);
 
-		using var _ = triangles.BeginAdd();
+		using (triangles.BeginAdd()) Parallel.For(0, triangles.Count, SubdivideSingle);
 
-		Parallel.For(0, triangles.Count, index => SubdivideTriangle(triangles, ref triangles[index], threshold, profile.FragmentationMaxIteration));
+		void SubdivideSingle(int index)
+		{
+			ref PreparedTriangle triangle = ref triangles[index];
+			int maxIteration = profile.FragmentationMaxIteration;
+
+			int count = SubdivideTriangle(triangles, ref triangle, threshold, maxIteration);
+			if (count != 0) extractor.Register(triangle.materialToken, count);
+		}
 	}
 
-	static void SubdivideTriangle(ConcurrentList<PreparedTriangle> triangles, ref PreparedTriangle triangle, float threshold, int maxIteration)
+	static int SubdivideTriangle(ConcurrentList<PreparedTriangle> triangles, ref PreparedTriangle triangle, float threshold, int maxIteration)
 	{
 		float multiplier = MathF.Log2(triangle.Area / threshold);
 		int iteration = Math.Min(multiplier.Ceil(), maxIteration);
-		if (iteration <= 0) return;
+		if (iteration <= 0) return 0;
 
-		int subdivision = 1 << (iteration * 2);
-		Span<PreparedTriangle> divided = stackalloc PreparedTriangle[subdivision];
+		int count = 1 << (iteration * 2);
+		Span<PreparedTriangle> divided = stackalloc PreparedTriangle[count];
 
 		triangle.GetSubdivided(divided, iteration);
-
 		triangle = divided[0];
-		for (int i = 1; i < subdivision; i++) triangles.Add(divided[i]);
+
+		for (int i = 1; i < count; i++) triangles.Add(divided[i]);
+
+		return count;
+	}
+
+	static TokenArray CreateTokenArray(SwatchExtractor extractor, int instanceCount)
+	{
+		bool hasInstance = instanceCount > 0;
+		int materialCount = extractor.Count;
+
+		Span<int> lengths = stackalloc int[materialCount + (hasInstance ? 0 : 1)];
+
+		for (int i = 0; i < materialCount; i++)
+		{
+			uint materialToken = (uint)i;
+			lengths[i] = extractor.GetRegistrationCount(materialToken);
+		}
+
+		if (hasInstance) lengths[^1] = instanceCount;
+
+		return new TokenArray(lengths);
 	}
 
 	/// <summary>
 	/// Handles tokens of <see cref="PreparedInstance"/>, which is invalid since tokens should be resolved to pure geometry.
 	/// </summary>
-	static Exception NotBasePackException([CallerMemberName] string name = default) => new($"{name} should be invoked on the base {nameof(PreparedPack)}, not one with a token that is a {nameof(Token.IsInstance)}!");
+	static Exception NotBasePackException([CallerMemberName] string name = default) => new($"{name} should be invoked on the base {nameof(PreparedPack)}, not one with a token that is a {nameof(NodeToken.IsInstance)}!");
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
+using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Scenic.Instancing;
 
 namespace EchoRenderer.Scenic.Preparation;
@@ -51,6 +52,8 @@ public class PreparedInstance
 
 	readonly float forwardScale = 1f; //The parent to local scale multiplier
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
+
+	readonly Piecewise1 powerDistribution;
 
 	/// <summary>
 	/// Processes <paramref name="query"/>.
@@ -112,15 +115,6 @@ public class PreparedInstance
 		//Restore distance back to parent space
 		distance *= inverseScale;
 		return cost;
-	}
-
-	/// <summary>
-	/// Transforms <paramref name="direction"/> from local space to parent space.
-	/// NOTE: this might apply a uniformed scaling to <paramref name="direction"/>.
-	/// </summary>
-	public void TransformInverse(ref Float3 direction)
-	{
-		direction = inverseTransform.MultiplyDirection(direction);
 	}
 
 	/// <summary>

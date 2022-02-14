@@ -18,7 +18,7 @@ namespace EchoRenderer.Mathematics.Intersections;
 /// </summary>
 public class QuadBoundingVolumeHierarchy : Aggregator
 {
-	public QuadBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
+	public QuadBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens, length => length > 1);
 		int[] indices = CreateIndices(aabbs.Length);
@@ -53,7 +53,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 	public override bool Occlude(ref OccludeQuery query) => OccludeCore(ref query);
 
-	public override int TraceCost(in Ray ray, ref float distance) => GetTraceCost(Token.root, ray, ref distance);
+	public override int TraceCost(in Ray ray, ref float distance) => GetTraceCost(NodeToken.root, ray, ref distance);
 
 	public override unsafe int GetHashCode()
 	{
@@ -76,13 +76,13 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		//Thus, we must carefully reduce the value of depth to make sure that we never exceed the span size
 		depth = depth / 2 - 1;
 
-		Token* stack0 = stackalloc Token[length];
-		Token* stack1 = stackalloc Token[length];
+		NodeToken* stack0 = stackalloc NodeToken[length];
+		NodeToken* stack1 = stackalloc NodeToken[length];
 
-		Token* next0 = stack0;
-		Token* next1 = stack1;
+		NodeToken* next0 = stack0;
+		NodeToken* next1 = stack1;
 
-		*next0++ = Token.root;
+		*next0++ = NodeToken.root;
 		int head = 0; //Result head
 
 		for (int i = 0; i < depth; i++)
@@ -93,7 +93,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 				for (int j = 0; j < Width; j++)
 				{
-					ref readonly Token child = ref node.token4[j];
+					ref readonly NodeToken child = ref node.token4[j];
 
 					if (child.IsEmpty) continue;
 					if (child.IsNode) *next1++ = child;
@@ -113,7 +113,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 			for (int i = 0; i < Width; i++)
 			{
-				ref readonly Token child = ref node.token4[i];
+				ref readonly NodeToken child = ref node.token4[i];
 				if (!child.IsEmpty) span[head++] = node.aabb4[i];
 			}
 		}
@@ -125,12 +125,12 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 	unsafe void TraceCore(ref TraceQuery query)
 	{
-		Token* stack = stackalloc Token[stackSize];
+		NodeToken* stack = stackalloc NodeToken[stackSize];
 		float* hits = stackalloc float[stackSize];
 
-		Token* next = stack;
+		NodeToken* next = stack;
 
-		*next++ = Token.root;
+		*next++ = NodeToken.root;
 		*hits++ = 0f;
 
 		bool* orders = stackalloc bool[Width]
@@ -200,11 +200,11 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-			void Push(in Vector128<float> hit4, in Token4 child4, int offset, ref TraceQuery refQuery)
+			void Push(in Vector128<float> hit4, in NodeToken4 child4, int offset, ref TraceQuery refQuery)
 			{
 				float hit = hit4.GetElement(offset);
 				if (hit >= refQuery.distance) return;
-				ref readonly Token token = ref child4[offset];
+				ref readonly NodeToken token = ref child4[offset];
 
 				if (token.IsGeometry)
 				{
@@ -225,10 +225,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 	unsafe bool OccludeCore(ref OccludeQuery query)
 	{
-		Token* stack = stackalloc Token[stackSize];
+		NodeToken* stack = stackalloc NodeToken[stackSize];
 
-		Token* next = stack;
-		*next++ = Token.root;
+		NodeToken* next = stack;
+		*next++ = NodeToken.root;
 
 		bool* orders = stackalloc bool[Width]
 		{
@@ -293,11 +293,11 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-			bool Push(in Vector128<float> hit4, in Token4 child4, int offset, ref OccludeQuery refQuery)
+			bool Push(in Vector128<float> hit4, in NodeToken4 child4, int offset, ref OccludeQuery refQuery)
 			{
 				float hit = hit4.GetElement(offset);
 				if (hit >= refQuery.travel) return false;
-				ref readonly Token token = ref child4[offset];
+				ref readonly NodeToken token = ref child4[offset];
 
 				if (token.IsGeometry) return pack.Occlude(ref refQuery, token); //Child is leaf
 
@@ -310,7 +310,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		return false;
 	}
 
-	int GetTraceCost(in Token token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
+	int GetTraceCost(in NodeToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 	{
 		if (token.IsEmpty || intersection >= distance) return 0;
 		if (token.IsGeometry) return pack.GetTraceCost(ray, ref distance, token);
@@ -342,7 +342,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		return cost;
 	}
 
-	int GetTraceCost2(bool order, int offset, in Token4 child4, in Vector128<float> intersections, in Ray ray, ref float distance)
+	int GetTraceCost2(bool order, int offset, in NodeToken4 child4, in Vector128<float> intersections, in Ray ray, ref float distance)
 	{
 		int cost = 0;
 
@@ -360,23 +360,23 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		return cost;
 	}
 
-	Node CreateNode(BuildNode buildNode, ReadOnlySpan<Token> tokens, ref uint nodeIndex, out int depth)
+	Node CreateNode(BuildNode buildNode, ReadOnlySpan<NodeToken> tokens, ref uint nodeIndex, out int depth)
 	{
 		Assert.IsNotNull(buildNode.child);
 		BuildNode current = buildNode.child;
 
-		Span<Token> token4 = stackalloc Token[Width];
+		Span<NodeToken> token4 = stackalloc NodeToken[Width];
 
 		depth = 0;
 
 		for (int i = 0; i < Width; i++)
 		{
-			Token nodeToken;
+			NodeToken nodeToken;
 			int nodeDepth;
 
 			if (current.IsEmpty)
 			{
-				nodeToken = Token.empty;
+				nodeToken = NodeToken.empty;
 				nodeDepth = 0;
 			}
 			else if (current.IsLeaf)
@@ -390,7 +390,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 				ref Node node = ref nodes[index];
 
 				node = CreateNode(current, tokens, ref nodeIndex, out nodeDepth);
-				nodeToken = Token.CreateNode(index);
+				nodeToken = NodeToken.CreateNode(index);
 			}
 
 			token4[i] = nodeToken;
@@ -409,7 +409,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	[StructLayout(LayoutKind.Explicit, Size = 128)]
 	readonly struct Node
 	{
-		public Node(BuildNode node, ReadOnlySpan<Token> token4)
+		public Node(BuildNode node, ReadOnlySpan<NodeToken> token4)
 		{
 			Assert.IsNotNull(node.child);
 			BuildNode child = node.child;
@@ -420,7 +420,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			ref readonly var aabb3 = ref GetAABB(ref child);
 
 			aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
-			this.token4 = new Token4(token4);
+			this.token4 = new NodeToken4(token4);
 
 			axisMajor = node.axisMajor;
 			axisMinor0 = node.axisMinor0;
@@ -439,13 +439,13 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		}
 
 		/// <summary>
-		/// Static check to ensure our currently layout is correctly updated if <see cref="Token4"/> size is changed.
+		/// Static check to ensure our currently layout is correctly updated if <see cref="NodeToken4"/> size is changed.
 		/// </summary>
 		static unsafe Node()
 		{
-			int size = sizeof(Token4);
+			int size = sizeof(NodeToken4);
 
-			if (size is Width * Token.Size and 16) return;
+			if (size is Width * NodeToken.Size and 16) return;
 			throw new Exception("Invalid layout or size!");
 		}
 
@@ -455,10 +455,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
 
 		/// <summary>
-		/// The <see cref="Token"/> representing the four branches off from this <see cref="Node"/>,
+		/// The <see cref="NodeToken"/> representing the four branches off from this <see cref="Node"/>,
 		/// which is either a leaf geometry object or another <see cref="Node"/> child branch.
 		/// </summary>
-		[FieldOffset(096)] public readonly Token4 token4;
+		[FieldOffset(096)] public readonly NodeToken4 token4;
 
 		/// <summary>
 		/// Unused memory padding.
