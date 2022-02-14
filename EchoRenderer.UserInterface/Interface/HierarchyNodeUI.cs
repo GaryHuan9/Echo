@@ -1,4 +1,4 @@
-﻿using EchoRenderer.Scenic;
+﻿using EchoRenderer.Core.Scenic;
 using EchoRenderer.UserInterface.Core.Areas;
 
 namespace EchoRenderer.UserInterface.Interface;

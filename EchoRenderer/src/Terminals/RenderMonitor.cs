@@ -1,10 +1,10 @@
 using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Scenic.Geometries;
-using EchoRenderer.Scenic.Preparation;
-using EchoRenderer.Textures.Grid;
+using EchoRenderer.Core.Rendering.Engines;
+using EchoRenderer.Core.Scenic.Geometries;
+using EchoRenderer.Core.Scenic.Preparation;
+using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Terminals;
 
