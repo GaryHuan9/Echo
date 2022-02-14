@@ -2,13 +2,12 @@
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Rendering.Engines;
-using EchoRenderer.Rendering.Pixels;
-using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Scenic;
-using EchoRenderer.Scenic.Examples;
-using EchoRenderer.Scenic.Preparation;
-using EchoRenderer.Textures.Grid;
+using EchoRenderer.Core.Rendering.Engines;
+using EchoRenderer.Core.Rendering.Pixels;
+using EchoRenderer.Core.Scenic;
+using EchoRenderer.Core.Scenic.Examples;
+using EchoRenderer.Core.Scenic.Preparation;
+using EchoRenderer.Core.Texturing.Grid;
 using EchoRenderer.UserInterface.Core.Areas;
 
 namespace EchoRenderer.UserInterface.Interface;

@@ -4,7 +4,8 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using EchoRenderer.Mathematics.Primitives;
+using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Core.Aggregation.Acceleration;
 
 namespace EchoRenderer.Experimental;
 
