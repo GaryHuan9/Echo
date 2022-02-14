@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using CodeHelpers.Mathematics;
-using EchoRenderer.IO;
-using EchoRenderer.Mathematics.Intersections;
-using EchoRenderer.Mathematics.Primitives;
-using EchoRenderer.Mathematics.Randomization;
-using EchoRenderer.Rendering.Materials;
-using EchoRenderer.Rendering.Profiles;
-using EchoRenderer.Scenic;
-using EchoRenderer.Scenic.Geometries;
-using EchoRenderer.Scenic.Preparation;
+using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Mathematics.Randomization;
+using EchoRenderer.Core.Aggregation;
+using EchoRenderer.Core.Aggregation.Acceleration;
+using EchoRenderer.Core.Aggregation.Primitives;
+using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Scenic;
+using EchoRenderer.Core.Scenic.Geometries;
+using EchoRenderer.Core.Scenic.Preparation;
+using EchoRenderer.InOut;
 
 namespace EchoRenderer.Experimental;
 

@@ -1,5 +1,5 @@
 using System;
-using EchoRenderer.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions;
 using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests;
