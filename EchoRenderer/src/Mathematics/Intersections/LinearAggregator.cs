@@ -13,7 +13,7 @@ namespace EchoRenderer.Mathematics.Intersections;
 /// </summary>
 public class LinearAggregator : Aggregator
 {
-	public LinearAggregator(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens) : base(pack)
+	public LinearAggregator(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens);
 
@@ -47,7 +47,7 @@ public class LinearAggregator : Aggregator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections.GetElement(i) >= query.distance) continue;
-				ref readonly Token token = ref node.token4[i];
+				ref readonly NodeToken token = ref node.token4[i];
 				pack.Trace(ref query, token);
 			}
 		}
@@ -62,7 +62,7 @@ public class LinearAggregator : Aggregator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections.GetElement(i) >= query.travel) continue;
-				ref readonly Token token = ref node.token4[i];
+				ref readonly NodeToken token = ref node.token4[i];
 				if (pack.Occlude(ref query, token)) return true;
 			}
 		}
@@ -81,7 +81,7 @@ public class LinearAggregator : Aggregator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections.GetElement(i) >= distance) continue;
-				ref readonly Token token = ref node.token4[i];
+				ref readonly NodeToken token = ref node.token4[i];
 				cost += pack.GetTraceCost(ray, ref distance, token);
 			}
 		}
@@ -168,13 +168,13 @@ public class LinearAggregator : Aggregator
 
 	readonly struct Node
 	{
-		public Node(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
+		public Node(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens)
 		{
 			aabb4 = new AxisAlignedBoundingBox4(aabbs);
-			token4 = new Token4(tokens);
+			token4 = new NodeToken4(tokens);
 		}
 
 		public readonly AxisAlignedBoundingBox4 aabb4;
-		public readonly Token4 token4;
+		public readonly NodeToken4 token4;
 	}
 }

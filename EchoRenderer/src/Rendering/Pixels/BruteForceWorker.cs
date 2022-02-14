@@ -2,6 +2,7 @@
 using EchoRenderer.Common;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Rendering.Scattering;
 using EchoRenderer.Scenic.Lights;
 
@@ -9,19 +10,19 @@ namespace EchoRenderer.Rendering.Pixels;
 
 public class BruteForceWorker : PixelWorker
 {
-	public override Sample Render(Float2 uv, Arena arena)
+	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
 		Float3 energy = Float3.one;
 		Float3 radiance = Float3.zero;
 
-		TraceQuery query = arena.Scene.camera.GetRay(uv, arena.Random);
+		TraceQuery query = profile.Scene.camera.GetRay(uv, arena.Random);
 
-		for (int bounce = 0; bounce < arena.profile.BounceLimit; bounce++)
+		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
 		{
-			if (!arena.Scene.Trace(ref query)) break;
+			if (!profile.Scene.Trace(ref query)) break;
 			using var _ = arena.allocator.Begin();
 
-			Interaction interaction = arena.Scene.Interact(query);
+			Interaction interaction = profile.Scene.Interact(query);
 			interaction.shade.material.Scatter(ref interaction, arena);
 
 			if (interaction.bsdf == null)
@@ -43,7 +44,7 @@ public class BruteForceWorker : PixelWorker
 
 		if (energy.PositiveRadiance())
 		{
-			foreach (AmbientLight ambient in arena.Scene.AmbientLights) radiance += energy * ambient.Evaluate(query.ray.direction);
+			foreach (AmbientLight ambient in profile.Scene.AmbientLights) radiance += energy * ambient.Evaluate(query.ray.direction);
 		}
 
 		return radiance;

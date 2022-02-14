@@ -5,25 +5,29 @@ using EchoRenderer.Mathematics;
 using EchoRenderer.Mathematics.Primitives;
 using EchoRenderer.Rendering.Distributions;
 using EchoRenderer.Rendering.Memory;
+using EchoRenderer.Rendering.Profiles;
 using EchoRenderer.Rendering.Scattering;
 using EchoRenderer.Scenic.Lights;
+using EchoRenderer.Scenic.Preparation;
 
 namespace EchoRenderer.Rendering.Pixels;
 
 public class PathTraceWorker : PixelWorker
 {
-	public override Sample Render(Float2 uv, Arena arena)
+	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
+		PreparedScene scene = profile.Scene;
+
 		Float3 energy = Float3.one;
 		Float3 radiance = Float3.zero;
 
 		bool specularBounce = false;
 
-		TraceQuery query = arena.Scene.camera.GetRay(uv);
+		TraceQuery query = scene.camera.GetRay(uv);
 
 		for (int bounce = 0;; bounce++)
 		{
-			bool intersected = arena.Scene.Trace(ref query);
+			bool intersected = scene.Trace(ref query);
 
 			if (bounce == 0 || specularBounce)
 			{
@@ -32,18 +36,18 @@ public class PathTraceWorker : PixelWorker
 				if (intersected) { }
 				else
 				{
-					foreach (AmbientLight ambient in arena.Scene.AmbientLights)
+					foreach (AmbientLight ambient in scene.AmbientLights)
 					{
 						radiance += energy * ambient.Evaluate(query.ray.direction);
 					}
 				}
 			}
 
-			if (!intersected || bounce > arena.profile.BounceLimit) break;
+			if (!intersected || bounce > profile.BounceLimit) break;
 
 			using var _ = arena.allocator.Begin();
 
-			Interaction interaction = arena.Scene.Interact(query);
+			Interaction interaction = scene.Interact(query);
 			interaction.shade.material.Scatter(ref interaction, arena);
 
 			if (interaction.bsdf == null)
@@ -69,10 +73,10 @@ public class PathTraceWorker : PixelWorker
 
 			if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) break;
 
-			LightSource source = FindLight(interaction, arena, out float pdfLight);
+			ILight source = scene.PickLight(arena, out float pdfLight);
 
-			Float3 light = ImportanceSampleLight(interaction, source, arena);
-			light += ImportanceSampleBSDF(interaction, source, arena);
+			Float3 light = ImportanceSampleLight(interaction, source, scene, arena);
+			light += ImportanceSampleBSDF(interaction, source, scene, arena);
 
 			radiance += 1f / pdfLight * energy * light;
 
@@ -89,35 +93,35 @@ public class PathTraceWorker : PixelWorker
 		return radiance;
 	}
 
-	/// <summary>
-	/// Returns a <see cref="LightSource"/> in <see cref="Arena.Scene"/> and outputs its <paramref name="pdf"/>.
-	/// </summary>
-	static LightSource FindLight(in Interaction interaction, Arena arena, out float pdf)
-	{
-		//Handle degenerate cases
-		var sources = arena.Scene.LightSources;
-		int length = sources.Length;
-
-		if (length == 0)
-		{
-			pdf = 0f;
-			return null;
-		}
-
-		//Finds one light to sample
-		pdf = 1f / length;
-		return sources[arena.distribution.NextOne().Range(length)];
-	}
+	// /// <summary>
+	// /// Returns a <see cref="LightSource"/> in <see cref="Arena.Scene"/> and outputs its <paramref name="pdf"/>.
+	// /// </summary>
+	// static LightSource FindLight(in Interaction interaction, Arena arena, out float pdf)
+	// {
+	// 	//Handle degenerate cases
+	// 	var sources = arena.Scene.lightSources;
+	// 	int length = sources.Length;
+	//
+	// 	if (length == 0)
+	// 	{
+	// 		pdf = 0f;
+	// 		return null;
+	// 	}
+	//
+	// 	//Finds one light to sample
+	// 	pdf = 1f / length;
+	// 	return sources[arena.distribution.NextOne().Range(length)];
+	// }
 
 	/// <summary>
 	/// Importance samples <paramref name="light"/> at <paramref name="interaction"/> and returns the combined radiance.
 	/// </summary>
-	static Float3 ImportanceSampleLight(in Interaction interaction, ILight light, Arena arena)
+	static Float3 ImportanceSampleLight(in Interaction interaction, ILight light, PreparedScene scene, Arena arena)
 	{
 		//Sample light source
 		Float3 emission = light.Sample
 		(
-			interaction, arena.distribution.NextTwo(),
+			interaction.point, arena.distribution.NextTwo(),
 			out Float3 incident, out float pdf, out float travel
 		);
 
@@ -131,7 +135,7 @@ public class PathTraceWorker : PixelWorker
 		//Conditionally terminate if radiance is non-positive
 		if (!scatter.PositiveRadiance()) return Float3.zero;
 		var query = interaction.SpawnOcclude(incident, travel);
-		if (arena.Scene.Occlude(ref query)) return Float3.zero;
+		if (scene.Occlude(ref query)) return Float3.zero;
 
 		//Calculate final radiance
 		float pdfScatter = interaction.bsdf.ProbabilityDensity(outgoing, incident);
@@ -142,7 +146,7 @@ public class PathTraceWorker : PixelWorker
 	/// <summary>
 	/// Importance samples <paramref name="interaction.bsdf"/> with <paramref name="light"/> and returns the combined radiance.
 	/// </summary>
-	static Float3 ImportanceSampleBSDF(in Interaction interaction, LightSource light, Arena arena)
+	static Float3 ImportanceSampleBSDF(in Interaction interaction, ILight light, PreparedScene scene, Arena arena)
 	{
 		//TODO: sort this mess
 
@@ -159,7 +163,7 @@ public class PathTraceWorker : PixelWorker
 
 		if (!sampledType.Any(FunctionType.specular))
 		{
-			float pdfLight = areaLight.ProbabilityDensity(interaction, incident);
+			float pdfLight = areaLight.ProbabilityDensity(interaction.point, incident);
 			if (!FastMath.Positive(pdfLight)) return Float3.zero;
 			weight = PowerHeuristic(pdf, pdfLight);
 		}
@@ -168,7 +172,7 @@ public class PathTraceWorker : PixelWorker
 
 		Float3 emission = Float3.zero;
 
-		if (arena.Scene.Trace(ref query))
+		if (scene.Trace(ref query))
 		{
 			//TODO: evaluate light at intersection if area light is our source
 		}

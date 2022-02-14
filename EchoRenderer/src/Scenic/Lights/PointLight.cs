@@ -9,11 +9,11 @@ public class PointLight : LightSource
 {
 	public override Float3 Power => 4f * Scalars.PI * Intensity;
 
-	public override Float3 Sample(in Interaction interaction, Distro2 distro, out Float3 incident, out float pdf, out float travel)
+	public override Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel)
 	{
-		Float3 difference = Position - interaction;
+		Float3 offset = Position - point;
 
-		travel = difference.Magnitude;
+		travel = offset.Magnitude;
 		float travelR = 1f / travel;
 
 		if (FastMath.AlmostZero(travel))
@@ -25,7 +25,7 @@ public class PointLight : LightSource
 
 		pdf = 1f;
 
-		incident = difference * travelR;
+		incident = offset * travelR;
 		return Intensity * travelR * travelR;
 	}
 }

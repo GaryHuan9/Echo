@@ -30,7 +30,7 @@ public record AggregatorProfile : IProfile
 		if (AggregatorType?.IsSubclassOf(typeof(Aggregator)) == false) throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, $"is not of type {nameof(Aggregator)}");
 	}
 
-	public Aggregator CreateAggregator(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
+	public Aggregator CreateAggregator(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens)
 	{
 		if (AggregatorType != null) return CreateExplicit(AggregatorType, pack, aabbs, tokens);
 
@@ -50,7 +50,7 @@ public record AggregatorProfile : IProfile
 		return new LinearAggregator(pack, aabbs, tokens);
 	}
 
-	static Aggregator CreateExplicit(Type type, PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<Token> tokens)
+	static Aggregator CreateExplicit(Type type, PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens)
 	{
 		if (type == typeof(LinearAggregator)) return new LinearAggregator(pack, aabbs, tokens);
 		if (type == typeof(BoundingVolumeHierarchy)) return new BoundingVolumeHierarchy(pack, aabbs, tokens);

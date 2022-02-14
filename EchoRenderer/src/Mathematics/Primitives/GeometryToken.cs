@@ -15,12 +15,12 @@ namespace EchoRenderer.Mathematics.Primitives;
 /// </summary>
 public unsafe struct GeometryToken : IEquatable<GeometryToken>
 {
-	Token _geometry;
+	NodeToken _geometry;
 
 	/// <summary>
 	/// The unique token for one geometry inside a <see cref="PreparedPack"/>.
 	/// </summary>
-	public Token Geometry
+	public NodeToken Geometry
 	{
 		readonly get => _geometry;
 		set
@@ -61,7 +61,7 @@ public unsafe struct GeometryToken : IEquatable<GeometryToken>
 	}
 
 	/// <summary>
-	/// Returns the <see cref="PreparedInstance.id"/> of the <see cref="PreparedInstance"/> branches held in this <see cref="Token"/>.
+	/// Returns the <see cref="PreparedInstance.id"/> of the <see cref="PreparedInstance"/> branches held in this <see cref="NodeToken"/>.
 	/// </summary>
 	public readonly ReadOnlySpan<uint> Instances => MemoryMarshal.CreateReadOnlySpan(ref Unsafe.AsRef(in instances[0]), InstanceCount);
 

@@ -150,7 +150,7 @@ public class ProgressiveRenderEngine : IDisposable
 		{
 			//Sample color
 			Float2 uv = (position + arena.Random.NextSample()) / buffer.size - Float2.half;
-			var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), arena);
+			var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), profile, arena);
 
 			bool successful = pixel.Accumulate(sample);
 		}
