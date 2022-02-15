@@ -4,8 +4,9 @@ using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Instancing;
+using EchoRenderer.Core.Scenic.Preparation;
 
-namespace EchoRenderer.Core.Scenic.Preparation;
+namespace EchoRenderer.Core.Aggregation.Preparation;
 
 public class PreparedInstance
 {
@@ -31,10 +32,11 @@ public class PreparedInstance
 	{
 		this.id = id;
 
-		PreparedPack preparedPack = preparer.GetPreparedPack(pack);
-		this.swatch = preparedPack.swatchExtractor.Prepare(swatch);
+		PreparedPack prepared = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray);
 
-		this.pack = preparedPack;
+		this.swatch = extractor.Prepare(swatch);
+
+		this.pack = prepared;
 	}
 
 	/// <summary>

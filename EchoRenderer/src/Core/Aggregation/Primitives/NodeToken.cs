@@ -1,5 +1,6 @@
 using System;
 using CodeHelpers.Diagnostics;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Preparation;
 

@@ -20,7 +20,7 @@ public class BoxEntity : GeometryEntity
 	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 	{
 		Float3 extend = Size / 2f;
-		uint materialToken = extractor.Register(Material);
+		MaterialIndex material = extractor.Register(Material);
 
 		Float3 nnn = GetVertex(-1, -1, -1);
 		Float3 nnp = GetVertex(-1, -1, 1);
@@ -33,25 +33,25 @@ public class BoxEntity : GeometryEntity
 		Float3 ppp = GetVertex(1, 1, 1);
 
 		//X axis
-		yield return new PreparedTriangle(pnn, ppp, pnp, Texcoord00, Texcoord11, Texcoord10, materialToken);
-		yield return new PreparedTriangle(pnn, ppn, ppp, Texcoord00, Texcoord01, Texcoord11, materialToken);
+		yield return new PreparedTriangle(pnn, ppp, pnp, Texcoord00, Texcoord11, Texcoord10, material);
+		yield return new PreparedTriangle(pnn, ppn, ppp, Texcoord00, Texcoord01, Texcoord11, material);
 
-		yield return new PreparedTriangle(nnp, npn, nnn, Texcoord00, Texcoord11, Texcoord10, materialToken);
-		yield return new PreparedTriangle(nnp, npp, npn, Texcoord00, Texcoord01, Texcoord11, materialToken);
+		yield return new PreparedTriangle(nnp, npn, nnn, Texcoord00, Texcoord11, Texcoord10, material);
+		yield return new PreparedTriangle(nnp, npp, npn, Texcoord00, Texcoord01, Texcoord11, material);
 
 		//Y axis
-		yield return new PreparedTriangle(npn, ppp, ppn, Texcoord00, Texcoord11, Texcoord10, materialToken);
-		yield return new PreparedTriangle(npn, npp, ppp, Texcoord00, Texcoord01, Texcoord11, materialToken);
+		yield return new PreparedTriangle(npn, ppp, ppn, Texcoord00, Texcoord11, Texcoord10, material);
+		yield return new PreparedTriangle(npn, npp, ppp, Texcoord00, Texcoord01, Texcoord11, material);
 
-		yield return new PreparedTriangle(pnn, nnp, nnn, Texcoord00, Texcoord11, Texcoord10, materialToken);
-		yield return new PreparedTriangle(pnn, pnp, nnp, Texcoord00, Texcoord01, Texcoord11, materialToken);
+		yield return new PreparedTriangle(pnn, nnp, nnn, Texcoord00, Texcoord11, Texcoord10, material);
+		yield return new PreparedTriangle(pnn, pnp, nnp, Texcoord00, Texcoord01, Texcoord11, material);
 
 		//Z axis
-		yield return new PreparedTriangle(pnp, npp, nnp, Texcoord00, Texcoord11, Texcoord10, materialToken);
-		yield return new PreparedTriangle(pnp, ppp, npp, Texcoord00, Texcoord01, Texcoord11, materialToken);
+		yield return new PreparedTriangle(pnp, npp, nnp, Texcoord00, Texcoord11, Texcoord10, material);
+		yield return new PreparedTriangle(pnp, ppp, npp, Texcoord00, Texcoord01, Texcoord11, material);
 
-		yield return new PreparedTriangle(nnn, ppn, pnn, Texcoord00, Texcoord11, Texcoord10, materialToken);
-		yield return new PreparedTriangle(nnn, npn, ppn, Texcoord00, Texcoord01, Texcoord11, materialToken);
+		yield return new PreparedTriangle(nnn, ppn, pnn, Texcoord00, Texcoord11, Texcoord10, material);
+		yield return new PreparedTriangle(nnn, npn, ppn, Texcoord00, Texcoord01, Texcoord11, material);
 
 		Float3 GetVertex(int x, int y, int z) => LocalToWorld.MultiplyPoint(new Float3(x, y, z) * extend);
 	}

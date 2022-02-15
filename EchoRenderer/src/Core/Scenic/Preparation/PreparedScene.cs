@@ -7,6 +7,7 @@ using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Lights;
@@ -150,7 +151,7 @@ public class PreparedScene
 		//Finds one light to sample
 		pdf = 1f / length;
 
-		throw new NotImplementedException();
+		// throw new NotImplementedException();
 		return lightSources[arena.distribution.NextOne().Range(length)];
 	}
 
