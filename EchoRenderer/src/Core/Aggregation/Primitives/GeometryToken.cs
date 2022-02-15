@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common.Mathematics.Randomization;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Preparation;
 

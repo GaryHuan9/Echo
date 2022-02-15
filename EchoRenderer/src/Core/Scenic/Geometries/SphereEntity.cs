@@ -23,31 +23,28 @@ public class SphereEntity : GeometryEntity
 	public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor)
 	{
 		if (Radius <= 0f || FastMath.AlmostZero(Radius)) yield break;
-
-		uint materialToken = extractor.Register(Material);
-		yield return new PreparedSphere(this, materialToken);
+		yield return new PreparedSphere(this, extractor.Register(Material));
 	}
 }
-
 public readonly struct PreparedSphere
 {
-	public PreparedSphere(SphereEntity sphere, uint materialToken) : this
+	public PreparedSphere(SphereEntity sphere, MaterialIndex material) : this
 	(
 		sphere.LocalToWorld.MultiplyPoint(Float3.zero),
 		sphere.Scale.MaxComponent * sphere.Radius,
-		materialToken
+		material
 	) { }
 
-	public PreparedSphere(in Float3 position, float radius, uint materialToken)
+	public PreparedSphere(in Float3 position, float radius, MaterialIndex material)
 	{
 		this.position = position;
 		this.radius = radius;
-		this.materialToken = materialToken;
+		this.material = material;
 	}
 
 	public readonly Float3 position;
 	public readonly float radius;
-	public readonly uint materialToken;
+	public readonly MaterialIndex material;
 
 	/// <summary>
 	/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedSphere"/>.

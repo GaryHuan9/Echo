@@ -25,5 +25,5 @@ public class PreparedSwatch
 
 	//TODO: add emissive material detection and handling
 
-	public Material this[uint token] => materials[token];
+	public Material this[MaterialIndex index] => materials[index];
 }

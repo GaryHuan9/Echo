@@ -7,118 +7,31 @@ using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
-using EchoRenderer.Core.Aggregation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
+using EchoRenderer.Core.Scenic.Preparation;
 
-namespace EchoRenderer.Core.Scenic.Preparation;
+namespace EchoRenderer.Core.Aggregation.Preparation;
 
 public class PreparedPack
 {
-	public PreparedPack(ScenePreparer preparer, EntityPack pack)
+	PreparedPack(AggregatorProfile profile, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens,
+				 PreparedTriangle[] triangles, PreparedSphere[] spheres, PreparedInstance[] instances)
 	{
-		//Collect objects
-		var trianglesList = new ConcurrentList<PreparedTriangle>();
-		var spheresList = new List<PreparedSphere>();
-		var instancesList = new List<PreparedInstance>();
+		aggregator = profile.CreateAggregator(this, aabbs, tokens);
+		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
-		swatchExtractor = new SwatchExtractor(preparer);
-
-		trianglesList.BeginAdd();
-
-		foreach (Entity child in pack.LoopChildren(true))
-		{
-			switch (child)
-			{
-				case GeometryEntity geometry:
-				{
-					trianglesList.AddRange(geometry.ExtractTriangles(swatchExtractor));
-					spheresList.AddRange(geometry.ExtractSpheres(swatchExtractor));
-
-					break;
-				}
-				case PackInstance objectInstance:
-				{
-					uint id = (uint)instancesList.Count;
-					var instance = new PreparedInstance(preparer, objectInstance, id);
-					instancesList.Add(instance);
-
-					break;
-				}
-			}
-		}
-
-		trianglesList.EndAdd();
-
-		SubdivideTriangles(trianglesList, swatchExtractor, preparer.profile);
-
-		//Extract prepared data
-		triangles = new PreparedTriangle[trianglesList.Count];
-		spheres = new PreparedSphere[spheresList.Count];
-		instances = new PreparedInstance[instancesList.Count];
-
-		geometryCounts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
-
-		//Construct aggregator
-		Span<int> lengths = stackalloc int[swatchExtractor.Count + 1];
-
-		for (int i = 0; i < lengths.Length; i++)
-		{
-			// lengths[i] = swatchExtractor.GetRegistrationCount(i);
-		}
-
-		throw new NotImplementedException();
-
-		//Collect tokens
-		// var tokens = CreateTokenArray(swatchExtractor, )
-		// var aabbs = new AxisAlignedBoundingBox[tokens];
-		//
-		// Parallel.For(0, triangles.Length, FillTriangles);
-		// Parallel.For(0, spheres.Length, FillSpheres);
-		// Parallel.For(0, instances.Length, FillInstances);
-		//
-		// aggregator = preparer.profile.AggregatorProfile.CreateAggregator(this, aabbs, tokens);
-		//
-		// void FillTriangles(int index)
-		// {
-		// 	var triangle = trianglesList[index];
-		// 	triangles[index] = triangle;
-		//
-		// 	tokens.Add()
-		//
-		// 	aabbs[index] = triangle.AABB;
-		// 	tokens[index] = NodeToken.CreateTriangle((uint)index);
-		// }
-		//
-		// void FillSpheres(int index)
-		// {
-		// 	var sphere = spheresList[index];
-		// 	spheres[index] = sphere;
-		//
-		// 	int target = triangles.Length + index;
-		//
-		// 	aabbs[target] = sphere.AABB;
-		// 	tokens[target] = NodeToken.CreateSphere((uint)index);
-		// }
-		//
-		// void FillInstances(int index)
-		// {
-		// 	var instance = instancesList[index];
-		// 	instances[index] = instance;
-		//
-		// 	int target = triangles.Length + spheres.Length + index;
-		//
-		// 	aabbs[target] = instance.AABB;
-		// 	tokens[target] = NodeToken.CreateInstance((uint)index);
-		// }
+		this.triangles = triangles;
+		this.spheres = spheres;
+		this.instances = instances;
 	}
 
 	public readonly Aggregator aggregator;
-	public readonly GeometryCounts geometryCounts;
-	public readonly SwatchExtractor swatchExtractor;
+	public readonly GeometryCounts counts;
 
 	readonly PreparedTriangle[] triangles;
 	readonly PreparedSphere[] spheres;
@@ -228,7 +141,7 @@ public class PreparedPack
 
 		Float3 normal;
 		Float2 texcoord;
-		uint materialToken;
+		MaterialIndex materialIndex;
 
 		if (token.IsTriangle)
 		{
@@ -236,7 +149,7 @@ public class PreparedPack
 
 			normal = triangle.GetNormal(query.uv);
 			texcoord = triangle.GetTexcoord(query.uv);
-			materialToken = triangle.materialToken;
+			materialIndex = triangle.material;
 		}
 		else if (token.IsSphere)
 		{
@@ -244,12 +157,12 @@ public class PreparedPack
 
 			normal = PreparedSphere.GetNormal(query.uv);
 			texcoord = PreparedSphere.GetTexcoord(query.uv);
-			materialToken = sphere.materialToken;
+			materialIndex = sphere.material;
 		}
 		else throw NotBasePackException();
 
 		normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
-		Material material = instance.swatch[materialToken];      //Find appropriate mapped material
+		Material material = instance.swatch[materialIndex];      //Find appropriate mapped material
 
 		//Construct interaction
 		if (material == null) return new Interaction(query, normal);
@@ -302,6 +215,96 @@ public class PreparedPack
 		throw NotBasePackException();
 	}
 
+	public static PreparedPack Create(ScenePreparer preparer, EntityPack pack, out SwatchExtractor extractor, out NodeTokenArray tokens)
+	{
+		//Collect objects
+		var trianglesList = new ConcurrentList<PreparedTriangle>();
+		var spheresList = new List<PreparedSphere>();
+		var instancesList = new List<PreparedInstance>();
+
+		extractor = new SwatchExtractor(preparer);
+
+		trianglesList.BeginAdd();
+
+		foreach (Entity child in pack.LoopChildren(true))
+		{
+			switch (child)
+			{
+				case GeometryEntity geometry:
+				{
+					trianglesList.AddRange(geometry.ExtractTriangles(extractor));
+					spheresList.AddRange(geometry.ExtractSpheres(extractor));
+
+					break;
+				}
+				case PackInstance objectInstance:
+				{
+					uint id = (uint)instancesList.Count;
+					var instance = new PreparedInstance(preparer, objectInstance, id);
+					instancesList.Add(instance);
+
+					break;
+				}
+			}
+		}
+
+		trianglesList.EndAdd();
+
+		SubdivideTriangles(trianglesList, extractor, preparer.profile);
+
+		//Extract prepared data
+		var triangles = new PreparedTriangle[trianglesList.Count];
+		var spheres = new PreparedSphere[spheresList.Count];
+		var instances = new PreparedInstance[instancesList.Count];
+
+		//Collect tokens
+		tokens = CreateTokenArray(extractor, instances.Length);
+		var aabbs = new AxisAlignedBoundingBox[tokens.Length];
+
+		var tokenArray = tokens;
+
+		Parallel.For(0, triangles.Length, FillTriangles);
+		Parallel.For(0, spheres.Length, FillSpheres);
+		Parallel.For(0, instances.Length, FillInstances);
+
+		tokens.AssertIsFull();
+
+		//Construct instance
+		return new PreparedPack(preparer.profile.AggregatorProfile, aabbs, tokens, triangles, spheres, instances);
+
+		void FillTriangles(int index)
+		{
+			ref readonly var triangle = ref trianglesList[index];
+
+			triangles[index] = triangle;
+
+			var token = NodeToken.CreateTriangle((uint)index);
+			index = tokenArray.Add(triangle.material, token);
+
+			aabbs[index] = triangle.AABB;
+		}
+
+		void FillSpheres(int index)
+		{
+			var sphere = spheres[index] = spheresList[index];
+
+			var token = NodeToken.CreateSphere((uint)index);
+			index = tokenArray.Add(sphere.material, token);
+
+			aabbs[index] = sphere.AABB;
+		}
+
+		void FillInstances(int index)
+		{
+			var instance = instances[index] = instancesList[index];
+
+			NodeToken token = NodeToken.CreateInstance((uint)index);
+			index = tokenArray.Add(tokenArray.PartitionLength - 1, token);
+
+			aabbs[index] = instance.AABB;
+		}
+	}
+
 	/// <summary>
 	/// Divides large triangles for better space partitioning.
 	/// </summary>
@@ -320,7 +323,7 @@ public class PreparedPack
 			int maxIteration = profile.FragmentationMaxIteration;
 
 			int count = SubdivideTriangle(triangles, ref triangle, threshold, maxIteration);
-			if (count != 0) extractor.Register(triangle.materialToken, count);
+			if (count != 0) extractor.Register(triangle.material, count);
 		}
 	}
 
@@ -341,22 +344,19 @@ public class PreparedPack
 		return count;
 	}
 
-	static TokenArray CreateTokenArray(SwatchExtractor extractor, int instanceCount)
+	static NodeTokenArray CreateTokenArray(SwatchExtractor extractor, int instanceCount)
 	{
 		bool hasInstance = instanceCount > 0;
-		int materialCount = extractor.Count;
 
-		Span<int> lengths = stackalloc int[materialCount + (hasInstance ? 0 : 1)];
+		ReadOnlySpan<MaterialIndex> indices = extractor.Indices;
+		int totalLength = indices.Length + (hasInstance ? 1 : 0);
 
-		for (int i = 0; i < materialCount; i++)
-		{
-			uint materialToken = (uint)i;
-			lengths[i] = extractor.GetRegistrationCount(materialToken);
-		}
-
+		Span<int> lengths = stackalloc int[totalLength];
 		if (hasInstance) lengths[^1] = instanceCount;
 
-		return new TokenArray(lengths);
+		foreach (MaterialIndex index in indices) lengths[index] = extractor.GetRegistrationCount(index);
+
+		return new NodeTokenArray(lengths);
 	}
 
 	/// <summary>

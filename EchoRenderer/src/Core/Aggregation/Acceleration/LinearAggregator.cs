@@ -3,6 +3,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Preparation;
 

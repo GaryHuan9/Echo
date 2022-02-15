@@ -1,7 +1,9 @@
 ﻿using CodeHelpers.Diagnostics;
 using EchoRenderer.Core.Aggregation.Primitives;
+using EchoRenderer.Core.Scenic;
+using EchoRenderer.Core.Scenic.Preparation;
 
-namespace EchoRenderer.Core.Scenic.Preparation;
+namespace EchoRenderer.Core.Aggregation.Preparation;
 
 /// <summary>
 /// A <see cref="PreparedInstance"/> only used by <see cref="PreparedScene"/>, which is the root of the entire hierarchy.

@@ -5,6 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Preparation;
 
