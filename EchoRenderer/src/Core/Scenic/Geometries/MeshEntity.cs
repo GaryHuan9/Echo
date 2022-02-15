@@ -23,8 +23,7 @@ public class MeshEntity : GeometryEntity
 		for (int i = 0; i < Mesh.TriangleCount; i++)
 		{
 			Triangle triangle = Mesh.GetTriangle(i);
-			Material material = MaterialLibrary?[triangle.materialName] ?? Material;
-			uint materialToken = extractor.Register(material);
+			MaterialIndex material = extractor.Register(MaterialLibrary?[triangle.materialName] ?? Material);
 
 			bool hasNormal = triangle.normalIndices.MinComponent >= 0;
 			bool hasTexcoord = triangle.texcoordIndices.MinComponent >= 0;
@@ -37,7 +36,7 @@ public class MeshEntity : GeometryEntity
 					(
 						GetVertex(0), GetVertex(1), GetVertex(2),
 						GetNormal(0), GetNormal(1), GetNormal(2),
-						GetTexcoord(0), GetTexcoord(1), GetTexcoord(2), materialToken
+						GetTexcoord(0), GetTexcoord(1), GetTexcoord(2), material
 					);
 				}
 				else
@@ -45,7 +44,7 @@ public class MeshEntity : GeometryEntity
 					yield return new PreparedTriangle
 					(
 						GetVertex(0), GetVertex(1), GetVertex(2),
-						GetNormal(0), GetNormal(1), GetNormal(2), materialToken
+						GetNormal(0), GetNormal(1), GetNormal(2), material
 					);
 				}
 			}
@@ -56,14 +55,14 @@ public class MeshEntity : GeometryEntity
 					yield return new PreparedTriangle
 					(
 						GetVertex(0), GetVertex(1), GetVertex(2),
-						GetTexcoord(0), GetTexcoord(1), GetTexcoord(2), materialToken
+						GetTexcoord(0), GetTexcoord(1), GetTexcoord(2), material
 					);
 				}
 				else
 				{
 					yield return new PreparedTriangle
 					(
-						GetVertex(0), GetVertex(1), GetVertex(2), materialToken
+						GetVertex(0), GetVertex(1), GetVertex(2), material
 					);
 				}
 			}

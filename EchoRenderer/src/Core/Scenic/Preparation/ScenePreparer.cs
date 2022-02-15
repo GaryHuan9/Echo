@@ -5,6 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Pooling;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
@@ -33,14 +34,18 @@ public class ScenePreparer
 	public void PrepareAll() => PreparePacks(root);
 
 	/// <summary>
-	/// Creates or retrieves and returns the <see cref="PreparedPack"/> for <paramref name="pack"/>.
+	/// Retrieves the <see cref="PreparedPack"/> for <paramref name="pack"/> and outputs its corresponding
+	/// <see cref="SwatchExtractor"/> and <see cref="NodeTokenArray"/> that were used during the construction.
 	/// </summary>
-	public PreparedPack GetPreparedPack(EntityPack pack)
+	public PreparedPack GetPreparedPack(EntityPack pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray)
 	{
 		Node node = entityPacks.TryGetValue(pack);
 
 		if (node == null) throw ExceptionHelper.Invalid(nameof(pack), pack, "is not linked in the input scene in any way");
 		if (node.PreparedPack == null) throw new Exception("Pack not prepared! Are you sure the preparing order is correct?");
+
+		extractor = node.Extractor;
+		tokenArray = node.TokenArray;
 
 		return node.PreparedPack;
 	}
@@ -83,10 +88,10 @@ public class ScenePreparer
 		//Head recursion to make sure that all children are prepared before the parent
 
 		foreach (Node child in node) PreparePacks(child);
-		node.AssignPack(new PreparedPack(this, node.entityPack));
+		node.CreatePack(this);
 	}
 
-	public class Node : IEnumerable<Node>
+	public class Node
 	{
 		public Node(EntityPack entityPack, Node parent)
 		{
@@ -94,14 +99,17 @@ public class ScenePreparer
 			if (parent != null) parents.Add(parent);
 		}
 
-		public readonly EntityPack entityPack;
-		public PreparedPack PreparedPack { get; private set; }
-
-		public GeometryCounts InstancedCounts { get; private set; }
-		public GeometryCounts UniqueCounts { get; private set; }
+		readonly EntityPack entityPack;
 
 		readonly HashSet<Node> parents = new();
 		readonly Dictionary<Node, uint> children = new(); //Maps child to the number of duplicated instances
+
+		public PreparedPack PreparedPack { get; private set; }
+		public SwatchExtractor Extractor { get; private set; }
+		public NodeTokenArray TokenArray { get; private set; }
+
+		public GeometryCounts InstancedCounts { get; private set; }
+		public GeometryCounts UniqueCounts { get; private set; }
 
 		/// <summary>
 		/// Tries to add <paramref name="child"/>, returns true if the child has not been added before.
@@ -144,24 +152,25 @@ public class ScenePreparer
 			}
 		}
 
-		public void AssignPack(PreparedPack preparedPack)
+		public void CreatePack(ScenePreparer preparer)
 		{
-			Assert.IsNull(PreparedPack);
-			PreparedPack = preparedPack;
+			//Create pack and assign it
+			PreparedPack = PreparedPack.Create(preparer, entityPack, out SwatchExtractor extractor, out NodeTokenArray tokens);
 
+			Extractor = extractor;
+			TokenArray = tokens;
+
+			//Accumulate counts
 			foreach ((Node child, uint number) in children)
 			{
 				InstancedCounts += child.InstancedCounts * number;
 				UniqueCounts += child.UniqueCounts;
 			}
 
-			InstancedCounts += preparedPack.geometryCounts;
-			UniqueCounts += preparedPack.geometryCounts;
+			InstancedCounts += PreparedPack.counts;
+			UniqueCounts += PreparedPack.counts;
 		}
 
-		Dictionary<Node, uint>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();
-
-		IEnumerator<Node> IEnumerable<Node>.GetEnumerator() => GetEnumerator();
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		public Dictionary<Node, uint>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();
 	}
 }
