@@ -33,14 +33,14 @@ public class TriangleEntity : GeometryEntity
 
 	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 	{
-		uint materialToken = extractor.Register(Material);
+		MaterialIndex material = extractor.Register(Material);
 
 		if (Normal0 == Float3.zero || Normal1 == Float3.zero || Normal2 == Float3.zero)
 		{
 			yield return new PreparedTriangle
 			(
 				LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
-				materialToken
+				material
 			);
 		}
 		else
@@ -49,56 +49,55 @@ public class TriangleEntity : GeometryEntity
 			(
 				LocalToWorld.MultiplyPoint(Vertex0), LocalToWorld.MultiplyPoint(Vertex1), LocalToWorld.MultiplyPoint(Vertex2),
 				LocalToWorld.MultiplyDirection(Normal0), LocalToWorld.MultiplyDirection(Normal1), LocalToWorld.MultiplyDirection(Normal2),
-				materialToken
+				material
 			);
 		}
 	}
 
 	public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 }
-
 public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWISE
 {
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, uint materialToken) : this
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
-		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0), materialToken
+		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0), materialIndex
 	) { }
 
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, uint materialToken) : this
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
-		normal, normal, normal, materialToken
+		normal, normal, normal, materialIndex
 	) { }
 
 	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, uint materialToken) : this
+							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
 		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0),
-		texcoord0, texcoord1, texcoord2, materialToken
+		texcoord0, texcoord1, texcoord2, materialIndex
 	) { }
 
 	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 							Float3 normal,
-							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, uint materialToken) : this
+							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
 		normal, normal, normal,
-		texcoord0, texcoord1, texcoord2, materialToken
+		texcoord0, texcoord1, texcoord2, materialIndex
 	) { }
 
 	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							Float3 normal0, Float3 normal1, Float3 normal2, uint materialToken) : this
+							Float3 normal0, Float3 normal1, Float3 normal2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
 		normal0, normal1, normal2,
-		Float2.zero, Float2.zero, Float2.zero, materialToken
+		Float2.zero, Float2.zero, Float2.zero, materialIndex
 	) { }
 
 	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 							Float3 normal0, Float3 normal1, Float3 normal2,
-							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, uint materialToken)
+							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material)
 	{
 		this.vertex0 = vertex0;
 		edge1 = vertex1 - vertex0;
@@ -112,7 +111,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		this.texcoord1 = texcoord1;
 		this.texcoord2 = texcoord2;
 
-		this.materialToken = materialToken;
+		this.material = material;
 	}
 
 	public readonly Float3 vertex0; //NOTE: Vertex one and two are actually not needed for intersection
@@ -127,7 +126,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	public readonly Float2 texcoord1;
 	public readonly Float2 texcoord2;
 
-	public readonly uint materialToken;
+	public readonly MaterialIndex material;
 
 	public Float3 Vertex1 => vertex0 + edge1;
 	public Float3 Vertex2 => vertex0 + edge2;
@@ -294,16 +293,16 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		Float2 texcoord11 = triangle.texcoord1;
 		Float2 texcoord22 = triangle.texcoord2;
 
-		Fill(triangles, 0, triangle.materialToken, vertex01, vertex12, vertex02, normal01, normal12, normal02, texcoord01, texcoord12, texcoord02);
-		Fill(triangles, 1, triangle.materialToken, vertex00, vertex01, vertex02, normal00, normal01, normal02, texcoord00, texcoord01, texcoord02);
-		Fill(triangles, 2, triangle.materialToken, vertex11, vertex12, vertex01, normal11, normal12, normal01, texcoord11, texcoord12, texcoord01);
-		Fill(triangles, 3, triangle.materialToken, vertex22, vertex02, vertex12, normal22, normal02, normal12, texcoord22, texcoord02, texcoord12);
+		Fill(triangles, 0, triangle.material, vertex01, vertex12, vertex02, normal01, normal12, normal02, texcoord01, texcoord12, texcoord02);
+		Fill(triangles, 1, triangle.material, vertex00, vertex01, vertex02, normal00, normal01, normal02, texcoord00, texcoord01, texcoord02);
+		Fill(triangles, 2, triangle.material, vertex11, vertex12, vertex01, normal11, normal12, normal01, texcoord11, texcoord12, texcoord01);
+		Fill(triangles, 3, triangle.material, vertex22, vertex02, vertex12, normal22, normal02, normal12, texcoord22, texcoord02, texcoord12);
 
 		//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal00, in Float3 normal11, in Float3 normal22) => (1f - uv.x - uv.y) * normal00 + uv.x * normal11 + uv.y * normal22;
 
-		static void Fill(Span<PreparedTriangle> span, int index, uint materialToken,
+		static void Fill(Span<PreparedTriangle> span, int index, MaterialIndex material,
 						 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
 						 in Float3 normal0, in Float3 normal1, in Float3 normal2,
 						 Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
@@ -315,7 +314,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 			(
 				vertex0, vertex1, vertex2,
 				normal0, normal1, normal2,
-				texcoord0, texcoord1, texcoord2, materialToken
+				texcoord0, texcoord1, texcoord2, material
 			);
 
 			GetSubdivided(slice, normal0, normal1, normal2);

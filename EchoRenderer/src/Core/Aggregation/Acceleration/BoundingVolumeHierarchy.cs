@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Preparation;
 

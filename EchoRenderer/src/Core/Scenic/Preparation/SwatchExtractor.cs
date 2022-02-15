@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
@@ -22,22 +24,40 @@ public class SwatchExtractor
 	readonly Dictionary<Material, Data> map = new();
 	readonly List<Data> materialList = new();
 
-	PreparedSwatch emptySwatch;                                //Caches the default empty swatch with no mappings
-	Dictionary<MaterialSwatch, PreparedSwatch> cachedSwatches; //Caches all the prepared swatches and their originals
+	/// <summary>
+	/// Caches all the prepared swatches and their originals
+	/// </summary>
+	Dictionary<MaterialSwatch, PreparedSwatch> cachedSwatches;
 
 	Seal seal;
 
 	/// <summary>
-	/// Returns the number of registered <see cref="Material"/>.
+	/// An empty <see cref="MaterialSwatch"/> used to replace null ones.
 	/// </summary>
-	public int Count => map.Count;
+	static readonly MaterialSwatch emptySwatch = new();
+
+	MaterialIndex[] _indices = Array.Empty<MaterialIndex>();
 
 	/// <summary>
-	/// Registers <paramref name="material"/> into this <see cref="SwatchExtractor"/> and returns a token for this <paramref name="material"/>.
-	/// That token can be used to identify and retrieve this <paramref name="material"/> (or a mapped one) later on in <see cref="PreparedSwatch"/>.
+	/// Returns the <see cref="MaterialIndex"/> of all of the registered <see cref="Material"/> in this <see cref="SwatchExtractor"/>.
+	/// </summary>
+	public ReadOnlySpan<MaterialIndex> Indices
+	{
+		get
+		{
+			if (_indices.Length == materialList.Count) return _indices;
+			_indices = materialList.Select(data => data.index).ToArray();
+
+			return _indices;
+		}
+	}
+
+	/// <summary>
+	/// Registers <paramref name="material"/> into this <see cref="SwatchExtractor"/> and returns a <see cref="MaterialIndex"/> which
+	/// can be used to identify and retrieve this <paramref name="material"/> (or a mapped one) later on in <see cref="PreparedSwatch"/>.
 	/// NOTE: this method should not be invoked after we started invoking <see cref="Prepare"/>.
 	/// </summary>
-	public uint Register(Material material, int count = 1)
+	public MaterialIndex Register(Material material, int count = 1)
 	{
 		Assert.IsTrue(count > 0);
 		seal.AssertNotApplied();
@@ -45,60 +65,53 @@ public class SwatchExtractor
 		if (map.TryGetValue(material, out Data data))
 		{
 			data.Register(count);
-			return data.token;
+			return data.index;
 		}
 
-		data = new Data(material, (uint)map.Count);
+		data = new Data(material, new MaterialIndex(map.Count));
 		data.Register(count);
 
 		map.Add(material, data);
 		materialList.Add(data);
 
-		return data.token;
+		return data.index;
 	}
 
 	/// <summary>
-	/// Registers a <paramref name="count"/> of users for the <see cref="Material"/> represented by <paramref name="token"/>.
+	/// Registers a <paramref name="count"/> of users for the <see cref="Material"/> represented by <paramref name="index"/>.
 	/// </summary>
-	public void Register(uint token, int count = 1)
+	public void Register(MaterialIndex index, int count = 1)
 	{
 		Assert.IsTrue(count > 0);
-		materialList[(int)token].Register(count);
+		materialList[index].Register(count);
 	}
 
 	/// <summary>
-	/// Returns the number of registered users for the <see cref="Material"/> represented by <paramref name="token"/>.
+	/// Returns the number of registered users for the <see cref="Material"/> represented by <paramref name="index"/>.
 	/// </summary>
-	public int GetRegistrationCount(uint token) => materialList[(int)token].Count;
+	public int GetRegistrationCount(MaterialIndex index) => materialList[index].Count;
 
 	/// <summary>
-	/// Prepares <paramref name="swatch"/> into a <see cref="PreparedSwatch"/>. Note that once this method is invoked,
-	/// invocation to <see cref="Register(Material,int)"/> and <see cref="Register(uint,int)"/> is no longer supported.
+	/// Prepares <paramref name="swatch"/> into a <see cref="PreparedSwatch"/>. Note that once
+	/// this method is invoked, invocations to the registration methods is no longer supported.
 	/// </summary>
 	public PreparedSwatch Prepare(MaterialSwatch swatch)
 	{
 		seal.TryApply();
 
-		var valueComparer = MaterialSwatch.valueEqualityComparer; //We will compare the swatches based on their content, not reference
+		//We will compare the swatches based on their content, not reference
+		var valueComparer = MaterialSwatch.valueEqualityComparer;
 
-		//If this swatch is empty or null, return the prepared default empty swatch
-		if (valueComparer.Equals(swatch, null)) return emptySwatch ??= CreateSwatch(materialList.Select(data => data.material).ToArray());
+		swatch ??= emptySwatch;
 
 		//Find cached swatch again, this time look through all the ones that are not empty
 		cachedSwatches ??= new Dictionary<MaterialSwatch, PreparedSwatch>(valueComparer);
 		if (cachedSwatches.TryGetValue(swatch, out PreparedSwatch prepared)) return prepared;
 
 		//Create and cache if none found
-		prepared = CreateSwatch(CreateMaterials(swatch));
+		prepared = new PreparedSwatch(CreateMaterials(swatch));
 		cachedSwatches.Add(swatch, prepared);
-
 		return prepared;
-	}
-
-	PreparedSwatch CreateSwatch(Material[] materials)
-	{
-		foreach (var material in materials) preparer.PrepareMaterial(material);
-		return new PreparedSwatch(materials);
 	}
 
 	Material[] CreateMaterials(MaterialSwatch swatch)
@@ -108,22 +121,28 @@ public class SwatchExtractor
 		for (int i = 0; i < result.Length; i++)
 		{
 			Material material = materialList[i].material;
-			result[i] = swatch[material] ?? material;
+			Material mapped = swatch[material] ?? material;
+
+			preparer.PrepareMaterial(mapped);
+			result[i] = mapped;
 		}
 
 		return result;
 	}
 
+	/// <summary>
+	/// A single entry to <see cref="map"/>.
+	/// </summary>
 	class Data
 	{
-		public Data(Material material, uint token)
+		public Data(Material material, MaterialIndex index)
 		{
 			this.material = material;
-			this.token = token;
+			this.index = index;
 		}
 
 		public readonly Material material;
-		public readonly uint token;
+		public readonly MaterialIndex index;
 
 		int _count;
 

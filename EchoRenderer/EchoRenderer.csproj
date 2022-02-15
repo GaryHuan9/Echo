@@ -19,7 +19,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Drawing.Common" Version="5.0.3"/>
+        <PackageReference Include="System.Drawing.Common" Version="5.0.3" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,19 +33,19 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj"/>
+        <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="src\Core\Rendering\Materials\Diffuse.cs"/>
-        <Compile Remove="src\Core\Rendering\Materials\Glass.cs"/>
-        <Compile Remove="src\Core\Rendering\Materials\Glossy.cs"/>
-        <Compile Remove="src\Core\Rendering\Materials\MaterialOld.cs"/>
-        <Compile Remove="src\Core\Rendering\Materials\Emissive.cs"/>
-        <Compile Remove="src\Core\Scenic\Examples\BMWs.cs"/>
-        <Compile Remove="src\Core\Scenic\Examples\CornellBox.cs"/>
-        <Compile Remove="src\Core\Scenic\Examples\TestScenes.cs"/>
-        <Compile Remove="src\Core\Scenic\Examples\MaterialBalls.cs"/>
+        <Compile Remove="src\Core\Rendering\Materials\Diffuse.cs" />
+        <Compile Remove="src\Core\Rendering\Materials\Glass.cs" />
+        <Compile Remove="src\Core\Rendering\Materials\Glossy.cs" />
+        <Compile Remove="src\Core\Rendering\Materials\MaterialOld.cs" />
+        <Compile Remove="src\Core\Rendering\Materials\Emissive.cs" />
+        <Compile Remove="src\Core\Scenic\Examples\BMWs.cs" />
+        <Compile Remove="src\Core\Scenic\Examples\CornellBox.cs" />
+        <Compile Remove="src\Core\Scenic\Examples\TestScenes.cs" />
+        <Compile Remove="src\Core\Scenic\Examples\MaterialBalls.cs" />
     </ItemGroup>
 
 </Project>

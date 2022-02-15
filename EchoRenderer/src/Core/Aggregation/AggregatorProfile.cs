@@ -3,6 +3,7 @@ using CodeHelpers;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Acceleration;
+using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -36,7 +37,7 @@ public record AggregatorProfile : IProfile
 	{
 		if (AggregatorType != null) return CreateExplicit(AggregatorType, pack, aabbs, tokens);
 
-		ulong total = pack.geometryCounts.Total;
+		ulong total = pack.counts.Total;
 
 		//If there is enough geometry
 		if (total > 1)
@@ -45,7 +46,7 @@ public record AggregatorProfile : IProfile
 			if (total >= ThresholdBVH) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
 
 			//If there is an instance in the pack and our configuration disallows a linear aggregator for to store instances
-			if (!LinearForInstances && pack.geometryCounts.instance > 0) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
+			if (!LinearForInstances && pack.counts.instance > 0) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
 		}
 
 		//Base case defaults to linear aggregator
