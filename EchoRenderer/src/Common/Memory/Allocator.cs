@@ -161,7 +161,7 @@ public class Allocator
 		{
 			//Simply read token if already assigned
 			ref int read = ref token.value;
-			int original = Volatile.Read(ref read);
+			int original = Volatile.Read(ref read); //TODO: is this volatile read necessary?
 			if (original >= 0) return original;
 
 			//Attempt to reserve a spot for new token creation

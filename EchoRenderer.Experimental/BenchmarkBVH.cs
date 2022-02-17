@@ -16,7 +16,7 @@ using EchoRenderer.InOut;
 
 namespace EchoRenderer.Experimental;
 
-[SimpleJob(RuntimeMoniker.NetCoreApp50)]
+[SimpleJob(RuntimeMoniker.Net60)]
 public class BenchmarkBVH
 {
 	public BenchmarkBVH()
@@ -104,10 +104,10 @@ public class BenchmarkBVH
 	// Added occlusion
 	// |  Method | CurrentPair |     Mean |    Error |   StdDev |
 	// |-------- |------------ |---------:|---------:|---------:|
-	// |   Trace |        Quad | 42.66 ms | 0.401 ms | 0.335 ms |
-	// | Occlude |        Quad | 35.47 ms | 0.187 ms | 0.175 ms |
-	// |   Trace |     Regular | 60.68 ms | 0.236 ms | 0.197 ms |
-	// | Occlude |     Regular | 49.08 ms | 0.257 ms | 0.227 ms |
+	// |   Trace |        Quad | 40.71 ms | 0.238 ms | 0.223 ms |
+	// | Occlude |        Quad | 34.22 ms | 0.290 ms | 0.271 ms |
+	// |   Trace |     Regular | 61.09 ms | 0.265 ms | 0.248 ms |
+	// | Occlude |     Regular | 49.77 ms | 0.202 ms | 0.189 ms |
 
 	[Benchmark]
 	public bool Trace()
