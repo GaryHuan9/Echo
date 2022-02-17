@@ -114,12 +114,12 @@ public class BoundingVolumeHierarchy : Aggregator
 	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 	unsafe void TraceCore(ref TraceQuery query)
 	{
-		NodeToken* stack = stackalloc NodeToken[maxDepth];
+		var stack = stackalloc NodeToken[maxDepth];
 		float* hits = stackalloc float[maxDepth];
 
 		NodeToken* next = stack; //A pointer pointing at the top of the stack
 
-		*next++ = NodeToken.root.Next;        //We have already tested with the root before this method is invoked
+		*next++ = NodeToken.root.Next;    //We have already tested with the root before this method is invoked
 		*hits++ = float.NegativeInfinity; //Explicitly initialize intersection distance
 
 		while (next != stack)

@@ -22,8 +22,8 @@ public class PreparedPack
 	PreparedPack(AggregatorProfile profile, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens,
 				 PreparedTriangle[] triangles, PreparedSphere[] spheres, PreparedInstance[] instances)
 	{
-		aggregator = profile.CreateAggregator(this, aabbs, tokens);
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
+		aggregator = profile.CreateAggregator(this, aabbs, tokens);
 
 		this.triangles = triangles;
 		this.spheres = spheres;

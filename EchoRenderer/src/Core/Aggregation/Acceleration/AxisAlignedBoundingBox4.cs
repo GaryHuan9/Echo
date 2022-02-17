@@ -7,6 +7,9 @@ using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Aggregation.Acceleration;
 
+/// <summary>
+/// Stores four <see cref="AxisAlignedBoundingBox"/> in six four-wide SIMD vectors.
+/// </summary>
 public readonly struct AxisAlignedBoundingBox4
 {
 	public AxisAlignedBoundingBox4(in AxisAlignedBoundingBox aabb0, in AxisAlignedBoundingBox aabb1, in AxisAlignedBoundingBox aabb2, in AxisAlignedBoundingBox aabb3)
@@ -42,6 +45,16 @@ public readonly struct AxisAlignedBoundingBox4
 	(
 		new Float3(minX.GetElement(index), minY.GetElement(index), minZ.GetElement(index)),
 		new Float3(maxX.GetElement(index), maxY.GetElement(index), maxZ.GetElement(index))
+	);
+
+	/// <summary>
+	/// Calculates and returns an <see cref="AxisAlignedBoundingBox"/> that encapsulates the four
+	/// <see cref="AxisAlignedBoundingBox"/> contained in this <see cref="AxisAlignedBoundingBox4"/>.
+	/// </summary>
+	public AxisAlignedBoundingBox Encapsulated => new
+	(
+		new Float3(Utilities.ToFloat4(minX).MinComponent, Utilities.ToFloat4(minY).MinComponent, Utilities.ToFloat4(minZ).MinComponent),
+		new Float3(Utilities.ToFloat4(maxX).MaxComponent, Utilities.ToFloat4(maxY).MaxComponent, Utilities.ToFloat4(maxZ).MaxComponent)
 	);
 
 	/// <summary>
