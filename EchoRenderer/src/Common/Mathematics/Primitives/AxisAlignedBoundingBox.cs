@@ -8,7 +8,10 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
 
-[StructLayout(LayoutKind.Explicit, Size = 28)]
+/// <summary>
+/// A 3D box that is aligned to the coordinate axes, usually used to bound other objects.
+/// </summary>
+[StructLayout(LayoutKind.Explicit)]
 public readonly struct AxisAlignedBoundingBox
 {
 	public AxisAlignedBoundingBox(in Float3 min, in Float3 max)
@@ -18,23 +21,6 @@ public readonly struct AxisAlignedBoundingBox
 
 		this.min = min;
 		this.max = max;
-
-		Assert.IsTrue(max >= min);
-	}
-
-	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
-	{
-		Unsafe.SkipInit(out minV);
-		Unsafe.SkipInit(out maxV);
-
-		min = Float3.positiveInfinity;
-		max = Float3.negativeInfinity;
-
-		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
-		{
-			min = aabb.min.Min(min);
-			max = aabb.max.Max(max);
-		}
 
 		Assert.IsTrue(max >= min);
 	}
@@ -56,22 +42,50 @@ public readonly struct AxisAlignedBoundingBox
 		Assert.IsTrue(max >= min);
 	}
 
+	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
+	{
+		Unsafe.SkipInit(out min);
+		Unsafe.SkipInit(out max);
+
+		minV = Vector128.Create(float.PositiveInfinity);
+		maxV = Vector128.Create(float.NegativeInfinity);
+
+		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
+		{
+			minV = Sse.Min(minV, aabb.minV);
+			maxV = Sse.Max(maxV, aabb.maxV);
+		}
+
+		Assert.IsTrue(max >= min);
+	}
+
+	AxisAlignedBoundingBox(in Vector128<float> minV, in Vector128<float> maxV)
+	{
+		Unsafe.SkipInit(out min);
+		Unsafe.SkipInit(out max);
+
+		this.minV = minV;
+		this.maxV = maxV;
+
+		Assert.IsTrue(max >= min);
+	}
+
 	public static readonly AxisAlignedBoundingBox none = new(Float3.positiveInfinity, Float3.positiveInfinity);
 
-	[FieldOffset(0)] public readonly Float3 min;
-	[FieldOffset(12)] public readonly Float3 max;
+	[FieldOffset(00)] public readonly Float3 min;
+	[FieldOffset(16)] public readonly Float3 max;
 
-	[FieldOffset(0)] readonly Vector128<float> minV;
-	[FieldOffset(12)] readonly Vector128<float> maxV;
+	[FieldOffset(00)] readonly Vector128<float> minV;
+	[FieldOffset(16)] readonly Vector128<float> maxV;
 
-	public Float3 Center => (max + min) / 2f;
-	public Float3 Extend => (max - min) / 2f;
+	public Float3 Center => Utilities.ToFloat3(Sse.Multiply(Sse.Add /**/(maxV, minV), Vector128.Create(0.5f)));
+	public Float3 Extend => Utilities.ToFloat3(Sse.Multiply(Sse.Subtract(maxV, minV), Vector128.Create(0.5f)));
 
 	public float Area
 	{
 		get
 		{
-			Float3 size = max - min;
+			Float3 size = Utilities.ToFloat3(Sse.Subtract(maxV, minV));
 			return size.x * size.y + size.x * size.z + size.y * size.z;
 		}
 	}
@@ -142,7 +156,11 @@ public readonly struct AxisAlignedBoundingBox
 		return far >= near && far >= 0f ? near : float.PositiveInfinity;
 	}
 
-	public AxisAlignedBoundingBox Encapsulate(in AxisAlignedBoundingBox other) => new(min.Min(other.min), max.Max(other.max));
+	public AxisAlignedBoundingBox Encapsulate(in AxisAlignedBoundingBox other) => new
+	(
+		Sse.Min(minV, other.minV),
+		Sse.Max(maxV, other.maxV)
+	);
 
 	public override int GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
 	public override string ToString() => $"{nameof(Center)}: {Center}, {nameof(Extend)}: {Extend}";
