@@ -38,7 +38,7 @@ public class PlaneEntity : GeometryEntity
 		Float3 point10 = LocalToWorld.MultiplyPoint(new Float3(extend.x, 0f, -extend.y));
 		Float3 point11 = LocalToWorld.MultiplyPoint(new Float3(extend.x, 0f, extend.y));
 
-		MaterialIndex material = extractor.Register(Material);
+		MaterialIndex material = extractor.Register(Material, 2);
 
 		yield return new PreparedTriangle(point00, point11, point10, Texcoord00, Texcoord11, Texcoord10, material);
 		yield return new PreparedTriangle(point00, point01, point11, Texcoord00, Texcoord01, Texcoord11, material);

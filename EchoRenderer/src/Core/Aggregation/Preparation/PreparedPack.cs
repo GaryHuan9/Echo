@@ -267,7 +267,7 @@ public class PreparedPack
 		Parallel.For(0, spheres.Length, FillSpheres);
 		Parallel.For(0, instances.Length, FillInstances);
 
-		tokens.AssertIsFull();
+		Assert.IsTrue(tokens.IsFull);
 
 		//Construct instance
 		return new PreparedPack(preparer.profile.AggregatorProfile, aabbs, tokens, triangles, spheres, instances);
@@ -323,7 +323,7 @@ public class PreparedPack
 			int maxIteration = profile.FragmentationMaxIteration;
 
 			int count = SubdivideTriangle(triangles, ref triangle, threshold, maxIteration);
-			if (count != 0) extractor.Register(triangle.material, count);
+			if (count > 0) extractor.Register(triangle.material, count);
 		}
 	}
 
@@ -341,7 +341,7 @@ public class PreparedPack
 
 		for (int i = 1; i < count; i++) triangles.Add(divided[i]);
 
-		return count;
+		return count - 1;
 	}
 
 	static NodeTokenArray CreateTokenArray(SwatchExtractor extractor, int instanceCount)
