@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests;
 
-public class Piecewise1Test
+public class Piecewise1Tests
 {
 	[OneTimeSetUp]
 	public void OneTimeSetUp()

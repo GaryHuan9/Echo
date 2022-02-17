@@ -55,6 +55,22 @@ public class NodeTokenArray
 	public int Length => array.Length;
 
 	/// <summary>
+	/// Returns whether this <see cref="NodeTokenArray"/> is completely filled up.
+	/// </summary>
+	public bool IsFull
+	{
+		get
+		{
+			for (int i = 0; i < heads.Length; i++)
+			{
+				if (GetSegmentEnd(i) != InterlockedHelper.Read(ref heads[i])) return false;
+			}
+
+			return true;
+		}
+	}
+
+	/// <summary>
 	/// Returns the <paramref name="segment"/> partition of this <see cref="NodeTokenArray"/>.
 	/// </summary>
 	public ReadOnlySpan<NodeToken> this[int segment] => array.AsSpan(starts[segment]..InterlockedHelper.Read(ref heads[segment]));
@@ -72,15 +88,6 @@ public class NodeTokenArray
 
 		array[index] = token;
 		return index;
-	}
-
-	/// <summary>
-	/// Asserts to make sure that this <see cref="NodeTokenArray"/> is completely filled up.
-	/// </summary>
-	[Conditional(Assert.DebugSymbol)]
-	public void AssertIsFull()
-	{
-		for (int i = 0; i < heads.Length; i++) Assert.AreEqual(GetSegmentEnd(i), InterlockedHelper.Read(ref heads[i]));
 	}
 
 	int GetSegmentEnd(int segment) => segment + 1 == PartitionLength ? Length : starts[segment + 1];
