@@ -63,7 +63,7 @@ public class PreparedScene
 		{
 			light.Prepare(this);
 
-			float luminace = PackedMath.GetLuminance(Utilities.ToVector(light.Power));
+			// float luminace = PackedMath.GetLuminance(Utilities.ToVector(light.Power));
 		}
 
 		DebugHelper.Log("Prepared scene");
@@ -179,5 +179,9 @@ public class PreparedScene
 		throw new NotImplementedException();
 	}
 
-	public void ResetIntersectionCount() => Interlocked.Exchange(ref _traceCount, 0);
+	public void ResetIntersectionCount()
+	{
+		Interlocked.Exchange(ref _traceCount, 0);
+		Interlocked.Exchange(ref _occludeCount, 0);
+	}
 }

@@ -20,7 +20,7 @@ public class BoxEntity : GeometryEntity
 	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 	{
 		Float3 extend = Size / 2f;
-		MaterialIndex material = extractor.Register(Material);
+		MaterialIndex material = extractor.Register(Material, 12);
 
 		Float3 nnn = GetVertex(-1, -1, -1);
 		Float3 nnp = GetVertex(-1, -1, 1);
