@@ -45,7 +45,7 @@ public record AggregatorProfile : IProfile
 			if (total >= ThresholdQuadBVH) return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
 			if (total >= ThresholdBVH) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
 
-			//If there is an instance in the pack and our configuration disallows a linear aggregator for to store instances
+			//If there is an instance in the pack and our configuration disallows a linear aggregator to store instances
 			if (!LinearForInstances && pack.counts.instance > 0) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
 		}
 

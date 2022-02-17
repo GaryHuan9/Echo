@@ -36,20 +36,22 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		nodes = new Node[count];
 		nodes[0] = CreateNode(buildRoot, tokens, ref nodeIndex, out int maxDepth);
 
-		stackSize = maxDepth * 3;
-		rootAABB = root.aabb;
-
+		stackSize = maxDepth * 3; //This 3 is not arbitrary!
 		Assert.AreEqual((long)nodeIndex, nodes.Length);
 	}
 
 	readonly Node[] nodes;
 	readonly int stackSize;
-	readonly AxisAlignedBoundingBox rootAABB;
 
 	/// <summary>
 	/// This is the width of the multiple processing size.  
 	/// </summary>
 	const int Width = 4;
+
+	/// <summary>
+	/// Returns the root <see cref="AxisAlignedBoundingBox"/> that encapsulates the entire hierarchy.
+	/// </summary>
+	AxisAlignedBoundingBox RootAABB => nodes[NodeToken.root.NodeValue].aabb4.Encapsulated;
 
 	public override void Trace(ref TraceQuery query) => TraceCore(ref query);
 
@@ -70,7 +72,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		//Span is too small
 		if (length < Width)
 		{
-			span[0] = rootAABB;
+			span[0] = RootAABB;
 			return 1;
 		}
 
@@ -127,7 +129,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
 	unsafe void TraceCore(ref TraceQuery query)
 	{
-		NodeToken* stack = stackalloc NodeToken[stackSize];
+		var stack = stackalloc NodeToken[stackSize];
 		float* hits = stackalloc float[stackSize];
 
 		NodeToken* next = stack;
