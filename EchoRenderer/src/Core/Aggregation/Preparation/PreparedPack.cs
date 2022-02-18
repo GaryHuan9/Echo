@@ -297,9 +297,10 @@ public class PreparedPack
 		void FillInstances(int index)
 		{
 			var instance = instances[index] = instancesList[index];
+			int instanceIndex = tokenArray.PartitionLength - 1;
 
-			NodeToken token = NodeToken.CreateInstance((uint)index);
-			index = tokenArray.Add(tokenArray.PartitionLength - 1, token);
+			var token = NodeToken.CreateInstance((uint)index);
+			index = tokenArray.Add(instanceIndex, token);
 
 			aabbs[index] = instance.AABB;
 		}

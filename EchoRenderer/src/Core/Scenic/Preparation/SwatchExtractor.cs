@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
-using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
@@ -109,7 +108,7 @@ public class SwatchExtractor
 		if (cachedSwatches.TryGetValue(swatch, out PreparedSwatch prepared)) return prepared;
 
 		//Create and cache if none found
-		prepared = new PreparedSwatch(CreateMaterials(swatch));
+		prepared = new PreparedSwatch(CreateMaterials(swatch), Indices);
 		cachedSwatches.Add(swatch, prepared);
 		return prepared;
 	}
