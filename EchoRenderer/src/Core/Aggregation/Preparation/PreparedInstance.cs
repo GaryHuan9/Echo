@@ -20,23 +20,24 @@ public class PreparedInstance
 
 		Float3 scale = instance.Scale;
 
-		if (scale.Sorted == scale.SortedReversed)
-		{
-			inverseScale = scale.Average;
-			forwardScale = 1f / inverseScale;
-		}
-		else throw new Exception($"{nameof(PackInstance)} does not support none uniform scaling! '{scale}'");
+		inverseScale = scale.Average;
+		forwardScale = 1f / inverseScale;
+
+		if ((Float3)inverseScale != scale) throw new Exception($"{nameof(PackInstance)} does not support none uniform scaling! '{scale}'");
 	}
 
 	protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, uint id)
 	{
 		this.id = id;
 
-		PreparedPack prepared = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray);
+		this.pack = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray);
 
 		this.swatch = extractor.Prepare(swatch);
 
-		this.pack = prepared;
+		foreach (MaterialIndex index in this.swatch.EmissiveIndices)
+		{
+			// tokenArray[index]
+		}
 	}
 
 	/// <summary>
