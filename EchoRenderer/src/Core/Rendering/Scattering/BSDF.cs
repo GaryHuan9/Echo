@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics;
@@ -240,44 +241,32 @@ public class BSDF
 
 	int FindFunction(FunctionType type, ref Distro1 distro, out int index)
 	{
-		if (count == 0)
-		{
-			index = default;
-			return 0;
-		}
+		Unsafe.SkipInit(out index);
+		if (count == 0) return 0;
 
-		int matched; //The number of functions matching type
-
+		//If all stored functions match
 		if (FunctionType.all.Fits(type))
 		{
-			//All stored functions match
-			matched = count;
-			index = distro.Range(matched);
+			distro = distro.Extract(count, out index);
+			return count;
 		}
-		else
+
+		//Count the number of functions matching type
+		Span<int> stack = stackalloc int[count];
+
+		int matched = 0;
+
+		for (int i = 0; i < count; i++)
 		{
-			//Count the number of matched and select
-			Span<int> stack = stackalloc int[count];
-
-			matched = 0;
-
-			for (int i = 0; i < count; i++)
-			{
-				if (!functions[i].type.Fits(type)) continue;
-				stack[matched++] = i;
-			}
-
-			if (matched == 0)
-			{
-				index = default;
-				return 0;
-			}
-
-			index = stack[distro.Range(matched)];
+			if (!functions[i].type.Fits(type)) continue;
+			stack[matched++] = i;
 		}
 
-		//Remaps distro by "zooming in" because we just used it to find index
-		distro = (Distro1)FastMath.FMA(distro.u, matched, -index);
+		if (matched == 0) return 0;
+
+		//Select one function
+		distro = distro.Extract(matched, out index);
+		index = stack[index];
 
 		return matched;
 	}

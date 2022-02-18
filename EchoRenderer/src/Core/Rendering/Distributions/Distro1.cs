@@ -27,9 +27,19 @@ public readonly struct Distro1
 	public int Range(int min, int max)
 	{
 		Assert.IsTrue(min < max);
-		return Range(max - min) + min;
+		return (int)FastMath.FMA(u, max - min, min);
+	}
+
+	/// <summary>
+	/// Extracts and outputs <paramref name="index"/> which is between zero (inclusive) and <paramref name="range"/> (exclusive).
+	/// Returns a new uniform and unbiased <see cref="Distro1"/> that is a more 'zoomed in' version of this <see cref="Distro1"/>.
+	/// </summary>
+	public Distro1 Extract(int range, out int index)
+	{
+		index = Range(range);
+		return (Distro1)FastMath.FMA(u, range, -index);
 	}
 
 	public static implicit operator float(Distro1 distro) => distro.u;
-	public static explicit operator Distro1(float value)  => new(value);
+	public static explicit operator Distro1(float value) => new(value);
 }

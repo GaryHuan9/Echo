@@ -76,9 +76,9 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			return 1;
 		}
 
-		//Because we fetch the aabbs in packs of Width (4) moving down one more level yields 4x more aabbs
+		//Because we fetch the aabbs in packs of Width (4), moving down one more level yields 4x more aabbs
 		//Thus, we must carefully reduce the value of depth to make sure that we never exceed the span size
-		depth = depth / 2 - 1;
+		uint iteration = depth / 2 - 1;
 
 		NodeToken* stack0 = stackalloc NodeToken[length];
 		NodeToken* stack1 = stackalloc NodeToken[length];
@@ -89,7 +89,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		*next0++ = NodeToken.root;
 		int head = 0; //Result head
 
-		for (int i = 0; i < depth; i++)
+		for (int i = 0; i < iteration; i++)
 		{
 			while (next0 != stack0)
 			{
