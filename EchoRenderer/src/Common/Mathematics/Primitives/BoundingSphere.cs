@@ -29,9 +29,8 @@ public readonly struct BoundingSphere
 		this.radius = radius;
 	}
 
-	public bool Contains(in Float3 point) => Contains(point, in center, radius);
 
-	const int NormalCount    = 3;
+	const int NormalCount = 3;
 	const int ExtremalPoints = NormalCount * 2;
 
 	// NOTE: The count of normals could be increased if required for precision, for now we'll be using 3
@@ -41,7 +40,12 @@ public readonly struct BoundingSphere
 	};
 
 	public readonly Float3 center;
-	public readonly float  radius;
+	public readonly float radius;
+
+	/// <summary>
+	/// Returns whether <paramref name="point"/> is inside this <see cref="BoundingSphere"/>.
+	/// </summary>
+	public bool Contains(in Float3 point) => Contains(point, in center, radius);
 
 	// Finds extremes from given point using the normals and fills it into extremes span
 	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)
@@ -65,6 +69,7 @@ public readonly struct BoundingSphere
 					min = value;
 					min3 = point;
 				}
+
 				if (value > max)
 				{
 					max = value;
@@ -142,7 +147,7 @@ public readonly struct BoundingSphere
 		}
 	}
 
-	static bool Contains(in Float3 point, in Float3 center, float radius) => center.Distance(point) - radius <= 0f;
+	static bool Contains(in Float3 point, in Float3 center, float radius) => center.SquaredDistance(point) <= radius * radius;
 
 	/// <summary>
 	///     Solves the CircumSphere from three points
