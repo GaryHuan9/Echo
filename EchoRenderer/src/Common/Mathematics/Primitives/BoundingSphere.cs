@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Numerics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
@@ -20,6 +19,7 @@ public readonly struct BoundingSphere
 			FillExtremes(points, extremes);
 
 			SolveExact(extremes, out center, out radius);
+			GrowSphere(points, ref center, ref radius);
 		}
 	}
 	
@@ -27,12 +27,6 @@ public readonly struct BoundingSphere
 	{
 		this.center = center;
 		this.radius = radius;
-	}
-
-	public static BoundingSphere CreateExact(ReadOnlySpan<Float3> points)
-	{
-		SolveExact(points, out Float3 center, out float radius);
-		return new BoundingSphere(center, radius);
 	}
 
 	/// <summary>
@@ -85,6 +79,17 @@ public readonly struct BoundingSphere
 			extremes[current] = min3;
 			extremes[current + 1] = max3;
 			current += 2;
+		}
+	}
+	
+	static void GrowSphere(ReadOnlySpan<Float3> points, ref Float3 center, ref float radius)
+	{
+		for (int current = 0; current < points.Length; ++current)
+		{
+			if (Contains(points[current], center, radius)) continue;
+			// else doesn't contain point
+
+			SolveExactRecursive(points, current, out center, out radius, current);
 		}
 	}
 
@@ -171,33 +176,37 @@ public readonly struct BoundingSphere
 		float c2 = c.SquaredMagnitude;
 		float d2 = d.SquaredMagnitude;
 
-		float aDet = 1f / new Matrix4x4(
+		float aDet = 1f / new Float4x4
+		(
 			a.x, a.y, a.z, 1f,
 			b.x, b.y, b.z, 1f,
 			c.x, c.y, c.z, 1f,
 			d.x, d.y, d.z, 1f
-		).GetDeterminant();
+		).Determinant;
 
 		center = aDet / 2f *
 				 new Float3(
-					 new Matrix4x4(
+					 new Float4x4
+					 (
 						 a2, a.y, a.z, 1f,
 						 b2, b.y, b.z, 1f,
 						 c2, c.y, c.z, 1f,
 						 d2, d.y, d.z, 1f
-					 ).GetDeterminant(),
-					 new Matrix4x4(
+					 ).Determinant,
+					 new Float4x4
+					 (
 						 a.x, a2, a.z, 1f,
 						 b.x, b2, b.z, 1f,
 						 c.x, c2, c.z, 1f,
 						 d.x, d2, d.z, 1f
-					 ).GetDeterminant(),
-					 new Matrix4x4(
+					 ).Determinant,
+					 new Float4x4
+					 (
 						 a.x, a.y, a2, 1f,
 						 b.x, b.y, b2, 1f,
 						 c.x, c.y, c2, 1f,
 						 d.x, d.y, d2, 1f
-					 ).GetDeterminant()
+					 ).Determinant
 				 );
 
 		radius = center.Distance(a);
