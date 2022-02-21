@@ -5,9 +5,9 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Aggregation;
 
@@ -26,8 +26,8 @@ public abstract class Aggregator
 	/// </summary>
 	public AxisAlignedBoundingBox GetTransformedAABB(in Float4x4 inverseTransform)
 	{
-		const uint FetchDepth = 6; //How deep do we go into this aggregator to get the AABB of the nodes
-		Span<AxisAlignedBoundingBox> aabbs = stackalloc AxisAlignedBoundingBox[1 << (int)FetchDepth];
+		const int FetchDepth = 6; //How deep do we go into this aggregator to get the AABB of the nodes
+		using var _ = SpanPool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
 		aabbs = aabbs[..FillAABB(FetchDepth, aabbs)];
 		Float4x4 absoluteTransform = inverseTransform.Absoluted;
@@ -37,7 +37,7 @@ public abstract class Aggregator
 		Float3 min = Float3.positiveInfinity;
 		Float3 max = Float3.negativeInfinity;
 
-		//Potentially find a smaller AABB by encapsulating children nodes instead of the full aggregator
+		//Potentially find a smaller AABB by encapsulating transformed children nodes instead of the full aggregator
 		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
 		{
 			Float3 center = inverseTransform.MultiplyPoint(aabb.Center);

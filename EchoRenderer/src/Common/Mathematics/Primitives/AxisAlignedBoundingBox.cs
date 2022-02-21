@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
@@ -156,11 +157,38 @@ public readonly struct AxisAlignedBoundingBox
 		return far >= near && far >= 0f ? near : float.PositiveInfinity;
 	}
 
+	/// <summary>
+	/// Returns a new <see cref="AxisAlignedBoundingBox"/> that encapsulates both
+	/// this <see cref="AxisAlignedBoundingBox"/> and <paramref name="other"/>.
+	/// </summary>
 	public AxisAlignedBoundingBox Encapsulate(in AxisAlignedBoundingBox other) => new
 	(
 		Sse.Min(minV, other.minV),
 		Sse.Max(maxV, other.maxV)
 	);
+
+	/// <summary>
+	/// Fills <paramref name="span"/> with the eight vertices of this <see cref="AxisAlignedBoundingBox"/>.
+	/// Note that <paramref name="span"/> must have a <see cref="Span{T}.Length"/> greater than or equals to
+	/// eight. Returns the number elements used in <paramref name="span"/>, which is always eight.
+	/// </summary>
+	public int FillVertices(Span<Float3> span)
+	{
+		if (span.Length < 8) throw ExceptionHelper.Invalid(nameof(span.Length), span.Length, "is not large enough");
+
+		span[0] = min;
+		span[1] = max;
+
+		span[2] = new Float3(min.x, min.y, max.z);
+		span[3] = new Float3(min.x, max.y, min.z);
+		span[4] = new Float3(max.x, min.y, min.z);
+
+		span[5] = new Float3(max.x, max.y, min.z);
+		span[6] = new Float3(max.x, min.y, max.z);
+		span[7] = new Float3(min.x, max.y, max.z);
+
+		return 8;
+	}
 
 	public override int GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
 	public override string ToString() => $"{nameof(Center)}: {Center}, {nameof(Extend)}: {Extend}";
