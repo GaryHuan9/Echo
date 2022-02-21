@@ -22,7 +22,7 @@ public readonly struct BoundingSphere
 			GrowSphere(points, ref center, ref radius);
 		}
 	}
-	
+
 	public BoundingSphere(in Float3 center, float radius)
 	{
 		this.center = center;
@@ -34,7 +34,7 @@ public readonly struct BoundingSphere
 	/// </summary>
 	public bool Contains(in Float3 point) => Contains(point, in center, radius);
 
-	const int NormalCount    = 3;
+	const int NormalCount = 3;
 	const int ExtremalPoints = NormalCount * 2;
 
 	// NOTE: The count of normals could be increased if required for precision, for now we'll be using 3
@@ -44,7 +44,7 @@ public readonly struct BoundingSphere
 	};
 
 	public readonly Float3 center;
-	public readonly float  radius;
+	public readonly float radius;
 
 	// Finds extremes from given point using the normals and fills it into extremes span
 	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)
@@ -81,7 +81,7 @@ public readonly struct BoundingSphere
 			current += 2;
 		}
 	}
-	
+
 	static void GrowSphere(ReadOnlySpan<Float3> points, ref Float3 center, ref float radius)
 	{
 		for (int current = 0; current < points.Length; ++current)
@@ -184,30 +184,30 @@ public readonly struct BoundingSphere
 			d.x, d.y, d.z, 1f
 		).Determinant;
 
-		center = aDet / 2f *
-				 new Float3(
-					 new Float4x4
-					 (
-						 a2, a.y, a.z, 1f,
-						 b2, b.y, b.z, 1f,
-						 c2, c.y, c.z, 1f,
-						 d2, d.y, d.z, 1f
-					 ).Determinant,
-					 new Float4x4
-					 (
-						 a.x, a2, a.z, 1f,
-						 b.x, b2, b.z, 1f,
-						 c.x, c2, c.z, 1f,
-						 d.x, d2, d.z, 1f
-					 ).Determinant,
-					 new Float4x4
-					 (
-						 a.x, a.y, a2, 1f,
-						 b.x, b.y, b2, 1f,
-						 c.x, c.y, c2, 1f,
-						 d.x, d.y, d2, 1f
-					 ).Determinant
-				 );
+		center = aDet / 2f * new Float3
+		(
+			new Float4x4
+			(
+				a2, a.y, a.z, 1f,
+				b2, b.y, b.z, 1f,
+				c2, c.y, c.z, 1f,
+				d2, d.y, d.z, 1f
+			).Determinant,
+			new Float4x4
+			(
+				a.x, a2, a.z, 1f,
+				b.x, b2, b.z, 1f,
+				c.x, c2, c.z, 1f,
+				d.x, d2, d.z, 1f
+			).Determinant,
+			new Float4x4
+			(
+				a.x, a.y, a2, 1f,
+				b.x, b.y, b2, 1f,
+				c.x, c.y, c2, 1f,
+				d.x, d.y, d2, 1f
+			).Determinant
+		);
 
 		radius = center.Distance(a);
 	}
