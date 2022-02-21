@@ -48,20 +48,22 @@ public class PreparedScene
 			if (child.Scale.MinComponent <= 0f) throw new Exception($"Cannot have non-positive scales! '{child.Scale}'");
 		}
 
-		lightSources = lightsList.ToArray();
-		_ambientLights = ambientList.ToArray();
-
 		preparer = new ScenePreparer(source, profile);
 		preparer.PrepareAll();
 
+		//Create root instance
 		rootInstance = new PreparedInstanceRoot(preparer, source);
+		rootInstance.CalculateBounds(out aabb, out boundingSphere);
 
 		//Prepare lights
+		lightSources = lightsList.ToArray();
+		_ambientLights = ambientList.ToArray();
+
 		foreach (LightSource light in lightSources)
 		{
 			light.Prepare(this);
 
-			// float luminace = PackedMath.GetLuminance(Utilities.ToVector(light.Power));
+			float power = light.Power;
 		}
 
 		DebugHelper.Log("Prepared scene");
@@ -70,6 +72,9 @@ public class PreparedScene
 	public readonly ScenePreparer preparer; //NOTE: this field should be removed in the future, it is only here now for temporary access to scene preparation data
 	public readonly Scene source;
 	public readonly Camera camera;
+
+	public readonly AxisAlignedBoundingBox aabb;
+	public readonly BoundingSphere boundingSphere;
 
 	readonly LightSource[] lightSources;
 	readonly AmbientLight[] _ambientLights;

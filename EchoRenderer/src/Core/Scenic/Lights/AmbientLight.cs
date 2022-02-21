@@ -3,6 +3,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -44,13 +45,23 @@ public class AmbientLight : AreaLightSource
 		}
 	}
 
+	float _power;
+
+	public override float Power => _power;
+
 	public override void Prepare(PreparedScene scene)
 	{
 		base.Prepare(scene);
 		Texture.Prepare();
 
+		//Calculate transforms
 		localToWorld = new Versor(Rotation);
 		worldToLocal = localToWorld.Inverse;
+
+		//Calculate power
+		float radius = scene.boundingSphere.radius;
+		float multiplier = Scalars.PI * radius * radius;
+		_power = multiplier * PackedMath.GetLuminance(Texture.Average);
 	}
 
 	/// <summary>

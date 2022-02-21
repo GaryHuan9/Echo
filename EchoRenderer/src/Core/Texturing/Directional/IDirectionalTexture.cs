@@ -10,8 +10,13 @@ namespace EchoRenderer.Core.Texturing.Directional;
 public interface IDirectionalTexture
 {
 	/// <summary>
+	/// Returns the average of this <see cref="IDirectionalTexture"/> on all directions.
+	/// </summary>
+	Vector128<float> Average { get; }
+
+	/// <summary>
 	/// Invoked prior to rendering begins to perform any initialization work this <see cref="IDirectionalTexture"/> need.
-	/// Other methods defined in this interface will/should not be invoked before this method is invoked at least once.
+	/// Other members defined in this interface will/should not be used before this method is invoked at least once.
 	/// </summary>
 	virtual void Prepare() { }
 

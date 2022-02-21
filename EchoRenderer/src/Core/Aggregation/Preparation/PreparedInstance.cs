@@ -59,6 +59,8 @@ public class PreparedInstance
 
 	readonly Piecewise1 powerDistribution;
 
+	public float Power { get; }
+
 	/// <summary>
 	/// Processes <paramref name="query"/>.
 	/// </summary>
