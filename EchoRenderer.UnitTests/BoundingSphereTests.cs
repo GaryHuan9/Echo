@@ -12,7 +12,7 @@ public class BoundingSphereTests
 	// this test will likely fail as the bound sphere's
 	// constructor doesn't really create an "exact" bounding sphere XD
 	
-	/*[SetUp]
+	[SetUp]
 	[Repeat(100)]
 	public void Setup()
 	{
@@ -27,7 +27,7 @@ public class BoundingSphereTests
 	}
 
 	Float3[] points;
-	BoundingSphere sphere;*/
+	BoundingSphere sphere;
 
 	static Float3[] GenerateRandomPoints()
 	{
