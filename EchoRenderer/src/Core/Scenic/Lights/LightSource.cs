@@ -21,7 +21,7 @@ public abstract class LightSource : Entity, ILight
 	/// <summary>
 	/// The approximated total emitted power of this <see cref="LightSource"/>.
 	/// </summary>
-	public virtual Float3 Power => throw new NotSupportedException();
+	public abstract float Power { get; }
 
 	/// <summary>
 	/// Invoked before rendering; after geometry and materials are prepared.
