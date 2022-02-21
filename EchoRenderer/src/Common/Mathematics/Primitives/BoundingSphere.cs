@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
@@ -7,30 +8,39 @@ public readonly struct BoundingSphere
 {
 	public BoundingSphere(ReadOnlySpan<Float3> points)
 	{
-		SolveExact(points, out center, out radius);
-
-		/*if (points.Length < ExtremalPoints)
+		if (points.Length < ExtremalPoints)
 		{
+			SolveExact(points, out center, out radius);
+		}
+		else
+		{
+			// else there is no reason for us to solve less
 			Span<Float3> extremes = stackalloc Float3[normals.Length * 2];
 
 			FillExtremes(points, extremes);
 
-			SolveExactOld(extremes, out center, out radius);
-			return;
+			SolveExact(extremes, out center, out radius);
 		}
-		// else there is no reason for us to solve less
-
-		SolveExactOld(points, out center, out radius);*/
 	}
-
+	
 	public BoundingSphere(in Float3 center, float radius)
 	{
 		this.center = center;
 		this.radius = radius;
 	}
 
+	public static BoundingSphere CreateExact(ReadOnlySpan<Float3> points)
+	{
+		SolveExact(points, out Float3 center, out float radius);
+		return new BoundingSphere(center, radius);
+	}
 
-	const int NormalCount = 3;
+	/// <summary>
+	///     Returns whether <paramref name="point" /> is inside this <see cref="BoundingSphere" />.
+	/// </summary>
+	public bool Contains(in Float3 point) => Contains(point, in center, radius);
+
+	const int NormalCount    = 3;
 	const int ExtremalPoints = NormalCount * 2;
 
 	// NOTE: The count of normals could be increased if required for precision, for now we'll be using 3
@@ -40,12 +50,7 @@ public readonly struct BoundingSphere
 	};
 
 	public readonly Float3 center;
-	public readonly float radius;
-
-	/// <summary>
-	/// Returns whether <paramref name="point"/> is inside this <see cref="BoundingSphere"/>.
-	/// </summary>
-	public bool Contains(in Float3 point) => Contains(point, in center, radius);
+	public readonly float  radius;
 
 	// Finds extremes from given point using the normals and fills it into extremes span
 	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)
@@ -84,66 +89,63 @@ public readonly struct BoundingSphere
 	}
 
 	/// <summary>
-	///     Solves exact sphere using the mini-ball implementation from paper
+	///     Solves the exact sphere using the given points, reference: https://www.youtube.com/watch?v=HojzdCICjmQ&t=260s
 	/// </summary>
 	static void SolveExact(ReadOnlySpan<Float3> points, out Float3 center, out float radius)
 	{
-		//set center as first point
-		center = points[0];
+		SolveFromDiameterPoints(points[0], points[1], out center, out radius);
 
-		//find farthest
-		int farthest = 0; // not in use
-
-		radius = 0;
-
-		float sqrRadius = 0;
-
-		for (int i = 1; i < points.Length; ++i)
-		{
-			Float3 point = points[i];
-
-			float distance = center.SquaredDistance(point);
-
-			if (distance < sqrRadius) continue;
-			//else
-
-			sqrRadius = distance;
-			farthest = i;
-
-			radius = MathF.Sqrt(sqrRadius);
-		}
-	}
-
-	/// <summary>
-	///     Solves the exact sphere using the given points, reference: https://www.youtube.com/watch?v=HojzdCICjmQ&t=260s
-	/// </summary>
-	static void SolveExactOld(ReadOnlySpan<Float3> points, out Float3 center, out float radius)
-	{
-		SolveFromExtremePoints(points[0], points[1], out center, out radius);
-
-		// Double Check, and solve the circle again if out of bounds
 		for (int current = 2; current < points.Length; ++current)
 		{
-			if (Contains(points[current], in center, radius)) continue;
-			// else not in bounds
+			if (Contains(points[current], center, radius)) continue;
+			// else doesn't contain point
 
-			SolveExactWithPins(points, current, out center, out radius, current, current);
+			SolveExactRecursive(points, current, out center, out radius, current);
 		}
 	}
 
 	/// <summary>
 	///     Solves the exact sphere using the given points with anchored pins (or you could say guessed extreme points)
 	/// </summary>
-	static void SolveExactWithPins(ReadOnlySpan<Float3> points, int end, out Float3 center, out float radius, int pin1, int pin2)
+	static void SolveExactRecursive(ReadOnlySpan<Float3> points, int end, out Float3 center, out float radius, int pin1, int pin2 = -1, int pin3 = -1)
 	{
-		SolveFromExtremePoints(points[pin1], points[pin2], out center, out radius);
+		int current = 0;
 
-		for (int current = 0; current < end; ++current)
+		if (pin2 < 0) // no pin 2
 		{
-			if (Contains(points[current], in center, radius)) continue;
-			// else not in bounds
+			// only pin 1
+			SolveFromDiameterPoints(points[0], points[pin1], out center, out radius);
+			current = 1;
+		}
+		else // have pin 1 and 2
+		{
+			if (pin3 < 0) // only have pin 1 & 2
+				SolveFromDiameterPoints(points[pin1], points[pin2], out center, out radius);
+			else // and also have pin 3
+				SolveFromTriangle(points[pin1], points[pin2], points[pin3], out center, out radius);
+		}
 
-			SolveFromTriangle(points[pin1], points[pin2], points[current], out center, out radius);
+		for (; current < end; ++current)
+		{
+			if (Contains(points[current], center, radius)) continue;
+			// else doesn't contain point
+
+			if (pin2 < 0) // no pin 2
+			{
+				// only pin 1
+				SolveExactRecursive(points, current, out center, out radius, pin1, current);
+				continue;
+			}
+			// else have pin 1 and 2
+
+			if (pin3 < 0) // only have pin 1 & 2
+			{
+				SolveExactRecursive(points, current, out center, out radius, pin1, pin2, current);
+				continue;
+			}
+			// and also have pin 3
+
+			SolveCircumSphereFromFourExtremes(points[pin1], points[pin2], points[pin3], points[current], out center, out radius);
 		}
 	}
 
@@ -162,10 +164,49 @@ public readonly struct BoundingSphere
 		radius = center.Distance(a);
 	}
 
+	static void SolveCircumSphereFromFourExtremes(in Float3 a, in Float3 b, in Float3 c, in Float3 d, out Float3 center, out float radius)
+	{
+		float a2 = a.SquaredMagnitude;
+		float b2 = b.SquaredMagnitude;
+		float c2 = c.SquaredMagnitude;
+		float d2 = d.SquaredMagnitude;
+
+		float aDet = 1f / new Matrix4x4(
+			a.x, a.y, a.z, 1f,
+			b.x, b.y, b.z, 1f,
+			c.x, c.y, c.z, 1f,
+			d.x, d.y, d.z, 1f
+		).GetDeterminant();
+
+		center = aDet / 2f *
+				 new Float3(
+					 new Matrix4x4(
+						 a2, a.y, a.z, 1f,
+						 b2, b.y, b.z, 1f,
+						 c2, c.y, c.z, 1f,
+						 d2, d.y, d.z, 1f
+					 ).GetDeterminant(),
+					 new Matrix4x4(
+						 a.x, a2, a.z, 1f,
+						 b.x, b2, b.z, 1f,
+						 c.x, c2, c.z, 1f,
+						 d.x, d2, d.z, 1f
+					 ).GetDeterminant(),
+					 new Matrix4x4(
+						 a.x, a.y, a2, 1f,
+						 b.x, b.y, b2, 1f,
+						 c.x, c.y, c2, 1f,
+						 d.x, d.y, d2, 1f
+					 ).GetDeterminant()
+				 );
+
+		radius = center.Distance(a);
+	}
+
 	/// <summary>
 	///     Solves the sphere from two extreme points (assuming they are the sphere's diameter end points)
 	/// </summary>
-	static void SolveFromExtremePoints(in Float3 a, in Float3 b, out Float3 center, out float radius)
+	static void SolveFromDiameterPoints(in Float3 a, in Float3 b, out Float3 center, out float radius)
 	{
 		center = (a + b) / 2f;
 		radius = (a - b).Magnitude / 2f;
