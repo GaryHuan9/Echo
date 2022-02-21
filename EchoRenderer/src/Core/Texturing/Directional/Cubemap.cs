@@ -63,6 +63,9 @@ public class Cubemap : IDirectionalTexture
 		}
 	}
 
+	//Change when we add importance sampling, the golden ration is a good default number for now.
+	public Vector128<float> Average => Vector128.Create(Scalars.GoldenRatio - 1f);
+
 	Texture this[int index]
 	{
 		get => textures[index];
