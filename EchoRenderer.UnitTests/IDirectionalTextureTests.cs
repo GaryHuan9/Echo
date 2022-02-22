@@ -11,8 +11,8 @@ namespace EchoRenderer.UnitTests;
 
 public abstract class IDirectionalTextureTests
 {
-	[SetUp]
-	public void SetUp()
+	[OneTimeSetUp]
+	public void OneTimeSetUp()
 	{
 		texture = GetTexture();
 		texture.Prepare();
@@ -28,14 +28,14 @@ public abstract class IDirectionalTextureTests
 	}
 
 	[Test]
-	public void Coherence([Random(0f, 1f, 4)] float x, [Random(0f, 1f, 4)] float y)
+	public void Coherence([Random(0f, 1f, 12)] float x, [Random(0f, 1f, 12)] float y)
 	{
 		Distro2 distro = (Distro2)new Float2(x, y);
 
 		Vector128<float> sampled = texture.Sample(distro, out Float3 incident, out float pdf);
 
 		Assert.That(Difference(sampled, texture.Evaluate(incident)), Is.LessThan(0.001f));
-		Assert.That(pdf, Is.EqualTo(texture.ProbabilityDensity(incident)).Roughly(8));
+		Assert.That(pdf, Is.EqualTo(texture.ProbabilityDensity(incident)).Roughly(0.01f));
 	}
 
 	protected abstract IDirectionalTexture GetTexture();
