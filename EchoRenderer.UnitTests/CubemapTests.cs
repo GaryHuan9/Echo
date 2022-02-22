@@ -13,7 +13,7 @@ public class CubemapTests : IDirectionalTextureTests
 	{
 		Span<Texture> textures = new Texture[Direction.All.Length];
 
-		foreach (ref Texture texture in textures) texture = GenerateRandomTexture((Int2)200);
+		foreach (ref Texture texture in textures) texture = GenerateRandomTexture((Int2)150);
 
 		return new Cubemap(textures);
 	}
