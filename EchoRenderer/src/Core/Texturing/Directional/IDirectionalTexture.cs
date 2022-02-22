@@ -52,6 +52,8 @@ public static class IDirectionalTextureExtensions
 	/// </summary>
 	public static Vector128<float> ConvergeAverage(this IDirectionalTexture texture, int sampleCount = 1000000)
 	{
+		//TODO: optimize with multithreading / Parallel.For
+
 		IRandom random = new SquirrelRandom();
 		Summation sum = Summation.Zero;
 
