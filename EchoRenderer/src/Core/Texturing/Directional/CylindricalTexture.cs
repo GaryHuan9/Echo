@@ -50,7 +50,7 @@ public class CylindricalTexture : IDirectionalTexture
 		int index = -1;
 
 		//At the same time, also calculate the weighted sum of the texture
-		Vector256<double> sum = Vector256<double>.Zero;
+		var sum = Summation.Zero;
 		double sinTotal = 0d; //Total of the sin multiplier
 
 		for (int y = 1; y <= size.y; y++)
@@ -75,49 +75,22 @@ public class CylindricalTexture : IDirectionalTexture
 				previous = current;
 
 				//Add to sum with sin weight
-				sum = FMA(Get(position - Float2.half), sin, sum);
+				Vector128<float> value = Get(position - Float2.half);
+				sum += Sse.Multiply(value, Vector128.Create(sin));
 			}
 		}
 
 		//Construct piecewise distribution and calculate average from sum
+		Vector128<float> sinTotalRV = Vector128.Create((float)(1d / sinTotal));
+
 		piecewise = new Piecewise2(weights, size.x);
-		Average = Divide(sum, sinTotal);
+		Average = Sse.Multiply(sum.Result, sinTotalRV);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		Vector128<float> Get(in Float2 position) => texture[position * sizeR];
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		float GetWeight(in Float2 position) => PackedMath.GetLuminance(Get(position));
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static Vector256<double> FMA(in Vector128<float> value, float multiplier, in Vector256<double> adder)
-		{
-			if (Fma.IsSupported && Avx.IsSupported)
-			{
-				Vector256<double> converted = Avx.ConvertToVector256Double(value);
-				Vector256<double> multiplierV = Vector256.Create((double)multiplier);
-
-				return Fma.MultiplyAdd(converted, multiplierV, adder);
-			}
-
-			return Vector256.Create
-			(
-				value.GetElement(0) * multiplier + adder.GetElement(0), value.GetElement(1) * multiplier + adder.GetElement(1),
-				value.GetElement(2) * multiplier + adder.GetElement(2), value.GetElement(3) * multiplier + adder.GetElement(3)
-			);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static Vector128<float> Divide(in Vector256<double> value, double divisor)
-		{
-			if (Avx.IsSupported) return Avx.ConvertToVector128Single(Avx.Divide(value, Vector256.Create(divisor)));
-
-			return Vector128.Create
-			(
-				(float)(value.GetElement(0) / divisor), (float)(value.GetElement(1) / divisor),
-				(float)(value.GetElement(2) / divisor), (float)(value.GetElement(3) / divisor)
-			);
-		}
 	}
 
 	/// <inheritdoc/>
