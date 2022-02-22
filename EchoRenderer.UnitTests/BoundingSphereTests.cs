@@ -10,7 +10,6 @@ namespace EchoRenderer.UnitTests;
 public class BoundingSphereTests
 {
 	[SetUp]
-	[Repeat(100)]
 	public void Setup()
 	{
 		points = GenerateRandomPoints();

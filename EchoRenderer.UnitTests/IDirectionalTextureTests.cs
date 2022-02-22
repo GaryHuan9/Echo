@@ -12,7 +12,6 @@ namespace EchoRenderer.UnitTests;
 public abstract class IDirectionalTextureTests
 {
 	[SetUp]
-	// [Repeat(100)]
 	public void SetUp()
 	{
 		texture = GetTexture();
@@ -45,10 +44,12 @@ public abstract class IDirectionalTextureTests
 	{
 		IRandom random = Utilities.NewRandom();
 
-		ArrayGrid texture = new ArrayGrid(new Int2(random.Next1(maxSize.x), random.Next1(maxSize.y)));
+		ArrayGrid texture = new ArrayGrid(Next2(random, maxSize - Int2.one) + Int2.one);
 		texture.ForEach(position => texture[position] = Common.Utilities.ToVector(random.Next3()));
 
 		return texture;
+
+		static Int2 Next2(IRandom random, Int2 max) => new(random.Next1(max.x), random.Next1(max.y));
 	}
 
 	static float Difference(in Vector128<float> value, in Vector128<float> other)

@@ -11,15 +11,15 @@ public abstract class Texture
 {
 	protected Texture(IWrapper wrapper) => Wrapper = wrapper;
 
-	IWrapper _wrapper;
+	NotNull<object> _wrapper;
 
 	/// <summary>
 	/// The <see cref="IWrapper"/> used on this <see cref="Texture"/> to control uv texture coordinates.
 	/// </summary>
 	public IWrapper Wrapper
 	{
-		get => _wrapper;
-		set => _wrapper = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
+		get => (IWrapper)_wrapper.Value;
+		set => _wrapper = (object)value;
 	}
 
 	/// <summary>
