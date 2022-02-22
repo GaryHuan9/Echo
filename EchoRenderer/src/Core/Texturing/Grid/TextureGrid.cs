@@ -14,6 +14,8 @@ public abstract partial class TextureGrid : Texture
 {
 	protected TextureGrid(Int2 size, IFilter filter) : base(Wrappers.repeat)
 	{
+		Assert.IsTrue(this.size > Int2.zero);
+
 		this.size = size;
 		sizeR = 1f / size;
 		oneLess = size - Int2.one;
@@ -42,15 +44,15 @@ public abstract partial class TextureGrid : Texture
 	/// </summary>
 	public readonly float aspect;
 
-	IFilter _filter;
+	NotNull<object> _filter;
 
 	/// <summary>
 	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid"/> to retrieve pixels.
 	/// </summary>
 	public IFilter Filter
 	{
-		get => _filter;
-		set => _filter = value ?? throw ExceptionHelper.Invalid(nameof(value), InvalidType.isNull);
+		get => (IFilter)_filter.Value;
+		set => _filter = (object)value;
 	}
 
 	/// <summary>
