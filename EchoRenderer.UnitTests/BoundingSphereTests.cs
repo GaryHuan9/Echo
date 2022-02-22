@@ -3,15 +3,12 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
 using NUnit.Framework;
-using NUnit.Framework.Internal;
 
 namespace EchoRenderer.UnitTests;
 
+[TestFixture]
 public class BoundingSphereTests
 {
-	// this test will likely fail as the bound sphere's
-	// constructor doesn't really create an "exact" bounding sphere XD
-	
 	[SetUp]
 	[Repeat(100)]
 	public void Setup()
@@ -31,7 +28,7 @@ public class BoundingSphereTests
 
 	static Float3[] GenerateRandomPoints()
 	{
-		IRandom random = new SquirrelRandom(TestContext.CurrentContext.Random.NextUInt());
+		IRandom random = Utilities.NewRandom();
 
 		var points = new Float3[random.Next1(1000)];
 		FillRandom(points, random.Next1(), random);

@@ -1,5 +1,8 @@
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Core.Rendering.Distributions;
 
 namespace EchoRenderer.Core.Texturing.Directional;
@@ -41,4 +44,23 @@ public interface IDirectionalTexture
 	/// Returns the probability density function for <paramref name="incident"/> direction on this <see cref="IDirectionalTexture"/>.
 	/// </summary>
 	float ProbabilityDensity(in Float3 incident) => Distro2.UniformSpherePDF;
+}
+public static class IDirectionalTextureExtensions
+{
+	/// <summary>
+	/// Explicitly calculates a converged value for <see cref="IDirectionalTexture.Average"/> using Monte Carlo sampling.
+	/// </summary>
+	public static Vector128<float> ConvergeAverage(this IDirectionalTexture texture, int sampleCount = 1000000)
+	{
+		IRandom random = new SquirrelRandom();
+		Summation sum = Summation.Zero;
+
+		for (int i = 0; i < sampleCount; i++)
+		{
+			var direction = random.NextOnSphere();
+			sum += texture.Evaluate(direction);
+		}
+
+		return Sse.Divide(sum.Result, Vector128.Create((float)sampleCount));
+	}
 }
