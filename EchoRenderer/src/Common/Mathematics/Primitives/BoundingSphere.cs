@@ -7,20 +7,22 @@ public readonly struct BoundingSphere
 {
 	public BoundingSphere(ReadOnlySpan<Float3> points)
 	{
-		if (points.Length < ExtremalPoints)
-		{
-			SolveExact(points, out center, out radius);
-		}
-		else
+		if (points.Length > ExtremalPoints)
 		{
 			// else there is no reason for us to solve less
-			Span<Float3> extremes = stackalloc Float3[normals.Length * 2];
+			Span<Float3> extremes = stackalloc Float3[ExtremalPoints];
 
 			FillExtremes(points, extremes);
 
 			SolveExact(extremes, out center, out radius);
 			GrowSphere(points, ref center, ref radius);
 		}
+		else SolveExact(points, out center, out radius);
+
+		//Because floating point arithmetic accuracy issues, we will increase the radius of
+		//the sphere by an epsilon to ensure that the sphere contains all the input points.
+
+		radius *= 1f + Scalars.Epsilon;
 	}
 
 	public BoundingSphere(in Float3 center, float radius)
@@ -38,10 +40,7 @@ public readonly struct BoundingSphere
 	const int ExtremalPoints = NormalCount * 2;
 
 	// NOTE: The count of normals could be increased if required for precision, for now we'll be using 3
-	static readonly Float3[] normals =
-	{
-		Float3.right, Float3.up, Float3.forward
-	};
+	static readonly Float3[] normals = { Float3.right, Float3.up, Float3.forward };
 
 	public readonly Float3 center;
 	public readonly float radius;
@@ -94,7 +93,7 @@ public readonly struct BoundingSphere
 	}
 
 	/// <summary>
-	///     Solves the exact sphere using the given points, reference: https://www.youtube.com/watch?v=HojzdCICjmQ&t=260s
+	///     Solves the exact sphere using the given points, reference: https://www.youtube.com/watch?v=HojzdCICjmQ
 	/// </summary>
 	static void SolveExact(ReadOnlySpan<Float3> points, out Float3 center, out float radius)
 	{
