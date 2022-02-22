@@ -4,6 +4,7 @@ using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests;
 
+[TestFixture]
 public class NodeTokenArrayTests
 {
 	[SetUp]
