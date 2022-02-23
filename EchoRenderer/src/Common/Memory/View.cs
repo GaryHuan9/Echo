@@ -50,8 +50,8 @@ public readonly struct View<T>
 
 	public T this[Index index]
 	{
-		get => array[AssertShift(index.Value)];
-		set => array[AssertShift(index.Value)] = value;
+		get => array[AssertShift(index.GetOffset(count))];
+		set => array[AssertShift(index.GetOffset(count))] = value;
 	}
 
 	public View<T> this[Range range]
