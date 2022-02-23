@@ -37,7 +37,7 @@ public readonly struct ReadOnlyView<T>
 	public ReadOnlySpan<T> AsSpan() => this;
 
 	public T this[int index] => array[AssertShift(index)];
-	public T this[Index index] => array[AssertShift(index.Value)];
+	public T this[Index index] => array[AssertShift(index.GetOffset(count))];
 	public ReadOnlyView<T> this[Range range] => Slice(range.Start.Value, range.End.Value - range.Start.Value);
 
 	public bool IsEmpty => count == 0 || array == null;
