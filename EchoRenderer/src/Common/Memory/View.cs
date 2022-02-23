@@ -54,11 +54,7 @@ public readonly struct View<T>
 		set => array[AssertShift(index.GetOffset(count))] = value;
 	}
 
-	public View<T> this[Range range]
-	{
-		get => Slice(range.Start.Value, range.End.Value - range.Start.Value);
-		set => throw new NotImplementedException();
-	}
+	public View<T> this[Range range] => Slice(range.Start.Value, range.End.Value - range.Start.Value);
 
 	public bool IsEmpty => count == 0 || array == null;
 
