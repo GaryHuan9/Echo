@@ -23,7 +23,7 @@ public class Piecewise2
 		Assert.AreEqual(function.Length, size.Product);
 
 		slices = new Piecewise1[size.y];
-		using var _ = SpanPool<float>.Fetch(size.y, out Span<float> sums);
+		using var _ = Pool<float>.Fetch(size.y, out Span<float> sums);
 
 		//Create single dimensional functions and collect integrals
 		for (int y = 0; y < size.y; y++)

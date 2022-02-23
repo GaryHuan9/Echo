@@ -1,6 +1,10 @@
 ﻿using System;
+using CodeHelpers.Collections;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Memory;
+using EchoRenderer.Core.Aggregation.Acceleration;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Instancing;
@@ -15,8 +19,8 @@ public class PreparedInstance
 	/// </summary>
 	public PreparedInstance(ScenePreparer preparer, PackInstance instance, uint id) : this(preparer, instance.EntityPack, instance.Swatch, id)
 	{
-		forwardTransform = instance.WorldToLocal;
 		inverseTransform = instance.LocalToWorld;
+		forwardTransform = instance.WorldToLocal;
 
 		Float3 scale = instance.Scale;
 
@@ -31,13 +35,9 @@ public class PreparedInstance
 		this.id = id;
 
 		this.pack = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray);
-
 		this.swatch = extractor.Prepare(swatch);
 
-		foreach (MaterialIndex index in this.swatch.EmissiveIndices)
-		{
-			// tokenArray[index]
-		}
+		// powerDistribution = CreatePowerDistribution()
 	}
 
 	/// <summary>
@@ -57,9 +57,12 @@ public class PreparedInstance
 	readonly float forwardScale = 1f; //The parent to local scale multiplier
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
 
-	readonly Piecewise1 powerDistribution;
+	readonly PowerDistribution powerDistribution;
 
-	public float Power { get; }
+	/// <summary>
+	/// Returns the total emissive power of this <see cref="PreparedInstance"/>.
+	/// </summary>
+	public float Power => powerDistribution.Total * inverseScale * inverseScale;
 
 	/// <summary>
 	/// Processes <paramref name="query"/>.
@@ -132,5 +135,31 @@ public class PreparedInstance
 		Float3 direction = forwardTransform.MultiplyDirection(ray.direction);
 
 		ray = new Ray(origin, direction * inverseScale);
+	}
+
+	static PowerDistribution CreatePowerDistribution(PreparedPack pack, PreparedSwatch swatch, NodeTokenArray tokenArray)
+	{
+		// var materialIndices = swatch.EmissiveIndices;
+		//
+		// int emissiveInstanceCount = 0;
+		//
+		// var instanceTokens = tokenArray[tokenArray.FinalPartition];
+		//
+		// foreach (NodeToken token in instanceTokens)
+		// {
+		// 	PreparedInstance instance = pack.GetInstance(token.InstanceValue);
+		// 	if (instance.Power > 0f) ++emissiveInstanceCount;
+		// }
+		//
+		// if (materialIndices.IsEmpty) return null;
+		//
+		// using var _ = Pool<ReadOnlyView<NodeToken>>.Fetch(materialIndices.Length, out var views);
+		//
+		// for (int i = 0; i < materialIndices.Length; i++)
+		// {
+		// 	views[i] = tokenArray[materialIndices[i]];
+		// }
+
+		throw new NotImplementedException();
 	}
 }

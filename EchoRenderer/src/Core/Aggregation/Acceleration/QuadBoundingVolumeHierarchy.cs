@@ -6,6 +6,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -87,7 +88,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		NodeToken* next1 = stack1;
 
 		*next0++ = NodeToken.root;
-		int head = 0; //Result head
+		var fill = span.AsFill();
 
 		for (int i = 0; i < iteration; i++)
 		{
@@ -101,7 +102,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 					if (child.IsEmpty) continue;
 					if (child.IsNode) *next1++ = child;
-					else span[head++] = node.aabb4[j];
+					else fill.Add(node.aabb4[j]);
 				}
 			}
 
@@ -118,11 +119,11 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			for (int i = 0; i < Width; i++)
 			{
 				ref readonly NodeToken child = ref node.token4[i];
-				if (!child.IsEmpty) span[head++] = node.aabb4[i];
+				if (!child.IsEmpty) fill.Add(node.aabb4[i]);
 			}
 		}
 
-		return head;
+		return fill.Count;
 	}
 
 	[SkipLocalsInit]

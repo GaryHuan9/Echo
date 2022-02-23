@@ -27,7 +27,7 @@ public abstract class Aggregator
 	public AxisAlignedBoundingBox GetTransformedAABB(in Float4x4 inverseTransform)
 	{
 		const int FetchDepth = 6; //How deep do we go into this aggregator to get the AABB of the nodes
-		using var _ = SpanPool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
+		using var _ = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
 		aabbs = aabbs[..FillAABB(FetchDepth, aabbs)];
 		Float4x4 absoluteTransform = inverseTransform.Absoluted;
