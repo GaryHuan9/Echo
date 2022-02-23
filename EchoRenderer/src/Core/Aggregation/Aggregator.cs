@@ -81,14 +81,14 @@ public abstract class Aggregator
 	/// Validates that <paramref name="aabbs"/> and <paramref name="tokens"/>
 	/// are allowed to be used to construct this <see cref="Aggregator"/>.
 	/// </summary>
-	protected static void Validate(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens, Func<int, bool> lengthValidator = null)
+	protected static void Validate(ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens, Func<int, bool> lengthValidator = null)
 	{
 		if (aabbs.Length != tokens.Length) throw ExceptionHelper.Invalid(nameof(aabbs), $"does not have a matching length with {nameof(tokens)}");
 		if (lengthValidator?.Invoke(tokens.Length) == false) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "has invalid length");
 
 #if DEBUG
 			foreach (ref readonly NodeToken token in tokens) Assert.IsTrue(token.IsGeometry);
-			foreach (ref readonly var aabb in aabbs.Span) Assert.IsFalse(aabb.min.EqualsExact(aabb.max));
+			foreach (ref readonly var aabb in aabbs) Assert.IsFalse(aabb.min.EqualsExact(aabb.max));
 #endif
 	}
 
