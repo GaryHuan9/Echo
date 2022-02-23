@@ -131,6 +131,28 @@ public class PreparedPack
 	/// </summary>
 	public PreparedInstance GetInstance(uint id) => instances[id];
 
+	/// <summary>
+	/// Returns the area of the geometry represented by <paramref name="token"/>.
+	/// </summary>
+	public float GetArea(in NodeToken token)
+	{
+		Assert.IsTrue(token.IsGeometry);
+
+		if (token.IsTriangle)
+		{
+			ref readonly var triangle = ref triangles[token.TriangleValue];
+			return triangle.Area;
+		}
+
+		if (token.IsSphere)
+		{
+			ref readonly var sphere = ref spheres[token.SphereValue];
+			return sphere.Area;
+		}
+
+		throw NotBasePackException();
+	}
+
 	/// <inheritdoc cref="PreparedScene.Interact"/>
 	public Interaction Interact(in TraceQuery query, in Float4x4 transform, PreparedInstance instance)
 	{
@@ -259,7 +281,7 @@ public class PreparedPack
 
 		//Collect tokens
 		tokens = CreateTokenArray(extractor, instances.Length);
-		var aabbs = new AxisAlignedBoundingBox[tokens.Length];
+		var aabbs = new AxisAlignedBoundingBox[tokens.TotalLength];
 
 		var tokenArray = tokens;
 
@@ -297,10 +319,9 @@ public class PreparedPack
 		void FillInstances(int index)
 		{
 			var instance = instances[index] = instancesList[index];
-			int instanceIndex = tokenArray.PartitionLength - 1;
 
-			var token = NodeToken.CreateInstance((uint)index);
-			index = tokenArray.Add(instanceIndex, token);
+			NodeToken token = NodeToken.CreateInstance((uint)index);
+			index = tokenArray.Add(tokenArray.FinalPartition, token);
 
 			aabbs[index] = instance.AABB;
 		}

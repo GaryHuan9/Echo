@@ -3,6 +3,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -101,18 +102,19 @@ public class LinearAggregator : Aggregator
 		//If theres enough room to store every individual AABB
 		if (span.Length >= totalCount)
 		{
-			int index = 0;
+			var fill = span[..totalCount].AsFill();
 
 			foreach (ref readonly Node node in nodes.AsSpan())
 			{
 				for (int i = 0; i < Width; i++)
 				{
-					if (index == totalCount) break;
-					span[index++] = node.aabb4[i];
+					if (fill.IsFull) goto exit;
+					fill.Add(node.aabb4[i]);
 				}
 			}
 
-			return index;
+		exit:
+			return totalCount;
 		}
 
 		Span<AxisAlignedBoundingBox> aabb4 = stackalloc AxisAlignedBoundingBox[Width];

@@ -48,7 +48,7 @@ public abstract class Material
 	/// <summary>
 	/// Returns whether this <see cref="Material"/> is emissive.
 	/// </summary>
-	public bool HasEmission { get; private set; }
+	public bool IsEmissive { get; private set; }
 
 	bool zeroNormal;
 
@@ -63,7 +63,7 @@ public abstract class Material
 	public virtual void Prepare()
 	{
 		Emission = Float3.zero.Max(Emission);
-		HasEmission = Emission.PositiveRadiance();
+		IsEmissive = Emission.PositiveRadiance();
 
 		zeroNormal = Normal == Texture.normal || NormalIntensity == Float3.zero;
 		normalIntensityV = Utilities.ToVector(NormalIntensity);

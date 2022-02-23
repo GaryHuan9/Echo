@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -78,7 +79,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		NodeToken* next1 = stack1;
 
 		*next0++ = NodeToken.root;
-		int head = 0; //Result head
+		var fill = span.AsFill();
 
 		for (uint i = 0; i < depth; i++)
 		{
@@ -92,7 +93,7 @@ public class BoundingVolumeHierarchy : Aggregator
 					*next1++ = node.token;
 					*next1++ = node.token.Next;
 				}
-				else span[head++] = node.aabb; //If leaf then we write it to the result
+				else fill.Add(node.aabb); //If leaf then we write it to the result
 			}
 
 			//Swap the two stacks
@@ -104,10 +105,10 @@ public class BoundingVolumeHierarchy : Aggregator
 		while (next0 != stack0)
 		{
 			ref readonly Node node = ref nodes[(--next0)->NodeValue];
-			span[head++] = node.aabb;
+			fill.Add(node.aabb);
 		}
 
-		return head;
+		return fill.Count;
 	}
 
 	[SkipLocalsInit]
