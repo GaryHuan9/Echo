@@ -1,12 +1,11 @@
 ﻿using System;
-using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
-using EchoRenderer.Core.Aggregation.Acceleration;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Preparation;
 
@@ -37,7 +36,7 @@ public class PreparedInstance
 		this.pack = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray);
 		this.swatch = extractor.Prepare(swatch);
 
-		// powerDistribution = CreatePowerDistribution()
+		powerDistribution = CreatePowerDistribution(this.pack, this.swatch, tokenArray);
 	}
 
 	/// <summary>
@@ -137,29 +136,80 @@ public class PreparedInstance
 		ray = new Ray(origin, direction * inverseScale);
 	}
 
+	/// <summary>
+	/// Creates and returns a new <see cref="powerDistribution"/> for some emissive
+	/// objects indicated by the parameter. If no object is emissive, null is returned.
+	/// </summary>
 	static PowerDistribution CreatePowerDistribution(PreparedPack pack, PreparedSwatch swatch, NodeTokenArray tokenArray)
 	{
-		// var materialIndices = swatch.EmissiveIndices;
-		//
-		// int emissiveInstanceCount = 0;
-		//
-		// var instanceTokens = tokenArray[tokenArray.FinalPartition];
-		//
-		// foreach (NodeToken token in instanceTokens)
-		// {
-		// 	PreparedInstance instance = pack.GetInstance(token.InstanceValue);
-		// 	if (instance.Power > 0f) ++emissiveInstanceCount;
-		// }
-		//
-		// if (materialIndices.IsEmpty) return null;
-		//
-		// using var _ = Pool<ReadOnlyView<NodeToken>>.Fetch(materialIndices.Length, out var views);
-		//
-		// for (int i = 0; i < materialIndices.Length; i++)
-		// {
-		// 	views[i] = tokenArray[materialIndices[i]];
-		// }
+		int powerLength = 0;
+		int segmentLength = 0;
 
-		throw new NotImplementedException();
+		var materials = swatch.EmissiveIndices;
+		var instances = tokenArray[tokenArray.FinalPartition];
+
+		//Iterate through materials to find their partition lengths
+		foreach (MaterialIndex index in materials)
+		{
+			var partition = tokenArray[index];
+			Assert.IsFalse(partition.IsEmpty);
+			powerLength += partition.Length;
+		}
+
+		segmentLength += materials.Length;
+
+		//Iterate through instances to see if any is emissive
+		foreach (NodeToken token in instances)
+		{
+			var instance = pack.GetInstance(token.InstanceValue);
+			if (!FastMath.Positive(instance.Power)) continue;
+
+			powerLength += instances.Length;
+			++segmentLength;
+
+			break;
+		}
+
+		//Exit if nothing is emissive
+		if (powerLength == 0) return null;
+		Assert.IsTrue(segmentLength > 0);
+
+		//Fetch buffers
+		using var _0 = Pool<float>.Fetch(powerLength, out var powerValues);
+		using var _1 = Pool<int>.Fetch(segmentLength, out var segments);
+
+		SpanFill<float> powerFill = powerValues;
+		SpanFill<int> segmentFill = segments;
+
+		//Fill in the relevant power and segment values for geometries with emissive materials
+		foreach (MaterialIndex index in materials)
+		{
+			float power = PackedMath.GetLuminance(Utilities.ToVector(swatch[index].Emission));
+
+			foreach (NodeToken token in tokenArray[index])
+			{
+				float area = pack.GetArea(token);
+				powerFill.Add(area * power);
+			}
+
+			segmentFill.Add(index);
+		}
+
+		//Fill in the power values for instances if any is emissive
+		if (!segmentFill.IsFull)
+		{
+			foreach (NodeToken token in instances)
+			{
+				powerFill.Add(pack.GetInstance(token.InstanceValue).Power);
+			}
+
+			segmentFill.Add(tokenArray.FinalPartition);
+		}
+
+		//Create power distribution instance
+		Assert.IsTrue(segmentFill.IsFull);
+		Assert.IsTrue(powerFill.IsFull);
+
+		return new PowerDistribution(powerValues, segments, tokenArray);
 	}
 }
