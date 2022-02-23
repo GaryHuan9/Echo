@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using CodeHelpers.Diagnostics;
 
 namespace EchoRenderer.Common.Memory;
 
@@ -14,6 +15,9 @@ public readonly struct View<T>
 
 	public View(T[] array, int start, int count)
 	{
+		Assert.IsTrue(start < array.Length);
+		Assert.IsFalse(count + start > array.Length);
+
 		this.array = array;
 		this.start = start;
 		this.count = count;
@@ -21,8 +25,13 @@ public readonly struct View<T>
 
 	public void Clear() => throw new NotImplementedException();
 
-	public View<T> Slice(int offset) => throw new NotImplementedException();
-	public View<T> Slice(int offset, int length) => throw new NotImplementedException();
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public View<T> Slice(int offset) =>
+		new(array, AssertShift(offset), count - offset);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public View<T> Slice(int offset, int length) =>
+		new(array, AssertShift(offset), length);
 
 	public static implicit operator ReadOnlyView<T>(View<T> view) =>
 		new(view.array, view.start, view.count);
@@ -31,21 +40,23 @@ public readonly struct View<T>
 	public static implicit operator ReadOnlySpan<T>(View<T> view) =>
 		new(view.array, view.start, view.count);
 
+	public Span<T> AsSpan() => this;
+
 	public T this[int index]
 	{
-		get => array[IndexShift(index)];
-		set => array[IndexShift(index)] = value;
+		get => array[AssertShift(index)];
+		set => array[AssertShift(index)] = value;
 	}
 
 	public T this[Index index]
 	{
-		get => array[IndexShift(index.Value)];
-		set => array[IndexShift(index.Value)] = value;
+		get => array[AssertShift(index.Value)];
+		set => array[AssertShift(index.Value)] = value;
 	}
 
 	public View<T> this[Range range]
 	{
-		get => throw new NotImplementedException();
+		get => Slice(range.Start.Value, range.End.Value - range.Start.Value);
 		set => throw new NotImplementedException();
 	}
 
@@ -57,8 +68,17 @@ public readonly struct View<T>
 	readonly int start;
 
 	/// <summary>
-	///     Shifts the view array index to the original array index
+	///     Asserts and Shifts the view array index to the original array index
+	///     if the <paramref name="index" /> is less than <see cref="count" />
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	int IndexShift(int index) => index + start;
+	int AssertShift(int index)
+	{
+		Assert.IsTrue(index < count);
+		return start + index;
+	}
+}
+public static class ViewExtensions
+{
+	public static View<T> AsView<T>(this T[] array) => new(array);
 }
