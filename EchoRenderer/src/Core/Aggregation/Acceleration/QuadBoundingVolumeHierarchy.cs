@@ -21,7 +21,7 @@ namespace EchoRenderer.Core.Aggregation.Acceleration;
 /// </summary>
 public class QuadBoundingVolumeHierarchy : Aggregator
 {
-	public QuadBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
+	public QuadBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens, length => length > 1);
 		int[] indices = CreateIndices(aabbs.Length);

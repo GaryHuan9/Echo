@@ -7,6 +7,7 @@ using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Materials;
@@ -19,7 +20,7 @@ namespace EchoRenderer.Core.Aggregation.Preparation;
 
 public class PreparedPack
 {
-	PreparedPack(AggregatorProfile profile, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens,
+	PreparedPack(AggregatorProfile profile, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens,
 				 PreparedTriangle[] triangles, PreparedSphere[] spheres, PreparedInstance[] instances)
 	{
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);

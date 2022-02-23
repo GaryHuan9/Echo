@@ -51,6 +51,6 @@ public readonly struct ReadOnlyView<T>
 		return start + index;
 	}
 
-	public static implicit operator ReadOnlySpan<T>(ReadOnlyView<T> view) =>
-		new(view.array, view.start, view.Length);
+	public static implicit operator ReadOnlySpan<T>(ReadOnlyView<T> view) => new(view.array, view.start, view.Length);
+	public static implicit operator ReadOnlyView<T>(T[] array) => new(array);
 }
