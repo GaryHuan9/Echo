@@ -4,6 +4,7 @@ using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests;
 
+[TestFixture]
 public class ViewTests
 {
 	[SetUp]
@@ -21,6 +22,16 @@ public class ViewTests
 		Assert.That(data[0], Is.EqualTo(dataView[0]));
 		Assert.That(data[^1], Is.EqualTo(dataView[^1]));
 	}
+	
+	[Test]
+	public void ReadonlyConversionTest()
+	{
+		ReadOnlyView<int> readOnlyView = dataView;
+		
+		Assert.That(data.Length, Is.EqualTo(readOnlyView.count));
+		Assert.That(data[0], Is.EqualTo(readOnlyView[0]));
+		Assert.That(data[^1], Is.EqualTo(readOnlyView[^1]));
+	}
 
 	[Test]
 	public void SliceTest()
@@ -28,18 +39,38 @@ public class ViewTests
 		// expected result [ 2, 3 ]
 		View<int> slicedViewWithLength = dataView.Slice(1, 2);
 
-
 		Assert.That(slicedViewWithLength.count, Is.EqualTo(2));
 		Assert.That(slicedViewWithLength[0], Is.EqualTo(2));
 		Assert.That(slicedViewWithLength[^1], Is.EqualTo(3));
-
-
+		
+		
 		// expected result [ 6, 7, 8, 9, 10 ]
 		View<int> slicedViewNoLength = dataView.Slice(5);
 
 		Assert.That(slicedViewNoLength.count, Is.EqualTo(5));
 		Assert.That(slicedViewNoLength[0], Is.EqualTo(6));
 		Assert.That(slicedViewNoLength[^1], Is.EqualTo(10));
+		
+		
+	}
+
+	[Test]
+	public void ReadonlySliceTest()
+	{
+		// expected result [ 2, 3 ]
+		ReadOnlyView<int> roSlicedViewWithLength = dataView.Slice(1, 2);
+		
+		Assert.That(roSlicedViewWithLength.count, Is.EqualTo(2));
+		Assert.That(roSlicedViewWithLength[0], Is.EqualTo(2));
+		Assert.That(roSlicedViewWithLength[^1], Is.EqualTo(3));
+		
+		
+		// expected result [ 6, 7, 8, 9, 10 ]
+		ReadOnlyView<int> roSlicedVewNoLength = dataView.Slice(5);
+		
+		Assert.That(roSlicedVewNoLength.count, Is.EqualTo(5));
+		Assert.That(roSlicedVewNoLength[0], Is.EqualTo(6));
+		Assert.That(roSlicedVewNoLength[^1], Is.EqualTo(10));
 	}
 
 	int[] data;
