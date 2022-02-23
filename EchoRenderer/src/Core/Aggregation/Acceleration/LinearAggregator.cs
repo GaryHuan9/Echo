@@ -16,11 +16,11 @@ namespace EchoRenderer.Core.Aggregation.Acceleration;
 /// </summary>
 public class LinearAggregator : Aggregator
 {
-	public LinearAggregator(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
+	public LinearAggregator(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens);
 
-		ReadOnlySpan<AxisAlignedBoundingBox> span = aabbs.Span;
+		ReadOnlySpan<AxisAlignedBoundingBox> span = aabbs;
 		nodes = new Node[span.Length.CeiledDivide(Width)];
 
 		for (int i = 0; i < nodes.Length; i++)

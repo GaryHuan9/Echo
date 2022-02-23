@@ -56,6 +56,7 @@ public readonly struct View<T>
 	public static implicit operator ReadOnlyView<T>(View<T> view) => new(view.array, view.start, view.Length);
 	public static implicit operator ReadOnlySpan<T>(View<T> view) => new(view.array, view.start, view.Length);
 	public static implicit operator Span<T>(View<T> view) => new(view.array, view.start, view.Length);
+	public static implicit operator View<T>(T[] array) => new(array);
 }
 public static class ViewExtensions
 {
