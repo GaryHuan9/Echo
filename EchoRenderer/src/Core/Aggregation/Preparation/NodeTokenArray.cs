@@ -79,7 +79,7 @@ public class NodeTokenArray
 	/// <summary>
 	/// Returns the <paramref name="segment"/> partition of this <see cref="NodeTokenArray"/>.
 	/// </summary>
-	public ReadOnlySpan<NodeToken> this[int segment] => array.AsSpan(starts[segment]..InterlockedHelper.Read(ref heads[segment]));
+	public ReadOnlyView<NodeToken> this[int segment] => array.AsView()[starts[segment]..InterlockedHelper.Read(ref heads[segment])];
 
 	/// <summary>
 	/// Adds a <see cref="NodeToken"/> into this <see cref="NodeTokenArray"/>'s <paramref name="segment"/> partition.
