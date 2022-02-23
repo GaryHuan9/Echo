@@ -6,15 +6,11 @@ namespace EchoRenderer.Common.Memory;
 
 public readonly struct ReadOnlyView<T>
 {
-	public ReadOnlyView(T[] array)
-	{
-		this.array = array;
-		start = 0;
-		Length = array.Length;
-	}
+	public ReadOnlyView(T[] array, int start = 0) : this(array, start, array.Length - start) { }
 
 	public ReadOnlyView(T[] array, int start, int count)
 	{
+		Assert.IsNotNull(array);
 		Assert.IsTrue(start < array.Length);
 		Assert.IsFalse(count + start > array.Length);
 
@@ -23,24 +19,21 @@ public readonly struct ReadOnlyView<T>
 		Length = count;
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public ReadOnlyView<T> Slice(int offset) =>
-		new(array, AssertShift(offset), Length - offset);
+	public ReadOnlySpan<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public ReadOnlyView<T> Slice(int offset, int length) =>
-		new(array, AssertShift(offset), length);
+	public ReadOnlyView<T> Slice(int offset) => Slice(offset, Length - offset);
 
-	public static implicit operator ReadOnlySpan<T>(ReadOnlyView<T> view) =>
-		new(view.array, view.start, view.Length);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public ReadOnlyView<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
 
 	public ReadOnlySpan<T> AsSpan() => this;
+	public ReadOnlySpan<T> AsSpan(int offset) => this[offset..];
+	public ReadOnlySpan<T> AsSpan(int offset, int length) => Slice(offset, length);
 
-	public T this[int index] => array[AssertShift(index)];
-	public T this[Index index] => array[AssertShift(index.GetOffset(Length))];
-	public ReadOnlyView<T> this[Range range] => Slice(range.Start.Value, range.End.Value - range.Start.Value);
+	public ref T this[int index] => ref array[AssertShift(index)];
 
-	public bool IsEmpty => Length == 0 || array == null;
+	public bool IsEmpty => Length == 0;
 
 	public int Length { get; }
 
@@ -57,4 +50,7 @@ public readonly struct ReadOnlyView<T>
 		Assert.IsTrue(index < Length);
 		return start + index;
 	}
+
+	public static implicit operator ReadOnlySpan<T>(ReadOnlyView<T> view) =>
+		new(view.array, view.start, view.Length);
 }
