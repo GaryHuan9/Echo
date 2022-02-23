@@ -10,7 +10,7 @@ public readonly struct ReadOnlyView<T>
 	{
 		this.array = array;
 		start = 0;
-		count = array.Length;
+		Length = array.Length;
 	}
 
 	public ReadOnlyView(T[] array, int start, int count)
@@ -20,41 +20,41 @@ public readonly struct ReadOnlyView<T>
 
 		this.array = array;
 		this.start = start;
-		this.count = count;
+		Length = count;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public ReadOnlyView<T> Slice(int offset) =>
-		new(array, AssertShift(offset), count - offset);
+		new(array, AssertShift(offset), Length - offset);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public ReadOnlyView<T> Slice(int offset, int length) =>
 		new(array, AssertShift(offset), length);
 
 	public static implicit operator ReadOnlySpan<T>(ReadOnlyView<T> view) =>
-		new(view.array, view.start, view.count);
+		new(view.array, view.start, view.Length);
 
 	public ReadOnlySpan<T> AsSpan() => this;
 
 	public T this[int index] => array[AssertShift(index)];
-	public T this[Index index] => array[AssertShift(index.GetOffset(count))];
+	public T this[Index index] => array[AssertShift(index.GetOffset(Length))];
 	public ReadOnlyView<T> this[Range range] => Slice(range.Start.Value, range.End.Value - range.Start.Value);
 
-	public bool IsEmpty => count == 0 || array == null;
+	public bool IsEmpty => Length == 0 || array == null;
 
-	public readonly int count;
+	public int Length { get; }
 
 	readonly T[] array;
 	readonly int start;
 
 	/// <summary>
 	///     Asserts and Shifts the view array index to the original array index
-	///     if the <paramref name="index" /> is less than <see cref="count" />
+	///     if the <paramref name="index" /> is less than <see cref="Length" />
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	int AssertShift(int index)
 	{
-		Assert.IsTrue(index < count);
+		Assert.IsTrue(index < Length);
 		return start + index;
 	}
 }
