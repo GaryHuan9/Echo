@@ -9,14 +9,14 @@ public readonly struct View<T>
 	{
 		this.array = array;
 		start = 0;
-		Count = array.Length;
+		count = array.Length;
 	}
 
 	public View(T[] array, int start, int count)
 	{
 		this.array = array;
 		this.start = start;
-		Count = count;
+		this.count = count;
 	}
 
 	public void Clear() => throw new NotImplementedException();
@@ -25,12 +25,11 @@ public readonly struct View<T>
 	public View<T> Slice(int offset, int length) => throw new NotImplementedException();
 
 	public static implicit operator ReadOnlyView<T>(View<T> view) =>
-		new ReadOnlyView<T>(view.array, view.start, view.Count);
-
+		new(view.array, view.start, view.count);
 	public static implicit operator Span<T>(View<T> view) =>
-		new Span<T>(view.array, view.start, view.Count);
+		new(view.array, view.start, view.count);
 	public static implicit operator ReadOnlySpan<T>(View<T> view) =>
-		new ReadOnlySpan<T>(view.array, view.start, view.Count);
+		new(view.array, view.start, view.count);
 
 	public T this[int index]
 	{
@@ -50,9 +49,9 @@ public readonly struct View<T>
 		set => throw new NotImplementedException();
 	}
 
-	public bool IsEmpty => Count == 0 || array == null;
+	public bool IsEmpty => count == 0 || array == null;
 
-	public int Count { get; }
+	public readonly int count;
 
 	readonly T[] array;
 	readonly int start;
