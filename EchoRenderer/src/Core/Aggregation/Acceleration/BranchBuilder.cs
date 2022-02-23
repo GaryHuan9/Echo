@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Memory;
 
 namespace EchoRenderer.Core.Aggregation.Acceleration;
 
@@ -11,16 +12,16 @@ namespace EchoRenderer.Core.Aggregation.Acceleration;
 /// </summary>
 public class BranchBuilder
 {
-	public BranchBuilder(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs) : this(aabbs, aabbs.Length) { }
+	public BranchBuilder(ReadOnlyView<AxisAlignedBoundingBox> aabbs) : this(aabbs, aabbs.Length) { }
 
-	BranchBuilder(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, int capacity)
+	BranchBuilder(ReadOnlyView<AxisAlignedBoundingBox> aabbs, int capacity)
 	{
 		this.aabbs = aabbs;
 		this.capacity = capacity;
 		sorter = new BoxSorter(capacity);
 	}
 
-	readonly ReadOnlyMemory<AxisAlignedBoundingBox> aabbs;
+	readonly ReadOnlyView<AxisAlignedBoundingBox> aabbs;
 	readonly int capacity;
 	readonly BoxSorter sorter;
 
@@ -31,7 +32,7 @@ public class BranchBuilder
 	/// <summary>
 	/// Initialize build on the root builder.
 	/// </summary>
-	public Node Build(Memory<int> indices)
+	public Node Build(View<int> indices)
 	{
 		Assert.IsTrue(indices.Length <= capacity);
 		LayerData data = new LayerData(aabbs, indices);
@@ -109,7 +110,7 @@ public class BranchBuilder
 
 		int axis = aabb.MajorAxis;
 		if (axis == parentAxis) axis = -1; //No need to sort because it is already sorted
-		return new LayerBuilder(this, data.indicesMemory, axis);
+		return new LayerBuilder(this, data.indices, axis);
 	}
 
 	/// <summary>
@@ -203,7 +204,7 @@ public class BranchBuilder
 
 	class LayerBuilder
 	{
-		public LayerBuilder(BranchBuilder parent, Memory<int> indices, int sortAxis)
+		public LayerBuilder(BranchBuilder parent, View<int> indices, int sortAxis)
 		{
 			this.parent = parent;
 			this.indices = indices;
@@ -214,14 +215,14 @@ public class BranchBuilder
 
 		readonly Task<Node> buildTask;
 		readonly BranchBuilder parent;
-		readonly Memory<int> indices;
+		readonly View<int> indices;
 		readonly int sortAxis;
 
 		public Node WaitForNode() => buildTask.Result;
 
 		Node Build()
 		{
-			ReadOnlyMemory<AxisAlignedBoundingBox> aabbs = parent.aabbs;
+			ReadOnlyView<AxisAlignedBoundingBox> aabbs = parent.aabbs;
 
 			var data = new LayerData(aabbs, indices);
 			var builder = new BranchBuilder(aabbs, data.Length);
@@ -235,23 +236,20 @@ public class BranchBuilder
 
 	readonly ref struct LayerData
 	{
-		public LayerData(ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, Memory<int> indices)
+		public LayerData(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, View<int> indices)
 		{
-			this.aabbs = aabbs.Span;
-			this.indices = indices.Span;
-			indicesMemory = indices;
+			this.aabbs = aabbs;
+			this.indices = indices;
 		}
 
 		LayerData(in LayerData source, Range range)
 		{
 			aabbs = source.aabbs;
 			indices = source.indices[range];
-			indicesMemory = source.indicesMemory[range];
 		}
 
 		public readonly ReadOnlySpan<AxisAlignedBoundingBox> aabbs;
-		public readonly Span<int> indices;
-		public readonly Memory<int> indicesMemory;
+		public readonly View<int> indices;
 
 		public int Length => indices.Length;
 

@@ -18,7 +18,7 @@ namespace EchoRenderer.Core.Aggregation.Acceleration;
 /// </summary>
 public class BoundingVolumeHierarchy : Aggregator
 {
-	public BoundingVolumeHierarchy(PreparedPack pack, ReadOnlyMemory<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
+	public BoundingVolumeHierarchy(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens, length => length > 1);
 		int[] indices = CreateIndices(aabbs.Length);
