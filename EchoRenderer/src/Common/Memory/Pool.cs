@@ -4,20 +4,20 @@ using System.Buffers;
 namespace EchoRenderer.Common.Memory;
 
 /// <summary>
-/// A utility static class that wraps <see cref="ArrayPool{T}.Shared"/>.
+/// A generic memory pool.
 /// </summary>
-public static class SpanPool<T>
+public static class Pool<T>
 {
-	static ArrayPool<T> Pool => ArrayPool<T>.Shared;
+	static ArrayPool<T> Internal => ArrayPool<T>.Shared;
 
 	/// <summary>
-	/// Receives and outputs a pooled <paramref name="span"/> with <paramref name="length"/>, which
-	/// should be promptly returned via 'using statements' on the returned result of this method.
+	/// Receives and outputs a pooled <paramref name="span"/> with <paramref name="length"/>, which should be
+	/// promptly caught via 'using statements' on the returned <see cref="ReleaseHandle"/> of this method.
 	/// NOTE: the output <paramref name="span"/> is not guaranteed to be all empty!
 	/// </summary>
 	public static ReleaseHandle Fetch(int length, out Span<T> span)
 	{
-		T[] array = Pool.Rent(length);
+		T[] array = Internal.Rent(length);
 		span = array.AsSpan(0, length);
 		return new ReleaseHandle(array);
 	}
@@ -43,7 +43,7 @@ public static class SpanPool<T>
 		void IDisposable.Dispose()
 		{
 			if (array == null) return;
-			Pool.Return(array);
+			Internal.Return(array);
 			array = null;
 		}
 	}

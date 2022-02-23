@@ -40,16 +40,17 @@ public class CylindricalTexture : IDirectionalTexture
 		Float2 sizeR = 1f / size;
 
 		//Fetch temporary buffers to calculate weights
-		using var _0 = SpanPool<float>.Fetch(size.Product, out Span<float> weights);
-		using var _1 = SpanPool<float>.Fetch(size.x + 1, out Span<float> pastWeights);
+		using var _0 = Pool<float>.Fetch(size.Product, out Span<float> weights);
+		using var _1 = Pool<float>.Fetch(size.x + 1, out Span<float> pastWeights);
+
+		SpanFill<float> fill = weights.AsFill();
 
 		//Get the first luminance weights of discrete points when v = 0
 		for (int x = 0; x <= size.x; x++) pastWeights[x] = GetWeight(new Float2(x, 0f));
 
 		//Fill actual weights by summing the four weights of each pixel corner
-		int index = -1;
-
 		//At the same time, also calculate the weighted sum of the texture
+
 		var sum = Summation.Zero;
 		double sinTotal = 0d; //Total of the sin multiplier
 
@@ -69,7 +70,7 @@ public class CylindricalTexture : IDirectionalTexture
 				float current = GetWeight(position);
 				float weight = current + previous + bottomLeft + pastWeights[x];
 
-				weights[++index] = weight * sin;
+				fill.Add(weight * sin);
 
 				bottomLeft = previous;
 				previous = current;

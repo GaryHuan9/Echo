@@ -24,8 +24,8 @@ public class PreparedInstanceRoot : PreparedInstance
 	{
 		const int FetchDepth = 6; //How deep do we go into our aggregator to get the AABB of the nodes
 
-		using var _0 = SpanPool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
-		using var _1 = SpanPool<Float3>.Fetch(aabbs.Length * 8, out Span<Float3> points);
+		using var _0 = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
+		using var _1 = Pool<Float3>.Fetch(aabbs.Length * 8, out Span<Float3> points);
 
 		aabbs = aabbs[..pack.aggregator.FillAABB(FetchDepth, aabbs)];
 
