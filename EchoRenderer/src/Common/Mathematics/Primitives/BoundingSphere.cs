@@ -3,6 +3,11 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
 
+/// <summary>
+/// A Sphere which is usually used for containing a bunch of points <br/>
+/// Tight fitting algorithm: https://ep.liu.se/ecp/034/009/ecp083409.pdf <br/>
+/// Exact Solver Algorithm: https://youtu.be/HojzdCICjmQ?t=575
+/// </summary>
 public readonly struct BoundingSphere
 {
 	public BoundingSphere(ReadOnlySpan<Float3> points)
