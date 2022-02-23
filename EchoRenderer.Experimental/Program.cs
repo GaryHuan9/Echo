@@ -1,11 +1,16 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using BenchmarkDotNet.Running;
+using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using ILGPU;
 using ILGPU.Runtime;
 using ILGPU.Runtime.CPU;
 using ILGPU.Runtime.Cuda;
 using ILGPU.Runtime.OpenCL;
+using Microsoft.Toolkit.HighPerformance;
 
 namespace EchoRenderer.Experimental;
 
@@ -13,8 +18,10 @@ public class Program
 {
 	static void Main()
 	{
+		TestUnmanaged();
+
 		// BenchmarkRunner.Run<TestSIMD>();
-		BenchmarkRunner.Run<BenchmarkBVH>();
+		// BenchmarkRunner.Run<BenchmarkBVH>();
 		// BenchmarkRunner.Run<BenchmarkTexture>();
 		// BenchmarkRunner.Run<BenchmarkRadixSort>();
 		// BenchmarkRunner.Run<BenchmarkLoop>();
@@ -22,7 +29,51 @@ public class Program
 		// BenchmarkRunner.Run<BenchmarkMath>();
 	}
 
+	static unsafe void TestUnmanaged()
+	{
+		CreateTrash();
 
+		byte[] array = new byte[1024];
+
+		nint truth0;
+		nint truth1;
+
+		nint ref0;
+		nint ref1;
+
+		ref Reference allocated = ref GC.AllocateArray<Reference>(1, true)[0];
+
+		ref Reference r = ref Unsafe.As<Reference, Reference>(ref allocated);
+
+		r = new Reference(array);
+
+		fixed (byte* ptr = array) truth0 = (nint)ptr;
+		fixed (byte* ptr = r.reference) ref0 = (nint)ptr;
+
+		GC.Collect();
+
+		fixed (byte* ptr = array) truth1 = (nint)ptr;
+		fixed (byte* ptr = r.reference) ref1 = (nint)ptr;
+
+		DebugHelper.Log(truth1, truth0, truth1 - truth0);
+		DebugHelper.Log(ref1, ref0, ref1 - ref0);
+
+		static void CreateTrash()
+		{
+			byte[] trash = null;
+
+			for (int i = 0; i < 1024; i++) trash = new byte[1024];
+
+			GC.KeepAlive(trash);
+		}
+	}
+
+	readonly struct Reference
+	{
+		public Reference(byte[] reference) => this.reference = reference;
+
+		public readonly byte[] reference;
+	}
 }
 
 // public static class Program

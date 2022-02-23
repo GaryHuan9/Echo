@@ -5,6 +5,7 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
+using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 
 namespace EchoRenderer.Core.Aggregation.Preparation;
@@ -52,7 +53,12 @@ public class NodeTokenArray
 	/// <summary>
 	/// Returns the total number of elements in this <see cref="NodeTokenArray"/>.
 	/// </summary>
-	public int Length => array.Length;
+	public int TotalLength => array.Length;
+
+	/// <summary>
+	/// Returns the index of the final partition in this <see cref="NodeTokenArray"/>.
+	/// </summary>
+	public int FinalPartition => PartitionLength - 1;
 
 	/// <summary>
 	/// Returns whether this <see cref="NodeTokenArray"/> is completely filled up.
@@ -90,7 +96,7 @@ public class NodeTokenArray
 		return index;
 	}
 
-	int GetSegmentEnd(int segment) => segment + 1 == PartitionLength ? Length : starts[segment + 1];
+	int GetSegmentEnd(int segment) => segment == FinalPartition ? TotalLength : starts[segment + 1];
 
 	/// <summary>
 	/// Retrieves read access to the entirety of <paramref name="array"/>. Note that some

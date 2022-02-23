@@ -16,7 +16,7 @@ public class GeometryLight : IAreaLight
 {
 	public void Reset(PreparedScene newScene, in GeometryToken newToken, in Material newMaterial)
 	{
-		Assert.IsTrue(newMaterial.HasEmission);
+		Assert.IsTrue(newMaterial.IsEmissive);
 
 		scene = newScene;
 		token = newToken;

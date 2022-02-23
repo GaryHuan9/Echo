@@ -40,6 +40,19 @@ public readonly struct Distro1
 		return (Distro1)FastMath.FMA(u, range, -index);
 	}
 
+	/// <summary>
+	/// When this <see cref="Distro1"/> is between <paramref name="lower"/> (inclusive) and <paramref name="upper"/> (exclusive),
+	/// returns a new <see cref="Distro1"/> that is this <see cref="Distro1"/> stretched, with the two bounds to zero and one.
+	/// </summary>
+	public Distro1 Zoom(float lower, float upper)
+	{
+		Assert.IsTrue(u >= lower);
+		Assert.IsTrue(u < upper);
+
+		float domainR = 1f / (upper - lower);
+		return (Distro1)((u - lower) * domainR);
+	}
+
 	public static implicit operator float(Distro1 distro) => distro.u;
 	public static explicit operator Distro1(float value) => new(value);
 }
