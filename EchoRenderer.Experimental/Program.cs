@@ -1,16 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using BenchmarkDotNet.Running;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using ILGPU;
-using ILGPU.Runtime;
-using ILGPU.Runtime.CPU;
-using ILGPU.Runtime.Cuda;
-using ILGPU.Runtime.OpenCL;
-using Microsoft.Toolkit.HighPerformance;
 
 namespace EchoRenderer.Experimental;
 
@@ -18,10 +9,10 @@ public class Program
 {
 	static void Main()
 	{
-		TestUnmanaged();
+		// TestUnmanaged();
 
 		// BenchmarkRunner.Run<TestSIMD>();
-		// BenchmarkRunner.Run<BenchmarkBVH>();
+		BenchmarkRunner.Run<BenchmarkBVH>();
 		// BenchmarkRunner.Run<BenchmarkTexture>();
 		// BenchmarkRunner.Run<BenchmarkRadixSort>();
 		// BenchmarkRunner.Run<BenchmarkLoop>();

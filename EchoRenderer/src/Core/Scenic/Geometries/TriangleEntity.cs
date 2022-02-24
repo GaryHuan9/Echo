@@ -152,6 +152,9 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		const float Infinity = float.PositiveInfinity;
 		Unsafe.SkipInit(out uv);
 
+		ref float u = ref Unsafe.AsRef(in uv.x);
+		ref float v = ref Unsafe.AsRef(in uv.y);
+
 		//Calculate determinant and u
 		Float3 cross2 = Float3.Cross(ray.direction, edge2);
 		float determinant = Float3.Dot(edge1, cross2);
@@ -161,23 +164,20 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		float determinantR = 1f / determinant;
 
 		Float3 offset = ray.origin - vertex0;
-		float u = offset.Dot(cross2) * determinantR;
+		u = offset.Dot(cross2) * determinantR;
 
 		//Check if is outside barycentric bounds
-		if (u is < 0f or > 1f) return Infinity;
+		if ((u < 0f) | (u > 1f)) return Infinity;
 
 		Float3 cross1 = Float3.Cross(offset, edge1);
-		float v = ray.direction.Dot(cross1) * determinantR;
+		v = ray.direction.Dot(cross1) * determinantR;
 
 		//Check if is outside barycentric bounds
-		if (v < 0f || u + v > 1f) return Infinity;
+		if ((v < 0f) | (u + v > 1f)) return Infinity;
 
 		//Check if ray is pointing away from triangle
 		float distance = edge2.Dot(cross1) * determinantR;
-		if (distance < 0f) return Infinity;
-
-		uv = new Float2(u, v);
-		return distance;
+		return distance < 0f ? Infinity : distance;
 	}
 
 	/// <summary>
@@ -199,17 +199,17 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		float u = offset.Dot(cross2) * sign;
 
 		//Check if is outside barycentric bounds
-		if (u < 0f || u > determinant) return false;
+		if ((u < 0f) | (u > determinant)) return false;
 
 		Float3 cross1 = Float3.Cross(offset, edge1);
 		float v = ray.direction.Dot(cross1) * sign;
 
 		//Check if is outside barycentric bounds
-		if (v < 0f || u + v > determinant) return false;
+		if ((v < 0f) | (u + v > determinant)) return false;
 
 		//Check if ray is pointing away from triangle
 		float distance = edge2.Dot(cross1) * sign;
-		return distance >= 0f && distance < travel * determinant;
+		return (distance >= 0f) & (distance < travel * determinant);
 	}
 
 	/// <summary>
