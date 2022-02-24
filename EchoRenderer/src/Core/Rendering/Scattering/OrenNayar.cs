@@ -39,7 +39,7 @@ public class OrenNayar : BxDF
 
 		float cosMax = 0f;
 
-		if (!FastMath.AlmostZero(sinO) && !FastMath.AlmostZero(sinI))
+		if (!FastMath.AlmostZero(sinO) & !FastMath.AlmostZero(sinI))
 		{
 			float cos = CosineT(outgoing) * CosineT(incident);
 			float sin = SineT(outgoing) * SineT(incident);

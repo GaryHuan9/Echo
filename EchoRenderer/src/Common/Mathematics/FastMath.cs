@@ -88,5 +88,5 @@ public static class FastMath
 	/// <summary>
 	/// Returns whether <paramref name="value"/> is almost zero based on <paramref name="epsilon"/>.
 	/// </summary>
-	public static bool AlmostZero(float value, float epsilon = 1E-8f) => -epsilon < value && value < epsilon;
+	public static bool AlmostZero(float value, float epsilon = 1E-8f) => (-epsilon < value) & (value < epsilon);
 }

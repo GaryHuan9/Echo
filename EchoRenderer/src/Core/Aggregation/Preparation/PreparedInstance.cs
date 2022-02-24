@@ -16,7 +16,7 @@ public class PreparedInstance
 	/// <summary>
 	/// Creates a regular <see cref="PreparedInstance"/>.
 	/// </summary>
-	public PreparedInstance(ScenePreparer preparer, PackInstance instance, uint id) : this(preparer, instance.EntityPack, instance.Swatch, id)
+	public PreparedInstance(ScenePreparer preparer, PackInstance instance, NodeToken token) : this(preparer, instance.EntityPack, instance.Swatch, token)
 	{
 		inverseTransform = instance.LocalToWorld;
 		forwardTransform = instance.WorldToLocal;
@@ -29,9 +29,9 @@ public class PreparedInstance
 		if ((Float3)inverseScale != scale) throw new Exception($"{nameof(PackInstance)} does not support none uniform scaling! '{scale}'");
 	}
 
-	protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, uint id)
+	protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, NodeToken token)
 	{
-		this.id = id;
+		this.token = token;
 
 		this.pack = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray);
 		this.swatch = extractor.Prepare(swatch);
@@ -46,7 +46,7 @@ public class PreparedInstance
 	/// </summary>
 	public AxisAlignedBoundingBox AABB => pack.aggregator.GetTransformedAABB(inverseTransform);
 
-	public readonly uint id;
+	public readonly NodeToken token;
 	public readonly PreparedPack pack;
 	public readonly PreparedSwatch swatch;
 
@@ -56,7 +56,7 @@ public class PreparedInstance
 	readonly float forwardScale = 1f; //The parent to local scale multiplier
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
 
-	readonly PowerDistribution powerDistribution;
+	protected readonly PowerDistribution powerDistribution;
 
 	/// <summary>
 	/// Returns the total emissive power of this <see cref="PreparedInstance"/>.
@@ -146,7 +146,7 @@ public class PreparedInstance
 		int segmentLength = 0;
 
 		var materials = swatch.EmissiveIndices;
-		var instances = tokenArray[tokenArray.FinalPartition];
+		var instances = GetInstancesToken();
 
 		//Iterate through materials to find their partition lengths
 		foreach (MaterialIndex index in materials)
@@ -161,7 +161,7 @@ public class PreparedInstance
 		//Iterate through instances to see if any is emissive
 		foreach (NodeToken token in instances)
 		{
-			var instance = pack.GetInstance(token.InstanceValue);
+			PreparedInstance instance = pack.GetInstance(token);
 			if (!FastMath.Positive(instance.Power)) continue;
 
 			powerLength += instances.Length;
@@ -198,10 +198,7 @@ public class PreparedInstance
 		//Fill in the power values for instances if any is emissive
 		if (!segmentFill.IsFull)
 		{
-			foreach (NodeToken token in instances)
-			{
-				powerFill.Add(pack.GetInstance(token.InstanceValue).Power);
-			}
+			foreach (NodeToken token in instances) powerFill.Add(pack.GetInstance(token).Power);
 
 			segmentFill.Add(tokenArray.FinalPartition);
 		}
@@ -211,5 +208,7 @@ public class PreparedInstance
 		Assert.IsTrue(powerFill.IsFull);
 
 		return new PowerDistribution(powerValues, segments, tokenArray);
+
+		ReadOnlyView<NodeToken> GetInstancesToken() => pack.counts.instance > 0 ? tokenArray[tokenArray.FinalPartition] : default;
 	}
 }

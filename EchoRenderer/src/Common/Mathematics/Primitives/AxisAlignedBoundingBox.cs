@@ -154,7 +154,7 @@ public readonly struct AxisAlignedBoundingBox
 
 		//NOTE: we place the infinity constant as the second return candidate because
 		//if either near or far is NaN, this method will still return a valid result
-		return far >= near && far >= 0f ? near : float.PositiveInfinity;
+		return (far >= near) & (far >= 0f) ? near : float.PositiveInfinity;
 	}
 
 	/// <summary>
