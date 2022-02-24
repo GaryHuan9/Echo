@@ -14,7 +14,7 @@ public abstract partial class TextureGrid : Texture
 {
 	protected TextureGrid(Int2 size, IFilter filter) : base(Wrappers.repeat)
 	{
-		Assert.IsTrue(this.size > Int2.zero);
+		Assert.IsTrue(size > Int2.zero);
 
 		this.size = size;
 		sizeR = 1f / size;

@@ -64,7 +64,7 @@ public static class Utilities
 	/// </summary>
 	public static ref readonly T TryGetValue<T>(this ReadOnlySpan<T> span, int index, in T defaultValue = default)
 	{
-		if (0 <= index && index < span.Length) return ref span[index];
+		if ((0 <= index) & (index < span.Length)) return ref span[index];
 		return ref defaultValue;
 	}
 
