@@ -130,11 +130,11 @@ public class PreparedScene
 		Float4x4 transform = Float4x4.identity;
 
 		//Traverse down the instancing path
-		foreach (uint id in query.token.Instances)
+		foreach (ref readonly NodeToken token in query.token.Instances)
 		{
 			//Because we traverse in reverse, we must also multiply the transform in reverse
 			transform = instance.inverseTransform * transform;
-			instance = instance.pack.GetInstance(id);
+			instance = instance.pack.GetInstance(token);
 		}
 
 		return instance.pack.Interact(query, transform, instance);

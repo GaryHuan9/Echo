@@ -128,9 +128,9 @@ public class PreparedPack
 	}
 
 	/// <summary>
-	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> with <paramref name="id"/>.
+	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> represented by <paramref name="token"/>.
 	/// </summary>
-	public PreparedInstance GetInstance(uint id) => instances[id];
+	public PreparedInstance GetInstance(in NodeToken token) => instances[token.InstanceValue];
 
 	/// <summary>
 	/// Returns the area of the geometry represented by <paramref name="token"/>.
@@ -262,8 +262,8 @@ public class PreparedPack
 				}
 				case PackInstance objectInstance:
 				{
-					uint id = (uint)instancesList.Count;
-					var instance = new PreparedInstance(preparer, objectInstance, id);
+					NodeToken token = NodeToken.CreateInstance((uint)instancesList.Count);
+					var instance = new PreparedInstance(preparer, objectInstance, token);
 					instancesList.Add(instance);
 
 					break;
@@ -302,9 +302,9 @@ public class PreparedPack
 			triangles[index] = triangle;
 
 			var token = NodeToken.CreateTriangle((uint)index);
-			index = tokenArray.Add(triangle.material, token);
+			int at = tokenArray.Add(triangle.material, token);
 
-			aabbs[index] = triangle.AABB;
+			aabbs[at] = triangle.AABB;
 		}
 
 		void FillSpheres(int index)
@@ -312,19 +312,18 @@ public class PreparedPack
 			var sphere = spheres[index] = spheresList[index];
 
 			var token = NodeToken.CreateSphere((uint)index);
-			index = tokenArray.Add(sphere.material, token);
+			int at = tokenArray.Add(sphere.material, token);
 
-			aabbs[index] = sphere.AABB;
+			aabbs[at] = sphere.AABB;
 		}
 
 		void FillInstances(int index)
 		{
-			var instance = instances[index] = instancesList[index];
+			PreparedInstance instance = instances[index] = instancesList[index];
+			int at = tokenArray.Add(tokenArray.FinalPartition, instance.token);
+			Assert.AreEqual((uint)index, instance.token.InstanceValue);
 
-			NodeToken token = NodeToken.CreateInstance((uint)index);
-			index = tokenArray.Add(tokenArray.FinalPartition, token);
-
-			aabbs[index] = instance.AABB;
+			aabbs[at] = instance.AABB;
 		}
 	}
 
