@@ -7,7 +7,6 @@ using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Aggregation.Acceleration;
 

@@ -9,7 +9,6 @@ using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Aggregation.Acceleration;
 
@@ -472,6 +471,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		/// <summary>
 		/// Unused memory padding.
 		/// </summary>
+		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 		[FieldOffset(112)] readonly int padding;
 
 		/// <summary>

@@ -1,5 +1,4 @@
-﻿using System;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Instancing;

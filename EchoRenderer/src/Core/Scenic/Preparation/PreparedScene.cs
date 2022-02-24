@@ -49,7 +49,7 @@ public class PreparedScene
 		}
 
 		preparer = new ScenePreparer(source, profile);
-		preparer.PrepareAll();
+		preparer.Prepare();
 
 		//Create root instance
 		rootInstance = new PreparedInstanceRoot(preparer, source);

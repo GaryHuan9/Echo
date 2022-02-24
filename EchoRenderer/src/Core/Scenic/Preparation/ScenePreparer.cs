@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using CodeHelpers;
 using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Pooling;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Rendering.Materials;
@@ -31,7 +29,29 @@ public class ScenePreparer
 	/// <summary>
 	/// Prepares the entire scene.
 	/// </summary>
-	public void PrepareAll() => PreparePacks(root);
+	public void Prepare()
+	{
+		int depth = PrepareOne(this, root) - 1;
+
+		if (depth > EntityPack.MaxLayer) throw new Exception($"Invalid scene! Instancing layer exceeding {nameof(EntityPack.MaxLayer)}!");
+
+		static int PrepareOne(ScenePreparer preparer, Node node)
+		{
+			int maxDepth = 0;
+
+			//NOTE: we prepare the children first before we prepare this current
+			//node to make sure that all children are prepared before the parent
+
+			foreach (Node child in node)
+			{
+				int depth = PrepareOne(preparer, child);
+				maxDepth = Math.Max(maxDepth, depth);
+			}
+
+			node.CreatePack(preparer);
+			return maxDepth + 1;
+		}
+	}
 
 	/// <summary>
 	/// Retrieves the <see cref="PreparedPack"/> for <paramref name="pack"/> and outputs its corresponding
@@ -81,14 +101,6 @@ public class ScenePreparer
 		}
 
 		return node;
-	}
-
-	void PreparePacks(Node node)
-	{
-		//Head recursion to make sure that all children are prepared before the parent
-
-		foreach (Node child in node) PreparePacks(child);
-		node.CreatePack(this);
 	}
 
 	public class Node
