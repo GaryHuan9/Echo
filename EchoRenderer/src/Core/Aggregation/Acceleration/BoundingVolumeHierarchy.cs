@@ -123,7 +123,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		*next++ = NodeToken.root.Next;    //We have already tested with the root before this method is invoked
 		*hits++ = float.NegativeInfinity; //Explicitly initialize intersection distance
 
-		while (next != stack)
+		do
 		{
 			uint index = (--next)->NodeValue;
 			if (*--hits >= query.distance) continue;
@@ -162,6 +162,7 @@ public class BoundingVolumeHierarchy : Aggregator
 				else pack.Trace(ref refQuery, token);
 			}
 		}
+		while (next != stack);
 	}
 
 	[SkipLocalsInit]
@@ -173,7 +174,7 @@ public class BoundingVolumeHierarchy : Aggregator
 
 		*next++ = NodeToken.root.Next; //Push the child of the root because we have already tested with the root
 
-		while (next != stack)
+		do
 		{
 			uint index = (--next)->NodeValue;
 
@@ -204,15 +205,16 @@ public class BoundingVolumeHierarchy : Aggregator
 
 				if (token.IsNode)
 				{
-					//Branch
+					//Add branch
 					*next++ = token;
 					return false;
 				}
 
-				//Leaf
+				//Evaluate leaf
 				return pack.Occlude(ref refQuery, token);
 			}
 		}
+		while (next != stack);
 
 		return false;
 	}

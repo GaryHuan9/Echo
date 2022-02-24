@@ -199,7 +199,7 @@ public class BranchBuilder
 		public readonly int index; //If is leaf, this indicates the index of the token
 		public readonly int axis;  //The axis used to divide the two children in this node
 
-		public bool IsLeaf => child0 == null || child1 == null;
+		public bool IsLeaf => (child0 == null) | (child1 == null);
 	}
 
 	class LayerBuilder

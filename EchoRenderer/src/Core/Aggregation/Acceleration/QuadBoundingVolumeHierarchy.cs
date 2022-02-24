@@ -146,7 +146,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			true
 		};
 
-		while (next != stack)
+		do
 		{
 			uint index = (--next)->NodeValue;
 
@@ -209,6 +209,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			{
 				float hit = hit4.GetElement(offset);
 				if (hit >= refQuery.distance) return;
+
 				ref readonly NodeToken token = ref child4[offset];
 
 				if (token.IsGeometry)
@@ -224,6 +225,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 				}
 			}
 		}
+		while (next != stack);
 	}
 
 	[SkipLocalsInit]
@@ -243,7 +245,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			true
 		};
 
-		while (next != stack)
+		do
 		{
 			ref readonly Node node = ref nodes[(--next)->NodeValue];
 			Vector128<float> intersections = node.aabb4.Intersect(query.ray);
@@ -302,6 +304,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			{
 				float hit = hit4.GetElement(offset);
 				if (hit >= refQuery.travel) return false;
+
 				ref readonly NodeToken token = ref child4[offset];
 
 				if (token.IsGeometry) return pack.Occlude(ref refQuery, token); //Child is leaf
@@ -311,6 +314,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 				return false;
 			}
 		}
+		while (next != stack);
 
 		return false;
 	}
