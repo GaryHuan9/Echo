@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
@@ -6,6 +7,7 @@ using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
+using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Preparation;
 
@@ -56,12 +58,12 @@ public class PreparedInstance
 	readonly float forwardScale = 1f; //The parent to local scale multiplier
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
 
-	protected readonly PowerDistribution powerDistribution;
+	readonly PowerDistribution powerDistribution;
 
 	/// <summary>
 	/// Returns the total emissive power of this <see cref="PreparedInstance"/>.
 	/// </summary>
-	public float Power => powerDistribution.Total * inverseScale * inverseScale;
+	public float Power => powerDistribution?.Total * inverseScale * inverseScale ?? 0f;
 
 	/// <summary>
 	/// Processes <paramref name="query"/>.
@@ -137,6 +139,40 @@ public class PreparedInstance
 	}
 
 	/// <summary>
+	/// If <see cref="Power"/> is positive, find an emissive geometry based on <paramref name="distros"/> and returns a <see cref="GeometryToken"/> that
+	/// represents it, otherwise the behavior is undefined. The probability density function of this action is calculated and exported to <paramref name="pdf"/>
+	/// </summary>
+	public GeometryToken Find(ReadOnlySpan<Distro1> distros, out float pdf)
+	{
+		Assert.IsTrue(FastMath.Positive(Power));
+
+		pdf = 1f;
+
+		var geometryToken = new GeometryToken();
+		PreparedInstance instance = this;
+
+		foreach (Distro1 distro in distros)
+		{
+			pdf *= FindSingle(distro, ref instance, ref geometryToken);
+			if (geometryToken.Geometry != default) return geometryToken;
+
+			Assert.IsNotNull(instance);
+
+			static float FindSingle(Distro1 distro, ref PreparedInstance instance, ref GeometryToken geometryToken)
+			{
+				NodeToken token = instance.powerDistribution.Find(distro, out float pdf);
+
+				if (token.IsTriangle || token.IsSphere) geometryToken.Geometry = token;
+				else geometryToken.Push(instance = instance.pack.GetInstance(token));
+
+				return pdf;
+			}
+		}
+
+		throw ExceptionHelper.Invalid(nameof(distros.Length), distros.Length, "does not have enough elements");
+	}
+
+	/// <summary>
 	/// Creates and returns a new <see cref="powerDistribution"/> for some emissive
 	/// objects indicated by the parameter. If no object is emissive, null is returned.
 	/// </summary>
@@ -184,13 +220,9 @@ public class PreparedInstance
 		//Fill in the relevant power and segment values for geometries with emissive materials
 		foreach (MaterialIndex index in materials)
 		{
-			float power = PackedMath.GetLuminance(Utilities.ToVector(swatch[index].Emission));
+			float power = PackedMath.GetLuminance(Utilities.ToVector(swatch[index].Emission)) * Scalars.PI;
 
-			foreach (NodeToken token in tokenArray[index])
-			{
-				float area = pack.GetArea(token);
-				powerFill.Add(area * power);
-			}
+			foreach (NodeToken token in tokenArray[index]) powerFill.Add(pack.GetArea(token) * power);
 
 			segmentFill.Add(index);
 		}

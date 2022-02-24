@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using CodeHelpers.Mathematics;
@@ -57,7 +58,7 @@ public class BenchmarkBVH
 
 		// scene.children.Add(new PlaneObject(new Matte { Albedo = (Pure)0.75f }, new Float2(32f, 24f)));
 
-		Pairs = new[]
+		Types = new[]
 		{
 			new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
 			// new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDiv"),
@@ -68,10 +69,10 @@ public class BenchmarkBVH
 	readonly TraceQuery[] traceQueries;
 	readonly OccludeQuery[] occludeQueries;
 
-	[ParamsSource(nameof(Pairs))]
-	public Pair CurrentPair { get; set; }
+	[ParamsSource(nameof(Types))]
+	public Pair Type { get; set; }
 
-	public IEnumerable<Pair> Pairs { get; set; }
+	public IEnumerable<Pair> Types { get; set; }
 
 	//First test set. Different sets will have different timings
 	//V0: 903.5us per 1000 intersections (recursive)
@@ -102,12 +103,12 @@ public class BenchmarkBVH
 	// | GetIntersection |     Regular | 59.66 ms | 0.252 ms | 0.236 ms |
 
 	// Added occlusion
-	// |  Method | CurrentPair |     Mean |    Error |   StdDev |
-	// |-------- |------------ |---------:|---------:|---------:|
-	// |   Trace |        Quad | 40.71 ms | 0.238 ms | 0.223 ms |
-	// | Occlude |        Quad | 34.22 ms | 0.290 ms | 0.271 ms |
-	// |   Trace |     Regular | 61.09 ms | 0.265 ms | 0.248 ms |
-	// | Occlude |     Regular | 49.77 ms | 0.202 ms | 0.189 ms |
+	// |  Method |    Type |     Mean |    Error |   StdDev |
+	// |-------- |-------- |---------:|---------:|---------:|
+	// |   Trace |    Quad | 40.05 ms | 0.345 ms | 0.323 ms |
+	// | Occlude |    Quad | 33.88 ms | 0.165 ms | 0.155 ms |
+	// |   Trace | Regular | 61.27 ms | 0.330 ms | 0.293 ms |
+	// | Occlude | Regular | 49.67 ms | 0.349 ms | 0.309 ms |
 
 	[Benchmark]
 	public bool Trace()
@@ -117,7 +118,7 @@ public class BenchmarkBVH
 		for (int i = 0; i < traceQueries.Length; i++)
 		{
 			TraceQuery query = traceQueries[i];
-			result ^= CurrentPair.scene.Trace(ref query);
+			result ^= Type.scene.Trace(ref query);
 		}
 
 		return result;
@@ -131,7 +132,7 @@ public class BenchmarkBVH
 		for (int i = 0; i < traceQueries.Length; i++)
 		{
 			OccludeQuery query = occludeQueries[i];
-			result ^= CurrentPair.scene.Occlude(ref query);
+			result ^= Type.scene.Occlude(ref query);
 		}
 
 		return result;

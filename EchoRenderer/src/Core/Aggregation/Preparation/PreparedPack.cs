@@ -103,57 +103,6 @@ public class PreparedPack
 		return instances[token.InstanceValue].Occlude(ref query);
 	}
 
-	/// <summary>
-	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
-	/// </summary>
-	public int GetTraceCost(in Ray ray, ref float distance, in NodeToken token)
-	{
-		Assert.IsTrue(token.IsGeometry);
-
-		if (token.IsTriangle)
-		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			distance = Math.Min(distance, triangle.Intersect(ray, out _));
-			return 1;
-		}
-
-		if (token.IsSphere)
-		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			distance = Math.Min(distance, sphere.Intersect(ray, out _));
-			return 1;
-		}
-
-		return instances[token.InstanceValue].TraceCost(ray, ref distance);
-	}
-
-	/// <summary>
-	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> represented by <paramref name="token"/>.
-	/// </summary>
-	public PreparedInstance GetInstance(in NodeToken token) => instances[token.InstanceValue];
-
-	/// <summary>
-	/// Returns the area of the geometry represented by <paramref name="token"/>.
-	/// </summary>
-	public float GetArea(in NodeToken token)
-	{
-		Assert.IsTrue(token.IsGeometry);
-
-		if (token.IsTriangle)
-		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			return triangle.Area;
-		}
-
-		if (token.IsSphere)
-		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			return sphere.Area;
-		}
-
-		throw NotBasePackException();
-	}
-
 	/// <inheritdoc cref="PreparedScene.Interact"/>
 	public Interaction Interact(in TraceQuery query, in Float4x4 transform, PreparedInstance instance)
 	{
@@ -190,6 +139,33 @@ public class PreparedPack
 		//Construct interaction
 		if (material == null) return new Interaction(query, normal);
 		return new Interaction(query, normal, material, texcoord);
+	}
+
+	/// <summary>
+	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> represented by <paramref name="token"/>.
+	/// </summary>
+	public PreparedInstance GetInstance(in NodeToken token) => instances[token.InstanceValue];
+
+	/// <summary>
+	/// Returns the area of the geometry represented by <paramref name="token"/>.
+	/// </summary>
+	public float GetArea(in NodeToken token)
+	{
+		Assert.IsTrue(token.IsGeometry);
+
+		if (token.IsTriangle)
+		{
+			ref readonly var triangle = ref triangles[token.TriangleValue];
+			return triangle.Area;
+		}
+
+		if (token.IsSphere)
+		{
+			ref readonly var sphere = ref spheres[token.SphereValue];
+			return sphere.Area;
+		}
+
+		throw NotBasePackException();
 	}
 
 	/// <summary>
@@ -238,6 +214,34 @@ public class PreparedPack
 		throw NotBasePackException();
 	}
 
+	/// <summary>
+	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
+	/// </summary>
+	public int GetTraceCost(in Ray ray, ref float distance, in NodeToken token)
+	{
+		Assert.IsTrue(token.IsGeometry);
+
+		if (token.IsTriangle)
+		{
+			ref readonly var triangle = ref triangles[token.TriangleValue];
+			distance = Math.Min(distance, triangle.Intersect(ray, out _));
+			return 1;
+		}
+
+		if (token.IsSphere)
+		{
+			ref readonly var sphere = ref spheres[token.SphereValue];
+			distance = Math.Min(distance, sphere.Intersect(ray, out _));
+			return 1;
+		}
+
+		return instances[token.InstanceValue].TraceCost(ray, ref distance);
+	}
+
+	/// <summary>
+	/// Creates a new <see cref="PreparedPack"/>; outputs the <paramref name="extractor"/> and
+	/// <paramref name="tokens"/> that were used to construct this new <see cref="PreparedPack"/>.
+	/// </summary>
 	public static PreparedPack Create(ScenePreparer preparer, EntityPack pack, out SwatchExtractor extractor, out NodeTokenArray tokens)
 	{
 		//Collect objects
