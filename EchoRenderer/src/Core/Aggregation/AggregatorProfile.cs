@@ -7,7 +7,6 @@ using EchoRenderer.Core.Aggregation.Acceleration;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Instancing;
-using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Aggregation;
 

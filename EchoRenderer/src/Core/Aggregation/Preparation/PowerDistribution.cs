@@ -49,10 +49,10 @@ public class PowerDistribution
 	public float Total => distribution.sum;
 
 	/// <summary>
-	/// Samples one <see cref="NodeToken"/> from this <see cref="PowerDistribution"/>
+	/// Finds one <see cref="NodeToken"/> from this <see cref="PowerDistribution"/>
 	/// based on <paramref name="distro"/> and outputs <paramref name="pdf"/>.
 	/// </summary>
-	public NodeToken Sample(Distro1 distro, out float pdf)
+	public NodeToken Find(Distro1 distro, out float pdf)
 	{
 		//Sample from piecewise and binary search
 		int index = distribution.SampleDiscrete(distro, out pdf);
