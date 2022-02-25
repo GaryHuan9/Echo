@@ -14,14 +14,14 @@ public class Arena
 	/// <summary>
 	/// Creates a new <see cref="Arena"/>.
 	/// </summary>
-	public Arena(Distribution distribution)
+	public Arena(ContinuousDistribution distribution)
 	{
 		Assert.IsNotNull(distribution);
 		this.distribution = distribution;
 	}
 
 	public readonly Allocator allocator = new();
-	public readonly Distribution distribution;
+	public readonly ContinuousDistribution distribution;
 
 	IRandom _random;
 

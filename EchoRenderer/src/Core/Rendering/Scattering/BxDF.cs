@@ -35,12 +35,12 @@ public abstract class BxDF
 	}
 
 	/// <summary>
-	/// Selects a local output <paramref name="incident"/> direction from <paramref name="distro"/>, evaluates the value of
+	/// Selects a local output <paramref name="incident"/> direction from <paramref name="sample"/>, evaluates the value of
 	/// this <see cref="BxDF"/> from the two local directions, and outputs the probability density to <paramref name="pdf"/>.
 	/// </summary>
-	public virtual Float3 Sample(in Float3 outgoing, Distro2 distro, out Float3 incident, out float pdf)
+	public virtual Float3 Sample(in Float3 outgoing, Sample2D sample, out Float3 incident, out float pdf)
 	{
-		incident = distro.CosineHemisphere;
+		incident = sample.CosineHemisphere;
 		if (outgoing.z < 0f) incident = new Float3(incident.x, incident.y, -incident.z);
 
 		pdf = ProbabilityDensity(outgoing, incident);
@@ -51,38 +51,38 @@ public abstract class BxDF
 	/// Returns the hemispherical-directional reflectance, the total reflectance in direction
 	/// <paramref name="outgoing"/> due to a constant illumination over the doming hemisphere
 	/// </summary>
-	public virtual Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Distro2> distros)
+	public virtual Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples)
 	{
 		Float3 result = Float3.zero;
 
-		foreach (ref readonly Distro2 distro in distros)
+		foreach (ref readonly Sample2D sample in samples)
 		{
-			Float3 sampled = Sample(outgoing, distro, out Float3 incident, out float pdf);
+			Float3 sampled = Sample(outgoing, sample, out Float3 incident, out float pdf);
 			if (FastMath.Positive(pdf)) result += sampled * AbsoluteCosineP(incident) / pdf;
 		}
 
-		return result / distros.Length;
+		return result / samples.Length;
 	}
 
 	/// <summary>
 	/// Returns the hemispherical-hemispherical reflectance, the fraction of incident light
 	/// reflected when the amount of incident light is constant across all directions
 	/// </summary>
-	public virtual Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1)
+	public virtual Float3 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
 	{
 		Float3 result = Float3.zero;
-		int length = distros0.Length;
+		int length = samples0.Length;
 
-		Assert.AreEqual(length, distros1.Length);
-		for (int i = 0; i < distros0.Length; i++)
+		Assert.AreEqual(length, samples1.Length);
+		for (int i = 0; i < samples0.Length; i++)
 		{
-			ref readonly Distro2 distro0 = ref distros0[i];
-			ref readonly Distro2 distro1 = ref distros1[i];
+			ref readonly Sample2D sample0 = ref samples0[i];
+			ref readonly Sample2D sample1 = ref samples1[i];
 
-			Float3 outgoing = distro0.UniformHemisphere;
-			Float3 sampled = Sample(outgoing, distro1, out Float3 incident, out float pdf);
+			Float3 outgoing = sample0.UniformHemisphere;
+			Float3 sampled = Sample(outgoing, sample1, out Float3 incident, out float pdf);
 
-			pdf *= Distro2.UniformHemispherePDF;
+			pdf *= Sample2D.UniformHemispherePDF;
 
 			if (FastMath.Positive(pdf)) result += sampled * FastMath.Abs(CosineP(outgoing) * CosineP(incident)) / pdf;
 		}

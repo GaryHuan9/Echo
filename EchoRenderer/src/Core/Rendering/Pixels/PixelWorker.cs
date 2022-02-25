@@ -7,7 +7,7 @@ namespace EchoRenderer.Core.Rendering.Pixels;
 
 public abstract class PixelWorker
 {
-	protected Distribution SourceDistribution { get; private set; }
+	protected ContinuousDistribution SourceDistribution { get; private set; }
 
 	/// <summary>
 	/// Invoked once before a new rendering process begin on this <see cref="PixelWorker"/>.
@@ -40,13 +40,13 @@ public abstract class PixelWorker
 	/// <summary>
 	/// Invoked once before a new rendering process begins on this <see cref="PixelWorker"/>.
 	/// Can be used to prepare the worker for future invocations to <see cref="Render"/>.
-	/// Should create and return a source <see cref="Distribution"/> that will be used.
+	/// Should create and return a source <see cref="ContinuousDistribution"/> that will be used.
 	/// </summary>
-	protected virtual Distribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
+	protected virtual ContinuousDistribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
 
 	/// <summary>
 	/// Optionally creates a <see cref="IRandom"/> with <paramref name="seed"/>. If this method does not return null,
-	/// the random it returned will be assigned to the <see cref="Distribution"/> created in <see cref="CreateArena"/>.
+	/// the random it returned will be assigned to the <see cref="ContinuousDistribution"/> created in <see cref="CreateArena"/>.
 	/// </summary>
 	protected virtual IRandom CreateRandom(uint seed) => new SquirrelRandom(seed);
 

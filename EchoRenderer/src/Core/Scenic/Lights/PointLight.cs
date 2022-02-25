@@ -20,7 +20,7 @@ public class PointLight : LightSource
 		_power = 4f * Scalars.PI * PackedMath.GetLuminance(Utilities.ToVector(Intensity));
 	}
 
-	public override Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel)
+	public override Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
 	{
 		Float3 offset = Position - point;
 
