@@ -158,12 +158,12 @@ public class PreparedInstance
 
 			Assert.IsNotNull(instance);
 
-			static float FindSingle(Distro1 distro, ref PreparedInstance instance, ref GeometryToken geometryToken)
+			static float FindSingle(Distro1 distro, ref PreparedInstance instance, ref GeometryToken stack)
 			{
 				NodeToken token = instance.powerDistribution.Find(distro, out float pdf);
 
-				if (token.IsTriangle || token.IsSphere) geometryToken.Geometry = token;
-				else geometryToken.Push(instance = instance.pack.GetInstance(token));
+				if (token.IsTriangle || token.IsSphere) stack.Geometry = token;
+				else stack.Push(instance = instance.pack.GetInstance(token));
 
 				return pdf;
 			}

@@ -100,7 +100,7 @@ public class CylindricalTexture : IDirectionalTexture
 	/// <inheritdoc/>
 	public Vector128<float> Sample(Distro2 distro, out Float3 incident, out float pdf)
 	{
-		Float2 uv = piecewise.SampleContinuous(distro, out pdf);
+		Float2 uv = piecewise.Sample(distro, out pdf);
 
 		if (!FastMath.Positive(pdf))
 		{
