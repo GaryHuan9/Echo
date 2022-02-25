@@ -9,15 +9,7 @@ namespace EchoRenderer.Common.Mathematics.Randomization;
 /// </summary>
 public class SquirrelRandom : IRandom
 {
-	public SquirrelRandom() : this
-	(
-		(uint)HashCode.Combine
-		(
-			Thread.CurrentThread,
-			Environment.TickCount64,
-			Interlocked.Increment(ref globalSeed)
-		)
-	) { }
+	public SquirrelRandom() : this((uint)Random.Shared.Next()) { }
 
 	public SquirrelRandom(uint seed)
 	{
@@ -25,9 +17,8 @@ public class SquirrelRandom : IRandom
 		state = seed;
 	}
 
-	uint state;
 	readonly uint seed;
-	static long globalSeed;
+	uint state;
 
 	const double Scale = 1d / (uint.MaxValue + 1L);
 
@@ -63,7 +54,6 @@ public class SquirrelRandom : IRandom
 	/// <summary>
 	/// Returns a randomly hashed and mangled value from <paramref name="source"/>.
 	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static uint Mangle(uint source)
 	{
 		source *= 0xED7D6509u;

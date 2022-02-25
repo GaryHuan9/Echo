@@ -30,9 +30,9 @@ public abstract class IDirectionalTextureTests
 	[Test]
 	public void Coherence([Random(0f, 1f, 12)] float x, [Random(0f, 1f, 12)] float y)
 	{
-		Distro2 distro = (Distro2)new Float2(x, y);
+		Sample2D sample = (Sample2D)new Float2(x, y);
 
-		Vector128<float> sampled = texture.Sample(distro, out Float3 incident, out float pdf);
+		Vector128<float> sampled = texture.Sample(sample, out Float3 incident, out float pdf);
 
 		Assert.That(Difference(sampled, texture.Evaluate(incident)), Is.LessThan(0.001f));
 		Assert.That(pdf, Is.EqualTo(texture.ProbabilityDensity(incident)).Roughly(0.01f));

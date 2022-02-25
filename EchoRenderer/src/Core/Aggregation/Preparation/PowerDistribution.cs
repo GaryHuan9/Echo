@@ -13,7 +13,7 @@ public class PowerDistribution
 {
 	public PowerDistribution(ReadOnlySpan<float> powerValues, ReadOnlySpan<int> segments, NodeTokenArray tokenArray)
 	{
-		distribution = new Piecewise1(powerValues);
+		distribution = new DiscreteDistribution1D(powerValues);
 
 		int partitionLength = segments.Length;
 
@@ -38,7 +38,7 @@ public class PowerDistribution
 		Assert.AreEqual(rolling, powerValues.Length);
 	}
 
-	readonly Piecewise1 distribution;
+	readonly DiscreteDistribution1D distribution;
 
 	readonly int[] starts;
 	readonly ReadOnlyView<NodeToken>[] partitions;
@@ -50,12 +50,12 @@ public class PowerDistribution
 
 	/// <summary>
 	/// Finds one <see cref="NodeToken"/> from this <see cref="PowerDistribution"/>
-	/// based on <paramref name="distro"/> and outputs <paramref name="pdf"/>.
+	/// based on <paramref name="sample"/> and outputs <paramref name="pdf"/>.
 	/// </summary>
-	public NodeToken Find(Distro1 distro, out float pdf)
+	public NodeToken Find(Sample1D sample, out float pdf)
 	{
-		//Sample from piecewise and binary search
-		int index = distribution.Find(distro, out pdf);
+		//Sample from distribution and do binary search
+		int index = distribution.Find(sample, out pdf);
 		int segment = starts.AsSpan().BinarySearch(index);
 
 		//Find token from index

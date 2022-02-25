@@ -155,7 +155,7 @@ public class TileWorker : IDisposable
 			for (int i = 0; i < count; i++)
 			{
 				arena.distribution.BeginSample();
-				Float2 offset = arena.distribution.NextTwo();
+				Float2 offset = arena.distribution.Next2D();
 
 				//Sample radiance
 				Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.half;

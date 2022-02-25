@@ -213,12 +213,12 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	}
 
 	/// <summary>
-	/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="distro"/> and outputs
+	/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="sample"/> and outputs
 	/// the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 	/// </summary>
-	public GeometryPoint Sample(in Float3 origin, Distro2 distro, out float pdf)
+	public GeometryPoint Sample(in Float3 origin, Sample2D sample, out float pdf)
 	{
-		Float2 uv = distro.UniformTriangle;
+		Float2 uv = sample.UniformTriangle;
 		Float3 position = GetPoint(uv);
 		Float3 normal = GetPoint(uv);
 

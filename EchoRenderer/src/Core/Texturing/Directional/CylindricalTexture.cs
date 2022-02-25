@@ -21,7 +21,7 @@ public class CylindricalTexture : IDirectionalTexture
 		set => _texture = value;
 	}
 
-	Piecewise2 piecewise;
+	DiscreteDistribution2D distribution;
 
 	/// <summary>
 	/// The Jacobian used to convert from uv coordinates to spherical coordinates.
@@ -81,10 +81,10 @@ public class CylindricalTexture : IDirectionalTexture
 			}
 		}
 
-		//Construct piecewise distribution and calculate average from sum
+		//Construct distribution and calculate average from sum
 		Vector128<float> sinTotalRV = Vector128.Create((float)(1d / sinTotal));
 
-		piecewise = new Piecewise2(weights, size.x);
+		distribution = new DiscreteDistribution2D(weights, size.x);
 		Average = Sse.Multiply(sum.Result, sinTotalRV);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,9 +98,9 @@ public class CylindricalTexture : IDirectionalTexture
 	public Vector128<float> Evaluate(in Float3 direction) => Texture[ToUV(direction)];
 
 	/// <inheritdoc/>
-	public Vector128<float> Sample(Distro2 distro, out Float3 incident, out float pdf)
+	public Vector128<float> Sample(Sample2D sample, out Float3 incident, out float pdf)
 	{
-		Float2 uv = piecewise.Sample(distro, out pdf);
+		Float2 uv = distribution.Sample(sample, out pdf);
 
 		if (!FastMath.Positive(pdf))
 		{
@@ -131,7 +131,7 @@ public class CylindricalTexture : IDirectionalTexture
 
 		if (sinP <= 0f) return 0f;
 
-		return piecewise.ProbabilityDensity((Distro2)uv) * Jacobian / sinP;
+		return distribution.ProbabilityDensity((Sample2D)uv) * Jacobian / sinP;
 	}
 
 	static Float2 ToUV(in Float3 direction) => new

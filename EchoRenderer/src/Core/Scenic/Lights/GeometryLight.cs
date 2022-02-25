@@ -28,9 +28,9 @@ public class GeometryLight : IAreaLight
 	Material material;
 
 	/// <inheritdoc/>
-	public Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel)
+	public Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
 	{
-		GeometryPoint sampled = scene.Sample(token, point, distro, out pdf);
+		GeometryPoint sampled = scene.Sample(token, point, sample, out pdf);
 
 		incident = sampled.position - point;
 

@@ -27,16 +27,16 @@ public class StratifiedDistribution : LimitedDistribution
 		Assert.IsNotNull(Random);
 
 		//Fill single samples
-		foreach (SpanAggregate<Distro1> aggregate in singleOnes)
+		foreach (SpanAggregate<Sample1D> aggregate in singleOnes)
 		{
 			FillStratum(aggregate.array);
-			Random.Shuffle<Distro1>(aggregate.array);
+			Random.Shuffle<Sample1D>(aggregate.array);
 		}
 
-		foreach (SpanAggregate<Distro2> aggregate in singleTwos)
+		foreach (SpanAggregate<Sample2D> aggregate in singleTwos)
 		{
 			FillStratum(aggregate.array, sampleSize);
-			Random.Shuffle<Distro2>(aggregate.array);
+			Random.Shuffle<Sample2D>(aggregate.array);
 		}
 	}
 
@@ -47,7 +47,7 @@ public class StratifiedDistribution : LimitedDistribution
 		//Fill span samples
 		for (int i = 0; i < arrayOnes.Count; i++)
 		{
-			Span<Distro1> span = arrayOnes[i][SampleIndex];
+			Span<Sample1D> span = arrayOnes[i][SampleIndex];
 
 			FillStratum(span);
 			Random.Shuffle(span);
@@ -59,19 +59,19 @@ public class StratifiedDistribution : LimitedDistribution
 		}
 	}
 
-	void FillStratum(Span<Distro1> span)
+	void FillStratum(Span<Sample1D> span)
 	{
 		float scale = 1f / span.Length;
 
 		for (int i = 0; i < span.Length; i++)
 		{
-			ref Distro1 distro = ref span[i];
+			ref Sample1D sample = ref span[i];
 			float offset = Jitter ? Random.Next1() : 0.5f;
-			distro = (Distro1)((i + offset) * scale);
+			sample = (Sample1D)((i + offset) * scale);
 		}
 	}
 
-	void FillStratum(Span<Distro2> span, Int2 size)
+	void FillStratum(Span<Sample2D> span, Int2 size)
 	{
 		Assert.AreEqual(span.Length, size.Product);
 		Float2 scale = 1f / size;
@@ -80,17 +80,17 @@ public class StratifiedDistribution : LimitedDistribution
 
 		for (int i = 0; i < span.Length; i++)
 		{
-			ref Distro2 distro = ref span[i];
+			ref Sample2D sample = ref span[i];
 
 			Float2 offset = Jitter ? Random.Next2() : Float2.half;
-			distro = (Distro2)((position + offset) * scale);
+			sample = (Sample2D)((position + offset) * scale);
 
 			if (position.x < size.x - 1) position += Int2.right;
 			else position = new Int2(0, position.y + 1);
 		}
 	}
 
-	void LatinHypercube(Span<Distro2> span)
+	void LatinHypercube(Span<Sample2D> span)
 	{
 		int length = span.Length;
 		float scale = 1f / length;
@@ -106,12 +106,12 @@ public class StratifiedDistribution : LimitedDistribution
 
 		for (int i = 0; i < span.Length; i++)
 		{
-			ref Distro2 distro = ref span[i];
+			ref Sample2D sample = ref span[i];
 			Float2 offset = Jitter ? Random.Next2() : Float2.half;
 			Float2 position = new Float2(spanX[i], spanY[i]);
-			distro = (Distro2)((position + offset) * scale);
+			sample = (Sample2D)((position + offset) * scale);
 		}
 	}
 
-	public override Distribution Replicate() => new StratifiedDistribution(this);
+	public override ContinuousDistribution Replicate() => new StratifiedDistribution(this);
 }

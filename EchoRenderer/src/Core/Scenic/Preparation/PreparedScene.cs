@@ -155,16 +155,16 @@ public class PreparedScene
 		pdf = 1f / length;
 
 		// throw new NotImplementedException();
-		return lightSources[arena.distribution.NextOne().Range(length)];
+		return lightSources[arena.distribution.Next1D().Range(length)];
 	}
 
 	/// <summary>
 	/// Samples the object represented by <paramref name="token"/> from the perspective of <paramref name="origin"/> and
 	/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 	/// </summary>
-	public GeometryPoint Sample(in GeometryToken token, in Float3 origin, Distro2 distro, out float pdf)
+	public GeometryPoint Sample(in GeometryToken token, in Float3 origin, Sample2D sample, out float pdf)
 	{
-		if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.Geometry, origin, distro, out pdf);
+		if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.Geometry, origin, sample, out pdf);
 
 		//TODO: support the entire hierarchy
 		throw new NotImplementedException();

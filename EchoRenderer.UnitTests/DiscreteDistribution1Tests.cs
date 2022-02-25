@@ -5,29 +5,29 @@ using NUnit.Framework;
 namespace EchoRenderer.UnitTests;
 
 [TestFixture]
-public class Piecewise1Tests
+public class DiscreteDistribution1Tests
 {
 	[SetUp]
 	public void SetUp()
 	{
-		constant = new Piecewise1(stackalloc[] { 1f, 1f, 1f, 1f, 1f });
-		singular = new Piecewise1(stackalloc[] { 4f });
-		sequence = new Piecewise1(stackalloc[] { 1f, 2f, 3f });
-		allZeros = new Piecewise1(stackalloc[] { 0f, 0f, 0f });
-		zerosOne = new Piecewise1(stackalloc[] { 0f, 0f, 0f, 1f });
-		oneZeros = new Piecewise1(stackalloc[] { 1f, 0f, 0f, 0f });
+		constant = new DiscreteDistribution1D(stackalloc[] { 1f, 1f, 1f, 1f, 1f });
+		singular = new DiscreteDistribution1D(stackalloc[] { 4f });
+		sequence = new DiscreteDistribution1D(stackalloc[] { 1f, 2f, 3f });
+		allZeros = new DiscreteDistribution1D(stackalloc[] { 0f, 0f, 0f });
+		zerosOne = new DiscreteDistribution1D(stackalloc[] { 0f, 0f, 0f, 1f });
+		oneZeros = new DiscreteDistribution1D(stackalloc[] { 1f, 0f, 0f, 0f });
 
 		array = new[] { constant, singular, sequence, allZeros, zerosOne, oneZeros };
 	}
 
-	Piecewise1 constant;
-	Piecewise1 singular;
-	Piecewise1 sequence;
-	Piecewise1 allZeros;
-	Piecewise1 zerosOne;
-	Piecewise1 oneZeros;
+	DiscreteDistribution1D constant;
+	DiscreteDistribution1D singular;
+	DiscreteDistribution1D sequence;
+	DiscreteDistribution1D allZeros;
+	DiscreteDistribution1D zerosOne;
+	DiscreteDistribution1D oneZeros;
 
-	Piecewise1[] array;
+	DiscreteDistribution1D[] array;
 
 	[Test]
 	public void Sum()
@@ -65,34 +65,34 @@ public class Piecewise1Tests
 	[Test]
 	public void ProbabilityDensity([Random(0f, 1f, 1000)] float random)
 	{
-		Distro1 distro = (Distro1)random;
+		Sample1D sample = (Sample1D)random;
 
-		foreach (Piecewise1 piecewise in array) ProbabilityDensitySingle(piecewise, distro);
+		foreach (DiscreteDistribution1D distribution in array) ProbabilityDensitySingle(distribution, sample);
 	}
 
 	[Test]
 	public void ProbabilityDensityBoundaries()
 	{
-		foreach (Piecewise1 piecewise in array)
-		foreach (Distro1 distro in Uniform(piecewise.Count))
+		foreach (DiscreteDistribution1D distribution in array)
+		foreach (Sample1D sample in Uniform(distribution.Count))
 		{
-			ProbabilityDensitySingle(piecewise, distro);
+			ProbabilityDensitySingle(distribution, sample);
 		}
 	}
 
-	static void ProbabilityDensitySingle(Piecewise1 piecewise, Distro1 distro)
+	static void ProbabilityDensitySingle(DiscreteDistribution1D distribution, Sample1D sample)
 	{
-		Assert.That(piecewise.ProbabilityDensity(piecewise.Find(distro, out float pdf0)), Is.EqualTo(pdf0).Roughly());
-		Assert.That(piecewise.ProbabilityDensity(piecewise.Sample(distro, out float pdf1)), Is.EqualTo(pdf1).Roughly());
+		Assert.That(distribution.ProbabilityDensity(distribution.Find(sample, out float pdf0)), Is.EqualTo(pdf0).Roughly());
+		Assert.That(distribution.ProbabilityDensity(distribution.Sample(sample, out float pdf1)), Is.EqualTo(pdf1).Roughly());
 
 		Assert.That(pdf0, Is.Not.Zero);
 		Assert.That(pdf1, Is.Not.Zero);
 	}
 
-	static IEnumerable<Distro1> Uniform(int count)
+	static IEnumerable<Sample1D> Uniform(int count)
 	{
 		double countR = 1d / count;
 
-		for (int i = 0; i <= count; i++) yield return (Distro1)(i * countR);
+		for (int i = 0; i <= count; i++) yield return (Sample1D)(i * countR);
 	}
 }
