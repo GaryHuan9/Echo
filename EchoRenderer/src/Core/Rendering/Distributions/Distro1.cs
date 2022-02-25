@@ -8,7 +8,11 @@ namespace EchoRenderer.Core.Rendering.Distributions;
 /// </summary>
 public readonly struct Distro1
 {
-	Distro1(float u) => this.u = FastMath.ClampEpsilon(u);
+	Distro1(float u)
+	{
+		Assert.IsFalse(float.IsNaN(u));
+		this.u = FastMath.ClampEpsilon(u);
+	}
 
 	public readonly float u;
 

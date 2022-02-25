@@ -18,7 +18,7 @@ public class NodeTokenArrayTests
 	[Test]
 	public void Length()
 	{
-		Assert.That(array, Has.Length.EqualTo(3 + 1 + 2));
+		Assert.That(array.TotalLength, Is.EqualTo(3 + 1 + 2));
 		Assert.That(array.PartitionLength, Is.EqualTo(3));
 	}
 

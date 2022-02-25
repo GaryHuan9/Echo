@@ -49,8 +49,14 @@ public class Piecewise1
 			for (int i = 0; i < length; i++) cdfValues[i] *= sumR;
 		}
 
-		cdfValues[length - 1] = 1f;
 		integral = sum * countR;
+
+		//Assign the last identical values to one to ensure no leaking when sampling
+		int index = length - 1;
+		float last = cdfValues[index];
+
+		do cdfValues[index] = 1f;
+		while (--index > 0 && last.Equals(cdfValues[index]));
 	}
 
 	/// <summary>
@@ -79,12 +85,13 @@ public class Piecewise1
 	public int Count => cdfValues.Length;
 
 	/// <summary>
-	/// Samples this <see cref="Piecewise1"/> at continuous linear intervals based on <paramref name="distro"/>.
+	/// Samples this <see cref="Piecewise1"/> at continuous linear intervals
+	/// based on <paramref name="distro"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public Distro1 SampleContinuous(Distro1 distro, out float pdf)
+	public Distro1 Sample(Distro1 distro, out float pdf)
 	{
 		//Find index and lower and upper bounds
-		FindIndex(distro, out int index);
+		int index = FindIndex(distro);
 		GetBounds(index, out float lower, out float upper);
 
 		//Export values
@@ -96,19 +103,21 @@ public class Piecewise1
 	}
 
 	/// <summary>
-	/// Samples this <see cref="Piecewise1"/> at discrete points based on <paramref name="distro"/>.
+	/// Finds a discrete point from this <see cref="Piecewise1"/> based on
+	/// <paramref name="distro"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public int SampleDiscrete(Distro1 distro, out float pdf)
+	public int Find(Distro1 distro, out float pdf)
 	{
-		FindIndex(distro, out int index);
+		int index = FindIndex(distro);
 		GetBounds(index, out float lower, out float upper);
+
 		pdf = upper - lower;
 		return index;
 	}
 
 	/// <summary>
 	/// Returns the probability destiny function of this <see cref="Piecewise1"/>
-	/// if we sampled <paramref name="distro"/> from <see cref="SampleContinuous"/>.
+	/// if we sampled <paramref name="distro"/> from <see cref="Sample"/>.
 	/// </summary>
 	public float ProbabilityDensity(Distro1 distro)
 	{
@@ -118,20 +127,46 @@ public class Piecewise1
 
 	/// <summary>
 	/// Returns the probability destiny function of this <see cref="Piecewise1"/>
-	/// if we sampled <paramref name="discrete"/> from <see cref="SampleDiscrete"/>.
+	/// if we found <paramref name="point"/> from <see cref="Find"/>.
 	/// </summary>
-	public float ProbabilityDensity(int discrete)
+	public float ProbabilityDensity(int point)
 	{
-		GetBounds(discrete, out float lower, out float upper);
+		GetBounds(point, out float lower, out float upper);
 		return upper - lower;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	void FindIndex(Distro1 distro, out int index)
+	int FindIndex(Distro1 distro)
 	{
-		index = new ReadOnlySpan<float>(cdfValues).BinarySearch(distro.u);
-		if (index < 0) index = ~index;
-		Assert.IsTrue(index < Count);
+		int index = new ReadOnlySpan<float>(cdfValues).BinarySearch(distro.u);
+
+		//Majority of the times we will simply exit because we are between two anchors
+		Assert.IsTrue(~index < Count);
+		if (index < 0) return ~index;
+
+		//When we landed exactly on an anchor, we need to perform some special checks
+		GetBounds(index, out float lower, out float upper);
+
+		float pdf = upper - lower;
+		if (pdf > 0f) return index;
+
+		//If our pdf is zero, then it means our binary search has landed
+		//on the first few of the several consecutive identical cdfValues
+
+		do
+		{
+			//Then we will perform a forward search to find the next positive pdf. Note that this search cannot fail,
+			//because if there are some zero pdfs at the end, their cdfValues will be exactly one, which is higher than
+			//the maximum value for our distro, so they will never get selected by the binary search.
+
+			Assert.IsTrue(index < Count - 1);
+
+			lower = upper;
+			upper = cdfValues[++index];
+		}
+		while (lower.Equals(upper));
+
+		return index;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

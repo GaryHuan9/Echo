@@ -56,24 +56,26 @@ public class Piecewise2
 	public float Integral => vertical.integral;
 
 	/// <summary>
-	/// Samples this <see cref="Piecewise2"/> at continuous linear intervals based on <paramref name="distro"/>.
+	/// Samples this <see cref="Piecewise2"/> at continuous linear intervals
+	/// based on <paramref name="distro"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public Distro2 SampleContinuous(Distro2 distro, out float pdf)
+	public Distro2 Sample(Distro2 distro, out float pdf)
 	{
-		Distro1 y = vertical.SampleContinuous(distro.y, out float pdfY);
-		Distro1 x = slices[y.Range(size.y)].SampleContinuous(distro.x, out pdf);
+		Distro1 y = vertical.Sample(distro.y, out float pdfY);
+		Distro1 x = slices[y.Range(size.y)].Sample(distro.x, out pdf);
 
 		pdf *= pdfY;
 		return new Distro2(x, y);
 	}
 
 	/// <summary>
-	/// Samples this <see cref="Piecewise2"/> at discrete points based on <paramref name="distro"/>.
+	/// Finds a discrete point from this <see cref="Piecewise2"/> based on
+	/// <paramref name="distro"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public Int2 SampleDiscrete(Distro2 distro, out float pdf)
+	public Int2 Find(Distro2 distro, out float pdf)
 	{
-		int y = vertical.SampleDiscrete(distro.y, out float pdfY);
-		int x = slices[y].SampleDiscrete(distro.x, out pdf);
+		int y = vertical.Find(distro.y, out float pdfY);
+		int x = slices[y].Find(distro.x, out pdf);
 
 		pdf *= pdfY;
 		return new Int2(x, y);
@@ -81,7 +83,7 @@ public class Piecewise2
 
 	/// <summary>
 	/// Returns the probability destiny function of this <see cref="Piecewise2"/>
-	/// if we sampled <paramref name="distro"/> from <see cref="SampleContinuous"/>.
+	/// if we sampled <paramref name="distro"/> from <see cref="Sample"/>.
 	/// </summary>
 	public float ProbabilityDensity(Distro2 distro)
 	{
@@ -95,14 +97,14 @@ public class Piecewise2
 
 	/// <summary>
 	/// Returns the probability destiny function of this <see cref="Piecewise2"/>
-	/// if we sampled <paramref name="discrete"/> from <see cref="SampleDiscrete"/>.
+	/// if we sampled <paramref name="point"/> from <see cref="Find"/>.
 	/// </summary>
-	public float ProbabilityDensity(Int2 discrete)
+	public float ProbabilityDensity(Int2 point)
 	{
-		Piecewise1 slice = slices[discrete.y];
+		Piecewise1 slice = slices[point.y];
 
-		float pdfX = slice.ProbabilityDensity(discrete.x);
-		float pdfY = vertical.ProbabilityDensity(discrete.y);
+		float pdfX = slice.ProbabilityDensity(point.x);
+		float pdfY = vertical.ProbabilityDensity(point.y);
 
 		return pdfX * pdfY;
 	}
