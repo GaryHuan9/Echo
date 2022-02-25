@@ -21,15 +21,15 @@ public readonly struct ReadOnlyView<T>
 
 	public ReadOnlySpan<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public ReadOnlyView<T> Slice(int offset) => Slice(offset, Length - offset);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public ReadOnlyView<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
 
 	public ReadOnlySpan<T> AsSpan() => this;
 	public ReadOnlySpan<T> AsSpan(int offset) => this[offset..];
 	public ReadOnlySpan<T> AsSpan(int offset, int length) => Slice(offset, length);
+
+	public static ReadOnlyView<T> Empty => default;
 
 	public ref T this[int index] => ref array[AssertShift(index)];
 
