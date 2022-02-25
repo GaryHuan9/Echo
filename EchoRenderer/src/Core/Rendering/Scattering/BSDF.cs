@@ -131,8 +131,8 @@ public class BSDF
 						 out FunctionType sampledType, FunctionType type = FunctionType.all)
 	{
 		//Uniformly select a matching function
-		Sample1D sampleFind = sample.x;
-		int matched = FindFunction(type, ref sampleFind, out int index);
+		ref Sample1D sampleX = ref Unsafe.AsRef(in sample.x);
+		int matched = FindFunction(type, ref sampleX, out int index);
 
 		if (matched == 0)
 		{
@@ -141,8 +141,6 @@ public class BSDF
 			sampledType = FunctionType.none;
 			return Float3.zero;
 		}
-
-		sample = new Sample2D(sampleFind, sample.y);
 
 		BxDF selected = functions[index];
 		sampledType = selected.type;
@@ -185,13 +183,13 @@ public class BSDF
 			if (function.type.Any(reflect)) value += function.Evaluate(outgoing, incident);
 		}
 
-		if (matched > 1) pdf /= matched;
+		pdf /= matched;
 		return value;
 	}
 
 	/// <summary>
 	/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{sample2})"/> for more information.
+	/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Sample2D})"/> for more information.
 	/// </summary>
 	public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
 	{
