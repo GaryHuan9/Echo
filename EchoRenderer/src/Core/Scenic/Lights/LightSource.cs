@@ -29,7 +29,7 @@ public abstract class LightSource : Entity, ILight
 	public virtual void Prepare(PreparedScene scene) => Intensity = Intensity.Max(Float3.zero);
 
 	/// <inheritdoc/>
-	public abstract Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel);
+	public abstract Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel);
 }
 
 /// <summary>
@@ -51,7 +51,7 @@ public interface ILight
 	/// <summary>
 	/// Samples the contribution of this <see cref="ILight"/> to <paramref name="point"/>.
 	/// </summary>
-	Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel);
+	Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel);
 }
 
 /// <summary>

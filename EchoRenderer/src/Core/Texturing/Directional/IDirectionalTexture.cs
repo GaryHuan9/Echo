@@ -30,20 +30,20 @@ public interface IDirectionalTexture
 	Vector128<float> Evaluate(in Float3 direction);
 
 	/// <summary>
-	/// Samples this <see cref="IDirectionalTexture"/> based on <paramref name="distro"/> and outputs the
+	/// Samples this <see cref="IDirectionalTexture"/> based on <paramref name="sample"/> and outputs the
 	/// <see cref="Evaluate"/> <paramref name="incident"/> direction and its <paramref name="pdf"/>.
 	/// </summary>
-	Vector128<float> Sample(Distro2 distro, out Float3 incident, out float pdf)
+	Vector128<float> Sample(Sample2D sample, out Float3 incident, out float pdf)
 	{
-		incident = distro.UniformSphere;
-		pdf = Distro2.UniformSpherePDF;
+		incident = sample.UniformSphere;
+		pdf = Sample2D.UniformSpherePDF;
 		return Evaluate(incident);
 	}
 
 	/// <summary>
 	/// Returns the probability density function for <paramref name="incident"/> direction on this <see cref="IDirectionalTexture"/>.
 	/// </summary>
-	float ProbabilityDensity(in Float3 incident) => Distro2.UniformSpherePDF;
+	float ProbabilityDensity(in Float3 incident) => Sample2D.UniformSpherePDF;
 }
 public static class IDirectionalTextureExtensions
 {

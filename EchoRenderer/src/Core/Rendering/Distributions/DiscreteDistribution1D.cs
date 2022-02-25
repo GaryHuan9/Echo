@@ -10,9 +10,9 @@ namespace EchoRenderer.Core.Rendering.Distributions;
 /// <summary>
 /// A one dimensional piecewise distribution constructed from a function of discrete probability destiny values.
 /// </summary>
-public class Piecewise1
+public class DiscreteDistribution1D
 {
-	public Piecewise1(ReadOnlySpan<float> pdfValues)
+	public DiscreteDistribution1D(ReadOnlySpan<float> pdfValues)
 	{
 		Assert.IsFalse(pdfValues.IsEmpty);
 
@@ -80,35 +80,35 @@ public class Piecewise1
 	readonly float countR;
 
 	/// <summary>
-	/// The total number of discrete values in this <see cref="Piecewise1"/>.
+	/// The total number of discrete values in this <see cref="DiscreteDistribution1D"/>.
 	/// </summary>
 	public int Count => cdfValues.Length;
 
 	/// <summary>
-	/// Samples this <see cref="Piecewise1"/> at continuous linear intervals
-	/// based on <paramref name="distro"/> and outputs the <paramref name="pdf"/>.
+	/// Samples this <see cref="DiscreteDistribution1D"/> at continuous linear intervals
+	/// based on <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public Distro1 Sample(Distro1 distro, out float pdf)
+	public Sample1D Sample(Sample1D sample, out float pdf)
 	{
 		//Find index and lower and upper bounds
-		int index = FindIndex(distro);
+		int index = FindIndex(sample);
 		GetBounds(index, out float lower, out float upper);
 
 		//Export values
 		pdf = (upper - lower) * Count;
 		Assert.AreNotEqual(pdf, 0f);
 
-		float shift = Scalars.InverseLerp(lower, upper, distro);
-		return (Distro1)((shift + index) * countR);
+		float shift = Scalars.InverseLerp(lower, upper, sample);
+		return (Sample1D)((shift + index) * countR);
 	}
 
 	/// <summary>
-	/// Finds a discrete point from this <see cref="Piecewise1"/> based on
-	/// <paramref name="distro"/> and outputs the <paramref name="pdf"/>.
+	/// Finds a discrete point from this <see cref="DiscreteDistribution1D"/> based on
+	/// <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public int Find(Distro1 distro, out float pdf)
+	public int Find(Sample1D sample, out float pdf)
 	{
-		int index = FindIndex(distro);
+		int index = FindIndex(sample);
 		GetBounds(index, out float lower, out float upper);
 
 		pdf = upper - lower;
@@ -116,17 +116,17 @@ public class Piecewise1
 	}
 
 	/// <summary>
-	/// Returns the probability destiny function of this <see cref="Piecewise1"/>
-	/// if we sampled <paramref name="distro"/> from <see cref="Sample"/>.
+	/// Returns the probability destiny function of this <see cref="DiscreteDistribution1D"/>
+	/// if we sampled <paramref name="sample"/> from <see cref="Sample"/>.
 	/// </summary>
-	public float ProbabilityDensity(Distro1 distro)
+	public float ProbabilityDensity(Sample1D sample)
 	{
-		GetBounds(distro.Range(Count), out float lower, out float upper);
+		GetBounds(sample.Range(Count), out float lower, out float upper);
 		return (upper - lower) * Count;
 	}
 
 	/// <summary>
-	/// Returns the probability destiny function of this <see cref="Piecewise1"/>
+	/// Returns the probability destiny function of this <see cref="DiscreteDistribution1D"/>
 	/// if we found <paramref name="point"/> from <see cref="Find"/>.
 	/// </summary>
 	public float ProbabilityDensity(int point)
@@ -136,9 +136,9 @@ public class Piecewise1
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	int FindIndex(Distro1 distro)
+	int FindIndex(Sample1D sample)
 	{
-		int index = new ReadOnlySpan<float>(cdfValues).BinarySearch(distro.u);
+		int index = new ReadOnlySpan<float>(cdfValues).BinarySearch(sample.u);
 
 		//Majority of the times we will simply exit because we are between two anchors
 		Assert.IsTrue(~index < Count);
@@ -157,7 +157,7 @@ public class Piecewise1
 		{
 			//Then we will perform a forward search to find the next positive pdf. Note that this search cannot fail,
 			//because if there are some zero pdfs at the end, their cdfValues will be exactly one, which is higher than
-			//the maximum value for our distro, so they will never get selected by the binary search.
+			//the maximum value for our sample, so they will never get selected by the binary search.
 
 			Assert.IsTrue(index < Count - 1);
 

@@ -73,9 +73,9 @@ public class AmbientLight : AreaLightSource
 		return Utilities.ToFloat3(Texture.Evaluate(transformed));
 	}
 
-	public override Float3 Sample(in GeometryPoint point, Distro2 distro, out Float3 incident, out float pdf, out float travel)
+	public override Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
 	{
-		Vector128<float> value = Texture.Sample(distro, out incident, out pdf);
+		Vector128<float> value = Texture.Sample(sample, out incident, out pdf);
 
 		incident = localToWorld * incident;
 		travel = float.PositiveInfinity;

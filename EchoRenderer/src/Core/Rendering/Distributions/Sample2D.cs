@@ -8,18 +8,18 @@ namespace EchoRenderer.Core.Rendering.Distributions;
 /// <summary>
 /// A sample on a two dimensional distribution between zero (inclusive) and one (exclusive)
 /// </summary>
-public readonly struct Distro2
+public readonly struct Sample2D
 {
-	Distro2(Float2 u) : this((Distro1)u.x, (Distro1)u.y) { }
+	Sample2D(Float2 u) : this((Sample1D)u.x, (Sample1D)u.y) { }
 
-	public Distro2(Distro1 x, Distro1 y)
+	public Sample2D(Sample1D x, Sample1D y)
 	{
 		this.x = x;
 		this.y = y;
 	}
 
-	public readonly Distro1 x;
-	public readonly Distro1 y;
+	public readonly Sample1D x;
+	public readonly Sample1D y;
 
 	/// <summary>
 	/// Returns a uniformly sampled point on a unit hemisphere surface.
@@ -112,7 +112,7 @@ public readonly struct Distro2
 	public const float UniformSpherePDF = 1f / 2f / Scalars.TAU;
 
 	/// <summary>
-	/// Maps this <see cref="Distro2"/> to be between zero (inclusive) and <paramref name="max"/> (exclusive).
+	/// Maps this <see cref="Sample2D"/> to be between zero (inclusive) and <paramref name="max"/> (exclusive).
 	/// </summary>
 	public Int2 Range(Int2 max)
 	{
@@ -121,7 +121,7 @@ public readonly struct Distro2
 	}
 
 	/// <summary>
-	/// Maps this <see cref="Distro2"/> to be between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
+	/// Maps this <see cref="Sample2D"/> to be between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
 	/// </summary>
 	public Int2 Range(Int2 min, Int2 max)
 	{
@@ -129,8 +129,8 @@ public readonly struct Distro2
 		return Range(max - min) + min;
 	}
 
-	public static implicit operator Float2(Distro2 distro) => new(distro.x, distro.y);
-	public static explicit operator Distro2(Float2 value) => new(value);
+	public static implicit operator Float2(Sample2D sample) => new(sample.x, sample.y);
+	public static explicit operator Sample2D(Float2 value) => new(value);
 
 	static Float3 ProjectSphere(float z, float u)
 	{
