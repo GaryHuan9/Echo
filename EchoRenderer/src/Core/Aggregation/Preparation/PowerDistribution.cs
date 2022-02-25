@@ -55,11 +55,11 @@ public class PowerDistribution
 	public NodeToken Find(Distro1 distro, out float pdf)
 	{
 		//Sample from piecewise and binary search
-		int index = distribution.SampleDiscrete(distro, out pdf);
-		int partitionIndex = starts.AsSpan().BinarySearch(index);
+		int index = distribution.Find(distro, out pdf);
+		int segment = starts.AsSpan().BinarySearch(index);
 
 		//Find token from index
-		if (partitionIndex < 0) partitionIndex = ~partitionIndex - 1;
-		return partitions[partitionIndex][index - starts[index]];
+		if (segment < 0) segment = ~segment - 1;
+		return partitions[segment][index - starts[index]];
 	}
 }

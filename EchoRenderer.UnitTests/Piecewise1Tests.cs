@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using EchoRenderer.Core.Rendering.Distributions;
 using NUnit.Framework;
 
@@ -7,26 +7,27 @@ namespace EchoRenderer.UnitTests;
 [TestFixture]
 public class Piecewise1Tests
 {
-	[OneTimeSetUp]
-	public void OneTimeSetUp()
-	{
-		distros = new Distro1[4];
-		FillUniform(distros);
-	}
-
 	[SetUp]
 	public void SetUp()
 	{
 		constant = new Piecewise1(stackalloc[] { 1f, 1f, 1f, 1f, 1f });
 		singular = new Piecewise1(stackalloc[] { 4f });
 		sequence = new Piecewise1(stackalloc[] { 1f, 2f, 3f });
-	}
+		allZeros = new Piecewise1(stackalloc[] { 0f, 0f, 0f });
+		zerosOne = new Piecewise1(stackalloc[] { 0f, 0f, 0f, 1f });
+		oneZeros = new Piecewise1(stackalloc[] { 1f, 0f, 0f, 0f });
 
-	Distro1[] distros;
+		array = new[] { constant, singular, sequence, allZeros, zerosOne, oneZeros };
+	}
 
 	Piecewise1 constant;
 	Piecewise1 singular;
 	Piecewise1 sequence;
+	Piecewise1 allZeros;
+	Piecewise1 zerosOne;
+	Piecewise1 oneZeros;
+
+	Piecewise1[] array;
 
 	[Test]
 	public void Sum()
@@ -34,6 +35,9 @@ public class Piecewise1Tests
 		Assert.That(constant.sum, Is.EqualTo(5f).Roughly());
 		Assert.That(singular.sum, Is.EqualTo(4f).Roughly());
 		Assert.That(sequence.sum, Is.EqualTo(6f).Roughly());
+		Assert.That(allZeros.sum, Is.EqualTo(0f).Roughly());
+		Assert.That(zerosOne.sum, Is.EqualTo(1f).Roughly());
+		Assert.That(oneZeros.sum, Is.EqualTo(1f).Roughly());
 	}
 
 	[Test]
@@ -42,6 +46,9 @@ public class Piecewise1Tests
 		Assert.That(constant.integral, Is.EqualTo(1f).Roughly());
 		Assert.That(singular.integral, Is.EqualTo(4f).Roughly());
 		Assert.That(sequence.integral, Is.EqualTo(2f).Roughly());
+		Assert.That(allZeros.integral, Is.EqualTo(0f).Roughly());
+		Assert.That(zerosOne.integral, Is.EqualTo(0.25f).Roughly());
+		Assert.That(oneZeros.integral, Is.EqualTo(0.25f).Roughly());
 	}
 
 	[Test]
@@ -50,24 +57,42 @@ public class Piecewise1Tests
 		Assert.That(constant, Has.Count.EqualTo(5));
 		Assert.That(singular, Has.Count.EqualTo(1));
 		Assert.That(sequence, Has.Count.EqualTo(3));
+		Assert.That(allZeros, Has.Count.EqualTo(3));
+		Assert.That(zerosOne, Has.Count.EqualTo(4));
+		Assert.That(oneZeros, Has.Count.EqualTo(4));
 	}
 
 	[Test]
-	public void ProbabilityDensity([Random(0f, 1f, 10)] float random)
+	public void ProbabilityDensity([Random(0f, 1f, 1000)] float random)
 	{
 		Distro1 distro = (Distro1)random;
 
-		foreach (Piecewise1 piecewise in new[] { constant, singular, sequence })
+		foreach (Piecewise1 piecewise in array) ProbabilityDensitySingle(piecewise, distro);
+	}
+
+	[Test]
+	public void ProbabilityDensityBoundaries()
+	{
+		foreach (Piecewise1 piecewise in array)
+		foreach (Distro1 distro in Uniform(piecewise.Count))
 		{
-			Assert.That(piecewise.ProbabilityDensity(piecewise.SampleDiscrete(distro, out float pdf)), Is.EqualTo(pdf).Roughly());
-			Assert.That(piecewise.ProbabilityDensity(piecewise.SampleContinuous(distro, out pdf)), Is.EqualTo(pdf).Roughly());
+			ProbabilityDensitySingle(piecewise, distro);
 		}
 	}
 
-	static void FillUniform(Span<Distro1> span)
+	static void ProbabilityDensitySingle(Piecewise1 piecewise, Distro1 distro)
 	{
-		double lengthR = 1d / (span.Length - 1d);
+		Assert.That(piecewise.ProbabilityDensity(piecewise.Find(distro, out float pdf0)), Is.EqualTo(pdf0).Roughly());
+		Assert.That(piecewise.ProbabilityDensity(piecewise.Sample(distro, out float pdf1)), Is.EqualTo(pdf1).Roughly());
 
-		for (int i = 0; i < span.Length; i++) span[i] = (Distro1)(i * lengthR);
+		Assert.That(pdf0, Is.Not.Zero);
+		Assert.That(pdf1, Is.Not.Zero);
+	}
+
+	static IEnumerable<Distro1> Uniform(int count)
+	{
+		double countR = 1d / count;
+
+		for (int i = 0; i <= count; i++) yield return (Distro1)(i * countR);
 	}
 }
