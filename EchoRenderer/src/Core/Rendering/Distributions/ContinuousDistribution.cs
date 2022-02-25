@@ -6,17 +6,17 @@ using EchoRenderer.Common.Mathematics.Randomization;
 
 namespace EchoRenderer.Core.Rendering.Distributions;
 
-public abstract class Distribution
+public abstract class ContinuousDistribution
 {
-	protected Distribution(int sampleCount)
+	protected ContinuousDistribution(int sampleCount)
 	{
 		this.sampleCount = sampleCount;
 
-		arrayOnes = new List<SpanAggregate<Distro1>>();
-		arrayTwos = new List<SpanAggregate<Distro2>>();
+		arrayOnes = new List<SpanAggregate<Sample1D>>();
+		arrayTwos = new List<SpanAggregate<Sample2D>>();
 	}
 
-	protected Distribution(Distribution distribution)
+	protected ContinuousDistribution(ContinuousDistribution distribution)
 	{
 		sampleCount = distribution.sampleCount;
 
@@ -39,8 +39,8 @@ public abstract class Distribution
 	/// </summary>
 	protected readonly int sampleCount;
 
-	protected readonly List<SpanAggregate<Distro1>> arrayOnes;
-	protected readonly List<SpanAggregate<Distro2>> arrayTwos;
+	protected readonly List<SpanAggregate<Sample1D>> arrayOnes;
+	protected readonly List<SpanAggregate<Sample2D>> arrayTwos;
 
 	int arrayOneIndex;
 	int arrayTwoIndex;
@@ -56,19 +56,19 @@ public abstract class Distribution
 	protected int SampleIndex { get; private set; }
 
 	/// <summary>
-	/// The specific pseudo random number generator associated with this <see cref="Distribution"/>.
+	/// The specific pseudo random number generator associated with this <see cref="ContinuousDistribution"/>.
 	/// </summary>
 	public IRandom Random { get; set; }
 
 	/// <summary>
 	/// Requests a span of one dimensional values with <paramref name="length"/> to be available.
 	/// </summary>
-	public void RequestSpanOne(int length) => arrayOnes.Add(new SpanAggregate<Distro1>(length, sampleCount));
+	public void RequestSpanOne(int length) => arrayOnes.Add(new SpanAggregate<Sample1D>(length, sampleCount));
 
 	/// <summary>
 	/// Requests a span of two dimensional values with <paramref name="length"/> to be available.
 	/// </summary>
-	public void RequestSpanTwo(int length) => arrayTwos.Add(new SpanAggregate<Distro2>(length, sampleCount));
+	public void RequestSpanTwo(int length) => arrayTwos.Add(new SpanAggregate<Sample2D>(length, sampleCount));
 
 	/// <summary>
 	/// Begins sampling on a new pixel at <paramref name="position"/>.
@@ -94,28 +94,28 @@ public abstract class Distribution
 	/// <summary>
 	/// Returns the next one dimensional value of this sample.
 	/// </summary>
-	public abstract Distro1 NextOne();
+	public abstract Sample1D Next1D();
 
 	/// <summary>
 	/// Returns the next two dimensional value of this sample.
 	/// </summary>
-	public abstract Distro2 NextTwo();
+	public abstract Sample2D Next2D();
 
 	/// <summary>
 	/// Returns the next span of one dimensional values of this sample.
 	/// </summary>
-	public ReadOnlySpan<Distro1> NextSpanOne() => ++arrayOneIndex < arrayOnes.Count ? arrayOnes[arrayOneIndex][SampleIndex] : Span<Distro1>.Empty;
+	public ReadOnlySpan<Sample1D> NextSpan1D() => ++arrayOneIndex < arrayOnes.Count ? arrayOnes[arrayOneIndex][SampleIndex] : Span<Sample1D>.Empty;
 
 	/// <summary>
 	/// Returns the next span of two dimensional values of this sample.
 	/// </summary>
-	public ReadOnlySpan<Distro2> NextSpanTwo() => ++arrayTwoIndex < arrayTwos.Count ? arrayTwos[arrayTwoIndex][SampleIndex] : Span<Distro2>.Empty;
+	public ReadOnlySpan<Sample2D> NextSpan2D() => ++arrayTwoIndex < arrayTwos.Count ? arrayTwos[arrayTwoIndex][SampleIndex] : Span<Sample2D>.Empty;
 
 	/// <summary>
-	/// Produces and returns another copy of this <see cref="Distribution"/> of the same <see cref="Object.GetType()"/> to be used for other threads.
+	/// Produces and returns another copy of this <see cref="ContinuousDistribution"/> of the same <see cref="Object.GetType()"/> to be used for other threads.
 	/// NOTE: Only the information indicated prior to rendering needs to be cloned over; pixel, sample, or PRNG specific data can be ignored.
 	/// </summary>
-	public abstract Distribution Replicate();
+	public abstract ContinuousDistribution Replicate();
 
 	protected readonly struct SpanAggregate<T>
 	{

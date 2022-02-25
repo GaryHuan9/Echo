@@ -34,7 +34,7 @@ public class SpecularReflection : BxDF
 
 	public override Float3 Evaluate(in Float3 outgoing, in Float3 incident) => Float3.zero;
 
-	public override Float3 Sample(in Float3 outgoing, Distro2 distro, out Float3 incident, out float pdf)
+	public override Float3 Sample(in Float3 outgoing, Sample2D sample, out Float3 incident, out float pdf)
 	{
 		incident = new Float3(-outgoing.x, -outgoing.y, outgoing.z);
 
@@ -75,7 +75,7 @@ public class SpecularTransmission : BxDF
 
 	public override Float3 Evaluate(in Float3 outgoing, in Float3 incident) => Float3.zero;
 
-	public override Float3 Sample(in Float3 outgoing, Distro2 distro, out Float3 incident, out float pdf) => throw new NotImplementedException();
+	public override Float3 Sample(in Float3 outgoing, Sample2D sample, out Float3 incident, out float pdf) => throw new NotImplementedException();
 
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
 }

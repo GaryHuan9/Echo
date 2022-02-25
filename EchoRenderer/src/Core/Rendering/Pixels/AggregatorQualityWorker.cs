@@ -25,7 +25,7 @@ public class AggregatorQualityWorker : PixelWorker
 		return new Float3(cost, currentCost, currentSample);
 	}
 
-	protected override Distribution CreateDistribution(RenderProfile profile)
+	protected override ContinuousDistribution CreateDistribution(RenderProfile profile)
 	{
 		Interlocked.Exchange(ref totalCost, 0);
 		Interlocked.Exchange(ref totalSample, 0);

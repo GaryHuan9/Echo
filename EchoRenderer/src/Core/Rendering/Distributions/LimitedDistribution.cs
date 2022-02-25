@@ -1,27 +1,27 @@
 ﻿namespace EchoRenderer.Core.Rendering.Distributions;
 
-public abstract class LimitedDistribution : Distribution
+public abstract class LimitedDistribution : ContinuousDistribution
 {
 	protected LimitedDistribution(int sampleCount, int dimensionCount) : base(sampleCount)
 	{
-		singleOnes = new SpanAggregate<Distro1>[dimensionCount];
-		singleTwos = new SpanAggregate<Distro2>[dimensionCount];
+		singleOnes = new SpanAggregate<Sample1D>[dimensionCount];
+		singleTwos = new SpanAggregate<Sample2D>[dimensionCount];
 
 		for (int i = 0; i < dimensionCount; i++)
 		{
-			singleOnes[i] = new SpanAggregate<Distro1>(1, sampleCount);
-			singleTwos[i] = new SpanAggregate<Distro2>(1, sampleCount);
+			singleOnes[i] = new SpanAggregate<Sample1D>(1, sampleCount);
+			singleTwos[i] = new SpanAggregate<Sample2D>(1, sampleCount);
 		}
 	}
 
 	protected LimitedDistribution(LimitedDistribution distribution) : base(distribution)
 	{
-		singleOnes = new SpanAggregate<Distro1>[distribution.singleOnes.Length];
-		singleTwos = new SpanAggregate<Distro2>[distribution.singleTwos.Length];
+		singleOnes = new SpanAggregate<Sample1D>[distribution.singleOnes.Length];
+		singleTwos = new SpanAggregate<Sample2D>[distribution.singleTwos.Length];
 	}
 
-	protected readonly SpanAggregate<Distro1>[] singleOnes;
-	protected readonly SpanAggregate<Distro2>[] singleTwos;
+	protected readonly SpanAggregate<Sample1D>[] singleOnes;
+	protected readonly SpanAggregate<Sample2D>[] singleTwos;
 
 	int singleOneIndex;
 	int singleTwoIndex;
@@ -34,6 +34,6 @@ public abstract class LimitedDistribution : Distribution
 		singleTwoIndex = -1;
 	}
 
-	public override Distro1 NextOne() => singleOnes[++singleOneIndex].array[SampleIndex];
-	public override Distro2 NextTwo() => singleTwos[++singleTwoIndex].array[SampleIndex];
+	public override Sample1D Next1D() => singleOnes[++singleOneIndex].array[SampleIndex];
+	public override Sample2D Next2D() => singleTwos[++singleTwoIndex].array[SampleIndex];
 }

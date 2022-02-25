@@ -126,13 +126,13 @@ public class BSDF
 	/// Samples all <see cref="BxDF"/> that matches <paramref name="type"/>.
 	/// See <see cref="BxDF.Sample"/> for more information.
 	/// </summary>
-	public Float3 Sample(in Float3 outgoingWorld, Distro2 distro,
+	public Float3 Sample(in Float3 outgoingWorld, Sample2D sample,
 						 out Float3 incidentWorld, out float pdf,
 						 out FunctionType sampledType, FunctionType type = FunctionType.all)
 	{
 		//Uniformly select a matching function
-		Distro1 distroFind = distro.x;
-		int matched = FindFunction(type, ref distroFind, out int index);
+		Sample1D sampleFind = sample.x;
+		int matched = FindFunction(type, ref sampleFind, out int index);
 
 		if (matched == 0)
 		{
@@ -142,14 +142,14 @@ public class BSDF
 			return Float3.zero;
 		}
 
-		distro = new Distro2(distroFind, distro.y);
+		sample = new Sample2D(sampleFind, sample.y);
 
 		BxDF selected = functions[index];
 		sampledType = selected.type;
 
 		//Sample the selected function
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Float3 value = selected.Sample(outgoing, distro, out Float3 incident, out pdf);
+		Float3 value = selected.Sample(outgoing, sample, out Float3 incident, out pdf);
 
 		if (!FastMath.Positive(pdf))
 		{
@@ -191,9 +191,9 @@ public class BSDF
 
 	/// <summary>
 	/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Distro2})"/> for more information.
+	/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{sample2})"/> for more information.
 	/// </summary>
-	public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Distro2> distros, FunctionType type)
+	public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
 	{
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		Float3 reflectance = Float3.zero;
@@ -202,7 +202,7 @@ public class BSDF
 		{
 			BxDF function = functions[i];
 			if (!function.type.Fits(type)) continue;
-			reflectance += function.GetReflectance(outgoing, distros);
+			reflectance += function.GetReflectance(outgoing, samples);
 		}
 
 		return reflectance;
@@ -210,9 +210,9 @@ public class BSDF
 
 	/// <summary>
 	/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	/// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Distro2}, ReadOnlySpan{Distro2})"/> for more information.
+	/// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Sample2D}, ReadOnlySpan{Sample2D})"/> for more information.
 	/// </summary>
-	public Float3 GetReflectance(ReadOnlySpan<Distro2> distros0, ReadOnlySpan<Distro2> distros1, FunctionType type)
+	public Float3 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1, FunctionType type)
 	{
 		Float3 reflectance = Float3.zero;
 
@@ -220,7 +220,7 @@ public class BSDF
 		{
 			BxDF function = functions[i];
 			if (!function.type.Fits(type)) continue;
-			reflectance += function.GetReflectance(distros0, distros1);
+			reflectance += function.GetReflectance(samples0, samples1);
 		}
 
 		return reflectance;
@@ -239,7 +239,7 @@ public class BSDF
 		return dot0 * dot1 > 0f ? FunctionType.reflective : FunctionType.transmissive;
 	}
 
-	int FindFunction(FunctionType type, ref Distro1 distro, out int index)
+	int FindFunction(FunctionType type, ref Sample1D sample, out int index)
 	{
 		Unsafe.SkipInit(out index);
 		if (count == 0) return 0;
@@ -247,7 +247,7 @@ public class BSDF
 		//If all stored functions match
 		if (FunctionType.all.Fits(type))
 		{
-			distro = distro.Extract(count, out index);
+			sample = sample.Extract(count, out index);
 			return count;
 		}
 
@@ -265,7 +265,7 @@ public class BSDF
 		if (matched == 0) return 0;
 
 		//Select one function
-		distro = distro.Extract(matched, out index);
+		sample = sample.Extract(matched, out index);
 		index = stack[index];
 
 		return matched;

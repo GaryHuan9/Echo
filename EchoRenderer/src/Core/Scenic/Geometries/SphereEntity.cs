@@ -131,10 +131,10 @@ public readonly struct PreparedSphere
 	}
 
 	/// <summary>
-	/// Samples this <see cref="PreparedSphere"/> based on <paramref name="distro"/> at <paramref name="origin"/> and
+	/// Samples this <see cref="PreparedSphere"/> based on <paramref name="sample"/> at <paramref name="origin"/> and
 	/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 	/// </summary>
-	public GeometryPoint Sample(in Float3 origin, Distro2 distro, out float pdf)
+	public GeometryPoint Sample(in Float3 origin, Sample2D sample, out float pdf)
 	{
 		//Check whether origin is inside sphere
 		Float3 offset = origin - position;
@@ -144,7 +144,7 @@ public readonly struct PreparedSphere
 		if (length2 <= radius2)
 		{
 			//Sample uniformly if is inside
-			var sample = GetPoint(distro.UniformSphere);
+			var sample = GetPoint(sample.UniformSphere);
 			pdf = sample.ProbabilityDensity(origin, Area);
 
 			return sample;
@@ -155,9 +155,9 @@ public readonly struct PreparedSphere
 		float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
 
 		//Uniform sample cone, defined by theta and phi
-		float cosT = FastMath.FMA(distro.x, cosMaxT - 1f, 1f);
+		float cosT = FastMath.FMA(sample.x, cosMaxT - 1f, 1f);
 		float sinT = FastMath.Identity(cosT);
-		float phi = distro.y * Scalars.TAU;
+		float phi = sample.y * Scalars.TAU;
 
 		//Compute angle alpha from center of sphere to sample point
 		float length = FastMath.Sqrt0(length2);
@@ -199,7 +199,7 @@ public readonly struct PreparedSphere
 			float cosWeight = incident.Dot(normal) * radius;
 			if (FastMath.AlmostZero(cosWeight)) return 0f;
 
-			return distance * distance / FastMath.Abs(cosWeight) * Distro2.UniformSpherePDF;
+			return distance * distance / FastMath.Abs(cosWeight) * Sample2D.UniformSpherePDF;
 		}
 
 		//Since the point is not inside our sphere, the sampling is based on a cone is not uniform

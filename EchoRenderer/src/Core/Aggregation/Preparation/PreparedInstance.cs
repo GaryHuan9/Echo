@@ -139,10 +139,10 @@ public class PreparedInstance
 	}
 
 	/// <summary>
-	/// If <see cref="Power"/> is positive, find an emissive geometry based on <paramref name="distros"/> and returns a <see cref="GeometryToken"/> that
+	/// If <see cref="Power"/> is positive, find an emissive geometry based on <paramref name="samples"/> and returns a <see cref="GeometryToken"/> that
 	/// represents it, otherwise the behavior is undefined. The probability density function of this action is calculated and exported to <paramref name="pdf"/>
 	/// </summary>
-	public GeometryToken Find(ReadOnlySpan<Distro1> distros, out float pdf)
+	public GeometryToken Find(ReadOnlySpan<Sample1D> samples, out float pdf)
 	{
 		Assert.IsTrue(FastMath.Positive(Power));
 
@@ -151,16 +151,16 @@ public class PreparedInstance
 		var geometryToken = new GeometryToken();
 		PreparedInstance instance = this;
 
-		foreach (Distro1 distro in distros)
+		foreach (Sample1D sample in samples)
 		{
-			pdf *= FindSingle(distro, ref instance, ref geometryToken);
+			pdf *= FindSingle(sample, ref instance, ref geometryToken);
 			if (geometryToken.Geometry != default) return geometryToken;
 
 			Assert.IsNotNull(instance);
 
-			static float FindSingle(Distro1 distro, ref PreparedInstance instance, ref GeometryToken stack)
+			static float FindSingle(Sample1D sample, ref PreparedInstance instance, ref GeometryToken stack)
 			{
-				NodeToken token = instance.powerDistribution.Find(distro, out float pdf);
+				NodeToken token = instance.powerDistribution.Find(sample, out float pdf);
 
 				if (token.IsTriangle || token.IsSphere) stack.Geometry = token;
 				else stack.Push(instance = instance.pack.GetInstance(token));
@@ -169,7 +169,7 @@ public class PreparedInstance
 			}
 		}
 
-		throw ExceptionHelper.Invalid(nameof(distros.Length), distros.Length, "does not have enough elements");
+		throw ExceptionHelper.Invalid(nameof(samples.Length), samples.Length, "does not have enough elements");
 	}
 
 	/// <summary>
