@@ -144,10 +144,10 @@ public readonly struct PreparedSphere
 		if (length2 <= radius2)
 		{
 			//Sample uniformly if is inside
-			var sample = GetPoint(sample.UniformSphere);
-			pdf = sample.ProbabilityDensity(origin, Area);
+			var point = GetPoint(sample.UniformSphere);
+			pdf = point.ProbabilityDensity(origin, Area);
 
-			return sample;
+			return point;
 		}
 
 		//Find cosine max
