@@ -128,28 +128,16 @@ public class PreparedInstance
 	}
 
 	/// <summary>
-	/// Transforms <paramref name="ray"/> from parent to local space.
-	/// </summary>
-	void TransformForward(ref Ray ray)
-	{
-		Float3 origin = forwardTransform.MultiplyPoint(ray.origin);
-		Float3 direction = forwardTransform.MultiplyDirection(ray.direction);
-
-		ray = new Ray(origin, direction * inverseScale);
-	}
-
-	/// <summary>
 	/// If <see cref="Power"/> is positive, find an emissive geometry based on <paramref name="samples"/> and returns a <see cref="GeometryToken"/> that
 	/// represents it, otherwise the behavior is undefined. The probability density function of this action is calculated and exported to <paramref name="pdf"/>
 	/// </summary>
 	public GeometryToken Find(ReadOnlySpan<Sample1D> samples, out float pdf)
 	{
 		Assert.IsTrue(FastMath.Positive(Power));
-
-		pdf = 1f;
-
 		var geometryToken = new GeometryToken();
 		PreparedInstance instance = this;
+
+		pdf = 1f;
 
 		foreach (Sample1D sample in samples)
 		{
@@ -170,6 +158,17 @@ public class PreparedInstance
 		}
 
 		throw ExceptionHelper.Invalid(nameof(samples.Length), samples.Length, "does not have enough elements");
+	}
+
+	/// <summary>
+	/// Transforms <paramref name="ray"/> from parent to local space.
+	/// </summary>
+	void TransformForward(ref Ray ray)
+	{
+		Float3 origin = forwardTransform.MultiplyPoint(ray.origin);
+		Float3 direction = forwardTransform.MultiplyDirection(ray.direction);
+
+		ray = new Ray(origin, direction * inverseScale);
 	}
 
 	/// <summary>
