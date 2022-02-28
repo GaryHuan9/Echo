@@ -20,12 +20,12 @@ public class GeometryLight : IAreaLight
 
 		scene = newScene;
 		token = newToken;
-		material = newMaterial;
+		emission = newMaterial.Emission;
 	}
 
 	PreparedScene scene;
 	GeometryToken token;
-	Material material;
+	Float3 emission;
 
 	/// <inheritdoc/>
 	public Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
@@ -39,7 +39,7 @@ public class GeometryLight : IAreaLight
 
 		incident *= travelR;
 
-		return incident.Dot(sampled.normal) > 0f ? Float3.zero : material.Emission;
+		return incident.Dot(sampled.normal) > 0f ? Float3.zero : emission;
 	}
 
 	/// <inheritdoc/>

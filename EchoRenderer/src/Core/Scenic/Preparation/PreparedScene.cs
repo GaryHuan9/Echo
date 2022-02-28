@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Lights;
 
 namespace EchoRenderer.Core.Scenic.Preparation;
@@ -17,15 +19,12 @@ namespace EchoRenderer.Core.Scenic.Preparation;
 /// </summary>
 public class PreparedScene
 {
-	public PreparedScene(Scene source, ScenePrepareProfile profile)
+	public PreparedScene(Scene scene, ScenePrepareProfile profile)
 	{
-		this.source = source;
-
 		var lightsList = new List<LightSource>();
-		var ambientList = new List<AmbientLight>();
 
 		//Gather important objects
-		foreach (Entity child in source.LoopChildren(true))
+		foreach (Entity child in scene.LoopChildren(true))
 		{
 			switch (child)
 			{
@@ -39,8 +38,6 @@ public class PreparedScene
 				case LightSource value:
 				{
 					lightsList.Add(value);
-					if (value is AmbientLight ambient) ambientList.Add(ambient);
-
 					break;
 				}
 			}
@@ -48,38 +45,24 @@ public class PreparedScene
 			if (child.Scale.MinComponent <= 0f) throw new Exception($"Cannot have non-positive scales! '{child.Scale}'");
 		}
 
-		preparer = new ScenePreparer(source, profile);
+		preparer = new ScenePreparer(scene, profile);
 		preparer.Prepare();
 
 		//Create root instance
-		rootInstance = new PreparedInstanceRoot(preparer, source);
+		rootInstance = new PreparedInstanceRoot(preparer, scene);
 		rootInstance.CalculateBounds(out aabb, out boundingSphere);
 
 		//Prepare lights
-		lightSources = lightsList.ToArray();
-		_ambientLights = ambientList.ToArray();
-
-		foreach (LightSource light in lightSources)
-		{
-			light.Prepare(this);
-
-			float power = light.Power;
-		}
-
+		lights = new Lights(this, lightsList);
 		DebugHelper.Log("Prepared scene");
 	}
 
 	public readonly ScenePreparer preparer; //NOTE: this field should be removed in the future, it is only here now for temporary access to scene preparation data
-	public readonly Scene source;
 	public readonly Camera camera;
+	public readonly Lights lights;
 
 	public readonly AxisAlignedBoundingBox aabb;
 	public readonly BoundingSphere boundingSphere;
-
-	readonly LightSource[] lightSources;
-	readonly AmbientLight[] _ambientLights;
-
-	public ReadOnlySpan<AmbientLight> AmbientLights => _ambientLights;
 
 	long _traceCount;
 	long _occludeCount;
@@ -111,51 +94,30 @@ public class PreparedScene
 	}
 
 	/// <summary>
-	/// Returns the approximated cost of computing a <see cref="TraceQuery"/> with <see cref="Trace"/>.
+	/// Creates an <see cref="Interaction"/> from the concluded <paramref name="query"/> that was performed on this <see cref="PreparedScene"/>.
 	/// </summary>
-	public int TraceCost(in Ray ray)
-	{
-		float distance = float.PositiveInfinity;
-		return rootInstance.TraceCost(ray, ref distance);
-	}
+	public Interaction Interact(in TraceQuery query) => rootInstance.Interact(query);
 
 	/// <summary>
-	/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Interaction"/>.
+	/// Picks a <see cref="ILight"/> in this <see cref="PreparedScene"/> and outputs its probability density function to <paramref name="pdf"/>.
 	/// </summary>
-	public Interaction Interact(in TraceQuery query)
-	{
-		query.AssertHit();
-
-		PreparedInstance instance = rootInstance;
-		Float4x4 transform = Float4x4.identity;
-
-		//Traverse down the instancing path
-		foreach (ref readonly NodeToken token in query.token.Instances)
-		{
-			//Because we traverse in reverse, we must also multiply the transform in reverse
-			transform = instance.inverseTransform * transform;
-			instance = instance.pack.GetInstance(token);
-		}
-
-		return instance.pack.Interact(query, transform, instance);
-	}
-
 	public ILight PickLight(Arena arena, out float pdf)
 	{
-		//Handle degenerate cases
-		int length = lightSources.Length;
+		Sample1D sample = arena.distribution.Next1D();
+		var source = lights.PickLightSource(sample, out pdf);
 
-		if (length == 0)
-		{
-			pdf = 0f;
-			return null;
-		}
+		if (source != null) return source;
 
-		//Finds one light to sample
-		pdf = 1f / length;
+		var samples = arena.distribution.NextSpan1D();
+		var light = arena.allocator.New<GeometryLight>();
 
-		// throw new NotImplementedException();
-		return lightSources[arena.distribution.Next1D().Range(length)];
+		GeometryToken token = rootInstance.Find(samples, out var instance, out float tokenPDF);
+		Material material = instance.GetMaterial(instance.pack.GetMaterialIndex(token.Geometry));
+
+		light.Reset(this, token, material);
+
+		pdf *= tokenPDF;
+		return light;
 	}
 
 	/// <summary>
@@ -182,9 +144,75 @@ public class PreparedScene
 		throw new NotImplementedException();
 	}
 
+	/// <summary>
+	/// Returns the approximated cost of computing a <see cref="TraceQuery"/> with <see cref="Trace"/>.
+	/// </summary>
+	public int TraceCost(in Ray ray)
+	{
+		float distance = float.PositiveInfinity;
+		return rootInstance.TraceCost(ray, ref distance);
+	}
+
 	public void ResetIntersectionCount()
 	{
 		Interlocked.Exchange(ref _traceCount, 0);
 		Interlocked.Exchange(ref _occludeCount, 0);
+	}
+
+	public class Lights
+	{
+		public Lights(PreparedScene scene, List<LightSource> all)
+		{
+			_all = all.ToArray();
+			int length = _all.Length;
+
+			var ambientList = new List<AmbientLight>();
+
+			//Prepare power values for distribution
+			using var _ = Pool<float>.Fetch(length + 1, out var powerValues);
+
+			for (int i = 0; i < length; i++)
+			{
+				var light = _all[i];
+				light.Prepare(scene);
+
+				float power = light.Power;
+				Assert.IsTrue(power > 0f);
+				powerValues[i] = power;
+
+				if (light is AmbientLight ambient) ambientList.Add(ambient);
+			}
+
+			_ambient = ambientList.ToArray();
+
+			powerValues[length] = scene.rootInstance.Power;
+			distribution = new DiscreteDistribution1D(powerValues);
+		}
+
+		readonly DiscreteDistribution1D distribution;
+
+		readonly LightSource[] _all;
+		readonly AmbientLight[] _ambient;
+
+		/// <summary>
+		/// Accesses all of the <see cref="LightSource"/> present in a <see cref="PreparedScene"/>, which includes all <see cref="Ambient"/>.
+		/// </summary>
+		public ReadOnlySpan<LightSource> All => _all;
+
+		/// <summary>
+		/// Accesses all of the <see cref="AmbientLight"/> present in a <see cref="PreparedScene"/>.
+		/// </summary>
+		public ReadOnlySpan<AmbientLight> Ambient => _ambient;
+
+		/// <summary>
+		/// Selects a <see cref="LightSource"/> that is in <see cref="PreparedScene"/> based on <paramref name="sample"/>.
+		/// If a <see cref="GeometryLight"/> is selected, null is returned. <paramref name="pdf"/> contains the probability
+		/// density function value of this selection.
+		/// </summary>
+		public LightSource PickLightSource(Sample1D sample, out float pdf)
+		{
+			int index = distribution.Find(sample, out pdf);
+			return index < _all.Length ? _all[index] : null;
+		}
 	}
 }
