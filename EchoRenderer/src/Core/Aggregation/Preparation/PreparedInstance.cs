@@ -8,6 +8,7 @@ using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Preparation;
 
@@ -50,10 +51,11 @@ public class PreparedInstance
 
 	public readonly NodeToken token;
 	public readonly PreparedPack pack;
-	public readonly PreparedSwatch swatch;
 
 	public readonly Float4x4 forwardTransform = Float4x4.identity; //The parent to local transform
 	public readonly Float4x4 inverseTransform = Float4x4.identity; //The local to parent transform
+
+	protected readonly PreparedSwatch swatch;
 
 	readonly float forwardScale = 1f; //The parent to local scale multiplier
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
@@ -110,33 +112,21 @@ public class PreparedInstance
 	}
 
 	/// <summary>
-	/// Returns the cost of tracing a <see cref="TraceQuery"/>.
+	/// Returns the <see cref="Material"/> represented by <paramref name="index"/> in this <see cref="PreparedInstance"/>.
 	/// </summary>
-	public int TraceCost(Ray ray, ref float distance)
-	{
-		//Forward transform distance to local space
-		distance *= forwardScale;
-
-		//Gets intersection cost, calculation done in local space
-		TransformForward(ref ray);
-
-		int cost = pack.aggregator.TraceCost(ray, ref distance);
-
-		//Restore distance back to parent space
-		distance *= inverseScale;
-		return cost;
-	}
+	public Material GetMaterial(MaterialIndex index) => swatch[index];
 
 	/// <summary>
-	/// If <see cref="Power"/> is positive, find an emissive geometry based on <paramref name="samples"/> and returns a <see cref="GeometryToken"/> that
-	/// represents it, otherwise the behavior is undefined. The probability density function of this action is calculated and exported to <paramref name="pdf"/>
+	/// If <see cref="Power"/> is not positive, the behavior of this method is undefined. Otherwise, finds an emissive geometry based on <paramref name="samples"/>
+	/// and returns a <see cref="GeometryToken"/> that represents the geometry. The <see cref="PreparedInstance"/> that immediately holds this geometry, and the
+	/// probability density function value are calculated and exported to <paramref name="instance"/> and <paramref name="pdf"/> respectively.
 	/// </summary>
-	public GeometryToken Find(ReadOnlySpan<Sample1D> samples, out float pdf)
+	public GeometryToken Find(ReadOnlySpan<Sample1D> samples, out PreparedInstance instance, out float pdf)
 	{
 		Assert.IsTrue(FastMath.Positive(Power));
 		var geometryToken = new GeometryToken();
-		PreparedInstance instance = this;
 
+		instance = this;
 		pdf = 1f;
 
 		foreach (Sample1D sample in samples)
@@ -157,7 +147,26 @@ public class PreparedInstance
 			}
 		}
 
+		//We have exhausted the provided samples
 		throw ExceptionHelper.Invalid(nameof(samples.Length), samples.Length, "does not have enough elements");
+	}
+
+	/// <summary>
+	/// Returns the cost of tracing a <see cref="TraceQuery"/>.
+	/// </summary>
+	public int TraceCost(Ray ray, ref float distance)
+	{
+		//Forward transform distance to local space
+		distance *= forwardScale;
+
+		//Gets intersection cost, calculation done in local space
+		TransformForward(ref ray);
+
+		int cost = pack.aggregator.TraceCost(ray, ref distance);
+
+		//Restore distance back to parent space
+		distance *= inverseScale;
+		return cost;
 	}
 
 	/// <summary>
