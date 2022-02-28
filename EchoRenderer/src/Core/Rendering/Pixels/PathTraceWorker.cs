@@ -35,7 +35,7 @@ public class PathTraceWorker : PixelWorker
 				if (intersected) { }
 				else
 				{
-					foreach (AmbientLight ambient in scene.AmbientLights)
+					foreach (AmbientLight ambient in scene.lights.Ambient)
 					{
 						radiance += energy * ambient.Evaluate(query.ray.direction);
 					}
@@ -91,26 +91,6 @@ public class PathTraceWorker : PixelWorker
 
 		return radiance;
 	}
-
-	// /// <summary>
-	// /// Returns a <see cref="LightSource"/> in <see cref="Arena.Scene"/> and outputs its <paramref name="pdf"/>.
-	// /// </summary>
-	// static LightSource FindLight(in Interaction interaction, Arena arena, out float pdf)
-	// {
-	// 	//Handle degenerate cases
-	// 	var sources = arena.Scene.lightSources;
-	// 	int length = sources.Length;
-	//
-	// 	if (length == 0)
-	// 	{
-	// 		pdf = 0f;
-	// 		return null;
-	// 	}
-	//
-	// 	//Finds one light to sample
-	// 	pdf = 1f / length;
-	// 	return sources[arena.distribution.NextOne().Range(length)];
-	// }
 
 	/// <summary>
 	/// Importance samples <paramref name="light"/> at <paramref name="interaction"/> and returns the combined radiance.

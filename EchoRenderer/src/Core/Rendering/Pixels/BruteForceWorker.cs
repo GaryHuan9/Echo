@@ -43,7 +43,7 @@ public class BruteForceWorker : PixelWorker
 
 		if (energy.PositiveRadiance())
 		{
-			foreach (AmbientLight ambient in profile.Scene.AmbientLights) radiance += energy * ambient.Evaluate(query.ray.direction);
+			foreach (AmbientLight ambient in profile.Scene.lights.Ambient) radiance += energy * ambient.Evaluate(query.ray.direction);
 		}
 
 		return radiance;

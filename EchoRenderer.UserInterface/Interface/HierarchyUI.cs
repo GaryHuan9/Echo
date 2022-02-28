@@ -24,32 +24,32 @@ public class HierarchyUI : WindowUI
 	readonly HashSet<EntityPack> packs = new();
 	readonly List<HierarchyNodeUI> nodes = new();
 
-	public override void Update()
-	{
-		base.Update();
-
-		SceneViewUI sceneView = Root.Find<SceneViewUI>();
-		Scene scene = sceneView?.Profile.Scene?.source;
-
-		if (scene == null || packs.Contains(scene)) return;
-
-		foreach (HierarchyNodeUI node in nodes) group.Remove(node);
-
-		packs.Clear();
-		nodes.Clear();
-
-		ScenePreparer preparer = sceneView.Profile.Scene.preparer;
-
-		foreach (EntityPack pack in preparer.UniquePacks)
-		{
-			Assert.IsFalse(packs.Contains(pack));
-			var node = new HierarchyNodeUI(pack);
-
-			packs.Add(pack);
-			nodes.Add(node);
-			group.Add(node);
-		}
-	}
+	// public override void Update()
+	// {
+	// 	base.Update();
+	//
+	// 	SceneViewUI sceneView = Root.Find<SceneViewUI>();
+	// 	Scene scene = sceneView?.Profile.Scene?.source;
+	//
+	// 	if (scene == null || packs.Contains(scene)) return;
+	//
+	// 	foreach (HierarchyNodeUI node in nodes) group.Remove(node);
+	//
+	// 	packs.Clear();
+	// 	nodes.Clear();
+	//
+	// 	ScenePreparer preparer = sceneView.Profile.Scene.preparer;
+	//
+	// 	foreach (EntityPack pack in preparer.UniquePacks)
+	// 	{
+	// 		Assert.IsFalse(packs.Contains(pack));
+	// 		var node = new HierarchyNodeUI(pack);
+	//
+	// 		packs.Add(pack);
+	// 		nodes.Add(node);
+	// 		group.Add(node);
+	// 	}
+	// }
 
 	void OnRebuildPressed() { }
 }
