@@ -103,13 +103,14 @@ public class PreparedPack
 		return instances[token.InstanceValue].Occlude(ref query);
 	}
 
-	/// <inheritdoc cref="PreparedScene.Interact"/>
-	public Interaction Interact(in TraceQuery query, in Float4x4 transform, PreparedInstance instance)
+	/// <summary>
+	/// Creates a new <see cref="Interaction"/> from <paramref name="query"/>. The <see cref="Material"/> is extracted from <paramref name="swatch"/>.
+	/// The world to local <see cref="Float4x4"/> for the geometry found with <paramref name="query"/> should be passed through <paramref name="transform"/>.
+	/// </summary>
+	public Interaction Interact(in TraceQuery query, PreparedSwatch swatch, in Float4x4 transform)
 	{
 		NodeToken token = query.token.Geometry;
-
 		Assert.IsTrue(token.IsGeometry);
-		Assert.AreEqual(instance.pack, this);
 
 		Float3 normal;
 		Float2 texcoord;
@@ -134,7 +135,7 @@ public class PreparedPack
 		else throw NotBasePackException();
 
 		normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
-		Material material = instance.swatch[materialIndex];      //Find appropriate mapped material
+		Material material = swatch[materialIndex];               //Find appropriate mapped material
 
 		//Construct interaction
 		if (material == null) return new Interaction(query, normal);
@@ -145,6 +146,26 @@ public class PreparedPack
 	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> represented by <paramref name="token"/>.
 	/// </summary>
 	public PreparedInstance GetInstance(in NodeToken token) => instances[token.InstanceValue];
+
+	/// <summary>
+	/// Returns the <see cref="MaterialIndex"/> of the geometry represented by <paramref name="token"/>.
+	/// </summary>
+	public MaterialIndex GetMaterialIndex( in NodeToken token)
+	{
+		if (token.IsTriangle)
+		{
+			ref readonly var triangle = ref triangles[token.TriangleValue];
+			return triangle.material;
+		}
+
+		if (token.IsSphere)
+		{
+			ref readonly var sphere = ref spheres[token.SphereValue];
+			return sphere.material;
+		}
+
+		throw NotBasePackException();
+	}
 
 	/// <summary>
 	/// Returns the area of the geometry represented by <paramref name="token"/>.

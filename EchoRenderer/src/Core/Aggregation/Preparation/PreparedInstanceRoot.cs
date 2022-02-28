@@ -4,6 +4,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
+using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Preparation;
 
@@ -51,5 +52,26 @@ public class PreparedInstanceRoot : PreparedInstance
 	{
 		Assert.AreEqual(query.current, default);
 		return pack.aggregator.Occlude(ref query);
+	}
+
+	/// <summary>
+	/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Interaction"/>.
+	/// </summary>
+	public Interaction Interact(in TraceQuery query)
+	{
+		query.AssertHit();
+
+		PreparedInstance instance = this;
+		var transform = Float4x4.identity;
+
+		//Traverse down the instancing path
+		foreach (ref readonly NodeToken nodeToken in query.token.Instances)
+		{
+			//Because we traverse in reverse, we must also multiply the transform in reverse
+			transform = instance.inverseTransform * transform;
+			instance = instance.pack.GetInstance(nodeToken);
+		}
+
+		return instance.pack.Interact(query, swatch, transform);
 	}
 }
