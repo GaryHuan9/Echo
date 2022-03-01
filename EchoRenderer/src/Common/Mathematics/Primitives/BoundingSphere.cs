@@ -12,10 +12,10 @@ public readonly struct BoundingSphere
 {
 	public BoundingSphere(ReadOnlySpan<Float3> points)
 	{
-		if (points.Length > ExtremalPoints)
+		if (points.Length > ExtremalCount)
 		{
 			// else there is no reason for us to solve less
-			Span<Float3> extremes = stackalloc Float3[ExtremalPoints];
+			Span<Float3> extremes = stackalloc Float3[ExtremalCount];
 
 			FillExtremes(points, extremes);
 
@@ -41,14 +41,13 @@ public readonly struct BoundingSphere
 	/// </summary>
 	public bool Contains(in Float3 point) => Contains(point, in center, radius);
 
-	const int NormalCount = 3;
-	const int ExtremalPoints = NormalCount * 2;
-
-	// NOTE: The count of normals could be increased if required for precision, for now we'll be using 3
-	static readonly Float3[] normals = { Float3.right, Float3.up, Float3.forward };
-
 	public readonly Float3 center;
 	public readonly float radius;
+
+	//NOTE: The number of normals can be increased more precision is required
+	static readonly Float3[] normals = { Float3.right, Float3.up, Float3.forward };
+
+	static int ExtremalCount => normals.Length * 2;
 
 	// Finds extremes from given point using the normals and fills it into extremes span
 	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)
