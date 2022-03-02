@@ -21,18 +21,11 @@ public readonly struct View<T>
 
 	public Span<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
 
-	public void Clear() => Array.Clear(array, start, Length);
-
-	public void Fill(T value) => Array.Fill(array, value, start, Length);
-
-	public void CopyTo(View<T> view) =>
-		Array.Copy(array, start, view.array, view.start, Length);
-
 	public View<T> Slice(int offset) => Slice(offset, Length - offset);
 	public View<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
 
 	public Span<T> AsSpan() => this;
-	public Span<T> AsSpan(int offset) => this[offset..];
+	public Span<T> AsSpan(int offset) => this;
 	public Span<T> AsSpan(int offset, int length) => Slice(offset, length);
 
 	public static View<T> Empty => default;
@@ -62,18 +55,18 @@ public readonly struct View<T>
 	public static implicit operator Span<T>(View<T> view) => new(view.array, view.start, view.Length);
 	public static implicit operator View<T>(T[] array) => new(array);
 }
-
 public static class ViewExtensions
 {
 	public static View<T> AsView<T>(this T[] array, int start = 0) => new(array, start);
 	public static View<T> AsView<T>(this T[] array, int start, int length) => new(array, start, length);
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static View<T> AsView<T>(this T[] array, Range range)
 	{
 		(int offset, int length) = range.GetOffsetAndLength(array.Length);
 
-		return new View<T>(array, offset, length);
+		return array.AsView(offset, length);
 	}
 
-	public static View<T> AsView<T>(this T[] array, Index startIndex) => new(array, startIndex.GetOffset(array.Length));
+	public static View<T> AsView<T>(this T[] array, Index index) => array.AsView(index.GetOffset(array.Length));
 }

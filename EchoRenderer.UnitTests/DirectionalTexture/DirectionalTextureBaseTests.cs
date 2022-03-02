@@ -7,9 +7,9 @@ using EchoRenderer.Core.Texturing.Directional;
 using EchoRenderer.Core.Texturing.Grid;
 using NUnit.Framework;
 
-namespace EchoRenderer.UnitTests;
+namespace EchoRenderer.UnitTests.DirectionalTexture;
 
-public abstract class IDirectionalTextureTests
+public abstract class DirectionalTextureBaseTests
 {
 	[OneTimeSetUp]
 	public void OneTimeSetUp()
