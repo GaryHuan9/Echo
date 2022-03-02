@@ -4,10 +4,10 @@ using EchoRenderer.Core.Texturing;
 using EchoRenderer.Core.Texturing.Directional;
 using NUnit.Framework;
 
-namespace EchoRenderer.UnitTests;
+namespace EchoRenderer.UnitTests.DirectionalTexture;
 
 [TestFixture]
-public class CubemapTests : IDirectionalTextureTests
+public class CubemapTests : DirectionalTextureBaseTests
 {
 	protected override IDirectionalTexture GetTexture()
 	{

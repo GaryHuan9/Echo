@@ -31,7 +31,7 @@ public readonly struct ReadOnlyView<T>
 
 	public static ReadOnlyView<T> Empty => default;
 
-	public ref T this[int index] => ref array[AssertShift(index)];
+	public ref readonly T this[int index] => ref array[AssertShift(index)];
 
 	public bool IsEmpty => Length == 0;
 
