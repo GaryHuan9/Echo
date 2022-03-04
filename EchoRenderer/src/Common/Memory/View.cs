@@ -36,19 +36,20 @@ public readonly struct View<T>
 	///		Forms a slice out of the given view, beginning at '<paramref name="offset"/>'
 	/// </summary>
 	public View<T> Slice(int offset) => Slice(offset, Length - offset);
-	
+
 	/// <inheritdoc cref="Slice(int)"/>
 	public View<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
 
 	public Span<T> AsSpan() => array.AsSpan(start, Length);
 	public Span<T> AsSpan(int offset) => array.AsSpan(AssertShift(offset));
 	public Span<T> AsSpan(int offset, int length) => array.AsSpan(AssertShift(offset), length);
-	
+
 	public Span<T> AsSpan(Range range)
 	{
 		(int offset, int length) = range.GetOffsetAndLength(Length);
 		return AsSpan(offset, length);
 	}
+
 	public Span<T> AsSpan(Index startIndex) => AsSpan(startIndex.GetOffset(Length));
 
 	/// <summary>
