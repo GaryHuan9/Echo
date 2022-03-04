@@ -49,6 +49,7 @@ public readonly struct ReadOnlyView<T>
 		(int offset, int length) = range.GetOffsetAndLength(Length);
 		return AsSpan(offset, length);
 	}
+
 	public ReadOnlySpan<T> AsSpan(Index startIndex) => AsSpan(startIndex.GetOffset(Length));
 
 	/// <summary>
