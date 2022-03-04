@@ -19,15 +19,6 @@ public readonly struct View<T>
 		Length = count;
 	}
 
-	public Span<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
-
-	public View<T> Slice(int offset) => Slice(offset, Length - offset);
-	public View<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
-
-	public Span<T> AsSpan() => this;
-	public Span<T> AsSpan(int offset) => this;
-	public Span<T> AsSpan(int offset, int length) => Slice(offset, length);
-
 	public static View<T> Empty => default;
 
 	public ref T this[int index] => ref array[AssertShift(index)];
@@ -38,6 +29,27 @@ public readonly struct View<T>
 
 	readonly T[] array;
 	readonly int start;
+
+	public Span<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
+
+	/// <summary>
+	///		Forms a slice out of the given view, beginning at '<paramref name="offset"/>'
+	/// </summary>
+	public View<T> Slice(int offset) => Slice(offset, Length - offset);
+	
+	/// <inheritdoc cref="Slice(int)"/>
+	public View<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
+
+	public Span<T> AsSpan() => array.AsSpan(start, Length);
+	public Span<T> AsSpan(int offset) => array.AsSpan(AssertShift(offset));
+	public Span<T> AsSpan(int offset, int length) => array.AsSpan(AssertShift(offset), length);
+	
+	public Span<T> AsSpan(Range range)
+	{
+		(int offset, int length) = range.GetOffsetAndLength(Length);
+		return AsSpan(offset, length);
+	}
+	public Span<T> AsSpan(Index startIndex) => AsSpan(startIndex.GetOffset(Length));
 
 	/// <summary>
 	///     Asserts and Shifts the view array index to the original array index

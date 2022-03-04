@@ -129,6 +129,7 @@ public abstract class ViewBaseTests<T>
 
 	protected abstract T[] GetReference();
 
+	
 	void AsSpanSliceOne(Range range)
 	{
 		Span<T> reference = array.AsSpan(range);
@@ -148,10 +149,10 @@ public abstract class ViewBaseTests<T>
 		Assert.That(roSpan.SequenceEqual(reference));
 
 		//TODO: reenable after we added the overloads
-		// rgSpan = rgView.AsSpan(range);
-		// roSpan = roView.AsSpan(range);
-		//
-		// Assert.That(rgSpan.SequenceEqual(reference));
-		// Assert.That(roSpan.SequenceEqual(reference));
+		rgSpan = rgView.AsSpan(range);
+		roSpan = roView.AsSpan(range);
+		
+		Assert.That(rgSpan.SequenceEqual(reference));
+		Assert.That(roSpan.SequenceEqual(reference));
 	}
 }

@@ -19,16 +19,6 @@ public readonly struct ReadOnlyView<T>
 		Length = count;
 	}
 
-	public ReadOnlySpan<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
-
-	public ReadOnlyView<T> Slice(int offset) => Slice(offset, Length - offset);
-
-	public ReadOnlyView<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
-
-	public ReadOnlySpan<T> AsSpan() => this;
-	public ReadOnlySpan<T> AsSpan(int offset) => this[offset..];
-	public ReadOnlySpan<T> AsSpan(int offset, int length) => Slice(offset, length);
-
 	public static ReadOnlyView<T> Empty => default;
 
 	public ref readonly T this[int index] => ref array[AssertShift(index)];
@@ -39,6 +29,27 @@ public readonly struct ReadOnlyView<T>
 
 	readonly T[] array;
 	readonly int start;
+
+	public ReadOnlySpan<T>.Enumerator GetEnumerator() => AsSpan().GetEnumerator();
+
+	/// <summary>
+	///		Forms a slice out of the given readonly view, beginning at '<paramref name="offset"/>'
+	/// </summary>
+	public ReadOnlyView<T> Slice(int offset) => Slice(offset, Length - offset);
+
+	/// <inheritdoc cref="Slice(int)"/>
+	public ReadOnlyView<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
+
+	public ReadOnlySpan<T> AsSpan() => array.AsSpan(start, Length);
+	public ReadOnlySpan<T> AsSpan(int offset) => array.AsSpan(AssertShift(offset), Length);
+	public ReadOnlySpan<T> AsSpan(int offset, int length) => array.AsSpan(AssertShift(offset), length);
+	
+	public ReadOnlySpan<T> AsSpan(Range range)
+	{
+		(int offset, int length) = range.GetOffsetAndLength(Length);
+		return AsSpan(offset, length);
+	}
+	public ReadOnlySpan<T> AsSpan(Index startIndex) => AsSpan(startIndex.GetOffset(Length));
 
 	/// <summary>
 	///     Asserts and Shifts the view array index to the original array index
