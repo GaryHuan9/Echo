@@ -2,22 +2,22 @@
 
 public abstract class LimitedDistribution : ContinuousDistribution
 {
-	protected LimitedDistribution(int sampleCount, int dimensionCount) : base(sampleCount)
+	protected LimitedDistribution(int extend, int dimensionCount) : base(extend)
 	{
 		singleOnes = new SpanAggregate<Sample1D>[dimensionCount];
 		singleTwos = new SpanAggregate<Sample2D>[dimensionCount];
 
 		for (int i = 0; i < dimensionCount; i++)
 		{
-			singleOnes[i] = new SpanAggregate<Sample1D>(1, sampleCount);
-			singleTwos[i] = new SpanAggregate<Sample2D>(1, sampleCount);
+			singleOnes[i] = new SpanAggregate<Sample1D>(1, extend);
+			singleTwos[i] = new SpanAggregate<Sample2D>(1, extend);
 		}
 	}
 
-	protected LimitedDistribution(LimitedDistribution distribution) : base(distribution)
+	protected LimitedDistribution(LimitedDistribution source) : base(source)
 	{
-		singleOnes = new SpanAggregate<Sample1D>[distribution.singleOnes.Length];
-		singleTwos = new SpanAggregate<Sample2D>[distribution.singleTwos.Length];
+		singleOnes = new SpanAggregate<Sample1D>[source.singleOnes.Length];
+		singleTwos = new SpanAggregate<Sample2D>[source.singleTwos.Length];
 	}
 
 	protected readonly SpanAggregate<Sample1D>[] singleOnes;
@@ -34,6 +34,6 @@ public abstract class LimitedDistribution : ContinuousDistribution
 		singleTwoIndex = -1;
 	}
 
-	public override Sample1D Next1D() => singleOnes[++singleOneIndex].array[SampleIndex];
-	public override Sample2D Next2D() => singleTwos[++singleTwoIndex].array[SampleIndex];
+	public override Sample1D Next1D() => singleOnes[++singleOneIndex].array[SampleNumber];
+	public override Sample2D Next2D() => singleTwos[++singleTwoIndex].array[SampleNumber];
 }
