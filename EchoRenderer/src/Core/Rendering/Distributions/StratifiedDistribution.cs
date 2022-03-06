@@ -8,10 +8,10 @@ public class StratifiedDistribution : LimitedDistribution
 {
 	public StratifiedDistribution(Int2 sampleSize, int dimensionCount) : base(sampleSize.Product, dimensionCount) => this.sampleSize = sampleSize;
 
-	StratifiedDistribution(StratifiedDistribution distribution) : base(distribution)
+	StratifiedDistribution(StratifiedDistribution source) : base(source)
 	{
-		sampleSize = distribution.sampleSize;
-		Jitter = distribution.Jitter;
+		sampleSize = source.sampleSize;
+		Jitter = source.Jitter;
 	}
 
 	public readonly Int2 sampleSize;
@@ -47,7 +47,7 @@ public class StratifiedDistribution : LimitedDistribution
 		//Fill span samples
 		for (int i = 0; i < arrayOnes.Count; i++)
 		{
-			Span<Sample1D> span = arrayOnes[i][SampleIndex];
+			Span<Sample1D> span = arrayOnes[i][SampleNumber];
 
 			FillStratum(span);
 			Random.Shuffle(span);
@@ -55,7 +55,7 @@ public class StratifiedDistribution : LimitedDistribution
 
 		for (int i = 0; i < arrayTwos.Count; i++)
 		{
-			LatinHypercube(arrayTwos[i][SampleIndex]);
+			LatinHypercube(arrayTwos[i][SampleNumber]);
 		}
 	}
 
