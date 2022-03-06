@@ -92,7 +92,16 @@ public readonly struct BoundingSphere
 			if (Contains(points[current], center, radius)) continue;
 			// else doesn't contain point
 
-			SolveExactRecursive(points, current, out center, out radius, current);
+			// SolveExactRecursive(points, current, out center, out radius, current);
+
+			Float3 point0 = points[current];
+
+			Float3 direction = (center - point0).Normalized;
+
+			Float3 point1 = center + direction * radius;
+
+			center = (point0 + point1) / 2f;
+			radius = point0.Distance(point1) / 2f;
 		}
 	}
 
