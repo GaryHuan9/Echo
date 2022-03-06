@@ -19,7 +19,8 @@ public class SingleBunny : StandardScene
 		var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 		// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
 		var material0 = new Matte { Albedo = (Pure)new Float3(1f, 0.68f, 0.16f) };
-		var material1 = new Matte { Albedo = (Pure)new Float3(0.0250f, 0.1416f, 0.3736f) };
+		// var material1 = new Matte { Albedo = (Pure)new Float3(0.0250f, 0.1416f, 0.3736f) };
+		var material1 = new Matte { Albedo = Texture.white, Emission = (Float3)1f };
 
 		// children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
 		children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });

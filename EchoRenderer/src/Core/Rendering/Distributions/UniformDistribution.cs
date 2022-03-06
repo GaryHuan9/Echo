@@ -5,9 +5,9 @@ namespace EchoRenderer.Core.Rendering.Distributions;
 
 public class UniformDistribution : ContinuousDistribution
 {
-	public UniformDistribution(int sampleCount) : base(sampleCount) { }
+	public UniformDistribution(int extend) : base(extend) { }
 
-	UniformDistribution(UniformDistribution distribution) : base(distribution) => Jitter = distribution.Jitter;
+	UniformDistribution(UniformDistribution source) : base(source) => Jitter = source.Jitter;
 
 	/// <summary>
 	/// Whether the <see cref="ContinuousDistribution"/> randomly varies.
@@ -20,13 +20,13 @@ public class UniformDistribution : ContinuousDistribution
 		Assert.IsFalse(Jitter && Random == null); //Make sure that if jitter is true, the prng is not null
 
 		foreach (SpanAggregate<Sample1D> aggregate in arrayOnes)
-		foreach (ref Sample1D sample in aggregate[SampleIndex])
+		foreach (ref Sample1D sample in aggregate[SampleNumber])
 		{
 			sample = (Sample1D)(Jitter ? Random.Next1() : 0.5f);
 		}
 
 		foreach (SpanAggregate<Sample2D> aggregate in arrayTwos)
-		foreach (ref Sample2D sample in aggregate[SampleIndex])
+		foreach (ref Sample2D sample in aggregate[SampleNumber])
 		{
 			sample = (Sample2D)(Jitter ? Random.Next2() : Float2.half);
 		}
