@@ -1,7 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Common.Memory;
-using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions.Continuous;
 
 namespace EchoRenderer.Core.Rendering.Pixels;
 
@@ -17,13 +17,16 @@ public abstract class PixelWorker
 	/// <summary>
 	/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Render"/>.
 	/// NOTE: This method will be invoked after <see cref="Prepare"/>, and it will be invoked once on every rendering thread.
-	/// <param name="seed">Should be a fairly unique number that varies based on each rendering thread.</param>
+	/// <param name="seed">Can be null or a unique number that varies between each thread.</param>
 	/// </summary>
-	public virtual Arena CreateArena(RenderProfile profile, uint seed)
+	public Arena CreateArena(RenderProfile profile, uint? seed)
 	{
-		var distribution = SourceDistribution.Replicate();
-		distribution.Random = CreateRandom(seed);
-		return new Arena(distribution);
+		Arena arena = CreateArena(profile);
+
+		arena.Distribution = SourceDistribution.Replicate();
+		arena.Distribution.Prng = CreateRandom(seed);
+
+		return arena;
 	}
 
 	/// <summary>
@@ -45,10 +48,16 @@ public abstract class PixelWorker
 	protected virtual ContinuousDistribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
 
 	/// <summary>
-	/// Optionally creates a <see cref="IRandom"/> with <paramref name="seed"/>. If this method does not return null,
-	/// the random it returned will be assigned to the <see cref="ContinuousDistribution"/> created in <see cref="CreateArena"/>.
+	/// Creates a new <see cref="Arena"/> to be used for this <see cref="PixelWorker"/>.
+	/// Override this method if a different <see cref="Arena"/> child type is needed.
 	/// </summary>
-	protected virtual IRandom CreateRandom(uint seed) => new SquirrelRandom(seed);
+	protected virtual Arena CreateArena(RenderProfile profile) => new();
+
+	/// <summary>
+	/// Optionally creates a <see cref="IRandom"/> with an optional <paramref name="seed"/>. If this method does not return null,
+	/// its returned value will be assigned to <see cref="ContinuousDistribution.Prng"/> created in <see cref="CreateDistribution"/>.
+	/// </summary>
+	protected virtual IRandom CreateRandom(uint? seed = null) => new SquirrelRandom(seed);
 
 	public readonly struct Sample
 	{

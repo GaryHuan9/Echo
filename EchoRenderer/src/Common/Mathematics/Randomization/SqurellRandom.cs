@@ -1,6 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Threading;
+﻿using System.Runtime.CompilerServices;
 
 namespace EchoRenderer.Common.Mathematics.Randomization;
 
@@ -9,7 +7,7 @@ namespace EchoRenderer.Common.Mathematics.Randomization;
 /// </summary>
 public class SquirrelRandom : IRandom
 {
-	public SquirrelRandom() : this((uint)Random.Shared.Next()) { }
+	public SquirrelRandom(uint? seed = null) : this(IRandom.GetSeed(seed)) { }
 
 	public SquirrelRandom(uint seed)
 	{

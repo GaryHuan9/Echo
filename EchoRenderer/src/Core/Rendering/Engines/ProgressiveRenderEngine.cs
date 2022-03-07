@@ -148,10 +148,10 @@ public class ProgressiveRenderEngine : IDisposable
 		for (int i = 0; i < sampleCount; i++)
 		{
 			//Sample color
-			Float2 uv = (position + arena.Random.NextSample()) / buffer.size - Float2.half;
-			var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), profile, arena);
-
-			bool successful = pixel.Accumulate(sample);
+			// Float2 uv = (position + arena.Random.NextSample()) / buffer.size - Float2.half;
+			// var sample = method.Render(uv.ReplaceY(uv.y / buffer.aspect), profile, arena);
+			//
+			// bool successful = pixel.Accumulate(sample);
 		}
 
 		pixel.Store(renderData.Buffer, position);
