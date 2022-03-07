@@ -13,7 +13,7 @@ public class AlbedoPixelWorker : PixelWorker
 	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
 		PreparedScene scene = profile.Scene;
-		IRandom random = arena.Random;
+		IRandom random = arena.Distribution.Prng;
 
 		TraceQuery query = scene.camera.GetRay(uv, random);
 

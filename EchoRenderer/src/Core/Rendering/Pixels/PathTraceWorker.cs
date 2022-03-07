@@ -64,7 +64,7 @@ public class PathTraceWorker : PixelWorker
 
 			Float3 scatter = interaction.bsdf.Sample
 			(
-				interaction.outgoing, arena.distribution.Next2D(),
+				interaction.outgoing, arena.Distribution.Next2D(),
 				out Float3 incident, out float pdf, out FunctionType sampledType
 			);
 
@@ -100,7 +100,7 @@ public class PathTraceWorker : PixelWorker
 		//Sample light source
 		Float3 emission = light.Sample
 		(
-			interaction.point, arena.distribution.Next2D(),
+			interaction.point, arena.Distribution.Next2D(),
 			out Float3 incident, out float pdf, out float travel
 		);
 
@@ -129,7 +129,7 @@ public class PathTraceWorker : PixelWorker
 	{
 		//TODO: sort this mess
 
-		Sample2D sample = arena.distribution.Next2D();
+		Sample2D sample = arena.Distribution.Next2D();
 		if (light is not IAreaLight areaLight) return Float3.zero;
 
 		Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, sample, out Float3 incident, out float pdf, out FunctionType sampledType);
