@@ -4,6 +4,8 @@ namespace EchoRenderer.Common.Mathematics.Randomization;
 
 public class SystemRandom : Random, IRandom
 {
+	public SystemRandom(uint? seed = null) : this(IRandom.GetSeed(seed)) { }
+
 	public SystemRandom(uint seed) : base((int)seed) { }
 
 	/// <inheritdoc/>

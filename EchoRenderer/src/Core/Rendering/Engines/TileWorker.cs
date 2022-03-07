@@ -138,7 +138,7 @@ public class TileWorker : IDisposable
 		RenderPixel pixel = new RenderPixel();
 
 		//Regular pixel sampling
-		arena.distribution.BeginPixel(position);
+		arena.Distribution.BeginPixel(position);
 		Sample(profile.PixelSample);
 
 		//Adaptive sampling (temporary)
@@ -154,8 +154,8 @@ public class TileWorker : IDisposable
 		{
 			for (int i = 0; i < count; i++)
 			{
-				arena.distribution.BeginSample();
-				Float2 offset = arena.distribution.Next2D();
+				arena.Distribution.BeginSample();
+				Float2 offset = arena.Distribution.Next2D();
 
 				//Sample radiance
 				Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.half;
