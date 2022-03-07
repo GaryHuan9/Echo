@@ -5,7 +5,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics;
 
-namespace EchoRenderer.Core.Rendering.Distributions;
+namespace EchoRenderer.Core.Rendering.Distributions.Discrete;
 
 /// <summary>
 /// A one dimensional piecewise distribution constructed from a function of discrete probability destiny values.

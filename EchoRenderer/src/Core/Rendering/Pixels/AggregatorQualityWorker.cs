@@ -2,7 +2,7 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
-using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions.Continuous;
 using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Rendering.Pixels;
@@ -30,6 +30,6 @@ public class AggregatorQualityWorker : PixelWorker
 		Interlocked.Exchange(ref totalCost, 0);
 		Interlocked.Exchange(ref totalSample, 0);
 
-		return new UniformDistribution(profile.TotalSample) { Jitter = profile.TotalSample > 1 };
+		return new UniformDistribution(profile.TotalSample);
 	}
 }

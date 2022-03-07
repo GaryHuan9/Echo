@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -8,7 +9,9 @@ using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions.Discrete;
 using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Lights;
 
 namespace EchoRenderer.Core.Scenic.Preparation;
@@ -100,14 +103,17 @@ public class PreparedScene
 	/// <summary>
 	/// Picks a <see cref="ILight"/> in this <see cref="PreparedScene"/> and outputs its probability density function to <paramref name="pdf"/>.
 	/// </summary>
+	[SkipLocalsInit]
 	public ILight PickLight(Arena arena, out float pdf)
 	{
-		Sample1D sample = arena.distribution.Next1D();
+		Sample1D sample = arena.Distribution.Next1D();
 		var source = lights.PickLightSource(sample, out pdf);
 
 		if (source != null) return source;
 
-		var samples = arena.distribution.NextSpan1D();
+		Span<Sample1D> samples = stackalloc Sample1D[EntityPack.MaxLayer];
+		foreach (ref var one in samples) one = arena.Distribution.Next1D();
+
 		var light = arena.allocator.New<GeometryLight>();
 
 		GeometryToken token = rootInstance.Find(samples, out var instance, out float tokenPDF);
