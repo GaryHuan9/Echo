@@ -3,7 +3,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Memory;
 
-namespace EchoRenderer.Core.Rendering.Distributions;
+namespace EchoRenderer.Core.Rendering.Distributions.Discrete;
 
 /// <summary>
 /// A two dimensional piecewise distribution constructed from a function of discrete points.

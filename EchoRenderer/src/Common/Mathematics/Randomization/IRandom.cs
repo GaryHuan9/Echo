@@ -175,4 +175,17 @@ public interface IRandom
 	{
 		for (int i = span.Length - 1; i > 0; i--) CodeHelper.Swap(ref span[i], ref span[Next1(i + 1)]);
 	}
+
+	/// <summary>
+	/// Returns either a thread-safe random seed or the indicated seed from the nullable <paramref name="seed"/>.
+	/// </summary>
+	public static uint GetSeed(uint? seed)
+	{
+		if (seed != null) return seed.Value;
+
+		Span<byte> bytes = stackalloc byte[sizeof(uint)];
+
+		Random.Shared.NextBytes(bytes);
+		return BitConverter.ToUInt32(bytes);
+	}
 }

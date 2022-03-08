@@ -3,6 +3,7 @@ using CodeHelpers.Diagnostics;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions.Discrete;
 
 namespace EchoRenderer.Core.Aggregation.Preparation;
 

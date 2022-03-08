@@ -8,6 +8,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions.Discrete;
 
 namespace EchoRenderer.Core.Texturing.Directional;
 
