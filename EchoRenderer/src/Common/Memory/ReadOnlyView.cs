@@ -13,18 +13,27 @@ public readonly struct ReadOnlyView<T>
 		Assert.IsNotNull(array);
 		Assert.IsTrue(start < array.Length);
 		Assert.IsFalse(count + start > array.Length);
-
+		
 		this.array = array;
 		this.start = start;
 		Length = count;
 	}
 
+	/// <summary>
+	///		Returns an empty <see cref="ReadOnlyView{T}"/> object
+	/// </summary>
 	public static ReadOnlyView<T> Empty => default;
 
 	public ref readonly T this[int index] => ref array[AssertShift(index)];
 
+	/// <summary>
+	///		Returns a value which indicates whether this view is empty
+	/// </summary>
 	public bool IsEmpty => Length == 0;
 
+	/// <summary>
+	///		Returns the length of the current view
+	/// </summary>
 	public int Length { get; }
 
 	readonly T[] array;
