@@ -1,6 +1,5 @@
-﻿using CodeHelpers.Diagnostics;
-using EchoRenderer.Common.Mathematics.Randomization;
-using EchoRenderer.Core.Rendering.Distributions;
+﻿using CodeHelpers;
+using EchoRenderer.Core.Rendering.Distributions.Continuous;
 
 namespace EchoRenderer.Common.Memory;
 
@@ -12,29 +11,18 @@ namespace EchoRenderer.Common.Memory;
 public class Arena
 {
 	/// <summary>
-	/// Creates a new <see cref="Arena"/>.
+	/// An <see cref="Allocator"/> associated with this <see cref="Arena"/>.
 	/// </summary>
-	public Arena(ContinuousDistribution distribution)
-	{
-		Assert.IsNotNull(distribution);
-		this.distribution = distribution;
-	}
-
 	public readonly Allocator allocator = new();
-	public readonly ContinuousDistribution distribution;
 
-	IRandom _random;
+	NotNull<ContinuousDistribution> _distribution;
 
-	public IRandom Random
+	/// <summary>
+	/// A <see cref="ContinuousDistribution"/> associated with this <see cref="Arena"/>.
+	/// </summary>
+	public ContinuousDistribution Distribution
 	{
-		get => _random;
-		set
-		{
-			Assert.IsNull(_random);
-			Assert.IsNotNull(value);
-
-			_random = value;
-			distribution.Random = value;
-		}
+		get => _distribution;
+		set => _distribution = value;
 	}
 }
