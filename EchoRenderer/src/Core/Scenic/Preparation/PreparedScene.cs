@@ -216,6 +216,8 @@ public class PreparedScene
 		/// </summary>
 		public LightSource PickLightSource(Sample1D sample, out float pdf)
 		{
+			// int index = sample.Range(_all.Length); pdf = 1f / _all.Length;
+
 			int index = distribution.Find(sample, out pdf);
 			return index < _all.Length ? _all[index] : null;
 		}
