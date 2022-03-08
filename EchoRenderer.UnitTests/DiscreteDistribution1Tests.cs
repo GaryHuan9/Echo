@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions.Discrete;
 using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests;

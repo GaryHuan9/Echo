@@ -29,8 +29,8 @@ public class SingleBunny : StandardScene
 
 		children.Add(new SphereEntity(material1, 1f) { Position = new Float3(-3f, 1f, -2f) });
 
-		children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
-		children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
+		// children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
+		// children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
 	}
 }
 

@@ -14,7 +14,7 @@ public class BruteForceWorker : PixelWorker
 		Float3 energy = Float3.one;
 		Float3 radiance = Float3.zero;
 
-		TraceQuery query = profile.Scene.camera.GetRay(uv, arena.Random);
+		TraceQuery query = profile.Scene.camera.GetRay(uv, arena.Distribution.Prng);
 
 		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
 		{
@@ -30,9 +30,9 @@ public class BruteForceWorker : PixelWorker
 				continue;
 			}
 
-			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, arena.distribution.Next2D(), out Float3 incident, out float pdf, out FunctionType sampledType);
+			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, arena.Distribution.Next2D(), out Float3 incident, out float pdf, out FunctionType sampledType);
 
-			// radiance += energy * emission;
+			radiance += energy * interaction.shade.material.Emission;
 
 			if (!scatter.PositiveRadiance()) energy = Float3.zero;
 			else energy *= interaction.NormalDot(incident) / pdf * scatter;
