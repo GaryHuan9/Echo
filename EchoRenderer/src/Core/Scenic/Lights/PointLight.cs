@@ -22,21 +22,22 @@ public class PointLight : LightSource
 
 	public override Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
 	{
-		Float3 offset = Position - point;
+		Float3 delta = Position - point;
+		float travel2 = delta.SquaredMagnitude;
 
-		travel = offset.Magnitude;
-		float travelR = 1f / travel;
-
-		if (FastMath.AlmostZero(travel))
+		if (!FastMath.Positive(travel2))
 		{
-			pdf = 0f;
 			incident = default;
+			pdf = travel = default;
 			return Float3.zero;
 		}
 
 		pdf = 1f;
+		travel = FastMath.Sqrt0(travel2);
 
-		incident = offset * travelR;
+		float travelR = 1f / travel;
+		incident = delta * travelR;
+
 		return Intensity * travelR * travelR;
 	}
 }

@@ -5,6 +5,7 @@ using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Rendering.Scattering;
 using EchoRenderer.Core.Scenic.Lights;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -28,11 +29,21 @@ public class PathTraceWorker : PixelWorker
 		{
 			bool intersected = scene.Trace(ref query);
 
+			//TODO: this is a mess
+
+			Interaction interaction = default;
+			ref readonly Material material = ref interaction.shade.material;
+
+			if (intersected) interaction = scene.Interact(query);
+
 			if (bounce == 0 || specularBounce)
 			{
 				//TODO: Take care of emitted light at this path vertex or from the environment
 
-				if (intersected) { }
+				if (intersected)
+				{
+					if (material.IsEmissive) radiance += energy * GeometryLight.Evaluate(interaction.point, interaction.outgoing, material);
+				}
 				else
 				{
 					foreach (AmbientLight ambient in scene.lights.Ambient)
@@ -46,8 +57,7 @@ public class PathTraceWorker : PixelWorker
 
 			using var _ = arena.allocator.Begin();
 
-			Interaction interaction = scene.Interact(query);
-			interaction.shade.material.Scatter(ref interaction, arena);
+			material.Scatter(ref interaction, arena);
 
 			if (interaction.bsdf == null)
 			{
@@ -130,7 +140,7 @@ public class PathTraceWorker : PixelWorker
 		//TODO: sort this mess
 
 		Sample2D sample = arena.distribution.Next2D();
-		if (light is not IAreaLight areaLight) return Float3.zero;
+		if (light is not IAreaLight area) return Float3.zero;
 
 		Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, sample, out Float3 incident, out float pdf, out FunctionType sampledType);
 
@@ -142,7 +152,7 @@ public class PathTraceWorker : PixelWorker
 
 		if (!sampledType.Any(FunctionType.specular))
 		{
-			float pdfLight = areaLight.ProbabilityDensity(interaction.point, incident);
+			float pdfLight = area.ProbabilityDensity(interaction.point, incident);
 			if (!FastMath.Positive(pdfLight)) return Float3.zero;
 			weight = PowerHeuristic(pdf, pdfLight);
 		}
@@ -153,9 +163,19 @@ public class PathTraceWorker : PixelWorker
 
 		if (scene.Trace(ref query))
 		{
-			//TODO: evaluate light at intersection if area light is our source
+			//Evaluate light at intersection if area light is our source
+
+			if (area is GeometryLight geometry)
+			{
+				Interaction other = scene.Interact(query);
+
+				if (other.token == geometry.Token)
+				{
+					emission = geometry.Evaluate(other.point, other.outgoing);
+				}
+			}
 		}
-		else if (areaLight is AmbientLight ambient)
+		else if (area is AmbientLight ambient)
 		{
 			emission = ambient.Evaluate(incident);
 		}
