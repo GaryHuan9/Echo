@@ -19,12 +19,21 @@ public readonly struct View<T>
 		Length = count;
 	}
 
+	/// <summary>
+	///		Returns an empty <see cref="View{T}"/> object
+	/// </summary>
 	public static View<T> Empty => default;
 
 	public ref T this[int index] => ref array[AssertShift(index)];
 
+	/// <summary>
+	///		Returns a value which indicates whether this view is empty
+	/// </summary>
 	public bool IsEmpty => Length == 0;
 
+	/// <summary>
+	///		Represents the length of the current view 
+	/// </summary>
 	public int Length { get; }
 
 	readonly T[] array;
