@@ -5,6 +5,9 @@ using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Continuous;
 
+/// <summary>
+/// A stratified <see cref="ContinuousDistribution"/> that partitions the domain to improve the spread of the values drawn.
+/// </summary>
 public class StratifiedDistribution : HorizontalDistribution
 {
 	public StratifiedDistribution(int extend) : base(extend) { }
