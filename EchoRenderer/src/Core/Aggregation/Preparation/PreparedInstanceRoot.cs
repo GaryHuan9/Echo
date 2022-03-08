@@ -4,7 +4,6 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Preparation;
 
