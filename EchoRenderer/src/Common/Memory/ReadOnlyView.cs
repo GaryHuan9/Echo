@@ -4,6 +4,9 @@ using CodeHelpers.Diagnostics;
 
 namespace EchoRenderer.Common.Memory;
 
+/// <summary>
+/// A readonly version of <see cref="View{T}"/> that only supports read operations.
+/// </summary>
 public readonly struct ReadOnlyView<T>
 {
 	public ReadOnlyView(T[] array, int start = 0) : this(array, start, array.Length - start) { }
@@ -13,7 +16,7 @@ public readonly struct ReadOnlyView<T>
 		Assert.IsNotNull(array);
 		Assert.IsTrue(start < array.Length);
 		Assert.IsFalse(count + start > array.Length);
-		
+
 		this.array = array;
 		this.start = start;
 		Length = count;
@@ -59,12 +62,13 @@ public readonly struct ReadOnlyView<T>
 	/// Converts the current view into a <see cref="ReadOnlySpan{T}"/>.
 	/// </summary>
 	public ReadOnlySpan<T> AsSpan() => array.AsSpan(start, Length);
-	
+
 	/// <inheritdoc cref="AsSpan()"/>
 	public ReadOnlySpan<T> AsSpan(int offset) => array.AsSpan(AssertShift(offset), Length);
+
 	/// <inheritdoc cref="AsSpan()"/>
 	public ReadOnlySpan<T> AsSpan(int offset, int length) => array.AsSpan(AssertShift(offset), length);
-	
+
 	/// <inheritdoc cref="AsSpan()"/>
 	public ReadOnlySpan<T> AsSpan(Range range)
 	{

@@ -4,6 +4,9 @@ using CodeHelpers.Diagnostics;
 
 namespace EchoRenderer.Common.Memory;
 
+/// <summary>
+/// A sectional view into an array of <typeparamref name="T"/>.
+/// </summary>
 public readonly struct View<T>
 {
 	public View(T[] array, int start = 0) : this(array, start, array.Length - start) { }
@@ -59,9 +62,10 @@ public readonly struct View<T>
 	/// Converts the current view into a <see cref="Span{T}"/>.
 	/// </summary>
 	public Span<T> AsSpan() => array.AsSpan(start, Length);
-	
+
 	/// <inheritdoc cref="AsSpan()"/>
 	public Span<T> AsSpan(int offset) => array.AsSpan(AssertShift(offset));
+
 	/// <inheritdoc cref="AsSpan()"/>
 	public Span<T> AsSpan(int offset, int length) => array.AsSpan(AssertShift(offset), length);
 
@@ -91,6 +95,7 @@ public readonly struct View<T>
 	public static implicit operator Span<T>(View<T> view) => new(view.array, view.start, view.Length);
 	public static implicit operator View<T>(T[] array) => new(array);
 }
+
 public static class ViewExtensions
 {
 	public static View<T> AsView<T>(this T[] array, int start = 0) => new(array, start);
