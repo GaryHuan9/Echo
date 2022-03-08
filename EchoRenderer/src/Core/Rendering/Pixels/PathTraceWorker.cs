@@ -6,6 +6,7 @@ using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Distributions.Continuous;
+using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Rendering.Scattering;
 using EchoRenderer.Core.Scenic.Lights;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -142,7 +143,7 @@ public class PathTraceWorker : PixelWorker
 		//TODO: sort this mess
 
 		Sample2D sample = arena.Distribution.Next2D();
-		if (light is not IAreaLight areaLight) return Float3.zero;
+		if (light is not IAreaLight area) return Float3.zero;
 
 		Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, sample, out Float3 incident, out float pdf, out FunctionType sampledType);
 
