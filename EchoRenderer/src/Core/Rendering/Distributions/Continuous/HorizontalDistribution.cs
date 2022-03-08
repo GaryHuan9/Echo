@@ -2,6 +2,10 @@
 
 namespace EchoRenderer.Core.Rendering.Distributions.Continuous;
 
+/// <summary>
+/// An abstract <see cref="ContinuousDistribution"/> that draws single samples horizontally across different pixel samples
+/// by using either <see cref="ContinuousDistribution.NextSpan1D"/> or <see cref="ContinuousDistribution.NextSpan2D"/>.
+/// </summary>
 public abstract class HorizontalDistribution : ContinuousDistribution
 {
 	protected HorizontalDistribution(int extend) : base(extend) { }
