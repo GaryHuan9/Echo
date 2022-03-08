@@ -32,7 +32,7 @@ public class BruteForceWorker : PixelWorker
 
 			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, arena.Distribution.Next2D(), out Float3 incident, out float pdf, out FunctionType sampledType);
 
-			// radiance += energy * emission;
+			radiance += energy * interaction.shade.material.Emission;
 
 			if (!scatter.PositiveRadiance()) energy = Float3.zero;
 			else energy *= interaction.NormalDot(incident) / pdf * scatter;
