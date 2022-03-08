@@ -5,6 +5,7 @@ using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Rendering.Distributions.Continuous;
 using EchoRenderer.Core.Rendering.Scattering;
 using EchoRenderer.Core.Scenic.Lights;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -13,6 +14,8 @@ namespace EchoRenderer.Core.Rendering.Pixels;
 
 public class PathTraceWorker : PixelWorker
 {
+	protected override ContinuousDistribution CreateDistribution(RenderProfile profile) => new StratifiedDistribution(profile.TotalSample);
+
 	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
 		PreparedScene scene = profile.Scene;

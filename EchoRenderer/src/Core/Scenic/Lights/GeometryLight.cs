@@ -35,9 +35,7 @@ public class GeometryLight : IAreaLight
 		incident = sampled.position - point;
 
 		travel = incident.Magnitude;
-		float travelR = 1f / travel;
-
-		incident *= travelR;
+		incident *= 1f / travel;
 
 		return incident.Dot(sampled.normal) > 0f ? Float3.zero : emission;
 	}
