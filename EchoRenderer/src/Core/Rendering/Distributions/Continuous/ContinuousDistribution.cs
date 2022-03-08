@@ -42,6 +42,8 @@ public abstract class ContinuousDistribution
 	readonly BufferDomain<Sample1D> spans1D = new();
 	readonly BufferDomain<Sample2D> spans2D = new();
 
+	MonoThread monoThread;
+
 	/// <summary>
 	/// The position of the current processing pixel. This property is undefined if <see cref="BeginPixel"/> is never invoked.
 	/// </summary>
@@ -74,6 +76,8 @@ public abstract class ContinuousDistribution
 	/// </summary>
 	public virtual void BeginPixel(Int2 position)
 	{
+		monoThread.Ensure();
+
 		PixelPosition = position;
 		SampleNumber = -1;
 	}
@@ -83,6 +87,8 @@ public abstract class ContinuousDistribution
 	/// </summary>
 	public virtual void BeginSample()
 	{
+		monoThread.Ensure();
+
 		if (SampleNumber < -1) throw new Exception($"Operation invalid before {nameof(BeginPixel)} is invoked!");
 		if (++SampleNumber >= extend) throw new Exception($"More than {extend} pixel samples has been requested!");
 
@@ -187,6 +193,8 @@ public abstract class ContinuousDistribution
 	//
 	void EnsureIsSampling()
 	{
+		monoThread.Ensure();
+
 		if (SampleNumber < 0) throw new Exception($"Operation invalid before {nameof(BeginSample)} is invoked!");
 		if (SampleNumber >= extend) throw new Exception($"More than {extend} pixel samples has been requested!");
 	}

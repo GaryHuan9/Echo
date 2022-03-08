@@ -27,13 +27,6 @@ public class PointLight : LightSource
 		travel = offset.Magnitude;
 		float travelR = 1f / travel;
 
-		if (FastMath.AlmostZero(travel))
-		{
-			pdf = 0f;
-			incident = default;
-			return Float3.zero;
-		}
-
 		pdf = 1f;
 
 		incident = offset * travelR;
