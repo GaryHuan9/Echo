@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Common.Mathematics;
@@ -9,57 +11,62 @@ namespace EchoRenderer.Common.Mathematics;
 /// </summary>
 public static class FastMath
 {
-	static readonly float oneMinusEpsilon = Scalars.UInt32ToSingleBits(Scalars.SingleToUInt32Bits(1f) - 1u);
+	static FastMath() => Assert.AreEqual(Scalars.SingleToUInt32Bits(OneMinusEpsilon), Scalars.SingleToUInt32Bits(1f) - 1u);
 
-	//NOTE: some methods in this class is not necessarily "fast", however fast alternatives can be implemented later on if needed.
+	/// <summary>
+	/// This is the largest IEEE-754 float32 value that is smaller than 1f (ie. 1f - 1ulp).
+	/// </summary>
+	const float OneMinusEpsilon = 0.99999994f;
+
+	//NOTE: some methods in this class is not necessarily "fast" yet, however fast alternatives can be implemented later on if needed.
 
 	/// <summary>
 	/// Returns <paramref name="value"/> if it is larger than zero, or zero otherwise.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	public static float Max0(float value) => value < 0f ? 0f : value;
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is numerically clamped between zero and one.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	public static float Clamp01(float value) => value < 0f ? 0f : value > 1f ? 1f : value;
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is numerically clamped between negative one and one.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	public static float Clamp11(float value) => value < -1f ? -1f : value > 1f ? 1f : value;
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is clamped between zero (inclusive) and one (exclusive).
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
-	public static float ClampEpsilon(float value) => value < 0f ? 0f : value >= 1f ? oneMinusEpsilon : value;
+	public static float ClampEpsilon(float value) => value < 0f ? 0f : value >= 1f ? OneMinusEpsilon : value;
 
 	/// <summary>
 	/// Returns the absolute value of <paramref name="value"/>.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
-	public static float Abs(float value) => value < 0f ? -value : value; //NaN is simply returned
+	public static float Abs(float value) => value < 0f ? -value : value;
 
 	/// <summary>
 	/// Returns the square root of <paramref name="value"/> if is larger than zero, or zero otherwise.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	public static float Sqrt0(float value) => value <= 0f ? 0f : MathF.Sqrt(value);
 
 	/// <summary>
-	/// Returns the inverse/reciprocal square root of <paramref name="value"/> if it is larger than zero.
-	/// If <paramref name="value"/> is zero, <see cref="float.PositiveInfinity"/> is returned.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// Returns the inverse/reciprocal square root of <paramref name="value"/> if it is
+	/// larger than zero. Otherwise, <see cref="float.PositiveInfinity"/> is returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	public static float SqrtR0(float value) => value <= 0f ? float.PositiveInfinity : 1f / MathF.Sqrt(value);
 
 	/// <summary>
 	/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1.
 	/// The value returned is always positive, unlike regular trigonometric functions.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is simply returned.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	public static float Identity(float value) => Sqrt0(FMA(value, -value, 1f));
 
