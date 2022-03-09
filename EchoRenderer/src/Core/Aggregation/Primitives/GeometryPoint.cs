@@ -28,13 +28,16 @@ public readonly struct GeometryPoint
 	public readonly Float3 normal;
 
 	/// <summary>
-	/// Returns the uniform probability density function (pdf) of this <see cref="GeometryPoint"/>, which
-	/// is from a geometry with <paramref name="area"/>, over solid angle at <paramref name="origin"/>.
+	/// Returns the uniform probability density function (pdf) of sampling this <see cref="GeometryPoint"/>,
+	/// which is from a geometry with <paramref name="area"/>, over solid angles at <paramref name="origin"/>.
 	/// </summary>
 	public float ProbabilityDensity(in Float3 origin, float area)
 	{
-		Float3 offset = position - origin;
-		return offset.SquaredMagnitude / FastMath.Abs(normal.Dot(offset.Normalized) * area);
+		Float3 delta = position - origin;
+		float length2 = delta.SquaredMagnitude;
+		float length = FastMath.Sqrt0(length2);
+
+		return length2 / FastMath.Abs(normal.Dot(delta) * area / length);
 	}
 
 	/// <summary>

@@ -220,7 +220,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	{
 		Float2 uv = sample.UniformTriangle;
 		Float3 position = GetPoint(uv);
-		Float3 normal = GetPoint(uv);
+		Float3 normal = GetNormal(uv);
 
 		var point = new GeometryPoint(position, normal);
 		pdf = point.ProbabilityDensity(origin, Area);
