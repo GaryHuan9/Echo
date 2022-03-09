@@ -229,7 +229,6 @@ public class PreparedInstance
 		foreach (MaterialIndex index in materials)
 		{
 			float power = PackedMath.GetLuminance(Utilities.ToVector(swatch[index].Emission)) * Scalars.PI;
-
 			foreach (NodeToken token in tokenArray[index]) powerFill.Add(pack.GetArea(token) * power);
 
 			segmentFill.Add(index);
@@ -249,6 +248,6 @@ public class PreparedInstance
 
 		return new PowerDistribution(powerValues, segments, tokenArray);
 
-		ReadOnlyView<NodeToken> GetInstancesToken() => pack.counts.instance > 0 ? tokenArray[tokenArray.FinalPartition] : default;
+		ReadOnlyView<NodeToken> GetInstancesToken() => pack.counts.instance > 0 ? tokenArray[tokenArray.FinalPartition] : ReadOnlyView<NodeToken>.Empty;
 	}
 }

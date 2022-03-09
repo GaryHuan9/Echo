@@ -14,10 +14,9 @@ public class PowerDistribution
 {
 	public PowerDistribution(ReadOnlySpan<float> powerValues, ReadOnlySpan<int> segments, NodeTokenArray tokenArray)
 	{
-		distribution = new DiscreteDistribution1D(powerValues);
-
 		int partitionLength = segments.Length;
 
+		distribution = new DiscreteDistribution1D(powerValues);
 		partitions = new ReadOnlyView<NodeToken>[partitionLength];
 		starts = new int[partitionLength];
 
@@ -40,9 +39,8 @@ public class PowerDistribution
 	}
 
 	readonly DiscreteDistribution1D distribution;
-
-	readonly int[] starts;
 	readonly ReadOnlyView<NodeToken>[] partitions;
+	readonly int[] starts;
 
 	/// <summary>
 	/// The total summed power of this <see cref="PowerDistribution"/>.
@@ -61,6 +59,6 @@ public class PowerDistribution
 
 		//Find token from index
 		if (segment < 0) segment = ~segment - 1;
-		return partitions[segment][index - starts[index]];
+		return partitions[segment][index - starts[segment]];
 	}
 }

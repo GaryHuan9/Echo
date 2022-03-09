@@ -19,18 +19,19 @@ public class SingleBunny : StandardScene
 		var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
 		// var materials = new MaterialLibrary("Assets/Models/StanfordBunny/bunny.mat");
 		var material0 = new Matte { Albedo = (Pure)new Float3(1f, 0.68f, 0.16f) };
-		// var material1 = new Matte { Albedo = (Pure)new Float3(0.0250f, 0.1416f, 0.3736f) };
-		var material1 = new Matte { Albedo = Texture.white, Emission = (Float3)1f };
+		var material1 = new Matte { Albedo = (Pure)new Float3(0.0250f, 0.1416f, 0.3736f) };
+		var material2 = new Matte { Albedo = Texture.white, Emission = (Float3)1f };
 
 		// children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
-		children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });
+		// children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });
 
 		children.Add(new MeshEntity(mesh, material0) { Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 
 		children.Add(new SphereEntity(material1, 1f) { Position = new Float3(-3f, 1f, -2f) });
+		children.Add(new PlaneEntity(material2, Float2.one * 6f) { Position = new Float3(4f, 1f, -2f), Rotation = new Float3(0f, 0f, 90f) });
 
-		// children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
-		// children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
+		children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
+		children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
 	}
 }
 
