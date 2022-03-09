@@ -42,9 +42,9 @@ public class GeometryLight : IAreaLight
 	Float3 emission;
 
 	/// <summary>
-	/// Evaluates this <see cref="GeometryLight"/> at the intersected <paramref name="point"/> towards <paramref name="incident"/>.
+	/// Evaluates this <see cref="GeometryLight"/> at the intersected <paramref name="point"/> from incoming <paramref name="outgoing"/> direction.
 	/// </summary>
-	public Float3 Evaluate(in GeometryPoint point, in Float3 incident) => Evaluate(point, incident, emission);
+	public Float3 Evaluate(in GeometryPoint point, in Float3 outgoing) => Evaluate(point, outgoing, emission);
 
 	/// <inheritdoc/>
 	public Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
@@ -71,12 +71,12 @@ public class GeometryLight : IAreaLight
 
 	/// <summary>
 	/// Evaluates the emissive contribution of <paramref name="point"/> with <paramref name="material"/>
-	/// towards <paramref name="incident"/>. Only invoke this method if <see cref="Material.IsEmissive"/>!
+	/// towards <paramref name="outgoing"/>. Only invoke this method if <see cref="Material.IsEmissive"/>!
 	/// </summary>
-	public static Float3 Evaluate(in GeometryPoint point, in Float3 incident, Material material)
+	public static Float3 Evaluate(in GeometryPoint point, in Float3 outgoing, Material material)
 	{
 		Assert.IsTrue(material.IsEmissive);
-		return Evaluate(point, incident, material.Emission);
+		return Evaluate(point, -outgoing, material.Emission);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

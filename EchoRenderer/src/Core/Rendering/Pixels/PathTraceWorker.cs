@@ -174,7 +174,7 @@ public class PathTraceWorker : PixelWorker
 
 				if (other.token == geometry.Token)
 				{
-					emission = geometry.Evaluate(other.point, other.outgoing);
+					emission = geometry.Evaluate(other.point, query.ray.direction);
 				}
 			}
 		}
