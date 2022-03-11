@@ -135,6 +135,7 @@ public class CylindricalTexture : IDirectionalTexture
 		return distribution.ProbabilityDensity((Sample2D)uv) * Jacobian / sinP;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float2 ToUV(in Float3 direction) => new
 	(
 		FastMath.FMA(MathF.Atan2(direction.x, direction.z), 0.5f / Scalars.PI, 0.5f),

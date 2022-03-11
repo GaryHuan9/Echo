@@ -95,10 +95,11 @@ public class DiscreteDistribution1D
 		GetBounds(index, out float lower, out float upper);
 
 		//Export values
-		pdf = (upper - lower) * Count;
-		Assert.AreNotEqual(pdf, 0f);
+		float gap = upper - lower;
+		Assert.AreNotEqual(gap, 0f);
+		pdf = gap * Count;
 
-		float shift = Scalars.InverseLerp(lower, upper, sample);
+		float shift = (sample - lower) / gap;
 		return (Sample1D)((shift + index) * countR);
 	}
 
@@ -138,13 +139,20 @@ public class DiscreteDistribution1D
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	int FindIndex(Sample1D sample)
 	{
-		int index = new ReadOnlySpan<float>(cdfValues).BinarySearch(sample.u);
+		int index = BinarySearch(cdfValues, sample);
 
 		//Majority of the times we will simply exit because we are between two anchors
 		Assert.IsTrue(~index < Count);
 		if (index < 0) return ~index;
 
 		//When we landed exactly on an anchor, we need to perform some special checks
+		//So we move onto the slower path and invokes a special method to fix the index
+
+		return FixIndex(index); //NOTE: we explicitly separate this out into a method for performance
+	}
+
+	int FixIndex(int index)
+	{
 		GetBounds(index, out float lower, out float upper);
 
 		float pdf = upper - lower;
@@ -164,7 +172,7 @@ public class DiscreteDistribution1D
 			lower = upper;
 			upper = cdfValues[++index];
 		}
-		while (lower.Equals(upper));
+		while (lower == upper);
 
 		return index;
 	}
@@ -172,8 +180,38 @@ public class DiscreteDistribution1D
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void GetBounds(int index, out float lower, out float upper)
 	{
+		cdfValues.AsSpan().BinarySearch(3f);
+
 		Assert.IsTrue(cdfValues.IsIndexValid(index));
 		lower = index == 0 ? 0f : cdfValues[index - 1];
 		upper = cdfValues[index];
+	}
+
+	/// <summary>
+	/// Efficient binary search referenced from C# <see cref="MemoryExtensions.BinarySearch{T, TComparable}(Span{T},TComparable)"/>
+	/// with significant changes specifically modified to only support <see cref="float"/> values to avoid comparer overhead.
+	/// </summary>
+	static int BinarySearch(float[] array, float value)
+	{
+		uint head = 0u;
+		uint tail = (uint)array.Length;
+		ref float origin = ref array[0];
+
+		while (head < tail)
+		{
+			uint index = (tail + head) >> 1;
+
+			var current = Unsafe.Add(ref origin, index);
+			if (current == value) return (int)index;
+
+			if (current > value) tail = index;
+			else head = index + 1u;
+		}
+
+		//NOTE: we can optimize this even further if needed:
+		//https://github.com/scandum/binary_search
+		//https://news.ycombinator.com/item?id=23893366
+
+		return (int)~head;
 	}
 }
