@@ -22,8 +22,16 @@ public class GeometryLight : IAreaLight
 
 		scene = newScene;
 		token = newToken;
-		emission = newMaterial.Emission;
+		Emission = newMaterial.Emission;
 	}
+
+	PreparedScene scene;
+	GeometryToken token;
+
+	/// <summary>
+	/// The current emissive output of this <see cref="GeometryLight"/>.
+	/// </summary>
+	public Float3 Emission { get; private set; }
 
 	/// <summary>
 	/// Accesses the <see cref="GeometryToken"/> that this <see cref="GeometryLight"/> currently represents.
@@ -36,15 +44,6 @@ public class GeometryLight : IAreaLight
 			return ref token;
 		}
 	}
-
-	PreparedScene scene;
-	GeometryToken token;
-	Float3 emission;
-
-	/// <summary>
-	/// Evaluates this <see cref="GeometryLight"/> at the intersected <paramref name="point"/> from incoming <paramref name="outgoing"/> direction.
-	/// </summary>
-	public Float3 Evaluate(in GeometryPoint point, in Float3 outgoing) => Evaluate(point, outgoing, emission);
 
 	/// <inheritdoc/>
 	public Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
@@ -63,22 +62,10 @@ public class GeometryLight : IAreaLight
 
 		travel = FastMath.Sqrt0(travel2);
 		incident = delta * (1f / travel);
-		return Evaluate(sampled, incident);
+
+		return Emission;
 	}
 
 	/// <inheritdoc/>
 	public float ProbabilityDensity(in GeometryPoint point, in Float3 incident) => scene.ProbabilityDensity(token, point, incident);
-
-	/// <summary>
-	/// Evaluates the emissive contribution of <paramref name="point"/> with <paramref name="material"/>
-	/// towards <paramref name="outgoing"/>. Only invoke this method if <see cref="Material.IsEmissive"/>!
-	/// </summary>
-	public static Float3 Evaluate(in GeometryPoint point, in Float3 outgoing, Material material)
-	{
-		Assert.IsTrue(material.IsEmissive);
-		return Evaluate(point, -outgoing, material.Emission);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float3 Evaluate(in GeometryPoint point, in Float3 incident, in Float3 emission) => incident.Dot(point.normal) > 0f ? Float3.zero : emission;
 }

@@ -228,7 +228,7 @@ public class PreparedInstance
 		//Fill in the relevant power and segment values for geometries with emissive materials
 		foreach (MaterialIndex index in materials)
 		{
-			float power = PackedMath.GetLuminance(Utilities.ToVector(swatch[index].Emission)) * Scalars.PI;
+			float power = PackedMath.GetLuminance(Utilities.ToVector(swatch[index].Emission)) * Scalars.TAU;
 			foreach (NodeToken token in tokenArray[index]) powerFill.Add(pack.GetArea(token) * power);
 
 			segmentFill.Add(index);
