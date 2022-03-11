@@ -14,8 +14,7 @@ public readonly struct View<T>
 	public View(T[] array, int start, int count)
 	{
 		Assert.IsNotNull(array);
-		Assert.IsTrue(start < array.Length);
-		Assert.IsFalse(count + start > array.Length);
+		Assert.IsFalse((ulong)(uint)start + (uint)count > (uint)array.Length);
 
 		this.array = array;
 		this.start = start;
@@ -81,12 +80,12 @@ public readonly struct View<T>
 
 	/// <summary>
 	/// Asserts and Shifts the view array index to the original array index,
-	/// if the <paramref name="index" /> is less than <see cref="Length" />.
+	/// if the <paramref name="index"/> is not greater than <see cref="Length"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	int AssertShift(int index)
 	{
-		Assert.IsTrue(index < Length);
+		Assert.IsFalse((uint)index > Length);
 		return start + index;
 	}
 
