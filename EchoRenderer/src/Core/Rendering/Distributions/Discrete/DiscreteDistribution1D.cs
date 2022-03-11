@@ -180,8 +180,6 @@ public class DiscreteDistribution1D
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void GetBounds(int index, out float lower, out float upper)
 	{
-		cdfValues.AsSpan().BinarySearch(3f);
-
 		Assert.IsTrue(cdfValues.IsIndexValid(index));
 		lower = index == 0 ? 0f : cdfValues[index - 1];
 		upper = cdfValues[index];
