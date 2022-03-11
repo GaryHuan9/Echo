@@ -24,7 +24,7 @@ public abstract class DirectionalTextureBaseTests
 	public void Average()
 	{
 		Vector128<float> average = texture.ConvergeAverage();
-		Assert.That(Difference(average, texture.Average), Is.LessThan(0.001f));
+		Assert.That(Difference(average, texture.Average), Is.LessThan(0.002f));
 	}
 
 	[Test]
@@ -34,7 +34,7 @@ public abstract class DirectionalTextureBaseTests
 
 		Vector128<float> sampled = texture.Sample(sample, out Float3 incident, out float pdf);
 
-		Assert.That(Difference(sampled, texture.Evaluate(incident)), Is.LessThan(0.001f));
+		Assert.That(Difference(sampled, texture.Evaluate(incident)), Is.LessThan(0.002f));
 		Assert.That(pdf, Is.EqualTo(texture.ProbabilityDensity(incident)).Roughly(0.01f));
 	}
 
