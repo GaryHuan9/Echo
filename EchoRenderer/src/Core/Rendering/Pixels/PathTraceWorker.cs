@@ -45,7 +45,7 @@ public class PathTraceWorker : PixelWorker
 
 				if (intersected)
 				{
-					if (material.IsEmissive) radiance += energy * GeometryLight.Evaluate(interaction.point, interaction.outgoing, material);
+					if (material.IsEmissive) radiance += energy * material.Emission;
 				}
 				else
 				{
@@ -174,7 +174,7 @@ public class PathTraceWorker : PixelWorker
 
 				if (other.token == geometry.Token)
 				{
-					emission = geometry.Evaluate(other.point, query.ray.direction);
+					emission = geometry.Emission;
 				}
 			}
 		}
