@@ -1,11 +1,9 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
-using EchoRenderer.Core.Aggregation;
 using EchoRenderer.Core.PostProcess;
 using EchoRenderer.Core.PostProcess.ToneMappers;
 using EchoRenderer.Core.Rendering.Engines;
@@ -90,7 +88,7 @@ public class Program
 		AdaptiveSample = 0
 	};
 
-	static readonly ScenePrepareProfile scenePrepareProfile = new() { AggregatorProfile = new AggregatorProfile() };
+	static readonly ScenePrepareProfile scenePrepareProfile = new();
 
 	static void PerformRender()
 	{
