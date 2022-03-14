@@ -36,7 +36,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		nodes = new Node[count];
 		nodes[0] = CreateNode(buildRoot, tokens, ref nodeIndex, out int maxDepth);
 
-		stackSize = maxDepth * 3; //This 3 is not arbitrary!
+		stackSize = maxDepth * 3; //NOTE: this 3 is not arbitrary!
 		Assert.AreEqual((long)nodeIndex, nodes.Length);
 	}
 
@@ -126,7 +126,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	}
 
 	[SkipLocalsInit]
-	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+	[MethodImpl(ImplementationOptions)]
 	unsafe void TraceCore(ref TraceQuery query)
 	{
 		var stack = stackalloc NodeToken[stackSize];
@@ -228,7 +228,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	}
 
 	[SkipLocalsInit]
-	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+	[MethodImpl(ImplementationOptions)]
 	unsafe bool OccludeCore(ref OccludeQuery query)
 	{
 		NodeToken* stack = stackalloc NodeToken[stackSize];
@@ -409,6 +409,76 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 		++depth;
 		return new Node(buildNode, token4);
+	}
+
+	[MethodImpl(ImplementationOptions)]
+	static unsafe void WriteOffsets(in Node node, bool* orders, byte* offsets)
+	{
+		if (orders[node.axisMajor])
+		{
+			if (orders[node.axisMinor1])
+			{
+				offsets[0] = 3;
+				offsets[1] = 2;
+			}
+			else
+			{
+				offsets[0] = 2;
+				offsets[1] = 3;
+			}
+
+			if (orders[node.axisMinor0])
+			{
+				offsets[2] = 1;
+				offsets[3] = 0;
+			}
+			else
+			{
+				offsets[2] = 0;
+				offsets[3] = 1;
+			}
+		}
+		else
+		{
+			if (orders[node.axisMinor0])
+			{
+				offsets[0] = 1;
+				offsets[1] = 0;
+			}
+			else
+			{
+				offsets[0] = 0;
+				offsets[1] = 1;
+			}
+
+			if (orders[node.axisMinor1])
+			{
+				offsets[2] = 3;
+				offsets[3] = 2;
+			}
+			else
+			{
+				offsets[2] = 2;
+				offsets[3] = 3;
+			}
+		}
+
+		// int order0 = orders[node.axisMinor0];
+		// int order1 = orders[node.axisMinor1];
+		//
+		// long* lut0 = stackalloc[] { 0x100000000, 0x000000001 };
+		// long* lut1 = stackalloc[] { 0x300000002, 0x200000003 };
+		//
+		// if (orders[node.axisMajor] == 1)
+		// {
+		// 	offsets[0] = lut1[order1];
+		// 	offsets[1] = lut0[order0];
+		// }
+		// else
+		// {
+		// 	offsets[0] = lut0[order0];
+		// 	offsets[1] = lut1[order1];
+		// }
 	}
 
 	/// <summary>
