@@ -15,7 +15,7 @@ public class Sponza : Scene
 
 		// materials["light"] = new Invisible();
 
-		children.Add(new MeshEntity(mesh, materials) { Rotation = Float3.up * 90f });
+		children.Add(new MeshEntity { Mesh = mesh, MaterialLibrary = materials, Rotation = Float3.up * 90f });
 
 		children.Add(new AmbientLight { Texture = (Pure)new Float3(10.3f, 8.9f, 6.3f) });
 
