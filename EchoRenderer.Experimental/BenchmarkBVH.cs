@@ -23,8 +23,9 @@ public class BenchmarkBVH
 	{
 		Scene scene = new Scene();
 
+		//This is some really temporary benchmarking code
 		Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
-		scene.children.Add(new MeshEntity(mesh, new Matte()));
+		scene.children.Add(new MeshEntity { Mesh = mesh, Material = new Matte() });
 
 		traceQueries = new TraceQuery[65536];
 		occludeQueries = new OccludeQuery[65536];
@@ -59,8 +60,9 @@ public class BenchmarkBVH
 
 		Types = new[]
 		{
-			new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
 			// new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDiv"),
+			// new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(LinearAggregator) }}), "Linear"),
+			// new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
 			new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
 		};
 	}

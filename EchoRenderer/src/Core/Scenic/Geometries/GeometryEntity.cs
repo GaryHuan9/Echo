@@ -7,9 +7,7 @@ namespace EchoRenderer.Core.Scenic.Geometries;
 
 public abstract class GeometryEntity : Entity
 {
-	protected GeometryEntity(Material material) => Material = material;
-
-	NotNull<Material> _material;
+	NotNull<Material> _material = Invisible.instance;
 
 	public Material Material
 	{

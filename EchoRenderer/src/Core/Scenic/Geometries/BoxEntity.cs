@@ -8,9 +8,7 @@ namespace EchoRenderer.Core.Scenic.Geometries;
 
 public class BoxEntity : GeometryEntity
 {
-	public BoxEntity(Material material, Float3 size) : base(material) => Size = size;
-
-	public Float3 Size { get; set; }
+	public Float3 Size { get; set; } = Float3.one;
 
 	public Float2 Texcoord00 { get; set; } = Float2.zero;
 	public Float2 Texcoord01 { get; set; } = Float2.right;

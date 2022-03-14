@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Common;
@@ -49,6 +51,39 @@ public static class Utilities
 			>= 'a' and <= 'f' => value - 'a' + 10,
 			_ => throw ExceptionHelper.Invalid(nameof(value), value, "is not valid hex")
 		};
+	}
+
+	/// <summary>
+	/// Skips the initialization of output <paramref name="value"/>.
+	/// Assigns <see cref="float.NaN"/> to it if we are in debug mode.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static unsafe void Skip<T>(out T value) where T : unmanaged
+	{
+		Unsafe.SkipInit(out value);
+		Fill(ref value);
+
+		[Conditional(Assert.DebugSymbol)]
+		static void Fill(ref T value)
+		{
+			const int ChunkSize = sizeof(uint);
+			const uint CustomNaN = 0xFFC02A2A;
+
+			ref uint head0 = ref Unsafe.As<T, uint>(ref value);
+
+			int size = sizeof(T);
+
+			while (size >= ChunkSize)
+			{
+				head0 = CustomNaN;
+				size -= ChunkSize;
+
+				head0 = ref Unsafe.Add(ref head0, 1);
+			}
+
+			ref byte head1 = ref Unsafe.As<uint, byte>(ref head0);
+			for (; size >= 0; --size) Unsafe.Add(ref head1, size) = 0x2A;
+		}
 	}
 
 	/// <summary>

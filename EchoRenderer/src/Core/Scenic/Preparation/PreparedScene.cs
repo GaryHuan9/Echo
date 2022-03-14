@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
@@ -220,6 +221,18 @@ public class PreparedScene
 
 			int index = distribution.Find(sample, out pdf);
 			return index < _all.Length ? _all[index] : null;
+		}
+
+		/// <summary>
+		/// Evaluates all of the <see cref="AmbientLight"/> at <paramref name="direction"/> in world-space.
+		/// </summary>
+		public Float3 EvaluateAmbient(Float3 direction)
+		{
+			Float3 total = Float3.zero;
+
+			foreach (AmbientLight light in _ambient) total += light.Evaluate(direction);
+
+			return total;
 		}
 	}
 }

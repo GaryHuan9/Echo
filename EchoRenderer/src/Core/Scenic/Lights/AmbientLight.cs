@@ -65,13 +65,10 @@ public class AmbientLight : AreaLightSource
 	}
 
 	/// <summary>
-	/// Evaluates this <see cref="AmbientLight"/> at <paramref name="direction"/> that escaped the <see cref="PreparedScene"/> geometries.
+	/// Evaluates this <see cref="AmbientLight"/> at <paramref name="direction"/>
+	/// in world-space, which escaped the <see cref="PreparedScene"/> geometries.
 	/// </summary>
-	public Float3 Evaluate(in Float3 direction)
-	{
-		Float3 transformed = worldToLocal * direction;
-		return Utilities.ToFloat3(Texture.Evaluate(transformed));
-	}
+	public Float3 Evaluate(in Float3 direction) => Utilities.ToFloat3(Texture.Evaluate(worldToLocal * direction));
 
 	public override Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
 	{

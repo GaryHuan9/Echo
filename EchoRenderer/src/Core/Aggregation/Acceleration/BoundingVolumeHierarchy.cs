@@ -111,7 +111,7 @@ public class BoundingVolumeHierarchy : Aggregator
 	}
 
 	[SkipLocalsInit]
-	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+	[MethodImpl(ImplementationOptions)]
 	unsafe void TraceCore(ref TraceQuery query)
 	{
 		var stack = stackalloc NodeToken[maxDepth];
@@ -165,7 +165,7 @@ public class BoundingVolumeHierarchy : Aggregator
 	}
 
 	[SkipLocalsInit]
-	[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+	[MethodImpl(ImplementationOptions)]
 	unsafe bool OccludeCore(ref OccludeQuery query)
 	{
 		NodeToken* stack = stackalloc NodeToken[maxDepth];
@@ -197,7 +197,7 @@ public class BoundingVolumeHierarchy : Aggregator
 				if (Push(hit1, child1.token, ref query)) return true;
 			}
 
-			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+			[MethodImpl(ImplementationOptions)]
 			bool Push(float hit, in NodeToken token, ref OccludeQuery refQuery)
 			{
 				if (hit >= refQuery.travel) return false;
