@@ -133,7 +133,6 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		float* hits = stackalloc float[stackSize];
 
 		NodeToken* next = stack;
-
 		*next++ = NodeToken.root;
 		*hits++ = 0f;
 
@@ -158,70 +157,67 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			{
 				if (orders[node.axisMinor1])
 				{
-					Push(intersections, node.token4, 3, ref query);
-					Push(intersections, node.token4, 2, ref query);
+					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, 2, ref query);
-					Push(intersections, node.token4, 3, ref query);
+					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
 				}
 
 				if (orders[node.axisMinor0])
 				{
-					Push(intersections, node.token4, 1, ref query);
-					Push(intersections, node.token4, 0, ref query);
+					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, 0, ref query);
-					Push(intersections, node.token4, 1, ref query);
+					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
 				}
 			}
 			else
 			{
 				if (orders[node.axisMinor0])
 				{
-					Push(intersections, node.token4, 1, ref query);
-					Push(intersections, node.token4, 0, ref query);
+					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, 0, ref query);
-					Push(intersections, node.token4, 1, ref query);
+					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
 				}
 
 				if (orders[node.axisMinor1])
 				{
-					Push(intersections, node.token4, 3, ref query);
-					Push(intersections, node.token4, 2, ref query);
+					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, 2, ref query);
-					Push(intersections, node.token4, 3, ref query);
+					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
+					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
 				}
 			}
 
-			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-			void Push(in Vector128<float> hit4, in NodeToken4 child4, int offset, ref TraceQuery refQuery)
+			[MethodImpl(ImplementationOptions)]
+			static void Push(in Vector128<float> intersections, in NodeToken4 token4, PreparedPack pack,
+							 int offset, ref NodeToken* next, ref float* hits, ref TraceQuery query)
 			{
-				float hit = hit4.GetElement(offset);
-				if (hit >= refQuery.distance) return;
+				float hit = intersections.GetElement(offset);
+				if (hit >= query.distance) return;
 
-				ref readonly NodeToken token = ref child4[offset];
+				ref readonly NodeToken token = ref token4[offset];
 
-				if (token.IsGeometry)
+				if (token.IsNode)
 				{
-					//Child is leaf
-					pack.Trace(ref refQuery, token);
-				}
-				else
-				{
-					//Child is branch
+					//Child is node/branch
 					*next++ = token;
 					*hits++ = hit;
 				}
+				else pack.Trace(ref query, token); //Child is geometry/leaf
 			}
 		}
 		while (next != stack);
@@ -253,60 +249,61 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			{
 				if (orders[node.axisMinor1])
 				{
-					if (Push(intersections, node.token4, 3, ref query)) return true;
-					if (Push(intersections, node.token4, 2, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, 2, ref query)) return true;
-					if (Push(intersections, node.token4, 3, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
 				}
 
 				if (orders[node.axisMinor0])
 				{
-					if (Push(intersections, node.token4, 1, ref query)) return true;
-					if (Push(intersections, node.token4, 0, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, 0, ref query)) return true;
-					if (Push(intersections, node.token4, 1, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
 				}
 			}
 			else
 			{
 				if (orders[node.axisMinor0])
 				{
-					if (Push(intersections, node.token4, 1, ref query)) return true;
-					if (Push(intersections, node.token4, 0, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, 0, ref query)) return true;
-					if (Push(intersections, node.token4, 1, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
 				}
 
 				if (orders[node.axisMinor1])
 				{
-					if (Push(intersections, node.token4, 3, ref query)) return true;
-					if (Push(intersections, node.token4, 2, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, 2, ref query)) return true;
-					if (Push(intersections, node.token4, 3, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
 				}
 			}
 
-			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
-			bool Push(in Vector128<float> hit4, in NodeToken4 child4, int offset, ref OccludeQuery refQuery)
+			[MethodImpl(ImplementationOptions)]
+			static bool Push(in Vector128<float> intersections, in NodeToken4 token4, PreparedPack pack,
+							 int offset, ref NodeToken* next, ref OccludeQuery query)
 			{
-				float hit = hit4.GetElement(offset);
-				if (hit >= refQuery.travel) return false;
+				float hit = intersections.GetElement(offset);
+				if (hit >= query.travel) return false;
 
-				ref readonly NodeToken token = ref child4[offset];
+				ref readonly NodeToken token = ref token4[offset];
 
-				if (token.IsGeometry) return pack.Occlude(ref refQuery, token); //Child is leaf
+				if (token.IsGeometry) return pack.Occlude(ref query, token); //Child is leaf
 
 				//Child is branch
 				*next++ = token;
