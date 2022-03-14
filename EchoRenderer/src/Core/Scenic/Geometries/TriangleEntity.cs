@@ -16,16 +16,9 @@ namespace EchoRenderer.Core.Scenic.Geometries;
 
 public class TriangleEntity : GeometryEntity
 {
-	public TriangleEntity(Material material, Float3 vertex0, Float3 vertex1, Float3 vertex2) : base(material)
-	{
-		Vertex0 = vertex0;
-		Vertex1 = vertex1;
-		Vertex2 = vertex2;
-	}
-
-	public Float3 Vertex0 { get; set; }
-	public Float3 Vertex1 { get; set; }
-	public Float3 Vertex2 { get; set; }
+	public Float3 Vertex0 { get; set; } = Float3.zero;
+	public Float3 Vertex1 { get; set; } = Float3.up;
+	public Float3 Vertex2 { get; set; } = Float3.one;
 
 	public Float3 Normal0 { get; set; }
 	public Float3 Normal1 { get; set; }
@@ -56,21 +49,22 @@ public class TriangleEntity : GeometryEntity
 
 	public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 }
+
 public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWISE
 {
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, MaterialIndex materialIndex) : this
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
 		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0), materialIndex
 	) { }
 
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, MaterialIndex materialIndex) : this
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, in Float3 normal, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
 		normal, normal, normal, materialIndex
 	) { }
 
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
@@ -78,8 +72,8 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		texcoord0, texcoord1, texcoord2, materialIndex
 	) { }
 
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							Float3 normal,
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
+							in Float3 normal,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
@@ -87,16 +81,16 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		texcoord0, texcoord1, texcoord2, materialIndex
 	) { }
 
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							Float3 normal0, Float3 normal1, Float3 normal2, MaterialIndex materialIndex) : this
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
+							in Float3 normal0, in Float3 normal1, in Float3 normal2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
 		normal0, normal1, normal2,
 		Float2.zero, Float2.zero, Float2.zero, materialIndex
 	) { }
 
-	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
-							Float3 normal0, Float3 normal1, Float3 normal2,
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
+							in Float3 normal0, in Float3 normal1, in Float3 normal2,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material)
 	{
 		this.vertex0 = vertex0;

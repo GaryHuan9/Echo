@@ -20,6 +20,8 @@ public abstract class Aggregator
 
 	protected readonly PreparedPack pack;
 
+	protected const MethodImplOptions ImplementationOptions = MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining;
+
 	/// <summary>
 	/// Calculates and returns the <see cref="AxisAlignedBoundingBox"/> of this <see cref="Aggregator"/> as if it was transformed
 	/// by <paramref name="inverseTransform"/>. Note that this transformation is usually performed inversely, thus the name.

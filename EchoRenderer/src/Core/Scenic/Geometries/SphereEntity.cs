@@ -7,16 +7,13 @@ using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
-using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Scenic.Geometries;
 
 public class SphereEntity : GeometryEntity
 {
-	public SphereEntity(Material material, float radius) : base(material) => Radius = radius;
-
-	public float Radius { get; set; }
+	public float Radius { get; set; } = 1f;
 
 	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor) => Enumerable.Empty<PreparedTriangle>();
 
@@ -26,6 +23,7 @@ public class SphereEntity : GeometryEntity
 		yield return new PreparedSphere(this, extractor.Register(Material));
 	}
 }
+
 public readonly struct PreparedSphere
 {
 	public PreparedSphere(SphereEntity sphere, MaterialIndex material) : this
