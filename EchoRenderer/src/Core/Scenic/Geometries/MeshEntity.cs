@@ -9,10 +9,6 @@ namespace EchoRenderer.Core.Scenic.Geometries;
 
 public class MeshEntity : GeometryEntity
 {
-	public MeshEntity(Mesh mesh, Material material) : base(material) => Mesh = mesh;
-
-	public MeshEntity(Mesh mesh, MaterialLibrary materialLibrary) : this(mesh, materialLibrary.first) => MaterialLibrary = materialLibrary;
-
 	public Mesh Mesh { get; set; }
 	public MaterialLibrary MaterialLibrary { get; set; }
 

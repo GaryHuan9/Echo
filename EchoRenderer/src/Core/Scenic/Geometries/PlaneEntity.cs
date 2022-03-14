@@ -8,9 +8,7 @@ namespace EchoRenderer.Core.Scenic.Geometries;
 
 public class PlaneEntity : GeometryEntity
 {
-	public PlaneEntity(Material material, Float2 size) : base(material) => Size = size;
-
-	public Float2 Size { get; set; }
+	public Float2 Size { get; set; } = Float2.one;
 
 	public Float2 Texcoord00 { get; set; } = Float2.zero;
 	public Float2 Texcoord01 { get; set; } = Float2.right;
