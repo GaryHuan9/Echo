@@ -19,14 +19,14 @@ public class Matte : Material
 		set => _roughness = value;
 	}
 
-	public override void Scatter(ref Interaction interaction, Arena arena)
+	public override void Scatter(ref Touch touch, Arena arena)
 	{
-		var make = new MakeBSDF(ref interaction, arena);
+		var make = new MakeBSDF(ref touch, arena);
 
-		Float3 albedo = Sample(Albedo, interaction).XYZ;
+		Float3 albedo = Sample(Albedo, touch).XYZ;
 		if (!albedo.PositiveRadiance()) return;
 
-		float roughness = FastMath.Clamp01(Sample(Roughness, interaction).x);
+		float roughness = FastMath.Clamp01(Sample(Roughness, touch).x);
 
 		if (FastMath.AlmostZero(roughness)) make.Add<LambertianReflection>().Reset(albedo);
 		else make.Add<OrenNayar>().Reset(albedo, roughness * 90f * Scalars.DegreeToRadian);

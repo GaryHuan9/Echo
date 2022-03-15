@@ -20,10 +20,10 @@ public class AlbedoPixelWorker : PixelWorker
 		//Trace for intersection
 		while (scene.Trace(ref query))
 		{
-			Interaction interaction = scene.Interact(query);
+			Touch touch = scene.Interact(query);
 
-			Float3 albedo = Utilities.ToFloat3(interaction.shade.material.Albedo[interaction.shade.Texcoord]);
-			/*if (!HitPassThrough(query, albedo, interaction.outgoing))*/ return albedo; //Return intersected albedo color
+			Float3 albedo = Utilities.ToFloat3(touch.shade.material.Albedo[touch.shade.Texcoord]);
+			/*if (!HitPassThrough(query, albedo, touch.outgoing))*/ return albedo; //Return intersected albedo color
 
 			query = query.SpawnTrace(query.ray.direction);
 		}
