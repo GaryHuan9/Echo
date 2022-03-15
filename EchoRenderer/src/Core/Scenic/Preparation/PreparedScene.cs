@@ -112,6 +112,7 @@ public class PreparedScene
 
 		if (source != null) return source;
 
+		//Choose emissive geometry as light
 		Span<Sample1D> samples = stackalloc Sample1D[EntityPack.MaxLayer];
 		foreach (ref var one in samples) one = arena.Distribution.Next1D();
 
