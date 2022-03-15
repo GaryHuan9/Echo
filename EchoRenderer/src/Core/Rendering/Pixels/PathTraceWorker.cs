@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
@@ -17,49 +18,42 @@ public class PathTraceWorker : PixelWorker
 {
 	protected override ContinuousDistribution CreateDistribution(RenderProfile profile) => new StratifiedDistribution(profile.TotalSample);
 
+	//NOTE: although the word 'radiant' is frequently used here to denote particles of energy accumulating,
+	//technically it is not correct because the size of the emitter could be either a point or an area,
+	//(so for the same reason the word 'radiance' is also wrong) we just chose 'radiant' because it has the
+	//same length as the word 'scatter'.
+
 	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
 		PreparedScene scene = profile.Scene;
+		TraceQuery query = scene.camera.GetRay(uv);
 
 		Float3 energy = Float3.one;
-		Float3 radiance = Float3.zero;
+		Float3 result = Float3.zero;
 
-		bool specularBounce = false;
-
-		TraceQuery query = scene.camera.GetRay(uv);
+		float scatterPdf = 1f;
+		float radiantPdf = 1f;
 
 		for (int bounce = 0;; bounce++)
 		{
-			bool intersected = scene.Trace(ref query);
-
-			//TODO: this is a mess
-
-			Interaction interaction = default;
-			ref readonly Material material = ref interaction.shade.material;
-
-			if (intersected) interaction = scene.Interact(query);
-
-			if (bounce == 0 || specularBounce)
+			//Exits loop if we have reached our bounce limit or we hit no geometry
+			if (bounce > profile.BounceLimit || !scene.Trace(ref query))
 			{
-				//TODO: Take care of emitted light at this path vertex or from the environment
-
-				if (intersected)
-				{
-					if (material.IsEmissive) radiance += energy * material.Emission;
-				}
-				else
-				{
-					foreach (AmbientLight ambient in scene.lights.Ambient)
-					{
-						radiance += energy * ambient.Evaluate(query.ray.direction);
-					}
-				}
+				result += energy * scene.lights.EvaluateAmbient(query.ray.direction);
+				break;
 			}
 
-			if (!intersected || bounce > profile.BounceLimit) break;
+			//Interact with the scene at our intersection
+			Interaction interaction = scene.Interact(query);
+			Material material = interaction.shade.material;
 
-			using var _ = arena.allocator.Begin();
+			Assert.IsNotNull(material);
 
+			//Add emission if available
+			if (material.IsEmissive) result += energy * material.Emission;
+
+			//Calculate material bsdf
+			using var _0 = arena.allocator.Begin();
 			material.Scatter(ref interaction, arena);
 
 			if (interaction.bsdf == null)
@@ -69,70 +63,70 @@ public class PathTraceWorker : PixelWorker
 				continue;
 			}
 
-			if (interaction.bsdf.Count() == 0)
-			{
-				energy = Float3.zero;
-				break;
-			}
+			//Sample the calculated bsdf
+			Sample2D scatterSample = arena.Distribution.Next2D();
+			Sample2D radiantSample = arena.Distribution.Next2D();
 
-			Float3 scatter = interaction.bsdf.Sample
-			(
-				interaction.outgoing, arena.Distribution.Next2D(),
-				out Float3 incident, out float pdf, out FunctionType sampledType
-			);
+			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, scatterSample, out Float3 incident, out scatterPdf, out BxDF function);
 
-			//TODO: this is a mess
+			if (!scatter.PositiveRadiance() || !FastMath.Positive(scatterPdf)) break;
 
-			if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) break;
+			//Select light from scene for multiple importance sampling
+			ILight light = scene.PickLight(arena, out float lightPdf);
 
-			ILight source = scene.PickLight(arena, out float pdfLight);
+			Float3 emission = ImportanceSampleLight(light, interaction, arena.Distribution.Next2D(), scene);
 
-			Float3 light = ImportanceSampleLight(interaction, source, scene, arena);
-			light += ImportanceSampleBSDF(interaction, source, scene, arena);
+			// if (light is IAreaLight area and not GeometryLight)
+			// {
+			// 	float weight = 1f;
+			//
+			// 	if (!function.type.Any(FunctionType.specular))
+			// 	{
+			// 		float p = area.ProbabilityDensity(interaction.point, incident);
+			// 		// if (!FastMath.Positive(p)) return Float3.zero;
+			// 		weight = PowerHeuristic(pdf, p);
+			// 	}
+			//
+			// 	emission += weight * area.
+			// }
 
-			radiance += 1f / pdfLight * energy * light;
+			float dot = interaction.NormalDot(incident);
+			result += 1f / lightPdf * energy * emission;
+			energy *= dot / scatterPdf * scatter;
 
-			energy *= interaction.NormalDot(incident) / pdf * scatter;
-			specularBounce = sampledType.Any(FunctionType.specular);
-
+			//TODO: Path termination with Russian Roulette
 			if (!energy.PositiveRadiance()) break;
 
 			query = query.SpawnTrace(incident);
-
-			//TODO: Path termination with Russian Roulette
 		}
 
-		return radiance;
+		return result;
 	}
 
 	/// <summary>
-	/// Importance samples <paramref name="light"/> at <paramref name="interaction"/> and returns the combined radiance.
+	/// Importance samples <paramref name="light"/> at <paramref name="interaction"/> and returns the emission/radiant.
 	/// </summary>
-	static Float3 ImportanceSampleLight(in Interaction interaction, ILight light, PreparedScene scene, Arena arena)
+	static Float3 ImportanceSampleLight(ILight light, in Interaction interaction, Sample2D sample, PreparedScene scene)
 	{
-		//Sample light source
-		Float3 emission = light.Sample
-		(
-			interaction.point, arena.Distribution.Next2D(),
-			out Float3 incident, out float pdf, out float travel
-		);
+		//Sample light
+		Float3 radiant = light.Sample(interaction.point, sample, out Float3 incident, out float radiantPdf, out float travel);
 
-		if (!FastMath.Positive(pdf) || !emission.PositiveRadiance()) return Float3.zero;
+		if (!FastMath.Positive(radiantPdf) | !radiant.PositiveRadiance()) return Float3.zero;
 
-		//Evaluate bsdf at light source's directions
+		//Evaluate bsdf at the direction sampled for our light
 		ref readonly Float3 outgoing = ref interaction.outgoing;
 		Float3 scatter = interaction.bsdf.Evaluate(outgoing, incident);
 		scatter *= interaction.NormalDot(incident);
 
-		//Conditionally terminate if radiance is non-positive
+		//Conditionally terminate if radiant cannot be positive
 		if (!scatter.PositiveRadiance()) return Float3.zero;
 		var query = interaction.SpawnOcclude(incident, travel);
 		if (scene.Occlude(ref query)) return Float3.zero;
 
-		//Calculate final radiance
-		float pdfScatter = interaction.bsdf.ProbabilityDensity(outgoing, incident);
-		float weight = light is IAreaLight ? PowerHeuristic(pdf, pdfScatter) : 1f;
-		return scatter * emission * (weight / pdf);
+		//Calculate final radiant
+		if (light is not IAreaLight) return 1f / radiantPdf * scatter * radiant;
+		float scatterPdf = interaction.bsdf.ProbabilityDensity(outgoing, incident);
+		return PowerHeuristic(radiantPdf, scatterPdf) / radiantPdf * scatter * radiant;
 	}
 
 	/// <summary>
@@ -145,7 +139,7 @@ public class PathTraceWorker : PixelWorker
 		Sample2D sample = arena.Distribution.Next2D();
 		if (light is not IAreaLight area) return Float3.zero;
 
-		Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, sample, out Float3 incident, out float pdf, out FunctionType sampledType);
+		Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, sample, out Float3 incident, out float pdf, out BxDF function);
 
 		scatter *= interaction.NormalDot(incident);
 
@@ -153,7 +147,7 @@ public class PathTraceWorker : PixelWorker
 
 		float weight = 1f;
 
-		if (!sampledType.Any(FunctionType.specular))
+		if (!function.type.Any(FunctionType.specular))
 		{
 			float pdfLight = area.ProbabilityDensity(interaction.point, incident);
 			if (!FastMath.Positive(pdfLight)) return Float3.zero;

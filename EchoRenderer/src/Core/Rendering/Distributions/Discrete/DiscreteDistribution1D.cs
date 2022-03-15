@@ -25,7 +25,7 @@ public class DiscreteDistribution1D
 
 		for (int i = 0; i < length; i++)
 		{
-			Assert.IsFalse(pdfValues[i] < 0f); //PDF should not be negative
+			Assert.IsFalse(pdfValues[i] < 0f); //pdf should not be negative
 			cdfValues[i] = (float)(rolling += pdfValues[i]);
 		}
 

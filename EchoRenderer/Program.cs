@@ -41,7 +41,7 @@ public class Program
 #endif
 
 		PerformRender();
-		// System.Console.ReadKey();
+		System.Console.ReadKey();
 	}
 
 	static TiledRenderEngine renderEngine;

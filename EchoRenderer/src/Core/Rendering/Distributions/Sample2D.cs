@@ -104,12 +104,12 @@ public readonly struct Sample2D
 	/// <summary>
 	/// The probability density function for <see cref="UniformHemisphere"/>.
 	/// </summary>
-	public const float UniformHemispherePDF = 1f / Scalars.TAU;
+	public const float UniformHemispherePdf = 1f / Scalars.TAU;
 
 	/// <summary>
 	/// The probability density function for <see cref="UniformSphere"/>.
 	/// </summary>
-	public const float UniformSpherePDF = 1f / 2f / Scalars.TAU;
+	public const float UniformSpherePdf = 1f / 2f / Scalars.TAU;
 
 	/// <summary>
 	/// Maps this <see cref="Sample2D"/> to be between zero (inclusive) and <paramref name="max"/> (exclusive).
