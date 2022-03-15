@@ -82,7 +82,7 @@ public abstract class BxDF
 			Float3 outgoing = sample0.UniformHemisphere;
 			Float3 sampled = Sample(outgoing, sample1, out Float3 incident, out float pdf);
 
-			pdf *= Sample2D.UniformHemispherePDF;
+			pdf *= Sample2D.UniformHemispherePdf;
 
 			if (FastMath.Positive(pdf)) result += sampled * FastMath.Abs(CosineP(outgoing) * CosineP(incident)) / pdf;
 		}
