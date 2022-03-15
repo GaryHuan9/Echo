@@ -21,21 +21,21 @@ public class BruteForceWorker : PixelWorker
 			if (!profile.Scene.Trace(ref query)) break;
 			using var _ = arena.allocator.Begin();
 
-			Interaction interaction = profile.Scene.Interact(query);
-			interaction.shade.material.Scatter(ref interaction, arena);
+			Touch touch = profile.Scene.Interact(query);
+			touch.shade.material.Scatter(ref touch, arena);
 
-			if (interaction.bsdf == null)
+			if (touch.bsdf == null)
 			{
 				query = query.SpawnTrace();
 				continue;
 			}
 
-			Float3 scatter = interaction.bsdf.Sample(interaction.outgoing, arena.Distribution.Next2D(), out Float3 incident, out float pdf, out BxDF function);
+			Float3 scatter = touch.bsdf.Sample(touch.outgoing, arena.Distribution.Next2D(), out Float3 incident, out float pdf, out BxDF function);
 
-			radiance += energy * interaction.shade.material.Emission;
+			radiance += energy * touch.shade.material.Emission;
 
 			if (!scatter.PositiveRadiance()) energy = Float3.zero;
-			else energy *= interaction.NormalDot(incident) / pdf * scatter;
+			else energy *= touch.NormalDot(incident) / pdf * scatter;
 
 			if (!energy.PositiveRadiance()) break;
 			query = query.SpawnTrace(incident);

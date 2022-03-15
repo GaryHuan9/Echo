@@ -6,7 +6,7 @@ namespace EchoRenderer.Core.Rendering.Materials;
 
 /// <summary>
 /// Represents a completely invisible <see cref="Material"/>, which
-/// generate no <see cref="BSDF"/> for <see cref="Interaction.bsdf"/>
+/// generate no <see cref="BSDF"/> for <see cref="Touch.bsdf"/>
 /// </summary>
 public class Invisible : Material
 {
@@ -15,5 +15,5 @@ public class Invisible : Material
 	/// </summary>
 	public static readonly Invisible instance = new();
 
-	public override void Scatter(ref Interaction interaction, Arena arena) => interaction.bsdf = null;
+	public override void Scatter(ref Touch touch, Arena arena) => touch.bsdf = null;
 }
