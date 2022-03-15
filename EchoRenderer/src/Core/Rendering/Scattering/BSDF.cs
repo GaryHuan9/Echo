@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -124,11 +125,11 @@ public class BSDF
 
 	/// <summary>
 	/// Samples all <see cref="BxDF"/> that matches <paramref name="type"/>.
+	/// Outputs the main <see cref="BxDF"/> sampled to <paramref name="selected"/>.
 	/// See <see cref="BxDF.Sample"/> for more information.
 	/// </summary>
-	public Float3 Sample(in Float3 outgoingWorld, Sample2D sample,
-						 out Float3 incidentWorld, out float pdf,
-						 out FunctionType sampledType, FunctionType type = FunctionType.all)
+	public Float3 Sample(in Float3 outgoingWorld, Sample2D sample, out Float3 incidentWorld,
+						 out float pdf, out BxDF selected, FunctionType type = FunctionType.all)
 	{
 		//Uniformly select a matching function
 		ref Sample1D sampleX = ref Unsafe.AsRef(in sample.x);
@@ -136,18 +137,18 @@ public class BSDF
 
 		if (matched == 0)
 		{
-			incidentWorld = Float3.zero;
+			Utilities.Skip(out incidentWorld);
+
 			pdf = 0f;
-			sampledType = FunctionType.none;
+			selected = default;
 			return Float3.zero;
 		}
 
-		BxDF selected = functions[index];
-		sampledType = selected.type;
+		selected = functions[index];
 
 		//Sample the selected function
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Float3 value = selected.Sample(outgoing, sample, out Float3 incident, out pdf);
+		Float3 scatter = selected.Sample(outgoing, sample, out Float3 incident, out pdf);
 
 		if (!FastMath.Positive(pdf))
 		{
@@ -158,16 +159,16 @@ public class BSDF
 		incidentWorld = transform.LocalToWorld(incident);
 
 		//If there is only one function, we have finished
-		if (matched == 1) return value;
+		if (matched == 1) return scatter;
 		Assert.IsTrue(matched > 1);
 
 		//If the selected function is specular, we are also finished
 		if (selected.type.Any(FunctionType.specular))
 		{
-			Assert.AreEqual(pdf, 1f); //This is because specular functions are Dirac delta distributions
+			Assert.AreEqual(pdf, 1f); //Specular functions are Dirac delta distributions
 
 			pdf /= matched;
-			return value;
+			return scatter;
 		}
 
 		//Sample the other matching functions
@@ -180,11 +181,11 @@ public class BSDF
 			if ((function == selected) | !function.type.Fits(type)) continue;
 			pdf += function.ProbabilityDensity(outgoing, incident);
 
-			if (function.type.Any(reflect)) value += function.Evaluate(outgoing, incident);
+			if (function.type.Any(reflect)) scatter += function.Evaluate(outgoing, incident);
 		}
 
 		pdf /= matched;
-		return value;
+		return scatter;
 	}
 
 	/// <summary>

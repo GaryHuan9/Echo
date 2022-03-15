@@ -197,7 +197,7 @@ public readonly struct PreparedSphere
 			float cosWeight = incident.Dot(normal) * radius;
 			if (FastMath.AlmostZero(cosWeight)) return 0f;
 
-			return distance * distance / FastMath.Abs(cosWeight) * Sample2D.UniformSpherePDF;
+			return distance * distance / FastMath.Abs(cosWeight) * Sample2D.UniformSpherePdf;
 		}
 
 		//Since the point is not inside our sphere, the sampling is based on a cone is not uniform
