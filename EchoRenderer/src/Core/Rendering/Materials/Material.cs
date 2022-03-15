@@ -70,10 +70,10 @@ public abstract class Material
 	}
 
 	/// <summary>
-	/// Determines the scattering properties of this material at <paramref name="interaction"/>
-	/// and potentially initializes the appropriate properties in <paramref name="interaction"/>.
+	/// Determines the scattering properties of this material at <paramref name="touch"/>
+	/// and potentially initializes the appropriate properties in <paramref name="touch"/>.
 	/// </summary>
-	public abstract void Scatter(ref Interaction interaction, Arena arena);
+	public abstract void Scatter(ref Touch touch, Arena arena);
 
 	/// <summary>
 	/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
@@ -99,21 +99,21 @@ public abstract class Material
 	}
 
 	/// <summary>
-	/// Samples <paramref name="texture"/> at <paramref name="interaction"/> as a <see cref="Float4"/>.
+	/// Samples <paramref name="texture"/> at <paramref name="touch"/> as a <see cref="Float4"/>.
 	/// </summary>
-	protected static Float4 Sample(Texture texture, in Interaction interaction) => Utilities.ToFloat4(texture[interaction.shade.Texcoord]);
+	protected static Float4 Sample(Texture texture, in Touch touch) => Utilities.ToFloat4(texture[touch.shade.Texcoord]);
 
 	/// <summary>
 	/// A wrapper struct used to easily create <see cref="BSDF"/> and add <see cref="BxDF"/> to it.
 	/// </summary>
 	protected readonly struct MakeBSDF
 	{
-		public MakeBSDF(ref Interaction interaction, Arena arena)
+		public MakeBSDF(ref Touch touch, Arena arena)
 		{
 			bsdf = arena.allocator.New<BSDF>();
 
-			interaction.bsdf = bsdf;
-			bsdf.Reset(interaction);
+			touch.bsdf = bsdf;
+			bsdf.Reset(touch);
 
 			this.arena = arena;
 		}
@@ -122,7 +122,7 @@ public abstract class Material
 		readonly Arena arena;
 
 		/// <summary>
-		/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Interaction.bsdf"/> and returns it.
+		/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Touch.bsdf"/> and returns it.
 		/// </summary>
 		public T Add<T>() where T : BxDF, new()
 		{

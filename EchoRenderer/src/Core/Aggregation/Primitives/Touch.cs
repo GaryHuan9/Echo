@@ -3,24 +3,28 @@ using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Rendering.Scattering;
+using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Aggregation.Primitives;
 
-public struct Interaction
+/// <summary>
+/// A mutable struct that describes an interaction with a <see cref="PreparedScene"/> from a concluded <see cref="TraceQuery"/>.
+/// </summary>
+public struct Touch
 {
-	public Interaction(in TraceQuery query, in Float3 normal) : this
+	public Touch(in TraceQuery query, in Float3 normal) : this
 	(
 		query, new GeometryPoint(query.Position, normal)
 	) { }
 
-	public Interaction(in TraceQuery query, in Float3 normal, Material material, Float2 texcoord) : this
+	public Touch(in TraceQuery query, in Float3 normal, Material material, Float2 texcoord) : this
 	(
 		query,
 		new GeometryPoint(query.Position, normal),
 		new GeometryShade(material, texcoord, normal)
 	) { }
 
-	public Interaction(in TraceQuery query, in GeometryPoint point, in GeometryShade shade = default)
+	public Touch(in TraceQuery query, in GeometryPoint point, in GeometryShade shade = default)
 	{
 		query.AssertHit();
 		token = query.token;
@@ -38,7 +42,7 @@ public struct Interaction
 	public readonly GeometryToken token;
 
 	/// <summary>
-	/// World space outgoing direction of this <see cref="Interaction"/>.
+	/// World space outgoing direction of this <see cref="Touch"/>.
 	/// </summary>
 	public readonly Float3 outgoing;
 
@@ -53,17 +57,17 @@ public struct Interaction
 	public readonly GeometryShade shade;
 
 	/// <summary>
-	/// The <see cref="BSDF"/> of this <see cref="Interaction"/>.
+	/// The <see cref="BSDF"/> of this <see cref="Touch"/>.
 	/// </summary>
 	public BSDF bsdf;
 
 	/// <summary>
-	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> towards <paramref name="direction"/>.
+	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Touch"/> towards <paramref name="direction"/>.
 	/// </summary>
 	public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(point.position, direction), float.PositiveInfinity, token);
 
 	/// <summary>
-	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Interaction"/> with a direction directly opposite to <see cref="outgoing"/>.
+	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Touch"/> with a direction directly opposite to <see cref="outgoing"/>.
 	/// </summary>
 	public readonly TraceQuery SpawnTrace() => SpawnTrace(-outgoing);
 
@@ -83,7 +87,7 @@ public struct Interaction
 	public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(shade.Normal));
 
 	/// <summary>
-	/// Converts to the position of <paramref name="interaction"/>.
+	/// Converts to the position of <paramref name="touch"/>.
 	/// </summary>
-	public static implicit operator Float3(in Interaction interaction) => interaction.point.position;
+	public static implicit operator Float3(in Touch touch) => touch.point.position;
 }

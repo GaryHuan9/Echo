@@ -104,10 +104,10 @@ public class PreparedPack
 	}
 
 	/// <summary>
-	/// Creates a new <see cref="Interaction"/> from <paramref name="query"/>. The <see cref="Material"/> is extracted from <paramref name="swatch"/>.
+	/// Creates a new <see cref="Touch"/> from <paramref name="query"/>. The <see cref="Material"/> is extracted from <paramref name="swatch"/>.
 	/// The world to local <see cref="Float4x4"/> for the geometry found with <paramref name="query"/> should be passed through <paramref name="transform"/>.
 	/// </summary>
-	public Interaction Interact(in TraceQuery query, PreparedSwatch swatch, in Float4x4 transform)
+	public Touch Interact(in TraceQuery query, PreparedSwatch swatch, in Float4x4 transform)
 	{
 		NodeToken token = query.token.Geometry;
 		Assert.IsTrue(token.IsGeometry);
@@ -137,9 +137,9 @@ public class PreparedPack
 		normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
 		Material material = swatch[materialIndex];               //Find appropriate mapped material
 
-		//Construct interaction
-		if (material == null) return new Interaction(query, normal);
-		return new Interaction(query, normal, material, texcoord);
+		//Construct touch
+		if (material == null) return new Touch(query, normal);
+		return new Touch(query, normal, material, texcoord);
 	}
 
 	/// <summary>

@@ -97,9 +97,10 @@ public class PreparedScene
 	}
 
 	/// <summary>
-	/// Creates an <see cref="Interaction"/> from the concluded <paramref name="query"/> that was performed on this <see cref="PreparedScene"/>.
+	/// Interacts with a concluded <see cref="TraceQuery"/> that was performed
+	/// on this <see cref="PreparedScene"/> by creating a <see cref="Touch"/>.
 	/// </summary>
-	public Interaction Interact(in TraceQuery query) => rootInstance.Interact(query);
+	public Touch Interact(in TraceQuery query) => rootInstance.Interact(query);
 
 	/// <summary>
 	/// Picks a <see cref="ILight"/> in this <see cref="PreparedScene"/> and outputs its probability density function to <paramref name="pdf"/>.
