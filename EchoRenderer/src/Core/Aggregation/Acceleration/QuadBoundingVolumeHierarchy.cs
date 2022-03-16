@@ -36,7 +36,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		nodes = new Node[count];
 		nodes[0] = CreateNode(buildRoot, tokens, ref nodeIndex, out int maxDepth);
 
-		stackSize = maxDepth * 3; //NOTE: this 3 is not arbitrary!
+		stackSize = maxDepth * 3 + 1; //NOTE: this equation is not arbitrary!
 		Assert.AreEqual((long)nodeIndex, nodes.Length);
 	}
 

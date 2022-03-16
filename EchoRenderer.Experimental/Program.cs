@@ -12,12 +12,12 @@ public class Program
 		// TestUnmanaged();
 
 		// BenchmarkRunner.Run<TestSIMD>();
-		BenchmarkRunner.Run<BenchmarkBVH>();
+		// BenchmarkRunner.Run<BenchmarkBVH>();
 		// BenchmarkRunner.Run<BenchmarkTexture>();
 		// BenchmarkRunner.Run<BenchmarkRadixSort>();
 		// BenchmarkRunner.Run<BenchmarkLoop>();
 		// BenchmarkRunner.Run<AxisAlignedBoundingBoxSIMD>();
-		// BenchmarkRunner.Run<BenchmarkMath>();
+		BenchmarkRunner.Run<BenchmarkMath>();
 	}
 
 	static unsafe void TestUnmanaged()
