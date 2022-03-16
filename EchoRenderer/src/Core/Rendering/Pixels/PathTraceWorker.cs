@@ -28,85 +28,72 @@ public class PathTraceWorker : PixelWorker
 		PreparedScene scene = profile.Scene;
 		TraceQuery query = scene.camera.GetRay(uv);
 
+		if (!scene.Trace(ref query)) return scene.lights.EvaluateAmbient(query.ray.direction);
+
 		Float3 energy = Float3.one;
 		Float3 result = Float3.zero;
 
-		float scatterPdf = 1f;
-		float radiantPdf = 1f;
+		Touch touch = scene.Interact(query);
 
-		for (int bounce = 0;; bounce++)
+		ref readonly Material material = ref touch.shade.material;
+
+		//TODO: Add emissive first hit
+
+		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
 		{
-			//Exits loop if we have reached our bounce limit or we hit no geometry
-			if (bounce > profile.BounceLimit || !scene.Trace(ref query))
-			{
-				result += energy * scene.lights.EvaluateAmbient(query.ray.direction);
-				break;
-			}
-
-			//Interact with the scene at our intersection
-			Touch touch = scene.Interact(query);
-
-			//Add emission if available
-			ref readonly Material material = ref touch.shade.material;
-			if (material.IsEmissive) result += energy * material.Emission;
-
-			//Calculate material bsdf
+			//Calculate new material bsdf
 			using var _0 = arena.allocator.Begin();
 			material.Scatter(ref touch, arena);
 
-			if (touch.bsdf == null)
-			{
-				query = query.SpawnTrace();
-				--bounce;
-				continue;
-			}
-
-			//Sample the calculated bsdf
+			//Work around the generated bsdf
 			Sample2D scatterSample = arena.Distribution.Next2D();
 			Sample2D radiantSample = arena.Distribution.Next2D();
 
-			Float3 scatter = touch.bsdf.Sample(touch.outgoing, scatterSample, out Float3 incident, out scatterPdf, out BxDF function);
+			bool specular = touch.bsdf.Count(~FunctionType.specular) == 0;
 
-			if (!scatter.PositiveRadiance() || !FastMath.Positive(scatterPdf)) break;
+			Float3 scatter = touch.bsdf.Sample(touch.outgoing, scatterSample, out Float3 incident, out float scatterPdf, out _);
 
-			//Select light from scene for multiple importance sampling
-			ILight light = scene.PickLight(arena, out float lightPdf);
+			if (specular) { }
+			else
+			{
+				//Select light from scene for multiple importance sampling
+				ILight light = scene.PickLight(arena, out float lightPdf);
+				Float3 radiant = ImportanceSampleRadiant(light, touch, arena.Distribution.Next2D(), scene, out bool mis);
 
-			Float3 emission = ImportanceSampleLight(light, touch, arena.Distribution.Next2D(), scene);
+				result += 1f / lightPdf * energy * radiant;
+			}
 
-			// if (light is IAreaLight area and not GeometryLight)
-			// {
-			// 	float weight = 1f;
-			//
-			// 	if (!function.type.Any(FunctionType.specular))
-			// 	{
-			// 		float p = area.ProbabilityDensity(touch.point, incident);
-			// 		// if (!FastMath.Positive(p)) return Float3.zero;
-			// 		weight = PowerHeuristic(pdf, p);
-			// 	}
-			//
-			// 	emission += weight * area.
-			// }
+			if (!scatter.PositiveRadiance() | !FastMath.Positive(scatterPdf)) break;
 
 			float dot = touch.NormalDot(incident);
-			result += 1f / lightPdf * energy * emission;
 			energy *= dot / scatterPdf * scatter;
 
 			//TODO: Path termination with Russian Roulette
 			if (!energy.PositiveRadiance()) break;
 
 			query = query.SpawnTrace(incident);
+
+			if (scene.Trace(ref query)) { }
+
+			//Add emission if available
+			if (material.IsEmissive)
+			{
+				result += energy * material.Emission;
+			}
 		}
 
 		return result;
 	}
 
 	/// <summary>
-	/// Importance samples <paramref name="light"/> at <paramref name="touch"/> and returns the emission/radiant.
+	/// Importance samples <paramref name="light"/> at <paramref name="touch"/> and returns the sampled radiant.
+	/// If multiple importance sampling is used, <paramref name="mis"/> will be assigned to true, otherwise false.
 	/// </summary>
-	static Float3 ImportanceSampleLight(ILight light, in Touch touch, Sample2D sample, PreparedScene scene)
+	static Float3 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedScene scene, out bool mis)
 	{
-		//Sample light
+		//Importance sample light
+		mis = light is IAreaLight;
+
 		Float3 radiant = light.Sample(touch.point, sample, out Float3 incident, out float radiantPdf, out float travel);
 
 		if (!FastMath.Positive(radiantPdf) | !radiant.PositiveRadiance()) return Float3.zero;
@@ -122,9 +109,15 @@ public class PathTraceWorker : PixelWorker
 		if (scene.Occlude(ref query)) return Float3.zero;
 
 		//Calculate final radiant
-		if (light is not IAreaLight) return 1f / radiantPdf * scatter * radiant;
-		float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
-		return PowerHeuristic(radiantPdf, scatterPdf) / radiantPdf * scatter * radiant;
+		float weight = 1f / radiantPdf;
+
+		if (mis)
+		{
+			float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
+			weight *= PowerHeuristic(radiantPdf, scatterPdf);
+		}
+
+		return weight * scatter * radiant;
 	}
 
 	/// <summary>
