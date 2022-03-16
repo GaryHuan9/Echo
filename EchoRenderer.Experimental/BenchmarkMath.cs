@@ -1,9 +1,11 @@
 ﻿using System;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using CodeHelpers.Mathematics;
 
 namespace EchoRenderer.Experimental;
 
+[SimpleJob(RuntimeMoniker.Net60)]
 public class BenchmarkMath
 {
 	public BenchmarkMath()
@@ -87,20 +89,18 @@ public class BenchmarkMath
 		return result;
 	}
 
-	static float FRSqrt(float value)
+	[Benchmark]
+	public float EstimateReciprocal()
 	{
-		float x2 = value * 0.5F;
-		int i = Scalars.SingleToInt32Bits(value);
-		i = 0x5f3759df - (i >> 1);
-		float y = Scalars.Int32ToSingleBits(i);
-		y *= 1.5f - x2 * y * y;
-		y *= 1.5f - x2 * y * y;
+		float result = 0f;
 
-		return y;
+		foreach (float value in array) result += MathF.ReciprocalEstimate(value);
+
+		return result;
 	}
 
 	[Benchmark]
-	public float InverseSqrt()
+	public float ReciprocalSqrt()
 	{
 		float result = 0f;
 
@@ -110,16 +110,48 @@ public class BenchmarkMath
 	}
 
 	[Benchmark]
-	public float FastInverseSqrt()
+	public float FastReciprocalSqrt()
 	{
 		float result = 0f;
 
 		foreach (float value in array) result += FRSqrt(value);
 
 		return result;
+
+		static float FRSqrt(float value)
+		{
+			float x2 = value * 0.5F;
+			int i = Scalars.SingleToInt32Bits(value);
+			i = 0x5F3759DF - (i >> 1);
+			float y = Scalars.Int32ToSingleBits(i);
+			y *= 1.5f - x2 * y * y;
+			y *= 1.5f - x2 * y * y;
+
+			return y;
+		}
 	}
 
-	// [Benchmark]
+	[Benchmark]
+	public float EstimateReciprocalSqrt()
+	{
+		float result = 0f;
+
+		foreach (float value in array) result += MathF.ReciprocalSqrtEstimate(value);
+
+		return result;
+	}
+
+	[Benchmark]
+	public float Conversion()
+	{
+		float result = 0f;
+
+		foreach (float value in array) result += (int)value; //NOTE: there are two conversions here!
+
+		return result;
+	}
+
+	[Benchmark]
 	public float SqrtD()
 	{
 		float result = 0f;
@@ -139,7 +171,7 @@ public class BenchmarkMath
 		return result;
 	}
 
-	// [Benchmark]
+	[Benchmark]
 	public float Sin()
 	{
 		float result = 0f;
@@ -149,7 +181,7 @@ public class BenchmarkMath
 		return result;
 	}
 
-	// [Benchmark]
+	[Benchmark]
 	public float Tan()
 	{
 		float result = 0f;
@@ -159,7 +191,7 @@ public class BenchmarkMath
 		return result;
 	}
 
-	// [Benchmark]
+	[Benchmark]
 	public float Acos()
 	{
 		float result = 0f;
@@ -169,7 +201,7 @@ public class BenchmarkMath
 		return result;
 	}
 
-	// [Benchmark]
+	[Benchmark]
 	public float Exp()
 	{
 		float result = 0f;
@@ -179,7 +211,7 @@ public class BenchmarkMath
 		return result;
 	}
 
-	// [Benchmark]
+	[Benchmark]
 	public float Log()
 	{
 		float result = 0f;
@@ -189,7 +221,7 @@ public class BenchmarkMath
 		return result;
 	}
 
-	// [Benchmark]
+	[Benchmark]
 	public float Log2()
 	{
 		float result = 0f;
