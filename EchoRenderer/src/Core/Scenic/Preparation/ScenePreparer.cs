@@ -16,42 +16,24 @@ public class ScenePreparer
 	{
 		this.profile = profile;
 		root = CreateNode(scene, null);
+
+		depth = Prepare() + 1;
+		instancedCounts = root.InstancedCounts;
+		uniqueCounts = root.UniqueCounts;
 	}
 
 	public readonly ScenePrepareProfile profile;
-	public readonly Node root; //This field can be made private once a better monitoring system is introduced
+
+	public readonly int depth;
+	public readonly GeometryCounts instancedCounts;
+	public readonly GeometryCounts uniqueCounts;
+
+	readonly Node root;
 
 	readonly Dictionary<EntityPack, Node> entityPacks = new();
 	readonly HashSet<Material> preparedMaterials = new();
 
 	public Dictionary<EntityPack, Node>.KeyCollection UniquePacks => entityPacks.Keys;
-
-	/// <summary>
-	/// Prepares the entire scene.
-	/// </summary>
-	public void Prepare()
-	{
-		int depth = PrepareOne(this, root) - 1;
-
-		if (depth > EntityPack.MaxLayer) throw new Exception($"Invalid scene! Instancing layer exceeding {nameof(EntityPack.MaxLayer)}!");
-
-		static int PrepareOne(ScenePreparer preparer, Node node)
-		{
-			int maxDepth = 0;
-
-			//NOTE: we prepare the children first before we prepare this current
-			//node to make sure that all children are prepared before the parent
-
-			foreach (Node child in node)
-			{
-				int depth = PrepareOne(preparer, child);
-				maxDepth = Math.Max(maxDepth, depth);
-			}
-
-			node.CreatePack(preparer);
-			return maxDepth + 1;
-		}
-	}
 
 	/// <summary>
 	/// Retrieves the <see cref="PreparedPack"/> for <paramref name="pack"/> and outputs its corresponding
@@ -76,6 +58,34 @@ public class ScenePreparer
 	public void PrepareMaterial(Material material)
 	{
 		if (preparedMaterials.Add(material)) material.Prepare();
+	}
+
+	/// <summary>
+	/// Prepares the entire scene.
+	/// </summary>
+	int Prepare()
+	{
+		int builtDepth = PrepareOne(this, root) - 1;
+		if (builtDepth > EntityPack.MaxLayer) throw new Exception($"Invalid scene! Instancing layer exceeding {nameof(EntityPack.MaxLayer)}!");
+
+		return builtDepth;
+
+		static int PrepareOne(ScenePreparer preparer, Node node)
+		{
+			int maxDepth = 0;
+
+			//NOTE: we prepare the children first before we prepare this current
+			//node to make sure that all children are prepared before the parent
+
+			foreach (Node child in node)
+			{
+				int depth = PrepareOne(preparer, child);
+				maxDepth = Math.Max(maxDepth, depth);
+			}
+
+			node.CreatePack(preparer);
+			return maxDepth + 1;
+		}
 	}
 
 	Node CreateNode(EntityPack pack, Node parent)
