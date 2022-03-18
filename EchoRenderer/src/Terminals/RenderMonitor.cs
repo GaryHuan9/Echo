@@ -85,13 +85,13 @@ public class RenderMonitor : Terminal.Section
 	void DisplayMonitoredStatus()
 	{
 		TiledRenderProfile profile = Engine.CurrentProfile;
-		ScenePreparer preparer = profile.Scene.preparer;
+		PreparedScene.Info info = profile.Scene.info;
 		TextureGrid buffer = profile.RenderBuffer;
 
 		//Display configuration information
 		int totalPixel = buffer.size.Product;
-		GeometryCounts instanced = preparer.root.InstancedCounts;
-		GeometryCounts unique = preparer.root.UniqueCounts;
+		GeometryCounts instanced = info.instancedCounts;
+		GeometryCounts unique = info.uniqueCounts;
 
 		builders.SetLine(0, $" / Worker {profile.WorkerSize} / Resolution {buffer.size} / Total Pixel {totalPixel:N0} / Total Tile {Engine.TotalTileCount:N0} / Method {profile.Method} / Pixel Sample {profile.PixelSample:N0} / Adaptive Sample {profile.AdaptiveSample:N0} / Tile Size {profile.TileSize:N0} /");
 		builders.SetLine(1, $" / Instanced Triangle {instanced.triangle:N0} / Instanced Sphere {instanced.sphere:N0} / Instanced Pack {instanced.instance:N0} / Unique Triangle {unique.triangle:N0} / Unique Sphere {unique.sphere:N0} / Unique Pack {unique.instance:N0} / Material {0:N0} /"); //preparer.materials.Count

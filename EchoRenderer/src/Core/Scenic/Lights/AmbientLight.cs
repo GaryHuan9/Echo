@@ -59,7 +59,7 @@ public class AmbientLight : AreaLightSource
 		worldToLocal = localToWorld.Inverse;
 
 		//Calculate power
-		float radius = scene.boundingSphere.radius;
+		float radius = scene.info.boundingSphere.radius;
 		float multiplier = Scalars.PI * radius * radius;
 		_power = multiplier * PackedMath.GetLuminance(Texture.Average);
 	}
