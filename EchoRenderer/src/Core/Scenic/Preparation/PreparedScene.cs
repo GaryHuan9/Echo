@@ -12,6 +12,7 @@ using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Distributions.Discrete;
 using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Lights;
 
@@ -48,24 +49,16 @@ public class PreparedScene
 			if (child.Scale.MinComponent <= 0f) throw new Exception($"Cannot have non-positive scales! '{child.Scale}'");
 		}
 
-		preparer = new ScenePreparer(scene, profile);
-		preparer.Prepare();
-
-		//Create root instance
+		var preparer = new ScenePreparer(scene, profile);
 		rootInstance = new PreparedInstanceRoot(preparer, scene);
-		rootInstance.CalculateBounds(out aabb, out boundingSphere);
 
-		//Prepare lights
 		lights = new Lights(this, lightsList);
-		DebugHelper.Log("Prepared scene");
+		info = new Info(this, preparer);
 	}
 
-	public readonly ScenePreparer preparer; //NOTE: this field should be removed in the future, it is only here now for temporary access to scene preparation data
 	public readonly Camera camera;
 	public readonly Lights lights;
-
-	public readonly AxisAlignedBoundingBox aabb;
-	public readonly BoundingSphere boundingSphere;
+	public readonly Info info;
 
 	long _traceCount;
 	long _occludeCount;
@@ -105,26 +98,20 @@ public class PreparedScene
 	/// <summary>
 	/// Picks a <see cref="ILight"/> in this <see cref="PreparedScene"/> and outputs its probability density function to <paramref name="pdf"/>.
 	/// </summary>
-	[SkipLocalsInit]
-	public ILight PickLight(Arena arena, out float pdf)
+	public ILight PickLight(ReadOnlySpan<Sample1D> samples, Allocator allocator, out float pdf)
 	{
-		Sample1D sample = arena.Distribution.Next1D();
-		var source = lights.PickLightSource(sample, out pdf);
-
+		var source = lights.PickLightSource(samples[0], out pdf);
 		if (source != null) return source;
 
 		//Choose emissive geometry as light
-		Span<Sample1D> samples = stackalloc Sample1D[EntityPack.MaxLayer];
-		foreach (ref var one in samples) one = arena.Distribution.Next1D();
+		var light = allocator.New<GeometryLight>();
 
-		var light = arena.allocator.New<GeometryLight>();
-
-		GeometryToken token = rootInstance.Find(samples, out var instance, out float tokenPDF);
+		GeometryToken token = rootInstance.Find(samples[1..], out var instance, out float tokenPdf);
 		Material material = instance.GetMaterial(instance.pack.GetMaterialIndex(token.Geometry));
 
 		light.Reset(this, token, material);
 
-		pdf *= tokenPDF;
+		pdf *= tokenPdf;
 		return light;
 	}
 
@@ -165,6 +152,25 @@ public class PreparedScene
 	{
 		Interlocked.Exchange(ref _traceCount, 0);
 		Interlocked.Exchange(ref _occludeCount, 0);
+	}
+
+	public record Info
+	{
+		public Info(PreparedScene scene, ScenePreparer preparer)
+		{
+			scene.rootInstance.CalculateBounds(out aabb, out boundingSphere);
+
+			depth = preparer.depth;
+			instancedCounts = preparer.instancedCounts;
+			uniqueCounts = preparer.uniqueCounts;
+		}
+
+		public readonly AxisAlignedBoundingBox aabb;
+		public readonly BoundingSphere boundingSphere;
+
+		public readonly int depth;
+		public readonly GeometryCounts instancedCounts;
+		public readonly GeometryCounts uniqueCounts;
 	}
 
 	public class Lights

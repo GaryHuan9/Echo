@@ -58,21 +58,15 @@ public class BSDF
 	}
 
 	/// <summary>
-	/// Returns the total number of <see cref="BxDF"/> included int his <see cref="BSDF"/>.
-	/// </summary>
-	public int Count() => count;
-
-	/// <summary>
 	/// Counts how many <see cref="BxDF"/> in this <see cref="BSDF"/> fits the attributes outlined by <paramref name="type"/>.
 	/// </summary>
 	public int Count(FunctionType type)
 	{
+		if (FunctionType.all.Fits(type)) return count;
+
 		int result = 0;
 
-		for (int i = 0; i < count; i++)
-		{
-			result += functions[i].type.Fits(type) ? 0 : 1;
-		}
+		for (int i = 0; i < count; i++) result += functions[i].type.Fits(type) ? 0 : 1;
 
 		return result;
 	}
