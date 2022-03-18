@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
@@ -9,6 +10,7 @@ using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Distributions.Continuous;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Rendering.Scattering;
+using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Lights;
 using EchoRenderer.Core.Scenic.Preparation;
 
@@ -23,21 +25,26 @@ public class PathTraceWorker : PixelWorker
 	//(so for the same reason the word 'radiance' is also wrong) we just chose 'radiant' because it has the
 	//same length as the word 'scatter'.
 
+	[SkipLocalsInit]
 	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
 	{
 		PreparedScene scene = profile.Scene;
 		TraceQuery query = scene.camera.GetRay(uv);
 
-		if (!scene.Trace(ref query)) return scene.lights.EvaluateAmbient(query.ray.direction);
+		//Quick exit with ambient light if no intersection
+		if (!scene.Trace(ref query)) return EvaluateAllAmbient();
 
 		Float3 energy = Float3.one;
 		Float3 result = Float3.zero;
 
 		Touch touch = scene.Interact(query);
 
-		ref readonly Material material = ref touch.shade.material;
+		//Allocate memory for samples used for lights
+		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth];
 
-		//TODO: Add emissive first hit
+		//Add emission for first hit if available
+		ref readonly Material material = ref touch.shade.material;
+		if (material.IsEmissive) result = material.Emission;
 
 		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
 		{
@@ -45,44 +52,88 @@ public class PathTraceWorker : PixelWorker
 			using var _0 = arena.allocator.Begin();
 			material.Scatter(ref touch, arena);
 
-			//Work around the generated bsdf
+			//Retrieve samples from distribution
 			Sample2D scatterSample = arena.Distribution.Next2D();
 			Sample2D radiantSample = arena.Distribution.Next2D();
 
-			bool specular = touch.bsdf.Count(~FunctionType.specular) == 0;
+			foreach (ref var sample in lightSamples) sample = arena.Distribution.Next1D();
 
-			Float3 scatter = touch.bsdf.Sample(touch.outgoing, scatterSample, out Float3 incident, out float scatterPdf, out _);
+			//Sample the bsdf
+			FunctionType type = TryExcludeSpecular(touch.bsdf);
 
-			if (specular) { }
+			Float3 scatter = touch.bsdf.Sample
+			(
+				touch.outgoing, scatterSample, out Float3 incident,
+				out float scatterPdf, out BxDF function, type
+			);
+
+			if (!FastMath.Positive(scatterPdf) | !scatter.PositiveRadiance()) break;
+
+			//Decide whether to use multiple importance sampling (mis)
+			if (function.type.Any(FunctionType.specular))
+			{
+				//No mis with specular bsdf
+				AdvancePath(out bool exhausted, out bool intersected);
+				if (exhausted) break; //Exhausted the path, exit
+
+				//Evaluate ambient light if no intersection
+				if (!intersected)
+				{
+					Contribute(EvaluateAllAmbient());
+					break;
+				}
+
+				//Continue path with new touch
+				touch = scene.Interact(query);
+
+				//Add emission if available
+				if (material.IsEmissive) Contribute(material.Emission);
+			}
 			else
 			{
 				//Select light from scene for multiple importance sampling
-				ILight light = scene.PickLight(arena, out float lightPdf);
-				Float3 radiant = ImportanceSampleRadiant(light, touch, arena.Distribution.Next2D(), scene, out bool mis);
+				ILight light = scene.PickLight(lightSamples, arena.allocator, out float lightPdf);
+				Float3 radiant = ImportanceSampleRadiant(light, touch, radiantSample, scene, out bool mis);
+
+				//TODO:
 
 				result += 1f / lightPdf * energy * radiant;
+
+				//Add emission if available
+				if (material.IsEmissive)
+				{
+					result += energy * material.Emission;
+				}
 			}
 
-			if (!scatter.PositiveRadiance() | !FastMath.Positive(scatterPdf)) break;
-
-			float dot = touch.NormalDot(incident);
-			energy *= dot / scatterPdf * scatter;
-
-			//TODO: Path termination with Russian Roulette
-			if (!energy.PositiveRadiance()) break;
-
-			query = query.SpawnTrace(incident);
-
-			if (scene.Trace(ref query)) { }
-
-			//Add emission if available
-			if (material.IsEmissive)
+			void AdvancePath(out bool exhausted, out bool intersected)
 			{
-				result += energy * material.Emission;
+				energy *= touch.NormalDot(incident) / scatterPdf * scatter;
+
+				//TODO: Path termination with Russian Roulette
+
+				if (energy.PositiveRadiance())
+				{
+					exhausted = false;
+
+					query = query.SpawnTrace(incident);
+					intersected = scene.Trace(ref query);
+				}
+				else
+				{
+					exhausted = true;
+					intersected = false;
+				}
 			}
 		}
 
 		return result;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		Float3 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(query.ray.direction);
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void Contribute(in Float3 value) => result += energy * value;
 	}
 
 	/// <summary>
@@ -178,4 +229,15 @@ public class PathTraceWorker : PixelWorker
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
+
+	/// <summary>
+	/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.specular"/>.
+	/// </summary>
+	static FunctionType TryExcludeSpecular(BSDF bsdf)
+	{
+		int count = bsdf.Count(FunctionType.specular);
+		int total = bsdf.Count(FunctionType.all);
+
+		return count == 0 || count == total ? FunctionType.all : ~FunctionType.specular;
+	}
 }
