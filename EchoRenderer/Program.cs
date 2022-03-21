@@ -9,7 +9,7 @@ using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.PostProcess;
 using EchoRenderer.Core.PostProcess.ToneMappers;
 using EchoRenderer.Core.Rendering.Engines;
-using EchoRenderer.Core.Rendering.Pixels;
+using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Examples;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -53,7 +53,7 @@ public class Program
 
 	static readonly TiledRenderProfile pathTraceFastProfile = new()
 	{
-		Method = new PathTraceWorker(),
+		Method = new PathTracedEvaluator(),
 		TilePattern = new CheckerboardPattern(),
 		PixelSample = 16,
 		AdaptiveSample = 80
@@ -61,7 +61,7 @@ public class Program
 
 	static readonly TiledRenderProfile pathTraceProfile = new()
 	{
-		Method = new PathTraceWorker(),
+		Method = new PathTracedEvaluator(),
 		TilePattern = new CheckerboardPattern(),
 		PixelSample = 40,
 		AdaptiveSample = 400
@@ -69,7 +69,7 @@ public class Program
 
 	static readonly TiledRenderProfile pathTraceExportProfile = new()
 	{
-		Method = new PathTraceWorker(),
+		Method = new PathTracedEvaluator(),
 		TilePattern = new CheckerboardPattern(),
 		PixelSample = 64,
 		AdaptiveSample = 1600
@@ -77,7 +77,7 @@ public class Program
 
 	static readonly TiledRenderProfile albedoProfile = new()
 	{
-		Method = new AlbedoPixelWorker(),
+		Method = new AlbedoEvaluator(),
 		TilePattern = new ScrambledPattern(),
 		PixelSample = 12,
 		AdaptiveSample = 80
@@ -85,7 +85,7 @@ public class Program
 
 	static readonly TiledRenderProfile aggregatorQualityProfile = new()
 	{
-		Method = new AggregatorQualityWorker(),
+		Method = new AggregatorQualityEvaluator(),
 		TilePattern = new OrderedPattern(),
 		PixelSample = 1,
 		AdaptiveSample = 0
@@ -107,7 +107,7 @@ public class Program
 
 		renderProfile = new TiledRenderProfile
 		{
-			Method = new PathTraceWorker(),
+			Method = new PathTracedEvaluator(),
 			TilePattern = new CheckerboardPattern(),
 			// WorkerSize = 1,
 			PixelSample = 64,
@@ -143,13 +143,13 @@ public class Program
 
 		using var postProcess = new PostProcessingEngine(buffer);
 
-		if (renderProfile.Method is AggregatorQualityWorker) //Creates different post processing workers based on render method
+		if (renderProfile.Method is AggregatorQualityEvaluator) //Creates different post processing workers based on render method
 		{
 			postProcess.AddWorker(new AggregatorQualityVisualizer(postProcess)); //Only used for aggregator quality testing
 		}
 		else if (false) //Enable or disable post processing
 		{
-			if (renderProfile.Method is PathTraceWorker)
+			if (renderProfile.Method is PathTracedEvaluator)
 			{
 				// postProcess.AddWorker(new DenoiseOidn(postProcess));
 			}

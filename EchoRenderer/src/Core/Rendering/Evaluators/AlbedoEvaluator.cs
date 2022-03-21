@@ -1,21 +1,20 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Scenic.Preparation;
 
-namespace EchoRenderer.Core.Rendering.Pixels;
+namespace EchoRenderer.Core.Rendering.Evaluators;
 
-public class AlbedoPixelWorker : PixelWorker
+public class AlbedoEvaluator : Evaluator
 {
-	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
+	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
-		PreparedScene scene = profile.Scene;
-		IRandom random = arena.Distribution.Prng;
-
-		TraceQuery query = scene.camera.GetRay(uv, random);
+		var scene = profile.Scene;
+		TraceQuery query = ray;
 
 		//Trace for intersection
 		while (scene.Trace(ref query))
@@ -23,7 +22,8 @@ public class AlbedoPixelWorker : PixelWorker
 			Touch touch = scene.Interact(query);
 
 			Float3 albedo = Utilities.ToFloat3(touch.shade.material.Albedo[touch.shade.Texcoord]);
-			/*if (!HitPassThrough(query, albedo, touch.outgoing))*/ return albedo; //Return intersected albedo color
+			/*if (!HitPassThrough(query, albedo, touch.outgoing))*/
+			return albedo; //Return intersected albedo color
 
 			query = query.SpawnTrace(query.ray.direction);
 		}
