@@ -8,6 +8,16 @@ namespace EchoRenderer.Common.Mathematics;
 public static class PackedMath
 {
 	/// <summary>
+	/// Returns the absolute value of <paramref name="value"/> by setting the most significant bit of it to zero.
+	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static Vector128<float> Abs(in Vector128<float> value)
+	{
+		var signMask = Vector128.Create(0x7FFFFFFF);
+		return Sse.And(value, signMask.AsSingle());
+	}
+
+	/// <summary>
 	/// Linearly interpolates between <paramref name="left"/> and <paramref name="right"/> based on <paramref name="time"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

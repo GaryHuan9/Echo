@@ -10,7 +10,6 @@ using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Distributions.Continuous;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Rendering.Scattering;
-using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Lights;
 using EchoRenderer.Core.Scenic.Preparation;
 
@@ -42,14 +41,14 @@ public class PathTraceWorker : PixelWorker
 		//Allocate memory for samples used for lights
 		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth];
 
-		//Add emission for first hit if available
+		//Add emission for first hit, if available
 		ref readonly Material material = ref touch.shade.material;
 		if (material.IsEmissive) result = material.Emission;
 
 		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
 		{
 			//Calculate new material bsdf
-			using var _0 = arena.allocator.Begin();
+			using var _ = arena.allocator.Begin();
 			material.Scatter(ref touch, arena);
 
 			//Retrieve samples from distribution
@@ -67,16 +66,17 @@ public class PathTraceWorker : PixelWorker
 				out float scatterPdf, out BxDF function, type
 			);
 
+			scatter *= touch.NormalDot(incident);
+
 			if (!FastMath.Positive(scatterPdf) | !scatter.PositiveRadiance()) break;
 
-			//Decide whether to use multiple importance sampling (mis)
+			//Decide whether to use multiple importance sampling (MIS)
 			if (function.type.Any(FunctionType.specular))
 			{
-				//No mis with specular bsdf
-				AdvancePath(out bool exhausted, out bool intersected);
-				if (exhausted) break; //Exhausted the path, exit
+				//No MIS with specular bsdf
+				if (AdvancePath(out bool intersected)) break; //Path energy exhausted
 
-				//Evaluate ambient light if no intersection
+				//Add ambient light and exit if no intersection
 				if (!intersected)
 				{
 					Contribute(EvaluateAllAmbient());
@@ -86,44 +86,59 @@ public class PathTraceWorker : PixelWorker
 				//Continue path with new touch
 				touch = scene.Interact(query);
 
-				//Add emission if available
+				//Try add emission
 				if (material.IsEmissive) Contribute(material.Emission);
 			}
 			else
 			{
-				//Select light from scene for multiple importance sampling
+				//Select light from scene for MIS
 				ILight light = scene.PickLight(lightSamples, arena.allocator, out float lightPdf);
-				Float3 radiant = ImportanceSampleRadiant(light, touch, radiantSample, scene, out bool mis);
 
-				//TODO:
+				float weight = 1f / lightPdf;
+				var area = light as IAreaLight;
 
-				result += 1f / lightPdf * energy * radiant;
+				Contribute(weight * ImportanceSampleRadiant(light, touch, radiantSample, scene, out bool mis));
 
-				//Add emission if available
-				if (material.IsEmissive)
+				if (mis)
 				{
-					result += energy * material.Emission;
+					Assert.IsNotNull(area);
+					weight *= PowerHeuristic(scatterPdf, area!.ProbabilityDensity(touch.point, incident));
 				}
+
+				if (AdvancePath(out bool intersected)) break; //Path energy exhausted
+
+				//Add ambient light and exit if no intersection
+				if (!intersected)
+				{
+					if (area is AmbientLight ambient) Contribute(weight * ambient.Evaluate(query.ray.direction));
+
+					break;
+				}
+
+				//Continue path with new touch
+				touch = scene.Interact(query);
+
+				//Try add emission with MIS
+				if (material.IsEmissive && area is GeometryLight geometry && geometry.Token == touch.token) Contribute(weight * material.Emission);
 			}
 
-			void AdvancePath(out bool exhausted, out bool intersected)
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			bool AdvancePath(out bool intersected)
 			{
-				energy *= touch.NormalDot(incident) / scatterPdf * scatter;
+				energy *= 1f / scatterPdf * scatter;
 
 				//TODO: Path termination with Russian Roulette
 
 				if (energy.PositiveRadiance())
 				{
-					exhausted = false;
-
 					query = query.SpawnTrace(incident);
 					intersected = scene.Trace(ref query);
+
+					return false;
 				}
-				else
-				{
-					exhausted = true;
-					intersected = false;
-				}
+
+				intersected = false;
+				return true;
 			}
 		}
 
@@ -160,15 +175,11 @@ public class PathTraceWorker : PixelWorker
 		if (scene.Occlude(ref query)) return Float3.zero;
 
 		//Calculate final radiant
-		float weight = 1f / radiantPdf;
+		radiant *= 1f / radiantPdf;
+		if (!mis) return scatter * radiant;
 
-		if (mis)
-		{
-			float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
-			weight *= PowerHeuristic(radiantPdf, scatterPdf);
-		}
-
-		return weight * scatter * radiant;
+		float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
+		return PowerHeuristic(radiantPdf, scatterPdf) * scatter * radiant;
 	}
 
 	/// <summary>
