@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using BenchmarkDotNet.Attributes;
 
-namespace EchoRenderer.Experimental;
+namespace EchoRenderer.Experimental.Benchmarks;
 
-public class BenchmarkLoop
+public class Loops
 {
-	public BenchmarkLoop()
+	public Loops()
 	{
 		Random random = new Random(42);
 		Span<byte> bytes = stackalloc byte[8];

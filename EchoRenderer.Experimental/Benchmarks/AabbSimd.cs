@@ -1,19 +1,16 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Acceleration;
 
-namespace EchoRenderer.Experimental;
+namespace EchoRenderer.Experimental.Benchmarks;
 
-// [DisassemblyDiagnoser(10)]
-[SimpleJob(RuntimeMoniker.NetCoreApp50)]
-public class AxisAlignedBoundingBoxSIMD
+public class AabbSimd
 {
-	public AxisAlignedBoundingBoxSIMD()
+	public AabbSimd()
 	{
 		Random random = new Random(42);
 
