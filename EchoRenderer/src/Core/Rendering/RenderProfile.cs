@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers;
 using EchoRenderer.Common;
-using EchoRenderer.Core.Rendering.Pixels;
+using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Scenic.Preparation;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -21,7 +21,7 @@ public abstract record RenderProfile : IProfile
 	/// <summary>
 	/// The fundamental rendering method used for each pixel.
 	/// </summary>
-	public PixelWorker Method { get; init; }
+	public Evaluator Method { get; init; }
 
 	/// <summary>
 	/// The destination <see cref="RenderBuffer"/> to render onto.

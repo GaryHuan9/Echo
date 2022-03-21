@@ -3,7 +3,7 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Core.Rendering.Engines;
-using EchoRenderer.Core.Rendering.Pixels;
+using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Examples;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -27,7 +27,7 @@ public class SceneViewUI : AreaUI
 
 		Profile = new ProgressiveRenderProfile
 		{
-			Method = new BruteForceWorker(),
+			Method = new BruteForcedEvaluator(),
 			EpochSample = 2,
 			EpochLength = 24,
 			AdaptiveSample = 35

@@ -5,18 +5,16 @@ using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Distributions.Continuous;
 using EchoRenderer.Core.Scenic.Preparation;
 
-namespace EchoRenderer.Core.Rendering.Pixels;
+namespace EchoRenderer.Core.Rendering.Evaluators;
 
-public class AggregatorQualityWorker : PixelWorker
+public class AggregatorQualityEvaluator : Evaluator
 {
 	long totalCost;
 	long totalSample;
 
-	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
+	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
-		PreparedScene scene = profile.Scene;
-		Ray ray = scene.camera.GetRay(uv);
-
+		var scene = profile.Scene;
 		int cost = scene.TraceCost(ray);
 
 		long currentCost = Interlocked.Add(ref totalCost, cost);
@@ -30,6 +28,6 @@ public class AggregatorQualityWorker : PixelWorker
 		Interlocked.Exchange(ref totalCost, 0);
 		Interlocked.Exchange(ref totalSample, 0);
 
-		return new UniformDistribution(profile.TotalSample);
+		return base.CreateDistribution(profile);
 	}
 }

@@ -7,7 +7,7 @@ using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Core.Texturing.Grid;
 
-namespace EchoRenderer.Core.Rendering.Pixels;
+namespace EchoRenderer.Core.Rendering.Evaluators;
 
 /// <summary>
 /// Mutable struct storing the accumulating render information for one pixel
@@ -51,7 +51,7 @@ public struct RenderPixel
 	/// Accumulates the sample <paramref name="value"/> to pixel.
 	/// Returns false if the input was rejected because it was invalid.
 	/// </summary>
-	public bool Accumulate(in PixelWorker.Sample value)
+	public bool Accumulate(in Evaluator.Sample value)
 	{
 		if (value.IsNaN) return false; //NaN gate
 
