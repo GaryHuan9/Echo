@@ -6,7 +6,7 @@ using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
 using EchoRenderer.Common.Memory;
-using EchoRenderer.Core.Rendering.Pixels;
+using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Texturing.Grid;
 using ThreadState = System.Threading.ThreadState;
 

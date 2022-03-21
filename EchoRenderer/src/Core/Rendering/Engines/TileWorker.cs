@@ -3,8 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
-using EchoRenderer.Core.Rendering.Pixels;
+using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.Rendering.Engines;
@@ -23,7 +24,7 @@ public class TileWorker : IDisposable
 		this.profile = profile;
 
 		renderBuffer = profile.RenderBuffer;
-		pixelWorker = profile.Method;
+		evaluator = profile.Method;
 
 		//Allocate thread
 		worker = new Thread(WorkThread)
@@ -34,7 +35,7 @@ public class TileWorker : IDisposable
 
 		//Create arena for thread. NOTE that HashCode returns a different value every runtime!
 		int seed = HashCode.Combine(Environment.TickCount64, id, size);
-		arena = pixelWorker.CreateArena(profile, (uint)seed);
+		arena = evaluator.CreateArena(profile, (uint)seed);
 	}
 
 	readonly int id;
@@ -42,7 +43,7 @@ public class TileWorker : IDisposable
 	readonly TiledRenderProfile profile;
 
 	readonly RenderBuffer renderBuffer;
-	readonly PixelWorker pixelWorker;
+	readonly Evaluator evaluator;
 
 	int _renderOffsetX;
 	int _renderOffsetY;
@@ -159,10 +160,11 @@ public class TileWorker : IDisposable
 
 				//Sample radiance
 				Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.half;
-				var sample = pixelWorker.Render(uv.ReplaceY(uv.y * aspect), profile, arena);
+				Ray ray = profile.Scene.camera.GetRay(uv.ReplaceY(uv.y * aspect));
+				Float3 radiance = evaluator.Evaluate(ray, profile, arena);
 
 				//Write to pixel
-				bool successful = pixel.Accumulate(sample);
+				bool successful = pixel.Accumulate(radiance);
 				Interlocked.Increment(ref _completedSample);
 
 				if (!successful) Interlocked.Increment(ref _rejectedSample);
