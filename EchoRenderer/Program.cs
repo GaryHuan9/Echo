@@ -1,9 +1,11 @@
 ﻿using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Threads;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.PostProcess;
 using EchoRenderer.Core.PostProcess.ToneMappers;
 using EchoRenderer.Core.Rendering.Engines;
@@ -25,6 +27,7 @@ public class Program
 		// SimplexNoise();
 		// FontTesting();
 		// PostProcessTesting();
+		// CompareImages();
 
 		// return;
 
@@ -217,6 +220,30 @@ public class Program
 		engine.WaitForProcess();
 
 		buffer.Save("post process.png");
+	}
+
+	static unsafe void CompareImages(string path0 = "render.png", string path1 = "ref.png")
+	{
+		ArrayGrid image0 = TextureGrid.Load(path0);
+		ArrayGrid image1 = TextureGrid.Load(path1);
+
+		if (image0.size != image1.size) throw new System.Exception("Cannot compare two images with different sizes!");
+
+		image0.ForEach
+		(
+			position =>
+			{
+				var value0 = image0[position];
+				var value1 = image1[position];
+
+				var result = PackedMath.Abs(Sse.Subtract(value0, value1));
+
+				((float*)&result)[3] = 1f;
+				image0[position] = result;
+			}
+		);
+
+		image0.Save("difference.png");
 	}
 
 	[Command]

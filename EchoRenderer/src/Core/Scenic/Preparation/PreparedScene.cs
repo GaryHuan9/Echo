@@ -52,8 +52,8 @@ public class PreparedScene
 		var preparer = new ScenePreparer(scene, profile);
 		rootInstance = new PreparedInstanceRoot(preparer, scene);
 
-		lights = new Lights(this, lightsList);
 		info = new Info(this, preparer);
+		lights = new Lights(this, lightsList);
 	}
 
 	public readonly Camera camera;
