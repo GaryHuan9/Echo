@@ -14,12 +14,12 @@ using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Preparation;
 using EchoRenderer.InOut;
 
-namespace EchoRenderer.Experimental;
+namespace EchoRenderer.Experimental.Benchmarks;
 
 [SimpleJob(RuntimeMoniker.Net60)]
-public class BenchmarkBVH
+public class Aggregators
 {
-	public BenchmarkBVH()
+	public Aggregators()
 	{
 		Scene scene = new Scene();
 

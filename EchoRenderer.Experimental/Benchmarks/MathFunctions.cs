@@ -3,12 +3,12 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using CodeHelpers.Mathematics;
 
-namespace EchoRenderer.Experimental;
+namespace EchoRenderer.Experimental.Benchmarks;
 
 [SimpleJob(RuntimeMoniker.Net60)]
-public class BenchmarkMath
+public class MathFunctions
 {
-	public BenchmarkMath()
+	public MathFunctions()
 	{
 		array = new float[1024 * 1024];
 		Random random = new Random(42);
