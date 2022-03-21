@@ -30,8 +30,8 @@ public class SingleBunny : StandardScene
 		children.Add(new SphereEntity { Material = material1, Radius = 1f, Position = new Float3(-3f, 1f, -2f) });
 		// children.Add(new PlaneEntity { Material = material1, Size = Float2.one * 2f, Position = new Float3(4f, 1f, -2f), Rotation = new Float3(0f, 0f, 90f) });
 
-		// children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
-		// children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
+		children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
+		children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
 	}
 }
 
