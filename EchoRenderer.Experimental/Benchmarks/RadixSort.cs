@@ -4,11 +4,11 @@ using System.Linq;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Collections;
 
-namespace EchoRenderer.Experimental;
+namespace EchoRenderer.Experimental.Benchmarks;
 
-public class BenchmarkRadixSort
+public class RadixSort
 {
-	public BenchmarkRadixSort()
+	public RadixSort()
 	{
 		sources = new float[100][];
 
@@ -30,7 +30,6 @@ public class BenchmarkRadixSort
 	// | SeeSharpSort | 8.119 s 
 	// |    RadixSort | 7.515 s 
 
-
 	[IterationSetup]
 	public void Setup()
 	{
@@ -39,7 +38,7 @@ public class BenchmarkRadixSort
 	}
 
 	[Benchmark]
-	public void SeeSharpSort()
+	public void SeeSharp()
 	{
 		for (int i = 0; i < targets.Length; i++)
 		{
@@ -48,7 +47,7 @@ public class BenchmarkRadixSort
 	}
 
 	[Benchmark]
-	public void RadixSort()
+	public void Radix()
 	{
 		for (int i = 0; i < targets.Length; i++)
 		{

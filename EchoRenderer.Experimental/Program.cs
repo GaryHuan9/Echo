@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Running;
 using CodeHelpers.Diagnostics;
+using EchoRenderer.Experimental.Benchmarks;
 
 namespace EchoRenderer.Experimental;
 
@@ -11,13 +12,13 @@ public class Program
 	{
 		// TestUnmanaged();
 
-		// BenchmarkRunner.Run<TestSIMD>();
+		BenchmarkRunner.Run<PackedFloats>();
 		// BenchmarkRunner.Run<BenchmarkBVH>();
 		// BenchmarkRunner.Run<BenchmarkTexture>();
 		// BenchmarkRunner.Run<BenchmarkRadixSort>();
 		// BenchmarkRunner.Run<BenchmarkLoop>();
 		// BenchmarkRunner.Run<AxisAlignedBoundingBoxSIMD>();
-		BenchmarkRunner.Run<BenchmarkMath>();
+		// BenchmarkRunner.Run<BenchmarkMath>();
 	}
 
 	static unsafe void TestUnmanaged()
