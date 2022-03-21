@@ -1,21 +1,22 @@
 ﻿using CodeHelpers.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Distributions.Continuous;
 
-namespace EchoRenderer.Core.Rendering.Pixels;
+namespace EchoRenderer.Core.Rendering.Evaluators;
 
-public abstract class PixelWorker
+public abstract class Evaluator
 {
 	protected ContinuousDistribution SourceDistribution { get; private set; }
 
 	/// <summary>
-	/// Invoked once before a new rendering process begin on this <see cref="PixelWorker"/>.
+	/// Invoked once before a new rendering process begin on this <see cref="Evaluator"/>.
 	/// </summary>
 	public void Prepare(RenderProfile profile) => SourceDistribution = CreateDistribution(profile);
 
 	/// <summary>
-	/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Render"/>.
+	/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Evaluate"/>.
 	/// NOTE: This method will be invoked after <see cref="Prepare"/>, and it will be invoked once on every rendering thread.
 	/// <param name="seed">Can be null or a unique number that varies between each thread.</param>
 	/// </summary>
@@ -30,25 +31,19 @@ public abstract class PixelWorker
 	}
 
 	/// <summary>
-	/// Renders a <see cref="Sample"/> at <paramref name="uv"/>.
+	/// Evaluates <see cref="RenderProfile.Scene"/> through <paramref name="ray"/> using <paramref name="profile"/> and <paramref name="arena"/>.
 	/// </summary>
-	/// <param name="uv">
-	///     The screen percentage point to work on. X should be normalized and between -0.5 to 0.5;
-	///     Y should have the same scale as X and it would depend on the aspect ratio.
-	/// </param>
-	/// <param name="profile">The <see cref="RenderProfile"/> to be used.</param>
-	/// <param name="arena">The <see cref="Arena"/> to be used.</param>
-	public abstract Sample Render(Float2 uv, RenderProfile profile, Arena arena);
+	public abstract Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena);
 
 	/// <summary>
-	/// Invoked once before a new rendering process begins on this <see cref="PixelWorker"/>.
-	/// Can be used to prepare the worker for future invocations to <see cref="Render"/>.
+	/// Invoked once before a new rendering process begins on this <see cref="Evaluator"/>.
+	/// Can be used to prepare the worker for future invocations to <see cref="Evaluate"/>.
 	/// Should create and return a source <see cref="ContinuousDistribution"/> that will be used.
 	/// </summary>
 	protected virtual ContinuousDistribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
 
 	/// <summary>
-	/// Creates a new <see cref="Arena"/> to be used for this <see cref="PixelWorker"/>.
+	/// Creates a new <see cref="Arena"/> to be used for this <see cref="Evaluator"/>.
 	/// Override this method if a different <see cref="Arena"/> child type is needed.
 	/// </summary>
 	protected virtual Arena CreateArena(RenderProfile profile) => new();

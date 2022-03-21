@@ -4,6 +4,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
@@ -13,9 +14,9 @@ using EchoRenderer.Core.Rendering.Scattering;
 using EchoRenderer.Core.Scenic.Lights;
 using EchoRenderer.Core.Scenic.Preparation;
 
-namespace EchoRenderer.Core.Rendering.Pixels;
+namespace EchoRenderer.Core.Rendering.Evaluators;
 
-public class PathTraceWorker : PixelWorker
+public class PathTracedEvaluator : Evaluator
 {
 	protected override ContinuousDistribution CreateDistribution(RenderProfile profile) => new StratifiedDistribution(profile.TotalSample);
 
@@ -25,10 +26,10 @@ public class PathTraceWorker : PixelWorker
 	//same length as the word 'scatter'.
 
 	[SkipLocalsInit]
-	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
+	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
-		PreparedScene scene = profile.Scene;
-		TraceQuery query = scene.camera.GetRay(uv);
+		var scene = profile.Scene;
+		TraceQuery query = ray;
 
 		//Quick exit with ambient light if no intersection
 		if (!scene.Trace(ref query)) return EvaluateAllAmbient();
@@ -39,7 +40,7 @@ public class PathTraceWorker : PixelWorker
 		Touch touch = scene.Interact(query);
 
 		//Allocate memory for samples used for lights
-		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth];
+		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
 
 		//Add emission for first hit, if available
 		ref readonly Material material = ref touch.shade.material;
@@ -180,58 +181,6 @@ public class PathTraceWorker : PixelWorker
 
 		float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
 		return PowerHeuristic(radiantPdf, scatterPdf) * scatter * radiant;
-	}
-
-	/// <summary>
-	/// Importance samples <paramref name="touch.bsdf"/> with <paramref name="light"/> and returns the combined radiance.
-	/// </summary>
-	static Float3 ImportanceSampleBSDF(in Touch touch, ILight light, PreparedScene scene, Arena arena)
-	{
-		//TODO: sort this mess
-
-		Sample2D sample = arena.Distribution.Next2D();
-		if (light is not IAreaLight area) return Float3.zero;
-
-		Float3 scatter = touch.bsdf.Sample(touch.outgoing, sample, out Float3 incident, out float pdf, out BxDF function);
-
-		scatter *= touch.NormalDot(incident);
-
-		if (!scatter.PositiveRadiance() || !FastMath.Positive(pdf)) return Float3.zero;
-
-		float weight = 1f;
-
-		if (!function.type.Any(FunctionType.specular))
-		{
-			float pdfLight = area.ProbabilityDensity(touch.point, incident);
-			if (!FastMath.Positive(pdfLight)) return Float3.zero;
-			weight = PowerHeuristic(pdf, pdfLight);
-		}
-
-		TraceQuery query = touch.SpawnTrace(incident);
-
-		Float3 emission = Float3.zero;
-
-		if (scene.Trace(ref query))
-		{
-			//Evaluate light at intersection if area light is our source
-
-			if (area is GeometryLight geometry)
-			{
-				Touch other = scene.Interact(query);
-
-				if (other.token == geometry.Token)
-				{
-					emission = geometry.Emission;
-				}
-			}
-		}
-		else if (area is AmbientLight ambient)
-		{
-			emission = ambient.Evaluate(incident);
-		}
-
-		if (!emission.PositiveRadiance()) return Float3.zero;
-		return weight / pdf * scatter * emission;
 	}
 
 	/// <summary>

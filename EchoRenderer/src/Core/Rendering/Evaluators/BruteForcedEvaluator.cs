@@ -1,20 +1,21 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Scattering;
 using EchoRenderer.Core.Scenic.Lights;
 
-namespace EchoRenderer.Core.Rendering.Pixels;
+namespace EchoRenderer.Core.Rendering.Evaluators;
 
-public class BruteForceWorker : PixelWorker
+public class BruteForcedEvaluator : Evaluator
 {
-	public override Sample Render(Float2 uv, RenderProfile profile, Arena arena)
+	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
 		Float3 energy = Float3.one;
 		Float3 radiance = Float3.zero;
 
-		TraceQuery query = profile.Scene.camera.GetRay(uv, arena.Distribution.Prng);
+		TraceQuery query = ray;
 
 		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
 		{
