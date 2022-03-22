@@ -8,12 +8,12 @@ namespace EchoRenderer.Core.Rendering.Evaluators;
 
 public abstract class Evaluator
 {
-	protected ContinuousDistribution SourceDistribution { get; private set; }
+	ContinuousDistribution sourceDistribution;
 
 	/// <summary>
 	/// Invoked once before a new rendering process begin on this <see cref="Evaluator"/>.
 	/// </summary>
-	public void Prepare(RenderProfile profile) => SourceDistribution = CreateDistribution(profile);
+	public void Prepare(RenderProfile profile) => sourceDistribution = CreateDistribution(profile);
 
 	/// <summary>
 	/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Evaluate"/>.
@@ -24,7 +24,7 @@ public abstract class Evaluator
 	{
 		Arena arena = CreateArena(profile);
 
-		arena.Distribution = SourceDistribution.Replicate();
+		arena.Distribution = sourceDistribution.Replicate();
 		arena.Distribution.Prng = CreateRandom(seed);
 
 		return arena;
@@ -37,7 +37,7 @@ public abstract class Evaluator
 
 	/// <summary>
 	/// Invoked once before a new rendering process begins on this <see cref="Evaluator"/>.
-	/// Can be used to prepare the worker for future invocations to <see cref="Evaluate"/>.
+	/// Can be used to prepare the evaluator for future invocations to <see cref="Evaluate"/>.
 	/// Should create and return a source <see cref="ContinuousDistribution"/> that will be used.
 	/// </summary>
 	protected virtual ContinuousDistribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
