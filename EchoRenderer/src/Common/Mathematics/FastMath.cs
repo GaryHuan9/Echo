@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -12,6 +11,10 @@ namespace EchoRenderer.Common.Mathematics;
 public static class FastMath
 {
 	static FastMath() => Assert.AreEqual(Scalars.SingleToUInt32Bits(OneMinusEpsilon), Scalars.SingleToUInt32Bits(1f) - 1u);
+
+	//NOTE: Some naming conversions used in this project:
+	//R = reciprocal (eg: three = 3f -> threeR = 1f / three = 1f / 3f)
+	//2 = the square (eg: three = 3f -> three2 = three * three = 9f)
 
 	/// <summary>
 	/// This is the largest IEEE-754 float32 value that is smaller than 1f (ie. 1f - 1ulp).
@@ -73,12 +76,19 @@ public static class FastMath
 	public static float SqrtR0(float value) => value <= 0f ? float.PositiveInfinity : 1f / MathF.Sqrt(value);
 
 	/// <summary>
+	/// Returns one minus <paramref name="value"/> squared using just one FMA instruction.
+	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
+	/// </summary>
+	[MethodImpl(Options)]
+	public static float OneMinus2(float value) => FMA(value, -value, 1f);
+
+	/// <summary>
 	/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1.
 	/// The value returned is always positive, unlike regular trigonometric functions.
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float Identity(float value) => Sqrt0(FMA(value, -value, 1f));
+	public static float Identity(float value) => Sqrt0(OneMinus2(value));
 
 	/// <summary>
 	/// Computes and returns <paramref name="value"/> * <paramref name="multiplier"/> + <paramref name="adder"/> in one instruction.
@@ -92,7 +102,7 @@ public static class FastMath
 	/// NOTE: this is only a shortcut for <see cref="FMA"/> and uses it internally to perform the operation.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float FSA(float value, float adder) => FMA(value, value, adder);
+	public static float F2A(float value, float adder) => FMA(value, value, adder);
 
 	/// <summary>
 	/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
