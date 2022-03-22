@@ -77,7 +77,7 @@ public readonly struct PreparedSphere
 		float radius2 = radius * radius;
 		float center = -offset.Dot(ray.direction);
 
-		float extend2 = FastMath.FSA(center, radius2 - offset.SquaredMagnitude);
+		float extend2 = FastMath.F2A(center, radius2 - offset.SquaredMagnitude);
 
 		if (extend2 < 0f) return Infinity;
 
@@ -114,7 +114,7 @@ public readonly struct PreparedSphere
 		Float3 offset = ray.origin - position;
 		float center = -offset.Dot(ray.direction);
 
-		float squared = FastMath.FSA(center, FastMath.FSA(radius, -offset.SquaredMagnitude));
+		float squared = FastMath.F2A(center, FastMath.F2A(radius, -offset.SquaredMagnitude));
 
 		if (squared < 0f) return false;
 
@@ -188,7 +188,7 @@ public readonly struct PreparedSphere
 		{
 			//Find intersection with sphere when is inside
 			float projected = offset.Dot(incident);
-			float extend2 = FastMath.FSA(projected, radius2 - length2);
+			float extend2 = FastMath.F2A(projected, radius2 - length2);
 
 			//Find the un-normalized normal at our point of intersection
 			float distance = FastMath.Sqrt0(extend2) - projected; //The distance to our point on the sphere

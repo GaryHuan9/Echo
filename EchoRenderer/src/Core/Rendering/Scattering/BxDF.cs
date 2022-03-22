@@ -8,9 +8,9 @@ namespace EchoRenderer.Core.Rendering.Scattering;
 
 /// <summary>
 /// The base class for either a bidirectional reflectance or transmittance distribution function.
-/// NOTE: all directions in this class is in local space, meaning <see cref="Float3.forward"/> is
-/// the surface normal at our point of interest, and incident and outgoing directions should also
-/// point away from that point.
+/// NOTE: unless specifically indicated, all directions in this class is in local space, meaning
+/// <see cref="Float3.forward"/> is the surface normal at our point of interest, and incident and
+/// outgoing directions point away from that point.
 /// </summary>
 public abstract class BxDF
 {
@@ -19,14 +19,14 @@ public abstract class BxDF
 	public readonly FunctionType type;
 
 	/// <summary>
-	/// Evaluates and returns the value of this <see cref="BxDF"/> from two pairs of
-	/// local directions, <paramref name="incident"/> and <paramref name="outgoing"/>.
+	/// Evaluates and returns the value of this <see cref="BxDF"/> from two pairs of <see cref="BxDF"/> local directions,
+	/// the leaving <paramref name="incident"/> direction and the returning <paramref name="outgoing"/> direction.
 	/// </summary>
 	public abstract Float3 Evaluate(in Float3 outgoing, in Float3 incident);
 
 	/// <summary>
-	/// Returns the probability density function (pdf) for a given pair of local
-	/// <paramref name="outgoing"/> and <paramref name="incident"/> directions.
+	/// Returns the probability density function (pdf) value from two pairs of <see cref="BxDF"/> local directions,
+	/// the leaving <paramref name="incident"/> direction and the returning <paramref name="outgoing"/> direction.
 	/// </summary>
 	public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
@@ -35,8 +35,10 @@ public abstract class BxDF
 	}
 
 	/// <summary>
-	/// Selects a local output <paramref name="incident"/> direction from <paramref name="sample"/>, evaluates the value of
-	/// this <see cref="BxDF"/> from the two local directions, and outputs the probability density to <paramref name="pdf"/>.
+	/// Samples a leaving <paramref name="incident"/> local direction based on <paramref name="sample"/>, outputs
+	/// the probability density function (pdf) value of doing so to <paramref name="pdf"/>, and returns the value
+	/// of this <see cref="BxDF"/> evaluated from the returning local <paramref name="outgoing"/> direction to the
+	/// <paramref name="incident"/> direction that we just sampled.
 	/// </summary>
 	public virtual Float3 Sample(in Float3 outgoing, Sample2D sample, out Float3 incident, out float pdf)
 	{
@@ -91,6 +93,11 @@ public abstract class BxDF
 	}
 
 	/// <summary>
+	/// Returns the local surface normal that lies in the same hemisphere as <paramref name="direction"/>.
+	/// </summary>
+	public static Float3 Normal(in Float3 direction) => direction.z < 0f ? Float3.backward : Float3.forward;
+
+	/// <summary>
 	/// Returns the cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
 	public static float CosineP(in Float3 direction) => direction.z;
@@ -108,7 +115,7 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns the sine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float SineP2(in Float3 direction) => FastMath.Max0(1f - CosineP2(direction));
+	public static float SineP2(in Float3 direction) => FastMath.OneMinus2(direction.z);
 
 	/// <summary>
 	/// Returns the sine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
