@@ -1,5 +1,6 @@
 ﻿using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -35,7 +36,7 @@ public class BruteForcedEvaluator : Evaluator
 
 			radiance += energy * touch.shade.material.Emission;
 
-			if (!scatter.PositiveRadiance()) energy = Float3.zero;
+			if (!FastMath.Positive(pdf) | !scatter.PositiveRadiance()) energy = Float3.zero;
 			else energy *= touch.NormalDot(incident) / pdf * scatter;
 
 			if (!energy.PositiveRadiance()) break;
