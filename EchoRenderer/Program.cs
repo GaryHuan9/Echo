@@ -111,7 +111,7 @@ public class Program
 			TilePattern = new CheckerboardPattern(),
 			// WorkerSize = 1,
 			PixelSample = 64,
-			// AdaptiveSample = 400,
+			AdaptiveSample = 4000,
 			BounceLimit = 128
 		};
 

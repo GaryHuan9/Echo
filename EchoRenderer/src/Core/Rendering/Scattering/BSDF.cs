@@ -126,8 +126,7 @@ public class BSDF
 						 out float pdf, out BxDF selected, FunctionType type = FunctionType.all)
 	{
 		//Uniformly select a matching function
-		ref Sample1D sampleX = ref Unsafe.AsRef(in sample.x);
-		int matched = FindFunction(type, ref sampleX, out int index);
+		int matched = FindFunction(type, ref Unsafe.AsRef(in sample.x), out int index);
 
 		if (matched == 0)
 		{
