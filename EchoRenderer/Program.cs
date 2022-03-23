@@ -229,19 +229,16 @@ public class Program
 
 		if (image0.size != image1.size) throw new System.Exception("Cannot compare two images with different sizes!");
 
-		image0.ForEach
-		(
-			position =>
-			{
-				var value0 = image0[position];
-				var value1 = image1[position];
+		image0.ForEach(position =>
+		{
+			var value0 = image0[position];
+			var value1 = image1[position];
 
-				var result = PackedMath.Abs(Sse.Subtract(value0, value1));
+			var result = PackedMath.Abs(Sse.Subtract(value0, value1));
 
-				((float*)&result)[3] = 1f;
-				image0[position] = result;
-			}
-		);
+			((float*)&result)[3] = 1f;
+			image0[position] = result;
+		});
 
 		image0.Save("difference.png");
 	}
