@@ -1,5 +1,8 @@
+using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Threading;
+using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Randomization;
@@ -45,6 +48,7 @@ public interface IDirectionalTexture
 	/// </summary>
 	float ProbabilityDensity(in Float3 incident) => Sample2D.UniformSpherePdf;
 }
+
 public static class IDirectionalTextureExtensions
 {
 	/// <summary>
@@ -52,17 +56,37 @@ public static class IDirectionalTextureExtensions
 	/// </summary>
 	public static Vector128<float> ConvergeAverage(this IDirectionalTexture texture, int sampleCount = 1000000)
 	{
-		//TODO: optimize with multithreading / Parallel.For
+		using ThreadLocal<SumPackage> sums = new(SumPackage.factory, true);
 
-		IRandom random = new SquirrelRandom();
+		//Sample random directions
+		Parallel.For(0, sampleCount, _ =>
+		{
+			// ReSharper disable once AccessToDisposedClosure
+			SumPackage package = sums.Value;
+
+			var direction = package.random.NextOnSphere();
+			package.Sum += texture.Evaluate(direction);
+		});
+
+		//Total the sums for individual threads
 		Summation sum = Summation.Zero;
 
-		for (int i = 0; i < sampleCount; i++)
-		{
-			var direction = random.NextOnSphere();
-			sum += texture.Evaluate(direction);
-		}
+		foreach (SumPackage package in sums.Values) sum += package.Sum;
 
 		return Sse.Divide(sum.Result, Vector128.Create((float)sampleCount));
+	}
+
+	class SumPackage
+	{
+		SumPackage()
+		{
+			random = new SquirrelRandom();
+			Sum = Summation.Zero;
+		}
+
+		public readonly IRandom random;
+		public Summation Sum { get; set; }
+
+		public static readonly Func<SumPackage> factory = () => new SumPackage();
 	}
 }
