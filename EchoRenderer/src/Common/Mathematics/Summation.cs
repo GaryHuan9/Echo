@@ -21,6 +21,15 @@ public readonly struct Summation
 		error = Sse.Subtract(Sse.Subtract(total, summation.total), delta);
 	}
 
+	Summation(in Summation summation, in Summation value)
+	{
+		error = Sse.Add(summation.error, value.error);
+		var delta = Sse.Subtract(value.total, error);
+
+		total = Sse.Add(summation.total, delta);
+		error = Sse.Subtract(Sse.Subtract(total, summation.total), delta);
+	}
+
 	readonly Vector128<float> total;
 	readonly Vector128<float> error;
 
@@ -38,4 +47,7 @@ public readonly struct Summation
 	/// Adds one more <paramref name="value"/> to this <paramref name="summation"/>.
 	/// </summary>
 	public static Summation operator +(in Summation summation, in Vector128<float> value) => new(summation, value);
+
+	/// <inheritdoc cref="op_Addition(in Summation, in Vector128{float})"/>
+	public static Summation operator +(in Summation summation, in Summation value) => new(summation, value);
 }
