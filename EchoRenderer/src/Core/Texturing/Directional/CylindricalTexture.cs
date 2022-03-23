@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -34,65 +35,70 @@ public class CylindricalTexture : IDirectionalTexture
 
 	public void Prepare()
 	{
+		//Fetch needed resources
 		Texture texture = Texture;
-		Int2 size = texture.ImportanceSamplingResolution;
+		Int2 size = texture.DiscreteResolution;
 
 		Assert.IsTrue(size > Int2.zero);
 		Float2 sizeR = 1f / size;
 
-		//Fetch temporary buffers to calculate weights
-		using var _0 = Pool<float>.Fetch(size.Product, out Span<float> weights);
-		using var _1 = Pool<float>.Fetch(size.x + 1, out Span<float> pastWeights);
+		using var _ = Pool<float>.Fetch(size.Product, out View<float> weights);
 
-		SpanFill<float> fill = weights.AsFill();
+		//Prepare for summing the weighted value of the texture
+		var total = Summation.Zero;
+		var locker = new object();
 
-		//Get the first luminance weights of discrete points when v = 0
-		for (int x = 0; x <= size.x; x++) pastWeights[x] = GetWeight(new Float2(x, 0f));
-
-		//Fill actual weights by summing the four weights of each pixel corner
-		//At the same time, also calculate the weighted sum of the texture
-
-		var sum = Summation.Zero;
-		double sinTotal = 0d; //Total of the sin multiplier
-
-		for (int y = 1; y <= size.y; y++)
+		//Loop through all horizontal rows
+		Parallel.For(0, size.y, () => Summation.Zero, (y, _, sum) =>
 		{
-			float sin = MathF.Sin(Scalars.PI * (y - 0.5f) * sizeR.y);
-			float previous = GetWeight(new Float2(0f, y));
+			//Calculate sin weights and create fill for this horizontal row
+			float sin0 = MathF.Sin(Scalars.PI * (y + 0f) * sizeR.y);
+			float sin1 = MathF.Sin(Scalars.PI * (y + 1f) * sizeR.y);
+			SpanFill<float> fill = weights.AsSpan(y * size.x, size.x);
 
-			sinTotal = Math.FusedMultiplyAdd(sin, size.x, sinTotal);
+			//Loop horizontally, caching the sum of the two previous x colors
+			var previous = Grab(0);
 
 			for (int x = 1; x <= size.x; x++)
 			{
-				var position = new Float2(x, y);
+				var current = Grab(x);
 
-				//Calculate and assign weight
-				ref float bottomLeft = ref pastWeights[x - 1];
-				float current = GetWeight(position);
-				float weight = current + previous + bottomLeft + pastWeights[x];
+				//Calculate the average of the four corners
+				var average = Sse.Add(previous, current);
+				average = Sse.Multiply(average, Vector128.Create(1f / 4f));
 
-				fill.Add(weight * sin);
-
-				bottomLeft = previous;
+				//Accumulate horizontally
 				previous = current;
-
-				//Add to sum with sin weight
-				Vector128<float> value = Get(position - Float2.half);
-				sum += Sse.Multiply(value, Vector128.Create(sin));
+				fill.Add(PackedMath.GetLuminance(average));
+				sum += average;
 			}
-		}
 
-		//Construct distribution and calculate average from sum
-		Vector128<float> sinTotalRV = Vector128.Create((float)(1d / sinTotal));
+			Assert.IsTrue(fill.IsFull);
 
+			return sum;
+
+			//Returns the sum of the values at (x, y) and (x, y + 1)
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			Vector128<float> Grab(int x)
+			{
+				var lower = texture[new Float2(x, y + 0f) * sizeR];
+				var upper = texture[new Float2(x, y + 1f) * sizeR];
+
+				lower = Sse.Multiply(lower, Vector128.Create(sin0));
+				upper = Sse.Multiply(upper, Vector128.Create(sin1));
+
+				return Sse.Add(lower, upper);
+			}
+		}, sum =>
+		{
+			//Accumulate vertically
+			lock (locker) total += sum;
+		});
+
+		//Construct distribution and calculate average from total sum
+		float weight = 2f / Scalars.PI / size.Product;
 		distribution = new DiscreteDistribution2D(weights, size.x);
-		Average = Sse.Multiply(sum.Result, sinTotalRV);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Vector128<float> Get(in Float2 position) => texture[position * sizeR];
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		float GetWeight(in Float2 position) => PackedMath.GetLuminance(Get(position));
+		Average = Sse.Multiply(total.Result, Vector128.Create(weight));
 	}
 
 	/// <inheritdoc/>

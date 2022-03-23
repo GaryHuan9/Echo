@@ -18,7 +18,7 @@ public class Pure : Texture, IDirectionalTexture
 
 	readonly Vector128<float> color;
 
-	public override Int2 ImportanceSamplingResolution => Int2.one;
+	public override Int2 DiscreteResolution => Int2.one;
 
 	Vector128<float> IDirectionalTexture.Average => color;
 

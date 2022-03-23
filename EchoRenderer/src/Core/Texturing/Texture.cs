@@ -28,9 +28,9 @@ public abstract class Texture
 	public Tint Tint { get; set; } = Tint.identity;
 
 	/// <summary>
-	/// The resolution that should be used if we are performing importance sampling on this <see cref="Texture"/>.
+	/// The resolution that should be used if discrete sampling is to be performed on this <see cref="Texture"/>.
 	/// </summary>
-	public virtual Int2 ImportanceSamplingResolution => (Int2)512;
+	public virtual Int2 DiscreteResolution => (Int2)512;
 
 	public static readonly Pure white = new(Float3.one);
 	public static readonly Pure black = new(Float3.zero);
