@@ -34,13 +34,11 @@ public abstract class PostProcessingWorker
 		if (Aborted) return;
 		buffer ??= renderBuffer;
 
-		Parallel.ForEach(buffer.size.Loop(), WorkPixel);
-
-		void WorkPixel(Int2 position, ParallelLoopState state)
+		Parallel.ForEach(buffer.size.Loop(), (position, state) =>
 		{
 			if (Aborted) state.Break();
 			else passAction(position);
-		}
+		});
 	}
 
 	/// <summary>
@@ -56,13 +54,11 @@ public abstract class PostProcessingWorker
 		if (Aborted) return;
 		buffer ??= renderBuffer;
 
-		Parallel.For(0, buffer.size.x, WorkPixel);
-
-		void WorkPixel(int horizontal, ParallelLoopState state)
+		Parallel.For(0, buffer.size.x, (horizontal, state) =>
 		{
 			if (Aborted) state.Break();
 			else passAction(horizontal);
-		}
+		});
 	}
 
 	/// <summary>
@@ -73,13 +69,11 @@ public abstract class PostProcessingWorker
 		if (Aborted) return;
 		buffer ??= renderBuffer;
 
-		Parallel.For(0, buffer.size.y, WorkPixel);
-
-		void WorkPixel(int vertical, ParallelLoopState state)
+		Parallel.For(0, buffer.size.y, (vertical, state) =>
 		{
 			if (Aborted) state.Break();
 			else passAction(vertical);
-		}
+		});
 	}
 
 	/// <summary>
@@ -116,7 +110,7 @@ public abstract class PostProcessingWorker
 		return handle;
 	}
 
-	public delegate void PassAction(Int2          position);
+	public delegate void PassAction(Int2 position);
 	public delegate void PassActionHorizontal(int horizontal);
-	public delegate void PassActionVertical(int   vertical);
+	public delegate void PassActionVertical(int vertical);
 }
