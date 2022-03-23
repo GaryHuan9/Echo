@@ -29,7 +29,7 @@ public readonly struct View<T>
 	/// <summary>
 	/// Returns a reference to the specified element of the View.
 	/// </summary>
-	public ref T this[int index] => ref array[AssertShift(index)];
+	public ref T this[int index] => ref Unsafe.Add(ref array[0], AssertShift(index));
 
 	/// <summary>
 	///	Returns a value which indicates whether this view is empty.

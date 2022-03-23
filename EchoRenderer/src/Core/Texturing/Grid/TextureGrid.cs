@@ -70,7 +70,7 @@ public abstract partial class TextureGrid : Texture
 		}
 	}
 
-	public override Int2 ImportanceSamplingResolution => size;
+	public override Int2 DiscreteResolution => size;
 
 	/// <summary>
 	/// Gets and sets the <see cref="Vector128{T}"/> pixel data at a specific <paramref name="position"/>.
