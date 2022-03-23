@@ -23,7 +23,7 @@ public class DiscreteDistribution2D
 		Assert.AreEqual(function.Length, size.Product);
 
 		slices = new DiscreteDistribution1D[size.y];
-		using var _ = Pool<float>.Fetch(size.y, out Span<float> sums);
+		using var _ = Pool<float>.Fetch(size.y, out var sums);
 
 		//Create single dimensional functions and collect integrals
 		for (int y = 0; y < size.y; y++)

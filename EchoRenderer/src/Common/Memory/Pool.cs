@@ -11,26 +11,26 @@ public static class Pool<T>
 	static ArrayPool<T> Internal => ArrayPool<T>.Shared;
 
 	/// <summary>
-	/// Receives and outputs a pooled <paramref name="span"/> with <paramref name="length"/>, which should be
+	/// Receives and outputs a pooled <paramref name="view"/> with <paramref name="length"/>, which should be
 	/// promptly caught via 'using statements' on the returned <see cref="ReleaseHandle"/> of this method.
-	/// NOTE: the output <paramref name="span"/> is not guaranteed to be all empty!
+	/// NOTE: the output <paramref name="view"/> is not guaranteed to be all empty!
 	/// </summary>
-	public static ReleaseHandle Fetch(int length, out Span<T> span)
+	public static ReleaseHandle Fetch(int length, out View<T> view)
 	{
 		T[] array = Internal.Rent(length);
-		span = array.AsSpan(0, length);
+		view = array.AsView(0, length);
 		return new ReleaseHandle(array);
 	}
 
 	/// <summary>
-	/// Receives and outputs a pooled <paramref name="span"/> with <paramref name="length"/>, which
+	/// Receives and outputs a pooled <paramref name="view"/> with <paramref name="length"/>, which
 	/// should be promptly returned via 'using statements' on the returned result of this method.
-	/// NOTE: the output <paramref name="span"/> is all empty.
+	/// NOTE: the output <paramref name="view"/> is all empty.
 	/// </summary>
-	public static ReleaseHandle FetchClean(int length, out Span<T> span)
+	public static ReleaseHandle FetchClean(int length, out View<T> view)
 	{
-		var handle = Fetch(length, out span);
-		span.Clear();
+		var handle = Fetch(length, out view);
+		view.AsSpan().Clear();
 		return handle;
 	}
 
