@@ -16,6 +16,7 @@ using EchoRenderer.Core.Scenic.Preparation;
 using EchoRenderer.Core.Texturing.Generative;
 using EchoRenderer.Core.Texturing.Grid;
 using EchoRenderer.InOut;
+using EchoRenderer.Scenic.Examples;
 using EchoRenderer.Terminals;
 
 namespace EchoRenderer;
@@ -102,16 +103,15 @@ public class Program
 		};
 
 		RenderBuffer buffer = new RenderBuffer(resolutions[1]); //Selects resolution and create buffer
-		TiledRenderProfile renderProfile;                       //Selects or creates render profile
-		Scene scene = new SingleBunny();                        //Selects or creates scene
+		Scene scene = new SingleBunny();                        //Selects and creates scene
 
-		renderProfile = new TiledRenderProfile
+		var renderProfile = new TiledRenderProfile
 		{
 			Method = new PathTracedEvaluator(),
 			TilePattern = new CheckerboardPattern(),
 			// WorkerSize = 1,
 			PixelSample = 64,
-			AdaptiveSample = 4000,
+			//AdaptiveSample = 400,
 			BounceLimit = 128
 		};
 

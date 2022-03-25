@@ -28,128 +28,94 @@ public class PathTracedEvaluator : Evaluator
 	[SkipLocalsInit]
 	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
+		Allocator allocator = arena.allocator;
+		var distribution = arena.Distribution;
+
 		var scene = profile.Scene;
-		TraceQuery query = ray;
+		var path = new Path(ray);
+
+		using var _ = new Allocator.ReleaseHandle(allocator);
 
 		//Quick exit with ambient light if no intersection
-		if (!scene.Trace(ref query)) return EvaluateAllAmbient();
-
-		Float3 energy = Float3.one;
-		Float3 result = Float3.zero;
-
-		Touch touch = scene.Interact(query);
+		if (!path.FindNext(scene, allocator)) return EvaluateAllAmbient();
 
 		//Allocate memory for samples used for lights
 		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
 
 		//Add emission for first hit, if available
-		ref readonly Material material = ref touch.shade.material;
-		if (material.IsEmissive) result = material.Emission;
+		path.Contribute(path.Material.Emission);
 
-		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
+		for (int depth = 0; depth < profile.BounceLimit; depth++)
 		{
-			//Calculate new material bsdf
-			using var _ = arena.allocator.Begin();
-			material.Scatter(ref touch, arena);
-
 			//Retrieve samples from distribution
-			Sample2D scatterSample = arena.Distribution.Next2D();
-			Sample2D radiantSample = arena.Distribution.Next2D();
+			Sample2D scatterSample = distribution.Next2D();
+			Sample2D radiantSample = distribution.Next2D();
 
-			foreach (ref var sample in lightSamples) sample = arena.Distribution.Next1D();
+			foreach (ref var sample in lightSamples) sample = distribution.Next1D();
 
 			//Sample the bsdf
-			FunctionType type = TryExcludeSpecular(touch.bsdf);
+			var bounce = new Bounce(path.touch, scatterSample);
+			if (bounce.IsZero) break;
 
-			Float3 scatter = touch.bsdf.Sample
-			(
-				touch.outgoing, scatterSample, out Float3 incident,
-				out float scatterPdf, out BxDF function, type
-			);
-
-			scatter *= touch.NormalDot(incident);
-
-			if (!FastMath.Positive(scatterPdf) | !scatter.PositiveRadiance()) break;
-
-			//Decide whether to use multiple importance sampling (MIS)
-			if (function.type.Any(FunctionType.specular))
+			//If the bounce is specular, then we do not use multiple importance sampling (MIS)
+			if (bounce.IsSpecular)
 			{
-				//No MIS with specular bsdf
-				if (AdvancePath(out bool intersected)) break; //Path energy exhausted
+				//Check if the path is exhausted
+				if (path.Advance(bounce, distribution.Next1D())) break;
 
-				//Add ambient light and exit if no intersection
-				if (!intersected)
+				//Begin finding a new bounce
+				allocator.Restart();
+
+				if (!path.FindNext(scene, allocator))
 				{
-					Contribute(EvaluateAllAmbient());
+					//None found, accumulate ambient and exit
+					path.Contribute(EvaluateAllAmbient());
 					break;
 				}
 
-				//Continue path with new touch
-				touch = scene.Interact(query);
-
-				//Try add emission
-				if (material.IsEmissive) Contribute(material.Emission);
+				//Try add intersected emission
+				path.Contribute(path.Material.Emission);
 			}
 			else
 			{
 				//Select light from scene for MIS
-				ILight light = scene.PickLight(lightSamples, arena.allocator, out float lightPdf);
+				ILight light = scene.PickLight(lightSamples, allocator, out float lightPdf);
 
 				float weight = 1f / lightPdf;
 				var area = light as IAreaLight;
 
-				Contribute(weight * ImportanceSampleRadiant(light, touch, radiantSample, scene, out bool mis));
+				Contribute(ImportanceSampleRadiant(light, path.touch, radiantSample, scene, out bool mis));
 
 				if (mis)
 				{
 					Assert.IsNotNull(area);
-					weight *= PowerHeuristic(scatterPdf, area!.ProbabilityDensity(touch.point, incident));
+					weight *= PowerHeuristic(bounce.pdf, area!.ProbabilityDensity(path.touch.point, bounce.incident));
 				}
 
-				if (AdvancePath(out bool intersected)) break; //Path energy exhausted
+				if (path.Advance(bounce, distribution.Next1D())) break; //Path exhausted
+
+				allocator.Restart();
 
 				//Add ambient light and exit if no intersection
-				if (!intersected)
+				if (!path.FindNext(scene, allocator))
 				{
-					if (area is AmbientLight ambient) Contribute(weight * ambient.Evaluate(query.ray.direction));
+					if (area is AmbientLight ambient) Contribute(ambient.Evaluate(path.CurrentDirection));
 
 					break;
 				}
 
-				//Continue path with new touch
-				touch = scene.Interact(query);
-
 				//Try add emission with MIS
-				if (material.IsEmissive && area is GeometryLight geometry && geometry.Token == touch.token) Contribute(weight * material.Emission);
-			}
+				if (path.Material.IsEmissive && area is GeometryLight geometry && geometry.Token == path.touch.token) Contribute(path.Material.Emission);
 
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			bool AdvancePath(out bool intersected)
-			{
-				energy *= 1f / scatterPdf * scatter;
-
-				//TODO: Path termination with Russian Roulette
-
-				if (energy.PositiveRadiance())
-				{
-					query = query.SpawnTrace(incident);
-					intersected = scene.Trace(ref query);
-
-					return false;
-				}
-
-				intersected = false;
-				return true;
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				void Contribute(in Float3 value) => path.Contribute(weight * value);
 			}
 		}
 
-		return result;
+		return path.Result;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Float3 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(query.ray.direction);
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void Contribute(in Float3 value) => result += energy * value;
+		Float3 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(path.CurrentDirection);
 	}
 
 	/// <summary>
@@ -179,8 +145,8 @@ public class PathTracedEvaluator : Evaluator
 		radiant *= 1f / radiantPdf;
 		if (!mis) return scatter * radiant;
 
-		float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
-		return PowerHeuristic(radiantPdf, scatterPdf) * scatter * radiant;
+		float pdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
+		return PowerHeuristic(radiantPdf, pdf) * scatter * radiant;
 	}
 
 	/// <summary>
@@ -190,14 +156,103 @@ public class PathTracedEvaluator : Evaluator
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
 
-	/// <summary>
-	/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.specular"/>.
-	/// </summary>
-	static FunctionType TryExcludeSpecular(BSDF bsdf)
+	struct Path
 	{
-		int count = bsdf.Count(FunctionType.specular);
-		int total = bsdf.Count(FunctionType.all);
+		public Path(in Ray ray)
+		{
+			Result = Float3.zero;
+			energy = Float3.one;
+			Unsafe.SkipInit(out touch);
+			query = new TraceQuery(ray);
+		}
 
-		return count == 0 || count == total ? FunctionType.all : ~FunctionType.specular;
+		public Float3 Result { get; private set; }
+		public Touch touch;
+
+		TraceQuery query;
+		Float3 energy;
+
+		public Float3 CurrentDirection => query.ray.direction;
+
+		public Material Material => touch.shade.material;
+
+		public bool FindNext(PreparedScene scene, Allocator allocator)
+		{
+			while (scene.Trace(ref query))
+			{
+				touch = scene.Interact(query);
+				allocator.Restart();
+
+				Material.Scatter(ref touch, allocator);
+				if (touch.bsdf != null) return true;
+
+				query = query.SpawnTrace();
+			}
+
+			return false;
+		}
+
+		public bool Advance(in Bounce bounce, Sample1D sample)
+		{
+			energy *= bounce.scatter / bounce.pdf;
+
+			//Path termination with Russian Roulette
+			bool exhausted = RussianRoulette(ref energy, sample);
+			if (!exhausted) query = query.SpawnTrace(bounce.incident);
+
+			return exhausted;
+		}
+
+		public void Contribute(in Float3 value) => Result += energy * value;
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static bool RussianRoulette(ref Float3 energy, Sample1D sample)
+		{
+			// return !energy.PositiveRadiance();
+
+			float luminance = PackedMath.GetLuminance(Utilities.ToVector(energy));
+
+			if (sample >= luminance) return true;
+
+			energy *= 1f / luminance;
+			return false;
+		}
+	}
+
+	readonly struct Bounce
+	{
+		public Bounce(in Touch touch, Sample2D sample)
+		{
+			FunctionType type = TryExcludeSpecular(touch.bsdf);
+
+			scatter = touch.bsdf.Sample
+			(
+				touch.outgoing, sample, out incident,
+				out pdf, out function, type
+			);
+
+			scatter *= touch.NormalDot(incident);
+		}
+
+		public readonly Float3 scatter;
+		public readonly Float3 incident;
+		public readonly float pdf;
+		readonly BxDF function;
+
+		public bool IsZero => !FastMath.Positive(pdf) | !scatter.PositiveRadiance();
+
+		public bool IsSpecular => function.type.Any(FunctionType.specular);
+
+		/// <summary>
+		/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.specular"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static FunctionType TryExcludeSpecular(BSDF bsdf)
+		{
+			int count = bsdf.Count(FunctionType.specular);
+			int total = bsdf.Count(FunctionType.all);
+
+			return count == 0 || count == total ? FunctionType.all : ~FunctionType.specular;
+		}
 	}
 }

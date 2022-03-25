@@ -73,7 +73,7 @@ public abstract class Material
 	/// Determines the scattering properties of this material at <paramref name="touch"/>
 	/// and potentially initializes the appropriate properties in <paramref name="touch"/>.
 	/// </summary>
-	public abstract void Scatter(ref Touch touch, Arena arena);
+	public abstract void Scatter(ref Touch touch, Allocator allocator);
 
 	/// <summary>
 	/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
@@ -108,25 +108,24 @@ public abstract class Material
 	/// </summary>
 	protected readonly struct MakeBSDF
 	{
-		public MakeBSDF(ref Touch touch, Arena arena)
+		public MakeBSDF(ref Touch touch, Allocator allocator)
 		{
-			bsdf = arena.allocator.New<BSDF>();
+			this.allocator = allocator;
+			bsdf = allocator.New<BSDF>();
 
 			touch.bsdf = bsdf;
 			bsdf.Reset(touch);
-
-			this.arena = arena;
 		}
 
+		readonly Allocator allocator;
 		readonly BSDF bsdf;
-		readonly Arena arena;
 
 		/// <summary>
 		/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Touch.bsdf"/> and returns it.
 		/// </summary>
 		public T Add<T>() where T : BxDF, new()
 		{
-			T function = arena.allocator.New<T>();
+			T function = allocator.New<T>();
 
 			bsdf.Add(function);
 			return function;
