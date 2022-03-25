@@ -2,10 +2,8 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
-using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Rendering.Evaluators;
 
@@ -14,7 +12,7 @@ public class AlbedoEvaluator : Evaluator
 	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
 		var scene = profile.Scene;
-		TraceQuery query = ray;
+		var query = new TraceQuery(ray);
 
 		//Trace for intersection
 		while (scene.Trace(ref query))

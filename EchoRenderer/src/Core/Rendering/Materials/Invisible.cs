@@ -15,5 +15,5 @@ public class Invisible : Material
 	/// </summary>
 	public static readonly Invisible instance = new();
 
-	public override void Scatter(ref Touch touch, Arena arena) => touch.bsdf = null;
+	public override void Scatter(ref Touch touch, Allocator allocator) => touch.bsdf = null;
 }

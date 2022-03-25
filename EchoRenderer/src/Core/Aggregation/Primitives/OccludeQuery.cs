@@ -43,6 +43,4 @@ public struct OccludeQuery
 	/// the numerical value of this field will change as we move between coordinate systems.
 	/// </summary>
 	public float travel;
-
-	public static implicit operator OccludeQuery(in Ray ray) => new(ray);
 }

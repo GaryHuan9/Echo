@@ -16,7 +16,7 @@ public class BruteForcedEvaluator : Evaluator
 		Float3 energy = Float3.one;
 		Float3 radiance = Float3.zero;
 
-		TraceQuery query = ray;
+		var query = new TraceQuery(ray);
 
 		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
 		{
@@ -24,7 +24,7 @@ public class BruteForcedEvaluator : Evaluator
 			using var _ = arena.allocator.Begin();
 
 			Touch touch = profile.Scene.Interact(query);
-			touch.shade.material.Scatter(ref touch, arena);
+			touch.shade.material.Scatter(ref touch, arena.allocator);
 
 			if (touch.bsdf == null)
 			{
