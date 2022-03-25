@@ -19,9 +19,9 @@ public class Matte : Material
 		set => _roughness = value;
 	}
 
-	public override void Scatter(ref Touch touch, Arena arena)
+	public override void Scatter(ref Touch touch, Allocator allocator)
 	{
-		var make = new MakeBSDF(ref touch, arena);
+		var make = new MakeBSDF(ref touch, allocator);
 
 		Float3 albedo = Sample(Albedo, touch).XYZ;
 		if (!albedo.PositiveRadiance()) return;

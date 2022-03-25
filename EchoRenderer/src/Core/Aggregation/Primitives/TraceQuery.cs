@@ -25,7 +25,7 @@ public struct TraceQuery
 		Unsafe.SkipInit(out uv);
 
 #if DEBUG
-			originalDistance = distance;
+		originalDistance = distance;
 #endif
 	}
 
@@ -122,6 +122,4 @@ public struct TraceQuery
 			Assert.IsTrue(Hit);
 #endif
 	}
-
-	public static implicit operator TraceQuery(in Ray ray) => new(ray);
 }

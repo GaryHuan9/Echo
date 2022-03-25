@@ -36,16 +36,19 @@ public class Allocator
 	object[] poolers = new object[InitialSize];
 	ushort[] pointers = new ushort[InitialSize];
 
+	MonoThread monoThread;
+
 	static ConcurrentList<Token> tokens = new();
 
 	const int InitialSize = 8;
 
 	/// <summary>
-	/// Begins a new allocation session on this <see cref="Allocator"/> and returns a
-	/// <see cref="ReleaseHandle"/> which should be used to <see cref="Release"/> this session.
+	/// If a session is not currently underway, begins a new allocation session on this <see cref="Allocator"/> and returns a
+	/// <see cref="ReleaseHandle"/> which should be used to <see cref="Release"/> this session. Otherwise an exception is thrown.
 	/// </summary>
 	public ReleaseHandle Begin()
 	{
+		monoThread.Ensure();
 		if (allocating) throw new Exception($"Cannot {nameof(Begin)} this {nameof(Allocator)} when it is already {nameof(allocating)}!");
 
 		allocating = true;
@@ -53,14 +56,24 @@ public class Allocator
 	}
 
 	/// <summary>
-	/// Releases all allocated objects and prepares for a new allocation session.
+	/// Releases all allocated objects and prepares for a new allocation session to <see cref="Begin"/>.
 	/// </summary>
 	public void Release()
 	{
-		if (!allocating) throw new Exception($"Cannot {nameof(Release)} this {nameof(Allocator)} when it is not {nameof(allocating)}!");
+		monoThread.Ensure();
+		if (!allocating) return;
 
 		allocating = false;
 		Array.Clear(pointers, 0, utilization);
+	}
+
+	/// <summary>
+	/// Invokes <see cref="Release"/> and then immediate invoke <see cref="Begin"/> and returns its <see cref="ReleaseHandle"/>.
+	/// </summary>
+	public ReleaseHandle Restart()
+	{
+		Release();
+		return Begin();
 	}
 
 	/// <summary>
@@ -69,6 +82,7 @@ public class Allocator
 	/// </summary>
 	public T New<T>() where T : class, new()
 	{
+		monoThread.Ensure();
 		if (!allocating) throw new Exception($"Cannot allocate without starting a session using {nameof(Begin)}!");
 
 		//Find pool based on token
@@ -119,8 +133,7 @@ public class Allocator
 	}
 
 	/// <summary>
-	/// Clear the internal static state of <see cref="Allocator"/> to prepare
-	/// for the creation of a new batch of <see cref="Allocator"/>.
+	/// Clear the internal static state of <see cref="Allocator"/> to prepare for the creation of a new batch of <see cref="Allocator"/>.
 	/// </summary>
 	public static void Clear()
 	{
@@ -136,7 +149,11 @@ public class Allocator
 
 	public struct ReleaseHandle : IDisposable
 	{
-		public ReleaseHandle(Allocator allocator) => this.allocator = allocator;
+		public ReleaseHandle(Allocator allocator)
+		{
+			this.allocator = allocator;
+			allocator.allocating = true;
+		}
 
 		Allocator allocator;
 

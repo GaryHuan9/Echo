@@ -43,7 +43,6 @@
         <Compile Remove="src\Core\Rendering\Materials\MaterialOld.cs" />
         <Compile Remove="src\Core\Rendering\Materials\Emissive.cs" />
         <Compile Remove="src\Core\Scenic\Examples\BMWs.cs" />
-        <Compile Remove="src\Core\Scenic\Examples\CornellBox.cs" />
         <Compile Remove="src\Core\Scenic\Examples\TestScenes.cs" />
         <Compile Remove="src\Core\Scenic\Examples\MaterialBalls.cs" />
     </ItemGroup>
