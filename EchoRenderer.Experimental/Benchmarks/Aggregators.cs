@@ -52,8 +52,8 @@ public class Aggregators
 
 			Ray ray = new Ray(position, (target - position).Normalized);
 
-			traceQueries[i] = ray;
-			occludeQueries[i] = ray;
+			traceQueries[i] = new TraceQuery(ray);
+			occludeQueries[i] = new OccludeQuery(ray);
 		}
 
 		// scene.children.Add(new PlaneObject(new Matte { Albedo = (Pure)0.75f }, new Float2(32f, 24f)));
