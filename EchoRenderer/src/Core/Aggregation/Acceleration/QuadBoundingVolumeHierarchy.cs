@@ -144,14 +144,16 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			true
 		};
 
+		ref Node origin = ref nodes[0];
+
 		do
 		{
 			uint index = (--next)->NodeValue;
 
 			if (*--hits >= query.distance) continue;
-			ref readonly Node node = ref nodes[index];
 
-			Vector128<float> intersections = node.aabb4.Intersect(query.ray);
+			ref readonly Node node = ref Unsafe.Add(ref origin, index);
+			var intersections = node.aabb4.Intersect(query.ray);
 
 			if (orders[node.axisMajor])
 			{
@@ -240,10 +242,13 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			true
 		};
 
+		ref Node origin = ref nodes[0];
+
 		do
 		{
-			ref readonly Node node = ref nodes[(--next)->NodeValue];
-			Vector128<float> intersections = node.aabb4.Intersect(query.ray);
+			uint index = (--next)->NodeValue;
+			ref readonly Node node = ref Unsafe.Add(ref origin, index);
+			var intersections = node.aabb4.Intersect(query.ray);
 
 			if (orders[node.axisMajor])
 			{

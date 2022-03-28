@@ -12,13 +12,12 @@ public class Program
 	{
 		// TestUnmanaged();
 
-		BenchmarkRunner.Run<PackedFloats>();
-		// BenchmarkRunner.Run<BenchmarkBVH>();
-		// BenchmarkRunner.Run<BenchmarkTexture>();
-		// BenchmarkRunner.Run<BenchmarkRadixSort>();
-		// BenchmarkRunner.Run<BenchmarkLoop>();
-		// BenchmarkRunner.Run<AxisAlignedBoundingBoxSIMD>();
-		// BenchmarkRunner.Run<BenchmarkMath>();
+		// BenchmarkRunner.Run<PackedFloats>();
+		BenchmarkRunner.Run<Aggregators>();
+		// BenchmarkRunner.Run<RadixSort>();
+		// BenchmarkRunner.Run<Loops>();
+		// BenchmarkRunner.Run<AabbSimd>();
+		// BenchmarkRunner.Run<MathFunctions>();
 	}
 
 	static unsafe void TestUnmanaged()
