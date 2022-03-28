@@ -32,6 +32,7 @@ public abstract class Evaluator
 
 	/// <summary>
 	/// Evaluates <see cref="RenderProfile.Scene"/> through <paramref name="ray"/> using <paramref name="profile"/> and <paramref name="arena"/>.
+	/// Note that the implementation do not need to <see cref="Allocator.Release"/> the <see cref="Allocator"/> after this method is finished.
 	/// </summary>
 	public abstract Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena);
 

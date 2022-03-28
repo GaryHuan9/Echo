@@ -16,7 +16,6 @@ using EchoRenderer.InOut;
 
 namespace EchoRenderer.Experimental.Benchmarks;
 
-[SimpleJob(RuntimeMoniker.Net60)]
 public class Aggregators
 {
 	public Aggregators()
@@ -27,8 +26,10 @@ public class Aggregators
 		Mesh mesh = new(@"C:\Users\MMXXXVIII\Things\CodingStuff\C#\EchoRenderer\EchoRenderer\Assets\Models\BlenderBMW\BlenderBMW.obj");
 		scene.children.Add(new MeshEntity { Mesh = mesh, Material = new Matte() });
 
-		traceQueries = new TraceQuery[65536];
-		occludeQueries = new OccludeQuery[65536];
+		const int Length = 65536;
+
+		traceQueries = new TraceQuery[Length];
+		occludeQueries = new OccludeQuery[Length];
 
 		IRandom random = new SystemRandom(42);
 
@@ -106,10 +107,10 @@ public class Aggregators
 	// Added occlusion
 	// |  Method |    Type |     Mean |    Error |   StdDev |
 	// |-------- |-------- |---------:|---------:|---------:|
-	// |   Trace |    Quad | 40.05 ms | 0.345 ms | 0.323 ms |
-	// | Occlude |    Quad | 33.88 ms | 0.165 ms | 0.155 ms |
-	// |   Trace | Regular | 61.27 ms | 0.330 ms | 0.293 ms |
-	// | Occlude | Regular | 49.67 ms | 0.349 ms | 0.309 ms |
+	// |   Trace |    Quad | 39.89 ms | 0.329 ms | 0.292 ms |
+	// | Occlude |    Quad | 32.79 ms | 0.284 ms | 0.266 ms |
+	// |   Trace | Regular | 59.15 ms | 0.317 ms | 0.297 ms |
+	// | Occlude | Regular | 47.05 ms | 0.334 ms | 0.296 ms |
 
 	[Benchmark]
 	public bool Trace()
