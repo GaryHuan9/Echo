@@ -33,11 +33,15 @@ public readonly struct GeometryPoint
 	/// </summary>
 	public float ProbabilityDensity(in Float3 origin, float area)
 	{
+		Assert.IsTrue(FastMath.Positive(area));
+
 		Float3 delta = position - origin;
 		float length2 = delta.SquaredMagnitude;
 		float length = FastMath.Sqrt0(length2);
 
-		return length2 / FastMath.Abs(normal.Dot(delta) * area / length);
+		float dot = FastMath.Abs(normal.Dot(delta));
+		if (!FastMath.Positive(dot)) return 0f;
+		return length2 * length / (dot * area);
 	}
 
 	/// <summary>
