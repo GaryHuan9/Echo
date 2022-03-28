@@ -163,6 +163,8 @@ public class TileWorker : IDisposable
 				Ray ray = profile.Scene.camera.GetRay(uv.ReplaceY(uv.y * aspect));
 				Float3 radiance = evaluator.Evaluate(ray, profile, arena);
 
+				arena.allocator.Release();
+
 				//Write to pixel
 				bool successful = pixel.Accumulate(radiance);
 				Interlocked.Increment(ref _completedSample);

@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -57,7 +59,7 @@ public struct TraceQuery
 
 	/// <summary>
 	/// After tracing completes, this field will be assigned the distance of the intersection to the <see cref="ray"/> origin.
-	/// NOTE: if there is no intersection with the scene, this field will be assigned <see cref="float.PositiveInfinity"/>.
+	/// NOTE: if there is no intersection with the scene, this field will be kept as its originally constructed value.
 	/// </summary>
 	public float distance;
 
@@ -68,28 +70,29 @@ public struct TraceQuery
 	public Float2 uv;
 
 	/// <summary>
-	/// After tracing completes, returns the <see cref="Position"/> at which the intersection occurred.
-	/// NOTE: if no intersection occurs, this field is undefined.
+	/// After tracing completes, if an intersection occurred, returns its <see cref="Position"/>, otherwise this property is undefined.
+	/// NOTE: if <see cref="distance"/> is really small, this property will be shifted slightly along <see cref="Ray.direction"/>, to
+	/// avoid us spawning new <see cref="TraceQuery"/> or <see cref="OccludeQuery"/> on the exact same <see cref="Ray.origin"/>.
 	/// </summary>
 	public readonly Float3 Position
 	{
 		get
 		{
 			AssertHit();
-			return ray.GetPoint(distance);
+			return ray.GetPoint(Math.Max(distance, Scalars.Epsilon));
 		}
 	}
 
 #if DEBUG
-		/// <summary>
-		/// The immutable original distance to determine whether this <see cref="TraceQuery"/> actually <see cref="Hit"/> something.
-		/// </summary>
-		readonly float originalDistance;
+	/// <summary>
+	/// The immutable original distance to determine whether this <see cref="TraceQuery"/> actually <see cref="Hit"/> something.
+	/// </summary>
+	readonly float originalDistance;
 
-		/// <summary>
-		/// Returns whether this <see cref="TraceQuery"/> has intersected with anything.
-		/// </summary>
-		public readonly bool Hit => distance < originalDistance;
+	/// <summary>
+	/// Returns whether this <see cref="TraceQuery"/> has intersected with anything.
+	/// </summary>
+	public readonly bool Hit => distance < originalDistance;
 #endif
 
 	/// <summary>
@@ -119,7 +122,7 @@ public struct TraceQuery
 	public readonly void AssertHit()
 	{
 #if DEBUG
-			Assert.IsTrue(Hit);
+		Assert.IsTrue(Hit);
 #endif
 	}
 }

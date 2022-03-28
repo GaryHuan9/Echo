@@ -34,8 +34,6 @@ public class PathTracedEvaluator : Evaluator
 		var scene = profile.Scene;
 		var path = new Path(ray);
 
-		using var _ = new Allocator.ReleaseHandle(allocator);
-
 		//Quick exit with ambient light if no intersection
 		if (!path.FindNext(scene, allocator)) return EvaluateAllAmbient();
 
@@ -43,7 +41,11 @@ public class PathTracedEvaluator : Evaluator
 		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
 
 		//Add emission for first hit, if available
-		path.Contribute(path.Material.Emission);
+		if (path.Material.IsEmissive)
+		{
+			path.Contribute(path.Material.Emission);
+			// return path.Result;
+		}
 
 		for (int depth = 0; depth < profile.BounceLimit; depth++)
 		{
@@ -74,7 +76,11 @@ public class PathTracedEvaluator : Evaluator
 				}
 
 				//Try add intersected emission
-				path.Contribute(path.Material.Emission);
+				if (path.Material.IsEmissive)
+				{
+					path.Contribute(path.Material.Emission);
+					// break;
+				}
 			}
 			else
 			{
@@ -100,12 +106,18 @@ public class PathTracedEvaluator : Evaluator
 				if (!path.FindNext(scene, allocator))
 				{
 					if (area is AmbientLight ambient) Contribute(ambient.Evaluate(path.CurrentDirection));
-
 					break;
 				}
 
+				//TODO: hitting emissive surface immediately ends path
+
 				//Try add emission with MIS
-				if (path.Material.IsEmissive && area is GeometryLight geometry && geometry.Token == path.touch.token) Contribute(path.Material.Emission);
+				//FIX: area light could get recollected after allocator restarts
+				if (path.Material.IsEmissive && area is GeometryLight geometry && geometry.Token == path.touch.token && path.Material.IsEmissive)
+				{
+					Contribute(path.Material.Emission);
+					// break;
+				}
 
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				void Contribute(in Float3 value) => path.Contribute(weight * value);
@@ -208,7 +220,7 @@ public class PathTracedEvaluator : Evaluator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool RussianRoulette(ref Float3 energy, Sample1D sample)
 		{
-			// return !energy.PositiveRadiance();
+			return !energy.PositiveRadiance();
 
 			float luminance = PackedMath.GetLuminance(Utilities.ToVector(energy));
 
