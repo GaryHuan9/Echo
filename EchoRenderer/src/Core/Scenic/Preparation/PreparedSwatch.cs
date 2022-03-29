@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Instancing;
 
@@ -20,8 +21,7 @@ public class PreparedSwatch
 
 		for (int i = 0; i < indices.Length; i++)
 		{
-			Material material = materials[i];
-			if (!material.IsEmissive) continue;
+			if (materials[i] is not IEmissive emissive || !FastMath.Positive(emissive.Power)) continue;
 
 			_emissiveIndices ??= new List<MaterialIndex>();
 			_emissiveIndices.Add(indices[i]);
@@ -32,7 +32,7 @@ public class PreparedSwatch
 	readonly List<MaterialIndex> _emissiveIndices;
 
 	/// <summary>
-	/// Returns all <see cref="MaterialIndex"/> in this <see cref="PreparedSwatch"/> that point to <see cref="Material"/> that <see cref="Material.IsEmissive"/>.
+	/// Returns all <see cref="MaterialIndex"/> in this <see cref="PreparedSwatch"/> that point to <see cref="IEmissive"/> materials.
 	/// </summary>
 	public ReadOnlySpan<MaterialIndex> EmissiveIndices => _emissiveIndices == null ? ReadOnlySpan<MaterialIndex>.Empty : CollectionsMarshal.AsSpan(_emissiveIndices);
 

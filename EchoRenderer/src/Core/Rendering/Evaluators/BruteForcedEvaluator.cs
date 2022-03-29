@@ -4,6 +4,7 @@ using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
+using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Rendering.Scattering;
 using EchoRenderer.Core.Scenic.Lights;
 
@@ -33,8 +34,7 @@ public class BruteForcedEvaluator : Evaluator
 			}
 
 			Float3 scatter = touch.bsdf.Sample(touch.outgoing, arena.Distribution.Next2D(), out Float3 incident, out float pdf, out BxDF function);
-
-			radiance += energy * touch.shade.material.Emission;
+			if (touch.shade.material is IEmissive emissive && FastMath.Positive(emissive.Power)) radiance += energy * emissive.Emit(touch.point, touch.outgoing);
 
 			if (!FastMath.Positive(pdf) | !scatter.PositiveRadiance()) energy = Float3.zero;
 			else energy *= touch.NormalDot(incident) / pdf * scatter;

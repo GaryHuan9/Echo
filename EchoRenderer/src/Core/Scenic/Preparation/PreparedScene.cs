@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
@@ -13,7 +13,6 @@ using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Distributions.Discrete;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
-using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Lights;
 
 namespace EchoRenderer.Core.Scenic.Preparation;
@@ -109,7 +108,7 @@ public class PreparedScene
 		GeometryToken token = rootInstance.Find(samples[1..], out var instance, out float tokenPdf);
 		Material material = instance.GetMaterial(instance.pack.GetMaterialIndex(token.Geometry));
 
-		light.Reset(this, token, material);
+		light.Reset(this, token, (IEmissive)material);
 
 		pdf *= tokenPdf;
 		return light;
@@ -175,10 +174,24 @@ public class PreparedScene
 
 	public class Lights
 	{
-		public Lights(PreparedScene scene, List<LightSource> all)
+		public Lights(PreparedScene scene, IReadOnlyCollection<LightSource> all)
 		{
+			int length = all.Count;
+			float geometryPower = scene.rootInstance.Power;
+
+			if (length == 0 && !FastMath.Positive(geometryPower))
+			{
+				//Degenerate case with literally zero light contributor; our output image will literally be
+				//completely black, but we add in a light so no exception is thrown when we look for lights.
+
+				_ambient = Array.Empty<AmbientLight>();
+				_all = new LightSource[] { new PointLight { Intensity = Float3.zero } };
+				distribution = new DiscreteDistribution1D(stackalloc[] { 1f, 0f });
+
+				return;
+			}
+
 			_all = all.ToArray();
-			int length = _all.Length;
 
 			var ambientList = new List<AmbientLight>();
 
@@ -198,8 +211,8 @@ public class PreparedScene
 			}
 
 			_ambient = ambientList.ToArray();
+			powerValues[length] = geometryPower;
 
-			powerValues[length] = scene.rootInstance.Power;
 			distribution = new DiscreteDistribution1D(powerValues);
 		}
 
