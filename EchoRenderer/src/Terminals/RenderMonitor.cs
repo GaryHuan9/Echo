@@ -25,6 +25,7 @@ public class RenderMonitor : Terminal.Section
 		statusGrid[1][0] = "Per Second";
 		statusGrid[2][0] = "Total Done";
 		statusGrid[3][0] = "Average Ratio";
+		statusGrid[4][0] = "Estimate";
 	}
 
 	public TiledRenderEngine Engine { get; set; }
@@ -36,8 +37,10 @@ public class RenderMonitor : Terminal.Section
 
 	readonly string[][] statusGrid;
 
-	const int StatusHeight = 7;         //Lines of text used to display the current status
-	readonly Int2 gridSize = new(6, 4); //4 rows; 6 columns: Name, Tile, Pixel, Sample, Trace, Occlude
+	const int StatusHeight = 8;         //Lines of text used to display the current status
+	readonly Int2 gridSize = new(6, 5); //4 rows; 6 columns: Name, Tile, Pixel, Sample, Trace, Occlude
+
+	float Progress => (float)((double)Engine.CompletedPixel / Engine.CurrentProfile.RenderBuffer.size.Product);
 
 	public override void Update()
 	{
@@ -105,20 +108,19 @@ public class RenderMonitor : Terminal.Section
 	{
 		TimeSpan elapsed = Engine.Elapsed;
 		double seconds = elapsed.TotalSeconds;
-
-		long completedPixel = Engine.CompletedPixel;
 		long rejectedSample = Engine.RejectedSample;
 
-		double fraction = (double)completedPixel / Engine.CurrentProfile.RenderBuffer.size.Product;
-		TimeSpan remain = TimeSpan.FromSeconds(seconds / Math.Max(fraction, Scalars.Epsilon) - seconds);
+		double progress = Progress;
+		TimeSpan remain = TimeSpan.FromSeconds(seconds / Math.Max(progress, Scalars.Epsilon) - seconds);
 
-		builders.SetLine(2, $" | Time Elapsed {elapsed:hh\\:mm\\:ss\\:ff} | Time Remain {remain:hh\\:mm\\:ss\\:ff} | Complete Percent {fraction * 100d:F2}% | Rejected Sample {rejectedSample:N0} |");
+		builders.SetLine(2, $" | Time Elapsed {elapsed:hh\\:mm\\:ss\\:ff} | Time Remain {remain:hh\\:mm\\:ss\\:ff} | Complete Percent {progress * 100d:F2}% | Rejected Sample {rejectedSample:N0} |");
 	}
 
 	void DrawStatusGrid()
 	{
 		//Fill the numbers
 		double seconds = Engine.Elapsed.TotalSeconds;
+		double progress = Progress;
 
 		Span<long> numbers = stackalloc long[]
 		{
@@ -135,6 +137,7 @@ public class RenderMonitor : Terminal.Section
 		{
 			long number = numbers[x - 1];
 			double rate = number / seconds;
+			double estimate = number / progress;
 
 			statusGrid[1][x] = rate.ToString("N2");
 			statusGrid[2][x] = $"{number:N0}   ";
@@ -147,6 +150,8 @@ public class RenderMonitor : Terminal.Section
 				statusGrid[3][x] = ratio.ToString("N2");
 			}
 			else statusGrid[3][x] = "";
+
+			statusGrid[4][x] = estimate.ToString("N2");
 		}
 
 		//Find max widths for each column
