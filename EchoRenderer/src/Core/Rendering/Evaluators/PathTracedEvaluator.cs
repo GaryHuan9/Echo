@@ -41,23 +41,16 @@ public class PathTracedEvaluator : Evaluator
 		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
 
 		//Add emission for first hit, if available
-		if (path.Material.IsEmissive)
-		{
-			path.Contribute(path.Material.Emission);
-			// return path.Result;
-		}
+		path.ContributeEmissive();
 
 		for (int depth = 0; depth < profile.BounceLimit; depth++)
 		{
-			//Retrieve samples from distribution
-			Sample2D scatterSample = distribution.Next2D();
-			Sample2D radiantSample = distribution.Next2D();
-
-			foreach (ref var sample in lightSamples) sample = distribution.Next1D();
-
 			//Sample the bsdf
-			var bounce = new Bounce(path.touch, scatterSample);
+			var bounce = new Bounce(path.touch, distribution.Next2D());
 			if (bounce.IsZero) break;
+
+			Sample2D radiantSample = distribution.Next2D();
+			foreach (ref var sample in lightSamples) sample = distribution.Next1D();
 
 			//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 			if (bounce.IsSpecular)
@@ -76,11 +69,7 @@ public class PathTracedEvaluator : Evaluator
 				}
 
 				//Try add intersected emission
-				if (path.Material.IsEmissive)
-				{
-					path.Contribute(path.Material.Emission);
-					// break;
-				}
+				path.ContributeEmissive();
 			}
 			else
 			{
@@ -90,7 +79,7 @@ public class PathTracedEvaluator : Evaluator
 				float weight = 1f / lightPdf;
 				var area = light as IAreaLight;
 
-				Contribute(ImportanceSampleRadiant(light, path.touch, radiantSample, scene, out bool mis));
+				path.Contribute(weight * ImportanceSampleRadiant(light, path.touch, radiantSample, scene, out bool mis));
 
 				if (mis)
 				{
@@ -105,7 +94,7 @@ public class PathTracedEvaluator : Evaluator
 				//Add ambient light and exit if no intersection
 				if (!path.FindNext(scene, allocator))
 				{
-					if (area is AmbientLight ambient) Contribute(ambient.Evaluate(path.CurrentDirection));
+					if (area is AmbientLight ambient) path.Contribute(weight * ambient.Evaluate(path.CurrentDirection));
 					break;
 				}
 
@@ -113,14 +102,10 @@ public class PathTracedEvaluator : Evaluator
 
 				//Try add emission with MIS
 				//FIX: area light could get recollected after allocator restarts
-				if (path.Material.IsEmissive && area is GeometryLight geometry && geometry.Token == path.touch.token && path.Material.IsEmissive)
+				if (area is GeometryLight geometry && geometry.Token == path.touch.token)
 				{
-					Contribute(path.Material.Emission);
-					// break;
+					path.ContributeEmissive(weight);
 				}
-
-				[MethodImpl(MethodImplOptions.AggressiveInlining)]
-				void Contribute(in Float3 value) => path.Contribute(weight * value);
 			}
 		}
 
@@ -216,6 +201,12 @@ public class PathTracedEvaluator : Evaluator
 		}
 
 		public void Contribute(in Float3 value) => Result += energy * value;
+
+		public void ContributeEmissive(float weight = 1f)
+		{
+			if (Material is not IEmissive emissive || !FastMath.Positive(emissive.Power)) return;
+			Contribute(emissive.Emit(touch.point, touch.outgoing) * weight);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool RussianRoulette(ref Float3 energy, Sample1D sample)
