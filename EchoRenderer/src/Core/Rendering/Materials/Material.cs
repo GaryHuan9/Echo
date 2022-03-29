@@ -36,19 +36,9 @@ public abstract class Material
 	}
 
 	/// <summary>
-	/// The emission of this <see cref="Material"/>.
-	/// </summary>
-	public Float3 Emission { get; set; }
-
-	/// <summary>
 	/// The intensity of <see cref="Normal"/> on this <see cref="Material"/>.
 	/// </summary>
 	public Float3 NormalIntensity { get; set; } = Float3.one;
-
-	/// <summary>
-	/// Returns whether this <see cref="Material"/> is emissive.
-	/// </summary>
-	public bool IsEmissive { get; private set; }
 
 	bool zeroNormal;
 
@@ -62,9 +52,6 @@ public abstract class Material
 	/// </summary>
 	public virtual void Prepare()
 	{
-		Emission = Float3.zero.Max(Emission);
-		IsEmissive = Emission.PositiveRadiance();
-
 		zeroNormal = Normal == Texture.normal || NormalIntensity == Float3.zero;
 		normalIntensityV = Utilities.ToVector(NormalIntensity);
 	}
