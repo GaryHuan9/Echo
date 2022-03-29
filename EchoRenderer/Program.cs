@@ -16,7 +16,6 @@ using EchoRenderer.Core.Scenic.Preparation;
 using EchoRenderer.Core.Texturing.Generative;
 using EchoRenderer.Core.Texturing.Grid;
 using EchoRenderer.InOut;
-using EchoRenderer.Scenic.Examples;
 using EchoRenderer.Terminals;
 
 namespace EchoRenderer;

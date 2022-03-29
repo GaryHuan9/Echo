@@ -16,22 +16,22 @@ namespace EchoRenderer.Core.Scenic.Lights;
 /// </summary>
 public class GeometryLight : IAreaLight
 {
-	public void Reset(PreparedScene newScene, in GeometryToken newToken, in Material newMaterial)
+	public void Reset(PreparedScene newScene, in GeometryToken newToken, IEmissive newEmissive)
 	{
-		Assert.IsTrue(newMaterial.IsEmissive);
-
 		scene = newScene;
 		token = newToken;
-		Emission = newMaterial.Emission;
+		Emissive = newEmissive;
+
+		Assert.IsTrue(FastMath.Positive(Emissive.Power));
 	}
 
 	PreparedScene scene;
 	GeometryToken token;
 
 	/// <summary>
-	/// The current emissive output of this <see cref="GeometryLight"/>.
+	/// The current <see cref="IEmissive"/> material that is assigned to this <see cref="GeometryLight"/>.
 	/// </summary>
-	public Float3 Emission { get; private set; }
+	public IEmissive Emissive { get; private set; }
 
 	/// <summary>
 	/// Accesses the <see cref="GeometryToken"/> that this <see cref="GeometryLight"/> currently represents.
@@ -63,7 +63,7 @@ public class GeometryLight : IAreaLight
 		travel = FastMath.Sqrt0(travel2);
 		incident = delta * (1f / travel);
 
-		return Emission;
+		return Emissive.Emit(sampled, -incident);
 	}
 
 	/// <inheritdoc/>

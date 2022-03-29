@@ -8,7 +8,7 @@ namespace EchoRenderer.Core.Rendering.Materials;
 /// Represents a completely invisible <see cref="Material"/>, which
 /// generate no <see cref="BSDF"/> for <see cref="Touch.bsdf"/>
 /// </summary>
-public class Invisible : Material
+public sealed class Invisible : Material
 {
 	/// <summary>
 	/// A static instance of this <see cref="Invisible"/> that can be reused.

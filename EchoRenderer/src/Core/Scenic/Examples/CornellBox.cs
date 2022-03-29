@@ -2,11 +2,10 @@
 using CodeHelpers.Mathematics;
 using EchoRenderer.Common;
 using EchoRenderer.Core.Rendering.Materials;
-using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Texturing;
 
-namespace EchoRenderer.Scenic.Examples
+namespace EchoRenderer.Core.Scenic.Examples
 {
 	public class CornellBox : Scene
 	{
@@ -18,7 +17,7 @@ namespace EchoRenderer.Scenic.Examples
 			var white = new Matte { Albedo = (Pure)Utilities.ToColor("EEEEF2") };
 
 			var cullable = new Cullable { Base = white };
-			var light = new Matte { Albedo = Texture.white, Emission = Utilities.ToColor("#FFFAF4").XYZ };
+			var light = new Emissive { Albedo = (Pure)Utilities.ToColor("#FFFAF4") };
 
 			const float Width = 10f;
 			const float Half = Width / 2f;
@@ -29,9 +28,9 @@ namespace EchoRenderer.Scenic.Examples
 			children.Add(new PlaneEntity { Material = blue, Size = (Float2)Width, Position = new Float3(0f, Half, Half), Rotation = new Float3(-90f, 0f, 0f) });     //Back
 			children.Add(new PlaneEntity { Material = cullable, Size = (Float2)Width, Position = new Float3(0f, Half, -Half), Rotation = new Float3(90f, 0f, 0f) }); //Front
 
-			children.Add(new PlaneEntity { Material = green, Size = (Float2)Width, Position = new Float3(Half, Half, 0f), Rotation = new Float3(0f, 0f, 90f) });         //Right
-			children.Add(new PlaneEntity { Material = red, Size = (Float2)Width, Position = new Float3(-Half, Half, 0f), Rotation = new Float3(0f, 0f, -90f) });         //Left
-			children.Add(new PlaneEntity { Material = light, Size = (Float2)Width, Position = new Float3(0f, Width - 0.01f, 0f), Rotation = new Float3(180f, 0f, 0f) }); //Light
+			children.Add(new PlaneEntity { Material = green, Size = (Float2)Width, Position = new Float3(Half, Half, 0f), Rotation = new Float3(0f, 0f, 90f) }); //Right
+			children.Add(new PlaneEntity { Material = red, Size = (Float2)Width, Position = new Float3(-Half, Half, 0f), Rotation = new Float3(0f, 0f, -90f) }); //Left
+			children.Add(new PlaneEntity { Material = light, Size = (Float2)Half, Position = new Float3(0f, Width - 0.01f, 0f), Rotation = Float3.zero });       //Light
 
 			children.Add(new BoxEntity { Material = white, Size = (Float3)Size, Position = new Float3(Size / 1.5f, Size / 2f, -Size / 1.5f), Rotation = Float3.up * 21f });
 			children.Add(new BoxEntity { Material = white, Size = new Float3(Size, Size * 2f, Size), Position = new Float3(-Size / 1.5f, Size, Size / 1.5f), Rotation = Float3.up * -21f });
@@ -56,7 +55,7 @@ namespace EchoRenderer.Scenic.Examples
 			float radian = camera.FieldOfView / 2f * Scalars.DegreeToRadian;
 			camera.Position += Float3.backward * (Half / MathF.Tan(radian));
 
-			children.Add(camera);
+			children.Add(camera); //Position: (0, 5, -18.025444)
 		}
 	}
 }

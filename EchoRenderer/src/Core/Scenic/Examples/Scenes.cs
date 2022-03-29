@@ -23,7 +23,7 @@ public class SingleBunny : StandardScene
 
 		var material0 = new Matte { Albedo = (Pure)new Float3(1f, 0.68f, 0.16f) };
 		var material1 = new Matte { Albedo = blue };
-		var material2 = new Matte { Albedo = blue, Emission = (Float3)1f };
+		var material2 = new Emissive { Albedo = (Pure)1f };
 		var material3 = new Mirror { Albedo = (Pure)0.75f };
 
 		// children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
