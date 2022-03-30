@@ -110,8 +110,7 @@ public class Program
 			TilePattern = new CheckerboardPattern(),
 			// WorkerSize = 1,
 			PixelSample = 64,
-			//AdaptiveSample = 400,
-			BounceLimit = 128
+			//AdaptiveSample = 400
 		};
 
 		DebugHelper.Log("Assets loaded");
