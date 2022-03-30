@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
@@ -14,13 +14,13 @@ public abstract partial class TextureGrid : Texture
 {
 	protected TextureGrid(Int2 size, IFilter filter) : base(Wrappers.repeat)
 	{
-		Assert.IsTrue(size > Int2.zero);
+		Assert.IsTrue(size > Int2.Zero);
 
 		this.size = size;
 		sizeR = 1f / size;
-		oneLess = size - Int2.one;
+		oneLess = size - Int2.One;
 
-		aspect = (float)size.x / size.y;
+		aspect = (float)size.X / size.Y;
 		Filter = filter;
 	}
 
@@ -63,8 +63,8 @@ public abstract partial class TextureGrid : Texture
 	{
 		get
 		{
-			float logWidth = MathF.Log(size.x);
-			float logHeight = MathF.Log(size.y);
+			float logWidth = MathF.Log(size.X);
+			float logHeight = MathF.Log(size.Y);
 
 			return MathF.Exp((logWidth + logHeight) / 2f);
 		}
@@ -80,20 +80,20 @@ public abstract partial class TextureGrid : Texture
 
 	protected sealed override Vector128<float> Evaluate(Float2 uv)
 	{
-		Assert.IsFalse(float.IsNaN(uv.x));
-		Assert.IsFalse(float.IsNaN(uv.y));
+		Assert.IsFalse(float.IsNaN(uv.X));
+		Assert.IsFalse(float.IsNaN(uv.Y));
 		return Filter.Convert(this, uv);
 	}
 
 	/// <summary>
 	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid.size"/>.
 	/// </summary>
-	public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.zero, oneLess);
+	public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.Zero, oneLess);
 
 	/// <summary>
 	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid"/>'s texture coordinate.
 	/// </summary>
-	public Float2 ToUV(Int2 position) => (position + Float2.half) * sizeR;
+	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
 
 	/// <summary>
 	/// Copies as much data from <paramref name="texture"/> to this <see cref="TextureGrid"/> as fast as possible.

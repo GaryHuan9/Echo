@@ -138,9 +138,9 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 		bool* orders = stackalloc bool[Width]
 		{
-			query.ray.inverseDirection.x > 0,
-			query.ray.inverseDirection.y > 0,
-			query.ray.inverseDirection.z > 0,
+			query.ray.inverseDirection.X > 0,
+			query.ray.inverseDirection.Y > 0,
+			query.ray.inverseDirection.Z > 0,
 			true
 		};
 
@@ -236,9 +236,9 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 		bool* orders = stackalloc bool[Width]
 		{
-			query.ray.inverseDirection.x > 0,
-			query.ray.inverseDirection.y > 0,
-			query.ray.inverseDirection.z > 0,
+			query.ray.inverseDirection.X > 0,
+			query.ray.inverseDirection.Y > 0,
+			query.ray.inverseDirection.Z > 0,
 			true
 		};
 
@@ -330,9 +330,9 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 		Span<bool> orders = stackalloc bool[Width]
 		{
-			ray.inverseDirection.x > 0f,
-			ray.inverseDirection.y > 0f,
-			ray.inverseDirection.z > 0f,
+			ray.inverseDirection.X > 0f,
+			ray.inverseDirection.Y > 0f,
+			ray.inverseDirection.Z > 0f,
 			true
 		};
 

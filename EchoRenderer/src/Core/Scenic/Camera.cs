@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
@@ -72,8 +73,8 @@ public class Camera : Entity
 	{
 		Float3 to = (target - Position).Normalized;
 
-		float yAngle = -Float2.up.SignedAngle(to.XZ);
-		float xAngle = -Float2.right.SignedAngle(to.RotateXZ(yAngle).ZY);
+		float yAngle = -Float2.Up.SignedAngle(to.XZ);
+		float xAngle = -Float2.Right.SignedAngle(to.RotateXZ(yAngle).ZY);
 
 		Rotation = new Float3(xAngle, yAngle, 0f);
 	}

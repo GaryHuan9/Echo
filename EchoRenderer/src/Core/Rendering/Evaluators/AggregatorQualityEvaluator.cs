@@ -1,9 +1,8 @@
 ﻿using System.Threading;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Distributions.Continuous;
-using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Rendering.Evaluators;
 

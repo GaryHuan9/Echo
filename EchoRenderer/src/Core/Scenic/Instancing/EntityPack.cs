@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Scenic.Instancing;
 

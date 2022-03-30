@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.UserInterface.Core.Interactions;
 using SFML.Graphics;
 
@@ -134,7 +134,7 @@ public partial class AreaUI : IDisposable
 		foreach (AreaUI child in LoopForward()) child.Update();
 	}
 
-	public void Draw() => Draw(true, Float2.negativeInfinity, Float2.positiveInfinity);
+	public void Draw() => Draw(true, Float2.NegativeInfinity, Float2.PositiveInfinity);
 
 	/// <summary>
 	/// Invoked on <see cref="Root"/> when the <see cref="Application"/> terminates.

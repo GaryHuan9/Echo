@@ -2,7 +2,6 @@ using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Discrete;

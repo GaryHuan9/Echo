@@ -4,8 +4,8 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Texturing.Grid;
@@ -21,10 +21,10 @@ public class Font
 		Int2 size = texture.size;
 		Int2 glyph = size / MapSize;
 
-		if (size % MapSize != Int2.zero) throw new Exception($"Invalid font map texture size {size}.");
+		if (size % MapSize != Int2.Zero) throw new Exception($"Invalid font map texture size {size}.");
 
 		glyphs = new Glyph[MapSize * MapSize];
-		glyphAspect = (float)glyph.x / glyph.y;
+		glyphAspect = (float)glyph.X / glyph.Y;
 
 		Parallel.For(0, glyphs.Length, ComputeSingleGlyph);
 
@@ -32,10 +32,10 @@ public class Font
 		{
 			Int2 position = new Int2(index % MapSize, index / MapSize) * glyph;
 
-			Float2 min = Float2.positiveInfinity;
-			Float2 max = Float2.negativeInfinity;
+			Float2 min = Float2.PositiveInfinity;
+			Float2 max = Float2.NegativeInfinity;
 
-			foreach (Int2 local in new EnumerableSpace2D(position, position + glyph - Int2.one))
+			foreach (Int2 local in new EnumerableSpace2D(position, position + glyph - Int2.One))
 			{
 				float strength = texture[local].GetElement(0);
 				texture[local] = Vector128.Create(strength);
@@ -46,7 +46,7 @@ public class Font
 				max = max.Max(local);
 			}
 
-			max += Float2.one;
+			max += Float2.One;
 
 			min /= size;
 			max /= size;
@@ -80,10 +80,10 @@ public class Font
 		Float4 colorSource = Utilities.ToColor(style.Color);
 
 		Vector128<float> color = Utilities.ToVector(colorSource);
-		Vector128<float> alpha = Vector128.Create(style.Color.w);
+		Vector128<float> alpha = Vector128.Create(style.Color.W);
 
 		Int2 sampleSquare = (Int2)style.SampleSize;
-		float inverse = 1f / (sampleSquare.x + 1f);
+		float inverse = 1f / (sampleSquare.X + 1f);
 
 		Vector128<float> sizeInverse = Vector128.Create(1f / sampleSquare.Product);
 		Parallel.ForEach(new EnumerableSpace2D(min.Floored, max.Ceiled), DrawPixel);
@@ -94,7 +94,7 @@ public class Font
 			Vector128<float> source = destination[position];
 
 			//Take multiple samples and calculate the average
-			foreach (Int2 offset in new EnumerableSpace2D(Int2.one, sampleSquare))
+			foreach (Int2 offset in new EnumerableSpace2D(Int2.One, sampleSquare))
 			{
 				Float2 point = (position + offset * inverse - center) / multiplier + glyph.origin;
 				if (glyph.minUV <= point && point <= glyph.maxUV) total = Sse.Add(total, texture[point]);
@@ -165,14 +165,14 @@ public class Font
 		};
 
 		Int2 position = new Int2(order % MapSize, order / MapSize);
-		position = new Int2(position.x, MapSize - position.y - 1);
+		position = new Int2(position.X, MapSize - position.Y - 1);
 
-		return position.x + position.y * MapSize;
+		return position.X + position.Y * MapSize;
 	}
 
 	public record Style
 	{
-		public Style(float height) : this(height, Float4.one) { }
+		public Style(float height) : this(height, Float4.One) { }
 
 		public Style(float height, Float4 color)
 		{

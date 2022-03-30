@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Rendering.Distributions;
 
 namespace EchoRenderer.Core.Rendering.Scattering;

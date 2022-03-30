@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using SFML.Graphics;
 using SFML.System;
 
@@ -65,7 +66,7 @@ public class LabelUI : AreaUI
 			FloatRect bounds = display.GetLocalBounds();
 
 			float width = bounds.Width;
-			float area = Dimension.x;
+			float area = Dimension.X;
 
 			switch (Align)
 			{
@@ -120,7 +121,7 @@ public class LabelUI : AreaUI
 	{
 		base.Reorient(position, dimension);
 
-		float fontSize = Math.Max(0f, dimension.y);
+		float fontSize = Math.Max(0f, dimension.Y);
 		display.CharacterSize = (uint)fontSize;
 
 		FloatRect bounds = display.GetLocalBounds();
@@ -136,27 +137,27 @@ public class LabelUI : AreaUI
 			case Alignment.center:
 			{
 				xOrigin = margin + extend;
-				xPosition = position.x + dimension.x / 2f;
+				xPosition = position.X + dimension.X / 2f;
 
 				break;
 			}
 			case Alignment.left:
 			{
 				xOrigin = margin;
-				xPosition = position.x + Margin;
+				xPosition = position.X + Margin;
 
 				break;
 			}
 			case Alignment.right:
 			{
 				xOrigin = margin + extend * 2f;
-				xPosition = position.x + dimension.x - Margin;
+				xPosition = position.X + dimension.X - Margin;
 
 				break;
 			}
 		}
 
-		float y = position.y - dimension.y * 0.16f;
+		float y = position.Y - dimension.Y * 0.16f;
 
 		display.Origin = new Vector2f(xOrigin, 0f);
 		display.Position = new Vector2f(xPosition, y);

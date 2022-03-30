@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -83,8 +84,8 @@ public class TileWorker : IDisposable
 		if (aborted) throw new Exception("Worker already aborted! It should not be used anymore!");
 		if (Working) throw new Exception("Cannot reset when the worker is dispatched and already working!");
 
-		Interlocked.Exchange(ref _renderOffsetX, renderOffset.x);
-		Interlocked.Exchange(ref _renderOffsetY, renderOffset.y);
+		Interlocked.Exchange(ref _renderOffsetX, renderOffset.X);
+		Interlocked.Exchange(ref _renderOffsetY, renderOffset.Y);
 
 		Int2 boarder = renderBuffer.size.Min(RenderOffset + (Int2)size); //Get the furthest buffer position
 		Interlocked.Exchange(ref _totalPixel, (boarder - RenderOffset).Product);
@@ -133,7 +134,7 @@ public class TileWorker : IDisposable
 	void WorkPixel(Int2 localPosition)
 	{
 		Int2 position = localPosition + RenderOffset;
-		if (position.Clamp(Int2.zero, renderBuffer.oneLess) != position) return; //Ignore pixels outside of buffer
+		if (position.Clamp(Int2.Zero, renderBuffer.oneLess) != position) return; //Ignore pixels outside of buffer
 
 		float aspect = 1f / renderBuffer.aspect;
 		RenderPixel pixel = new RenderPixel();
@@ -159,8 +160,8 @@ public class TileWorker : IDisposable
 				Float2 offset = arena.Distribution.Next2D();
 
 				//Sample radiance
-				Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.half;
-				Ray ray = profile.Scene.camera.GetRay(uv.ReplaceY(uv.y * aspect));
+				Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.Half;
+				Ray ray = profile.Scene.camera.GetRay(uv.ReplaceY(uv.Y * aspect));
 				Float3 radiance = evaluator.Evaluate(ray, profile, arena);
 
 				arena.allocator.Release();

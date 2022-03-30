@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -28,7 +29,7 @@ public readonly struct PreparedSphere
 {
 	public PreparedSphere(SphereEntity sphere, MaterialIndex material) : this
 	(
-		sphere.LocalToWorld.MultiplyPoint(Float3.zero),
+		sphere.LocalToWorld.MultiplyPoint(Float3.Zero),
 		sphere.Scale.MaxComponent * sphere.Radius,
 		material
 	) { }
@@ -92,12 +93,12 @@ public readonly struct PreparedSphere
 
 		//Calculate uv
 		Float3 point = offset + ray.direction * distance;
-		float sinP = FastMath.Clamp11(point.y / radius);
+		float sinP = FastMath.Clamp11(point.Y / radius);
 		float sinT = 0f;
 
-		float smallRadius = FastMath.FMA(-point.y, point.y, radius2);
-		if (smallRadius > 0f) sinT = point.x * FastMath.SqrtR0(smallRadius);
-		if (point.z < 0f) sinT += 3f; //Move sinT out of domain when cosT should be negative
+		float smallRadius = FastMath.FMA(-point.Y, point.Y, radius2);
+		if (smallRadius > 0f) sinT = point.X * FastMath.SqrtR0(smallRadius);
+		if (point.Z < 0f) sinT += 3f; //Move sinT out of domain when cosT should be negative
 
 		//Return
 		uv = new Float2(sinT, sinP);
@@ -235,8 +236,8 @@ public readonly struct PreparedSphere
 	/// </summary>
 	static void ToThetaPhi(Float2 uv, out float sinT, out float sinP, out float cosT)
 	{
-		sinT = uv.x;
-		sinP = uv.y;
+		sinT = uv.X;
+		sinP = uv.Y;
 
 		float sign = 1f;
 

@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Continuous;
 

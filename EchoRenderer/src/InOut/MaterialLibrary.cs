@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Texturing;

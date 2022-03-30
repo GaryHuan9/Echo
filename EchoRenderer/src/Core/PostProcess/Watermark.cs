@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Core.PostProcess.Operators;
 using EchoRenderer.Core.Texturing.Grid;
@@ -42,7 +42,7 @@ public class Watermark : PostProcessingWorker
 		Float2 position = renderBuffer.size.X_ + (size / 2f + margin) * new Float2(-1f, 1f);
 
 		Int2 min = (position - size / 2f).Floored;
-		Int2 max = (position + size / 2f).Ceiled + Int2.one;
+		Int2 max = (position + size / 2f).Ceiled + Int2.One;
 
 		//Allocate resources for full resolution Gaussian blur
 		float deviation = height * BlurDeviation;

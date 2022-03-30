@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Terminals;
 
@@ -145,8 +145,8 @@ public class Terminal : IDisposable
 			{
 				CheckHeight(index);
 
-				if (lines.Count <= index.y) return default;
-				return lines[index.y]?[index.x] ?? default;
+				if (lines.Count <= index.Y) return default;
+				return lines[index.Y]?[index.X] ?? default;
 			}
 			set
 			{
@@ -154,12 +154,12 @@ public class Terminal : IDisposable
 
 				if (value == default)
 				{
-					Line line = lines.TryGetValue(index.y);
+					Line line = lines.TryGetValue(index.Y);
 					if (line == null) return;
 				}
 
-				EnsureCapacity(index.y);
-				lines[index.y][index.x] = value;
+				EnsureCapacity(index.Y);
+				lines[index.Y][index.X] = value;
 			}
 		}
 
@@ -168,16 +168,16 @@ public class Terminal : IDisposable
 		{
 			CheckHeight(index);
 
-			Line line = lines.Count < index.y ? null : lines[index.y];
-			return line == null ? default : line.GetSlice(index.x, length);
+			Line line = lines.Count < index.Y ? null : lines[index.Y];
+			return line == null ? default : line.GetSlice(index.X, length);
 		}
 
 		public void SetSlice(Int2 index, ReadOnlySpan<char> slice) //NOTE: Currently indexers do not support stackalloc assignment, so we have to use methods
 		{
 			CheckHeight(index);
-			EnsureCapacity(index.y);
+			EnsureCapacity(index.Y);
 
-			lines[index.y].SetSlice(index.x, slice);
+			lines[index.Y].SetSlice(index.X, slice);
 		}
 
 		public void SetLine(int index, ReadOnlySpan<char> slice)
@@ -186,7 +186,7 @@ public class Terminal : IDisposable
 			EnsureCapacity(index);
 
 			if (lines[index].Count > slice.Length) Clear(index);
-			SetSlice(Int2.up * index, slice);
+			SetSlice(Int2.Up * index, slice);
 		}
 
 		public void Insert(Int2 index, char value) => Insert(index, stackalloc char[1] { value });
@@ -194,30 +194,30 @@ public class Terminal : IDisposable
 		public void Insert(Int2 index, ReadOnlySpan<char> value)
 		{
 			CheckHeight(index);
-			EnsureCapacity(index.y);
+			EnsureCapacity(index.Y);
 
-			Line line = lines[index.y];
+			Line line = lines[index.Y];
 			int length = value.Length;
 
-			Span<char> slice = stackalloc char[line.Count - index.x];
-			line.GetSlice(index.x, slice.Length).CopyTo(slice);
+			Span<char> slice = stackalloc char[line.Count - index.X];
+			line.GetSlice(index.X, slice.Length).CopyTo(slice);
 
-			line.SetSlice(index.x + length, slice);
-			line.SetSlice(index.x, value);
+			line.SetSlice(index.X + length, slice);
+			line.SetSlice(index.X, value);
 		}
 
 		public void Remove(Int2 index, int length = 1)
 		{
 			CheckHeight(index);
 
-			Line line = lines.TryGetValue(index.y);
-			if (line == null || line.Count <= index.x) return;
+			Line line = lines.TryGetValue(index.Y);
+			if (line == null || line.Count <= index.X) return;
 
-			Span<char> slice = stackalloc char[line.Count - index.x - length];
-			line.GetSlice(index.x + length, slice.Length).CopyTo(slice);
+			Span<char> slice = stackalloc char[line.Count - index.X - length];
+			line.GetSlice(index.X + length, slice.Length).CopyTo(slice);
 
-			line.SetSlice(index.x, slice);
-			line.SetSlice(index.x + slice.Length, stackalloc char[length]);
+			line.SetSlice(index.X, slice);
+			line.SetSlice(index.X + slice.Length, stackalloc char[length]);
 		}
 
 		public void Clear(int index)
@@ -271,7 +271,7 @@ public class Terminal : IDisposable
 			Console.WriteLine(writeBuffer, 0, windowWidth);
 		}
 
-		void CheckHeight(Int2 index) => CheckHeight(index.y);
+		void CheckHeight(Int2 index) => CheckHeight(index.Y);
 
 		void CheckHeight(int index)
 		{

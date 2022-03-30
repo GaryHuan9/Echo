@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 
 namespace EchoRenderer.Core.Scenic;
@@ -13,7 +14,7 @@ public class Entity
 
 	Float3 _position;
 	Float3 _rotation;
-	Float3 _scale = Float3.one;
+	Float3 _scale = Float3.One;
 
 	public virtual Float3 Position
 	{

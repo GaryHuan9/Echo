@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Evaluators;

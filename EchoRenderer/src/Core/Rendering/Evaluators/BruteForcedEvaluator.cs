@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
@@ -14,8 +14,8 @@ public class BruteForcedEvaluator : PathTracedEvaluator //Interesting inheritanc
 {
 	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
-		Float3 energy = Float3.one;
-		Float3 radiance = Float3.zero;
+		Float3 energy = Float3.One;
+		Float3 radiance = Float3.Zero;
 
 		var query = new TraceQuery(ray);
 
@@ -36,7 +36,7 @@ public class BruteForcedEvaluator : PathTracedEvaluator //Interesting inheritanc
 			Float3 scatter = touch.bsdf.Sample(touch.outgoing, arena.Distribution.Next2D(), out Float3 incident, out float pdf, out BxDF function);
 			if (touch.shade.material is IEmissive emissive && FastMath.Positive(emissive.Power)) radiance += energy * emissive.Emit(touch.point, touch.outgoing);
 
-			if (!FastMath.Positive(pdf) | !scatter.PositiveRadiance()) energy = Float3.zero;
+			if (!FastMath.Positive(pdf) | !scatter.PositiveRadiance()) energy = Float3.Zero;
 			else energy *= touch.NormalDot(incident) / pdf * scatter;
 
 			if (!energy.PositiveRadiance()) break;

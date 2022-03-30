@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
@@ -38,7 +38,7 @@ public abstract class Material
 	/// <summary>
 	/// The intensity of <see cref="Normal"/> on this <see cref="Material"/>.
 	/// </summary>
-	public Float3 NormalIntensity { get; set; } = Float3.one;
+	public Float3 NormalIntensity { get; set; } = Float3.One;
 
 	bool zeroNormal;
 
@@ -52,7 +52,7 @@ public abstract class Material
 	/// </summary>
 	public virtual void Prepare()
 	{
-		zeroNormal = Normal == Texture.normal || NormalIntensity == Float3.zero;
+		zeroNormal = Normal == Texture.normal || NormalIntensity == Float3.Zero;
 		normalIntensityV = Utilities.ToVector(NormalIntensity);
 	}
 

@@ -1,5 +1,5 @@
 ﻿using System.Runtime.Intrinsics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Texturing.Generative;
 
@@ -7,8 +7,8 @@ public abstract class CacheableTexture : Texture
 {
 	protected CacheableTexture() : base(Wrappers.unbound) { }
 
-	public Float2 Tiling { get; set; } = Float2.one;
-	public Float2 Offset { get; set; } = Float2.zero;
+	public Float2 Tiling { get; set; } = Float2.One;
+	public Float2 Offset { get; set; } = Float2.Zero;
 
 	protected sealed override Vector128<float> Evaluate(Float2 uv) => Sample(uv * Tiling + Offset);
 
