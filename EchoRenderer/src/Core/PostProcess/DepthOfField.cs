@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.PostProcess.Operators;
 using EchoRenderer.Core.Texturing.Grid;

@@ -2,7 +2,7 @@
 using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Acceleration;
 
@@ -19,7 +19,7 @@ public class AabbSimd
 		aabb2 = CreateAABB();
 		aabb3 = CreateAABB();
 
-		aabb0 = new AxisAlignedBoundingBox(Float3.negativeOne, Float3.one);
+		aabb0 = new AxisAlignedBoundingBox(Float3.NegativeOne, Float3.One);
 
 		aabb = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
 

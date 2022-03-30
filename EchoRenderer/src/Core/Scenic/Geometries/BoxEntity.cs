@@ -1,19 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using CodeHelpers.Mathematics;
-using EchoRenderer.Core.Rendering.Materials;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Scenic.Geometries;
 
 public class BoxEntity : GeometryEntity
 {
-	public Float3 Size { get; set; } = Float3.one;
+	public Float3 Size { get; set; } = Float3.One;
 
-	public Float2 Texcoord00 { get; set; } = Float2.zero;
-	public Float2 Texcoord01 { get; set; } = Float2.right;
-	public Float2 Texcoord10 { get; set; } = Float2.up;
-	public Float2 Texcoord11 { get; set; } = Float2.one;
+	public Float2 Texcoord00 { get; set; } = Float2.Zero;
+	public Float2 Texcoord01 { get; set; } = Float2.Right;
+	public Float2 Texcoord10 { get; set; } = Float2.Up;
+	public Float2 Texcoord11 { get; set; } = Float2.One;
 
 	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
 	{

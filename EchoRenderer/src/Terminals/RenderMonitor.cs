@@ -1,6 +1,7 @@
 using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Rendering.Engines;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -12,8 +13,8 @@ public class RenderMonitor : Terminal.Section
 {
 	public RenderMonitor(Terminal terminal) : base(terminal)
 	{
-		statusGrid = new string[gridSize.y][];
-		for (int i = 0; i < statusGrid.Length; i++) statusGrid[i] = new string[gridSize.x];
+		statusGrid = new string[gridSize.Y][];
+		for (int i = 0; i < statusGrid.Length; i++) statusGrid[i] = new string[gridSize.X];
 
 		statusGrid[0][0] = "";
 		statusGrid[0][1] = "Tile";
@@ -67,7 +68,7 @@ public class RenderMonitor : Terminal.Section
 		bool ready = Engine?.Rendering ?? false;
 		bool statusChanged = ready != EngineReady;
 
-		monitorHeight = ready ? Engine.TotalTileSize.y : 0;
+		monitorHeight = ready ? Engine.TotalTileSize.Y : 0;
 		return statusChanged;
 	}
 
@@ -76,13 +77,13 @@ public class RenderMonitor : Terminal.Section
 		const string Message = "Awaiting Render Engine";
 		const int MaxPeriodCount = 3;
 
-		builders.SetSlice(Int2.zero, Message);
+		builders.SetSlice(Int2.Zero, Message);
 
 		int periodCount = (int)(terminal.AliveTime / 1000d % (MaxPeriodCount + 1d));
 		Span<char> periods = stackalloc char[MaxPeriodCount];
 
 		for (int i = 0; i < periodCount; i++) periods[i] = '.';
-		builders.SetSlice(Int2.right * Message.Length, periods);
+		builders.SetSlice(Int2.Right * Message.Length, periods);
 	}
 
 	void DisplayMonitoredStatus()
@@ -131,9 +132,9 @@ public class RenderMonitor : Terminal.Section
 			Engine.CurrentProfile.Scene.OccludeCount
 		};
 
-		Assert.AreEqual(numbers.Length, gridSize.x - 1);
+		Assert.AreEqual(numbers.Length, gridSize.X - 1);
 
-		for (int x = 1; x < gridSize.x; x++)
+		for (int x = 1; x < gridSize.X; x++)
 		{
 			long number = numbers[x - 1];
 			double rate = number / seconds;
@@ -155,14 +156,14 @@ public class RenderMonitor : Terminal.Section
 		}
 
 		//Find max widths for each column
-		Span<int> widths = stackalloc int[gridSize.x];
+		Span<int> widths = stackalloc int[gridSize.X];
 
-		for (int x = 0; x < gridSize.x; x++)
+		for (int x = 0; x < gridSize.X; x++)
 		{
 			ref int width = ref widths[x];
 			width = 0;
 
-			for (int y = 0; y < gridSize.y; y++)
+			for (int y = 0; y < gridSize.Y; y++)
 			{
 				int length = statusGrid[y][x].Length;
 				width = Math.Max(width, length);
@@ -170,15 +171,15 @@ public class RenderMonitor : Terminal.Section
 		}
 
 		//Draw grid to console
-		for (int y = 0; y < gridSize.y; y++)
+		for (int y = 0; y < gridSize.Y; y++)
 		{
 			Int2 cursor = new Int2(0, y + 3);
-			builders.Clear(cursor.y);
+			builders.Clear(cursor.Y);
 
-			for (int x = 0; x < gridSize.x; x++)
+			for (int x = 0; x < gridSize.X; x++)
 			{
 				builders.SetSlice(cursor, " | ");
-				cursor += Int2.right * 3;
+				cursor += Int2.Right * 3;
 
 				string label = statusGrid[y][x];
 				int width = widths[x];
@@ -202,7 +203,7 @@ public class RenderMonitor : Terminal.Section
 		Span<char> margin = stackalloc char[MarginX];
 
 		for (int i = 0; i < MarginX - 1; i++) margin[i] = '=';
-		for (int i = 0; i < tileSize.y; i++) builders.SetSlice(Int2.up * (i + StatusHeight), margin);
+		for (int i = 0; i < tileSize.Y; i++) builders.SetSlice(Int2.Up * (i + StatusHeight), margin);
 
 		//Display rendering monitor
 		foreach (Int2 position in Engine.TotalTileSize.Loop())

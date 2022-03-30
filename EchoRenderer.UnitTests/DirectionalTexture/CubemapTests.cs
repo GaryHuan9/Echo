@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Texturing;
 using EchoRenderer.Core.Texturing.Directional;
 using NUnit.Framework;

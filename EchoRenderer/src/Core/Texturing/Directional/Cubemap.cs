@@ -4,6 +4,7 @@ using System.Runtime.Intrinsics;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.Texturing.Directional;
@@ -84,16 +85,16 @@ public class Cubemap : IDirectionalTexture
 		int index = target.Index;
 		Float2 uv = index switch
 		{
-			0 => new Float2(-direction.z, direction.y),
+			0 => new Float2(-direction.Z, direction.Y),
 			1 => direction.ZY,
-			2 => new Float2(direction.x, -direction.z),
+			2 => new Float2(direction.X, -direction.Z),
 			3 => direction.XZ,
 			4 => direction.XY,
-			5 => new Float2(-direction.x, direction.y),
+			5 => new Float2(-direction.X, direction.Y),
 			_ => throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.unexpected)
 		};
 
 		uv /= target.ExtractComponent(direction);
-		return this[index][uv / 2f + Float2.half];
+		return this[index][uv / 2f + Float2.Half];
 	}
 }

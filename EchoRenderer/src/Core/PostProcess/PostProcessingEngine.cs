@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using EchoRenderer.Common;
 using EchoRenderer.Core.Texturing.Grid;

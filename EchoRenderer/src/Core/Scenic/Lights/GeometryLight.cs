@@ -1,6 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Diagnostics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
@@ -57,7 +56,7 @@ public class GeometryLight : IAreaLight
 		{
 			incident = default;
 			pdf = travel = default;
-			return Float3.zero;
+			return Float3.Zero;
 		}
 
 		travel = FastMath.Sqrt0(travel2);

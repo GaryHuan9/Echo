@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using CodeHelpers.Mathematics;
-using EchoRenderer.Core.Rendering.Materials;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Scenic.Preparation;
 using EchoRenderer.InOut;
 

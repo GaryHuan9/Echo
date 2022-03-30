@@ -83,7 +83,7 @@ public class TextFieldUI : PressableUI
 	{
 		base.OnMousePressed(mouse);
 
-		float x = mouse.point.x - editingDisplay.Position.x;
+		float x = mouse.point.X - editingDisplay.Position.X;
 		cursor.Position = editingDisplay.GetIndex(x);
 	}
 

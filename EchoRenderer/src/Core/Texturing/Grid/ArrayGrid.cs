@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
@@ -40,10 +40,10 @@ public class ArrayGrid : TextureGrid
 	/// </summary>
 	public int ToIndex(Int2 position)
 	{
-		Assert.IsTrue(Int2.zero <= position);
+		Assert.IsTrue(Int2.Zero <= position);
 		Assert.IsTrue(position < size);
 
-		return position.x + position.y * size.x;
+		return position.X + position.Y * size.X;
 	}
 
 	/// <summary>
@@ -52,7 +52,7 @@ public class ArrayGrid : TextureGrid
 	public Int2 ToPosition(int index)
 	{
 		Assert.IsTrue(0 <= index && index < length);
-		return new Int2(index % size.x, index / size.x);
+		return new Int2(index % size.X, index / size.X);
 	}
 
 	public override void CopyFrom(Texture texture, bool parallel = true)

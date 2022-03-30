@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 
 namespace EchoRenderer.Core.PostProcess;
@@ -143,7 +143,7 @@ public class DenoiseOidn : PostProcessingWorker
 		/// </summary>
 		public void Set(string name, IntPtr texture, Int2 size)
 		{
-			oidnSetSharedFilterImage(this, name, texture, Format.float3, size.x, size.y, 0, 0, 0);
+			oidnSetSharedFilterImage(this, name, texture, Format.float3, size.X, size.Y, 0, 0, 0);
 		}
 
 		public void Set(string name, bool value) => oidnSetFilter1b(this, name, value);

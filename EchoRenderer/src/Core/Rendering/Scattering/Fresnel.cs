@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 
@@ -22,7 +22,7 @@ public readonly struct FresnelDielectric
 		GetIndices(ref cosI, out float etaI, out float etaT);
 
 		//Apply Snell's law
-		if (GetCosineTransmittance(cosI, etaI / etaT, out float cosT)) return Float3.one;
+		if (GetCosineTransmittance(cosI, etaI / etaT, out float cosT)) return Float3.One;
 
 		//Fresnel equation
 		return (Float3)Apply(cosI, cosT, etaI, etaT);
@@ -40,7 +40,7 @@ public readonly struct FresnelDielectric
 		if (GetCosineTransmittance(cosI, eta, out float cosT))
 		{
 			transmit = default;
-			return Float3.one;
+			return Float3.One;
 		}
 
 		//Fresnel equation
@@ -154,5 +154,5 @@ public readonly struct FresnelConductor
 		return (para * perp + para) / 2f;
 	}
 
-	static Float3 Sqrt(in Float3 value) => new(FastMath.Sqrt0(value.x), FastMath.Sqrt0(value.y), FastMath.Sqrt0(value.z));
+	static Float3 Sqrt(in Float3 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z));
 }

@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 
 namespace EchoRenderer.UserInterface.Core.Areas;
 
@@ -29,8 +29,8 @@ public class AutoLayoutAreaUI : AreaUI
 
 		if (Horizontal)
 		{
-			float margin = marginSize / Dimension.x;
-			float space = spaceSize / Dimension.x;
+			float margin = marginSize / Dimension.X;
+			float space = spaceSize / Dimension.X;
 
 			float total = 1f - margin * 2f - (count - 1) * space;
 

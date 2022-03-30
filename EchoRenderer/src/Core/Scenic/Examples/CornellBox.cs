@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
@@ -23,17 +24,17 @@ namespace EchoRenderer.Core.Scenic.Examples
 			const float Half = Width / 2f;
 			const float Size = Half / 5f * 3f;
 
-			children.Add(new PlaneEntity { Material = white, Size = (Float2)Width, Position = Float3.zero, Rotation = Float3.zero });                                //Floor
+			children.Add(new PlaneEntity { Material = white, Size = (Float2)Width, Position = Float3.Zero, Rotation = Float3.Zero });                                //Floor
 			children.Add(new PlaneEntity { Material = white, Size = (Float2)Width, Position = new Float3(0f, Width, 0f), Rotation = new Float3(180f, 0f, 0f) });     //Roof
 			children.Add(new PlaneEntity { Material = blue, Size = (Float2)Width, Position = new Float3(0f, Half, Half), Rotation = new Float3(-90f, 0f, 0f) });     //Back
 			children.Add(new PlaneEntity { Material = cullable, Size = (Float2)Width, Position = new Float3(0f, Half, -Half), Rotation = new Float3(90f, 0f, 0f) }); //Front
 
 			children.Add(new PlaneEntity { Material = green, Size = (Float2)Width, Position = new Float3(Half, Half, 0f), Rotation = new Float3(0f, 0f, 90f) }); //Right
 			children.Add(new PlaneEntity { Material = red, Size = (Float2)Width, Position = new Float3(-Half, Half, 0f), Rotation = new Float3(0f, 0f, -90f) }); //Left
-			children.Add(new PlaneEntity { Material = light, Size = (Float2)Half, Position = new Float3(0f, Width - 0.01f, 0f), Rotation = Float3.zero });       //Light
+			children.Add(new PlaneEntity { Material = light, Size = (Float2)Half, Position = new Float3(0f, Width - 0.01f, 0f), Rotation = Float3.Zero });       //Light
 
-			children.Add(new BoxEntity { Material = white, Size = (Float3)Size, Position = new Float3(Size / 1.5f, Size / 2f, -Size / 1.5f), Rotation = Float3.up * 21f });
-			children.Add(new BoxEntity { Material = white, Size = new Float3(Size, Size * 2f, Size), Position = new Float3(-Size / 1.5f, Size, Size / 1.5f), Rotation = Float3.up * -21f });
+			children.Add(new BoxEntity { Material = white, Size = (Float3)Size, Position = new Float3(Size / 1.5f, Size / 2f, -Size / 1.5f), Rotation = Float3.Up * 21f });
+			children.Add(new BoxEntity { Material = white, Size = new Float3(Size, Size * 2f, Size), Position = new Float3(-Size / 1.5f, Size, Size / 1.5f), Rotation = Float3.Up * -21f });
 
 			// const float Radius = 0.4f;
 			// const int Count = 3;
@@ -53,7 +54,7 @@ namespace EchoRenderer.Core.Scenic.Examples
 			Camera camera = new Camera(42f) { Position = new Float3(0f, Half, -Half) };
 
 			float radian = camera.FieldOfView / 2f * Scalars.DegreeToRadian;
-			camera.Position += Float3.backward * (Half / MathF.Tan(radian));
+			camera.Position += Float3.Backward * (Half / MathF.Tan(radian));
 
 			children.Add(camera); //Position: (0, 5, -18.025444)
 		}

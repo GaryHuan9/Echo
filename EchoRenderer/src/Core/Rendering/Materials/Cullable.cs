@@ -1,6 +1,6 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -56,7 +56,7 @@ public class Cullable : Material, IEmissive
 	public Float3 Emit(in GeometryPoint point, in Float3 outgoing)
 	{
 		bool none = emissive == null || Cull(point.normal, outgoing);
-		return none ? Float3.zero : emissive.Emit(point, outgoing);
+		return none ? Float3.Zero : emissive.Emit(point, outgoing);
 	}
 
 	bool Cull(in Touch touch) => Cull(touch.point.normal, touch.outgoing);

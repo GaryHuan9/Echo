@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using SFML.Graphics;
 
 namespace EchoRenderer.UserInterface.Core.Areas;

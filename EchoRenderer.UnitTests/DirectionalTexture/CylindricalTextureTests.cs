@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 using EchoRenderer.Core.Texturing.Directional;
 using NUnit.Framework;
 

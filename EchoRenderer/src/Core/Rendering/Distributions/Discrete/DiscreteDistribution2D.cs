@@ -1,6 +1,6 @@
 using System;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Memory;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Discrete;
@@ -22,11 +22,11 @@ public class DiscreteDistribution2D
 		size = new Int2(width, function.Length / width);
 		Assert.AreEqual(function.Length, size.Product);
 
-		slices = new DiscreteDistribution1D[size.y];
-		using var _ = Pool<float>.Fetch(size.y, out var sums);
+		slices = new DiscreteDistribution1D[size.Y];
+		using var _ = Pool<float>.Fetch(size.Y, out var sums);
 
 		//Create single dimensional functions and collect integrals
-		for (int y = 0; y < size.y; y++)
+		for (int y = 0; y < size.Y; y++)
 		{
 			var slice = new DiscreteDistribution1D(function.Slice(y * width, width));
 
@@ -62,7 +62,7 @@ public class DiscreteDistribution2D
 	public Sample2D Sample(Sample2D sample, out float pdf)
 	{
 		Sample1D y = vertical.Sample(sample.y, out float pdfY);
-		Sample1D x = slices[y.Range(size.y)].Sample(sample.x, out pdf);
+		Sample1D x = slices[y.Range(size.Y)].Sample(sample.x, out pdf);
 
 		pdf *= pdfY;
 		return new Sample2D(x, y);
@@ -87,7 +87,7 @@ public class DiscreteDistribution2D
 	/// </summary>
 	public float ProbabilityDensity(Sample2D sample)
 	{
-		DiscreteDistribution1D slice = slices[sample.y.Range(size.y)];
+		DiscreteDistribution1D slice = slices[sample.y.Range(size.Y)];
 
 		float pdfX = slice.ProbabilityDensity(sample.x);
 		float pdfY = vertical.ProbabilityDensity(sample.y);
@@ -101,10 +101,10 @@ public class DiscreteDistribution2D
 	/// </summary>
 	public float ProbabilityDensity(Int2 point)
 	{
-		DiscreteDistribution1D slice = slices[point.y];
+		DiscreteDistribution1D slice = slices[point.Y];
 
-		float pdfX = slice.ProbabilityDensity(point.x);
-		float pdfY = vertical.ProbabilityDensity(point.y);
+		float pdfX = slice.ProbabilityDensity(point.X);
+		float pdfY = vertical.ProbabilityDensity(point.Y);
 
 		return pdfX * pdfY;
 	}
