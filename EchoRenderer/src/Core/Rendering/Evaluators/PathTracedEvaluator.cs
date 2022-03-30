@@ -18,7 +18,17 @@ namespace EchoRenderer.Core.Rendering.Evaluators;
 
 public class PathTracedEvaluator : Evaluator
 {
-	protected override ContinuousDistribution CreateDistribution(RenderProfile profile) => new StratifiedDistribution(profile.TotalSample);
+	/// <summary>
+	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
+	/// If such occurrence appears, the sample becomes biased and this property should be increased.
+	/// </summary>
+	public int BounceLimit { get; set; } = 128;
+
+	/// <summary>
+	/// The survivability of a path with during unbiased path termination. As this value goes up, the amount of variance decreases,
+	/// and the time spend on each path increases. This value should be relatively high for interior scenes while low for outdoors.
+	/// </summary>
+	public float Survivability { get; set; } = 2.5f;
 
 	//NOTE: although the word 'radiant' is frequently used here to denote particles of energy accumulating,
 	//technically it is not correct because the size of the emitter could be either a point or an area,
@@ -43,7 +53,7 @@ public class PathTracedEvaluator : Evaluator
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
 
-		for (int depth = 0; depth < profile.BounceLimit; depth++)
+		for (int depth = 0; depth < BounceLimit; depth++)
 		{
 			//Sample the bsdf
 			var bounce = new Bounce(path.touch, distribution.Next2D());
@@ -56,7 +66,7 @@ public class PathTracedEvaluator : Evaluator
 			if (bounce.IsSpecular)
 			{
 				//Check if the path is exhausted
-				if (path.Advance(bounce, distribution.Next1D())) break;
+				if (path.Advance(bounce, Survivability, distribution.Next1D())) break;
 
 				//Begin finding a new bounce
 				allocator.Restart();
@@ -87,7 +97,7 @@ public class PathTracedEvaluator : Evaluator
 					weight *= PowerHeuristic(bounce.pdf, area!.ProbabilityDensity(path.touch.point, bounce.incident));
 				}
 
-				if (path.Advance(bounce, distribution.Next1D())) break; //Path exhausted
+				if (path.Advance(bounce, Survivability, distribution.Next1D())) break; //Path exhausted
 
 				allocator.Restart();
 
@@ -114,6 +124,8 @@ public class PathTracedEvaluator : Evaluator
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		Float3 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(path.CurrentDirection);
 	}
+
+	protected override ContinuousDistribution CreateDistribution(RenderProfile profile) => new StratifiedDistribution(profile.TotalSample);
 
 	/// <summary>
 	/// Importance samples <paramref name="light"/> at <paramref name="touch"/> and returns the sampled radiant.
@@ -189,12 +201,12 @@ public class PathTracedEvaluator : Evaluator
 			return false;
 		}
 
-		public bool Advance(in Bounce bounce, Sample1D sample)
+		public bool Advance(in Bounce bounce, float survivability, Sample1D sample)
 		{
 			energy *= bounce.scatter / bounce.pdf;
 
-			//Path termination with Russian Roulette
-			bool exhausted = RussianRoulette(ref energy, sample);
+			//Conditional path termination with Russian Roulette
+			bool exhausted = RussianRoulette(ref energy, survivability, sample);
 			if (!exhausted) query = query.SpawnTrace(bounce.incident);
 
 			return exhausted;
@@ -209,15 +221,14 @@ public class PathTracedEvaluator : Evaluator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool RussianRoulette(ref Float3 energy, Sample1D sample)
+		static bool RussianRoulette(ref Float3 energy, float survivability, Sample1D sample)
 		{
-			return !energy.PositiveRadiance();
-
 			float luminance = PackedMath.GetLuminance(Utilities.ToVector(energy));
+			float probability = FastMath.Clamp01(survivability * luminance);
 
-			if (sample >= luminance) return true;
+			if (sample >= probability) return true;
 
-			energy *= 1f / luminance;
+			energy *= 1f / probability;
 			return false;
 		}
 	}

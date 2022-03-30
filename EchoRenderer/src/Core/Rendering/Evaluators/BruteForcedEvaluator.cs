@@ -10,7 +10,7 @@ using EchoRenderer.Core.Scenic.Lights;
 
 namespace EchoRenderer.Core.Rendering.Evaluators;
 
-public class BruteForcedEvaluator : Evaluator
+public class BruteForcedEvaluator : PathTracedEvaluator //Interesting inheritance, we will probably remove this later
 {
 	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
@@ -19,7 +19,7 @@ public class BruteForcedEvaluator : Evaluator
 
 		var query = new TraceQuery(ray);
 
-		for (int bounce = 0; bounce < profile.BounceLimit; bounce++)
+		for (int bounce = 0; bounce < BounceLimit; bounce++)
 		{
 			if (!profile.Scene.Trace(ref query)) break;
 			using var _ = arena.allocator.Begin();
