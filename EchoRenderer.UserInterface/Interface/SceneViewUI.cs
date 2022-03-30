@@ -2,6 +2,7 @@
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Rendering.Engines;
 using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Scenic;

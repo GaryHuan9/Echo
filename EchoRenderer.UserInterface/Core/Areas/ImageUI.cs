@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 using SFML.Graphics;
 
 namespace EchoRenderer.UserInterface.Core.Areas;
@@ -32,7 +32,7 @@ public class ImageUI : AreaUI
 			display.Texture = value;
 
 			Int2 size = value.Size.Cast();
-			display.TextureRect = new IntRect(0, 0, size.x, size.y);
+			display.TextureRect = new IntRect(0, 0, size.X, size.Y);
 		}
 	}
 
@@ -52,7 +52,7 @@ public class ImageUI : AreaUI
 		if (KeepAspect)
 		{
 			float aspect = (float)Texture.Size.X / Texture.Size.Y;
-			int majorAxis = aspect * dimension.y / dimension.x > 1f ? 0 : 1;
+			int majorAxis = aspect * dimension.Y / dimension.X > 1f ? 0 : 1;
 
 			Float2 center = position + dimension / 2f;
 			float border = dimension[majorAxis];

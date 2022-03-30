@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.InOut;
 
@@ -54,9 +55,9 @@ public partial class TextureGrid
 		}
 
 		//Export
-		using Bitmap bitmap = new Bitmap(size.x, size.y);
+		using Bitmap bitmap = new Bitmap(size.X, size.Y);
 
-		Rectangle rectangle = new Rectangle(0, 0, size.x, size.y);
+		Rectangle rectangle = new Rectangle(0, 0, size.X, size.Y);
 		BitmapData bits = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
 
 		unsafe
@@ -98,7 +99,7 @@ public partial class TextureGrid
 
 		ArrayGrid texture = new ArrayGrid(size);
 
-		Rectangle rectangle = new Rectangle(0, 0, texture.size.x, texture.size.y);
+		Rectangle rectangle = new Rectangle(0, 0, texture.size.X, texture.size.Y);
 		BitmapData data = source.LockBits(rectangle, ImageLockMode.ReadOnly, format);
 
 		byte* origin = (byte*)data.Scan0;
@@ -145,7 +146,7 @@ public partial class TextureGrid
 	/// <summary>
 	/// Returns an index/offset to the origin of a <see cref="BitmapData"/> during serialization.
 	/// </summary>
-	int ToPointerOffset(Int2 position) => position.x + (oneLess.y - position.y) * size.x;
+	int ToPointerOffset(Int2 position) => position.X + (oneLess.Y - position.Y) * size.X;
 
 	static unsafe Vector128<float> ForwardGammaCorrect(Vector128<float> value)
 	{

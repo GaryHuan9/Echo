@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
@@ -138,7 +138,7 @@ public class PathTracedEvaluator : Evaluator
 
 		Float3 radiant = light.Sample(touch.point, sample, out Float3 incident, out float radiantPdf, out float travel);
 
-		if (!FastMath.Positive(radiantPdf) | !radiant.PositiveRadiance()) return Float3.zero;
+		if (!FastMath.Positive(radiantPdf) | !radiant.PositiveRadiance()) return Float3.Zero;
 
 		//Evaluate bsdf at the direction sampled for our light
 		ref readonly Float3 outgoing = ref touch.outgoing;
@@ -146,9 +146,9 @@ public class PathTracedEvaluator : Evaluator
 		scatter *= touch.NormalDot(incident);
 
 		//Conditionally terminate if radiant cannot be positive
-		if (!scatter.PositiveRadiance()) return Float3.zero;
+		if (!scatter.PositiveRadiance()) return Float3.Zero;
 		var query = touch.SpawnOcclude(incident, travel);
-		if (scene.Occlude(ref query)) return Float3.zero;
+		if (scene.Occlude(ref query)) return Float3.Zero;
 
 		//Calculate final radiant
 		radiant *= 1f / radiantPdf;
@@ -169,8 +169,8 @@ public class PathTracedEvaluator : Evaluator
 	{
 		public Path(in Ray ray)
 		{
-			Result = Float3.zero;
-			energy = Float3.one;
+			Result = Float3.Zero;
+			energy = Float3.One;
 			Unsafe.SkipInit(out touch);
 			query = new TraceQuery(ray);
 		}

@@ -2,6 +2,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Texturing.Generative;
 
@@ -17,8 +18,8 @@ public class GradientTexture : CacheableTexture
 		set => _gradient = value;
 	}
 
-	Float2 _point0 = Float2.zero;
-	Float2 _point1 = Float2.one;
+	Float2 _point0 = Float2.Zero;
+	Float2 _point1 = Float2.One;
 
 	public Float2 Point0
 	{

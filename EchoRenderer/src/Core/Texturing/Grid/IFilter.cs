@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Core.Texturing.Grid;
@@ -66,21 +66,21 @@ public static class Filters
 			uv *= texture.size;
 
 			Int2 upperRight = uv.Rounded;
-			Int2 bottomLeft = upperRight - Int2.one;
+			Int2 bottomLeft = upperRight - Int2.One;
 
 			upperRight = upperRight.Min(texture.oneLess);
-			bottomLeft = bottomLeft.Max(Int2.zero);
+			bottomLeft = bottomLeft.Max(Int2.Zero);
 
 			//Prefetch color data (273.6 ns => 194.6 ns)
 			Vector128<float> y0x0 = texture[bottomLeft];
-			Vector128<float> y0x1 = texture[new Int2(upperRight.x, bottomLeft.y)];
+			Vector128<float> y0x1 = texture[new Int2(upperRight.X, bottomLeft.Y)];
 
-			Vector128<float> y1x0 = texture[new Int2(bottomLeft.x, upperRight.y)];
+			Vector128<float> y1x0 = texture[new Int2(bottomLeft.X, upperRight.Y)];
 			Vector128<float> y1x1 = texture[upperRight];
 
 			//Interpolate
-			Vector128<float> timeX = Vector128.Create(InverseLerp(bottomLeft.x, upperRight.x, uv.x - 0.5f));
-			Vector128<float> timeY = Vector128.Create(InverseLerp(bottomLeft.y, upperRight.y, uv.y - 0.5f));
+			Vector128<float> timeX = Vector128.Create(InverseLerp(bottomLeft.X, upperRight.X, uv.X - 0.5f));
+			Vector128<float> timeY = Vector128.Create(InverseLerp(bottomLeft.Y, upperRight.Y, uv.Y - 0.5f));
 
 			Vector128<float> y0 = PackedMath.Lerp(y0x0, y0x1, timeX);
 			Vector128<float> y1 = PackedMath.Lerp(y1x0, y1x1, timeX);

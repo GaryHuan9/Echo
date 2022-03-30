@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Texturing.Directional;
@@ -44,12 +44,12 @@ public abstract class DirectionalTextureBaseTests
 	{
 		IRandom random = Utilities.NewRandom();
 
-		ArrayGrid texture = new ArrayGrid(Next2(random, maxSize - Int2.one) + Int2.one);
+		ArrayGrid texture = new ArrayGrid(Next2(random, maxSize - Int2.One) + Int2.One);
 		texture.ForEach(position => texture[position] = Common.Utilities.ToVector(random.Next3()));
 
 		return texture;
 
-		static Int2 Next2(IRandom random, Int2 max) => new(random.Next1(max.x), random.Next1(max.y));
+		static Int2 Next2(IRandom random, Int2 max) => new(random.Next1(max.X), random.Next1(max.Y));
 	}
 
 	static float Difference(in Vector128<float> value, in Vector128<float> other)

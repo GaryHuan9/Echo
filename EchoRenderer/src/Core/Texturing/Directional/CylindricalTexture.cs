@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Distributions;
@@ -39,7 +40,7 @@ public class CylindricalTexture : IDirectionalTexture
 		Texture texture = Texture;
 		Int2 size = texture.DiscreteResolution;
 
-		Assert.IsTrue(size > Int2.zero);
+		Assert.IsTrue(size > Int2.Zero);
 		Float2 sizeR = 1f / size;
 
 		using var _ = Pool<float>.Fetch(size.Product, out View<float> weights);
@@ -49,17 +50,17 @@ public class CylindricalTexture : IDirectionalTexture
 		var locker = new object();
 
 		//Loop through all horizontal rows
-		Parallel.For(0, size.y, () => Summation.Zero, (y, _, sum) =>
+		Parallel.For(0, size.Y, () => Summation.Zero, (y, _, sum) =>
 		{
 			//Calculate sin weights and create fill for this horizontal row
-			float sin0 = MathF.Sin(Scalars.PI * (y + 0f) * sizeR.y);
-			float sin1 = MathF.Sin(Scalars.PI * (y + 1f) * sizeR.y);
-			SpanFill<float> fill = weights.AsSpan(y * size.x, size.x);
+			float sin0 = MathF.Sin(Scalars.PI * (y + 0f) * sizeR.Y);
+			float sin1 = MathF.Sin(Scalars.PI * (y + 1f) * sizeR.Y);
+			SpanFill<float> fill = weights.AsSpan(y * size.X, size.X);
 
 			//Loop horizontally, caching the sum of the two previous x colors
 			var previous = Grab(0);
 
-			for (int x = 1; x <= size.x; x++)
+			for (int x = 1; x <= size.X; x++)
 			{
 				var current = Grab(x);
 
@@ -97,7 +98,7 @@ public class CylindricalTexture : IDirectionalTexture
 
 		//Construct distribution and calculate average from total sum
 		float weight = 2f / Scalars.PI / size.Product;
-		distribution = new DiscreteDistribution2D(weights, size.x);
+		distribution = new DiscreteDistribution2D(weights, size.X);
 		Average = Sse.Multiply(total.Result, Vector128.Create(weight));
 	}
 
@@ -115,8 +116,8 @@ public class CylindricalTexture : IDirectionalTexture
 			return Vector128<float>.Zero;
 		}
 
-		float angle0 = uv.x * Scalars.TAU;
-		float angle1 = uv.y * Scalars.PI;
+		float angle0 = uv.X * Scalars.TAU;
+		float angle1 = uv.Y * Scalars.PI;
 
 		FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
 		FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
@@ -133,7 +134,7 @@ public class CylindricalTexture : IDirectionalTexture
 	public float ProbabilityDensity(in Float3 incident)
 	{
 		Float2 uv = ToUV(incident);
-		float cosP = -incident.y;
+		float cosP = -incident.Y;
 		float sinP = FastMath.Identity(cosP);
 
 		if (sinP <= 0f) return 0f;
@@ -144,7 +145,7 @@ public class CylindricalTexture : IDirectionalTexture
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float2 ToUV(in Float3 direction) => new
 	(
-		FastMath.FMA(MathF.Atan2(direction.x, direction.z), 0.5f / Scalars.PI, 0.5f),
-		FastMath.FMA(MathF.Acos(FastMath.Clamp11(direction.y)), -1f / Scalars.PI, 1f)
+		FastMath.FMA(MathF.Atan2(direction.X, direction.Z), 0.5f / Scalars.PI, 0.5f),
+		FastMath.FMA(MathF.Acos(FastMath.Clamp11(direction.Y)), -1f / Scalars.PI, 1f)
 	);
 }

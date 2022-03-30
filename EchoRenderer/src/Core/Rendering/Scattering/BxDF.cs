@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Rendering.Distributions;
 
@@ -9,7 +10,7 @@ namespace EchoRenderer.Core.Rendering.Scattering;
 /// <summary>
 /// The base class for either a bidirectional reflectance or transmittance distribution function.
 /// NOTE: unless specifically indicated, all directions in this class is in local space, meaning
-/// <see cref="Float3.forward"/> is the surface normal at our point of interest, and incident and
+/// <see cref="Float3.Forward"/> is the surface normal at our point of interest, and incident and
 /// outgoing directions point away from that point.
 /// </summary>
 public abstract class BxDF
@@ -43,7 +44,7 @@ public abstract class BxDF
 	public virtual Float3 Sample(in Float3 outgoing, Sample2D sample, out Float3 incident, out float pdf)
 	{
 		incident = sample.CosineHemisphere;
-		if (outgoing.z < 0f) incident = new Float3(incident.x, incident.y, -incident.z);
+		if (outgoing.Z < 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
 
 		pdf = ProbabilityDensity(outgoing, incident);
 		return Evaluate(outgoing, incident);
@@ -55,7 +56,7 @@ public abstract class BxDF
 	/// </summary>
 	public virtual Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples)
 	{
-		Float3 result = Float3.zero;
+		Float3 result = Float3.Zero;
 
 		foreach (ref readonly Sample2D sample in samples)
 		{
@@ -72,7 +73,7 @@ public abstract class BxDF
 	/// </summary>
 	public virtual Float3 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
 	{
-		Float3 result = Float3.zero;
+		Float3 result = Float3.Zero;
 		int length = samples0.Length;
 
 		Assert.AreEqual(length, samples1.Length);
@@ -95,27 +96,27 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns the local surface normal that lies in the same hemisphere as <paramref name="direction"/>.
 	/// </summary>
-	public static Float3 Normal(in Float3 direction) => direction.z < 0f ? Float3.backward : Float3.forward;
+	public static Float3 Normal(in Float3 direction) => direction.Z < 0f ? Float3.Backward : Float3.Forward;
 
 	/// <summary>
 	/// Returns the cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float CosineP(in Float3 direction) => direction.z;
+	public static float CosineP(in Float3 direction) => direction.Z;
 
 	/// <summary>
 	/// Returns the cosine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float CosineP2(in Float3 direction) => direction.z * direction.z;
+	public static float CosineP2(in Float3 direction) => direction.Z * direction.Z;
 
 	/// <summary>
 	/// Returns the absolute cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float AbsoluteCosineP(in Float3 direction) => FastMath.Abs(direction.z);
+	public static float AbsoluteCosineP(in Float3 direction) => FastMath.Abs(direction.Z);
 
 	/// <summary>
 	/// Returns the sine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float SineP2(in Float3 direction) => FastMath.OneMinus2(direction.z);
+	public static float SineP2(in Float3 direction) => FastMath.OneMinus2(direction.Z);
 
 	/// <summary>
 	/// Returns the sine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
@@ -139,7 +140,7 @@ public abstract class BxDF
 	{
 		float sin = SineP(direction);
 		if (sin == 0f) return 1f;
-		return FastMath.Clamp11(direction.x / sin);
+		return FastMath.Clamp11(direction.X / sin);
 	}
 
 	/// <summary>
@@ -149,7 +150,7 @@ public abstract class BxDF
 	{
 		float sin = SineP(direction);
 		if (sin == 0f) return 0f;
-		return FastMath.Clamp11(direction.y / sin);
+		return FastMath.Clamp11(direction.Y / sin);
 	}
 
 	/// <summary>
@@ -159,7 +160,7 @@ public abstract class BxDF
 	{
 		float sin2 = SineP2(direction);
 		if (sin2 == 0f) return 1f;
-		return FastMath.Clamp01(direction.x * direction.x / sin2);
+		return FastMath.Clamp01(direction.X * direction.X / sin2);
 	}
 
 	/// <summary>
@@ -169,11 +170,11 @@ public abstract class BxDF
 	{
 		float sin2 = SineP2(direction);
 		if (sin2 == 0f) return 0f;
-		return FastMath.Clamp01(direction.y * direction.y / sin2);
+		return FastMath.Clamp01(direction.Y * direction.Y / sin2);
 	}
 
 	/// <summary>
 	/// Returns whether the local directions <paramref name="local0"/> and <paramref name="local1"/> are in the same hemisphere.
 	/// </summary>
-	public static bool SameHemisphere(in Float3 local0, in Float3 local1) => local0.z * local1.z > 0f;
+	public static bool SameHemisphere(in Float3 local0, in Float3 local1) => local0.Z * local1.Z > 0f;
 }

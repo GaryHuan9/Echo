@@ -2,6 +2,7 @@ using System;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Aggregation.Primitives;

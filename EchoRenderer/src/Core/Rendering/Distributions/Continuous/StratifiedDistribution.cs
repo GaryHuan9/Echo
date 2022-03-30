@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Continuous;
 
@@ -65,7 +65,7 @@ public class StratifiedDistribution : HorizontalDistribution
 		for (int x = 0; x < size; x++)
 		for (int y = 0; y < size; y++)
 		{
-			Float2 offset = Jitter ? Prng.Next2() : Float2.half;
+			Float2 offset = Jitter ? Prng.Next2() : Float2.Half;
 			Float2 position = new Float2(x, y) + offset;
 			span[x * size + y] = (Sample2D)(position * sizeR);
 		}
@@ -88,7 +88,7 @@ public class StratifiedDistribution : HorizontalDistribution
 
 		for (int i = 0; i < span.Length; i++)
 		{
-			Float2 offset = Jitter ? Prng.Next2() : Float2.half;
+			Float2 offset = Jitter ? Prng.Next2() : Float2.Half;
 			Float2 position = new Float2(spanX[i], spanY[i]);
 			span[i] = (Sample2D)((position + offset) * lengthR);
 		}

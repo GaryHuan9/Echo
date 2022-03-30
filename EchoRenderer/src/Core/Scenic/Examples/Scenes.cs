@@ -1,6 +1,7 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
@@ -33,8 +34,8 @@ public class SingleBunny : StandardScene
 
 		children.Add(new SphereEntity { Material = material3, Radius = 1f, Position = new Float3(-3f, 1f, -2f) });
 
-		children.Add(new PlaneEntity { Material = material2, Size = Float2.one * 2f, Position = new Float3(4f, 1f, -2f), Rotation = new Float3(0f, 0f, 90f) });
-		children.Add(new PlaneEntity { Material = material2, Size = Float2.one * 2f, Position = new Float3(-5f, 1f, -3f), Rotation = new Float3(0f, 0f, 90f) });
+		children.Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(4f, 1f, -2f), Rotation = new Float3(0f, 0f, 90f) });
+		children.Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(-5f, 1f, -3f), Rotation = new Float3(0f, 0f, 90f) });
 
 		children.Add(new PointLight { Intensity = new Float3(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
 		children.Add(new PointLight { Intensity = new Float3(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
@@ -104,7 +105,7 @@ public class GridSpheres : Scene
 	public GridSpheres()
 	{
 		children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
-		children.Add(new Camera(100f) { Position = new Float3(0f, 0f, -3f), Rotation = Float3.zero });
+		children.Add(new Camera(100f) { Position = new Float3(0f, 0f, -3f), Rotation = Float3.Zero });
 
 		const int Width = 10;
 		const int Height = 4;
@@ -154,14 +155,14 @@ public class TestInstancing : Scene
 		bunnyWall.children.Add(new PlaneEntity { Material = material0, Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });
 		// bunnyWall.children.Add(new PackInstance{EntityPack = bunnyWall}); //Tests recursive instancing
 
-		children.Add(new BoxEntity { Material = material0, Size = Float3.one });
-		children.Add(new PlaneEntity { Material = material1, Size = Float2.one * 0.9f, Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
+		children.Add(new BoxEntity { Material = material0, Size = Float3.One });
+		children.Add(new PlaneEntity { Material = material1, Size = Float2.One * 0.9f, Position = new Float3(-1.1f, -0.4f, 0.3f), Rotation = new Float3(-70f, 20f, 30f) });
 
 		children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale((Float3)1.5f) } });
 
 		var camera = new Camera(110f) { Position = new Float3(4f, 27f, -25f) };
 
-		camera.LookAt(Float3.zero);
+		camera.LookAt(Float3.Zero);
 		children.Add(camera);
 	}
 }

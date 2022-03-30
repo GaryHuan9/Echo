@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 
 namespace EchoRenderer.Core.Texturing.Grid;
@@ -41,7 +42,7 @@ public class ProgressiveRenderBuffer : RenderBuffer
 			int index = ToIndex(position); //The global positional index of the pixel
 
 			int offset = index - ToIndex(position.Replace(MajorAxis, 0));     //This pixel's offset from axis origin
-			int flipped = ToIndex(position.ReplaceY(oneLess.y - position.y)); //Serialized byte array needs flipped Y axis index
+			int flipped = ToIndex(position.ReplaceY(oneLess.Y - position.Y)); //Serialized byte array needs flipped Y axis index
 
 			Color32 color32 = (Color32)Utilities.ToFloat3(value); //Convert value to color32 with max alpha
 			uint color = Unsafe.As<Color32, uint>(ref color32);   //Bit align color32 to uint for chunk writing

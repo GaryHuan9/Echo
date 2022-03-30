@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Noises;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 
 namespace EchoRenderer.Core.Texturing.Generative;

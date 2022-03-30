@@ -1,6 +1,7 @@
 using System;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Common.Mathematics.Randomization;
 
@@ -165,7 +166,7 @@ public interface IRandom
 	public sealed Float2 NextSample()
 	{
 		Float2 position = new Float2(NextGaussian(), NextGaussian()) / 6f;
-		return position.Clamp(Float2.negativeHalf, Float2.half) + Float2.half;
+		return position.Clamp(Float2.NegativeHalf, Float2.Half) + Float2.Half;
 	}
 
 	/// <summary>

@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Common.Memory;
@@ -70,9 +70,9 @@ public abstract class Evaluator
 		public readonly Float3 normal;
 		public readonly float zDepth;
 
-		public bool IsNaN => float.IsNaN(colour.x) || float.IsNaN(colour.y) || float.IsNaN(colour.z) ||
-							 float.IsNaN(albedo.x) || float.IsNaN(albedo.y) || float.IsNaN(albedo.z) ||
-							 float.IsNaN(normal.x) || float.IsNaN(normal.y) || float.IsNaN(normal.z) ||
+		public bool IsNaN => float.IsNaN(colour.X) || float.IsNaN(colour.Y) || float.IsNaN(colour.Z) ||
+							 float.IsNaN(albedo.X) || float.IsNaN(albedo.Y) || float.IsNaN(albedo.Z) ||
+							 float.IsNaN(normal.X) || float.IsNaN(normal.Y) || float.IsNaN(normal.Z) ||
 							 float.IsNaN(zDepth);
 
 		public static implicit operator Sample(in Float3 colour) => new(colour);

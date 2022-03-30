@@ -2,11 +2,11 @@
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Scattering;
 using EchoRenderer.Core.Texturing;
 
 namespace EchoRenderer.Core.Rendering.Materials;
@@ -36,8 +36,8 @@ public class Emissive : Material, IEmissive
 
 		Parallel.For(0, size.Product, () => Summation.Zero, (i, _, sum) =>
 		{
-			Int2 position = new Int2(i % size.x, i / size.x);
-			return sum + texture[(position + Float2.half) * sizeR];
+			Int2 position = new Int2(i % size.X, i / size.X);
+			return sum + texture[(position + Float2.Half) * sizeR];
 		}, sum =>
 		{
 			//Accumulate sums

@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Collections;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using CodeHelpers.Threads;
 
@@ -304,7 +304,7 @@ public class Mesh
 
 	static Int3 ParseIndices(ReadOnlySpan<char> span, ReadOnlySpan<Range> ranges)
 	{
-		Int3 result = Int3.negativeOne;
+		Int3 result = Int3.NegativeOne;
 
 		for (int i = 0; i < 3; i++)
 		{

@@ -1,4 +1,5 @@
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -29,7 +30,7 @@ public class PointLight : LightSource
 		{
 			incident = default;
 			pdf = travel = default;
-			return Float3.zero;
+			return Float3.Zero;
 		}
 
 		pdf = 1f;

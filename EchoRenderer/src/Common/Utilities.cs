@@ -5,6 +5,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Common;
 
@@ -131,7 +132,7 @@ public static class Utilities
 		return hashCode;
 	}
 
-	public static int Morton(Int2 position) => Saw((short)position.x) | (Saw((short)position.y) << 1); //Uses Morton encoding to improve cache hit chance
+	public static int Morton(Int2 position) => Saw((short)position.X) | (Saw((short)position.Y) << 1); //Uses Morton encoding to improve cache hit chance
 	public static Int2 Morton(int index) => new(Unsaw(index), Unsaw(index >> 1));
 
 	/// <summary>

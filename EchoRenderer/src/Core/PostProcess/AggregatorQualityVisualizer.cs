@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common;
 using EchoRenderer.Core.Texturing;
@@ -58,8 +58,8 @@ public class AggregatorQualityVisualizer : PostProcessingWorker
 			$"Max {max:N0}"
 		};
 
-		float height = renderBuffer.size.y * Scale;
-		var style = new Font.Style(height, Float4.one);
+		float height = renderBuffer.size.Y * Scale;
+		var style = new Font.Style(height, Float4.One);
 
 		for (int i = 0; i < labels.Length; i++)
 		{
@@ -75,9 +75,9 @@ public class AggregatorQualityVisualizer : PostProcessingWorker
 	{
 		Float4 source = Utilities.ToFloat4(renderBuffer[position]);
 
-		InterlockedHelper.Max(ref maxCost, source.x);
-		InterlockedHelper.Max(ref totalCost, source.y);
-		InterlockedHelper.Max(ref totalSample, source.z);
+		InterlockedHelper.Max(ref maxCost, source.X);
+		InterlockedHelper.Max(ref totalCost, source.Y);
+		InterlockedHelper.Max(ref totalSample, source.Z);
 	}
 
 	void MainPass(Int2 position)

@@ -1,5 +1,5 @@
 ﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Core.Rendering.Materials;
 
 namespace EchoRenderer.Core.Aggregation.Primitives;

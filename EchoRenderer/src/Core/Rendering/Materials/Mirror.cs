@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;

@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 

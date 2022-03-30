@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Texturing;
 
@@ -32,8 +32,8 @@ public abstract class Texture
 	/// </summary>
 	public virtual Int2 DiscreteResolution => (Int2)512;
 
-	public static readonly Pure white = new(Float3.one);
-	public static readonly Pure black = new(Float3.zero);
+	public static readonly Pure white = new(Float3.One);
+	public static readonly Pure black = new(Float3.Zero);
 	public static readonly Pure normal = new(new Float3(0.5f, 0.5f, 1f));
 
 	/// <summary>

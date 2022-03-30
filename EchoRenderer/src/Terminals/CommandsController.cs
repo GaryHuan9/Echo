@@ -7,7 +7,7 @@ using System.Reflection;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Terminals;
 
@@ -139,7 +139,7 @@ public class CommandsController : Terminal.Section, ILogger
 			}
 			case ConsoleKey.Enter:
 			{
-				ProcessCommand(new string(builders.GetSlice(Int2.up * CursorY, inputLength)));
+				ProcessCommand(new string(builders.GetSlice(Int2.Up * CursorY, inputLength)));
 
 				builders.Clear(CursorY);
 				inputLength = cursorPosition = 0;

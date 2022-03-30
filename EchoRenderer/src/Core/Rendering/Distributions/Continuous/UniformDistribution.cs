@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Continuous;
 
@@ -23,7 +23,7 @@ public class UniformDistribution : ContinuousDistribution
 
 	protected override Sample2D Next2DCore()
 	{
-		if (Prng == null) return (Sample2D)Float2.half;
+		if (Prng == null) return (Sample2D)Float2.Half;
 		return (Sample2D)Prng.Next2();
 	}
 

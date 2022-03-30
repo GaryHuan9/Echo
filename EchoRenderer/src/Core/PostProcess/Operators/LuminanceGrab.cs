@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Texturing.Grid;
@@ -34,7 +34,7 @@ public class LuminanceGrab
 		//Because the work of grabbing luminance on each position is relatively small,
 		//we selectively run either a full or vertical pass to maximize performance.
 
-		if (size.y < HeightThreshold) worker.RunPass(LuminancePass, sourceBuffer);
+		if (size.Y < HeightThreshold) worker.RunPass(LuminancePass, sourceBuffer);
 		else worker.RunPassVertical(VerticalLuminancePass, sourceBuffer);
 
 		Luminance = (float)(InterlockedHelper.Read(ref luminanceTotal) / length);
@@ -50,7 +50,7 @@ public class LuminanceGrab
 	{
 		double luminance = 0d;
 
-		for (int x = 0; x < sourceBuffer.size.x; x++)
+		for (int x = 0; x < sourceBuffer.size.X; x++)
 		{
 			var color = sourceBuffer[new Int2(x, vertical)];
 			luminance += PackedMath.GetLuminance(color);

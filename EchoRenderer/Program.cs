@@ -1,9 +1,10 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System;
+using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.PostProcess;
@@ -44,7 +45,7 @@ public class Program
 #endif
 
 		PerformRender();
-		System.Console.ReadKey();
+		Console.ReadKey();
 	}
 
 	static TiledRenderEngine renderEngine;
@@ -192,7 +193,7 @@ public class Program
 		ArrayGrid output = new ArrayGrid((Int2)2048);
 
 		foreach (Int2 position in output.size.Loop()) output[position] = Vector128.Create(0f, 0f, 1f, 1f);
-		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.one));
+		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.One));
 
 		output.Save("render.png");
 	}
@@ -225,7 +226,7 @@ public class Program
 		ArrayGrid image0 = TextureGrid.Load(path0);
 		ArrayGrid image1 = TextureGrid.Load(path1);
 
-		if (image0.size != image1.size) throw new System.Exception("Cannot compare two images with different sizes!");
+		if (image0.size != image1.size) throw new Exception("Cannot compare two images with different sizes!");
 
 		image0.ForEach(position =>
 		{

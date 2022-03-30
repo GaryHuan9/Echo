@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using SFML.Graphics;
 

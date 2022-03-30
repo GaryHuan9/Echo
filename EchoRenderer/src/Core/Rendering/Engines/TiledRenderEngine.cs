@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using CodeHelpers;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 
 namespace EchoRenderer.Core.Rendering.Engines;

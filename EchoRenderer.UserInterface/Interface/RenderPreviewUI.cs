@@ -32,8 +32,8 @@ public class RenderPreviewUI : AreaUI
 
 			if (texture == null)
 			{
-				uint width = (uint)value.size.x;
-				uint height = (uint)value.size.y;
+				uint width = (uint)value.size.X;
+				uint height = (uint)value.size.Y;
 
 				imageUI.Texture = new Texture(width, height);
 			}

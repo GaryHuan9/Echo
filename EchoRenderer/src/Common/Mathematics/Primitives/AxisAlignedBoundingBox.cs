@@ -5,7 +5,7 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
 
@@ -31,8 +31,8 @@ public readonly struct AxisAlignedBoundingBox
 		Unsafe.SkipInit(out minV);
 		Unsafe.SkipInit(out maxV);
 
-		min = Float3.positiveInfinity;
-		max = Float3.negativeInfinity;
+		min = Float3.PositiveInfinity;
+		max = Float3.NegativeInfinity;
 
 		foreach (ref readonly Float3 point in points)
 		{
@@ -71,7 +71,7 @@ public readonly struct AxisAlignedBoundingBox
 		Assert.IsTrue(max >= min);
 	}
 
-	public static readonly AxisAlignedBoundingBox none = new(Float3.positiveInfinity, Float3.positiveInfinity);
+	public static readonly AxisAlignedBoundingBox none = new(Float3.PositiveInfinity, Float3.PositiveInfinity);
 
 	[FieldOffset(00)] public readonly Float3 min;
 	[FieldOffset(16)] public readonly Float3 max;
@@ -87,7 +87,7 @@ public readonly struct AxisAlignedBoundingBox
 		get
 		{
 			Float3 size = Utilities.ToFloat3(Sse.Subtract(maxV, minV));
-			return size.x * size.y + size.x * size.z + size.y * size.z;
+			return size.X * size.Y + size.X * size.Z + size.Y * size.Z;
 		}
 	}
 
@@ -179,13 +179,13 @@ public readonly struct AxisAlignedBoundingBox
 		span[0] = min;
 		span[1] = max;
 
-		span[2] = new Float3(min.x, min.y, max.z);
-		span[3] = new Float3(min.x, max.y, min.z);
-		span[4] = new Float3(max.x, min.y, min.z);
+		span[2] = new Float3(min.X, min.Y, max.Z);
+		span[3] = new Float3(min.X, max.Y, min.Z);
+		span[4] = new Float3(max.X, min.Y, min.Z);
 
-		span[5] = new Float3(max.x, max.y, min.z);
-		span[6] = new Float3(max.x, min.y, max.z);
-		span[7] = new Float3(min.x, max.y, max.z);
+		span[5] = new Float3(max.X, max.Y, min.Z);
+		span[6] = new Float3(max.X, min.Y, max.Z);
+		span[7] = new Float3(min.X, max.Y, max.Z);
 
 		return 8;
 	}
