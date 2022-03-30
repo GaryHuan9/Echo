@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 using SFML.Window;
 
 namespace EchoRenderer.UserInterface.Core.Interactions;

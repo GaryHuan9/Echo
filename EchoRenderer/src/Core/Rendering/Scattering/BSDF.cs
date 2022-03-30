@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
@@ -80,7 +80,7 @@ public class BSDF
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		Float3 incident = transform.WorldToLocal(incidentWorld);
 
-		Float3 evaluation = Float3.zero;
+		Float3 evaluation = Float3.Zero;
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
 
 		for (int i = 0; i < count; i++)
@@ -134,7 +134,7 @@ public class BSDF
 
 			pdf = 0f;
 			selected = default;
-			return Float3.zero;
+			return Float3.Zero;
 		}
 
 		selected = functions[index];
@@ -145,8 +145,8 @@ public class BSDF
 
 		if (!FastMath.Positive(pdf))
 		{
-			incidentWorld = Float3.zero;
-			return Float3.zero;
+			incidentWorld = Float3.Zero;
+			return Float3.Zero;
 		}
 
 		incidentWorld = transform.LocalToWorld(incident);
@@ -188,7 +188,7 @@ public class BSDF
 	public Float3 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
 	{
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Float3 reflectance = Float3.zero;
+		Float3 reflectance = Float3.Zero;
 
 		for (int i = 0; i < count; i++)
 		{
@@ -206,7 +206,7 @@ public class BSDF
 	/// </summary>
 	public Float3 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1, FunctionType type)
 	{
-		Float3 reflectance = Float3.zero;
+		Float3 reflectance = Float3.Zero;
 
 		for (int i = 0; i < count; i++)
 		{

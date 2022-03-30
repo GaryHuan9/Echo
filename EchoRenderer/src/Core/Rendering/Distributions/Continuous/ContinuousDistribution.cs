@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics.Randomization;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Continuous;
 
-using FP = System.Runtime.CompilerServices.CallerFilePathAttribute;
-using LN = System.Runtime.CompilerServices.CallerLineNumberAttribute;
+using FP = CallerFilePathAttribute;
+using LN = CallerLineNumberAttribute;
 
 /// <summary>
 /// A continuous distribution that we can draw two different kinds of sample from: <see cref="Sample1D"/> and <see cref="Sample2D"/>.

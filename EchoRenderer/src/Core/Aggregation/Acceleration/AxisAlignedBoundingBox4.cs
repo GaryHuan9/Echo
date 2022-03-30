@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics.Primitives;
 
@@ -14,13 +14,13 @@ public readonly struct AxisAlignedBoundingBox4
 {
 	public AxisAlignedBoundingBox4(in AxisAlignedBoundingBox aabb0, in AxisAlignedBoundingBox aabb1, in AxisAlignedBoundingBox aabb2, in AxisAlignedBoundingBox aabb3)
 	{
-		minX = Make(aabb0.min.x, aabb1.min.x, aabb2.min.x, aabb3.min.x);
-		minY = Make(aabb0.min.y, aabb1.min.y, aabb2.min.y, aabb3.min.y);
-		minZ = Make(aabb0.min.z, aabb1.min.z, aabb2.min.z, aabb3.min.z);
+		minX = Make(aabb0.min.X, aabb1.min.X, aabb2.min.X, aabb3.min.X);
+		minY = Make(aabb0.min.Y, aabb1.min.Y, aabb2.min.Y, aabb3.min.Y);
+		minZ = Make(aabb0.min.Z, aabb1.min.Z, aabb2.min.Z, aabb3.min.Z);
 
-		maxX = Make(aabb0.max.x, aabb1.max.x, aabb2.max.x, aabb3.max.x);
-		maxY = Make(aabb0.max.y, aabb1.max.y, aabb2.max.y, aabb3.max.y);
-		maxZ = Make(aabb0.max.z, aabb1.max.z, aabb2.max.z, aabb3.max.z);
+		maxX = Make(aabb0.max.X, aabb1.max.X, aabb2.max.X, aabb3.max.X);
+		maxY = Make(aabb0.max.Y, aabb1.max.Y, aabb2.max.Y, aabb3.max.Y);
+		maxZ = Make(aabb0.max.Z, aabb1.max.Z, aabb2.max.Z, aabb3.max.Z);
 	}
 
 	public AxisAlignedBoundingBox4(ReadOnlySpan<AxisAlignedBoundingBox> aabbs) : this
@@ -64,8 +64,8 @@ public readonly struct AxisAlignedBoundingBox4
 	public Vector128<float> Intersect(in Ray ray)
 	{
 		//X axis
-		Vector128<float> origin = Make(ray.origin.x);
-		Vector128<float> inverseDirection = Make(ray.inverseDirection.x);
+		Vector128<float> origin = Make(ray.origin.X);
+		Vector128<float> inverseDirection = Make(ray.inverseDirection.X);
 
 		Vector128<float> length0 = Sse.Multiply(Sse.Subtract(minX, origin), inverseDirection);
 		Vector128<float> length1 = Sse.Multiply(Sse.Subtract(maxX, origin), inverseDirection);
@@ -74,8 +74,8 @@ public readonly struct AxisAlignedBoundingBox4
 		Vector128<float> near = Sse.Min(length0, length1);
 
 		//Y axis
-		origin = Make(ray.origin.y);
-		inverseDirection = Make(ray.inverseDirection.y);
+		origin = Make(ray.origin.Y);
+		inverseDirection = Make(ray.inverseDirection.Y);
 
 		length0 = Sse.Multiply(Sse.Subtract(minY, origin), inverseDirection);
 		length1 = Sse.Multiply(Sse.Subtract(maxY, origin), inverseDirection);
@@ -84,8 +84,8 @@ public readonly struct AxisAlignedBoundingBox4
 		near = Sse.Max(near, Sse.Min(length0, length1));
 
 		//Z axis
-		origin = Make(ray.origin.z);
-		inverseDirection = Make(ray.inverseDirection.z);
+		origin = Make(ray.origin.Z);
+		inverseDirection = Make(ray.inverseDirection.Z);
 
 		length0 = Sse.Multiply(Sse.Subtract(minZ, origin), inverseDirection);
 		length1 = Sse.Multiply(Sse.Subtract(maxZ, origin), inverseDirection);

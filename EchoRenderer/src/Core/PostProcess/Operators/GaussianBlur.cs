@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -73,7 +74,7 @@ public class GaussianBlur : IDisposable
 
 		for (int x = -radius; x < radius; x++) accumulator = Sse.Add(accumulator, Get(x));
 
-		for (int x = 0; x < workerBuffer.size.x; x++)
+		for (int x = 0; x < workerBuffer.size.X; x++)
 		{
 			Vector128<float> sourceHead = Get(x + radius);
 			Vector128<float> sourceTail = Get(x - radius);
@@ -86,7 +87,7 @@ public class GaussianBlur : IDisposable
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Vector128<float> Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.x), vertical)];
+		Vector128<float> Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.X), vertical)];
 	}
 
 	void VerticalBlurPass(int horizontal)
@@ -95,7 +96,7 @@ public class GaussianBlur : IDisposable
 
 		for (int y = -radius; y < radius; y++) accumulator = Sse.Add(accumulator, Get(y));
 
-		for (int y = 0; y < sourceBuffer.size.y; y++)
+		for (int y = 0; y < sourceBuffer.size.Y; y++)
 		{
 			Vector128<float> sourceHead = Get(y + radius);
 			Vector128<float> sourceTail = Get(y - radius);
@@ -108,7 +109,7 @@ public class GaussianBlur : IDisposable
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Vector128<float> Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.y))];
+		Vector128<float> Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.Y))];
 	}
 
 	void BuildRadii() => radii ??= BuildRadii(deviation, quality, out _deviationActual);

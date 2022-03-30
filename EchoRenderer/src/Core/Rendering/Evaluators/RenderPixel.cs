@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -144,7 +144,7 @@ public struct RenderPixel
 		public static Double3 operator *(double value, in Double3 other) => Multiply(Vector256.Create(value), other.vector);
 		public static Double3 operator /(double value, in Double3 other) => Divide(Vector256.Create(value), other.vector);
 
-		public static implicit operator Double3(in Float3 value) => new(value.x, value.y, value.z);
+		public static implicit operator Double3(in Float3 value) => new(value.X, value.Y, value.Z);
 		public static explicit operator Float3(in Double3 value) => new((float)value.x, (float)value.y, (float)value.z);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

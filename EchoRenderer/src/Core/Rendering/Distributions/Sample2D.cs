@@ -1,6 +1,7 @@
 using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Core.Rendering.Distributions;
@@ -10,7 +11,7 @@ namespace EchoRenderer.Core.Rendering.Distributions;
 /// </summary>
 public readonly struct Sample2D
 {
-	Sample2D(Float2 u) : this((Sample1D)u.x, (Sample1D)u.y) { }
+	Sample2D(Float2 u) : this((Sample1D)u.X, (Sample1D)u.Y) { }
 
 	public Sample2D(Sample1D x, Sample1D y)
 	{
@@ -66,21 +67,21 @@ public readonly struct Sample2D
 		{
 			Float2 xy = this;
 
-			if (xy.EqualsExact(Float2.half)) return Float2.zero;
-			xy = xy * 2f - Float2.one;
+			if (xy.EqualsExact(Float2.Half)) return Float2.Zero;
+			xy = xy * 2f - Float2.One;
 
 			float radius;
 			float angle;
 
-			if (FastMath.Abs(xy.x) > FastMath.Abs(xy.y))
+			if (FastMath.Abs(xy.X) > FastMath.Abs(xy.Y))
 			{
-				radius = xy.x;
-				angle = Scalars.PI / 4f * xy.y / xy.x;
+				radius = xy.X;
+				angle = Scalars.PI / 4f * xy.Y / xy.X;
 			}
 			else
 			{
-				radius = xy.y;
-				angle = Scalars.PI / 2f * FastMath.FMA(xy.x / xy.y, -0.5f, 1f);
+				radius = xy.Y;
+				angle = Scalars.PI / 2f * FastMath.FMA(xy.X / xy.Y, -0.5f, 1f);
 			}
 
 			return ProjectDisk(radius, angle);
@@ -116,7 +117,7 @@ public readonly struct Sample2D
 	/// </summary>
 	public Int2 Range(Int2 max)
 	{
-		Assert.IsTrue(max >= Int2.zero);
+		Assert.IsTrue(max >= Int2.Zero);
 		return (Int2)((Float2)this * max);
 	}
 

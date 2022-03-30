@@ -4,21 +4,20 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
-using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Scenic.Geometries;
 
 public class TriangleEntity : GeometryEntity
 {
-	public Float3 Vertex0 { get; set; } = Float3.zero;
-	public Float3 Vertex1 { get; set; } = Float3.up;
-	public Float3 Vertex2 { get; set; } = Float3.one;
+	public Float3 Vertex0 { get; set; } = Float3.Zero;
+	public Float3 Vertex1 { get; set; } = Float3.Up;
+	public Float3 Vertex2 { get; set; } = Float3.One;
 
 	public Float3 Normal0 { get; set; }
 	public Float3 Normal1 { get; set; }
@@ -28,7 +27,7 @@ public class TriangleEntity : GeometryEntity
 	{
 		MaterialIndex material = extractor.Register(Material);
 
-		if (Normal0 == Float3.zero || Normal1 == Float3.zero || Normal2 == Float3.zero)
+		if (Normal0 == Float3.Zero || Normal1 == Float3.Zero || Normal2 == Float3.Zero)
 		{
 			yield return new PreparedTriangle
 			(
@@ -86,7 +85,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	(
 		vertex0, vertex1, vertex2,
 		normal0, normal1, normal2,
-		Float2.zero, Float2.zero, Float2.zero, materialIndex
+		Float2.Zero, Float2.Zero, Float2.Zero, materialIndex
 	) { }
 
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
@@ -146,8 +145,8 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		const float Infinity = float.PositiveInfinity;
 		Unsafe.SkipInit(out uv);
 
-		ref float u = ref Unsafe.AsRef(in uv.x);
-		ref float v = ref Unsafe.AsRef(in uv.y);
+		ref float u = ref Unsafe.As<Float2, float>(ref uv);
+		ref float v = ref Unsafe.Add(ref u, 1);
 
 		//Calculate determinant and u
 		Float3 cross2 = Float3.Cross(ray.direction, edge2);
@@ -236,8 +235,8 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		return distance * distance / FastMath.Abs(GetNormal(uv).Dot(incident) * Area);
 	}
 
-	public Float3 GetNormal(Float2 uv) => ((1f - uv.x - uv.y) * normal0 + uv.x * normal1 + uv.y * normal2).Normalized;
-	public Float2 GetTexcoord(Float2 uv) => (1f - uv.x - uv.y) * texcoord0 + uv.x * texcoord1 + uv.y * texcoord2;
+	public Float3 GetNormal(Float2 uv) => ((1f - uv.X - uv.Y) * normal0 + uv.X * normal1 + uv.Y * normal2).Normalized;
+	public Float2 GetTexcoord(Float2 uv) => (1f - uv.X - uv.Y) * texcoord0 + uv.X * texcoord1 + uv.Y * texcoord2;
 
 	public void GetSubdivided(Span<PreparedTriangle> triangles, int iteration)
 	{
@@ -253,7 +252,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 
 	public override string ToString() => $"<{nameof(vertex0)}: {vertex0}, {nameof(Vertex1)}: {Vertex1}, {nameof(Vertex2)}: {Vertex2}>";
 
-	Float3 GetPoint(Float2 uv) => vertex0 + uv.x * edge1 + uv.y * edge2;
+	Float3 GetPoint(Float2 uv) => vertex0 + uv.X * edge1 + uv.Y * edge2;
 
 	static void GetSubdivided(Span<PreparedTriangle> triangles, in Float3 normal00, in Float3 normal11, in Float3 normal22)
 	{
@@ -294,7 +293,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 
 		//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal00, in Float3 normal11, in Float3 normal22) => (1f - uv.x - uv.y) * normal00 + uv.x * normal11 + uv.y * normal22;
+		static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal00, in Float3 normal11, in Float3 normal22) => (1f - uv.X - uv.Y) * normal00 + uv.X * normal11 + uv.Y * normal22;
 
 		static void Fill(Span<PreparedTriangle> span, int index, MaterialIndex material,
 						 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,

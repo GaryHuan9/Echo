@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using EchoRenderer.Core.Texturing;
 using EchoRenderer.Core.Texturing.Grid;
@@ -54,7 +54,7 @@ public abstract class PostProcessingWorker
 		if (Aborted) return;
 		buffer ??= renderBuffer;
 
-		Parallel.For(0, buffer.size.x, (horizontal, state) =>
+		Parallel.For(0, buffer.size.X, (horizontal, state) =>
 		{
 			if (Aborted) state.Break();
 			else passAction(horizontal);
@@ -69,7 +69,7 @@ public abstract class PostProcessingWorker
 		if (Aborted) return;
 		buffer ??= renderBuffer;
 
-		Parallel.For(0, buffer.size.y, (vertical, state) =>
+		Parallel.For(0, buffer.size.Y, (vertical, state) =>
 		{
 			if (Aborted) state.Break();
 			else passAction(vertical);
@@ -92,7 +92,7 @@ public abstract class PostProcessingWorker
 		var handle = FetchTemporaryBuffer(out ArrayGrid texture);
 
 		if (size == texture.size) buffer = texture;
-		else buffer = new CropGrid(texture, Int2.zero, size);
+		else buffer = new CropGrid(texture, Int2.Zero, size);
 
 		return handle;
 	}

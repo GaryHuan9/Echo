@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CodeHelpers;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.UserInterface.Core.Interactions;
 using SFML.Graphics;
 using SFML.Graphics.Glsl;
@@ -77,7 +77,7 @@ void main()
 
 	public void Resize(Float2 size)
 	{
-		Reorient(Float2.zero, size);
+		Reorient(Float2.Zero, size);
 		transform.MarkDirty();
 	}
 
@@ -115,14 +115,14 @@ void main()
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void PaintRegular(Drawable drawable, Float2 min, Float2 max)
 	{
-		borderRegularShader.SetUniform("border", new Vec4(min.x, min.y, max.x, max.y));
+		borderRegularShader.SetUniform("border", new Vec4(min.X, min.Y, max.X, max.Y));
 		drawable.Draw(application, new RenderStates(borderRegularShader));
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public void PaintTexture(Drawable drawable, Float2 min, Float2 max)
 	{
-		borderTextureShader.SetUniform("border", new Vec4(min.x, min.y, max.x, max.y));
+		borderTextureShader.SetUniform("border", new Vec4(min.X, min.Y, max.X, max.Y));
 		borderTextureShader.SetUniform("texture", Shader.CurrentTexture);
 		drawable.Draw(application, new RenderStates(borderTextureShader));
 	}

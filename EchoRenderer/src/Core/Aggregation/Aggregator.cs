@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
@@ -36,8 +37,8 @@ public abstract class Aggregator
 
 		Assert.IsFalse(aabbs.IsEmpty);
 
-		Float3 min = Float3.positiveInfinity;
-		Float3 max = Float3.negativeInfinity;
+		Float3 min = Float3.PositiveInfinity;
+		Float3 max = Float3.NegativeInfinity;
 
 		//Potentially find a smaller AABB by encapsulating transformed children nodes instead of the full aggregator
 		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)

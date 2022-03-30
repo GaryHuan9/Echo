@@ -1,5 +1,6 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Core.Aggregation.Primitives;

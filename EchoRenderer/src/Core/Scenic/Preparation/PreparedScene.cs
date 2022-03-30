@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -185,7 +185,7 @@ public class PreparedScene
 				//completely black, but we add in a light so no exception is thrown when we look for lights.
 
 				_ambient = Array.Empty<AmbientLight>();
-				_all = new LightSource[] { new PointLight { Intensity = Float3.zero } };
+				_all = new LightSource[] { new PointLight { Intensity = Float3.Zero } };
 				distribution = new DiscreteDistribution1D(stackalloc[] { 1f, 0f });
 
 				return;
@@ -249,7 +249,7 @@ public class PreparedScene
 		/// </summary>
 		public Float3 EvaluateAmbient(Float3 direction)
 		{
-			Float3 total = Float3.zero;
+			Float3 total = Float3.Zero;
 
 			foreach (AmbientLight light in _ambient) total += light.Evaluate(direction);
 

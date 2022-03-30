@@ -2,6 +2,7 @@
 using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Core.Rendering.Engines;
 
@@ -35,8 +36,8 @@ public class SpiralPattern : ITilePattern
 {
 	/// <inheritdoc/>
 	public virtual Int2[] GetPattern(Int2 totalSize) => (from position in new EnumerableSpiral2D(totalSize.MaxComponent.CeiledDivide(2))
-														 let tile = position + totalSize / 2 - Int2.one
-														 where Int2.zero <= tile && tile < totalSize
+														 let tile = position + totalSize / 2 - Int2.One
+														 where Int2.Zero <= tile && tile < totalSize
 														 select tile).ToArray();
 }
 

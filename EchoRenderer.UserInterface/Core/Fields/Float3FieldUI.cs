@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.UserInterface.Core.Fields;
 
@@ -12,9 +12,9 @@ public class Float3FieldUI : FloatsFieldUI
 		get => new Float3(values[0], values[1], values[2]);
 		set
 		{
-			values[0] = value.x;
-			values[1] = value.y;
-			values[2] = value.z;
+			values[0] = value.X;
+			values[1] = value.Y;
+			values[2] = value.Z;
 		}
 	}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
 
@@ -45,7 +46,7 @@ public readonly struct BoundingSphere
 	public readonly float radius;
 
 	//NOTE: The number of normals can be increased more precision is required
-	static readonly Float3[] normals = { Float3.right, Float3.up, Float3.forward };
+	static readonly Float3[] normals = { Float3.Right, Float3.Up, Float3.Forward };
 
 	static int ExtremalCount => normals.Length * 2;
 
@@ -58,8 +59,8 @@ public readonly struct BoundingSphere
 		{
 			float min = float.PositiveInfinity;
 			float max = float.NegativeInfinity;
-			Float3 min3 = Float3.zero;
-			Float3 max3 = Float3.zero;
+			Float3 min3 = Float3.Zero;
+			Float3 max3 = Float3.Zero;
 
 			foreach (ref readonly Float3 point in points)
 			{
@@ -190,34 +191,34 @@ public readonly struct BoundingSphere
 
 		float aDet = 1f / new Float4x4
 		(
-			a.x, a.y, a.z, 1f,
-			b.x, b.y, b.z, 1f,
-			c.x, c.y, c.z, 1f,
-			d.x, d.y, d.z, 1f
+			a.X, a.Y, a.Z, 1f,
+			b.X, b.Y, b.Z, 1f,
+			c.X, c.Y, c.Z, 1f,
+			d.X, d.Y, d.Z, 1f
 		).Determinant;
 
 		center = aDet / 2f * new Float3
 		(
 			new Float4x4
 			(
-				a2, a.y, a.z, 1f,
-				b2, b.y, b.z, 1f,
-				c2, c.y, c.z, 1f,
-				d2, d.y, d.z, 1f
+				a2, a.Y, a.Z, 1f,
+				b2, b.Y, b.Z, 1f,
+				c2, c.Y, c.Z, 1f,
+				d2, d.Y, d.Z, 1f
 			).Determinant,
 			new Float4x4
 			(
-				a.x, a2, a.z, 1f,
-				b.x, b2, b.z, 1f,
-				c.x, c2, c.z, 1f,
-				d.x, d2, d.z, 1f
+				a.X, a2, a.Z, 1f,
+				b.X, b2, b.Z, 1f,
+				c.X, c2, c.Z, 1f,
+				d.X, d2, d.Z, 1f
 			).Determinant,
 			new Float4x4
 			(
-				a.x, a.y, a2, 1f,
-				b.x, b.y, b2, 1f,
-				c.x, c.y, c2, 1f,
-				d.x, d.y, d2, 1f
+				a.X, a.Y, a2, 1f,
+				b.X, b.Y, b2, 1f,
+				c.X, c.Y, c2, 1f,
+				d.X, d.Y, d2, 1f
 			).Determinant
 		);
 

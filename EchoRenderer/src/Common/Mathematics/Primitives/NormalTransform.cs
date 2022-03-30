@@ -1,5 +1,5 @@
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
 
@@ -12,7 +12,7 @@ public readonly struct NormalTransform
 	{
 		this.normal = normal;
 
-		Float3 helper = FastMath.Abs(normal.x) >= 0.9f ? Float3.forward : Float3.right;
+		Float3 helper = FastMath.Abs(normal.X) >= 0.9f ? Float3.Forward : Float3.Right;
 
 		tangent = Float3.Cross(normal, helper).Normalized;
 		binormal = Float3.Cross(normal, tangent);
@@ -36,8 +36,8 @@ public readonly struct NormalTransform
 	/// </summary>
 	public Float3 LocalToWorld(in Float3 direction) => new
 	(
-		tangent.x * direction.x + binormal.x * direction.y + normal.x * direction.z,
-		tangent.y * direction.x + binormal.y * direction.y + normal.y * direction.z,
-		tangent.z * direction.x + binormal.z * direction.y + normal.z * direction.z
+		tangent.X * direction.X + binormal.X * direction.Y + normal.X * direction.Z,
+		tangent.Y * direction.X + binormal.Y * direction.Y + normal.Y * direction.Z,
+		tangent.Z * direction.X + binormal.Z * direction.Y + normal.Z * direction.Z
 	);
 }

@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 
 namespace EchoRenderer.UserInterface.Core.Interactions;
 

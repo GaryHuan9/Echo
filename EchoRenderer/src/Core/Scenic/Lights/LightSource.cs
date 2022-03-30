@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Packed;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Instancing;
@@ -15,7 +15,7 @@ public abstract class LightSource : Entity, ILight
 	/// <summary>
 	/// The main color and intensity of this <see cref="LightSource"/>.
 	/// </summary>
-	public Float3 Intensity { get; set; } = Float3.one;
+	public Float3 Intensity { get; set; } = Float3.One;
 
 	/// <summary>
 	/// The approximated total emitted power of this <see cref="LightSource"/>.
@@ -26,7 +26,7 @@ public abstract class LightSource : Entity, ILight
 	/// Invoked before rendering; after geometry and materials are prepared.
 	/// Can be used to initialize this light to prepare it for rendering.
 	/// </summary>
-	public virtual void Prepare(PreparedScene scene) => Intensity = Intensity.Max(Float3.zero);
+	public virtual void Prepare(PreparedScene scene) => Intensity = Intensity.Max(Float3.Zero);
 
 	/// <inheritdoc/>
 	public abstract Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel);

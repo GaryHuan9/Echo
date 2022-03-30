@@ -1,5 +1,5 @@
 ﻿using System.Runtime.Intrinsics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Core.Texturing.Directional;
 
@@ -18,7 +18,7 @@ public class Pure : Texture, IDirectionalTexture
 
 	readonly Vector128<float> color;
 
-	public override Int2 DiscreteResolution => Int2.one;
+	public override Int2 DiscreteResolution => Int2.One;
 
 	Vector128<float> IDirectionalTexture.Average => color;
 

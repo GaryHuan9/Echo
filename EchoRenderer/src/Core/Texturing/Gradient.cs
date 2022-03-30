@@ -6,6 +6,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Texturing.Generative;
@@ -29,9 +30,9 @@ public class Gradient : IEnumerable<float>
 
 	Seal seal;
 
-	public static readonly Gradient black = new() { { 0f, Float4.ana } };
-	public static readonly Gradient white = new() { { 0f, Float4.one } };
-	public static readonly Gradient blend = new() { { 0f, Float4.ana }, { 1f, Float4.one } };
+	public static readonly Gradient black = new() { { 0f, Float4.Ana } };
+	public static readonly Gradient white = new() { { 0f, Float4.One } };
+	public static readonly Gradient blend = new() { { 0f, Float4.Ana }, { 1f, Float4.One } };
 
 	public Float4 this[float percent] => Utilities.ToFloat4(SampleVector(percent));
 

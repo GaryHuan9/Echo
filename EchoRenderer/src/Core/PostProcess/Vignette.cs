@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Randomization;
 
@@ -19,12 +19,12 @@ public class Vignette : PostProcessingWorker
 	{
 		IRandom random = new SystemRandom((uint)horizontal);
 
-		for (int y = 0; y < renderBuffer.size.y; y++)
+		for (int y = 0; y < renderBuffer.size.Y; y++)
 		{
 			Int2 position = new Int2(horizontal, y);
 			Float2 uv = position * renderBuffer.sizeR;
 
-			float distance = (uv - Float2.half).SquaredMagnitude * Intensity;
+			float distance = (uv - Float2.Half).SquaredMagnitude * Intensity;
 			float multiplier = 1f + random.Next1(-FilmGrain, FilmGrain) - distance;
 
 			Vector128<float> target = PackedMath.Clamp01(renderBuffer[position]);

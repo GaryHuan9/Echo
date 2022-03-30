@@ -1,5 +1,5 @@
 ﻿using System.Runtime.Intrinsics;
-using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Core.PostProcess;
