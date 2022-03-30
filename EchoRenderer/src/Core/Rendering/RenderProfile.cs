@@ -29,6 +29,11 @@ public abstract record RenderProfile : IProfile
 	public RenderBuffer RenderBuffer { get; init; }
 
 	/// <summary>
+	/// The maximum number of worker threads concurrently running.
+	/// </summary>
+	public int WorkerSize { get; init; } = Environment.ProcessorCount;
+
+	/// <summary>
 	/// The minimum (i.e. base) number of consecutive samples performed on each pixel.
 	/// </summary>
 	public int PixelSample { get; init; }
@@ -43,16 +48,6 @@ public abstract record RenderProfile : IProfile
 	/// </summary>
 	public int TotalSample => PixelSample + AdaptiveSample;
 
-	/// <summary>
-	/// The maximum number of worker threads concurrently running.
-	/// </summary>
-	public int WorkerSize { get; init; } = Environment.ProcessorCount;
-
-	/// <summary>
-	/// The maximum number of bounce allowed for one sample.
-	/// </summary>
-	public int BounceLimit { get; init; } = 128;
-
 	/// <inheritdoc/>
 	public virtual void Validate()
 	{
@@ -60,10 +55,8 @@ public abstract record RenderProfile : IProfile
 		if (Method == null) throw ExceptionHelper.Invalid(nameof(Method), InvalidType.isNull);
 		if (RenderBuffer == null) throw ExceptionHelper.Invalid(nameof(RenderBuffer), InvalidType.isNull);
 
+		if (WorkerSize <= 0) throw ExceptionHelper.Invalid(nameof(WorkerSize), WorkerSize, InvalidType.outOfBounds);
 		if (PixelSample <= 0) throw ExceptionHelper.Invalid(nameof(PixelSample), PixelSample, InvalidType.outOfBounds);
 		if (AdaptiveSample < 0) throw ExceptionHelper.Invalid(nameof(AdaptiveSample), AdaptiveSample, InvalidType.outOfBounds);
-
-		if (WorkerSize <= 0) throw ExceptionHelper.Invalid(nameof(WorkerSize), WorkerSize, InvalidType.outOfBounds);
-		if (BounceLimit < 0) throw ExceptionHelper.Invalid(nameof(BounceLimit), BounceLimit, InvalidType.outOfBounds);
 	}
 }
