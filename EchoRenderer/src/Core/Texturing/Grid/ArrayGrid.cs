@@ -14,11 +14,11 @@ public class ArrayGrid : TextureGrid
 	public ArrayGrid(Int2 size) : base(size, Filters.bilinear)
 	{
 		length = size.Product;
-		pixels = new RGBA32[length];
+		pixels = new RGBA128[length];
 	}
 
 	protected readonly int length;
-	protected readonly RGBA32[] pixels;
+	protected readonly RGBA128[] pixels;
 
 	/// <summary>
 	/// This is the axis in which <see cref="ToPosition"/> is going to move first if you increment the input index.
@@ -30,7 +30,7 @@ public class ArrayGrid : TextureGrid
 	/// </summary>
 	public const int MinorAxis = MajorAxis ^ 1;
 
-	public override RGBA32 this[Int2 position]
+	public override RGBA128 this[Int2 position]
 	{
 		get => pixels[ToIndex(position)];
 		set => pixels[ToIndex(position)] = value;

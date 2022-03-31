@@ -33,7 +33,7 @@ public class CylindricalTexture : IDirectionalTexture
 	/// </summary>
 	const float Jacobian = 1f / Scalars.Tau / Scalars.Pi;
 
-	public RGBA32 Average { get; private set; }
+	public RGBA128 Average { get; private set; }
 
 	public void Prepare()
 	{
@@ -64,8 +64,8 @@ public class CylindricalTexture : IDirectionalTexture
 			for (int x = 1; x <= size.X; x++)
 			{
 				//Calculate the average of the four corners
-				RGBA32 current = Grab(x);
-				RGBA32 average = (previous + current) / 4f;
+				RGBA128 current = Grab(x);
+				RGBA128 average = (previous + current) / 4f;
 
 				//Accumulate horizontally
 				previous = current;
@@ -79,7 +79,7 @@ public class CylindricalTexture : IDirectionalTexture
 
 			//Returns the sum of the values at (x, y) and (x, y + 1)
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			RGBA32 Grab(int x)
+			RGBA128 Grab(int x)
 			{
 				var lower = texture[new Float2(x, y + 0f) * sizeR];
 				var upper = texture[new Float2(x, y + 1f) * sizeR];
@@ -94,21 +94,21 @@ public class CylindricalTexture : IDirectionalTexture
 
 		//Construct distribution and calculate average from total sum
 		distribution = new DiscreteDistribution2D(weights, size.X);
-		Average = (RGBA32)(total.Result * 2f * Scalars.PiR / size.Product);
+		Average = (RGBA128)(total.Result * 2f * Scalars.PiR / size.Product);
 	}
 
 	/// <inheritdoc/>
-	public RGBA32 Evaluate(in Float3 direction) => Texture[ToUV(direction)];
+	public RGBA128 Evaluate(in Float3 direction) => Texture[ToUV(direction)];
 
 	/// <inheritdoc/>
-	public Probable<RGBA32> Sample(Sample2D sample, out Float3 incident)
+	public Probable<RGBA128> Sample(Sample2D sample, out Float3 incident)
 	{
 		Probable<Sample2D> probable = distribution.Sample(sample);
 
 		if (probable.IsZero)
 		{
 			incident = Float3.Zero;
-			return Probable<RGBA32>.Zero;
+			return Probable<RGBA128>.Zero;
 		}
 
 		Float2 uv = probable.content;
@@ -119,7 +119,7 @@ public class CylindricalTexture : IDirectionalTexture
 		FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
 		FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
 
-		if (sinP <= 0f) return (RGBA32.Black, 0f);
+		if (sinP <= 0f) return (RGBA128.Black, 0f);
 
 		incident = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
 		return (Texture[uv], probable.pdf * Jacobian / sinP);

@@ -18,7 +18,7 @@ public interface IFilter
 	/// </summary>
 	/// <param name="texture">The target texture to retrieve the color from.</param>
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-	RGBA32 Convert(TextureGrid texture, Float2 uv);
+	RGBA128 Convert(TextureGrid texture, Float2 uv);
 }
 
 /// <summary>
@@ -49,7 +49,7 @@ public static class Filters
 	class Point : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA32 Convert(TextureGrid texture, Float2 uv)
+		public RGBA128 Convert(TextureGrid texture, Float2 uv)
 		{
 			Int2 position = (uv * texture.size).Floored;
 			return texture[position.Min(texture.oneLess)];
@@ -62,7 +62,7 @@ public static class Filters
 		// 'native' approach by allowing derived class to provide customized implementations with virtual methods
 
 		/// <inheritdoc/>
-		public RGBA32 Convert(TextureGrid texture, Float2 uv)
+		public RGBA128 Convert(TextureGrid texture, Float2 uv)
 		{
 			uv *= texture.size;
 
@@ -73,11 +73,11 @@ public static class Filters
 			bottomLeft = bottomLeft.Max(Int2.Zero);
 
 			//Prefetch color data (273.6 ns => 194.6 ns)
-			RGBA32 y0x0 = texture[bottomLeft];
-			RGBA32 y0x1 = texture[new Int2(upperRight.X, bottomLeft.Y)];
+			RGBA128 y0x0 = texture[bottomLeft];
+			RGBA128 y0x1 = texture[new Int2(upperRight.X, bottomLeft.Y)];
 
-			RGBA32 y1x0 = texture[new Int2(bottomLeft.X, upperRight.Y)];
-			RGBA32 y1x1 = texture[upperRight];
+			RGBA128 y1x0 = texture[new Int2(bottomLeft.X, upperRight.Y)];
+			RGBA128 y1x1 = texture[upperRight];
 
 			//Interpolate
 			float timeX = InverseLerp(bottomLeft.X, upperRight.X, uv.X - 0.5f);
@@ -86,7 +86,7 @@ public static class Filters
 			Float4 y0 = Float4.Lerp(y0x0, y0x1, timeX);
 			Float4 y1 = Float4.Lerp(y1x0, y1x1, timeX);
 
-			return (RGBA32)Float4.Lerp(y0, y1, timeY);
+			return (RGBA128)Float4.Lerp(y0, y1, timeY);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static float InverseLerp(int left, int right, float value)

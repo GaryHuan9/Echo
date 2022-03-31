@@ -36,7 +36,7 @@ public class Bloom : PostProcessingWorker
 
 	void LuminancePass(Int2 position)
 	{
-		RGBA32 source = renderBuffer[position];
+		RGBA128 source = renderBuffer[position];
 		float luminance = source.Luminance;
 
 		if (luminance > Threshold)
@@ -44,13 +44,13 @@ public class Bloom : PostProcessingWorker
 			float excess = (luminance - Threshold) / luminance;
 			workerBuffer[position] = source * excess * Intensity;
 		}
-		else workerBuffer[position] = RGBA32.Black;
+		else workerBuffer[position] = RGBA128.Black;
 	}
 
 	void CombinePass(Int2 position)
 	{
-		RGBA32 source = workerBuffer[position];
-		RGBA32 target = renderBuffer[position];
+		RGBA128 source = workerBuffer[position];
+		RGBA128 target = renderBuffer[position];
 		renderBuffer[position] = target + source;
 	}
 }

@@ -31,7 +31,7 @@ public class TestGenerative : CacheableTexture
 
 	readonly Simplex[] simplices;
 
-	protected override RGBA32 Sample(Float2 position)
+	protected override RGBA128 Sample(Float2 position)
 	{
 		// Float2 q = new Float2(FractionalBrownianMotion(position), FractionalBrownianMotion(position + new Float2(5.2f, 1.3f)));
 		// Float2 r = new Float2(FractionalBrownianMotion(position + 4f * q + new Float2(1.7f, 9.2f)), FractionalBrownianMotion(position + 4f * q + new Float2(8.3f, 2.8f)));
@@ -44,7 +44,7 @@ public class TestGenerative : CacheableTexture
 		float v2 = FractionalBrownianMotion(position + new Float2(v1 * 2.7f, v1 * 4.7f));
 		float v3 = FractionalBrownianMotion(position + new Float2(v2 * 3.1f, v2 * 1.4f));
 
-		return new RGBA32(new Float3(v1, v2, v3));
+		return new RGBA128(new Float3(v1, v2, v3));
 	}
 
 	float FractionalBrownianMotion(Float2 position)

@@ -16,7 +16,7 @@ public abstract class LightSource : Entity, ILight
 	/// <summary>
 	/// The main color and intensity of this <see cref="LightSource"/>.
 	/// </summary>
-	public RGBA32 Intensity { get; set; } = RGBA32.White;
+	public RGBA128 Intensity { get; set; } = RGBA128.White;
 
 	/// <summary>
 	/// The approximated total emitted power of this <see cref="LightSource"/>.
@@ -30,7 +30,7 @@ public abstract class LightSource : Entity, ILight
 	public virtual void Prepare(PreparedScene scene) { }
 
 	/// <inheritdoc/>
-	public abstract Probable<RGBA32> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);
+	public abstract Probable<RGBA128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);
 }
 
 /// <summary>
@@ -54,7 +54,7 @@ public interface ILight
 	/// points from <paramref name="point"/> towards this <see cref="ILight"/>, the probability density function <paramref name="pdf"/> value,
 	/// and the <paramref name="travel"/> distance in light-space from <paramref name="point"/> to this <see cref="ILight"/> are outputted.
 	/// </summary>
-	Probable<RGBA32> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);
+	Probable<RGBA128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);
 }
 
 /// <summary>

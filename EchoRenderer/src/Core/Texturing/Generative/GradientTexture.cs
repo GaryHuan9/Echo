@@ -44,7 +44,7 @@ public class GradientTexture : CacheableTexture
 
 	Segment2 segment;
 
-	protected override RGBA32 Sample(Float2 position) => Gradient[segment.InverseLerp(position)];
+	protected override RGBA128 Sample(Float2 position) => Gradient[segment.InverseLerp(position)];
 
 	void UpdateSegment()
 	{

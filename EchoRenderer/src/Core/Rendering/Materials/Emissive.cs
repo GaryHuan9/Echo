@@ -21,7 +21,7 @@ public class Emissive : Material, IEmissive
 	/// <inheritdoc/>
 	public float Power { get; private set; }
 
-	RGBA32 emission;
+	RGBA128 emission;
 
 	public override void Prepare()
 	{
@@ -46,7 +46,7 @@ public class Emissive : Material, IEmissive
 		});
 
 		//Calculate emission and power from total sum
-		emission = ((RGBA32)total.Result / size.Product).AlphaOne;
+		emission = ((RGBA128)total.Result / size.Product).AlphaOne;
 		Power = emission.Luminance * Scalars.Tau;
 	}
 
@@ -57,7 +57,7 @@ public class Emissive : Material, IEmissive
 	}
 
 	/// <inheritdoc/>
-	public RGBA32 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
+	public RGBA128 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
 }
 
 /// <summary>
@@ -75,5 +75,5 @@ public interface IEmissive
 	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
 	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
 	/// </summary>
-	public RGBA32 Emit(in GeometryPoint point, in Float3 outgoing);
+	public RGBA128 Emit(in GeometryPoint point, in Float3 outgoing);
 }

@@ -77,18 +77,18 @@ public class GaussianBlur : IDisposable
 
 		for (int x = 0; x < workerBuffer.size.X; x++)
 		{
-			RGBA32 sourceHead = Get(x + radius);
-			RGBA32 sourceTail = Get(x - radius);
+			RGBA128 sourceHead = Get(x + radius);
+			RGBA128 sourceTail = Get(x - radius);
 
 			accumulator += sourceHead;
 
-			workerBuffer[new Int2(x, vertical)] = (RGBA32)(accumulator.Result * diameterR);
+			workerBuffer[new Int2(x, vertical)] = (RGBA128)(accumulator.Result * diameterR);
 
 			accumulator -= sourceTail;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		RGBA32 Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.X), vertical)];
+		RGBA128 Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.X), vertical)];
 	}
 
 	void VerticalBlurPass(int horizontal)
@@ -99,18 +99,18 @@ public class GaussianBlur : IDisposable
 
 		for (int y = 0; y < sourceBuffer.size.Y; y++)
 		{
-			RGBA32 sourceHead = Get(y + radius);
-			RGBA32 sourceTail = Get(y - radius);
+			RGBA128 sourceHead = Get(y + radius);
+			RGBA128 sourceTail = Get(y - radius);
 
 			accumulator += sourceHead;
 
-			sourceBuffer[new Int2(horizontal, y)] = (RGBA32)(accumulator.Result * diameterR);
+			sourceBuffer[new Int2(horizontal, y)] = (RGBA128)(accumulator.Result * diameterR);
 
 			accumulator -= sourceTail;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		RGBA32 Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.Y))];
+		RGBA128 Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.Y))];
 	}
 
 	void BuildRadii() => radii ??= BuildRadii(deviation, quality, out _deviationActual);

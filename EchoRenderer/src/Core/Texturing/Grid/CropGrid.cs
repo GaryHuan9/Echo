@@ -22,7 +22,7 @@ public class CropGrid : TextureGrid
 	readonly TextureGrid source;
 	readonly Int2 min;
 
-	public override RGBA32 this[Int2 position]
+	public override RGBA128 this[Int2 position]
 	{
 		get => source[min + position];
 		set => source[min + position] = value;

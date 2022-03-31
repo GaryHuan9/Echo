@@ -17,19 +17,19 @@ public readonly struct FresnelDielectric
 	readonly float etaAbove;
 	readonly float etaBelow;
 
-	public RGBA32 Evaluate(float cosI)
+	public RGBA128 Evaluate(float cosI)
 	{
 		//Get the indices of reflection
 		GetIndices(ref cosI, out float etaI, out float etaT);
 
 		//Apply Snell's law
-		if (GetCosineTransmittance(cosI, etaI / etaT, out float cosT)) return RGBA32.White;
+		if (GetCosineTransmittance(cosI, etaI / etaT, out float cosT)) return RGBA128.White;
 
 		//Fresnel equation
 		return Apply(cosI, cosT, etaI, etaT);
 	}
 
-	public RGBA32 Evaluate(in Float3 incoming, out Float3 transmit)
+	public RGBA128 Evaluate(in Float3 incoming, out Float3 transmit)
 	{
 		//Get the indices of reflection
 		float cosI = BxDF.CosineP(incoming);
@@ -41,7 +41,7 @@ public readonly struct FresnelDielectric
 		if (GetCosineTransmittance(cosI, eta, out float cosT))
 		{
 			transmit = default;
-			return RGBA32.White;
+			return RGBA128.White;
 		}
 
 		//Fresnel equation
@@ -84,7 +84,7 @@ public readonly struct FresnelDielectric
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static RGBA32 Apply(float cosI, float cosT, float etaI, float etaT)
+	static RGBA128 Apply(float cosI, float cosT, float etaI, float etaT)
 	{
 		float paraHead = etaT * cosI;
 		float paraTail = etaI * cosT;
@@ -95,7 +95,7 @@ public readonly struct FresnelDielectric
 		float para = (paraHead - paraTail) / (paraHead + paraTail);
 		float perp = (perpHead - perpTail) / (perpHead + perpTail);
 
-		return new RGBA32(para * para + perp * perp) / 2f;
+		return new RGBA128(para * para + perp * perp) / 2f;
 
 		// var m0 = Vector128.Create(etaT, etaI, etaI, etaT);
 		// var m1 = Vector128.Create(cosI, cosT, cosI, cosT);
@@ -115,7 +115,7 @@ public readonly struct FresnelDielectric
 
 public readonly struct FresnelConductor
 {
-	public FresnelConductor(in RGBA32 etaAbove, in RGBA32 etaBelow, in RGBA32 absorption)
+	public FresnelConductor(in RGBA128 etaAbove, in RGBA128 etaBelow, in RGBA128 absorption)
 	{
 		Float4 etaIncidentR = 1f / (Float4)etaAbove;
 
@@ -129,7 +129,7 @@ public readonly struct FresnelConductor
 	readonly Float4 eta2;  //(etaBelow   / etaAbove)^2
 	readonly Float4 etaK2; //(absorption / etaAbove)^2
 
-	public RGBA32 Evaluate(float cosI) //https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
+	public RGBA128 Evaluate(float cosI) //https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
 	{
 		cosI = FastMath.Clamp11(cosI);
 
@@ -152,7 +152,7 @@ public readonly struct FresnelConductor
 		Float4 para = (paraHead - paraTail) / (paraHead + paraTail);
 		Float4 perp = (perpHead - perpTail) / (perpHead + perpTail);
 
-		return (RGBA32)(para * perp + para) / 2f;
+		return (RGBA128)(para * perp + para) / 2f;
 	}
 
 	static Float4 Sqrt(in Float4 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z), 1f);
