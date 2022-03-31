@@ -61,7 +61,7 @@ public class BeckmannDistribution : MicrofacetDistribution
 
 		Float2 phi = new Float2(CosineT2(normal), SineT2(normal));
 		float exp = MathF.Exp(-tan2 * (phi / (alpha * alpha)).Sum);
-		return exp / (Scalars.PI * alpha.Product * cos2 * cos2);
+		return exp / (Scalars.Pi * alpha.Product * cos2 * cos2);
 	}
 
 	public override float MaskingShadowingVisible(in Float3 direction)
@@ -96,7 +96,7 @@ public class TrowbridgeReitzDistribution : MicrofacetDistribution
 
 		Float2 phi = new Float2(CosineT2(normal), SineT2(normal));
 		float sum = cos2 + cos2 * tan2 * (phi / (alpha * alpha)).Sum;
-		return 1f / (sum * sum * alpha.Product * Scalars.PI);
+		return 1f / (sum * sum * alpha.Product * Scalars.Pi);
 	}
 
 	public override float MaskingShadowingVisible(in Float3 direction) => throw new NotImplementedException();

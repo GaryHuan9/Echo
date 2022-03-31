@@ -136,7 +136,7 @@ public class PathTracedEvaluator : Evaluator
 		//Importance sample light
 		mis = light is IAreaLight;
 
-		Float3 radiant = light.Sample(touch.point, sample, out Float3 incident, out float radiantPdf, out float travel);
+		Float3 radiant = light.Sample(touch.point, sample, out Float3 incident, out float travel);
 
 		if (!FastMath.Positive(radiantPdf) | !radiant.PositiveRadiance()) return Float3.Zero;
 

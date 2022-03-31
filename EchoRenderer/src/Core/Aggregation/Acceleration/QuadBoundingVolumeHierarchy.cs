@@ -51,13 +51,13 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	/// <summary>
 	/// Returns the root <see cref="AxisAlignedBoundingBox"/> that encapsulates the entire hierarchy.
 	/// </summary>
-	AxisAlignedBoundingBox RootAABB => nodes[NodeToken.root.NodeValue].aabb4.Encapsulated;
+	AxisAlignedBoundingBox RootAABB => nodes[NodeToken.Root.NodeValue].aabb4.Encapsulated;
 
 	public override void Trace(ref TraceQuery query) => TraceCore(ref query);
 
 	public override bool Occlude(ref OccludeQuery query) => OccludeCore(ref query);
 
-	public override int TraceCost(in Ray ray, ref float distance) => GetTraceCost(NodeToken.root, ray, ref distance);
+	public override int TraceCost(in Ray ray, ref float distance) => GetTraceCost(NodeToken.Root, ray, ref distance);
 
 	public override unsafe int GetHashCode()
 	{
@@ -86,7 +86,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		NodeToken* next0 = stack0;
 		NodeToken* next1 = stack1;
 
-		*next0++ = NodeToken.root;
+		*next0++ = NodeToken.Root;
 		var fill = span.AsFill();
 
 		for (int i = 0; i < iteration; i++)
@@ -133,7 +133,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		float* hits = stackalloc float[stackSize];
 
 		NodeToken* next = stack;
-		*next++ = NodeToken.root;
+		*next++ = NodeToken.Root;
 		*hits++ = 0f;
 
 		bool* orders = stackalloc bool[Width]
@@ -232,7 +232,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		NodeToken* stack = stackalloc NodeToken[stackSize];
 
 		NodeToken* next = stack;
-		*next++ = NodeToken.root;
+		*next++ = NodeToken.Root;
 
 		bool* orders = stackalloc bool[Width]
 		{
@@ -386,7 +386,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 			if (current.IsEmpty)
 			{
-				nodeToken = NodeToken.empty;
+				nodeToken = NodeToken.Empty;
 				nodeDepth = 0;
 			}
 			else if (current.IsLeaf)

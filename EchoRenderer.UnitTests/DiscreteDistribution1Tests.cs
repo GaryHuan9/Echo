@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Distributions.Discrete;
 using NUnit.Framework;
@@ -83,11 +84,14 @@ public class DiscreteDistribution1Tests
 
 	static void ProbabilityDensitySingle(DiscreteDistribution1D distribution, Sample1D sample)
 	{
-		Assert.That(distribution.ProbabilityDensity(distribution.Find(sample, out float pdf0)), Is.EqualTo(pdf0).Roughly());
-		Assert.That(distribution.ProbabilityDensity(distribution.Sample(sample, out float pdf1)), Is.EqualTo(pdf1).Roughly());
+		var one = distribution.Sample(sample);
+		var two = distribution.Find(sample);
 
-		Assert.That(pdf0, Is.Not.Zero);
-		Assert.That(pdf1, Is.Not.Zero);
+		Assert.That(distribution.ProbabilityDensity(one), Is.EqualTo(one.pdf).Roughly());
+		Assert.That(distribution.ProbabilityDensity(two), Is.EqualTo(two.pdf).Roughly());
+
+		Assert.That(one.pdf, Is.Not.Zero);
+		Assert.That(two.pdf, Is.Not.Zero);
 	}
 
 	static IEnumerable<Sample1D> Uniform(int count)

@@ -14,7 +14,7 @@ namespace EchoRenderer.Core.Aggregation.Preparation;
 /// </summary>
 public class PreparedInstanceRoot : PreparedInstance
 {
-	public PreparedInstanceRoot(ScenePreparer preparer, Scene scene) : base(preparer, scene, null, NodeToken.empty) { }
+	public PreparedInstanceRoot(ScenePreparer preparer, Scene scene) : base(preparer, scene, null, NodeToken.Empty) { }
 
 	/// <summary>
 	/// Calculates and outputs the <see cref="AxisAlignedBoundingBox"/> and <see cref="BoundingSphere"/> of

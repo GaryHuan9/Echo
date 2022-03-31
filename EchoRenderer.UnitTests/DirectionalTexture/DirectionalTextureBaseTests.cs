@@ -32,7 +32,7 @@ public abstract class DirectionalTextureBaseTests
 	{
 		Sample2D sample = (Sample2D)new Float2(x, y);
 
-		Vector128<float> sampled = texture.Sample(sample, out Float3 incident, out float pdf);
+		Vector128<float> sampled = texture.Sample(sample, out Float3 incident);
 
 		Assert.That(Difference(sampled, texture.Evaluate(incident)), Is.LessThan(0.002f));
 		Assert.That(pdf, Is.EqualTo(texture.ProbabilityDensity(incident)).Roughly(0.01f));

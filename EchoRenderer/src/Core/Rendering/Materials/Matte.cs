@@ -1,8 +1,8 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Scattering;
@@ -24,12 +24,12 @@ public class Matte : Material
 	{
 		var make = new MakeBSDF(ref touch, allocator);
 
-		Float3 albedo = Sample(Albedo, touch).XYZ;
-		if (!albedo.PositiveRadiance()) return;
+		RGBA32 albedo = Sample(Albedo, touch);
+		if (albedo.IsZero) return;
 
 		float roughness = FastMath.Clamp01(Sample(Roughness, touch).X);
 
 		if (FastMath.AlmostZero(roughness)) make.Add<LambertianReflection>().Reset(albedo);
-		else make.Add<OrenNayar>().Reset(albedo, roughness * 90f * Scalars.DegreeToRadian);
+		else make.Add<OrenNayar>().Reset(albedo, Scalars.ToRadians(roughness * 90f));
 	}
 }

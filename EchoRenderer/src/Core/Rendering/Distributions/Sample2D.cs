@@ -40,7 +40,7 @@ public readonly struct Sample2D
 		get
 		{
 			float radius = FastMath.Sqrt0(x);
-			float angle = Scalars.TAU * y;
+			float angle = Scalars.Tau * y;
 			return ProjectDisk(radius, angle);
 		}
 	}
@@ -76,12 +76,12 @@ public readonly struct Sample2D
 			if (FastMath.Abs(xy.X) > FastMath.Abs(xy.Y))
 			{
 				radius = xy.X;
-				angle = Scalars.PI / 4f * xy.Y / xy.X;
+				angle = Scalars.Pi / 4f * xy.Y / xy.X;
 			}
 			else
 			{
 				radius = xy.Y;
-				angle = Scalars.PI / 2f * FastMath.FMA(xy.X / xy.Y, -0.5f, 1f);
+				angle = Scalars.Pi / 2f * FastMath.FMA(xy.X / xy.Y, -0.5f, 1f);
 			}
 
 			return ProjectDisk(radius, angle);
@@ -105,12 +105,12 @@ public readonly struct Sample2D
 	/// <summary>
 	/// The probability density function for <see cref="UniformHemisphere"/>.
 	/// </summary>
-	public const float UniformHemispherePdf = 1f / Scalars.TAU;
+	public const float UniformHemispherePdf = 1f / Scalars.Tau;
 
 	/// <summary>
 	/// The probability density function for <see cref="UniformSphere"/>.
 	/// </summary>
-	public const float UniformSpherePdf = 1f / 2f / Scalars.TAU;
+	public const float UniformSpherePdf = 1f / 2f / Scalars.Tau;
 
 	/// <summary>
 	/// Maps this <see cref="Sample2D"/> to be between zero (inclusive) and <paramref name="max"/> (exclusive).
@@ -136,7 +136,7 @@ public readonly struct Sample2D
 	static Float3 ProjectSphere(float z, float u)
 	{
 		float radius = FastMath.Identity(z);
-		float angle = Scalars.TAU * u;
+		float angle = Scalars.Tau * u;
 		return ProjectDisk(radius, angle).CreateXY(z);
 	}
 
