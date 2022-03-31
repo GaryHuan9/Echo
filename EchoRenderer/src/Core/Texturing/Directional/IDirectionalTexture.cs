@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Core.Rendering.Distributions;
 
@@ -18,7 +19,7 @@ public interface IDirectionalTexture
 	/// <summary>
 	/// Returns the average of this <see cref="IDirectionalTexture"/> on all directions.
 	/// </summary>
-	Vector128<float> Average { get; }
+	RGBA32 Average { get; }
 
 	/// <summary>
 	/// Invoked prior to rendering begins to perform any initialization work this <see cref="IDirectionalTexture"/> need.
@@ -30,17 +31,16 @@ public interface IDirectionalTexture
 	/// Evaluates this <see cref="IDirectionalTexture"/> at <paramref name="direction"/>.
 	/// NOTE: <paramref name="direction"/> should have a squared magnitude of exactly one.
 	/// </summary>
-	Vector128<float> Evaluate(in Float3 direction);
+	RGBA32 Evaluate(in Float3 direction);
 
 	/// <summary>
 	/// Samples this <see cref="IDirectionalTexture"/> based on <paramref name="sample"/> and outputs the
 	/// <see cref="Evaluate"/> <paramref name="incident"/> direction and its <paramref name="pdf"/>.
 	/// </summary>
-	Vector128<float> Sample(Sample2D sample, out Float3 incident, out float pdf)
+	Probable<RGBA32> Sample(Sample2D sample, out Float3 incident)
 	{
 		incident = sample.UniformSphere;
-		pdf = Sample2D.UniformSpherePdf;
-		return Evaluate(incident);
+		return (Evaluate(incident), Sample2D.UniformSpherePdf);
 	}
 
 	/// <summary>
@@ -54,7 +54,7 @@ public static class IDirectionalTextureExtensions
 	/// <summary>
 	/// Explicitly calculates a converged value for <see cref="IDirectionalTexture.Average"/> using Monte Carlo sampling.
 	/// </summary>
-	public static Vector128<float> ConvergeAverage(this IDirectionalTexture texture, int sampleCount = 1000000)
+	public static RGBA32 ConvergeAverage(this IDirectionalTexture texture, int sampleCount = (int)1E6)
 	{
 		using ThreadLocal<SumPackage> sums = new(SumPackage.factory, true);
 
@@ -73,7 +73,7 @@ public static class IDirectionalTextureExtensions
 
 		foreach (SumPackage package in sums.Values) sum += package.Sum;
 
-		return Sse.Divide(sum.Result, Vector128.Create((float)sampleCount));
+		return (RGBA32)(sum.Result / sampleCount);
 	}
 
 	class SumPackage

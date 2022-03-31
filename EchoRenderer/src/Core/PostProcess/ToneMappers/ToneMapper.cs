@@ -3,6 +3,7 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.PostProcess.Operators;
 
 namespace EchoRenderer.Core.PostProcess.ToneMappers;
@@ -34,11 +35,11 @@ public abstract class ToneMapper : PostProcessingWorker
 
 	void MainPass(Int2 position)
 	{
-		Vector128<float> source = renderBuffer[position];
-		float luminance = PackedMath.GetLuminance(source);
+		RGBA32 source = renderBuffer[position];
+		float luminance = source.Luminance;
 
 		float mapped = MapLuminance(luminance * luminanceInverse) * luminanceForward;
 		float multiplier = FastMath.AlmostZero(luminance) ? mapped : mapped / luminance;
-		renderBuffer[position] = Sse.Multiply(source, Vector128.Create(multiplier));
+		renderBuffer[position] = source * multiplier;
 	}
 }

@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Rendering.Scattering;
 
@@ -16,7 +17,7 @@ public class OrenNayar : BxDF
 		FunctionType.diffuse
 	) { }
 
-	public void Reset(in Float3 newReflectance, float newSigma)
+	public void Reset(in RGBA32 newReflectance, float newSigma)
 	{
 		reflectance = newReflectance;
 		sigma = newSigma;
@@ -27,13 +28,13 @@ public class OrenNayar : BxDF
 		b = 0.45f * sigma2 / (sigma2 + 0.09f);
 	}
 
-	Float3 reflectance;
+	RGBA32 reflectance;
 	float sigma;
 
 	float a;
 	float b;
 
-	public override Float3 Evaluate(in Float3 outgoing, in Float3 incident)
+	public override RGBA32 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
 		float sinO = SineP(outgoing);
 		float sinI = SineP(incident);
@@ -47,8 +48,8 @@ public class OrenNayar : BxDF
 			cosMax = Math.Max(cos + sin, 0f);
 		}
 
-		float cosO = AbsoluteCosineP(outgoing);
-		float cosI = AbsoluteCosineP(incident);
+		float cosO = FastMath.Abs(CosineP(outgoing));
+		float cosI = FastMath.Abs(CosineP(incident));
 
 		float sinA;
 		float tanB;
@@ -64,6 +65,6 @@ public class OrenNayar : BxDF
 			tanB = sinO / cosO;
 		}
 
-		return 1f / Scalars.PI * (a + b * cosMax * sinA * tanB) * reflectance;
+		return reflectance * (a + b * cosMax * sinA * tanB) * Scalars.PiR;
 	}
 }

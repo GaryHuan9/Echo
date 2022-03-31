@@ -5,6 +5,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Texturing;
@@ -20,7 +21,7 @@ public class Emissive : Material, IEmissive
 	/// <inheritdoc/>
 	public float Power { get; private set; }
 
-	Float3 emission;
+	RGBA32 emission;
 
 	public override void Prepare()
 	{
@@ -44,11 +45,9 @@ public class Emissive : Material, IEmissive
 			lock (locker) total += sum;
 		});
 
-		//Calculate average and power from total sum
-		Vector128<float> average = Sse.Divide(total.Result, Vector128.Create((float)size.Product));
-
-		emission = Utilities.ToFloat3(average);
-		Power = PackedMath.GetLuminance(average) * Scalars.TAU;
+		//Calculate emission and power from total sum
+		emission = ((RGBA32)total.Result / size.Product).AlphaOne;
+		Power = emission.Luminance * Scalars.Tau;
 	}
 
 	public override void Scatter(ref Touch touch, Allocator allocator)
@@ -58,7 +57,7 @@ public class Emissive : Material, IEmissive
 	}
 
 	/// <inheritdoc/>
-	public Float3 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
+	public RGBA32 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
 }
 
 /// <summary>
@@ -76,5 +75,5 @@ public interface IEmissive
 	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
 	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
 	/// </summary>
-	public Float3 Emit(in GeometryPoint point, in Float3 outgoing);
+	public RGBA32 Emit(in GeometryPoint point, in Float3 outgoing);
 }

@@ -1,6 +1,7 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Rendering.Materials;
@@ -45,24 +46,24 @@ public class GeometryLight : IAreaLight
 	}
 
 	/// <inheritdoc/>
-	public Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
+	public Probable<RGBA32> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
 	{
-		GeometryPoint sampled = scene.Sample(token, point, sample, out pdf);
+		Probable<GeometryPoint> sampled = scene.Sample(token, point, sample);
 
-		Float3 delta = sampled.position - point;
+		Float3 delta = sampled.content.position - point;
 		float travel2 = delta.SquaredMagnitude;
 
 		if (!FastMath.Positive(travel2))
 		{
-			incident = default;
-			pdf = travel = default;
-			return Float3.Zero;
+			incident = Float3.Zero;
+			travel = 0f;
+			return Probable<RGBA32>.Zero;
 		}
 
 		travel = FastMath.Sqrt0(travel2);
 		incident = delta * (1f / travel);
 
-		return Emissive.Emit(sampled, -incident);
+		return (Emissive.Emit(sampled, -incident), 1f);
 	}
 
 	/// <inheritdoc/>

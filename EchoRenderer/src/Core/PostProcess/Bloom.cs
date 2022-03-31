@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.PostProcess.Operators;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -35,26 +36,21 @@ public class Bloom : PostProcessingWorker
 
 	void LuminancePass(Int2 position)
 	{
-		Vector128<float> source = renderBuffer[position];
-		float luminance = PackedMath.GetLuminance(source);
+		RGBA32 source = renderBuffer[position];
+		float luminance = source.Luminance;
 
-		float brightness = luminance - Threshold;
-		Vector128<float> result = Vector128<float>.Zero;
-
-		if (brightness > 0f && !FastMath.AlmostZero(luminance))
+		if (luminance > Threshold)
 		{
-			float multiplier = brightness / luminance * Intensity;
-			result = Sse.Multiply(source, Vector128.Create(multiplier));
+			float excess = (luminance - Threshold) / luminance;
+			workerBuffer[position] = source * excess * Intensity;
 		}
-
-		workerBuffer[position] = result;
+		else workerBuffer[position] = RGBA32.Black;
 	}
 
 	void CombinePass(Int2 position)
 	{
-		Vector128<float> source = workerBuffer[position];
-		Vector128<float> target = renderBuffer[position];
-
-		renderBuffer[position] = Sse.Add(target, source);
+		RGBA32 source = workerBuffer[position];
+		RGBA32 target = renderBuffer[position];
+		renderBuffer[position] = target + source;
 	}
 }

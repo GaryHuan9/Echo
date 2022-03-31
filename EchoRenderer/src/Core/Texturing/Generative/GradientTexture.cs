@@ -3,6 +3,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Generative;
 
@@ -43,11 +44,7 @@ public class GradientTexture : CacheableTexture
 
 	Segment2 segment;
 
-	protected override Vector128<float> Sample(Float2 position)
-	{
-		float value = segment.InverseLerp(position);
-		return Gradient.SampleVector(value);
-	}
+	protected override RGBA32 Sample(Float2 position) => Gradient[segment.InverseLerp(position)];
 
 	void UpdateSegment()
 	{

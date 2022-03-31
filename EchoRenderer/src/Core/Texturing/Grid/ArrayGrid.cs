@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
@@ -13,11 +14,11 @@ public class ArrayGrid : TextureGrid
 	public ArrayGrid(Int2 size) : base(size, Filters.bilinear)
 	{
 		length = size.Product;
-		pixels = new Vector128<float>[length];
+		pixels = new RGBA32[length];
 	}
 
 	protected readonly int length;
-	protected readonly Vector128<float>[] pixels;
+	protected readonly RGBA32[] pixels;
 
 	/// <summary>
 	/// This is the axis in which <see cref="ToPosition"/> is going to move first if you increment the input index.
@@ -29,7 +30,7 @@ public class ArrayGrid : TextureGrid
 	/// </summary>
 	public const int MinorAxis = MajorAxis ^ 1;
 
-	public override Vector128<float> this[Int2 position]
+	public override RGBA32 this[Int2 position]
 	{
 		get => pixels[ToIndex(position)];
 		set => pixels[ToIndex(position)] = value;

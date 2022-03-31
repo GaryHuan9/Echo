@@ -3,6 +3,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 
 namespace EchoRenderer.Core.Rendering.Scattering;
@@ -23,7 +24,7 @@ public abstract class BxDF
 	/// Evaluates and returns the value of this <see cref="BxDF"/> from two pairs of <see cref="BxDF"/> local directions,
 	/// the leaving <paramref name="incident"/> direction and the returning <paramref name="outgoing"/> direction.
 	/// </summary>
-	public abstract Float3 Evaluate(in Float3 outgoing, in Float3 incident);
+	public abstract RGBA32 Evaluate(in Float3 outgoing, in Float3 incident);
 
 	/// <summary>
 	/// Returns the probability density function (pdf) value from two pairs of <see cref="BxDF"/> local directions,
@@ -32,7 +33,7 @@ public abstract class BxDF
 	public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
 		if (!SameHemisphere(outgoing, incident)) return 0f;
-		return AbsoluteCosineP(incident) * (1f / Scalars.PI);
+		return FastMath.Abs(CosineP(incident)) * (1f / Scalars.Pi);
 	}
 
 	/// <summary>
@@ -41,27 +42,29 @@ public abstract class BxDF
 	/// of this <see cref="BxDF"/> evaluated from the returning local <paramref name="outgoing"/> direction to the
 	/// <paramref name="incident"/> direction that we just sampled.
 	/// </summary>
-	public virtual Float3 Sample(in Float3 outgoing, Sample2D sample, out Float3 incident, out float pdf)
+	public virtual Probable<RGBA32> Sample(in Float3 outgoing, Sample2D sample, out Float3 incident)
 	{
 		incident = sample.CosineHemisphere;
 		if (outgoing.Z < 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
 
-		pdf = ProbabilityDensity(outgoing, incident);
-		return Evaluate(outgoing, incident);
+		return (Evaluate(outgoing, incident), ProbabilityDensity(outgoing, incident));
 	}
 
 	/// <summary>
 	/// Returns the hemispherical-directional reflectance, the total reflectance in direction
 	/// <paramref name="outgoing"/> due to a constant illumination over the doming hemisphere
 	/// </summary>
-	public virtual Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples)
+	public virtual RGBA32 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples)
 	{
-		Float3 result = Float3.Zero;
+		var result = RGBA32.Zero;
 
 		foreach (ref readonly Sample2D sample in samples)
 		{
-			Float3 sampled = Sample(outgoing, sample, out Float3 incident, out float pdf);
-			if (FastMath.Positive(pdf)) result += sampled * AbsoluteCosineP(incident) / pdf;
+			Probable<RGBA32> sampled = Sample(outgoing, sample, out Float3 incident);
+
+			if (sampled.IsZero | sampled.content.IsZero) continue;
+
+			result += sampled.content * FastMath.Abs(CosineP(incident)) / sampled.pdf;
 		}
 
 		return result / samples.Length;
@@ -71,26 +74,24 @@ public abstract class BxDF
 	/// Returns the hemispherical-hemispherical reflectance, the fraction of incident light
 	/// reflected when the amount of incident light is constant across all directions
 	/// </summary>
-	public virtual Float3 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
+	public virtual RGBA32 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
 	{
-		Float3 result = Float3.Zero;
-		int length = samples0.Length;
+		Assert.AreEqual(samples0.Length, samples1.Length);
 
-		Assert.AreEqual(length, samples1.Length);
+		var result = RGBA32.Zero;
+
 		for (int i = 0; i < samples0.Length; i++)
 		{
-			ref readonly Sample2D sample0 = ref samples0[i];
-			ref readonly Sample2D sample1 = ref samples1[i];
+			Float3 outgoing = samples0[i].UniformHemisphere;
+			Probable<RGBA32> sampled = Sample(outgoing, samples1[i], out Float3 incident);
 
-			Float3 outgoing = sample0.UniformHemisphere;
-			Float3 sampled = Sample(outgoing, sample1, out Float3 incident, out float pdf);
+			if (sampled.IsZero | sampled.content.IsZero) continue;
 
-			pdf *= Sample2D.UniformHemispherePdf;
-
-			if (FastMath.Positive(pdf)) result += sampled * FastMath.Abs(CosineP(outgoing) * CosineP(incident)) / pdf;
+			result += sampled.content * FastMath.Abs(CosineP(outgoing) * CosineP(incident))
+					/ (sampled.pdf * Sample2D.UniformHemispherePdf);
 		}
 
-		return result / length;
+		return result / samples0.Length;
 	}
 
 	/// <summary>
@@ -107,11 +108,6 @@ public abstract class BxDF
 	/// Returns the cosine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
 	public static float CosineP2(in Float3 direction) => direction.Z * direction.Z;
-
-	/// <summary>
-	/// Returns the absolute cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
-	/// </summary>
-	public static float AbsoluteCosineP(in Float3 direction) => FastMath.Abs(direction.Z);
 
 	/// <summary>
 	/// Returns the sine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.

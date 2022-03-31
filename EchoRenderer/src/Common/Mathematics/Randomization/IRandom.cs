@@ -156,7 +156,7 @@ public interface IRandom
 		float u0 = 1f - Next1();
 		float u1 = 1f - Next1();
 
-		return FastMath.Sqrt0(-2f * MathF.Log(u0)) * MathF.Sin(Scalars.TAU * u1);
+		return FastMath.Sqrt0(-2f * MathF.Log(u0)) * MathF.Sin(Scalars.Tau * u1);
 	}
 
 	/// <summary>

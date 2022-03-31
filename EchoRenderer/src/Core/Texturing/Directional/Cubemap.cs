@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.Texturing.Directional;
@@ -64,7 +65,7 @@ public class Cubemap : IDirectionalTexture
 		}
 	}
 
-	public Vector128<float> Average { get; private set; }
+	public RGBA32 Average { get; private set; }
 
 	Texture this[int index]
 	{
@@ -78,7 +79,7 @@ public class Cubemap : IDirectionalTexture
 	public void Prepare() => Average = this.ConvergeAverage();
 
 	/// <inheritdoc/>
-	public Vector128<float> Evaluate(in Float3 direction)
+	public RGBA32 Evaluate(in Float3 direction)
 	{
 		Direction target = (Direction)direction;
 
