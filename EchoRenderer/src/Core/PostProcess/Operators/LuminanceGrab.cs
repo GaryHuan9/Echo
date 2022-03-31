@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Packed;
-using CodeHelpers.Threads;
-using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.PostProcess.Operators;
 
-public class LuminanceGrab
+public sealed class LuminanceGrab : IDisposable
 {
 	public LuminanceGrab(PostProcessingWorker worker, TextureGrid sourceBuffer)
 	{
@@ -20,42 +20,27 @@ public class LuminanceGrab
 	readonly PostProcessingWorker worker;
 	readonly TextureGrid sourceBuffer;
 
-	double luminanceTotal;
-
-	static int HeightThreshold => Environment.ProcessorCount * 6;
+	ThreadLocal<StrongBox<Summation>> sums = new(() => new StrongBox<Summation>(Summation.Zero), true);
 
 	public void Run()
 	{
-		Int2 size = sourceBuffer.size;
-		double length = size.Product;
+		worker.RunPass(LuminancePass, sourceBuffer);
 
-		Interlocked.Exchange(ref luminanceTotal, 0d);
+		var sum = Summation.Zero;
 
-		//Because the work of grabbing luminance on each position is relatively small,
-		//we selectively run either a full or vertical pass to maximize performance.
+		foreach (StrongBox<Summation> box in sums.Values) sum += box.Value;
+		Luminance = ((RGBA32)sum.Result).Luminance / sourceBuffer.size.Product;
+	}
 
-		if (size.Y < HeightThreshold) worker.RunPass(LuminancePass, sourceBuffer);
-		else worker.RunPassVertical(VerticalLuminancePass, sourceBuffer);
-
-		Luminance = (float)(InterlockedHelper.Read(ref luminanceTotal) / length);
+	public void Dispose()
+	{
+		sums?.Dispose();
+		sums = null;
 	}
 
 	void LuminancePass(Int2 position)
 	{
-		float luminance = PackedMath.GetLuminance(sourceBuffer[position]);
-		InterlockedHelper.Add(ref luminanceTotal, luminance);
-	}
-
-	void VerticalLuminancePass(int vertical)
-	{
-		double luminance = 0d;
-
-		for (int x = 0; x < sourceBuffer.size.X; x++)
-		{
-			var color = sourceBuffer[new Int2(x, vertical)];
-			luminance += PackedMath.GetLuminance(color);
-		}
-
-		InterlockedHelper.Add(ref luminanceTotal, luminance);
+		StrongBox<Summation> box = sums.Value;
+		box.Value += sourceBuffer[position];
 	}
 }
