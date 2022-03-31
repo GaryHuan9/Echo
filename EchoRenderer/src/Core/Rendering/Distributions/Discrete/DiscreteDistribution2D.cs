@@ -1,6 +1,7 @@
 using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Discrete;
@@ -59,26 +60,24 @@ public class DiscreteDistribution2D
 	/// Samples this <see cref="DiscreteDistribution2D"/> at continuous linear intervals
 	/// based on <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public Sample2D Sample(Sample2D sample, out float pdf)
+	public Probable<Sample2D> Sample(Sample2D sample)
 	{
-		Sample1D y = vertical.Sample(sample.y, out float pdfY);
-		Sample1D x = slices[y.Range(size.Y)].Sample(sample.x, out pdf);
+		Probable<Sample1D> y = vertical.Sample(sample.y);
+		Probable<Sample1D> x = slices[y.content.Range(size.Y)].Sample(sample.x);
 
-		pdf *= pdfY;
-		return new Sample2D(x, y);
+		return (new Sample2D(x, y), x.pdf * y.pdf);
 	}
 
 	/// <summary>
 	/// Finds a discrete point from this <see cref="DiscreteDistribution2D"/> based on
 	/// <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public Int2 Find(Sample2D sample, out float pdf)
+	public Probable<Int2> Find(Sample2D sample)
 	{
-		int y = vertical.Find(sample.y, out float pdfY);
-		int x = slices[y].Find(sample.x, out pdf);
+		Probable<int> y = vertical.Find(sample.y);
+		Probable<int> x = slices[y].Find(sample.x);
 
-		pdf *= pdfY;
-		return new Int2(x, y);
+		return (new Int2(x, y), x.pdf * y.pdf);
 	}
 
 	/// <summary>

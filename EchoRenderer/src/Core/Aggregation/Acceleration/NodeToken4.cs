@@ -19,8 +19,8 @@ public unsafe struct NodeToken4
 
 	public NodeToken4(ReadOnlySpan<NodeToken> tokens) : this
 	(
-		tokens.TryGetValue(0, NodeToken.empty), tokens.TryGetValue(1, NodeToken.empty),
-		tokens.TryGetValue(2, NodeToken.empty), tokens.TryGetValue(3, NodeToken.empty)
+		tokens.TryGetValue(0, NodeToken.Empty), tokens.TryGetValue(1, NodeToken.Empty),
+		tokens.TryGetValue(2, NodeToken.Empty), tokens.TryGetValue(3, NodeToken.Empty)
 	) { }
 
 #pragma warning disable CS0649

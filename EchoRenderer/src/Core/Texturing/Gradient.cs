@@ -9,6 +9,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Generative;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -30,16 +31,37 @@ public class Gradient : IEnumerable<float>
 
 	Seal seal;
 
-	public static readonly Gradient black = new() { { 0f, Float4.Ana } };
-	public static readonly Gradient white = new() { { 0f, Float4.One } };
-	public static readonly Gradient blend = new() { { 0f, Float4.Ana }, { 1f, Float4.One } };
+	public static readonly Gradient black = new() { { 0f, RGBA32.Black } };
+	public static readonly Gradient white = new() { { 0f, RGBA32.White } };
+	public static readonly Gradient blend = new() { { 0f, RGBA32.Black }, { 1f, RGBA32.White } };
 
-	public Float4 this[float percent] => Utilities.ToFloat4(SampleVector(percent));
+	/// <summary>
+	/// Samples this <see cref="Gradient"/> and returns the <see cref="RGBA32"/> color value at <paramref name="percent"/>.
+	/// </summary>
+	public RGBA32 this[float percent]
+	{
+		get
+		{
+			{
+				if (anchors.Count == 0) throw new Exception("Cannot sample with zero anchor!");
+				int index = anchors.BinarySearch(percent, Comparer.instance);
+
+				if (index < 0) index = ~index;
+				else return anchors[index].color;
+
+				Anchor head = index == 0 ? anchors[index] : anchors[index - 1];
+				Anchor tail = index == anchors.Count ? anchors[index - 1] : anchors[index];
+
+				float time = Scalars.InverseLerp(head.percent, tail.percent, percent);
+				return (RGBA32)Float4.Lerp(head.color, tail.color, FastMath.Clamp01(time));
+			}
+		}
+	}
 
 	/// <summary>
 	/// Inserts a new <paramref name="color"/> at <paramref name="percent"/> to this <see cref="Gradient"/>.
 	/// </summary>
-	public void Add(float percent, in Float4 color)
+	public void Add(float percent, in RGBA32 color)
 	{
 		seal.AssertNotApplied();
 
@@ -66,24 +88,6 @@ public class Gradient : IEnumerable<float>
 	}
 
 	/// <summary>
-	/// Samples this <see cref="Gradient"/> and returns the vector color value at <paramref name="percent"/>.
-	/// </summary>
-	public Vector128<float> SampleVector(float percent)
-	{
-		if (anchors.Count == 0) throw new Exception("Cannot sample with zero anchor!");
-		int index = anchors.BinarySearch(percent, Comparer.instance);
-
-		if (index < 0) index = ~index;
-		else return anchors[index].color;
-
-		Anchor head = index == 0 ? anchors[index] : anchors[index - 1];
-		Anchor tail = index == anchors.Count ? anchors[index - 1] : anchors[index];
-
-		float time = Scalars.InverseLerp(head.percent, tail.percent, percent).Clamp();
-		return PackedMath.Lerp(head.color, tail.color, Vector128.Create(time));
-	}
-
-	/// <summary>
 	/// Draws this <see cref="Gradient"/> on <paramref name="texture"/> from <paramref name="point0"/> to <paramref name="point1"/>.
 	/// </summary>
 	public void Draw(TextureGrid texture, Float2 point0, Float2 point1) => texture.CopyFrom(new GradientTexture { Gradient = this, Point0 = point0, Point1 = point1 });
@@ -105,13 +109,13 @@ public class Gradient : IEnumerable<float>
 
 	readonly struct Anchor
 	{
-		public Anchor(float percent, in Float4 color)
+		public Anchor(float percent, in RGBA32 color)
 		{
 			this.percent = percent;
-			this.color = Utilities.ToVector(color);
+			this.color = color;
 		}
 
 		public readonly float percent;
-		public readonly Vector128<float> color;
+		public readonly RGBA32 color;
 	}
 }

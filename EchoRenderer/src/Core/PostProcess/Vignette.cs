@@ -25,10 +25,9 @@ public class Vignette : PostProcessingWorker
 			Float2 uv = position * renderBuffer.sizeR;
 
 			float distance = (uv - Float2.Half).SquaredMagnitude * Intensity;
-			float multiplier = 1f + random.Next1(-FilmGrain, FilmGrain) - distance;
+			float multiplier = random.Next1(-FilmGrain, FilmGrain) - distance;
 
-			Vector128<float> target = PackedMath.Clamp01(renderBuffer[position]);
-			renderBuffer[position] = Sse.Multiply(target, Vector128.Create(multiplier));
+			renderBuffer[position] *= 1f + multiplier;
 		}
 	}
 }

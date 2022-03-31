@@ -209,16 +209,14 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="sample"/> and outputs
 	/// the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 	/// </summary>
-	public GeometryPoint Sample(in Float3 origin, Sample2D sample, out float pdf)
+	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
 	{
 		Float2 uv = sample.UniformTriangle;
 		Float3 position = GetPoint(uv);
 		Float3 normal = GetNormal(uv);
 
-		var point = new GeometryPoint(position, normal);
-		pdf = point.ProbabilityDensity(origin, Area);
-
-		return point;
+		GeometryPoint point = new GeometryPoint(position, normal);
+		return (point, point.ProbabilityDensity(origin, Area));
 	}
 
 	/// <summary>

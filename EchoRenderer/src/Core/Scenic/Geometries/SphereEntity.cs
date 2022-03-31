@@ -53,7 +53,7 @@ public readonly struct PreparedSphere
 	/// <summary>
 	/// The area of this <see cref="PreparedSphere"/>.
 	/// </summary>
-	public float Area => 2f * Scalars.TAU * radius * radius;
+	public float Area => 2f * Scalars.Tau * radius * radius;
 
 	/// <summary>
 	/// Because spheres have two intersection points, if an intersection distance is going to be under this value,
@@ -133,7 +133,7 @@ public readonly struct PreparedSphere
 	/// Samples this <see cref="PreparedSphere"/> based on <paramref name="sample"/> at <paramref name="origin"/> and
 	/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 	/// </summary>
-	public GeometryPoint Sample(in Float3 origin, Sample2D sample, out float pdf)
+	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
 	{
 		//Check whether origin is inside sphere
 		Float3 offset = origin - position;
@@ -143,10 +143,8 @@ public readonly struct PreparedSphere
 		if (length2 <= radius2)
 		{
 			//Sample uniformly if is inside
-			var point = GetPoint(sample.UniformSphere);
-			pdf = point.ProbabilityDensity(origin, Area);
-
-			return point;
+			GeometryPoint point = GetPoint(sample.UniformSphere);
+			return (point, point.ProbabilityDensity(origin, Area));
 		}
 
 		//Find cosine max
@@ -156,7 +154,7 @@ public readonly struct PreparedSphere
 		//Uniform sample cone, defined by theta and phi
 		float cosT = FastMath.FMA(sample.x, cosMaxT - 1f, 1f);
 		float sinT = FastMath.Identity(cosT);
-		float phi = sample.y * Scalars.TAU;
+		float phi = sample.y * Scalars.Tau;
 
 		//Compute angle alpha from center of sphere to sample point
 		float length = FastMath.Sqrt0(length2);
@@ -168,11 +166,11 @@ public readonly struct PreparedSphere
 		FastMath.SinCos(phi, out float sinP, out float cosP);
 		Float3 normal = new Float3(sinA * cosP, sinA * sinP, cosA);
 
-		pdf = ProbabilityDensityCone(cosMaxT);
+		float pdf = ProbabilityDensityCone(cosMaxT);
 
 		//Transform and returns point
 		var transform = new NormalTransform(offset / length);
-		return GetPoint(transform.LocalToWorld(normal));
+		return (GetPoint(transform.LocalToWorld(normal)), pdf);
 	}
 
 	/// <summary>
@@ -225,8 +223,8 @@ public readonly struct PreparedSphere
 
 		return new Float2
 		(
-			FastMath.FMA(MathF.Atan2(sinT, cosT), 1f / Scalars.TAU, 0.5f),
-			FastMath.FMA(MathF.Asin(FastMath.Clamp11(sinP)), 1f / Scalars.PI, 0.5f)
+			FastMath.FMA(MathF.Atan2(sinT, cosT), 1f / Scalars.Tau, 0.5f),
+			FastMath.FMA(MathF.Asin(FastMath.Clamp11(sinP)), 1f / Scalars.Pi, 0.5f)
 		);
 	}
 
@@ -250,5 +248,5 @@ public readonly struct PreparedSphere
 		cosT = FastMath.Identity(sinT) * sign;
 	}
 
-	static float ProbabilityDensityCone(float cosMaxT) => 1f / Scalars.TAU / (1f - cosMaxT);
+	static float ProbabilityDensityCone(float cosMaxT) => 1f / Scalars.Tau / (1f - cosMaxT);
 }

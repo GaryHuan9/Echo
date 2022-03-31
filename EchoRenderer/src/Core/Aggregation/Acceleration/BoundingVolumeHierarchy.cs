@@ -77,7 +77,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		NodeToken* next0 = stack0;
 		NodeToken* next1 = stack1;
 
-		*next0++ = NodeToken.root;
+		*next0++ = NodeToken.Root;
 		var fill = span.AsFill();
 
 		for (uint i = 0; i < depth; i++)
@@ -119,7 +119,7 @@ public class BoundingVolumeHierarchy : Aggregator
 
 		NodeToken* next = stack; //A pointer pointing at the top of the stack
 
-		*next++ = NodeToken.root.Next;    //We have already tested with the root before this method is invoked
+		*next++ = NodeToken.Root.Next;    //We have already tested with the root before this method is invoked
 		*hits++ = float.NegativeInfinity; //Explicitly initialize intersection distance
 
 		do
@@ -171,7 +171,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		NodeToken* stack = stackalloc NodeToken[maxDepth];
 		NodeToken* next = stack; //A pointer pointing at the top of the stack
 
-		*next++ = NodeToken.root.Next; //Push the child of the root because we have already tested with the root
+		*next++ = NodeToken.Root.Next; //Push the child of the root because we have already tested with the root
 
 		do
 		{

@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 
 namespace EchoRenderer.Core.Rendering.Scattering;
@@ -16,14 +17,14 @@ public class LambertianReflection : BxDF
 		FunctionType.diffuse
 	) { }
 
-	public void Reset(in Float3 newReflectance) => reflectance = newReflectance;
+	public void Reset(in RGBA32 newReflectance) => reflectance = newReflectance;
 
-	Float3 reflectance;
+	RGBA32 reflectance;
 
-	public override Float3 Evaluate(in Float3 outgoing, in Float3 incident) => reflectance * (1f / Scalars.PI);
+	public override RGBA32 Evaluate(in Float3 outgoing, in Float3 incident) => reflectance * Scalars.PiR;
 
-	public override Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => reflectance;
-	public override Float3 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => reflectance;
+	public override RGBA32 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => reflectance;
+	public override RGBA32 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => reflectance;
 }
 
 /// <summary>
@@ -37,12 +38,12 @@ public class LambertianTransmission : BxDF
 		FunctionType.diffuse
 	) { }
 
-	public void Reset(in Float3 newTransmittance) => transmittance = newTransmittance;
+	public void Reset(in RGBA32 newTransmittance) => transmittance = newTransmittance;
 
-	Float3 transmittance;
+	RGBA32 transmittance;
 
-	public override Float3 Evaluate(in Float3 outgoing, in Float3 incident) => transmittance * (1f / Scalars.PI);
+	public override RGBA32 Evaluate(in Float3 outgoing, in Float3 incident) => transmittance * Scalars.PiR;
 
-	public override Float3 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => transmittance;
-	public override Float3 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => transmittance;
+	public override RGBA32 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => transmittance;
+	public override RGBA32 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => transmittance;
 }

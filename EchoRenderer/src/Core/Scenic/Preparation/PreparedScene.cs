@@ -97,30 +97,29 @@ public class PreparedScene
 	/// <summary>
 	/// Picks a <see cref="ILight"/> in this <see cref="PreparedScene"/> and outputs its probability density function to <paramref name="pdf"/>.
 	/// </summary>
-	public ILight PickLight(ReadOnlySpan<Sample1D> samples, Allocator allocator, out float pdf)
+	public Probable<ILight> PickLight(ReadOnlySpan<Sample1D> samples, Allocator allocator)
 	{
-		var source = lights.PickLightSource(samples[0], out pdf);
-		if (source != null) return source;
+		Probable<LightSource> primary = lights.PickLightSource(samples[0]);
+		if (primary.content != null) return (primary.content, primary.pdf);
 
 		//Choose emissive geometry as light
 		var light = allocator.New<GeometryLight>();
 
-		GeometryToken token = rootInstance.Find(samples[1..], out var instance, out float tokenPdf);
-		Material material = instance.GetMaterial(instance.pack.GetMaterialIndex(token.Geometry));
+		Probable<GeometryToken> token = rootInstance.Find(samples[1..], out var instance);
+		MaterialIndex index = instance.pack.GetMaterialIndex(token.content.Geometry);
 
+		Material material = instance.GetMaterial(index);
 		light.Reset(this, token, (IEmissive)material);
-
-		pdf *= tokenPdf;
-		return light;
+		return (light, primary.pdf * token.pdf);
 	}
 
 	/// <summary>
 	/// Samples the object represented by <paramref name="token"/> from the perspective of <paramref name="origin"/> and
 	/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
 	/// </summary>
-	public GeometryPoint Sample(in GeometryToken token, in Float3 origin, Sample2D sample, out float pdf)
+	public Probable<GeometryPoint> Sample(in GeometryToken token, in Float3 origin, Sample2D sample)
 	{
-		if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.Geometry, origin, sample, out pdf);
+		if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.Geometry, origin, sample);
 
 		//TODO: support the entire hierarchy
 		throw new NotImplementedException();
@@ -185,7 +184,7 @@ public class PreparedScene
 				//completely black, but we add in a light so no exception is thrown when we look for lights.
 
 				_ambient = Array.Empty<AmbientLight>();
-				_all = new LightSource[] { new PointLight { Intensity = Float3.Zero } };
+				_all = new LightSource[] { new PointLight { Intensity = RGBA32.Black } };
 				distribution = new DiscreteDistribution1D(stackalloc[] { 1f, 0f });
 
 				return;
@@ -236,20 +235,18 @@ public class PreparedScene
 		/// If a <see cref="GeometryLight"/> is selected, null is returned. <paramref name="pdf"/> contains the probability
 		/// density function value of this selection.
 		/// </summary>
-		public LightSource PickLightSource(Sample1D sample, out float pdf)
+		public Probable<LightSource> PickLightSource(Sample1D sample)
 		{
-			// int index = sample.Range(_all.Length); pdf = 1f / _all.Length;
-
-			int index = distribution.Find(sample, out pdf);
-			return index < _all.Length ? _all[index] : null;
+			Probable<int> index = distribution.Find(sample);
+			return (index < _all.Length ? _all[index] : null, index.pdf);
 		}
 
 		/// <summary>
 		/// Evaluates all of the <see cref="AmbientLight"/> at <paramref name="direction"/> in world-space.
 		/// </summary>
-		public Float3 EvaluateAmbient(Float3 direction)
+		public RGBA32 EvaluateAmbient(Float3 direction)
 		{
-			Float3 total = Float3.Zero;
+			var total = RGBA32.Zero;
 
 			foreach (AmbientLight light in _ambient) total += light.Evaluate(direction);
 

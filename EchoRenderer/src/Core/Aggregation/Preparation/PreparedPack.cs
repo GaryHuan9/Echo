@@ -151,7 +151,7 @@ public class PreparedPack
 	/// <summary>
 	/// Returns the <see cref="MaterialIndex"/> of the geometry represented by <paramref name="token"/>.
 	/// </summary>
-	public MaterialIndex GetMaterialIndex( in NodeToken token)
+	public MaterialIndex GetMaterialIndex(in NodeToken token)
 	{
 		if (token.IsTriangle)
 		{
@@ -194,20 +194,20 @@ public class PreparedPack
 	/// <inheritdoc cref="PreparedScene.Sample"/>
 	/// NOTE: this method functions according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
-	public GeometryPoint Sample(in NodeToken token, in Float3 origin, Sample2D sample, out float pdf)
+	public Probable<GeometryPoint> Sample(in NodeToken token, in Float3 origin, Sample2D sample)
 	{
 		Assert.IsTrue(token.IsGeometry);
 
 		if (token.IsTriangle)
 		{
 			ref readonly var triangle = ref triangles[token.TriangleValue];
-			return triangle.Sample(origin, sample, out pdf);
+			return triangle.Sample(origin, sample);
 		}
 
 		if (token.IsSphere)
 		{
 			ref readonly var sphere = ref spheres[token.SphereValue];
-			return sphere.Sample(origin, sample, out pdf);
+			return sphere.Sample(origin, sample);
 		}
 
 		throw NotBasePackException();

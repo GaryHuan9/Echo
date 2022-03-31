@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
@@ -76,11 +77,7 @@ public class RenderBuffer : ArrayGrid
 
 		return texture;
 
-		void SetPixel(Int2 position)
-		{
-			Float4 color = Utilities.ToColor(data[ToIndex(position)]);
-			texture[position] = Utilities.ToVector(color);
-		}
+		void SetPixel(Int2 position) => texture[position] = new RGBA32(data[ToIndex(position)]);
 	}
 
 	//TODO: add serialization methods

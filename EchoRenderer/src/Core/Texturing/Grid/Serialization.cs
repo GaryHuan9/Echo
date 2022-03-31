@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.Texturing.Grid;
@@ -68,11 +70,11 @@ public partial class TextureGrid
 
 			void SaveARGB(Int2 position)
 			{
-				Vector128<float> colorVector = this[position];
+				RGBA32 source = this[position];
 				byte* pointer = origin + ToPointerOffset(position) * 4;
 
-				if (sRGB) colorVector = ForwardGammaCorrect(colorVector);
-				Color32 color = (Color32)Utilities.ToFloat4(colorVector);
+				if (sRGB) source = ForwardGammaCorrect(source);
+				Color32 color = (Color32)(Float4)source;
 
 				pointer[0] = color.b;
 				pointer[1] = color.g;
@@ -122,21 +124,15 @@ public partial class TextureGrid
 		void LoadRGB(Int2 position)
 		{
 			byte* pointer = origin + texture.ToPointerOffset(position) * 3;
-
-			Color32 pixel = new Color32(pointer[2], pointer[1], pointer[0]);
-			Vector128<float> vector = Utilities.ToVector((Float4)pixel);
-
-			texture[position] = sRGB ? InverseGammaCorrect(vector) : vector;
+			RGBA32 color = (RGBA32)(Float4)new Color32(pointer[2], pointer[1], pointer[0]);
+			texture[position] = sRGB ? InverseGammaCorrect(color) : color;
 		}
 
 		void LoadARGB(Int2 position)
 		{
 			byte* pointer = origin + texture.ToPointerOffset(position) * 4;
-
-			Color32 pixel = new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
-			Vector128<float> vector = Utilities.ToVector((Float4)pixel);
-
-			texture[position] = sRGB ? InverseGammaCorrect(vector) : vector;
+			RGBA32 color = (RGBA32)(Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
+			texture[position] = sRGB ? InverseGammaCorrect(color) : color;
 		}
 
 		source.UnlockBits(data);
@@ -148,7 +144,7 @@ public partial class TextureGrid
 	/// </summary>
 	int ToPointerOffset(Int2 position) => position.X + (oneLess.Y - position.Y) * size.X;
 
-	static unsafe Vector128<float> ForwardGammaCorrect(Vector128<float> value)
+	static unsafe RGBA32 ForwardGammaCorrect(RGBA32 value)
 	{
 		float* pointer = (float*)&value;
 
@@ -163,7 +159,7 @@ public partial class TextureGrid
 		}
 	}
 
-	static unsafe Vector128<float> InverseGammaCorrect(Vector128<float> value)
+	static unsafe RGBA32 InverseGammaCorrect(RGBA32 value)
 	{
 		float* pointer = (float*)&value;
 
@@ -207,7 +203,7 @@ public partial class TextureGrid
 
 		foreach (Int2 position in size.Loop())
 		{
-			Vector128<uint> current = this[position].AsUInt32();
+			Vector128<uint> current = Cast(this[position]);
 			Vector128<uint> xor = Sse2.Xor(sequence, current);
 
 			//Write the xor difference as variable length quantity for lossless compression
@@ -217,6 +213,8 @@ public partial class TextureGrid
 
 			for (int i = 0; i < 4; i++) writer.WriteCompact(pointer[i]);
 		}
+
+		static Vector128<uint> Cast(RGBA32 value) => Unsafe.As<RGBA32, Vector128<uint>>(ref value);
 	}
 
 	static unsafe ArrayGrid Read(DataReader reader)
@@ -236,10 +234,12 @@ public partial class TextureGrid
 			Vector128<uint> xor = *(Vector128<uint>*)read;
 			Vector128<uint> current = Sse2.Xor(sequence, xor);
 
-			texture[position] = current.AsSingle();
+			texture[position] = Cast(current);
 			sequence = current;
 		}
 
 		return texture;
+
+		static RGBA32 Cast(Vector128<uint> value) => Unsafe.As<Vector128<uint>, RGBA32>(ref value);
 	}
 }

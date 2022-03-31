@@ -2,6 +2,7 @@
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing;
 
@@ -12,24 +13,25 @@ public readonly struct Tint
 {
 	Tint(in Float4 scale, in Float4 offset)
 	{
-		this.scale = Utilities.ToVector(scale);
-		this.offset = Utilities.ToVector(offset);
+		this.scale = scale;
+		this.offset = offset;
 	}
 
-	readonly Vector128<float> scale;
-	readonly Vector128<float> offset;
+	readonly Float4 scale;
+	readonly Float4 offset;
 
-	public static readonly Tint identity = new(Float4.One, Float4.Zero);
+	public static readonly Tint identity = new(RGBA32.White, RGBA32.Zero);
 
-	public Vector128<float> Apply(in Vector128<float> color) => PackedMath.FMA(color, scale, offset);
+	public RGBA32 Apply(in RGBA32 color)
+	{
+		//TODO: use FMA
+		return (RGBA32)(color * scale + offset);
+		// return PackedMath.FMA(color, scale, offset);
+	}
 
-	public static Tint Scale(in Float4 value) => new(value, Float4.Zero);
-	public static Tint Scale(in Float3 value) => Scale(Utilities.ToColor(value));
+	public static Tint Scale(in RGBA32 value) => new(value, RGBA32.Zero);
+	public static Tint Offset(in RGBA32 value) => new(RGBA32.White, value);
 
-	public static Tint Offset(in Float4 value) => new(Float4.One, value);
-	public static Tint Offset(in Float3 value) => Offset((Float4)value);
-
-	public static Tint Inverse(in Float4 value) => new(-value, value);
-	public static Tint Inverse(in Float3 value) => Inverse(Utilities.ToColor(value));
-	public static Tint Inverse() => Inverse(Float4.One);
+	public static Tint Inverse(in RGBA32 value) => new(-(Float4)value, value);
+	public static Tint Inverse() => Inverse(RGBA32.White);
 }

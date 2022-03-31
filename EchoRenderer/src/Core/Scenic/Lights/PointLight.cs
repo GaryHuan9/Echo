@@ -2,6 +2,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -18,27 +19,26 @@ public class PointLight : LightSource
 	{
 		base.Prepare(scene);
 
-		_power = 4f * Scalars.PI * PackedMath.GetLuminance(Utilities.ToVector(Intensity));
+		_power = 4f * Scalars.Pi * PackedMath.GetLuminance(Utilities.ToVector(Intensity));
 	}
 
-	public override Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
+	public override Probable<RGBA32> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
 	{
 		Float3 delta = Position - point;
 		float travel2 = delta.SquaredMagnitude;
 
 		if (!FastMath.Positive(travel2))
 		{
-			incident = default;
-			pdf = travel = default;
-			return Float3.Zero;
+			incident = Float3.Zero;
+			travel = 0f;
+			return Probable<RGBA32>.Zero;
 		}
 
-		pdf = 1f;
 		travel = FastMath.Sqrt0(travel2);
 
 		float travelR = 1f / travel;
 		incident = delta * travelR;
 
-		return Intensity * travelR * travelR;
+		return (Intensity * travelR * travelR, 1f);
 	}
 }
