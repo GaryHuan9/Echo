@@ -19,7 +19,7 @@ public interface IDirectionalTexture
 	/// <summary>
 	/// Returns the average of this <see cref="IDirectionalTexture"/> on all directions.
 	/// </summary>
-	RGBA32 Average { get; }
+	RGBA128 Average { get; }
 
 	/// <summary>
 	/// Invoked prior to rendering begins to perform any initialization work this <see cref="IDirectionalTexture"/> need.
@@ -31,13 +31,13 @@ public interface IDirectionalTexture
 	/// Evaluates this <see cref="IDirectionalTexture"/> at <paramref name="direction"/>.
 	/// NOTE: <paramref name="direction"/> should have a squared magnitude of exactly one.
 	/// </summary>
-	RGBA32 Evaluate(in Float3 direction);
+	RGBA128 Evaluate(in Float3 direction);
 
 	/// <summary>
 	/// Samples this <see cref="IDirectionalTexture"/> based on <paramref name="sample"/> and outputs the
 	/// <see cref="Evaluate"/> <paramref name="incident"/> direction and its <paramref name="pdf"/>.
 	/// </summary>
-	Probable<RGBA32> Sample(Sample2D sample, out Float3 incident)
+	Probable<RGBA128> Sample(Sample2D sample, out Float3 incident)
 	{
 		incident = sample.UniformSphere;
 		return (Evaluate(incident), Sample2D.UniformSpherePdf);
@@ -54,7 +54,7 @@ public static class IDirectionalTextureExtensions
 	/// <summary>
 	/// Explicitly calculates a converged value for <see cref="IDirectionalTexture.Average"/> using Monte Carlo sampling.
 	/// </summary>
-	public static RGBA32 ConvergeAverage(this IDirectionalTexture texture, int sampleCount = (int)1E6)
+	public static RGBA128 ConvergeAverage(this IDirectionalTexture texture, int sampleCount = (int)1E6)
 	{
 		using ThreadLocal<SumPackage> sums = new(SumPackage.factory, true);
 
@@ -73,7 +73,7 @@ public static class IDirectionalTextureExtensions
 
 		foreach (SumPackage package in sums.Values) sum += package.Sum;
 
-		return (RGBA32)(sum.Result / sampleCount);
+		return (RGBA128)(sum.Result / sampleCount);
 	}
 
 	class SumPackage

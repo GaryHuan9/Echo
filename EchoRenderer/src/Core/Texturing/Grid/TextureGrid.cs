@@ -74,12 +74,12 @@ public abstract partial class TextureGrid : Texture
 	public override Int2 DiscreteResolution => size;
 
 	/// <summary>
-	/// Gets and sets the <see cref="RGBA32"/> pixel data at a specific <paramref name="position"/>. The input
+	/// Gets and sets the <see cref="RGBA128"/> pixel data at a specific <paramref name="position"/>. The input
 	/// <paramref name="position"/> must be between <see cref="Int2.Zero"/> and <see cref="oneLess"/> (both inclusive).
 	/// </summary>
-	public abstract RGBA32 this[Int2 position] { get; set; }
+	public abstract RGBA128 this[Int2 position] { get; set; }
 
-	protected sealed override RGBA32 Evaluate(Float2 uv)
+	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
 		Assert.IsFalse(float.IsNaN(uv.Product));
 		return Filter.Convert(this, uv);

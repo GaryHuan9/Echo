@@ -70,7 +70,7 @@ public partial class TextureGrid
 
 			void SaveARGB(Int2 position)
 			{
-				RGBA32 source = this[position];
+				RGBA128 source = this[position];
 				byte* pointer = origin + ToPointerOffset(position) * 4;
 
 				if (sRGB) source = ForwardGammaCorrect(source);
@@ -124,14 +124,14 @@ public partial class TextureGrid
 		void LoadRGB(Int2 position)
 		{
 			byte* pointer = origin + texture.ToPointerOffset(position) * 3;
-			RGBA32 color = (RGBA32)(Float4)new Color32(pointer[2], pointer[1], pointer[0]);
+			RGBA128 color = (RGBA128)(Float4)new Color32(pointer[2], pointer[1], pointer[0]);
 			texture[position] = sRGB ? InverseGammaCorrect(color) : color;
 		}
 
 		void LoadARGB(Int2 position)
 		{
 			byte* pointer = origin + texture.ToPointerOffset(position) * 4;
-			RGBA32 color = (RGBA32)(Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
+			RGBA128 color = (RGBA128)(Float4)new Color32(pointer[2], pointer[1], pointer[0], pointer[3]);
 			texture[position] = sRGB ? InverseGammaCorrect(color) : color;
 		}
 
@@ -144,7 +144,7 @@ public partial class TextureGrid
 	/// </summary>
 	int ToPointerOffset(Int2 position) => position.X + (oneLess.Y - position.Y) * size.X;
 
-	static unsafe RGBA32 ForwardGammaCorrect(RGBA32 value)
+	static unsafe RGBA128 ForwardGammaCorrect(RGBA128 value)
 	{
 		float* pointer = (float*)&value;
 
@@ -159,7 +159,7 @@ public partial class TextureGrid
 		}
 	}
 
-	static unsafe RGBA32 InverseGammaCorrect(RGBA32 value)
+	static unsafe RGBA128 InverseGammaCorrect(RGBA128 value)
 	{
 		float* pointer = (float*)&value;
 
@@ -214,7 +214,7 @@ public partial class TextureGrid
 			for (int i = 0; i < 4; i++) writer.WriteCompact(pointer[i]);
 		}
 
-		static Vector128<uint> Cast(RGBA32 value) => Unsafe.As<RGBA32, Vector128<uint>>(ref value);
+		static Vector128<uint> Cast(RGBA128 value) => Unsafe.As<RGBA128, Vector128<uint>>(ref value);
 	}
 
 	static unsafe ArrayGrid Read(DataReader reader)
@@ -240,6 +240,6 @@ public partial class TextureGrid
 
 		return texture;
 
-		static RGBA32 Cast(Vector128<uint> value) => Unsafe.As<Vector128<uint>, RGBA32>(ref value);
+		static RGBA128 Cast(Vector128<uint> value) => Unsafe.As<Vector128<uint>, RGBA128>(ref value);
 	}
 }

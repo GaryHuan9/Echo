@@ -70,11 +70,11 @@ public class AmbientLight : AreaLightSource
 	/// Evaluates this <see cref="AmbientLight"/> at <paramref name="direction"/>
 	/// in world-space, which escaped the <see cref="PreparedScene"/> geometries.
 	/// </summary>
-	public RGBA32 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
+	public RGBA128 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
 
-	public override Probable<RGBA32> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
+	public override Probable<RGBA128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
 	{
-		Probable<RGBA32> value = Texture.Sample(sample, out incident);
+		Probable<RGBA128> value = Texture.Sample(sample, out incident);
 
 		incident = localToWorld * incident;
 		travel = float.PositiveInfinity;

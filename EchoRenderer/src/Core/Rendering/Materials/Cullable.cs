@@ -54,10 +54,10 @@ public class Cullable : Material, IEmissive
 	}
 
 	/// <inheritdoc/>
-	public RGBA32 Emit(in GeometryPoint point, in Float3 outgoing)
+	public RGBA128 Emit(in GeometryPoint point, in Float3 outgoing)
 	{
 		bool none = emissive == null || Cull(point.normal, outgoing);
-		return none ? RGBA32.Black : emissive.Emit(point, outgoing);
+		return none ? RGBA128.Black : emissive.Emit(point, outgoing);
 	}
 
 	bool Cull(in Touch touch) => Cull(touch.point.normal, touch.outgoing);

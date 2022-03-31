@@ -65,7 +65,7 @@ public class Cubemap : IDirectionalTexture
 		}
 	}
 
-	public RGBA32 Average { get; private set; }
+	public RGBA128 Average { get; private set; }
 
 	Texture this[int index]
 	{
@@ -79,7 +79,7 @@ public class Cubemap : IDirectionalTexture
 	public void Prepare() => Average = this.ConvergeAverage();
 
 	/// <inheritdoc/>
-	public RGBA32 Evaluate(in Float3 direction)
+	public RGBA128 Evaluate(in Float3 direction)
 	{
 		Direction target = (Direction)direction;
 

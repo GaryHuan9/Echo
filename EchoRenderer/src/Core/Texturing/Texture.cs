@@ -33,18 +33,18 @@ public abstract class Texture
 	/// </summary>
 	public virtual Int2 DiscreteResolution => (Int2)512;
 
-	public static readonly Pure white = new(RGBA32.White);
-	public static readonly Pure black = new(RGBA32.Black);
-	public static readonly Pure normal = new(new RGBA32(0.5f, 0.5f, 1f));
+	public static readonly Pure white = new(RGBA128.White);
+	public static readonly Pure black = new(RGBA128.Black);
+	public static readonly Pure normal = new(new RGBA128(0.5f, 0.5f, 1f));
 
 	/// <summary>
 	/// Access the content of this <see cref="Texture"/> at <paramref name="uv"/>.
 	/// </summary>
-	public RGBA32 this[Float2 uv] => Tint.Apply(Evaluate(Wrapper.Convert(uv)));
+	public RGBA128 this[Float2 uv] => Tint.Apply(Evaluate(Wrapper.Convert(uv)));
 
 	/// <summary>
 	/// Gets the pixel data at the indicated texture coordinate <paramref name="uv"/>.
 	/// NOTE: the uv is boundless and the specific range is based on <see cref="Wrapper"/>.
 	/// </summary>
-	protected abstract RGBA32 Evaluate(Float2 uv);
+	protected abstract RGBA128 Evaluate(Float2 uv);
 }

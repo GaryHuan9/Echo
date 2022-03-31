@@ -46,7 +46,7 @@ public class GeometryLight : IAreaLight
 	}
 
 	/// <inheritdoc/>
-	public Probable<RGBA32> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
+	public Probable<RGBA128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
 	{
 		Probable<GeometryPoint> sampled = scene.Sample(token, point, sample);
 
@@ -57,7 +57,7 @@ public class GeometryLight : IAreaLight
 		{
 			incident = Float3.Zero;
 			travel = 0f;
-			return Probable<RGBA32>.Zero;
+			return Probable<RGBA128>.Zero;
 		}
 
 		travel = FastMath.Sqrt0(travel2);

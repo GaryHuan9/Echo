@@ -11,17 +11,17 @@ namespace EchoRenderer.Core.Texturing;
 /// </summary>
 public class Pure : Texture, IDirectionalTexture
 {
-	public Pure(in RGBA32 color) : base(Wrappers.unbound) => this.color = color;
+	public Pure(in RGBA128 color) : base(Wrappers.unbound) => this.color = color;
 
-	readonly RGBA32 color;
+	readonly RGBA128 color;
 
 	public override Int2 DiscreteResolution => Int2.One;
 
-	RGBA32 IDirectionalTexture.Average => color;
+	RGBA128 IDirectionalTexture.Average => color;
 
-	protected override RGBA32 Evaluate(Float2 uv) => color;
+	protected override RGBA128 Evaluate(Float2 uv) => color;
 
-	RGBA32 IDirectionalTexture.Evaluate(in Float3 direction) => color;
+	RGBA128 IDirectionalTexture.Evaluate(in Float3 direction) => color;
 
-	public static explicit operator Pure(in RGBA32 color) => new(color);
+	public static explicit operator Pure(in RGBA128 color) => new(color);
 }
