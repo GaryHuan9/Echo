@@ -54,7 +54,7 @@ public class Watermark : PostProcessingWorker
 		cropWorker = new CropGrid(workerBuffer, min, max);
 		cropTarget = new CropGrid(renderBuffer, min, max);
 
-		var grab = new LuminanceGrab(this, cropWorker);
+		using var grab = new LuminanceGrab(this, cropWorker);
 
 		blur.Run(); //Run Gaussian blur
 		grab.Run(); //Run luminance grab
@@ -66,7 +66,7 @@ public class Watermark : PostProcessingWorker
 		RunPass(TintPass, cropWorker); //Copies buffer
 
 		//Write label
-		style = style with {Color = Utilities.ToColor(lightMode ? 0f : 1f)};
+		style = style with { Color = Utilities.ToColor(lightMode ? 0f : 1f) };
 		font.Draw(renderBuffer, Label, position, style);
 	}
 

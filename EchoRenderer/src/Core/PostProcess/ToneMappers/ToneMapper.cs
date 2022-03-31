@@ -19,7 +19,7 @@ public abstract class ToneMapper : PostProcessingWorker
 
 	public override void Dispatch()
 	{
-		var grab = new LuminanceGrab(this, renderBuffer);
+		using var grab = new LuminanceGrab(this, renderBuffer);
 
 		grab.Run();
 
