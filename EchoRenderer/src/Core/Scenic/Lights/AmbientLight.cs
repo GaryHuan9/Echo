@@ -5,6 +5,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
 using EchoRenderer.Core.Rendering.Distributions;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -61,23 +62,24 @@ public class AmbientLight : AreaLightSource
 
 		//Calculate power
 		float radius = scene.info.boundingSphere.radius;
-		float multiplier = Scalars.PI * radius * radius;
-		_power = multiplier * PackedMath.GetLuminance(Texture.Average);
+		float multiplier = Scalars.Pi * radius * radius;
+		_power = multiplier * Texture.Average.Luminance;
 	}
 
 	/// <summary>
 	/// Evaluates this <see cref="AmbientLight"/> at <paramref name="direction"/>
 	/// in world-space, which escaped the <see cref="PreparedScene"/> geometries.
 	/// </summary>
-	public Float3 Evaluate(in Float3 direction) => Utilities.ToFloat3(Texture.Evaluate(worldToLocal * direction));
+	public RGBA32 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
 
-	public override Float3 Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float pdf, out float travel)
+	public override Probable<RGBA32> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
 	{
-		Vector128<float> value = Texture.Sample(sample, out incident, out pdf);
+		Probable<RGBA32> value = Texture.Sample(sample, out incident);
 
 		incident = localToWorld * incident;
 		travel = float.PositiveInfinity;
-		return Utilities.ToFloat3(value);
+
+		return value;
 	}
 
 	public override float ProbabilityDensity(in GeometryPoint point, in Float3 incident)

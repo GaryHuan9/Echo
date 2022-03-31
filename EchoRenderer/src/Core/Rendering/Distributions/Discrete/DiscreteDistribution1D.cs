@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Rendering.Distributions.Discrete;
 
@@ -87,7 +88,7 @@ public class DiscreteDistribution1D
 	/// Samples this <see cref="DiscreteDistribution1D"/> at continuous linear intervals
 	/// based on <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public Sample1D Sample(Sample1D sample, out float pdf)
+	public Probable<Sample1D> Sample(Sample1D sample)
 	{
 		//Find index and lower and upper bounds
 		int index = FindIndex(sample);
@@ -96,23 +97,21 @@ public class DiscreteDistribution1D
 		//Export values
 		float gap = upper - lower;
 		Assert.AreNotEqual(gap, 0f);
-		pdf = gap * Count;
 
-		float shift = (sample - lower) / gap;
-		return (Sample1D)((shift + index) * countR);
+		float shift = (sample - lower) / gap + index;
+		Sample1D result = (Sample1D)(shift * countR);
+		return new Probable<Sample1D>(result, gap * Count);
 	}
 
 	/// <summary>
 	/// Finds a discrete point from this <see cref="DiscreteDistribution1D"/> based on
 	/// <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
 	/// </summary>
-	public int Find(Sample1D sample, out float pdf)
+	public Probable<int> Find(Sample1D sample)
 	{
 		int index = FindIndex(sample);
 		GetBounds(index, out float lower, out float upper);
-
-		pdf = upper - lower;
-		return index;
+		return new Probable<int>(index, upper - lower);
 	}
 
 	/// <summary>

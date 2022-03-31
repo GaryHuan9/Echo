@@ -8,6 +8,7 @@ using CodeHelpers.Mathematics.Enumerable;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.InOut;
@@ -37,8 +38,8 @@ public class Font
 
 			foreach (Int2 local in new EnumerableSpace2D(position, position + glyph - Int2.One))
 			{
-				float strength = texture[local].GetElement(0);
-				texture[local] = Vector128.Create(strength);
+				float strength = ((Float4)texture[local]).X;
+				texture[local] = new RGBA32(strength);
 
 				if (FastMath.AlmostZero(strength)) continue;
 
@@ -77,32 +78,29 @@ public class Font
 		Float2 min = (glyph.minUV - glyph.origin) * multiplier + center;
 		Float2 max = (glyph.maxUV - glyph.origin) * multiplier + center;
 
-		Float4 colorSource = Utilities.ToColor(style.Color);
-
-		Vector128<float> color = Utilities.ToVector(colorSource);
-		Vector128<float> alpha = Vector128.Create(style.Color.W);
+		Float4 color = ((RGBA32)style.Color).AlphaOne;
+		Float4 alpha = Float4.One * style.Color.W;
 
 		Int2 sampleSquare = (Int2)style.SampleSize;
 		float inverse = 1f / (sampleSquare.X + 1f);
+		float lengthR = 1f / sampleSquare.Product;
 
-		Vector128<float> sizeInverse = Vector128.Create(1f / sampleSquare.Product);
 		Parallel.ForEach(new EnumerableSpace2D(min.Floored, max.Ceiled), DrawPixel);
 
 		void DrawPixel(Int2 position)
 		{
-			Vector128<float> total = Vector128<float>.Zero;
-			Vector128<float> source = destination[position];
+			Float4 total = RGBA32.Black;
+			Float4 source = destination[position];
 
 			//Take multiple samples and calculate the average
 			foreach (Int2 offset in new EnumerableSpace2D(Int2.One, sampleSquare))
 			{
 				Float2 point = (position + offset * inverse - center) / multiplier + glyph.origin;
-				if (glyph.minUV <= point && point <= glyph.maxUV) total = Sse.Add(total, texture[point]);
+				if (glyph.minUV <= point && point <= glyph.maxUV) total += texture[point];
 			}
 
 			//Assigns color based on alpha
-			total = Sse.Multiply(total, sizeInverse);
-			destination[position] = PackedMath.Lerp(source, color, Sse.Multiply(alpha, total));
+			destination[position] = (RGBA32)Float4.Lerp(source, color, alpha * lengthR * total);
 		}
 	}
 

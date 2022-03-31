@@ -4,6 +4,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
@@ -35,7 +36,7 @@ public class ProgressiveRenderBuffer : RenderBuffer
 	/// When writing to one pixel, this special setter will write that same color to every pixel after this pixel in
 	/// the same <see cref="RenderBuffer.MajorAxis"/> that has not been written. Auxiliary data will not be assigned.
 	/// </summary>
-	public override unsafe Vector128<float> this[Int2 position]
+	public override unsafe RGBA32 this[Int2 position]
 	{
 		set
 		{
@@ -44,8 +45,8 @@ public class ProgressiveRenderBuffer : RenderBuffer
 			int offset = index - ToIndex(position.Replace(MajorAxis, 0));     //This pixel's offset from axis origin
 			int flipped = ToIndex(position.ReplaceY(oneLess.Y - position.Y)); //Serialized byte array needs flipped Y axis index
 
-			Color32 color32 = (Color32)Utilities.ToFloat3(value); //Convert value to color32 with max alpha
-			uint color = Unsafe.As<Color32, uint>(ref color32);   //Bit align color32 to uint for chunk writing
+			Color32 color32 = (Color32)(Float4)value.AlphaOne;  //Convert value to color32 with max alpha
+			uint color = Unsafe.As<Color32, uint>(ref color32); //Bit align color32 to uint for chunk writing
 
 			int segment = offset / FlagBlock;  //The local segment of the uint write flag array
 			int location = offset % FlagBlock; //The location of this pixel's bit on the segment
@@ -58,11 +59,11 @@ public class ProgressiveRenderBuffer : RenderBuffer
 				write |= 1u << location;       //Reference write to flag segment
 				uint flag = write >> location; //Jump to current flag bit
 
-				fixed (Vector128<float>* pointer0 = &pixels[index]) //Use pointers to assign to array in chunks
-				fixed (byte* pointer1 = &bytes[flipped * 4])        //Create pointer using inverted index
+				fixed (RGBA32* pointer0 = &pixels[index])    //Use pointers to assign to array in chunks
+				fixed (byte* pointer1 = &bytes[flipped * 4]) //Create pointer using inverted index
 				{
 					//Write colors
-					Vector128<float>* pPixel = pointer0 - 1;
+					RGBA32* pPixel = pointer0 - 1;
 					uint* pBytes = (uint*)pointer1 - 1;
 
 					for (int i = offset; i < size[MajorAxis]; i++)

@@ -88,13 +88,6 @@ public static class Utilities
 	}
 
 	/// <summary>
-	/// Returns whether we should consider <paramref name="radiance"/> as positive.
-	/// NOTE: this is only a temporary solution, we should move to a property after
-	/// Spectrum or some thing for color is introduced.
-	/// </summary>
-	public static bool PositiveRadiance(this in Float3 radiance) => !(radiance < Constants.radianceEpsilon);
-
-	/// <summary>
 	/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns
 	/// the item it points. Otherwise, <paramref name="defaultValue"/> is returned.
 	/// </summary>

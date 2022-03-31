@@ -7,6 +7,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common.Mathematics;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.PostProcess;
 using EchoRenderer.Core.PostProcess.ToneMappers;
 using EchoRenderer.Core.Rendering.Engines;
@@ -192,7 +193,7 @@ public class Program
 		Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
 		ArrayGrid output = new ArrayGrid((Int2)2048);
 
-		foreach (Int2 position in output.size.Loop()) output[position] = Vector128.Create(0f, 0f, 1f, 1f);
+		foreach (Int2 position in output.size.Loop()) output[position] = new RGBA32(0f, 0f, 1f);
 		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.One));
 
 		output.Save("render.png");
@@ -230,13 +231,11 @@ public class Program
 
 		image0.ForEach(position =>
 		{
-			var value0 = image0[position];
-			var value1 = image1[position];
+			Float4 value0 = image0[position];
+			Float4 value1 = image1[position];
 
-			var result = PackedMath.Abs(Sse.Subtract(value0, value1));
-
-			((float*)&result)[3] = 1f;
-			image0[position] = result;
+			Float4 result = (value0 - value1).Absoluted;
+			image0[position] = ((RGBA32)result).AlphaOne;
 		});
 
 		image0.Save("difference.png");

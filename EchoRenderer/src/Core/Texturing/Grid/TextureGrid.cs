@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
@@ -73,15 +74,14 @@ public abstract partial class TextureGrid : Texture
 	public override Int2 DiscreteResolution => size;
 
 	/// <summary>
-	/// Gets and sets the <see cref="Vector128{T}"/> pixel data at a specific <paramref name="position"/>.
-	/// The input <paramref name="position"/> must be between zero and <see cref="oneLess"/> (both inclusive).
+	/// Gets and sets the <see cref="RGBA32"/> pixel data at a specific <paramref name="position"/>. The input
+	/// <paramref name="position"/> must be between <see cref="Int2.Zero"/> and <see cref="oneLess"/> (both inclusive).
 	/// </summary>
-	public abstract Vector128<float> this[Int2 position] { get; set; }
+	public abstract RGBA32 this[Int2 position] { get; set; }
 
-	protected sealed override Vector128<float> Evaluate(Float2 uv)
+	protected sealed override RGBA32 Evaluate(Float2 uv)
 	{
-		Assert.IsFalse(float.IsNaN(uv.X));
-		Assert.IsFalse(float.IsNaN(uv.Y));
+		Assert.IsFalse(float.IsNaN(uv.Product));
 		return Filter.Convert(this, uv);
 	}
 

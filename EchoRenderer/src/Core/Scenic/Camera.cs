@@ -23,7 +23,7 @@ public class Camera : Entity
 		set
 		{
 			fieldOfView = value;
-			fieldDistance = 0.5f / MathF.Tan(value / 2f * Scalars.DegreeToRadian);
+			fieldDistance = 0.5f / MathF.Tan(Scalars.ToRadians(value) / 2f);
 		}
 	}
 

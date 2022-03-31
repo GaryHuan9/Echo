@@ -121,29 +121,30 @@ public class PreparedInstance
 	/// and returns a <see cref="GeometryToken"/> that represents the geometry. The <see cref="PreparedInstance"/> that immediately holds this geometry, and the
 	/// probability density function value are calculated and exported to <paramref name="instance"/> and <paramref name="pdf"/> respectively.
 	/// </summary>
-	public GeometryToken Find(ReadOnlySpan<Sample1D> samples, out PreparedInstance instance, out float pdf)
+	public Probable<GeometryToken> Find(ReadOnlySpan<Sample1D> samples, out PreparedInstance instance)
 	{
 		Assert.IsTrue(FastMath.Positive(Power));
 		var geometryToken = new GeometryToken();
 
 		instance = this;
-		pdf = 1f;
+		float pdf = 1f;
 
 		foreach (Sample1D sample in samples)
 		{
 			pdf *= FindSingle(sample, ref instance, ref geometryToken);
-			if (geometryToken.Geometry != default) return geometryToken;
+			if (geometryToken.Geometry != default) return (geometryToken, pdf);
 
 			Assert.IsNotNull(instance);
 
 			static float FindSingle(Sample1D sample, ref PreparedInstance instance, ref GeometryToken stack)
 			{
-				NodeToken token = instance.powerDistribution.Find(sample, out float pdf);
+				var probable = instance.powerDistribution.Find(sample);
+				ref readonly NodeToken token = ref probable.content;
 
 				if (token.IsTriangle || token.IsSphere) stack.Geometry = token;
 				else stack.Push(instance = instance.pack.GetInstance(token));
 
-				return pdf;
+				return probable.pdf;
 			}
 		}
 

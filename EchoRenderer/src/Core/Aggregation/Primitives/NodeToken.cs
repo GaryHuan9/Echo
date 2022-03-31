@@ -142,12 +142,12 @@ public readonly struct NodeToken : IEquatable<NodeToken>
 	/// The <see cref="NodeToken"/> that represents the root node in an <see cref="Aggregator"/>,
 	/// which contains an internal <see cref="data"/> of zero.
 	/// </summary>
-	public static readonly NodeToken root = CreateNode(0);
+	public static NodeToken Root => CreateNode(0);
 
 	/// <summary>
 	/// A <see cref="NodeToken"/> that <see cref="IsEmpty"/> (an <see cref="Aggregator"/> node that is null).
 	/// </summary>
-	public static readonly NodeToken empty = new(EmptyNode);
+	public static NodeToken Empty => new(EmptyNode);
 
 	/// <summary>
 	/// The number of bytes a <see cref="NodeToken"/> occupies in memory.
