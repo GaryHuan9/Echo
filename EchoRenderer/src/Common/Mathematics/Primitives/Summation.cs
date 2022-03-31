@@ -1,6 +1,4 @@
-﻿using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Packed;
+﻿using CodeHelpers.Packed;
 
 namespace EchoRenderer.Common.Mathematics.Primitives;
 
@@ -44,11 +42,7 @@ public readonly struct Summation
 	/// </summary>
 	public Float4 Result => total;
 
-	/// <summary>
-	/// Adds one more <paramref name="value"/> to this <paramref name="summation"/>.
-	/// </summary>
 	public static Summation operator +(in Summation summation, in Float4 value) => new(summation, value);
-
-	/// <inheritdoc cref="op_Addition(in Summation, in Float4"/>
+	public static Summation operator -(in Summation summation, in Float4 value) => new(summation, -value);
 	public static Summation operator +(in Summation summation, in Summation value) => new(summation, value);
 }
