@@ -81,7 +81,7 @@ public abstract class Material
 	/// <summary>
 	/// Samples <paramref name="texture"/> at <paramref name="touch"/> as a <see cref="Float4"/>.
 	/// </summary>
-	protected static RGBA32 Sample(Texture texture, in Touch touch) => texture[touch.shade.Texcoord];
+	protected static RGBA128 Sample(Texture texture, in Touch touch) => texture[touch.shade.Texcoord];
 
 	/// <summary>
 	/// A wrapper struct used to easily create <see cref="BSDF"/> and add <see cref="BxDF"/> to it.

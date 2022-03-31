@@ -17,7 +17,7 @@ public class OrenNayar : BxDF
 		FunctionType.diffuse
 	) { }
 
-	public void Reset(in RGBA32 newReflectance, float newSigma)
+	public void Reset(in RGBA128 newReflectance, float newSigma)
 	{
 		reflectance = newReflectance;
 		sigma = newSigma;
@@ -28,13 +28,13 @@ public class OrenNayar : BxDF
 		b = 0.45f * sigma2 / (sigma2 + 0.09f);
 	}
 
-	RGBA32 reflectance;
+	RGBA128 reflectance;
 	float sigma;
 
 	float a;
 	float b;
 
-	public override RGBA32 Evaluate(in Float3 outgoing, in Float3 incident)
+	public override RGBA128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
 		float sinO = SineP(outgoing);
 		float sinI = SineP(incident);

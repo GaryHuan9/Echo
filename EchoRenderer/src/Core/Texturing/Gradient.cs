@@ -31,14 +31,14 @@ public class Gradient : IEnumerable<float>
 
 	Seal seal;
 
-	public static readonly Gradient black = new() { { 0f, RGBA32.Black } };
-	public static readonly Gradient white = new() { { 0f, RGBA32.White } };
-	public static readonly Gradient blend = new() { { 0f, RGBA32.Black }, { 1f, RGBA32.White } };
+	public static readonly Gradient black = new() { { 0f, RGBA128.Black } };
+	public static readonly Gradient white = new() { { 0f, RGBA128.White } };
+	public static readonly Gradient blend = new() { { 0f, RGBA128.Black }, { 1f, RGBA128.White } };
 
 	/// <summary>
-	/// Samples this <see cref="Gradient"/> and returns the <see cref="RGBA32"/> color value at <paramref name="percent"/>.
+	/// Samples this <see cref="Gradient"/> and returns the <see cref="RGBA128"/> color value at <paramref name="percent"/>.
 	/// </summary>
-	public RGBA32 this[float percent]
+	public RGBA128 this[float percent]
 	{
 		get
 		{
@@ -53,7 +53,7 @@ public class Gradient : IEnumerable<float>
 				Anchor tail = index == anchors.Count ? anchors[index - 1] : anchors[index];
 
 				float time = Scalars.InverseLerp(head.percent, tail.percent, percent);
-				return (RGBA32)Float4.Lerp(head.color, tail.color, FastMath.Clamp01(time));
+				return (RGBA128)Float4.Lerp(head.color, tail.color, FastMath.Clamp01(time));
 			}
 		}
 	}
@@ -61,7 +61,7 @@ public class Gradient : IEnumerable<float>
 	/// <summary>
 	/// Inserts a new <paramref name="color"/> at <paramref name="percent"/> to this <see cref="Gradient"/>.
 	/// </summary>
-	public void Add(float percent, in RGBA32 color)
+	public void Add(float percent, in RGBA128 color)
 	{
 		seal.AssertNotApplied();
 
@@ -109,13 +109,13 @@ public class Gradient : IEnumerable<float>
 
 	readonly struct Anchor
 	{
-		public Anchor(float percent, in RGBA32 color)
+		public Anchor(float percent, in RGBA128 color)
 		{
 			this.percent = percent;
 			this.color = color;
 		}
 
 		public readonly float percent;
-		public readonly RGBA32 color;
+		public readonly RGBA128 color;
 	}
 }

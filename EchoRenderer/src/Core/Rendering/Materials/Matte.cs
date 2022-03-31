@@ -24,7 +24,7 @@ public class Matte : Material
 	{
 		var make = new MakeBSDF(ref touch, allocator);
 
-		RGBA32 albedo = Sample(Albedo, touch);
+		RGBA128 albedo = Sample(Albedo, touch);
 		if (albedo.IsZero) return;
 
 		float roughness = FastMath.Clamp01(Sample(Roughness, touch).X);

@@ -29,7 +29,7 @@ public sealed class LuminanceGrab : IDisposable
 		var sum = Summation.Zero;
 
 		foreach (StrongBox<Summation> box in sums.Values) sum += box.Value;
-		Luminance = ((RGBA32)sum.Result).Luminance / sourceBuffer.size.Product;
+		Luminance = ((RGBA128)sum.Result).Luminance / sourceBuffer.size.Product;
 	}
 
 	public void Dispose()

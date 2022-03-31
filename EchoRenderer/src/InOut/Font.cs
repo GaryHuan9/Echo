@@ -39,7 +39,7 @@ public class Font
 			foreach (Int2 local in new EnumerableSpace2D(position, position + glyph - Int2.One))
 			{
 				float strength = ((Float4)texture[local]).X;
-				texture[local] = new RGBA32(strength);
+				texture[local] = new RGBA128(strength);
 
 				if (FastMath.AlmostZero(strength)) continue;
 
@@ -78,7 +78,7 @@ public class Font
 		Float2 min = (glyph.minUV - glyph.origin) * multiplier + center;
 		Float2 max = (glyph.maxUV - glyph.origin) * multiplier + center;
 
-		Float4 color = ((RGBA32)style.Color).AlphaOne;
+		Float4 color = ((RGBA128)style.Color).AlphaOne;
 		Float4 alpha = Float4.One * style.Color.W;
 
 		Int2 sampleSquare = (Int2)style.SampleSize;
@@ -89,7 +89,7 @@ public class Font
 
 		void DrawPixel(Int2 position)
 		{
-			Float4 total = RGBA32.Black;
+			Float4 total = RGBA128.Black;
 			Float4 source = destination[position];
 
 			//Take multiple samples and calculate the average
@@ -100,7 +100,7 @@ public class Font
 			}
 
 			//Assigns color based on alpha
-			destination[position] = (RGBA32)Float4.Lerp(source, color, alpha * lengthR * total);
+			destination[position] = (RGBA128)Float4.Lerp(source, color, alpha * lengthR * total);
 		}
 	}
 
