@@ -5,6 +5,7 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
+using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.PostProcess.Operators;
@@ -47,8 +48,8 @@ public class GaussianBlur : IDisposable
 
 	int[] radii;
 	int radius;
+	float diameterR;
 
-	Vector128<float> radiusDivisor;
 	ReleaseHandle<ArrayGrid> handle;
 
 	public void Run()
@@ -59,7 +60,7 @@ public class GaussianBlur : IDisposable
 		for (int i = 0; i < quality; i++)
 		{
 			radius = radii[i];
-			radiusDivisor = Vector128.Create(1f / (radius * 2f + 1f));
+			diameterR = 1f / (radius * 2f + 1f);
 
 			worker.RunPassVertical(HorizontalBlurPass, workerBuffer);
 			worker.RunPassHorizontal(VerticalBlurPass, sourceBuffer);
@@ -70,46 +71,46 @@ public class GaussianBlur : IDisposable
 
 	void HorizontalBlurPass(int vertical)
 	{
-		Vector128<float> accumulator = Vector128<float>.Zero;
+		var accumulator = Summation.Zero;
 
-		for (int x = -radius; x < radius; x++) accumulator = Sse.Add(accumulator, Get(x));
+		for (int x = -radius; x < radius; x++) accumulator += Get(x);
 
 		for (int x = 0; x < workerBuffer.size.X; x++)
 		{
-			Vector128<float> sourceHead = Get(x + radius);
-			Vector128<float> sourceTail = Get(x - radius);
+			RGBA32 sourceHead = Get(x + radius);
+			RGBA32 sourceTail = Get(x - radius);
 
-			accumulator = Sse.Add(accumulator, sourceHead);
+			accumulator += sourceHead;
 
-			workerBuffer[new Int2(x, vertical)] = Sse.Multiply(accumulator, radiusDivisor);
+			workerBuffer[new Int2(x, vertical)] = (RGBA32)(accumulator.Result * diameterR);
 
-			accumulator = Sse.Subtract(accumulator, sourceTail);
+			accumulator -= sourceTail;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Vector128<float> Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.X), vertical)];
+		RGBA32 Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.X), vertical)];
 	}
 
 	void VerticalBlurPass(int horizontal)
 	{
-		Vector128<float> accumulator = Vector128<float>.Zero;
+		var accumulator = Summation.Zero;
 
-		for (int y = -radius; y < radius; y++) accumulator = Sse.Add(accumulator, Get(y));
+		for (int y = -radius; y < radius; y++) accumulator += Get(y);
 
 		for (int y = 0; y < sourceBuffer.size.Y; y++)
 		{
-			Vector128<float> sourceHead = Get(y + radius);
-			Vector128<float> sourceTail = Get(y - radius);
+			RGBA32 sourceHead = Get(y + radius);
+			RGBA32 sourceTail = Get(y - radius);
 
-			accumulator = Sse.Add(accumulator, sourceHead);
+			accumulator += sourceHead;
 
-			sourceBuffer[new Int2(horizontal, y)] = Sse.Multiply(accumulator, radiusDivisor);
+			sourceBuffer[new Int2(horizontal, y)] = (RGBA32)(accumulator.Result * diameterR);
 
-			accumulator = Sse.Subtract(accumulator, sourceTail);
+			accumulator -= sourceTail;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Vector128<float> Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.Y))];
+		RGBA32 Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.Y))];
 	}
 
 	void BuildRadii() => radii ??= BuildRadii(deviation, quality, out _deviationActual);
