@@ -20,18 +20,18 @@ public readonly struct Tint
 	readonly Float4 scale;
 	readonly Float4 offset;
 
-	public static readonly Tint identity = new(RGBA32.White, RGBA32.Zero);
+	public static readonly Tint identity = new(RGBA128.White, RGBA128.Zero);
 
-	public RGBA32 Apply(in RGBA32 color)
+	public RGBA128 Apply(in RGBA128 color)
 	{
 		//TODO: use FMA
-		return (RGBA32)(color * scale + offset);
+		return (RGBA128)(color * scale + offset);
 		// return PackedMath.FMA(color, scale, offset);
 	}
 
-	public static Tint Scale(in RGBA32 value) => new(value, RGBA32.Zero);
-	public static Tint Offset(in RGBA32 value) => new(RGBA32.White, value);
+	public static Tint Scale(in RGBA128 value) => new(value, RGBA128.Zero);
+	public static Tint Offset(in RGBA128 value) => new(RGBA128.White, value);
 
-	public static Tint Inverse(in RGBA32 value) => new(-(Float4)value, value);
-	public static Tint Inverse() => Inverse(RGBA32.White);
+	public static Tint Inverse(in RGBA128 value) => new(-(Float4)value, value);
+	public static Tint Inverse() => Inverse(RGBA128.White);
 }

@@ -193,7 +193,7 @@ public class Program
 		Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
 		ArrayGrid output = new ArrayGrid((Int2)2048);
 
-		foreach (Int2 position in output.size.Loop()) output[position] = new RGBA32(0f, 0f, 1f);
+		foreach (Int2 position in output.size.Loop()) output[position] = new RGBA128(0f, 0f, 1f);
 		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.One));
 
 		output.Save("render.png");
@@ -235,7 +235,7 @@ public class Program
 			Float4 value1 = image1[position];
 
 			Float4 result = (value0 - value1).Absoluted;
-			image0[position] = ((RGBA32)result).AlphaOne;
+			image0[position] = ((RGBA128)result).AlphaOne;
 		});
 
 		image0.Save("difference.png");

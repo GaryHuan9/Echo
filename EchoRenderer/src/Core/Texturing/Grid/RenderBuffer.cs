@@ -77,7 +77,7 @@ public class RenderBuffer : ArrayGrid
 
 		return texture;
 
-		void SetPixel(Int2 position) => texture[position] = new RGBA32(data[ToIndex(position)]);
+		void SetPixel(Int2 position) => texture[position] = new RGBA128(data[ToIndex(position)]);
 	}
 
 	//TODO: add serialization methods

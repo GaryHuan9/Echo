@@ -184,7 +184,7 @@ public class PreparedScene
 				//completely black, but we add in a light so no exception is thrown when we look for lights.
 
 				_ambient = Array.Empty<AmbientLight>();
-				_all = new LightSource[] { new PointLight { Intensity = RGBA32.Black } };
+				_all = new LightSource[] { new PointLight { Intensity = RGBA128.Black } };
 				distribution = new DiscreteDistribution1D(stackalloc[] { 1f, 0f });
 
 				return;
@@ -244,9 +244,9 @@ public class PreparedScene
 		/// <summary>
 		/// Evaluates all of the <see cref="AmbientLight"/> at <paramref name="direction"/> in world-space.
 		/// </summary>
-		public RGBA32 EvaluateAmbient(Float3 direction)
+		public RGBA128 EvaluateAmbient(Float3 direction)
 		{
-			var total = RGBA32.Zero;
+			var total = RGBA128.Zero;
 
 			foreach (AmbientLight light in _ambient) total += light.Evaluate(direction);
 

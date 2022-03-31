@@ -24,7 +24,7 @@ public abstract class BxDF
 	/// Evaluates and returns the value of this <see cref="BxDF"/> from two pairs of <see cref="BxDF"/> local directions,
 	/// the leaving <paramref name="incident"/> direction and the returning <paramref name="outgoing"/> direction.
 	/// </summary>
-	public abstract RGBA32 Evaluate(in Float3 outgoing, in Float3 incident);
+	public abstract RGBA128 Evaluate(in Float3 outgoing, in Float3 incident);
 
 	/// <summary>
 	/// Returns the probability density function (pdf) value from two pairs of <see cref="BxDF"/> local directions,
@@ -42,7 +42,7 @@ public abstract class BxDF
 	/// of this <see cref="BxDF"/> evaluated from the returning local <paramref name="outgoing"/> direction to the
 	/// <paramref name="incident"/> direction that we just sampled.
 	/// </summary>
-	public virtual Probable<RGBA32> Sample(in Float3 outgoing, Sample2D sample, out Float3 incident)
+	public virtual Probable<RGBA128> Sample(in Float3 outgoing, Sample2D sample, out Float3 incident)
 	{
 		incident = sample.CosineHemisphere;
 		if (outgoing.Z < 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
@@ -54,13 +54,13 @@ public abstract class BxDF
 	/// Returns the hemispherical-directional reflectance, the total reflectance in direction
 	/// <paramref name="outgoing"/> due to a constant illumination over the doming hemisphere
 	/// </summary>
-	public virtual RGBA32 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples)
+	public virtual RGBA128 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples)
 	{
-		var result = RGBA32.Zero;
+		var result = RGBA128.Zero;
 
 		foreach (ref readonly Sample2D sample in samples)
 		{
-			Probable<RGBA32> sampled = Sample(outgoing, sample, out Float3 incident);
+			Probable<RGBA128> sampled = Sample(outgoing, sample, out Float3 incident);
 
 			if (sampled.IsZero | sampled.content.IsZero) continue;
 
@@ -74,16 +74,16 @@ public abstract class BxDF
 	/// Returns the hemispherical-hemispherical reflectance, the fraction of incident light
 	/// reflected when the amount of incident light is constant across all directions
 	/// </summary>
-	public virtual RGBA32 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
+	public virtual RGBA128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
 	{
 		Assert.AreEqual(samples0.Length, samples1.Length);
 
-		var result = RGBA32.Zero;
+		var result = RGBA128.Zero;
 
 		for (int i = 0; i < samples0.Length; i++)
 		{
 			Float3 outgoing = samples0[i].UniformHemisphere;
-			Probable<RGBA32> sampled = Sample(outgoing, samples1[i], out Float3 incident);
+			Probable<RGBA128> sampled = Sample(outgoing, samples1[i], out Float3 incident);
 
 			if (sampled.IsZero | sampled.content.IsZero) continue;
 
