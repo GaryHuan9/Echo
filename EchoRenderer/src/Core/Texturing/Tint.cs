@@ -1,8 +1,5 @@
-﻿using System.Runtime.Intrinsics;
-using CodeHelpers.Packed;
-using EchoRenderer.Common;
-using EchoRenderer.Common.Mathematics;
-using EchoRenderer.Common.Mathematics.Primitives;
+﻿using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 
 namespace EchoRenderer.Core.Texturing;
 
@@ -20,16 +17,16 @@ public readonly struct Tint
 	readonly Float4 scale;
 	readonly Float4 offset;
 
-	public static readonly Tint identity = new(RGBA128.White, RGBA128.Zero);
+	public static Tint Identity => new(RGBA128.White, RGBA128.Black);
 
 	public RGBA128 Apply(in RGBA128 color)
 	{
-		//TODO: use FMA
+		//OPTIMIZE
 		return (RGBA128)(color * scale + offset);
 		// return PackedMath.FMA(color, scale, offset);
 	}
 
-	public static Tint Scale(in RGBA128 value) => new(value, RGBA128.Zero);
+	public static Tint Scale(in RGBA128 value) => new(value, RGBA128.Black);
 	public static Tint Offset(in RGBA128 value) => new(RGBA128.White, value);
 
 	public static Tint Inverse(in RGBA128 value) => new(-(Float4)value, value);

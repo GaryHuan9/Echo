@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Generative;
@@ -13,7 +14,7 @@ public abstract class CacheableTexture : Texture
 
 	protected sealed override RGBA128 Evaluate(Float2 uv) => Sample(uv * Tiling + Offset);
 
-	protected abstract RGBA128 Sample(Float2 position);
+	protected abstract RGB128 Sample(Float2 position);
 
 	//TODO: Implement cached sampling feature where texture chunks are baked as the samples are taken
 }

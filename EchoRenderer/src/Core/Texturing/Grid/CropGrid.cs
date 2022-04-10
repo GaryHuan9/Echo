@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
@@ -22,7 +23,7 @@ public class CropGrid : TextureGrid
 	readonly TextureGrid source;
 	readonly Int2 min;
 
-	public override RGBA128 this[Int2 position]
+	public override RGB128 this[Int2 position]
 	{
 		get => source[min + position];
 		set => source[min + position] = value;

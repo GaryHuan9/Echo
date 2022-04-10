@@ -1,7 +1,5 @@
-﻿using System.Runtime.Intrinsics;
-using CodeHelpers.Packed;
-using EchoRenderer.Common;
-using EchoRenderer.Common.Mathematics.Primitives;
+﻿using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Texturing.Directional;
 
 namespace EchoRenderer.Core.Texturing;
@@ -11,17 +9,22 @@ namespace EchoRenderer.Core.Texturing;
 /// </summary>
 public class Pure : Texture, IDirectionalTexture
 {
-	public Pure(in RGBA128 color) : base(Wrappers.unbound) => this.color = color;
+	public Pure(in RGBA128 color) : base(Wrappers.unbound)
+	{
+		this.color = (RGB128)color;
+		rgba = color;
+	}
 
-	readonly RGBA128 color;
+	readonly RGB128 color;
+	readonly RGBA128 rgba;
 
 	public override Int2 DiscreteResolution => Int2.One;
 
-	RGBA128 IDirectionalTexture.Average => color;
+	RGB128 IDirectionalTexture.Average => color;
 
-	protected override RGBA128 Evaluate(Float2 uv) => color;
+	public void Prepare() => Tint = Tint.Identity;
 
-	RGBA128 IDirectionalTexture.Evaluate(in Float3 direction) => color;
+	protected override RGBA128 Evaluate(Float2 uv) => rgba;
 
-	public static explicit operator Pure(in RGBA128 color) => new(color);
+	RGB128 IDirectionalTexture.Evaluate(in Float3 direction) => color;
 }

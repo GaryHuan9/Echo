@@ -1,17 +1,16 @@
 using System;
-using System.Runtime.Intrinsics;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Coloring;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
 /// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and <see cref="size"/> (exclusive).
 /// </summary>
-public abstract partial class TextureGrid : Texture
+public abstract partial class TextureGrid<T> : Texture where T : IColor
 {
 	protected TextureGrid(Int2 size, IFilter filter) : base(Wrappers.repeat)
 	{
@@ -48,7 +47,7 @@ public abstract partial class TextureGrid : Texture
 	NotNull<object> _filter;
 
 	/// <summary>
-	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid"/> to retrieve pixels.
+	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid{T}"/> to retrieve pixels as <see cref="RGBA128"/>.
 	/// </summary>
 	public IFilter Filter
 	{
@@ -74,10 +73,10 @@ public abstract partial class TextureGrid : Texture
 	public override Int2 DiscreteResolution => size;
 
 	/// <summary>
-	/// Gets and sets the <see cref="RGBA128"/> pixel data at a specific <paramref name="position"/>. The input
-	/// <paramref name="position"/> must be between <see cref="Int2.Zero"/> and <see cref="oneLess"/> (both inclusive).
+	/// Access or assign the pixel value of type <see cref="T"/> at a specific integer <paramref name="position"/>. The input
+	/// <paramref name="position"/> must be between <see cref="Int2.Zero"/> (inclusive) and <see cref="oneLess"/> (exclusive).
 	/// </summary>
-	public abstract RGBA128 this[Int2 position] { get; set; }
+	public abstract T this[Int2 position] { get; set; }
 
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
@@ -86,17 +85,17 @@ public abstract partial class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid.size"/>.
+	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid{T}.size"/>.
 	/// </summary>
 	public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.Zero, oneLess);
 
 	/// <summary>
-	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid"/>'s texture coordinate.
+	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid{T}"/>'s texture coordinate.
 	/// </summary>
 	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
 
 	/// <summary>
-	/// Copies as much data from <paramref name="texture"/> to this <see cref="TextureGrid"/> as fast as possible.
+	/// Copies as much data from <paramref name="texture"/> to this <see cref="TextureGrid{T}"/> as fast as possible.
 	/// </summary>
 	public virtual void CopyFrom(Texture texture, bool parallel = true) => ForEach
 	(
@@ -117,7 +116,7 @@ public abstract partial class TextureGrid : Texture
 		}
 	}
 
-	protected void AssertAlignedSize(TextureGrid texture)
+	protected void AssertAlignedSize(TextureGrid<T> texture)
 	{
 		if (texture.size == size) return;
 		throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
