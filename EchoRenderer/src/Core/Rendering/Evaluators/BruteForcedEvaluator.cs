@@ -1,5 +1,6 @@
 ﻿using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -12,10 +13,12 @@ namespace EchoRenderer.Core.Rendering.Evaluators;
 
 public class BruteForcedEvaluator : PathTracedEvaluator //Interesting inheritance, we will probably remove this later
 {
-	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
+	public override RGB128 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
-		Float3 energy = Float3.One;
-		Float3 radiance = Float3.Zero;
+		var scene = profile.Scene;
+
+		var energy = RGB128.White;
+		var radiant = RGB128.Black;
 
 		var query = new TraceQuery(ray);
 
@@ -33,21 +36,18 @@ public class BruteForcedEvaluator : PathTracedEvaluator //Interesting inheritanc
 				continue;
 			}
 
-			Float3 scatter = touch.bsdf.Sample(touch.outgoing, arena.Distribution.Next2D(), out Float3 incident, out float pdf, out BxDF function);
-			if (touch.shade.material is IEmissive emissive && FastMath.Positive(emissive.Power)) radiance += energy * emissive.Emit(touch.point, touch.outgoing);
+			(RGB128 scatter, float pdf) = touch.bsdf.Sample(touch.outgoing, arena.Distribution.Next2D(), out Float3 incident, out BxDF function);
+			if (touch.shade.material is IEmissive emissive && FastMath.Positive(emissive.Power)) radiant += energy * emissive.Emit(touch.point, touch.outgoing);
 
-			if (!FastMath.Positive(pdf) | !scatter.PositiveRadiance()) energy = Float3.Zero;
+			if (!FastMath.Positive(pdf) | scatter.IsZero) energy = RGB128.Black;
 			else energy *= touch.NormalDot(incident) / pdf * scatter;
 
-			if (!energy.PositiveRadiance()) break;
+			if (energy.IsZero) break;
 			query = query.SpawnTrace(incident);
 		}
 
-		if (energy.PositiveRadiance())
-		{
-			foreach (AmbientLight ambient in profile.Scene.lights.Ambient) radiance += energy * ambient.Evaluate(query.ray.direction);
-		}
+		if (!energy.IsZero) radiant += energy * scene.lights.EvaluateAmbient(query.ray.direction);
 
-		return radiance;
+		return radiant;
 	}
 }

@@ -1,5 +1,6 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
@@ -16,27 +17,7 @@ public interface IFilter
 	/// </summary>
 	/// <param name="texture">The target texture to retrieve the color from.</param>
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-	RGBA128 Convert<T>(TextureGrid<T> texture, Float2 uv) where T : IColor;
-}
-
-/// <summary>
-/// A struct to temporarily change a <see cref="TextureGrid{T}.Filter"/>
-/// and reverts the change after <see cref="Dispose"/> is invoked.
-/// </summary>
-public readonly struct ScopedFilter<T> : IDisposable where T : IColor
-{
-	public ScopedFilter(TextureGrid<T> texture, IFilter filter)
-	{
-		this.texture = texture;
-
-		original = texture.Filter;
-		texture.Filter = filter;
-	}
-
-	readonly TextureGrid<T> texture;
-	readonly IFilter original;
-
-	public void Dispose() => texture.Filter = original;
+	RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>;
 }
 
 public static class Filters
@@ -47,49 +28,51 @@ public static class Filters
 	class Point : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA128 Convert<T>(TextureGrid<T> texture, Float2 uv) where T : IColor
+		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>
 		{
 			Int2 position = (uv * texture.size).Floored;
-			return texture[position.Min(texture.oneLess)].ToRGBA128();
+			texture.Wrapper.Wrap(texture, ref position);
+			return texture[position].ToRGBA128();
 		}
 	}
 
 	class Bilinear : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA128 Convert<T>(TextureGrid<T> texture, Float2 uv) where T : IColor
+		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>
 		{
-			uv *= texture.size;
+			//Find x and y
+			Float2 scaled = uv * texture.size;
 
-			Int2 upperRight = uv.Rounded;
-			Int2 bottomLeft = upperRight - Int2.One;
+			Vector128<int> x = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.X));
+			Vector128<int> y = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.Y));
 
-			upperRight = upperRight.Min(texture.oneLess);
-			bottomLeft = bottomLeft.Max(Int2.Zero);
+			x = Sse2.Subtract(x, Vector128.Create(1, 1, 0, 0));
+			y = Sse2.Subtract(y, Vector128.Create(1, 0, 1, 0));
 
-			//Prefetch color data (273.6 ns => 194.6 ns)
-			RGB128 y0x0 = texture[bottomLeft];
-			RGB128 y0x1 = texture[new Int2(upperRight.X, bottomLeft.Y)];
+			//Wrap and shuffle
+			int minX = x.GetElement(0);
+			int minY = y.GetElement(1);
 
-			RGB128 y1x0 = texture[new Int2(bottomLeft.X, upperRight.Y)];
-			RGB128 y1x1 = texture[upperRight];
+			texture.Wrapper.Wrap(texture, ref x, ref y);
+
+			//OPTIMIZE shuffle x and y so we only use half of the GetElement calls
+
+			//Fetch color data
+			RGBA128 y0x0 = texture[new Int2(x.GetElement(0), y.GetElement(0))].ToRGBA128();
+			RGBA128 y0x1 = texture[new Int2(x.GetElement(1), y.GetElement(1))].ToRGBA128();
+
+			RGBA128 y1x0 = texture[new Int2(x.GetElement(2), y.GetElement(2))].ToRGBA128();
+			RGBA128 y1x1 = texture[new Int2(x.GetElement(3), y.GetElement(3))].ToRGBA128();
 
 			//Interpolate
-			float timeX = InverseLerp(bottomLeft.X, upperRight.X, uv.X - 0.5f);
-			float timeY = InverseLerp(bottomLeft.Y, upperRight.Y, uv.Y - 0.5f);
+			float timeX = scaled.X - 0.5f - minX;
+			float timeY = scaled.Y - 0.5f - minY;
 
 			Float4 y0 = Float4.Lerp(y0x0, y0x1, timeX);
 			Float4 y1 = Float4.Lerp(y1x0, y1x1, timeX);
 
-			return (RGB128)Float4.Lerp(y0, y1, timeY);
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static float InverseLerp(int left, int right, float value)
-			{
-				if (left == right) return 0f;
-				Assert.AreEqual(right, left + 1);
-				return value - left; //Gap is always one
-			}
+			return (RGBA128)Float4.Lerp(y0, y1, timeY);
 		}
 	}
 }

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
@@ -13,7 +11,7 @@ namespace EchoRenderer.Common.Coloring;
 /// The value for these three channels are always larger than or equals to zero, or less than
 /// <see cref="float.PositiveInfinity"/>, and is never <see cref="float.NaN"/>.
 /// </summary>
-public readonly struct RGB128 : IColor, IFormattable
+public readonly struct RGB128 : IColor<RGB128>, IFormattable
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public RGB128(float r, float g, float b) : this(CheckInput(new Float4(r, g, b, 0f))) { }
@@ -54,6 +52,7 @@ public readonly struct RGB128 : IColor, IFormattable
 	public override string ToString() => ToString(string.Empty);
 
 	public RGBA128 ToRGBA128() => (RGBA128)this;
+	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
 
 	public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);
 	public string ToString(string format, IFormatProvider provider) => d.ToString(format, provider);

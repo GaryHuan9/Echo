@@ -179,8 +179,8 @@ public class Program
 
 	static void SimplexNoise()
 	{
-		TestGenerative simplex = new TestGenerative(42, 4);
-		ArrayGrid texture = new ArrayGrid((Int2)1080);
+		var simplex = new TestGenerative(42, 4);
+		var texture = new ArrayGrid<RGB128>((Int2)1080);
 
 		simplex.Tiling = (Float2)1f;
 		simplex.Offset = (Float2)1f;
@@ -191,10 +191,10 @@ public class Program
 
 	static void FontTesting()
 	{
-		Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
-		ArrayGrid output = new ArrayGrid((Int2)2048);
+		var font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
+		var output = new ArrayGrid<RGB128>((Int2)2048);
 
-		foreach (Int2 position in output.size.Loop()) output[position] = new RGB128(0f, 0f, 1f);
+		output.ForEach(position => output[position] = new RGB128(0f, 0f, 1f));
 		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.One));
 
 		output.Save("render.png");

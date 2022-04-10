@@ -25,10 +25,10 @@ public class Matte : Material
 	{
 		var make = new MakeBSDF(ref touch, allocator);
 
-		RGB128 albedo = Sample(Albedo, touch);
+		var albedo = (RGB128)SampleAlbedo(touch);
 		if (albedo.IsZero) return;
 
-		float roughness = FastMath.Clamp01(Sample(Roughness, touch).X);
+		float roughness = FastMath.Clamp01(Sample(Roughness, touch).Luminance); //OPTIMIZE get primary channel
 
 		if (FastMath.AlmostZero(roughness)) make.Add<LambertianReflection>().Reset(albedo);
 		else make.Add<OrenNayar>().Reset(albedo, Scalars.ToRadians(roughness * 90f));
