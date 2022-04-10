@@ -4,6 +4,7 @@ using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
@@ -19,7 +20,7 @@ public interface IDirectionalTexture
 	/// <summary>
 	/// Returns the average of this <see cref="IDirectionalTexture"/> on all directions.
 	/// </summary>
-	RGBA128 Average { get; }
+	RGB128 Average { get; }
 
 	/// <summary>
 	/// Invoked prior to rendering begins to perform any initialization work this <see cref="IDirectionalTexture"/> need.
@@ -31,13 +32,13 @@ public interface IDirectionalTexture
 	/// Evaluates this <see cref="IDirectionalTexture"/> at <paramref name="direction"/>.
 	/// NOTE: <paramref name="direction"/> should have a squared magnitude of exactly one.
 	/// </summary>
-	RGBA128 Evaluate(in Float3 direction);
+	RGB128 Evaluate(in Float3 direction);
 
 	/// <summary>
 	/// Samples this <see cref="IDirectionalTexture"/> based on <paramref name="sample"/> and outputs the
 	/// <see cref="Evaluate"/> <paramref name="incident"/> direction and its <paramref name="pdf"/>.
 	/// </summary>
-	Probable<RGBA128> Sample(Sample2D sample, out Float3 incident)
+	Probable<RGB128> Sample(Sample2D sample, out Float3 incident)
 	{
 		incident = sample.UniformSphere;
 		return (Evaluate(incident), Sample2D.UniformSpherePdf);
@@ -54,7 +55,7 @@ public static class IDirectionalTextureExtensions
 	/// <summary>
 	/// Explicitly calculates a converged value for <see cref="IDirectionalTexture.Average"/> using Monte Carlo sampling.
 	/// </summary>
-	public static RGBA128 ConvergeAverage(this IDirectionalTexture texture, int sampleCount = (int)1E6)
+	public static RGB128 ConvergeAverage(this IDirectionalTexture texture, int sampleCount = (int)1E6)
 	{
 		using ThreadLocal<SumPackage> sums = new(SumPackage.factory, true);
 
@@ -73,7 +74,7 @@ public static class IDirectionalTextureExtensions
 
 		foreach (SumPackage package in sums.Values) sum += package.Sum;
 
-		return (RGBA128)(sum.Result / sampleCount);
+		return (RGB128)(sum.Result / sampleCount);
 	}
 
 	class SumPackage

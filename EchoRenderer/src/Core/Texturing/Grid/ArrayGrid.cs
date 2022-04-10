@@ -2,23 +2,24 @@
 using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// The default <see cref="TextureGrid"/>; stores RGBA color information with 32 bits per channel, supports full float range.
+/// The default <see cref="TextureGrid{T}"/>; stores RGBA color information with 32 bits per channel, supports full float range.
 /// </summary>
-public class ArrayGrid : TextureGrid
+public class ArrayGrid<T> : TextureGrid<T> where T : IColor
 {
 	public ArrayGrid(Int2 size) : base(size, Filters.bilinear)
 	{
 		length = size.Product;
-		pixels = new RGBA128[length];
+		pixels = new RGB128[length];
 	}
 
 	protected readonly int length;
-	protected readonly RGBA128[] pixels;
+	protected readonly RGB128[] pixels;
 
 	/// <summary>
 	/// This is the axis in which <see cref="ToPosition"/> is going to move first if you increment the input index.
@@ -30,7 +31,7 @@ public class ArrayGrid : TextureGrid
 	/// </summary>
 	public const int MinorAxis = MajorAxis ^ 1;
 
-	public override RGBA128 this[Int2 position]
+	public override RGB128 this[Int2 position]
 	{
 		get => pixels[ToIndex(position)];
 		set => pixels[ToIndex(position)] = value;

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -75,13 +76,13 @@ public class BSDF
 	/// Evaluates all <see cref="BxDF"/> contained in this <see cref="BSDF"/> that matches
 	/// <paramref name="type"/>. See <see cref="BxDF.Evaluate"/> for more information.
 	/// </summary>
-	public RGBA128 Evaluate(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
+	public RGB128 Evaluate(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
 	{
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		Float3 incident = transform.WorldToLocal(incidentWorld);
 
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
-		var total = RGBA128.Zero;
+		var total = RGB128.Black;
 
 		for (int i = 0; i < count; i++)
 		{
@@ -122,7 +123,7 @@ public class BSDF
 	/// Outputs the main <see cref="BxDF"/> sampled to <paramref name="selected"/>.
 	/// See <see cref="BxDF.Sample"/> for more information.
 	/// </summary>
-	public Probable<RGBA128> Sample(in Float3 outgoingWorld, Sample2D sample, out Float3 incidentWorld,
+	public Probable<RGB128> Sample(in Float3 outgoingWorld, Sample2D sample, out Float3 incidentWorld,
 								   out BxDF selected, FunctionType type = FunctionType.all)
 	{
 		//Uniformly select a matching function
@@ -133,19 +134,19 @@ public class BSDF
 			Utilities.Skip(out incidentWorld);
 
 			selected = default;
-			return Probable<RGBA128>.Zero;
+			return Probable<RGB128>.Zero;
 		}
 
 		selected = functions[index];
 
 		//Sample the selected function
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Probable<RGBA128> sampled = selected.Sample(outgoing, sample, out Float3 incident);
+		Probable<RGB128> sampled = selected.Sample(outgoing, sample, out Float3 incident);
 
 		if (sampled.IsZero | sampled.content.IsZero)
 		{
 			incidentWorld = Float3.Zero;
-			return Probable<RGBA128>.Zero;
+			return Probable<RGB128>.Zero;
 		}
 
 		incidentWorld = transform.LocalToWorld(incident);
@@ -185,10 +186,10 @@ public class BSDF
 	/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
 	/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Sample2D})"/> for more information.
 	/// </summary>
-	public RGBA128 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
+	public RGB128 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
 	{
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		var reflectance = RGBA128.Zero;
+		var reflectance = RGB128.Black;
 
 		for (int i = 0; i < count; i++)
 		{
@@ -204,9 +205,9 @@ public class BSDF
 	/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
 	/// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Sample2D}, ReadOnlySpan{Sample2D})"/> for more information.
 	/// </summary>
-	public RGBA128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1, FunctionType type)
+	public RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1, FunctionType type)
 	{
-		var reflectance = RGBA128.Zero;
+		var reflectance = RGB128.Black;
 
 		for (int i = 0; i < count; i++)
 		{

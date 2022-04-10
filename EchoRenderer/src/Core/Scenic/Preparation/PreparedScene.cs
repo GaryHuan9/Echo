@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -184,7 +185,7 @@ public class PreparedScene
 				//completely black, but we add in a light so no exception is thrown when we look for lights.
 
 				_ambient = Array.Empty<AmbientLight>();
-				_all = new LightSource[] { new PointLight { Intensity = RGBA128.Black } };
+				_all = new LightSource[] { new PointLight { Intensity = RGB128.Black } };
 				distribution = new DiscreteDistribution1D(stackalloc[] { 1f, 0f });
 
 				return;
@@ -244,9 +245,9 @@ public class PreparedScene
 		/// <summary>
 		/// Evaluates all of the <see cref="AmbientLight"/> at <paramref name="direction"/> in world-space.
 		/// </summary>
-		public RGBA128 EvaluateAmbient(Float3 direction)
+		public RGB128 EvaluateAmbient(Float3 direction)
 		{
-			var total = RGBA128.Zero;
+			var total = RGB128.Black;
 
 			foreach (AmbientLight light in _ambient) total += light.Evaluate(direction);
 

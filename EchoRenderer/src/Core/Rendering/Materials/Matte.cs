@@ -1,6 +1,7 @@
 ﻿using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -24,7 +25,7 @@ public class Matte : Material
 	{
 		var make = new MakeBSDF(ref touch, allocator);
 
-		RGBA128 albedo = Sample(Albedo, touch);
+		RGB128 albedo = Sample(Albedo, touch);
 		if (albedo.IsZero) return;
 
 		float roughness = FastMath.Clamp01(Sample(Roughness, touch).X);

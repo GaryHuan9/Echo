@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -29,7 +30,7 @@ public sealed class LuminanceGrab : IDisposable
 		var sum = Summation.Zero;
 
 		foreach (StrongBox<Summation> box in sums.Values) sum += box.Value;
-		Luminance = ((RGBA128)sum.Result).Luminance / sourceBuffer.size.Product;
+		Luminance = ((RGB128)sum.Result).Luminance / sourceBuffer.size.Product;
 	}
 
 	public void Dispose()

@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Mathematics;
-using EchoRenderer.Common.Mathematics.Primitives;
+using EchoRenderer.Common.Coloring;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// Retrieves the pixel of a <see cref="TextureGrid"/> using a texture coordinate.
+/// Retrieves the pixel value of a <see cref="TextureGrid{T}"/> using a texture coordinate.
 /// </summary>
 public interface IFilter
 {
@@ -18,16 +16,16 @@ public interface IFilter
 	/// </summary>
 	/// <param name="texture">The target texture to retrieve the color from.</param>
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-	RGBA128 Convert(TextureGrid texture, Float2 uv);
+	RGBA128 Convert<T>(TextureGrid<T> texture, Float2 uv) where T : IColor;
 }
 
 /// <summary>
-/// A struct to temporarily change a <see cref="TextureGrid.Filter"/>
+/// A struct to temporarily change a <see cref="TextureGrid{T}.Filter"/>
 /// and reverts the change after <see cref="Dispose"/> is invoked.
 /// </summary>
-public readonly struct ScopedFilter : IDisposable
+public readonly struct ScopedFilter<T> : IDisposable where T : IColor
 {
-	public ScopedFilter(TextureGrid texture, IFilter filter)
+	public ScopedFilter(TextureGrid<T> texture, IFilter filter)
 	{
 		this.texture = texture;
 
@@ -35,7 +33,7 @@ public readonly struct ScopedFilter : IDisposable
 		texture.Filter = filter;
 	}
 
-	readonly TextureGrid texture;
+	readonly TextureGrid<T> texture;
 	readonly IFilter original;
 
 	public void Dispose() => texture.Filter = original;
@@ -49,20 +47,17 @@ public static class Filters
 	class Point : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA128 Convert(TextureGrid texture, Float2 uv)
+		public RGBA128 Convert<T>(TextureGrid<T> texture, Float2 uv) where T : IColor
 		{
 			Int2 position = (uv * texture.size).Floored;
-			return texture[position.Min(texture.oneLess)];
+			return texture[position.Min(texture.oneLess)].ToRGBA128();
 		}
 	}
 
 	class Bilinear : IFilter
 	{
-		// If the performance of this bilinear filter is not fast enough anymore, we could always move to a more
-		// 'native' approach by allowing derived class to provide customized implementations with virtual methods
-
 		/// <inheritdoc/>
-		public RGBA128 Convert(TextureGrid texture, Float2 uv)
+		public RGBA128 Convert<T>(TextureGrid<T> texture, Float2 uv) where T : IColor
 		{
 			uv *= texture.size;
 
@@ -73,11 +68,11 @@ public static class Filters
 			bottomLeft = bottomLeft.Max(Int2.Zero);
 
 			//Prefetch color data (273.6 ns => 194.6 ns)
-			RGBA128 y0x0 = texture[bottomLeft];
-			RGBA128 y0x1 = texture[new Int2(upperRight.X, bottomLeft.Y)];
+			RGB128 y0x0 = texture[bottomLeft];
+			RGB128 y0x1 = texture[new Int2(upperRight.X, bottomLeft.Y)];
 
-			RGBA128 y1x0 = texture[new Int2(bottomLeft.X, upperRight.Y)];
-			RGBA128 y1x1 = texture[upperRight];
+			RGB128 y1x0 = texture[new Int2(bottomLeft.X, upperRight.Y)];
+			RGB128 y1x1 = texture[upperRight];
 
 			//Interpolate
 			float timeX = InverseLerp(bottomLeft.X, upperRight.X, uv.X - 0.5f);
@@ -86,7 +81,7 @@ public static class Filters
 			Float4 y0 = Float4.Lerp(y0x0, y0x1, timeX);
 			Float4 y1 = Float4.Lerp(y1x0, y1x1, timeX);
 
-			return (RGBA128)Float4.Lerp(y0, y1, timeY);
+			return (RGB128)Float4.Lerp(y0, y1, timeY);
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			static float InverseLerp(int left, int right, float value)
