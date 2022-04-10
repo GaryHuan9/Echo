@@ -47,7 +47,7 @@ public class Emissive : Material, IEmissive
 		});
 
 		//Calculate emission and power from total sum
-		emission = ((RGB128)total.Result / size.Product).AlphaOne;
+		emission = (RGB128)total.Result / size.Product;
 		Power = emission.Luminance * Scalars.Tau;
 	}
 

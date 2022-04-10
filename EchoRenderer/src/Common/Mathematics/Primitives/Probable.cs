@@ -1,4 +1,6 @@
-﻿namespace EchoRenderer.Common.Mathematics.Primitives;
+﻿using EchoRenderer.Common.Coloring;
+
+namespace EchoRenderer.Common.Mathematics.Primitives;
 
 /// <summary>
 /// Represents something of type <typeparamref name="T"/> with a certain probability density function (pdf) value.
@@ -14,11 +16,20 @@ public readonly struct Probable<T>
 	public readonly T content;
 	public readonly float pdf;
 
-	public static Probable<T> Zero => default;
+	public static Probable<T> Impossible => default;
 
-	public bool IsZero => !FastMath.Positive(pdf);
+	/// <summary>
+	/// Returns whether this <see cref="Probable{T}"/> is not possible (impossible).
+	/// </summary>
+	public bool NotPossible => !FastMath.Positive(pdf);
 
 	public static implicit operator Probable<T>(in (T content, float pdf) pair) => new(pair.content, pair.pdf);
 
 	public static implicit operator T(in Probable<T> probable) => probable.content;
+
+	public void Deconstruct(out T outContent, out float outPdf)
+	{
+		outContent = content;
+		outPdf = pdf;
+	}
 }

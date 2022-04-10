@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
@@ -82,8 +80,8 @@ public class CylindricalTexture : IDirectionalTexture
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			RGB128 Grab(int x)
 			{
-				var lower = texture[new Float2(x, y + 0f) * sizeR];
-				var upper = texture[new Float2(x, y + 1f) * sizeR];
+				var lower = (RGB128)texture[new Float2(x, y + 0f) * sizeR];
+				var upper = (RGB128)texture[new Float2(x, y + 1f) * sizeR];
 
 				return lower * sin0 + upper * sin1;
 			}
@@ -99,17 +97,17 @@ public class CylindricalTexture : IDirectionalTexture
 	}
 
 	/// <inheritdoc/>
-	public RGB128 Evaluate(in Float3 direction) => Texture[ToUV(direction)];
+	public RGB128 Evaluate(in Float3 direction) => (RGB128)Texture[ToUV(direction)];
 
 	/// <inheritdoc/>
 	public Probable<RGB128> Sample(Sample2D sample, out Float3 incident)
 	{
 		Probable<Sample2D> probable = distribution.Sample(sample);
 
-		if (probable.IsZero)
+		if (probable.NotPossible)
 		{
 			incident = Float3.Zero;
-			return Probable<RGB128>.Zero;
+			return Probable<RGB128>.Impossible;
 		}
 
 		Float2 uv = probable.content;
@@ -123,7 +121,7 @@ public class CylindricalTexture : IDirectionalTexture
 		if (sinP <= 0f) return (RGB128.Black, 0f);
 
 		incident = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
-		return (Texture[uv], probable.pdf * Jacobian / sinP);
+		return ((RGB128)Texture[uv], probable.pdf * Jacobian / sinP);
 	}
 
 	/// <inheritdoc/>

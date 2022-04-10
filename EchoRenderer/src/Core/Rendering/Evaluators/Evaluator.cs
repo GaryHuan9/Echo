@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Common.Memory;
@@ -34,7 +35,7 @@ public abstract class Evaluator
 	/// Evaluates <see cref="RenderProfile.Scene"/> through <paramref name="ray"/> using <paramref name="profile"/> and <paramref name="arena"/>.
 	/// Note that the implementation do not need to <see cref="Allocator.Release"/> the <see cref="Allocator"/> after this method is finished.
 	/// </summary>
-	public abstract Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena);
+	public abstract RGB128 Evaluate(in Ray ray, RenderProfile profile, Arena arena);
 
 	/// <summary>
 	/// Invoked once before a new rendering process begins on this <see cref="Evaluator"/>.
@@ -54,27 +55,4 @@ public abstract class Evaluator
 	/// its returned value will be assigned to <see cref="ContinuousDistribution.Prng"/> created in <see cref="CreateDistribution"/>.
 	/// </summary>
 	protected virtual IRandom CreateRandom(uint? seed = null) => new SquirrelRandom(seed);
-
-	public readonly struct Sample
-	{
-		public Sample(in Float3 colour, in Float3 albedo = default, in Float3 normal = default, float zDepth = default)
-		{
-			this.colour = colour;
-			this.albedo = albedo;
-			this.normal = normal;
-			this.zDepth = zDepth;
-		}
-
-		public readonly Float3 colour; //We use the British spelling here so that all the names line up (sort of)
-		public readonly Float3 albedo;
-		public readonly Float3 normal;
-		public readonly float zDepth;
-
-		public bool IsNaN => float.IsNaN(colour.X) || float.IsNaN(colour.Y) || float.IsNaN(colour.Z) ||
-							 float.IsNaN(albedo.X) || float.IsNaN(albedo.Y) || float.IsNaN(albedo.Z) ||
-							 float.IsNaN(normal.X) || float.IsNaN(normal.Y) || float.IsNaN(normal.Z) ||
-							 float.IsNaN(zDepth);
-
-		public static implicit operator Sample(in Float3 colour) => new(colour);
-	}
 }

@@ -7,26 +7,12 @@ namespace EchoRenderer.Common.Mathematics.Primitives;
 /// </summary>
 public readonly struct Summation
 {
-	public Summation(in Float4 value)
-	{
-		total = value;
-		error = Float4.Zero;
-	}
+	public Summation(in Float4 value) : this(value, Float4.Zero) { }
 
-	Summation(in Summation summation, in Float4 value)
+	Summation(in Float4 total, in Float4 error)
 	{
-		Float4 delta = value - summation.error;
-		total = summation.total + delta;
-		error = total - summation.total - delta;
-	}
-
-	Summation(in Summation summation, in Summation value)
-	{
-		error = summation.error + value.error;
-		Float4 delta = value.total - error;
-
-		total = summation.total + delta;
-		error = total - summation.total - delta;
+		this.total = total;
+		this.error = error;
 	}
 
 	readonly Float4 total;
@@ -42,7 +28,30 @@ public readonly struct Summation
 	/// </summary>
 	public Float4 Result => total;
 
-	public static Summation operator +(in Summation summation, in Float4 value) => new(summation, value);
-	public static Summation operator -(in Summation summation, in Float4 value) => new(summation, -value);
-	public static Summation operator +(in Summation summation, in Summation value) => new(summation, value);
+	public static Summation operator -(in Summation summation, in Float4 value) => summation + -value;
+	public static Summation operator /(in Summation summation, in Float4 value) => summation * (1f / value);
+
+	public static Summation operator +(in Summation summation, in Float4 value)
+	{
+		Float4 delta = value - summation.error;
+		Float4 total = summation.total + delta;
+		Float4 error = total - summation.total - delta;
+
+		return new Summation(total, error);
+	}
+
+	public static Summation operator *(in Summation summation, in Float4 value) => new(summation.total * value, summation.error * value);
+
+	public static Summation operator +(in Summation summation, in Summation value)
+	{
+		Float4 error = summation.error + value.error;
+		Float4 delta = value.total - error;
+
+		Float4 total = summation.total + delta;
+		error = total - summation.total - delta;
+
+		return new Summation(total, error);
+	}
+
+	public static Summation operator -(in Summation summation, in Summation value) => summation + new Summation(-value.total, -value.error);
 }

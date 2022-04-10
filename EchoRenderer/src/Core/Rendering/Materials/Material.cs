@@ -43,8 +43,6 @@ public abstract class Material
 
 	bool zeroNormal;
 
-	static Float4 NormalShift => new(-1f, -1f, -2f, 0f);
-
 	/// <summary>
 	/// Invoked before a new render session begins; can be used to execute any kind of preprocessing work for this <see cref="Material"/>.
 	/// NOTE: invoking any of the rendering related methods prior to invoking this method after a change will result in undefined behaviors!
@@ -66,12 +64,13 @@ public abstract class Material
 		if (zeroNormal) return false;
 
 		//Evaluate normal texture at texcoord
-		Float4 local = Float4.Clamp(Normal[texcoord]) * 2f + NormalShift;
+		Float4 local = Float4.Clamp(Normal[texcoord]);
+		local = local * 2f - new Float4(1f, 1f, 2f, 0f); //OPTIMIZE fma
 
 		local *= NormalIntensity;
 		if (local == Float4.Zero) return false;
 
-		//Create transform to move from local direction to world space based
+		//Create transform to move local direction to world space
 		NormalTransform transform = new NormalTransform(normal);
 		Float3 delta = transform.LocalToWorld(local.XYZ);
 
@@ -80,9 +79,14 @@ public abstract class Material
 	}
 
 	/// <summary>
-	/// Samples <paramref name="texture"/> at <paramref name="touch"/> as a <see cref="Float4"/>.
+	/// Samples <see cref="Albedo"/> at <paramref name="touch"/> and returns the resulting <see cref="RGBA128"/>.
 	/// </summary>
-	protected static RGB128 Sample(Texture texture, in Touch touch) => texture[touch.shade.Texcoord];
+	public RGBA128 SampleAlbedo(in Touch touch) => Albedo[touch.shade.Texcoord];
+
+	/// <summary>
+	/// Samples <paramref name="texture"/> at <paramref name="touch"/> and returns the resulting <see cref="RGB128"/>.
+	/// </summary>
+	protected static RGB128 Sample(Texture texture, in Touch touch) => (RGB128)texture[touch.shade.Texcoord];
 
 	/// <summary>
 	/// A wrapper struct used to easily create <see cref="BSDF"/> and add <see cref="BxDF"/> to it.

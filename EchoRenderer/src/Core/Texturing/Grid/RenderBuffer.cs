@@ -2,27 +2,17 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
 using EchoRenderer.Common.Coloring;
-using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// A regular <see cref="ArrayGrid"/> with albedo and normal auxiliary data.
+/// A <see cref="ArrayGrid{T}"/> of type <see cref="RGB128"/> primarily used as a rendering destination.
+/// Allows for optional auxiliary data such as albedo, normal, or depth to support later reconstruction.
 /// </summary>
-public class RenderBuffer : ArrayGrid
+public class RenderBuffer : ArrayGrid<RGB128>
 {
-	public RenderBuffer(Int2 size) : base(size)
-	{
-		albedos = new Float3[length];
-		normals = new Float3[length];
-		zDepths = new float[length];
-	}
-
-	readonly Float3[] albedos;
-	readonly Float3[] normals;
-	readonly float[] zDepths;
+	public RenderBuffer(Int2 size) : base(size) { }
 
 	public Float3 GetAlbedo(Int2 position) => albedos[ToIndex(position)];
 	public Float3 GetNormal(Int2 position) => normals[ToIndex(position)];
