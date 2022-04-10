@@ -142,7 +142,7 @@ public class ProgressiveRenderEngine : IDisposable
 		if (Epoch > profile.EpochLength)
 		{
 			sampleCount += profile.AdaptiveSample;
-			sampleCount *= pixel.Deviation;
+			// sampleCount *= pixel.Deviation;
 		}
 
 		for (int i = 0; i < sampleCount; i++)

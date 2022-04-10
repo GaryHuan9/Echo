@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Distributions.Continuous;
@@ -11,7 +12,7 @@ public class AggregatorQualityEvaluator : Evaluator
 	long totalCost;
 	long totalSample;
 
-	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
+	public override RGB128 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
 		var scene = profile.Scene;
 		int cost = scene.TraceCost(ray);
@@ -19,7 +20,7 @@ public class AggregatorQualityEvaluator : Evaluator
 		long currentCost = Interlocked.Add(ref totalCost, cost);
 		long currentSample = Interlocked.Increment(ref totalSample);
 
-		return new Float3(cost, currentCost, currentSample);
+		return new RGB128(cost, currentCost, currentSample);
 	}
 
 	protected override ContinuousDistribution CreateDistribution(RenderProfile profile)

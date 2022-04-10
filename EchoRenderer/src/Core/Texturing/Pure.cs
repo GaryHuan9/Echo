@@ -9,7 +9,7 @@ namespace EchoRenderer.Core.Texturing;
 /// </summary>
 public class Pure : Texture, IDirectionalTexture
 {
-	public Pure(in RGBA128 color) : base(Wrappers.unbound)
+	public Pure(in RGBA128 color)
 	{
 		this.color = (RGB128)color;
 		rgba = color;

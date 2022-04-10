@@ -32,7 +32,7 @@ public class PointLight : LightSource
 		{
 			incident = Float3.Zero;
 			travel = 0f;
-			return Probable<RGB128>.Zero;
+			return Probable<RGB128>.Impossible;
 		}
 
 		travel = FastMath.Sqrt0(travel2);

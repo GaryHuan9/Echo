@@ -118,7 +118,7 @@ public readonly struct FresnelConductor
 {
 	public FresnelConductor(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 absorption)
 	{
-		RGB128 etaIncidentR = 1f / etaAbove;
+		Float4 etaIncidentR = 1f / etaAbove;
 
 		eta2 = etaBelow * etaIncidentR;
 		etaK2 = absorption * etaIncidentR;
@@ -127,8 +127,8 @@ public readonly struct FresnelConductor
 		etaK2 *= etaK2;
 	}
 
-	readonly RGB128 eta2;  //(etaBelow   / etaAbove)^2
-	readonly RGB128 etaK2; //(absorption / etaAbove)^2
+	readonly Float4 eta2;  //(etaBelow   / etaAbove)^2
+	readonly Float4 etaK2; //(absorption / etaAbove)^2
 
 	public RGB128 Evaluate(float cosI) //https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
 	{

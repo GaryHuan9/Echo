@@ -11,7 +11,7 @@ namespace EchoRenderer.Common.Coloring;
 /// The value for these four channels are always larger than or equals to zero, or less than
 /// <see cref="float.PositiveInfinity"/>, and is never <see cref="float.NaN"/>.
 /// </summary>
-public readonly struct RGBA128 : IColor, IFormattable
+public readonly struct RGBA128 : IColor<RGBA128>, IFormattable
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public RGBA128(float r, float g, float b, float alpha = 1f) : this(CheckInput(new Float4(r, g, b, alpha))) { }
@@ -48,9 +48,15 @@ public readonly struct RGBA128 : IColor, IFormattable
 	public override string ToString() => ToString(string.Empty);
 
 	public RGBA128 ToRGBA128() => this;
+	public RGBA128 FromRGBA128(in RGBA128 value) => value;
 
 	public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);
 	public string ToString(string format, IFormatProvider provider) => d.ToString(format, provider);
+
+	/// <summary>
+	/// Returns this <see cref="RGBA128"/> converted as <typeparamref name="T"/> using <see cref="IColor{T}.FromRGBA128"/>.
+	/// </summary>
+	public T As<T>() where T : IColor<T> => default(T)!.FromRGBA128(this);
 
 	public static RGBA128 Parse(ReadOnlySpan<char> span)
 	{

@@ -1,28 +1,14 @@
 ﻿using System;
-using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
-using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
-/// <summary>
-/// The default <see cref="TextureGrid{T}"/>; stores RGBA color information with 32 bits per channel, supports full float range.
-/// </summary>
-public class ArrayGrid<T> : TextureGrid<T> where T : IColor
+public static class ArrayGrid
 {
-	public ArrayGrid(Int2 size) : base(size, Filters.bilinear)
-	{
-		length = size.Product;
-		pixels = new RGB128[length];
-	}
-
-	protected readonly int length;
-	protected readonly RGB128[] pixels;
-
 	/// <summary>
-	/// This is the axis in which <see cref="ToPosition"/> is going to move first if you increment the input index.
+	/// This is the axis in which <see cref="ArrayGrid{T}.ToPosition(int)"/> is going to move first if the input index is incremented.
 	/// </summary>
 	public const int MajorAxis = 0;
 
@@ -30,8 +16,23 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor
 	/// The opposite axis of <see cref="MajorAxis"/>.
 	/// </summary>
 	public const int MinorAxis = MajorAxis ^ 1;
+}
 
-	public override RGB128 this[Int2 position]
+/// <summary>
+/// The default <see cref="TextureGrid{T}"/>; stores RGBA color information with 32 bits per channel, supports full float range.
+/// </summary>
+public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
+{
+	public ArrayGrid(Int2 size) : base(size)
+	{
+		length = size.Product;
+		pixels = new T[length];
+	}
+
+	protected readonly int length;
+	protected readonly T[] pixels;
+
+	public override T this[Int2 position]
 	{
 		get => pixels[ToIndex(position)];
 		set => pixels[ToIndex(position)] = value;
@@ -59,13 +60,13 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor
 
 	public override void CopyFrom(Texture texture, bool parallel = true)
 	{
-		if (texture is ArrayGrid array && array.size == size)
+		if (texture is ArrayGrid<T> array && array.size == size)
 		{
 			//Span is faster on dotnet core
 #if NETCOREAPP
 			array.pixels.AsSpan().CopyTo(pixels);
 #else
-				Array.Copy(array.pixels, pixels, length);
+			Array.Copy(array.pixels, pixels, length);
 #endif
 		}
 		else base.CopyFrom(texture, parallel);

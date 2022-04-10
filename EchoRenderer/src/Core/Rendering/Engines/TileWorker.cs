@@ -4,6 +4,7 @@ using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Evaluators;
@@ -144,8 +145,8 @@ public class TileWorker : IDisposable
 		Sample(profile.PixelSample);
 
 		//Adaptive sampling (temporary)
-		float deviation = (float)pixel.Deviation.Clamp();
-		Sample((int)(deviation * profile.AdaptiveSample));
+		// float deviation = (float)pixel.Deviation.Clamp();
+		// Sample((int)(deviation * profile.AdaptiveSample));
 
 		//Store pixel
 		pixel.Store(renderBuffer, position);
@@ -162,7 +163,7 @@ public class TileWorker : IDisposable
 				//Sample radiance
 				Float2 uv = (position + offset) * renderBuffer.sizeR - Float2.Half;
 				Ray ray = profile.Scene.camera.GetRay(uv.ReplaceY(uv.Y * aspect));
-				Float3 radiance = evaluator.Evaluate(ray, profile, arena);
+				RGB128 radiance = evaluator.Evaluate(ray, profile, arena);
 
 				arena.allocator.Release();
 
