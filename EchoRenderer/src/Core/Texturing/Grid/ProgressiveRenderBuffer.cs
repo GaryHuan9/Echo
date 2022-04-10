@@ -4,6 +4,7 @@ using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing.Grid;
@@ -36,7 +37,7 @@ public class ProgressiveRenderBuffer : RenderBuffer
 	/// When writing to one pixel, this special setter will write that same color to every pixel after this pixel in
 	/// the same <see cref="RenderBuffer.MajorAxis"/> that has not been written. Auxiliary data will not be assigned.
 	/// </summary>
-	public override unsafe RGBA128 this[Int2 position]
+	public override unsafe RGB128 this[Int2 position]
 	{
 		set
 		{
@@ -59,11 +60,11 @@ public class ProgressiveRenderBuffer : RenderBuffer
 				write |= 1u << location;       //Reference write to flag segment
 				uint flag = write >> location; //Jump to current flag bit
 
-				fixed (RGBA128* pointer0 = &pixels[index])    //Use pointers to assign to array in chunks
+				fixed (RGB128* pointer0 = &pixels[index])    //Use pointers to assign to array in chunks
 				fixed (byte* pointer1 = &bytes[flipped * 4]) //Create pointer using inverted index
 				{
 					//Write colors
-					RGBA128* pPixel = pointer0 - 1;
+					RGB128* pPixel = pointer0 - 1;
 					uint* pBytes = (uint*)pointer1 - 1;
 
 					for (int i = offset; i < size[MajorAxis]; i++)

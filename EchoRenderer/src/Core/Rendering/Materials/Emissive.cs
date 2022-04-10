@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -21,7 +22,7 @@ public class Emissive : Material, IEmissive
 	/// <inheritdoc/>
 	public float Power { get; private set; }
 
-	RGBA128 emission;
+	RGB128 emission;
 
 	public override void Prepare()
 	{
@@ -46,7 +47,7 @@ public class Emissive : Material, IEmissive
 		});
 
 		//Calculate emission and power from total sum
-		emission = ((RGBA128)total.Result / size.Product).AlphaOne;
+		emission = ((RGB128)total.Result / size.Product).AlphaOne;
 		Power = emission.Luminance * Scalars.Tau;
 	}
 
@@ -57,7 +58,7 @@ public class Emissive : Material, IEmissive
 	}
 
 	/// <inheritdoc/>
-	public RGBA128 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
+	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
 }
 
 /// <summary>
@@ -75,5 +76,5 @@ public interface IEmissive
 	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
 	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
 	/// </summary>
-	public RGBA128 Emit(in GeometryPoint point, in Float3 outgoing);
+	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing);
 }
