@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -36,7 +36,7 @@ public class PathTracedEvaluator : Evaluator
 	//same length as the word 'scatter'.
 
 	[SkipLocalsInit]
-	public override Float3 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
+	public override RGB128 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
 	{
 		Allocator allocator = arena.allocator;
 		var distribution = arena.Distribution;
@@ -45,7 +45,7 @@ public class PathTracedEvaluator : Evaluator
 		var path = new Path(ray);
 
 		//Quick exit with ambient light if no intersection
-		if (!path.FindNext(scene, allocator)) return EvaluateAllAmbient();
+		if (!path.Advance(scene, allocator)) return EvaluateAllAmbient();
 
 		//Allocate memory for samples used for lights
 		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
@@ -66,12 +66,12 @@ public class PathTracedEvaluator : Evaluator
 			if (bounce.IsSpecular)
 			{
 				//Check if the path is exhausted
-				if (path.Advance(bounce, Survivability, distribution.Next1D())) break;
+				if (path.Continue(bounce, Survivability, distribution.Next1D())) break;
 
 				//Begin finding a new bounce
 				allocator.Restart();
 
-				if (!path.FindNext(scene, allocator))
+				if (!path.Advance(scene, allocator))
 				{
 					//None found, accumulate ambient and exit
 					path.Contribute(EvaluateAllAmbient());
@@ -84,7 +84,7 @@ public class PathTracedEvaluator : Evaluator
 			else
 			{
 				//Select light from scene for MIS
-				ILight light = scene.PickLight(lightSamples, allocator, out float lightPdf);
+				(ILight light, float lightPdf) = scene.PickLight(lightSamples, allocator);
 
 				float weight = 1f / lightPdf;
 				var area = light as IAreaLight;
@@ -97,12 +97,12 @@ public class PathTracedEvaluator : Evaluator
 					weight *= PowerHeuristic(bounce.pdf, area!.ProbabilityDensity(path.touch.point, bounce.incident));
 				}
 
-				if (path.Advance(bounce, Survivability, distribution.Next1D())) break; //Path exhausted
+				if (path.Continue(bounce, Survivability, distribution.Next1D())) break; //Path exhausted
 
 				allocator.Restart();
 
 				//Add ambient light and exit if no intersection
-				if (!path.FindNext(scene, allocator))
+				if (!path.Advance(scene, allocator))
 				{
 					if (area is AmbientLight ambient) path.Contribute(weight * ambient.Evaluate(path.CurrentDirection));
 					break;
@@ -122,7 +122,7 @@ public class PathTracedEvaluator : Evaluator
 		return path.Result;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		Float3 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(path.CurrentDirection);
+		RGB128 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(path.CurrentDirection);
 	}
 
 	protected override ContinuousDistribution CreateDistribution(RenderProfile profile) => new StratifiedDistribution(profile.TotalSample);
@@ -131,27 +131,27 @@ public class PathTracedEvaluator : Evaluator
 	/// Importance samples <paramref name="light"/> at <paramref name="touch"/> and returns the sampled radiant.
 	/// If multiple importance sampling is used, <paramref name="mis"/> will be assigned to true, otherwise false.
 	/// </summary>
-	static Float3 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedScene scene, out bool mis)
+	static RGB128 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedScene scene, out bool mis)
 	{
 		//Importance sample light
 		mis = light is IAreaLight;
 
-		Float3 radiant = light.Sample(touch.point, sample, out Float3 incident, out float travel);
+		(RGB128 radiant, float radiantPdf) = light.Sample(touch.point, sample, out Float3 incident, out float travel);
 
-		if (!FastMath.Positive(radiantPdf) | !radiant.PositiveRadiance()) return Float3.Zero;
+		if (!FastMath.Positive(radiantPdf) | radiant.IsZero) return RGB128.Black;
 
 		//Evaluate bsdf at the direction sampled for our light
 		ref readonly Float3 outgoing = ref touch.outgoing;
-		Float3 scatter = touch.bsdf.Evaluate(outgoing, incident);
+		RGB128 scatter = touch.bsdf.Evaluate(outgoing, incident);
 		scatter *= touch.NormalDot(incident);
 
 		//Conditionally terminate if radiant cannot be positive
-		if (!scatter.PositiveRadiance()) return Float3.Zero;
+		if (scatter.IsZero) return RGB128.Black;
 		var query = touch.SpawnOcclude(incident, travel);
-		if (scene.Occlude(ref query)) return Float3.Zero;
+		if (scene.Occlude(ref query)) return RGB128.Black;
 
 		//Calculate final radiant
-		radiant *= 1f / radiantPdf;
+		radiant /= radiantPdf;
 		if (!mis) return scatter * radiant;
 
 		float pdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
@@ -169,23 +169,23 @@ public class PathTracedEvaluator : Evaluator
 	{
 		public Path(in Ray ray)
 		{
-			Result = Float3.Zero;
-			energy = Float3.One;
+			Result = RGB128.Black;
+			energy = RGB128.White;
 			Unsafe.SkipInit(out touch);
 			query = new TraceQuery(ray);
 		}
 
-		public Float3 Result { get; private set; }
+		public RGB128 Result { get; private set; }
 		public Touch touch;
 
+		RGB128 energy;
 		TraceQuery query;
-		Float3 energy;
 
-		public Float3 CurrentDirection => query.ray.direction;
+		public readonly Float3 CurrentDirection => query.ray.direction;
 
-		public Material Material => touch.shade.material;
+		public readonly Material Material => touch.shade.material;
 
-		public bool FindNext(PreparedScene scene, Allocator allocator)
+		public bool Advance(PreparedScene scene, Allocator allocator)
 		{
 			while (scene.Trace(ref query))
 			{
@@ -201,18 +201,18 @@ public class PathTracedEvaluator : Evaluator
 			return false;
 		}
 
-		public bool Advance(in Bounce bounce, float survivability, Sample1D sample)
+		public bool Continue(in Bounce bounce, float survivability, Sample1D sample)
 		{
 			energy *= bounce.scatter / bounce.pdf;
 
 			//Conditional path termination with Russian Roulette
-			bool exhausted = RussianRoulette(ref energy, survivability, sample);
-			if (!exhausted) query = query.SpawnTrace(bounce.incident);
+			bool survived = RussianRoulette(ref energy, survivability, sample);
+			if (survived) query = query.SpawnTrace(bounce.incident);
 
-			return exhausted;
+			return survived;
 		}
 
-		public void Contribute(in Float3 value) => Result += energy * value;
+		public void Contribute(in RGB128 value) => Result += energy * value; //OPTIMIZE: fma
 
 		public void ContributeEmissive(float weight = 1f)
 		{
@@ -221,15 +221,14 @@ public class PathTracedEvaluator : Evaluator
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool RussianRoulette(ref Float3 energy, float survivability, Sample1D sample)
+		static bool RussianRoulette(ref RGB128 energy, float survivability, Sample1D sample)
 		{
-			float luminance = PackedMath.GetLuminance(Utilities.ToVector(energy));
-			float probability = FastMath.Clamp01(survivability * luminance);
+			float rate = FastMath.Clamp01(survivability * energy.Luminance);
 
-			if (sample >= probability) return true;
+			if (sample >= rate) return false;
 
-			energy *= 1f / probability;
-			return false;
+			energy /= rate;
+			return true;
 		}
 	}
 
@@ -237,23 +236,21 @@ public class PathTracedEvaluator : Evaluator
 	{
 		public Bounce(in Touch touch, Sample2D sample)
 		{
-			FunctionType type = TryExcludeSpecular(touch.bsdf);
-
-			scatter = touch.bsdf.Sample
+			(scatter, pdf) = touch.bsdf.Sample
 			(
 				touch.outgoing, sample, out incident,
-				out pdf, out function, type
+				out function, TryExcludeSpecular(touch.bsdf)
 			);
 
 			scatter *= touch.NormalDot(incident);
 		}
 
-		public readonly Float3 scatter;
+		public readonly RGB128 scatter;
 		public readonly Float3 incident;
 		public readonly float pdf;
 		readonly BxDF function;
 
-		public bool IsZero => !FastMath.Positive(pdf) | !scatter.PositiveRadiance();
+		public bool IsZero => !FastMath.Positive(pdf) | scatter.IsZero;
 
 		public bool IsSpecular => function.type.Any(FunctionType.specular);
 

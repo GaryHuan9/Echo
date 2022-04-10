@@ -63,7 +63,7 @@ public abstract class BxDF
 		{
 			Probable<RGB128> sampled = Sample(outgoing, sample, out Float3 incident);
 
-			if (sampled.IsZero | sampled.content.IsZero) continue;
+			if (sampled.NotPossible | sampled.content.IsZero) continue;
 
 			result += sampled.content * FastMath.Abs(CosineP(incident)) / sampled.pdf;
 		}
@@ -86,7 +86,7 @@ public abstract class BxDF
 			Float3 outgoing = samples0[i].UniformHemisphere;
 			Probable<RGB128> sampled = Sample(outgoing, samples1[i], out Float3 incident);
 
-			if (sampled.IsZero | sampled.content.IsZero) continue;
+			if (sampled.NotPossible | sampled.content.IsZero) continue;
 
 			result += sampled.content * FastMath.Abs(CosineP(outgoing) * CosineP(incident))
 					/ (sampled.pdf * Sample2D.UniformHemispherePdf);

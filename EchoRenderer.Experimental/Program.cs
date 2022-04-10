@@ -2,7 +2,9 @@
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Running;
 using CodeHelpers.Diagnostics;
+using EchoRenderer.Core.Aggregation.Acceleration;
 using EchoRenderer.Experimental.Benchmarks;
+using JitBuddy;
 
 namespace EchoRenderer.Experimental;
 
@@ -10,14 +12,21 @@ public class Program
 {
 	static void Main()
 	{
+		TestJitter();
 		// TestUnmanaged();
 
 		// BenchmarkRunner.Run<PackedFloats>();
-		BenchmarkRunner.Run<Aggregators>();
+		// BenchmarkRunner.Run<Aggregators>();
 		// BenchmarkRunner.Run<RadixSort>();
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
+	}
+
+	static void TestJitter()
+	{
+		var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
+		DebugHelper.Log(method.ToAsm());
 	}
 
 	static unsafe void TestUnmanaged()

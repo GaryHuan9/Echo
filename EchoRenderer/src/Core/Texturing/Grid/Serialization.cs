@@ -11,9 +11,7 @@ using CodeHelpers;
 using CodeHelpers.Files;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
 using EchoRenderer.Common.Coloring;
-using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.Texturing.Grid;

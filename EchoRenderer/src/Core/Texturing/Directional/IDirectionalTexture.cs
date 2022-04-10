@@ -1,11 +1,8 @@
 using System;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
-using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Core.Rendering.Distributions;

@@ -134,40 +134,39 @@ public class BSDF
 			Utilities.Skip(out incidentWorld);
 
 			selected = default;
-			return Probable<RGB128>.Zero;
+			return Probable<RGB128>.Impossible;
 		}
 
 		selected = functions[index];
 
 		//Sample the selected function
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Probable<RGB128> sampled = selected.Sample(outgoing, sample, out Float3 incident);
+		Probable<RGB128> probable = selected.Sample(outgoing, sample, out Float3 incident);
 
-		if (sampled.IsZero | sampled.content.IsZero)
+		if (probable.NotPossible | probable.content.IsZero)
 		{
 			incidentWorld = Float3.Zero;
-			return Probable<RGB128>.Zero;
+			return Probable<RGB128>.Impossible;
 		}
 
 		incidentWorld = transform.LocalToWorld(incident);
 
 		//If there is only one function, we have finished
-		if (matched == 1) return sampled;
+		if (matched == 1) return probable;
 		Assert.IsTrue(matched > 1);
 
 		//If the selected function is specular, we are also finished
 		if (selected.type.Any(FunctionType.specular))
 		{
 			//Specular functions are Dirac delta distributions
-			Assert.AreEqual(sampled.pdf, 1f);
-			return (sampled, 1f / matched);
+			Assert.AreEqual(probable.pdf, 1f);
+			return (probable, 1f / matched);
 		}
 
 		//Sample the other matching functions
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
 
-		var total = sampled.content;
-		float pdf = sampled.pdf;
+		(RGB128 total, float pdf) = probable;
 
 		for (int i = 0; i < count; i++)
 		{

@@ -1,7 +1,9 @@
 using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
 
@@ -10,22 +12,25 @@ namespace EchoRenderer.Core.Texturing.Grid;
 /// <summary>
 /// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and <see cref="size"/> (exclusive).
 /// </summary>
-public abstract partial class TextureGrid<T> : Texture where T : IColor
+public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 {
-	protected TextureGrid(Int2 size, IFilter filter) : base(Wrappers.repeat)
+	protected TextureGrid(Int2 size)
 	{
-		Assert.IsTrue(size > Int2.Zero);
+		if (!(size > Int2.Zero)) throw ExceptionHelper.Invalid(nameof(size), size, InvalidType.outOfBounds);
 
 		this.size = size;
 		sizeR = 1f / size;
 		oneLess = size - Int2.One;
 
 		aspect = (float)size.X / size.Y;
-		Filter = filter;
+		power = IsPowerOfTwo(size);
+
+		Wrapper = Wrappers.clamp;
+		Filter = Filters.bilinear;
 	}
 
 	/// <summary>
-	/// The size of this <see cref="Texture"/> (exclusive),
+	/// The size of this <see cref="TextureGrid{T}"/> (exclusive),
 	/// </summary>
 	public readonly Int2 size;
 
@@ -35,16 +40,33 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor
 	public readonly Float2 sizeR;
 
 	/// <summary>
-	/// The <see cref="size"/> of this <see cref="Texture"/> minus one.
+	/// The <see cref="size"/> of this <see cref="TextureGrid{T}"/> minus <see cref="Int2.One"/>.
 	/// </summary>
 	public readonly Int2 oneLess;
 
 	/// <summary>
-	/// The aspect ratio of this <see cref="Texture"/>, equals to width over height.
+	/// The aspect ratio of this <see cref="TextureGrid{T}"/>, equals to width over height.
 	/// </summary>
 	public readonly float aspect;
 
+	/// <summary>
+	/// If the <see cref="size"/> of this <see cref="TextureGrid{T}"/> is a power of two on any axis, then the
+	/// respective component of this field will be that power, otherwise the component will be a negative number.
+	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where N is a positive number.
+	/// </summary>
+	public readonly Int2 power;
+
+	NotNull<object> _wrapper;
 	NotNull<object> _filter;
+
+	/// <summary>
+	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid{T}"/> to convert uv texture coordinates.
+	/// </summary>
+	public IWrapper Wrapper
+	{
+		get => (IWrapper)_wrapper.Value;
+		set => _wrapper = (object)value;
+	}
 
 	/// <summary>
 	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid{T}"/> to retrieve pixels as <see cref="RGBA128"/>.
@@ -80,8 +102,8 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor
 
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
-		Assert.IsFalse(float.IsNaN(uv.Product));
-		return Filter.Convert(this, uv);
+		Assert.IsTrue(float.IsFinite(uv.Sum));
+		return Filter.Evaluate(this, uv);
 	}
 
 	/// <summary>
@@ -99,9 +121,9 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor
 	/// </summary>
 	public virtual void CopyFrom(Texture texture, bool parallel = true) => ForEach
 	(
-		texture is TextureGrid grid && grid.size == size ?
+		texture is TextureGrid<T> grid && grid.size == size ?
 			position => this[position] = grid[position] :
-			position => this[position] = texture[ToUV(position)], parallel
+			position => this[position] = texture[ToUV(position)].As<T>(), parallel
 	);
 
 	/// <summary>
@@ -116,11 +138,22 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor
 		}
 	}
 
+	public override string ToString() => $"{base.ToString()} with size {size}";
+
 	protected void AssertAlignedSize(TextureGrid<T> texture)
 	{
 		if (texture.size == size) return;
 		throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
 	}
 
-	public override string ToString() => $"{base.ToString()} with size {size}";
+	static Int2 IsPowerOfTwo(Int2 size)
+	{
+		Assert.IsTrue(size > Int2.Zero);
+
+		return new Int2
+		(
+			size.X.IsPowerOfTwo() ? BitOperations.Log2((uint)size.X) : -1,
+			size.Y.IsPowerOfTwo() ? BitOperations.Log2((uint)size.Y) : -1
+		);
+	}
 }

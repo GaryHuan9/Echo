@@ -15,15 +15,13 @@ public class Cubemap : IDirectionalTexture
 {
 	public Cubemap()
 	{
-		int length = names.Length;
-
-		textures = new NotNull<Texture>[length];
-		for (int i = 0; i < length; i++) textures[i] = Texture.black;
+		textures = new NotNull<Texture>[fileNames.Length];
+		foreach (ref var texture in textures.AsSpan()) texture = Texture.black;
 	}
 
 	public Cubemap(ReadOnlySpan<Texture> textures)
 	{
-		int length = names.Length;
+		int length = fileNames.Length;
 
 		int min = Math.Min(length, textures.Length);
 		this.textures = new NotNull<Texture>[length];
@@ -33,14 +31,14 @@ public class Cubemap : IDirectionalTexture
 
 	public Cubemap(string path)
 	{
-		int length = names.Length;
+		int length = fileNames.Length;
 
 		var tasks = new Task<ArrayGrid>[length];
 		textures = new NotNull<Texture>[length];
 
 		for (int i = 0; i < length; i++)
 		{
-			string fullPath = Path.Combine(path, names[i]);
+			string fullPath = Path.Combine(path, fileNames[i]);
 			tasks[i] = TextureGrid.LoadAsync(fullPath);
 		}
 
@@ -74,7 +72,7 @@ public class Cubemap : IDirectionalTexture
 		set => textures[index] = value;
 	}
 
-	static readonly string[] names = { "px", "nx", "py", "ny", "pz", "nz" };
+	static readonly string[] fileNames = { "px", "nx", "py", "ny", "pz", "nz" };
 
 	/// <inheritdoc/>
 	public void Prepare() => Average = this.ConvergeAverage();
@@ -96,7 +94,7 @@ public class Cubemap : IDirectionalTexture
 			_ => throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.unexpected)
 		};
 
-		uv /= target.ExtractComponent(direction);
-		return this[index][uv / 2f + Float2.Half];
+		uv *= 0.5f / target.ExtractComponent(direction);
+		return (RGB128)this[index][uv + Float2.Half];
 	}
 }
