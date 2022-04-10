@@ -5,6 +5,7 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -77,18 +78,18 @@ public class GaussianBlur : IDisposable
 
 		for (int x = 0; x < workerBuffer.size.X; x++)
 		{
-			RGBA128 sourceHead = Get(x + radius);
-			RGBA128 sourceTail = Get(x - radius);
+			RGB128 sourceHead = Get(x + radius);
+			RGB128 sourceTail = Get(x - radius);
 
 			accumulator += sourceHead;
 
-			workerBuffer[new Int2(x, vertical)] = (RGBA128)(accumulator.Result * diameterR);
+			workerBuffer[new Int2(x, vertical)] = (RGB128)(accumulator.Result * diameterR);
 
 			accumulator -= sourceTail;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		RGBA128 Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.X), vertical)];
+		RGB128 Get(int x) => sourceBuffer[new Int2(x.Clamp(0, sourceBuffer.oneLess.X), vertical)];
 	}
 
 	void VerticalBlurPass(int horizontal)
@@ -99,18 +100,18 @@ public class GaussianBlur : IDisposable
 
 		for (int y = 0; y < sourceBuffer.size.Y; y++)
 		{
-			RGBA128 sourceHead = Get(y + radius);
-			RGBA128 sourceTail = Get(y - radius);
+			RGB128 sourceHead = Get(y + radius);
+			RGB128 sourceTail = Get(y - radius);
 
 			accumulator += sourceHead;
 
-			sourceBuffer[new Int2(horizontal, y)] = (RGBA128)(accumulator.Result * diameterR);
+			sourceBuffer[new Int2(horizontal, y)] = (RGB128)(accumulator.Result * diameterR);
 
 			accumulator -= sourceTail;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		RGBA128 Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.Y))];
+		RGB128 Get(int y) => workerBuffer[new Int2(horizontal, y.Clamp(0, workerBuffer.oneLess.Y))];
 	}
 
 	void BuildRadii() => radii ??= BuildRadii(deviation, quality, out _deviationActual);

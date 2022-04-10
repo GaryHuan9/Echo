@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 
 namespace EchoRenderer.Core.Texturing;
@@ -26,7 +27,7 @@ public abstract class Texture
 	/// <summary>
 	/// The final <see cref="Tint"/> applied to this <see cref="Texture"/>.
 	/// </summary>
-	public Tint Tint { get; set; } = Tint.identity;
+	public Tint Tint { get; set; } = Tint.Identity;
 
 	/// <summary>
 	/// The resolution that should be used if discrete sampling is to be performed on this <see cref="Texture"/>.

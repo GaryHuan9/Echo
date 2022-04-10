@@ -1,6 +1,7 @@
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -22,7 +23,7 @@ public class PointLight : LightSource
 		_power = 4f * Scalars.Pi * PackedMath.GetLuminance(Utilities.ToVector(Intensity));
 	}
 
-	public override Probable<RGBA128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
+	public override Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
 	{
 		Float3 delta = Position - point;
 		float travel2 = delta.SquaredMagnitude;
@@ -31,7 +32,7 @@ public class PointLight : LightSource
 		{
 			incident = Float3.Zero;
 			travel = 0f;
-			return Probable<RGBA128>.Zero;
+			return Probable<RGB128>.Zero;
 		}
 
 		travel = FastMath.Sqrt0(travel2);

@@ -7,6 +7,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
@@ -33,7 +34,7 @@ public class CylindricalTexture : IDirectionalTexture
 	/// </summary>
 	const float Jacobian = 1f / Scalars.Tau / Scalars.Pi;
 
-	public RGBA128 Average { get; private set; }
+	public RGB128 Average { get; private set; }
 
 	public void Prepare()
 	{
@@ -64,8 +65,8 @@ public class CylindricalTexture : IDirectionalTexture
 			for (int x = 1; x <= size.X; x++)
 			{
 				//Calculate the average of the four corners
-				RGBA128 current = Grab(x);
-				RGBA128 average = (previous + current) / 4f;
+				RGB128 current = Grab(x);
+				RGB128 average = (previous + current) / 4f;
 
 				//Accumulate horizontally
 				previous = current;
@@ -79,7 +80,7 @@ public class CylindricalTexture : IDirectionalTexture
 
 			//Returns the sum of the values at (x, y) and (x, y + 1)
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			RGBA128 Grab(int x)
+			RGB128 Grab(int x)
 			{
 				var lower = texture[new Float2(x, y + 0f) * sizeR];
 				var upper = texture[new Float2(x, y + 1f) * sizeR];
@@ -94,21 +95,21 @@ public class CylindricalTexture : IDirectionalTexture
 
 		//Construct distribution and calculate average from total sum
 		distribution = new DiscreteDistribution2D(weights, size.X);
-		Average = (RGBA128)(total.Result * 2f * Scalars.PiR / size.Product);
+		Average = (RGB128)(total.Result * 2f * Scalars.PiR / size.Product);
 	}
 
 	/// <inheritdoc/>
-	public RGBA128 Evaluate(in Float3 direction) => Texture[ToUV(direction)];
+	public RGB128 Evaluate(in Float3 direction) => Texture[ToUV(direction)];
 
 	/// <inheritdoc/>
-	public Probable<RGBA128> Sample(Sample2D sample, out Float3 incident)
+	public Probable<RGB128> Sample(Sample2D sample, out Float3 incident)
 	{
 		Probable<Sample2D> probable = distribution.Sample(sample);
 
 		if (probable.IsZero)
 		{
 			incident = Float3.Zero;
-			return Probable<RGBA128>.Zero;
+			return Probable<RGB128>.Zero;
 		}
 
 		Float2 uv = probable.content;
@@ -119,7 +120,7 @@ public class CylindricalTexture : IDirectionalTexture
 		FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
 		FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
 
-		if (sinP <= 0f) return (RGBA128.Black, 0f);
+		if (sinP <= 0f) return (RGB128.Black, 0f);
 
 		incident = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
 		return (Texture[uv], probable.pdf * Jacobian / sinP);

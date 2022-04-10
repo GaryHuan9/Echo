@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.PostProcess.Operators;
@@ -36,7 +37,7 @@ public class Bloom : PostProcessingWorker
 
 	void LuminancePass(Int2 position)
 	{
-		RGBA128 source = renderBuffer[position];
+		RGB128 source = renderBuffer[position];
 		float luminance = source.Luminance;
 
 		if (luminance > Threshold)
@@ -44,13 +45,13 @@ public class Bloom : PostProcessingWorker
 			float excess = (luminance - Threshold) / luminance;
 			workerBuffer[position] = source * excess * Intensity;
 		}
-		else workerBuffer[position] = RGBA128.Black;
+		else workerBuffer[position] = RGB128.Black;
 	}
 
 	void CombinePass(Int2 position)
 	{
-		RGBA128 source = workerBuffer[position];
-		RGBA128 target = renderBuffer[position];
+		RGB128 source = workerBuffer[position];
+		RGB128 target = renderBuffer[position];
 		renderBuffer[position] = target + source;
 	}
 }

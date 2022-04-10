@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 
@@ -17,7 +18,7 @@ public class OrenNayar : BxDF
 		FunctionType.diffuse
 	) { }
 
-	public void Reset(in RGBA128 newReflectance, float newSigma)
+	public void Reset(in RGB128 newReflectance, float newSigma)
 	{
 		reflectance = newReflectance;
 		sigma = newSigma;
@@ -28,13 +29,13 @@ public class OrenNayar : BxDF
 		b = 0.45f * sigma2 / (sigma2 + 0.09f);
 	}
 
-	RGBA128 reflectance;
+	RGB128 reflectance;
 	float sigma;
 
 	float a;
 	float b;
 
-	public override RGBA128 Evaluate(in Float3 outgoing, in Float3 incident)
+	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
 		float sinO = SineP(outgoing);
 		float sinI = SineP(incident);

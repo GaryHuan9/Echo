@@ -1,5 +1,6 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
@@ -46,7 +47,7 @@ public class GeometryLight : IAreaLight
 	}
 
 	/// <inheritdoc/>
-	public Probable<RGBA128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
+	public Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
 	{
 		Probable<GeometryPoint> sampled = scene.Sample(token, point, sample);
 
@@ -57,7 +58,7 @@ public class GeometryLight : IAreaLight
 		{
 			incident = Float3.Zero;
 			travel = 0f;
-			return Probable<RGBA128>.Zero;
+			return Probable<RGB128>.Zero;
 		}
 
 		travel = FastMath.Sqrt0(travel2);
