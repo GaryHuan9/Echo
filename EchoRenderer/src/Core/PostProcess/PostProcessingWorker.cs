@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Texturing;
 using EchoRenderer.Core.Texturing.Grid;
 
@@ -29,7 +30,7 @@ public abstract class PostProcessingWorker
 	/// Run <paramref name="passAction"/> through every integer position on <paramref name="buffer"/>.
 	/// NOTE: If <paramref name="buffer"/> is null, <see cref="renderBuffer"/> will be used instead.
 	/// </summary>
-	public void RunPass(PassAction passAction, TextureGrid buffer = null)
+	public void RunPass(PassAction passAction, TextureGrid<RGB128> buffer = null)
 	{
 		if (Aborted) return;
 		buffer ??= renderBuffer;
@@ -44,7 +45,7 @@ public abstract class PostProcessingWorker
 	/// <summary>
 	/// Run a pass to copy the content of <paramref name="from"/> to <paramref name="to"/>.
 	/// </summary>
-	public void RunCopyPass(Texture from, TextureGrid to) => to.CopyFrom(from);
+	public void RunCopyPass(Texture from, TextureGrid to) => to.CopyFrom(@from);
 
 	/// <summary>
 	/// Run a pass along every horizontal position on <paramref name="buffer"/>.

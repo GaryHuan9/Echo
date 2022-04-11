@@ -5,19 +5,6 @@ using EchoRenderer.Common.Coloring;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
-public static class ArrayGrid
-{
-	/// <summary>
-	/// This is the axis in which <see cref="ArrayGrid{T}.ToPosition(int)"/> is going to move first if the input index is incremented.
-	/// </summary>
-	public const int MajorAxis = 0;
-
-	/// <summary>
-	/// The opposite axis of <see cref="MajorAxis"/>.
-	/// </summary>
-	public const int MinorAxis = MajorAxis ^ 1;
-}
-
 /// <summary>
 /// The default <see cref="TextureGrid{T}"/>; stores RGBA color information with 32 bits per channel, supports full float range.
 /// </summary>
@@ -29,8 +16,18 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 		pixels = new T[length];
 	}
 
-	protected readonly int length;
-	protected readonly T[] pixels;
+	readonly int length;
+	readonly T[] pixels;
+
+	/// <summary>
+	/// This is the axis in which <see cref="ToPosition"/> is going to move first if the input index is incremented.
+	/// </summary>
+	public const int MajorAxis = 0;
+
+	/// <summary>
+	/// The opposite axis of <see cref="MajorAxis"/>.
+	/// </summary>
+	public const int MinorAxis = MajorAxis ^ 1;
 
 	public override T this[Int2 position]
 	{
@@ -58,7 +55,7 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 		return new Int2(index % size.X, index / size.X);
 	}
 
-	public override void CopyFrom(Texture texture, bool parallel = true)
+	public override void CopyFrom(Texture texture)
 	{
 		if (texture is ArrayGrid<T> array && array.size == size)
 		{
@@ -69,6 +66,8 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 			Array.Copy(array.pixels, pixels, length);
 #endif
 		}
-		else base.CopyFrom(texture, parallel);
+		else base.CopyFrom(texture);
 	}
+
+	protected static T[] AccessArray(ArrayGrid<T> texture) => texture.pixels;
 }
