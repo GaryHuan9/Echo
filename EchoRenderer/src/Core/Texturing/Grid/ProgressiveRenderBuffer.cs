@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Threading;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
@@ -96,9 +97,9 @@ public class ProgressiveRenderBuffer : RenderBuffer
 
 	readonly object[] lockers; //Lockers used for concurrent writing in the setter
 
-	public override void CopyFrom(Texture texture, bool parallel = true)
+	public override void CopyFrom(Texture texture)
 	{
-		base.CopyFrom(texture, parallel);
+		base.CopyFrom(texture);
 
 		if (texture is not ProgressiveRenderBuffer buffer) return;
 
