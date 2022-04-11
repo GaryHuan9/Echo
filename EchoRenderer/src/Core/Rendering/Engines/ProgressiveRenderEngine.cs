@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Texturing.Grid;
@@ -198,8 +199,8 @@ public class ProgressiveRenderEngine : IDisposable
 
 		public void Recreate(RenderBuffer newBuffer)
 		{
-			RebuildMajor(ref patternMajor, newBuffer.size[ArrayGrid.MajorAxis]);
-			RebuildPattern(ref patternMinor, newBuffer.size[ArrayGrid.MinorAxis]);
+			RebuildMajor(ref patternMajor, newBuffer.size[ArrayGrid<RGB128>.MajorAxis]);
+			RebuildPattern(ref patternMinor, newBuffer.size[ArrayGrid<RGB128>.MinorAxis]);
 
 			int oldLength = Buffer?.size.Product ?? 0;
 			int newLength = newBuffer.size.Product;
@@ -214,7 +215,7 @@ public class ProgressiveRenderEngine : IDisposable
 
 		public Int2 GetPosition(int index) => Int2.Create
 		(
-			ArrayGrid.MajorAxis,
+			ArrayGrid<RGB128>.MajorAxis,
 			patternMajor[index / patternMinor.Length],
 			patternMinor[index % patternMinor.Length]
 		);
