@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using CodeHelpers;
+using CodeHelpers.Collections;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
 
@@ -8,52 +12,53 @@ namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
 /// A <see cref="ArrayGrid{T}"/> of type <see cref="RGB128"/> primarily used as a rendering destination.
-/// Allows for optional auxiliary data such as albedo, normal, or depth to support later reconstruction.
+/// Allows for optional auxiliary layers for data such as albedo, normal, or depth to support later reconstruction.
 /// </summary>
 public class RenderBuffer : ArrayGrid<RGB128>
 {
-	public RenderBuffer(Int2 size) : base(size) { }
+	public RenderBuffer(Int2 size) : base(size) => layers.Add("main", this);
 
-	public Float3 GetAlbedo(Int2 position) => albedos[ToIndex(position)];
-	public Float3 GetNormal(Int2 position) => normals[ToIndex(position)];
-	public float GetZDepth(Int2 position) => zDepths[ToIndex(position)];
-
-	public void SetAlbedo(Int2 position, Float3 value) => albedos[ToIndex(position)] = value;
-	public void SetNormal(Int2 position, Float3 value) => normals[ToIndex(position)] = value;
-	public void SetZDepth(Int2 position, float value) => zDepths[ToIndex(position)] = value;
+	readonly Dictionary<string, ArrayGrid<RGB128>> layers = new(StringComparer.InvariantCultureIgnoreCase);
 
 	/// <summary>
-	/// Creates and returns an <see cref="ArrayGrid"/> texture to visualize the <see cref="albedos"/> data.
+	/// Accesses the <see cref="ArrayGrid{T}"/> buffer layer named <paramref name="label"/>.
+	/// Exception is thrown if <paramref name="label"/> is not the name of any layer.
 	/// </summary>
-	public ArrayGrid CreateAlbedoTexture() => CreateTexture(albedos);
+	public TextureGrid<RGB128> this[string label] => layers[label];
 
 	/// <summary>
-	/// Creates and returns an <see cref="ArrayGrid"/> texture to visualize the <see cref="normals"/> data.
+	/// Creates a new layer named <paramref name="label"/>.
 	/// </summary>
-	public ArrayGrid CreateNormalTexture() => CreateTexture(normals);
-
-	public override void CopyFrom(Texture texture, bool parallel = true)
+	public void CreateLayer(string label)
 	{
-		base.CopyFrom(texture, parallel);
+		if (!layers.ContainsKey(label)) layers.Add(label, new ArrayGrid<RGB128>(size));
+		else throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
+	}
+
+	/// <summary>
+	/// Returns whether this <see cref="RenderBuffer"/> contains a buffer named <paramref name="label"/>.
+	/// </summary>
+	/// <param name="label"></param>
+	/// <returns></returns>
+	public bool HasLayer(string label) => layers.ContainsKey(label);
+
+	public override void CopyFrom(Texture texture)
+	{
+		base.CopyFrom(texture);
 
 		if (texture is not RenderBuffer buffer) return;
-		AssertAlignedSize(buffer); //TODO: remove this assert and interpolate the axillary data as well
 
-		Array.Copy(buffer.albedos, albedos, length);
-		Array.Copy(buffer.normals, normals, length);
-		Array.Copy(buffer.zDepths, zDepths, length);
+		Parallel.ForEach(layers, pair =>
+		{
+			var source = buffer.layers.TryGetValue(pair.Key);
+			if (source != null) pair.Value.CopyFrom(source);
+		});
 	}
 
 	/// <summary>
-	/// Completely empties this <see cref="RenderBuffer"/>
+	/// Completely empties the content of all of the layers of this <see cref="RenderBuffer"/>.
 	/// </summary>
-	public virtual void Clear()
-	{
-		Array.Clear(pixels, 0, length);
-		Array.Clear(albedos, 0, length);
-		Array.Clear(normals, 0, length);
-		Array.Clear(zDepths, 0, length);
-	}
+	public virtual void Clear() => Parallel.ForEach(layers, pair => Array.Clear(AccessArray(pair.Value)));
 
 	/// <summary>
 	/// Pins this <see cref="RenderBuffer"/> for various unmanaged access or pointer shenanigans.
@@ -61,49 +66,29 @@ public class RenderBuffer : ArrayGrid<RGB128>
 	/// </summary>
 	public Pin CreatePin() => new(this);
 
-	ArrayGrid CreateTexture(IReadOnlyList<Float3> data)
-	{
-		ArrayGrid texture = new ArrayGrid(size);
-		texture.ForEach(SetPixel);
-
-		return texture;
-
-		void SetPixel(Int2 position) => texture[position] = new RGB128(data[ToIndex(position)]);
-	}
-
-	//TODO: add serialization methods
-
-	public class Pin : IDisposable
+	public sealed class Pin : IDisposable
 	{
 		/// <summary>
 		/// Pins data inside <paramref name="buffer"/> for unmanaged use and holds pins until disposed.
 		/// </summary>
 		public Pin(RenderBuffer buffer)
 		{
-			colourPointer = CreatePointer(buffer.pixels, out colourHandle);
-			albedoPointer = CreatePointer(buffer.albedos, out albedoHandle);
-			normalPointer = CreatePointer(buffer.normals, out normalHandle);
+			layers = buffer.layers.ToDictionary(pair => pair.Key, pair =>
+			{
+				RGB128[] array = AccessArray(pair.Value);
+				var handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+				return (handle.AddrOfPinnedObject(), handle);
+			}, StringComparer.InvariantCultureIgnoreCase);
 		}
 
-		GCHandle colourHandle; //Cannot be readonly since GCHandle is a struct
-		GCHandle albedoHandle;
-		GCHandle normalHandle;
+		readonly Dictionary<string, (IntPtr pointer, GCHandle handle)> layers;
 
-		public readonly IntPtr colourPointer;
-		public readonly IntPtr albedoPointer;
-		public readonly IntPtr normalPointer;
+		public IntPtr this[string label] => layers[label].pointer;
 
 		public void Dispose()
 		{
-			colourHandle.Free();
-			albedoHandle.Free();
-			normalHandle.Free();
-		}
-
-		static IntPtr CreatePointer(object target, out GCHandle handle)
-		{
-			handle = GCHandle.Alloc(target, GCHandleType.Pinned);
-			return handle.AddrOfPinnedObject();
+			foreach (var pair in layers) pair.Value.handle.Free();
+			layers.Clear();
 		}
 	}
 }

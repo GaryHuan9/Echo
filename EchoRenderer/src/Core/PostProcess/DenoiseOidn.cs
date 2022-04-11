@@ -24,7 +24,7 @@ public class DenoiseOidn : PostProcessingWorker
 		try
 		{
 			using OidnDevice device = OidnDevice.CreateNew(OidnDevice.Type.automatic);
-			using OidnFilter filter = OidnFilter.CreateNew(device);
+			using OidnFilter filter = OidnFilter.CreateNew(device, "RT");
 
 			Int2 size = renderBuffer.size;
 			colors = new Float3[size.Product];
@@ -133,7 +133,7 @@ public class DenoiseOidn : PostProcessingWorker
 	{
 		readonly IntPtr handle;
 
-		public static OidnFilter CreateNew(OidnDevice device) => oidnNewFilter(device, "RT");
+		public static OidnFilter CreateNew(OidnDevice device, string type) => oidnNewFilter(device, type);
 
 		/// <inheritdoc cref="Set(string,IntPtr,Int2)"/>
 		public unsafe void Set(string name, Float3* texture, Int2 size) => Set(name, new IntPtr((float*)texture), size);

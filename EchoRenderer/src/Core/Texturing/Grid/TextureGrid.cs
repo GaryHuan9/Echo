@@ -119,11 +119,11 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	/// <summary>
 	/// Copies as much data from <paramref name="texture"/> to this <see cref="TextureGrid{T}"/> as fast as possible.
 	/// </summary>
-	public virtual void CopyFrom(Texture texture, bool parallel = true) => ForEach
+	public virtual void CopyFrom(Texture texture) => ForEach
 	(
 		texture is TextureGrid<T> grid && grid.size == size ?
 			position => this[position] = grid[position] :
-			position => this[position] = texture[ToUV(position)].As<T>(), parallel
+			position => this[position] = texture[ToUV(position)].As<T>()
 	);
 
 	/// <summary>
