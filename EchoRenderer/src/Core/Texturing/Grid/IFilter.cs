@@ -8,7 +8,7 @@ using EchoRenderer.Common.Coloring;
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// Retrieves the pixel value of a <see cref="TextureGrid{T}"/> using a texture coordinate.
+/// Retrieves the pixel value of a <see cref="TextureGrid"/> using a texture coordinate.
 /// </summary>
 public interface IFilter
 {

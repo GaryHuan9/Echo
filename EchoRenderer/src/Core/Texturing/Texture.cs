@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Packed;
+﻿using System;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
 
 namespace EchoRenderer.Core.Texturing;
@@ -26,6 +27,11 @@ public abstract class Texture
 	/// Accesses the content of this <see cref="Texture"/> at <paramref name="uv"/>.
 	/// </summary>
 	public RGBA128 this[Float2 uv] => Tint.Apply(Evaluate(uv));
+
+	/// <summary>
+	/// Copies as much data from <paramref name="texture"/> to this <see cref="Texture"/>.
+	/// </summary>
+	public virtual void CopyFrom(Texture texture) => throw new NotSupportedException();
 
 	/// <summary>
 	/// Gets the <see cref="RGBA128"/> pixel data at the indicated texture

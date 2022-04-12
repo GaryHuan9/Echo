@@ -1,5 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Mathematics.Randomization;
@@ -13,15 +14,15 @@ public class SummationTests
 	[Test]
 	public void Constructor()
 	{
-		var vector = Vector128.Create(1f, 0f, -1f, 100f);
-		Summation sum = new Summation(vector);
-		Assert.That(sum.Result, Is.EqualTo(vector));
+		var float4 = new Float4(1f, 0f, -1f, 100f);
+		var sum = new Summation(float4);
+		Assert.That(sum.Result, Is.EqualTo(float4));
 	}
 
 	[Test]
 	public void Zero()
 	{
-		Assert.That(Summation.Zero.Result, Is.EqualTo(Vector128<float>.Zero));
+		Assert.That(Summation.Zero.Result, Is.EqualTo(Float4.Zero));
 	}
 
 	[Test]
@@ -29,18 +30,17 @@ public class SummationTests
 	{
 		const int Length = 1000000;
 
-		var sum = new Summation(Vector128.Create((float)Length));
+		var sum = new Summation((Float4)Length);
 		long truth = Length;
 
 		for (int i = Length - 1; i >= 0; i--)
 		{
-			sum += Vector128.Create((float)i);
+			sum += (Float4)i;
 			truth += i;
 		}
 
-		var error = Sse.Subtract(sum.Result, Vector128.Create((float)truth));
-
-		Assert.That(PackedMath.AlmostZero(error));
+		Float4 error = sum.Result - (Float4)truth;
+		Assert.That(error, Is.EqualTo(Float4.Zero));
 	}
 
 	[Test]
@@ -54,11 +54,11 @@ public class SummationTests
 		for (int i = 0; i < 100000; i++)
 		{
 			float value = NextBiased(random);
-			sum += Vector128.Create(value);
+			sum += (Float4)value;
 			truth += (decimal)value;
 		}
 
-		Assert.That(truth, Is.EqualTo(sum.Result.GetElement(0)).Roughly());
+		Assert.That(truth, Is.EqualTo(sum.Result.X).Roughly());
 	}
 
 	[Test]
@@ -78,14 +78,14 @@ public class SummationTests
 			for (int j = 0; j < Length; j++)
 			{
 				float value = NextBiased(random);
-				sum += Vector128.Create(value);
+				sum += (Float4)value;
 				truth += (decimal)value;
 			}
 
 			total += sum;
 		}
 
-		Assert.That(truth, Is.EqualTo(total.Result.GetElement(0)).Roughly());
+		Assert.That(truth, Is.EqualTo(total.Result.X).Roughly());
 	}
 
 	static float NextBiased(IRandom random) => random.Next1() < 0.5f ? -random.Next1() : random.Next1() * 8f;

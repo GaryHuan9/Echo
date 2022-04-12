@@ -1,4 +1,6 @@
-﻿using System;
+﻿global using ArrayGrid = EchoRenderer.Core.Texturing.Grid.ArrayGrid<EchoRenderer.Common.Coloring.RGB128>;
+//
+using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
@@ -6,7 +8,7 @@ using EchoRenderer.Common.Coloring;
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// The default <see cref="TextureGrid{T}"/>; stores RGBA color information with 32 bits per channel, supports full float range.
+/// The default <see cref="TextureGrid"/>; stores RGBA color information with 32 bits per channel, supports full float range.
 /// </summary>
 public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 {
@@ -16,8 +18,8 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 		pixels = new T[length];
 	}
 
-	readonly int length;
-	readonly T[] pixels;
+	protected readonly int length;
+	protected readonly T[] pixels;
 
 	/// <summary>
 	/// This is the axis in which <see cref="ToPosition"/> is going to move first if the input index is incremented.
@@ -68,6 +70,4 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 		}
 		else base.CopyFrom(texture);
 	}
-
-	protected static T[] AccessArray(ArrayGrid<T> texture) => texture.pixels;
 }

@@ -11,7 +11,7 @@ namespace EchoRenderer.Common.Coloring;
 /// The value for these four channels are always larger than or equals to zero, or less than
 /// <see cref="float.PositiveInfinity"/>, and is never <see cref="float.NaN"/>.
 /// </summary>
-public readonly struct RGBA128 : IColor<RGBA128>, IFormattable
+public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public RGBA128(float r, float g, float b, float alpha = 1f) : this(CheckInput(new Float4(r, g, b, alpha))) { }
@@ -47,7 +47,10 @@ public readonly struct RGBA128 : IColor<RGBA128>, IFormattable
 	public override int GetHashCode() => d.GetHashCode();
 	public override string ToString() => ToString(string.Empty);
 
+	/// <inheritdoc/>
 	public RGBA128 ToRGBA128() => this;
+
+	/// <inheritdoc/>
 	public RGBA128 FromRGBA128(in RGBA128 value) => value;
 
 	public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);
@@ -58,44 +61,39 @@ public readonly struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// </summary>
 	public T As<T>() where T : IColor<T> => default(T)!.FromRGBA128(this);
 
+	/// <summary>
+	/// Parses the input <paramref name="span"/> as a <typeparamref name="T"/> and returns the
+	/// result. An exception is thrown if the <paramref name="span"/> format is invalid.
+	/// </summary>
+	public static T Parse<T>(ReadOnlySpan<char> span) where T : IColor<T> => Parse(span).As<T>();
+
+	/// <summary>
+	/// Parses the input <paramref name="span"/> as a <see cref="RGBA128"/> and returns the
+	/// result. An exception is thrown if the <paramref name="span"/> format is invalid.
+	/// </summary>
 	public static RGBA128 Parse(ReadOnlySpan<char> span)
 	{
 		if (TryParse(span, out RGBA128 result)) return result;
 		throw new Exception($"Cannot parse {span.ToString()}!");
 	}
 
-	public static bool TryParse(ReadOnlySpan<char> span, out RGBA128 result)
+	/// <summary>
+	/// Tries to parse the input <paramref name="span"/> as a <typeparamref name="T"/> and outputs
+	/// to <paramref name="result"/>. Returns true if the operation was successful, false otherwise.
+	/// </summary>
+	public static bool TryParse<T>(ReadOnlySpan<char> span, out T result) where T : IColor<T>
 	{
-		throw new NotImplementedException();
+		bool successful = TryParse(span, out RGBA128 parsed);
 
-		// span = span.Trim();
-		// span = span.Trim('#');
-		// span = span.Trim("0x");
-		//
-		// result = span.Length switch
-		// {
-		// 	3 => (RGBA32)(), new Color32(ParseOne(span[0]), ParseOne(span[1]), ParseOne(span[2])),
-		// 4 => (Float4)new Color32(ParseOne(span[0]), ParseOne(span[1]), ParseOne(span[2]), ParseOne(span[3])),
-		// 6 => (Float4)new Color32(ParseTwo(span[..2]), ParseTwo(span[2..4]), ParseTwo(span[4..])),
-		// 8 => (Float4)new Color32(ParseTwo(span[..2]), ParseTwo(span[2..4]), ParseTwo(span[4..6]), ParseTwo(span[6..]))
-		// };
-		//
-		// static float ParseOne(char span)
-		// {
-		// 	int hex = ParseHex(span);
-		// 	return hex * 16 + hex;
-		// }
-		//
-		// static byte ParseTwo(ReadOnlySpan<char> span) => (byte)(ParseHex(span[0]) * 16 + ParseHex(span[1]));
-		//
-		// static int ParseHex(char span) => span switch
-		// {
-		// 	>= '0' and <= '9' => span - '0',
-		// 	>= 'A' and <= 'F' => span - 'A' + 10,
-		// 	>= 'a' and <= 'f' => span - 'a' + 10,
-		// 	_ => throw ExceptionHelper.Invalid(nameof(span), span, "is not valid hex")
-		// };
+		result = parsed.As<T>();
+		return successful;
 	}
+
+	/// <summary>
+	/// Tries to parse the input <paramref name="span"/> as a <see cref="RGBA128"/> and outputs
+	/// to <paramref name="result"/>. Returns true if the operation was successful, false otherwise.
+	/// </summary>
+	public static bool TryParse(ReadOnlySpan<char> span, out RGBA128 result) => new Parser(span).Execute(out result);
 
 	public static implicit operator Float4(in RGBA128 value) => value.d;
 	public static explicit operator RGBA128(in Float4 value) => new(CheckInput(value));
