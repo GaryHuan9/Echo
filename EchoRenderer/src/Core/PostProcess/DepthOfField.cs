@@ -1,9 +1,9 @@
-﻿using System.Runtime.Intrinsics;
+﻿using System;
+using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.PostProcess.Operators;
-using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.PostProcess;
 
@@ -45,15 +45,16 @@ public class DepthOfField : PostProcessingWorker
 
 	void MainPass(Int2 position)
 	{
-		float zDepth = renderBuffer.GetZDepth(position);
-
-		float near = nearMinMax.InverseLerp(zDepth).Clamp();
-		float far = farMinMax.InverseLerp(zDepth).Clamp();
-
-		Vector128<float> source = renderBuffer[position];
-		Vector128<float> worker = workerBuffer[position]; //Blurred
-
-		var percent = Vector128.Create(CurveHelper.Sigmoid(near - far));
-		renderBuffer[position] = PackedMath.Lerp(worker, source, percent);
+		throw new NotImplementedException();
+		// float zDepth = renderBuffer.GetZDepth(position);
+		//
+		// float near = nearMinMax.InverseLerp(zDepth).Clamp();
+		// float far = farMinMax.InverseLerp(zDepth).Clamp();
+		//
+		// Vector128<float> source = renderBuffer[position];
+		// Vector128<float> worker = workerBuffer[position]; //Blurred
+		//
+		// var percent = Vector128.Create(CurveHelper.Sigmoid(near - far));
+		// renderBuffer[position] = PackedMath.Lerp(worker, source, percent);
 	}
 }

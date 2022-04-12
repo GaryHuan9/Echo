@@ -2,6 +2,7 @@
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.PostProcess.Operators;
 using EchoRenderer.Core.Texturing.Grid;
 using EchoRenderer.InOut;
@@ -18,7 +19,7 @@ public class Watermark : PostProcessingWorker
 	CropGrid cropWorker;
 	CropGrid cropTarget;
 
-	Vector128<float> tintV;
+	float tint;
 
 	static readonly Font font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
 
@@ -60,19 +61,14 @@ public class Watermark : PostProcessingWorker
 		grab.Run(); //Run luminance grab
 
 		bool lightMode = grab.Luminance > LuminanceThreshold;
-		float tint = lightMode ? 1f + BackgroundTint : 1f - BackgroundTint;
+		tint = lightMode ? 1f + BackgroundTint : 1f - BackgroundTint;
 
-		tintV = Vector128.Create(tint);
 		RunPass(TintPass, cropWorker); //Copies buffer
 
 		//Write label
-		style = style with { Color = Utilities.ToColor(lightMode ? 0f : 1f) };
+		style = style with { Color = new RGBA128(lightMode ? 0f : 1f) };
 		font.Draw(renderBuffer, Label, position, style);
 	}
 
-	void TintPass(Int2 position)
-	{
-		Vector128<float> source = cropWorker[position];
-		cropTarget[position] = Sse.Multiply(source, tintV);
-	}
+	void TintPass(Int2 position) => cropTarget[position] = cropWorker[position] * tint;
 }

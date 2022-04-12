@@ -30,7 +30,7 @@ public abstract class PostProcessingWorker
 	/// Run <paramref name="passAction"/> through every integer position on <paramref name="buffer"/>.
 	/// NOTE: If <paramref name="buffer"/> is null, <see cref="renderBuffer"/> will be used instead.
 	/// </summary>
-	public void RunPass(PassAction passAction, TextureGrid<RGB128> buffer = null)
+	public void RunPass(PassAction passAction, TextureGrid buffer = null)
 	{
 		if (Aborted) return;
 		buffer ??= renderBuffer;
@@ -41,11 +41,6 @@ public abstract class PostProcessingWorker
 			else passAction(position);
 		});
 	}
-
-	/// <summary>
-	/// Run a pass to copy the content of <paramref name="from"/> to <paramref name="to"/>.
-	/// </summary>
-	public void RunCopyPass(Texture from, TextureGrid to) => to.CopyFrom(@from);
 
 	/// <summary>
 	/// Run a pass along every horizontal position on <paramref name="buffer"/>.
@@ -79,13 +74,13 @@ public abstract class PostProcessingWorker
 
 	/// <summary>
 	/// Gets the handle to a temporary <see cref="ArrayGrid"/> with the same size as <see cref="renderBuffer"/>.
-	/// This method does not guarantee the initial content of the allocated buffer! It might not be empty.
+	/// NOTE: This method does not make any guarantee to the initial content of the output buffer!
 	/// NOTE: Remember to use the using statement to release the texture when you are done with it!
 	/// </summary>
 	public ReleaseHandle<ArrayGrid> FetchTemporaryBuffer(out ArrayGrid buffer) => engine.texturePooler.Fetch(out buffer);
 
 	/// <summary>
-	/// Functions similarly to <see cref="FetchTemporaryBuffer(out ArrayGrid)"/>, except that you can indicate a <paramref name="size"/>
+	/// Functions similarly to <see cref="FetchTemporaryBuffer(out ArrayGrid{RGB128})"/>, except that you can indicate a <paramref name="size"/>
 	/// which must be smaller than or equals to the size of <see cref="renderBuffer"/>. NOTE: Remember to dispose/release the handle.
 	/// </summary>
 	public ReleaseHandle<ArrayGrid> FetchTemporaryBuffer(out TextureGrid buffer, Int2 size)
@@ -106,7 +101,7 @@ public abstract class PostProcessingWorker
 	public ReleaseHandle<ArrayGrid> CopyTemporaryBuffer(out ArrayGrid buffer)
 	{
 		var handle = FetchTemporaryBuffer(out buffer);
-		RunCopyPass(renderBuffer, buffer);
+		buffer.CopyFrom(renderBuffer);
 
 		return handle;
 	}

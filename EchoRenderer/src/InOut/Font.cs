@@ -79,8 +79,8 @@ public class Font
 		Float2 min = (glyph.minUV - glyph.origin) * multiplier + center;
 		Float2 max = (glyph.maxUV - glyph.origin) * multiplier + center;
 
-		Float4 color = ((RGB128)style.Color).AlphaOne;
-		Float4 alpha = Float4.One * style.Color.W;
+		var color = (RGB128)style.Color;
+		float alpha = style.Color.Alpha;
 
 		Int2 sampleSquare = (Int2)style.SampleSize;
 		float inverse = 1f / (sampleSquare.X + 1f);
@@ -169,18 +169,12 @@ public class Font
 		return position.X + position.Y * MapSize;
 	}
 
-	public record Style
+	public record struct Style(float Height, in RGBA128 Color)
 	{
-		public Style(float height) : this(height, Float4.One) { }
+		public Style(float height) : this(height, RGBA128.White) { }
 
-		public Style(float height, Float4 color)
-		{
-			Height = height;
-			Color = color;
-		}
-
-		public float Height { get; init; }
-		public Float4 Color { get; init; }
+		public float Height { get; init; } = Height;
+		public RGBA128 Color { get; init; } = Color;
 
 		public float GlyphWidth { get; init; } = 0.6f; //How compact should the width of each glyph be
 		public int SampleSize { get; init; } = 5;      //The square multisampling size for each pixel

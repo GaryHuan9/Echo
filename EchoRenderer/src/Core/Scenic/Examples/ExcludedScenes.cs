@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Lights;
 using EchoRenderer.Core.Texturing;
@@ -11,7 +12,7 @@ public class BallRoom : Scene
 {
 	public BallRoom()
 	{
-		children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale((Float3)0.02f) } });
+		children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") { Tint = Tint.Scale(new RGBA128(0.02f)) } });
 
 		var mesh = new Mesh("Assets/Models/Excluded/BallRoom/ballRoom.obj");
 		var materials = new MaterialLibrary("Assets/Models/Excluded/BallRoom/ballRoom.mat");

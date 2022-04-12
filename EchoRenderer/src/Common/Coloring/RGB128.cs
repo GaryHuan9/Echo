@@ -51,7 +51,10 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	public override int GetHashCode() => d.GetHashCode();
 	public override string ToString() => ToString(string.Empty);
 
+	/// <inheritdoc/>
 	public RGBA128 ToRGBA128() => (RGBA128)this;
+
+	/// <inheritdoc/>
 	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
 
 	public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);

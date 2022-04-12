@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using CodeHelpers;
@@ -11,54 +12,59 @@ using EchoRenderer.Common.Coloring;
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// A <see cref="ArrayGrid{T}"/> of type <see cref="RGB128"/> primarily used as a rendering destination.
+/// A <see cref="ArrayGrid"/> of type <see cref="RGB128"/> primarily used as a rendering destination.
 /// Allows for optional auxiliary layers for data such as albedo, normal, or depth to support later reconstruction.
 /// </summary>
-public class RenderBuffer : ArrayGrid<RGB128>
+public class RenderBuffer : ArrayGrid
 {
 	public RenderBuffer(Int2 size) : base(size) => layers.Add("main", this);
 
-	readonly Dictionary<string, ArrayGrid<RGB128>> layers = new(StringComparer.InvariantCultureIgnoreCase);
+	readonly Dictionary<string, Texture> layers = new(StringComparer.InvariantCultureIgnoreCase);
 
 	/// <summary>
-	/// Accesses the <see cref="ArrayGrid{T}"/> buffer layer named <paramref name="label"/>.
-	/// Exception is thrown if <paramref name="label"/> is not the name of any layer.
+	/// Tries to access the <see cref="TextureGrid"/> buffer layer named <paramref name="label"/> for type
+	/// <typeparamref name="T"/> and outputs it to <paramref name="layer"/>. Returns whether the operation succeeded.
 	/// </summary>
-	public TextureGrid<RGB128> this[string label] => layers[label];
+	public bool TryGetLayer<T>(string label, out TextureGrid<T> layer) where T : IColor<T>
+	{
+		if (layers.TryGetValue(label, out Texture candidate))
+		{
+			layer = candidate as TextureGrid<T>;
+			return layer != null;
+		}
+
+		layer = null;
+		return false;
+	}
 
 	/// <summary>
 	/// Creates a new layer named <paramref name="label"/>.
 	/// </summary>
-	public void CreateLayer(string label)
+	public void CreateLayer<T>(string label) where T : IColor<T>
 	{
-		if (!layers.ContainsKey(label)) layers.Add(label, new ArrayGrid<RGB128>(size));
+		if (!layers.ContainsKey(label)) layers.Add(label, new ArrayGrid<T>(size));
 		else throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
 	}
-
-	/// <summary>
-	/// Returns whether this <see cref="RenderBuffer"/> contains a buffer named <paramref name="label"/>.
-	/// </summary>
-	/// <param name="label"></param>
-	/// <returns></returns>
-	public bool HasLayer(string label) => layers.ContainsKey(label);
 
 	public override void CopyFrom(Texture texture)
 	{
 		base.CopyFrom(texture);
 
-		if (texture is not RenderBuffer buffer) return;
-
-		Parallel.ForEach(layers, pair =>
+		if (texture is RenderBuffer buffer)
 		{
-			var source = buffer.layers.TryGetValue(pair.Key);
-			if (source != null) pair.Value.CopyFrom(source);
-		});
+			Parallel.ForEach(layers, pair =>
+			{
+				var source = buffer.layers.TryGetValue(pair.Key);
+				if (source != null) pair.Value.CopyFrom(source);
+			});
+		}
+		else Parallel.ForEach(layers, pair => pair.Value.CopyFrom(texture));
 	}
 
 	/// <summary>
-	/// Completely empties the content of all of the layers of this <see cref="RenderBuffer"/>.
+	/// Completely empties the content of all of the layers and buffers in this <see cref="RenderBuffer"/>.
 	/// </summary>
-	public virtual void Clear() => Parallel.ForEach(layers, pair => Array.Clear(AccessArray(pair.Value)));
+	public virtual void Clear() => CopyFrom(black);
 
 	/// <summary>
 	/// Pins this <see cref="RenderBuffer"/> for various unmanaged access or pointer shenanigans.
@@ -75,13 +81,16 @@ public class RenderBuffer : ArrayGrid<RGB128>
 		{
 			layers = buffer.layers.ToDictionary(pair => pair.Key, pair =>
 			{
-				RGB128[] array = AccessArray(pair.Value);
+				object array = arrayFieldInfo.GetValue(pair.Value);
 				var handle = GCHandle.Alloc(array, GCHandleType.Pinned);
-				return (handle.AddrOfPinnedObject(), handle);
+				return new Bundle(handle.AddrOfPinnedObject(), handle);
 			}, StringComparer.InvariantCultureIgnoreCase);
 		}
 
-		readonly Dictionary<string, (IntPtr pointer, GCHandle handle)> layers;
+		static Pin() => arrayFieldInfo = typeof(ArrayGrid<>).GetField(nameof(pixels), BindingFlags.Public | BindingFlags.NonPublic);
+
+		readonly Dictionary<string, Bundle> layers;
+		static readonly FieldInfo arrayFieldInfo;
 
 		public IntPtr this[string label] => layers[label].pointer;
 
@@ -89,6 +98,18 @@ public class RenderBuffer : ArrayGrid<RGB128>
 		{
 			foreach (var pair in layers) pair.Value.handle.Free();
 			layers.Clear();
+		}
+
+		struct Bundle
+		{
+			public Bundle(IntPtr pointer, GCHandle handle)
+			{
+				this.pointer = pointer;
+				this.handle = handle;
+			}
+
+			public readonly IntPtr pointer;
+			public readonly GCHandle handle;
 		}
 	}
 }
