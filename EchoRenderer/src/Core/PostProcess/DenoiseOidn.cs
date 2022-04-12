@@ -26,29 +26,31 @@ public class DenoiseOidn : PostProcessingWorker
 			using OidnDevice device = OidnDevice.CreateNew(OidnDevice.Type.automatic);
 			using OidnFilter filter = OidnFilter.CreateNew(device, "RT");
 
-			Int2 size = renderBuffer.size;
-			colors = new Float3[size.Product];
+			throw new NotImplementedException();
 
-			RunPass(ForwardPass); //Copies color to unmanaged buffer
-
-			fixed (Float3* colourPointer = colors)
-			{
-				using var pin = renderBuffer.CreatePin();
-
-				filter.Set("color", colourPointer, size);
-				filter.Set("albedo", pin.albedoPointer, size);
-				filter.Set("normal", pin.normalPointer, size);
-
-				//Output to the same buffer
-				filter.Set("output", colourPointer, size);
-
-				filter.Set("hdr", true);
-				filter.Commit();
-
-				filter.Execute();
-			}
-
-			RunPass(BackwardPass); //Copies denoised data back to renderBuffer
+			// Int2 size = renderBuffer.size;
+			// colors = new Float3[size.Product];
+			//
+			// RunPass(ForwardPass); //Copies color to unmanaged buffer
+			//
+			// fixed (Float3* colourPointer = colors)
+			// {
+			// 	using var pin = renderBuffer.CreatePin();
+			//
+			// 	filter.Set("color", colourPointer, size);
+			// 	filter.Set("albedo", pin.albedoPointer, size);
+			// 	filter.Set("normal", pin.normalPointer, size);
+			//
+			// 	//Output to the same buffer
+			// 	filter.Set("output", colourPointer, size);
+			//
+			// 	filter.Set("hdr", true);
+			// 	filter.Commit();
+			//
+			// 	filter.Execute();
+			// }
+			//
+			// RunPass(BackwardPass); //Copies denoised data back to renderBuffer
 		}
 		catch (DllNotFoundException exception)
 		{
@@ -56,18 +58,18 @@ public class DenoiseOidn : PostProcessingWorker
 		}
 	}
 
-	void ForwardPass(Int2 position)
-	{
-		int index = renderBuffer.ToIndex(position);
-		Vector128<float> source = renderBuffer[position];
-		colors[index] = Utilities.ToFloat4(source).XYZ;
-	}
-
-	void BackwardPass(Int2 position)
-	{
-		Float3 data = colors[renderBuffer.ToIndex(position)];
-		renderBuffer[position] = Utilities.ToVector(Utilities.ToColor(data));
-	}
+	// void ForwardPass(Int2 position)
+	// {
+	// 	int index = renderBuffer.ToIndex(position);
+	// 	Vector128<float> source = renderBuffer[position];
+	// 	colors[index] = Utilities.ToFloat4(source).XYZ;
+	// }
+	//
+	// void BackwardPass(Int2 position)
+	// {
+	// 	Float3 data = colors[renderBuffer.ToIndex(position)];
+	// 	renderBuffer[position] = Utilities.ToVector(Utilities.ToColor(data));
+	// }
 
 	readonly struct OidnDevice : IDisposable
 	{

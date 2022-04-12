@@ -18,42 +18,6 @@ public static class Utilities
 	//NOTE: to vector with ref values is unsafe and not provided for float3 since we can access weird memory with it.
 	public static Vector128<float> ToVector(Float3 value) => Unsafe.As<Float3, Vector128<float>>(ref value);
 
-	public static Float4 ToColor(float value) => ToColor((Float4)value);
-	public static Float4 ToColor(in Float3 value) => ToColor((Float4)value);
-	public static Float4 ToColor(in Float4 value) => value.Replace(3, 1f);
-
-	public static Float4 ToColor(ReadOnlySpan<char> value)
-	{
-		value = value.Trim();
-		value = value.Trim('#');
-		if (value.StartsWith("0x")) value = value[2..];
-
-		return value.Length switch
-		{
-			3 => (Float4)new Color32(ParseOne(value[0]), ParseOne(value[1]), ParseOne(value[2])),
-			4 => (Float4)new Color32(ParseOne(value[0]), ParseOne(value[1]), ParseOne(value[2]), ParseOne(value[3])),
-			6 => (Float4)new Color32(ParseTwo(value[..2]), ParseTwo(value[2..4]), ParseTwo(value[4..])),
-			8 => (Float4)new Color32(ParseTwo(value[..2]), ParseTwo(value[2..4]), ParseTwo(value[4..6]), ParseTwo(value[6..])),
-			_ => throw ExceptionHelper.Invalid(nameof(value), value.ToString(), "is not valid hex")
-		};
-
-		static byte ParseOne(char value)
-		{
-			int hex = ParseHex(value);
-			return (byte)(hex * 16 + hex);
-		}
-
-		static byte ParseTwo(ReadOnlySpan<char> value) => (byte)(ParseHex(value[0]) * 16 + ParseHex(value[1]));
-
-		static int ParseHex(char value) => value switch
-		{
-			>= '0' and <= '9' => value - '0',
-			>= 'A' and <= 'F' => value - 'A' + 10,
-			>= 'a' and <= 'f' => value - 'a' + 10,
-			_ => throw ExceptionHelper.Invalid(nameof(value), value, "is not valid hex")
-		};
-	}
-
 	/// <summary>
 	/// Skips the initialization of output <paramref name="value"/>.
 	/// Assigns <see cref="float.NaN"/> to it if we are in debug mode.
