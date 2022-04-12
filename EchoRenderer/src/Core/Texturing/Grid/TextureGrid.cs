@@ -1,3 +1,5 @@
+global using TextureGrid = EchoRenderer.Core.Texturing.Grid.TextureGrid<EchoRenderer.Common.Coloring.RGB128>;
+//
 using System;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -30,7 +32,7 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	}
 
 	/// <summary>
-	/// The size of this <see cref="TextureGrid{T}"/> (exclusive),
+	/// The size of this <see cref="TextureGrid"/> (exclusive),
 	/// </summary>
 	public readonly Int2 size;
 
@@ -40,17 +42,17 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	public readonly Float2 sizeR;
 
 	/// <summary>
-	/// The <see cref="size"/> of this <see cref="TextureGrid{T}"/> minus <see cref="Int2.One"/>.
+	/// The <see cref="size"/> of this <see cref="TextureGrid"/> minus <see cref="Int2.One"/>.
 	/// </summary>
 	public readonly Int2 oneLess;
 
 	/// <summary>
-	/// The aspect ratio of this <see cref="TextureGrid{T}"/>, equals to width over height.
+	/// The aspect ratio of this <see cref="TextureGrid"/>, equals to width over height.
 	/// </summary>
 	public readonly float aspect;
 
 	/// <summary>
-	/// If the <see cref="size"/> of this <see cref="TextureGrid{T}"/> is a power of two on any axis, then the
+	/// If the <see cref="size"/> of this <see cref="TextureGrid"/> is a power of two on any axis, then the
 	/// respective component of this field will be that power, otherwise the component will be a negative number.
 	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where N is a positive number.
 	/// </summary>
@@ -60,7 +62,7 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	NotNull<object> _filter;
 
 	/// <summary>
-	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid{T}"/> to convert uv texture coordinates.
+	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid"/> to convert uv texture coordinates.
 	/// </summary>
 	public IWrapper Wrapper
 	{
@@ -69,7 +71,7 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	}
 
 	/// <summary>
-	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid{T}"/> to retrieve pixels as <see cref="RGBA128"/>.
+	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid"/> to retrieve pixels as <see cref="RGBA128"/>.
 	/// </summary>
 	public IFilter Filter
 	{
@@ -107,24 +109,14 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	}
 
 	/// <summary>
-	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid{T}.size"/>.
+	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid.size"/>.
 	/// </summary>
 	public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.Zero, oneLess);
 
 	/// <summary>
-	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid{T}"/>'s texture coordinate.
+	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid"/>'s texture coordinate.
 	/// </summary>
 	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
-
-	/// <summary>
-	/// Copies as much data from <paramref name="texture"/> to this <see cref="TextureGrid{T}"/> as fast as possible.
-	/// </summary>
-	public virtual void CopyFrom(Texture texture) => ForEach
-	(
-		texture is TextureGrid<T> grid && grid.size == size ?
-			position => this[position] = grid[position] :
-			position => this[position] = texture[ToUV(position)].As<T>()
-	);
 
 	/// <summary>
 	/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
@@ -137,6 +129,13 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 			foreach (Int2 position in size.Loop()) action(position);
 		}
 	}
+
+	public override void CopyFrom(Texture texture) => ForEach
+	(
+		texture is TextureGrid<T> grid && grid.size == size ?
+			position => this[position] = grid[position] :
+			position => this[position] = texture[ToUV(position)].As<T>()
+	);
 
 	public override string ToString() => $"{base.ToString()} with size {size}";
 

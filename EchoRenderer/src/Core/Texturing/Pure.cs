@@ -27,4 +27,6 @@ public class Pure : Texture, IDirectionalTexture
 	protected override RGBA128 Evaluate(Float2 uv) => rgba;
 
 	RGB128 IDirectionalTexture.Evaluate(in Float3 direction) => color;
+
+	public static explicit operator Pure(in RGBA128 color) => new(color);
 }

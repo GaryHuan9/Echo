@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common.Coloring;
-using EchoRenderer.Common.Mathematics;
-using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.PostProcess;
 using EchoRenderer.Core.PostProcess.ToneMappers;
 using EchoRenderer.Core.Rendering.Engines;
@@ -163,8 +159,6 @@ public class Program
 			postProcess.AddWorker(new Watermark(postProcess)); //Disable this if do not want watermark
 		}
 
-		postProcess.AddWorker(new OutputBarrier(postProcess));
-
 		postProcess.Dispatch();
 		postProcess.WaitForProcess(); //Wait for post processing to finish
 
@@ -180,7 +174,7 @@ public class Program
 	static void SimplexNoise()
 	{
 		var simplex = new TestGenerative(42, 4);
-		var texture = new ArrayGrid<RGB128>((Int2)1080);
+		var texture = new ArrayGrid((Int2)1080);
 
 		simplex.Tiling = (Float2)1f;
 		simplex.Offset = (Float2)1f;
@@ -192,10 +186,10 @@ public class Program
 	static void FontTesting()
 	{
 		var font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
-		var output = new ArrayGrid<RGB128>((Int2)2048);
+		var output = new ArrayGrid((Int2)2048);
 
 		output.ForEach(position => output[position] = new RGB128(0f, 0f, 1f));
-		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f, Float4.One));
+		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f));
 
 		output.Save("render.png");
 	}
@@ -215,7 +209,6 @@ public class Program
 		engine.AddWorker(new Bloom(engine));
 		engine.AddWorker(new Reinhard(engine));
 		engine.AddWorker(new Vignette(engine));
-		engine.AddWorker(new OutputBarrier(engine));
 
 		engine.Dispatch();
 		engine.WaitForProcess();
@@ -223,7 +216,7 @@ public class Program
 		buffer.Save("post process.png");
 	}
 
-	static unsafe void CompareImages(string path0 = "render.png", string path1 = "ref.png")
+	static void CompareImages(string path0 = "render.png", string path1 = "ref.png")
 	{
 		ArrayGrid image0 = TextureGrid.Load(path0);
 		ArrayGrid image1 = TextureGrid.Load(path1);
@@ -235,8 +228,7 @@ public class Program
 			Float4 value0 = image0[position];
 			Float4 value1 = image1[position];
 
-			Float4 result = (value0 - value1).Absoluted;
-			image0[position] = ((RGB128)result).AlphaOne;
+			image0[position] = (RGB128)(value0 - value1).Absoluted;
 		});
 
 		image0.Save("difference.png");

@@ -2,6 +2,7 @@
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Texturing;
@@ -12,13 +13,13 @@ namespace EchoRenderer.Core.Scenic.Examples
 	{
 		public CornellBox()
 		{
-			var green = new Matte { Albedo = (Pure)Utilities.ToColor("00CB21") };
-			var red = new Matte { Albedo = (Pure)Utilities.ToColor("CB0021") };
-			var blue = new Matte { Albedo = (Pure)Utilities.ToColor("0021CB") };
-			var white = new Matte { Albedo = (Pure)Utilities.ToColor("EEEEF2") };
+			var green = new Matte { Albedo = (Pure)RGBA128.Parse("0x00CB21") };
+			var red = new Matte { Albedo = (Pure)RGBA128.Parse("0xCB0021") };
+			var blue = new Matte { Albedo = (Pure)RGBA128.Parse("0x0021CB") };
+			var white = new Matte { Albedo = (Pure)RGBA128.Parse("0xEEEEF2") };
 
 			var cullable = new Cullable { Base = white };
-			var light = new Emissive { Albedo = (Pure)Utilities.ToColor("#FFFAF4") };
+			var light = new Emissive { Albedo = (Pure)RGBA128.Parse("0xFFFAF4") };
 
 			const float Width = 10f;
 			const float Half = Width / 2f;
@@ -53,7 +54,7 @@ namespace EchoRenderer.Core.Scenic.Examples
 
 			Camera camera = new Camera(42f) { Position = new Float3(0f, Half, -Half) };
 
-			float radian = camera.FieldOfView / 2f * Scalars.DegreeToRadian;
+			float radian = Scalars.ToRadians(camera.FieldOfView / 2f);
 			camera.Position += Float3.Backward * (Half / MathF.Tan(radian));
 
 			children.Add(camera); //Position: (0, 5, -18.025444)

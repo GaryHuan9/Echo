@@ -90,7 +90,7 @@ public class RenderMonitor : Terminal.Section
 	{
 		TiledRenderProfile profile = Engine.CurrentProfile;
 		PreparedScene.Info info = profile.Scene.info;
-		TextureGrid buffer = profile.RenderBuffer;
+		RenderBuffer buffer = profile.RenderBuffer;
 
 		//Display configuration information
 		int totalPixel = buffer.size.Product;

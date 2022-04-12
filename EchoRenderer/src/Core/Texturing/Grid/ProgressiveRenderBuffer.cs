@@ -18,7 +18,7 @@ public class ProgressiveRenderBuffer : RenderBuffer
 {
 	public ProgressiveRenderBuffer(Int2 size) : base(size)
 	{
-		bytes = new byte[length * 4];
+		bytes = new byte[size.Product * 4];
 		ClearSerializedByteArray();
 
 		flagWidth = size[MajorAxis].CeiledDivide(FlagBlock);
@@ -47,7 +47,7 @@ public class ProgressiveRenderBuffer : RenderBuffer
 			int offset = index - ToIndex(position.Replace(MajorAxis, 0));     //This pixel's offset from axis origin
 			int flipped = ToIndex(position.ReplaceY(oneLess.Y - position.Y)); //Serialized byte array needs flipped Y axis index
 
-			Color32 color32 = (Color32)(Float4)value.AlphaOne;  //Convert value to color32 with max alpha
+			Color32 color32 = (Color32)(Float4)(RGBA128)value;  //Convert value to color32 with max alpha
 			uint color = Unsafe.As<Color32, uint>(ref color32); //Bit align color32 to uint for chunk writing
 
 			int segment = offset / FlagBlock;  //The local segment of the uint write flag array
@@ -61,18 +61,18 @@ public class ProgressiveRenderBuffer : RenderBuffer
 				write |= 1u << location;       //Reference write to flag segment
 				uint flag = write >> location; //Jump to current flag bit
 
-				fixed (RGB128* pointer0 = &pixels[index])    //Use pointers to assign to array in chunks
-				fixed (byte* pointer1 = &bytes[flipped * 4]) //Create pointer using inverted index
+				fixed (RGB128* pixelSource = pixels)
+				fixed (byte* bytesSource = bytes)
 				{
 					//Write colors
-					RGB128* pPixel = pointer0 - 1;
-					uint* pBytes = (uint*)pointer1 - 1;
+					RGB128* pixelPointer = pixelSource - 1 + index;        //Use pointers to assign to array in chunks
+					uint* bytesPointer = (uint*)bytesSource - 1 + flipped; //Create pointer using inverted index
 
 					for (int i = offset; i < size[MajorAxis]; i++)
 					{
 						//Write to arrays in blocks
-						*++pPixel = value;
-						*++pBytes = color;
+						*++pixelPointer = value;
+						*++bytesPointer = color;
 
 						//Advance flag bit position
 						if (++location == FlagBlock)
@@ -119,12 +119,14 @@ public class ProgressiveRenderBuffer : RenderBuffer
 
 	unsafe void ClearSerializedByteArray()
 	{
-		if (bytes.Length == 0) return;
+		int length = bytes.Length / 4;
 		var color32 = new Color32(0, 0, 0);
 
-		fixed (byte* p = &bytes[0])
+		if (length == 0) return;
+
+		fixed (byte* origin = bytes)
 		{
-			uint* pointer = (uint*)p;
+			uint* pointer = (uint*)origin;
 
 			uint color = Unsafe.As<Color32, uint>(ref color32);
 			for (int i = 0; i < length; i++) pointer[i] = color;

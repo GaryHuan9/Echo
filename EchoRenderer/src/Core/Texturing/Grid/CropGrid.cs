@@ -1,4 +1,6 @@
-﻿using CodeHelpers;
+﻿global using CropGrid = EchoRenderer.Core.Texturing.Grid.CropGrid<EchoRenderer.Common.Coloring.RGB128>;
+//
+using CodeHelpers;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
 

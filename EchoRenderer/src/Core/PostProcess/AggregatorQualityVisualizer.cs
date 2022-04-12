@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Texturing;
 using EchoRenderer.InOut;
 
@@ -12,15 +14,15 @@ public class AggregatorQualityVisualizer : PostProcessingWorker
 {
 	public AggregatorQualityVisualizer(PostProcessingEngine engine) : base(engine)
 	{
-		ReadOnlySpan<Float4> colors = stackalloc Float4[]
+		ReadOnlySpan<RGBA128> colors = stackalloc RGBA128[]
 		{
-			Utilities.ToColor("#000000"),
-			Utilities.ToColor("#0000FF"),
-			Utilities.ToColor("#00FFFF"),
-			Utilities.ToColor("#00FF00"),
-			Utilities.ToColor("#FFFF00"),
-			Utilities.ToColor("#FF0000"),
-			Utilities.ToColor("#FFFFFF")
+			RGBA128.Parse("#000000"),
+			RGBA128.Parse("#0000FF"),
+			RGBA128.Parse("#00FFFF"),
+			RGBA128.Parse("#00FF00"),
+			RGBA128.Parse("#FFFF00"),
+			RGBA128.Parse("#FF0000"),
+			RGBA128.Parse("#FFFFFF")
 		};
 
 		costGradient = new Gradient();
@@ -59,7 +61,7 @@ public class AggregatorQualityVisualizer : PostProcessingWorker
 		};
 
 		float height = renderBuffer.size.Y * Scale;
-		var style = new Font.Style(height, Float4.One);
+		var style = new Font.Style(height);
 
 		for (int i = 0; i < labels.Length; i++)
 		{
@@ -73,7 +75,7 @@ public class AggregatorQualityVisualizer : PostProcessingWorker
 
 	void GatherPass(Int2 position)
 	{
-		Float4 source = Utilities.ToFloat4(renderBuffer[position]);
+		Float4 source = renderBuffer[position];
 
 		InterlockedHelper.Max(ref maxCost, source.X);
 		InterlockedHelper.Max(ref totalCost, source.Y);
@@ -82,7 +84,7 @@ public class AggregatorQualityVisualizer : PostProcessingWorker
 
 	void MainPass(Int2 position)
 	{
-		float percent = renderBuffer[position].GetElement(0) / maxCost;
-		renderBuffer[position] = Utilities.ToVector(costGradient[percent]);
+		float percent = ((Float4)renderBuffer[position]).X / maxCost;
+		renderBuffer[position] = (RGB128)costGradient[percent.Clamp()];
 	}
 }
