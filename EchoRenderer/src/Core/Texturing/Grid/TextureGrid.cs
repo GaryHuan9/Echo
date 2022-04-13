@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 using CodeHelpers;
@@ -6,6 +7,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
+using EchoRenderer.Core.Texturing.Serialization;
 using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.Texturing.Grid;
@@ -101,22 +103,6 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	/// </summary>
 	public abstract T this[Int2 position] { get; set; }
 
-	protected sealed override RGBA128 Evaluate(Float2 uv)
-	{
-		Assert.IsTrue(float.IsFinite(uv.Sum));
-		return Filter.Evaluate(this, uv);
-	}
-
-	/// <summary>
-	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid.size"/>.
-	/// </summary>
-	public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.Zero, oneLess);
-
-	/// <summary>
-	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid"/>'s texture coordinate.
-	/// </summary>
-	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
-
 	/// <summary>
 	/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
 	/// </summary>
@@ -138,10 +124,52 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 
 	public override string ToString() => $"{base.ToString()} with size {size}";
 
-	protected void AssertAlignedSize(TextureGrid<T> texture)
+	/// <summary>
+	/// Performs a <see cref="Save"/> operation asynchronously.
+	/// </summary>
+	public Task SaveAsync(string path, ISerializer serializer = null) => Task.Run(() => Save(path, serializer));
+
+	/// <summary>
+	/// Saves this <see cref="TextureGrid{T}"/> to <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
+	/// will be made to find the best <see cref="ISerializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
+	/// </summary>
+	public void Save(string path, ISerializer serializer = null)
 	{
-		if (texture.size == size) return;
-		throw ExceptionHelper.Invalid(nameof(texture), texture, "has a mismatched size!");
+		serializer ??= ISerializer.Find(path);
+		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
+		serializer.Serialize(this, File.Open(AssetsUtility.GetAssetsPath(path), FileMode.Create));
+	}
+
+	/// <summary>
+	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid{T}.size"/>.
+	/// </summary>
+	public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.Zero, oneLess);
+
+	/// <summary>
+	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid{T}"/>'s texture coordinate.
+	/// </summary>
+	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
+
+	protected sealed override RGBA128 Evaluate(Float2 uv)
+	{
+		Assert.IsTrue(float.IsFinite(uv.Sum));
+		return Filter.Evaluate(this, uv);
+	}
+
+	/// <summary>
+	/// Performs a <see cref="Load"/> operation asynchronously.
+	/// </summary>
+	public static Task<TextureGrid<T>> LoadAsync(string path, ISerializer serializer = null) => Task.Run(() => Load(path, serializer));
+
+	/// <summary>
+	/// Loads a <see cref="TextureGrid{T}"/> from <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
+	/// will be made to find the best <see cref="ISerializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
+	/// </summary>
+	public static TextureGrid<T> Load(string path, ISerializer serializer = null)
+	{
+		serializer ??= ISerializer.Find(path);
+		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
+		return serializer.Deserialize<T>(File.OpenRead(AssetsUtility.GetAssetsPath(path)));
 	}
 
 	static Int2 IsPowerOfTwo(Int2 size)
