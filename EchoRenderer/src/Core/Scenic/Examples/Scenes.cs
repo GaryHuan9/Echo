@@ -29,7 +29,7 @@ public class SingleBunny : StandardScene
 		var material3 = new Mirror { Albedo = (Pure)new RGBA128(0.75f) };
 
 		// children.Add(new AmbientLight { Texture = new Cubemap("Assets/Cubemaps/OutsideDayTime") });
-		children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });
+		children.Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid<RGB128>.Load("Assets/Cubemaps/UlmerMuenster.jpg") } });
 
 		children.Add(new MeshEntity { Mesh = mesh, Material = material0, Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = (Float3)2.5f });
 

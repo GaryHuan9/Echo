@@ -10,7 +10,7 @@ namespace EchoRenderer.Core.PostProcess.Operators;
 
 public sealed class LuminanceGrab : IDisposable
 {
-	public LuminanceGrab(PostProcessingWorker worker, TextureGrid sourceBuffer)
+	public LuminanceGrab(PostProcessingWorker worker, TextureGrid<RGB128> sourceBuffer)
 	{
 		this.worker = worker;
 		this.sourceBuffer = sourceBuffer;
@@ -19,7 +19,7 @@ public sealed class LuminanceGrab : IDisposable
 	public float Luminance { get; private set; }
 
 	readonly PostProcessingWorker worker;
-	readonly TextureGrid sourceBuffer;
+	readonly TextureGrid<RGB128> sourceBuffer;
 
 	ThreadLocal<StrongBox<Summation>> sums = new(() => new StrongBox<Summation>(Summation.Zero), true);
 

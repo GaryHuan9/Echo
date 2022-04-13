@@ -1,26 +1,26 @@
-﻿global using CropGrid = EchoRenderer.Core.Texturing.Grid.CropGrid<EchoRenderer.Common.Coloring.RGB128>;
-//
-using CodeHelpers;
+﻿using CodeHelpers;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
+/// <summary>
+/// A rectangular cropped view into a <see cref="TextureGrid{T}"/>.
+/// </summary>
 public class CropGrid<T> : TextureGrid<T> where T : IColor<T>
 {
 	/// <summary>
-	/// Creates the rectangular cropped reference of <paramref name="source"/>.
-	/// <paramref name="min"/> is inclusive and <paramref name="max"/> is exclusive.
+	/// Constructs a <see cref="CropGrid{T}"/> from <paramref name="min"/> (inclusive) to <paramref name="max"/> (exclusive).
 	/// </summary>
-	public CropGrid(TextureGrid<T> source, Int2 min, Int2 max) : base(max - min)
+	public CropGrid(TextureGrid<T> texture, Int2 min, Int2 max) : base(max - min)
 	{
 		if (!(max > min)) throw ExceptionHelper.Invalid(nameof(max), max, InvalidType.outOfBounds);
 
-		this.source = source;
+		source = texture;
 		this.min = min;
 
-		Wrapper = source.Wrapper;
-		Filter = source.Filter;
+		Wrapper = texture.Wrapper;
+		Filter = texture.Filter;
 	}
 
 	readonly TextureGrid<T> source;
@@ -31,4 +31,19 @@ public class CropGrid<T> : TextureGrid<T> where T : IColor<T>
 		get => source[min + position];
 		set => source[min + position] = value;
 	}
+}
+
+public static class CropGridExtensions
+{
+	/// <summary>
+	/// Crops <paramref name="texture"/> from <see cref="min"/> (inclusive) to
+	/// the maximum corner (top right) by creating a <see cref="CropGrid{T}"/>.
+	/// </summary>
+	public static CropGrid<T> Crop<T>(this TextureGrid<T> texture, Int2 min) where T : IColor<T> => new(texture, min, texture.size);
+
+	/// <summary>
+	/// Crops <paramref name="texture"/> from <see cref="min"/> (inclusive) to the
+	/// <paramref name="max"/> (exclusive) by creating a <see cref="CropGrid{T}"/>.
+	/// </summary>
+	public static CropGrid<T> Crop<T>(this TextureGrid<T> texture, Int2 min, Int2 max) where T : IColor<T> => new(texture, min, max);
 }
