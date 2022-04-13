@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics.Enumerable;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
 using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
-using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.InOut;
@@ -18,7 +14,7 @@ public class Font
 {
 	Font(string path)
 	{
-		texture = TextureGrid.Load(path);
+		texture = TextureGrid<RGB128>.Load(path);
 
 		Int2 size = texture.size;
 		Int2 glyph = size / MapSize;
@@ -58,7 +54,7 @@ public class Font
 		}
 	}
 
-	readonly TextureGrid texture;
+	readonly TextureGrid<RGB128> texture;
 	readonly Glyph[] glyphs;
 
 	readonly float glyphAspect;
@@ -71,7 +67,7 @@ public class Font
 	/// Draws <paramref name="character"/> to <paramref name="destination"/> at <see cref="center"/>
 	/// with this <see cref="Font"/> and <paramref name="style"/>.
 	/// </summary>
-	public void Draw(TextureGrid destination, char character, Float2 center, Style style)
+	public void Draw(TextureGrid<RGB128> destination, char character, Float2 center, Style style)
 	{
 		Glyph glyph = glyphs[GetIndex(character)];
 		float multiplier = MapSize * style.Height;
@@ -109,7 +105,7 @@ public class Font
 	/// Draws <paramref name="text"/> to <paramref name="destination"/> at <see cref="center"/>
 	/// with this <see cref="Font"/> and <paramref name="style"/>.
 	/// </summary>
-	public void Draw(TextureGrid destination, string text, Float2 center, Style style)
+	public void Draw(TextureGrid<RGB128> destination, string text, Float2 center, Style style)
 	{
 		float offset = text.Length / 2f - 0.5f;
 		float aspect = style.GlyphWidth * glyphAspect;

@@ -5,7 +5,7 @@ using EchoRenderer.Common.Coloring;
 namespace EchoRenderer.Core.Texturing;
 
 /// <summary>
-/// An infinite area of RGBA four channeled pixel colors.
+/// An infinite two-dimensional region of <see cref="RGBA128"/> four-channelled colors that can be arbitrarily sampled.
 /// </summary>
 public abstract class Texture
 {
@@ -24,9 +24,9 @@ public abstract class Texture
 	public static readonly Pure normal = new(new RGBA128(0.5f, 0.5f, 1f));
 
 	/// <summary>
-	/// Accesses the content of this <see cref="Texture"/> at <paramref name="uv"/>.
+	/// Accesses the content of this <see cref="Texture"/> at <paramref name="texcoord"/>.
 	/// </summary>
-	public RGBA128 this[Float2 uv] => Tint.Apply(Evaluate(uv));
+	public RGBA128 this[Float2 texcoord] => Tint.Apply(Evaluate(texcoord));
 
 	/// <summary>
 	/// Copies as much data from <paramref name="texture"/> to this <see cref="Texture"/>.

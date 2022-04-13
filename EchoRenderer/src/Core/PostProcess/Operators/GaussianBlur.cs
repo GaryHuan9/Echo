@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
@@ -11,9 +9,9 @@ using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.PostProcess.Operators;
 
-public class GaussianBlur : IDisposable
+public sealed class GaussianBlur : IDisposable
 {
-	public GaussianBlur(PostProcessingWorker worker, TextureGrid sourceBuffer, float deviation = 1f, int quality = 4)
+	public GaussianBlur(PostProcessingWorker worker, TextureGrid<RGB128> sourceBuffer, float deviation = 1f, int quality = 4)
 	{
 		this.worker = worker;
 		this.sourceBuffer = sourceBuffer;
@@ -26,8 +24,8 @@ public class GaussianBlur : IDisposable
 
 	readonly PostProcessingWorker worker;
 
-	readonly TextureGrid sourceBuffer;
-	readonly TextureGrid workerBuffer;
+	readonly TextureGrid<RGB128> sourceBuffer;
+	readonly TextureGrid<RGB128> workerBuffer;
 
 	public readonly float deviation;
 	public readonly int quality;
@@ -51,7 +49,7 @@ public class GaussianBlur : IDisposable
 	int radius;
 	float diameterR;
 
-	ReleaseHandle<ArrayGrid> handle;
+	ReleaseHandle<ArrayGrid<RGB128>> handle;
 
 	public void Run()
 	{

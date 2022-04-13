@@ -16,8 +16,8 @@ public class Watermark : PostProcessingWorker
 {
 	public Watermark(PostProcessingEngine engine) : base(engine) { }
 
-	CropGrid cropWorker;
-	CropGrid cropTarget;
+	CropGrid<RGB128> cropWorker;
+	CropGrid<RGB128> cropTarget;
 
 	float tint;
 
@@ -48,12 +48,12 @@ public class Watermark : PostProcessingWorker
 		//Allocate resources for full resolution Gaussian blur
 		float deviation = height * BlurDeviation;
 
-		using var handle = CopyTemporaryBuffer(out ArrayGrid workerBuffer);
+		using var handle = CopyTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);
 		using var blur = new GaussianBlur(this, workerBuffer, deviation);
 
 		//Start watermark stamping passes
-		cropWorker = new CropGrid(workerBuffer, min, max);
-		cropTarget = new CropGrid(renderBuffer, min, max);
+		cropWorker = workerBuffer.Crop(min, max);
+		cropTarget = renderBuffer.Crop(min, max);
 
 		using var grab = new LuminanceGrab(this, cropWorker);
 

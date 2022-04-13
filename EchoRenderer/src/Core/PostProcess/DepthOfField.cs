@@ -2,8 +2,10 @@
 using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.PostProcess.Operators;
+using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.PostProcess;
 
@@ -22,7 +24,7 @@ public class DepthOfField : PostProcessingWorker
 	public float FarStart { get; set; } = 15f;
 	public float FarEnd { get; set; } = 20f;
 
-	ArrayGrid workerBuffer;
+	ArrayGrid<RGB128> workerBuffer;
 
 	MinMax nearMinMax;
 	MinMax farMinMax;

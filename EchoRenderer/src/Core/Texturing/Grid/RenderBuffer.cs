@@ -12,17 +12,17 @@ using EchoRenderer.Common.Coloring;
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// A <see cref="ArrayGrid"/> of type <see cref="RGB128"/> primarily used as a rendering destination.
+/// A <see cref="ArrayGrid{T}"/> of type <see cref="RGB128"/> primarily used as a rendering destination.
 /// Allows for optional auxiliary layers for data such as albedo, normal, or depth to support later reconstruction.
 /// </summary>
-public class RenderBuffer : ArrayGrid
+public class RenderBuffer : ArrayGrid<RGB128>
 {
 	public RenderBuffer(Int2 size) : base(size) => layers.Add("main", this);
 
 	readonly Dictionary<string, Texture> layers = new(StringComparer.InvariantCultureIgnoreCase);
 
 	/// <summary>
-	/// Tries to access the <see cref="TextureGrid"/> buffer layer named <paramref name="label"/> for type
+	/// Tries to access the <see cref="TextureGrid{T}"/> buffer layer named <paramref name="label"/> for type
 	/// <typeparamref name="T"/> and outputs it to <paramref name="layer"/>. Returns whether the operation succeeded.
 	/// </summary>
 	public bool TryGetLayer<T>(string label, out TextureGrid<T> layer) where T : IColor<T>
