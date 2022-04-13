@@ -1,5 +1,3 @@
-global using TextureGrid = EchoRenderer.Core.Texturing.Grid.TextureGrid<EchoRenderer.Common.Coloring.RGB128>;
-//
 using System;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -8,6 +6,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Coloring;
+using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.Texturing.Grid;
 
@@ -32,7 +31,7 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	}
 
 	/// <summary>
-	/// The size of this <see cref="TextureGrid"/> (exclusive),
+	/// The size of this <see cref="TextureGrid{T}"/> (exclusive),
 	/// </summary>
 	public readonly Int2 size;
 
@@ -42,17 +41,17 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	public readonly Float2 sizeR;
 
 	/// <summary>
-	/// The <see cref="size"/> of this <see cref="TextureGrid"/> minus <see cref="Int2.One"/>.
+	/// The <see cref="size"/> of this <see cref="TextureGrid{T}"/> minus <see cref="Int2.One"/>.
 	/// </summary>
 	public readonly Int2 oneLess;
 
 	/// <summary>
-	/// The aspect ratio of this <see cref="TextureGrid"/>, equals to width over height.
+	/// The aspect ratio of this <see cref="TextureGrid{T}"/>, equals to width over height.
 	/// </summary>
 	public readonly float aspect;
 
 	/// <summary>
-	/// If the <see cref="size"/> of this <see cref="TextureGrid"/> is a power of two on any axis, then the
+	/// If the <see cref="size"/> of this <see cref="TextureGrid{T}"/> is a power of two on any axis, then the
 	/// respective component of this field will be that power, otherwise the component will be a negative number.
 	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where N is a positive number.
 	/// </summary>
@@ -62,7 +61,7 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	NotNull<object> _filter;
 
 	/// <summary>
-	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid"/> to convert uv texture coordinates.
+	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid{T}"/> to convert uv texture coordinates.
 	/// </summary>
 	public IWrapper Wrapper
 	{
@@ -71,7 +70,7 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	}
 
 	/// <summary>
-	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid"/> to retrieve pixels as <see cref="RGBA128"/>.
+	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid{T}"/> to retrieve pixels as <see cref="RGBA128"/>.
 	/// </summary>
 	public IFilter Filter
 	{

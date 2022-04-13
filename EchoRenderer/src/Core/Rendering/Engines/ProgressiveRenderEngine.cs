@@ -199,8 +199,8 @@ public class ProgressiveRenderEngine : IDisposable
 
 		public void Recreate(RenderBuffer newBuffer)
 		{
-			RebuildMajor(ref patternMajor, newBuffer.size[ArrayGrid.MajorAxis]);
-			RebuildPattern(ref patternMinor, newBuffer.size[ArrayGrid.MinorAxis]);
+			RebuildMajor(ref patternMajor, newBuffer.size[RenderBuffer.MajorAxis]);
+			RebuildPattern(ref patternMinor, newBuffer.size[RenderBuffer.MinorAxis]);
 
 			int oldLength = Buffer?.size.Product ?? 0;
 			int newLength = newBuffer.size.Product;
@@ -215,7 +215,7 @@ public class ProgressiveRenderEngine : IDisposable
 
 		public Int2 GetPosition(int index) => Int2.Create
 		(
-			ArrayGrid.MajorAxis,
+			RenderBuffer.MajorAxis,
 			patternMajor[index / patternMinor.Length],
 			patternMinor[index % patternMinor.Length]
 		);

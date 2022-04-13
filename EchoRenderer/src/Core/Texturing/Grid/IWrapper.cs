@@ -8,7 +8,7 @@ using EchoRenderer.Common.Coloring;
 namespace EchoRenderer.Core.Texturing.Grid;
 
 /// <summary>
-/// A way to convert integer input texture positions for a <see cref="TextureGrid"/> to acceptable bounds.
+/// A way to convert integer input texture positions for a <see cref="TextureGrid{T}"/> to acceptable bounds.
 /// </summary>
 public interface IWrapper
 {

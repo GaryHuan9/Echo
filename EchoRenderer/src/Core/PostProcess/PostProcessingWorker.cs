@@ -2,7 +2,6 @@ using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using EchoRenderer.Common.Coloring;
-using EchoRenderer.Core.Texturing;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.PostProcess;
@@ -30,7 +29,7 @@ public abstract class PostProcessingWorker
 	/// Run <paramref name="passAction"/> through every integer position on <paramref name="buffer"/>.
 	/// NOTE: If <paramref name="buffer"/> is null, <see cref="renderBuffer"/> will be used instead.
 	/// </summary>
-	public void RunPass(PassAction passAction, TextureGrid buffer = null)
+	public void RunPass(PassAction passAction, TextureGrid<RGB128> buffer = null)
 	{
 		if (Aborted) return;
 		buffer ??= renderBuffer;
@@ -45,7 +44,7 @@ public abstract class PostProcessingWorker
 	/// <summary>
 	/// Run a pass along every horizontal position on <paramref name="buffer"/>.
 	/// </summary>
-	public void RunPassHorizontal(PassActionHorizontal passAction, TextureGrid buffer = null)
+	public void RunPassHorizontal(PassActionHorizontal passAction, TextureGrid<RGB128> buffer = null)
 	{
 		if (Aborted) return;
 		buffer ??= renderBuffer;
@@ -60,7 +59,7 @@ public abstract class PostProcessingWorker
 	/// <summary>
 	/// Run a pass along every vertical position on <paramref name="buffer"/>.
 	/// </summary>
-	public void RunPassVertical(PassActionVertical passAction, TextureGrid buffer = null)
+	public void RunPassVertical(PassActionVertical passAction, TextureGrid<RGB128> buffer = null)
 	{
 		if (Aborted) return;
 		buffer ??= renderBuffer;
@@ -73,32 +72,32 @@ public abstract class PostProcessingWorker
 	}
 
 	/// <summary>
-	/// Gets the handle to a temporary <see cref="ArrayGrid"/> with the same size as <see cref="renderBuffer"/>.
+	/// Gets the handle to a temporary <see cref="ArrayGrid{T}"/> with the same size as <see cref="renderBuffer"/>.
 	/// NOTE: This method does not make any guarantee to the initial content of the output buffer!
 	/// NOTE: Remember to use the using statement to release the texture when you are done with it!
 	/// </summary>
-	public ReleaseHandle<ArrayGrid> FetchTemporaryBuffer(out ArrayGrid buffer) => engine.texturePooler.Fetch(out buffer);
+	public ReleaseHandle<ArrayGrid<RGB128>> FetchTemporaryBuffer(out ArrayGrid<RGB128> buffer) => engine.texturePooler.Fetch(out buffer);
 
 	/// <summary>
 	/// Functions similarly to <see cref="FetchTemporaryBuffer(out ArrayGrid{RGB128})"/>, except that you can indicate a <paramref name="size"/>
 	/// which must be smaller than or equals to the size of <see cref="renderBuffer"/>. NOTE: Remember to dispose/release the handle.
 	/// </summary>
-	public ReleaseHandle<ArrayGrid> FetchTemporaryBuffer(out TextureGrid buffer, Int2 size)
+	public ReleaseHandle<ArrayGrid<RGB128>> FetchTemporaryBuffer(out TextureGrid<RGB128> buffer, Int2 size)
 	{
-		var handle = FetchTemporaryBuffer(out ArrayGrid texture);
+		var handle = FetchTemporaryBuffer(out ArrayGrid<RGB128> texture);
 
 		if (size == texture.size) buffer = texture;
-		else buffer = new CropGrid(texture, Int2.Zero, size);
+		else buffer = texture.Crop(Int2.Zero, size);
 
 		return handle;
 	}
 
 	/// <summary>
-	/// Gets the handle to a temporary <see cref="ArrayGrid"/> with the same size as <see cref="renderBuffer"/>.
+	/// Gets the handle to a temporary <see cref="ArrayGrid{T}"/> with the same size as <see cref="renderBuffer"/>.
 	/// The content of <see cref="renderBuffer"/> is copied onto the allocated <paramref name="buffer"/>.
 	/// NOTE: Remember to use the using statement to release the texture when you are done with it!
 	/// </summary>
-	public ReleaseHandle<ArrayGrid> CopyTemporaryBuffer(out ArrayGrid buffer)
+	public ReleaseHandle<ArrayGrid<RGB128>> CopyTemporaryBuffer(out ArrayGrid<RGB128> buffer)
 	{
 		var handle = FetchTemporaryBuffer(out buffer);
 		buffer.CopyFrom(renderBuffer);

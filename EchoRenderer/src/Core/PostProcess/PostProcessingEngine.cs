@@ -5,6 +5,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using EchoRenderer.Common;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Texturing.Grid;
 
 namespace EchoRenderer.Core.PostProcess;
@@ -82,7 +83,7 @@ public class PostProcessingEngine : IDisposable
 		}
 	}
 
-	public class ArrayGridPooler : PoolerBase<ArrayGrid>
+	public class ArrayGridPooler : PoolerBase<ArrayGrid<RGB128>>
 	{
 		public ArrayGridPooler(Int2 size) => this.size = size;
 
@@ -90,7 +91,7 @@ public class PostProcessingEngine : IDisposable
 
 		protected override int MaxPoolSize => 16;
 
-		protected override ArrayGrid GetNewObject() => new(size);
-		protected override void Reset(ArrayGrid target) { }
+		protected override ArrayGrid<RGB128> GetNewObject() => new(size);
+		protected override void Reset(ArrayGrid<RGB128> target) { }
 	}
 }

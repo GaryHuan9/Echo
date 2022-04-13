@@ -174,7 +174,7 @@ public class Program
 	static void SimplexNoise()
 	{
 		var simplex = new TestGenerative(42, 4);
-		var texture = new ArrayGrid((Int2)1080);
+		var texture = new ArrayGrid<RGB128>((Int2)1080);
 
 		simplex.Tiling = (Float2)1f;
 		simplex.Offset = (Float2)1f;
@@ -186,7 +186,7 @@ public class Program
 	static void FontTesting()
 	{
 		var font = Font.Find("Assets/Fonts/JetBrainsMono/FontMap.png");
-		var output = new ArrayGrid((Int2)2048);
+		var output = new ArrayGrid<RGB128>((Int2)2048);
 
 		output.ForEach(position => output[position] = new RGB128(0f, 0f, 1f));
 		font.Draw(output, "The quick fox does stuff", (Float2)1024f, new Font.Style(100f));
@@ -196,7 +196,7 @@ public class Program
 
 	static void PostProcessTesting()
 	{
-		ArrayGrid texture = TextureGrid.Load("render.fpi");
+		var texture = TextureGrid<RGB128>.Load("render.fpi");
 		RenderBuffer buffer = new RenderBuffer(texture.size);
 
 		buffer.CopyFrom(texture);
@@ -218,8 +218,8 @@ public class Program
 
 	static void CompareImages(string path0 = "render.png", string path1 = "ref.png")
 	{
-		ArrayGrid image0 = TextureGrid.Load(path0);
-		ArrayGrid image1 = TextureGrid.Load(path1);
+		var image0 = TextureGrid<RGB128>.Load(path0);
+		var image1 = TextureGrid<RGB128>.Load(path1);
 
 		if (image0.size != image1.size) throw new Exception("Cannot compare two images with different sizes!");
 
