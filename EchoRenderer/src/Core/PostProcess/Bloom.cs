@@ -17,7 +17,7 @@ public class Bloom : PostProcessingWorker
 	public float Threshold { get; set; } = 0.95f;
 
 	readonly float deviation;
-	ArrayGrid workerBuffer;
+	ArrayGrid<RGB128> workerBuffer;
 
 	public override void Dispatch()
 	{

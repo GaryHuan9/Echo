@@ -8,9 +8,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
+using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Rendering.Materials;
 using EchoRenderer.Core.Texturing;
 using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Texturing.Serialization;
 
 namespace EchoRenderer.InOut;
 
@@ -110,7 +112,7 @@ public class MaterialLibrary
 		materials = new Dictionary<string, Material>();
 	}
 
-	static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] {".mat"});
+	static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] { ".mat" });
 
 	readonly Dictionary<string, Material> materials;
 
@@ -170,8 +172,15 @@ public class MaterialLibrary
 
 		public void Operate()
 		{
-			bool normal = Property.Name.Contains("normal", StringComparison.InvariantCultureIgnoreCase);
-			Property.SetValue(Target, TextureGrid.Load(path, !normal)); //Special case for normal maps to not use sRGB
+			ISerializer serializer = null;
+
+			if (Property.Name.Contains("normal", StringComparison.InvariantCultureIgnoreCase))
+			{
+				serializer = ISerializer.Find(path); //Special case for normal maps to not use sRGB
+				if (serializer is SystemSerializer system) serializer = system with { sRGB = false };
+			}
+
+			Property.SetValue(Target, TextureGrid<RGB128>.Load(path, serializer));
 		}
 	}
 }
