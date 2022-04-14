@@ -131,8 +131,7 @@ public class BSDF
 
 		if (matched == 0)
 		{
-			Utilities.Skip(out incidentWorld);
-
+			incidentWorld = Float3.Zero;
 			selected = default;
 			return Probable<RGB128>.Impossible;
 		}
