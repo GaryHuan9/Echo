@@ -81,7 +81,7 @@ public class SpecularTransmission : BxDF
 
 	public override Probable<RGB128> Sample(in Float3 outgoing, Sample2D sample, out Float3 incident)
 	{
-		RGB128 evaluated = dielectric.Evaluate(outgoing, out incident);
+		RGB128 evaluated = RGB128.White - dielectric.Evaluate(outgoing, out incident);
 		return (evaluated * transmittance / Math.Abs(CosineP(incident)), 1f);
 	}
 }
