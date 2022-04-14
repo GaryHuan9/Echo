@@ -172,12 +172,12 @@ public class MaterialLibrary
 
 		public void Operate()
 		{
-			ISerializer serializer = null;
+			Serializer serializer = null;
 
 			if (Property.Name.Contains("normal", StringComparison.InvariantCultureIgnoreCase))
 			{
-				serializer = ISerializer.Find(path); //Special case for normal maps to not use sRGB
-				if (serializer is SystemSerializer system) serializer = system with { sRGB = false };
+				serializer = Serializer.Find(path); //Special case for normal maps to not use sRGB
+				serializer = serializer with { sRGB = false };
 			}
 
 			Property.SetValue(Target, TextureGrid<RGB128>.Load(path, serializer));

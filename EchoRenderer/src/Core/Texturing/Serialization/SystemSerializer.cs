@@ -12,9 +12,9 @@ using EchoRenderer.Core.Texturing.Grid;
 namespace EchoRenderer.Core.Texturing.Serialization;
 
 /// <summary>
-/// An <see cref="ISerializer"/> implemented through classes from the <see cref="System.Drawing.Imaging"/> namespace.
+/// An <see cref="Serializer"/> implemented through classes from the <see cref="System.Drawing.Imaging"/> namespace.
 /// </summary>
-public record SystemSerializer(ImageFormat Format, bool sRGB = true) : ISerializer
+public record SystemSerializer(ImageFormat Format) : Serializer
 {
 	public static readonly SystemSerializer png = new(ImageFormat.Png);
 	public static readonly SystemSerializer jpeg = new(ImageFormat.Jpeg);
@@ -28,8 +28,7 @@ public record SystemSerializer(ImageFormat Format, bool sRGB = true) : ISerializ
 	const float GammaOffset = 0.055f;
 	const float GammaExponent = 2.4f;
 
-	/// <inheritdoc/>
-	public unsafe void Serialize<T>(TextureGrid<T> texture, Stream stream) where T : IColor<T>
+	public override unsafe void Serialize<T>(TextureGrid<T> texture, Stream stream)
 	{
 		Int2 size = texture.size;
 
@@ -61,8 +60,7 @@ public record SystemSerializer(ImageFormat Format, bool sRGB = true) : ISerializ
 		int Offset(Int2 position) => position.X + (texture.oneLess.Y - position.Y) * size.X;
 	}
 
-	/// <inheritdoc/>
-	public unsafe TextureGrid<T> Deserialize<T>(Stream stream) where T : IColor<T>
+	public override unsafe TextureGrid<T> Deserialize<T>(Stream stream)
 	{
 		using var bitmap = new Bitmap(stream, true);
 		PixelFormat format = bitmap.PixelFormat;

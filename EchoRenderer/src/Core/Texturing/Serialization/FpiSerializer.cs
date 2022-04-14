@@ -10,14 +10,13 @@ using EchoRenderer.Core.Texturing.Grid;
 namespace EchoRenderer.Core.Texturing.Serialization;
 
 /// <summary>
-/// An <see cref="ISerializer"/> for the <see cref="EchoRenderer"/> custom floating-point image (.fpi) format.
+/// An <see cref="Serializer"/> for the <see cref="EchoRenderer"/> custom floating-point image (.fpi) format.
 /// </summary>
-public class FpiSerializer : ISerializer
+public record FpiSerializer : Serializer
 {
 	public static readonly FpiSerializer fpi = new();
 
-	/// <inheritdoc/>
-	public void Serialize<T>(TextureGrid<T> texture, Stream stream) where T : IColor<T>
+	public override void Serialize<T>(TextureGrid<T> texture, Stream stream)
 	{
 		using var writer = new DataWriter(stream);
 
@@ -25,8 +24,7 @@ public class FpiSerializer : ISerializer
 		Write(texture, writer);
 	}
 
-	/// <inheritdoc/>
-	public TextureGrid<T> Deserialize<T>(Stream stream) where T : IColor<T>
+	public override TextureGrid<T> Deserialize<T>(Stream stream)
 	{
 		using var reader = new DataReader(stream);
 
