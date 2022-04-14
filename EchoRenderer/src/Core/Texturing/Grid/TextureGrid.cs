@@ -127,15 +127,15 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	/// <summary>
 	/// Performs a <see cref="Save"/> operation asynchronously.
 	/// </summary>
-	public Task SaveAsync(string path, ISerializer serializer = null) => Task.Run(() => Save(path, serializer));
+	public Task SaveAsync(string path, Serializer serializer = null) => Task.Run(() => Save(path, serializer));
 
 	/// <summary>
 	/// Saves this <see cref="TextureGrid{T}"/> to <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
-	/// will be made to find the best <see cref="ISerializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
+	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
 	/// </summary>
-	public void Save(string path, ISerializer serializer = null)
+	public void Save(string path, Serializer serializer = null)
 	{
-		serializer ??= ISerializer.Find(path);
+		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
 		serializer.Serialize(this, File.Open(AssetsUtility.GetAssetsPath(path), FileMode.Create));
 	}
@@ -159,15 +159,15 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	/// <summary>
 	/// Performs a <see cref="Load"/> operation asynchronously.
 	/// </summary>
-	public static Task<TextureGrid<T>> LoadAsync(string path, ISerializer serializer = null) => Task.Run(() => Load(path, serializer));
+	public static Task<TextureGrid<T>> LoadAsync(string path, Serializer serializer = null) => Task.Run(() => Load(path, serializer));
 
 	/// <summary>
 	/// Loads a <see cref="TextureGrid{T}"/> from <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
-	/// will be made to find the best <see cref="ISerializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
+	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
 	/// </summary>
-	public static TextureGrid<T> Load(string path, ISerializer serializer = null)
+	public static TextureGrid<T> Load(string path, Serializer serializer = null)
 	{
-		serializer ??= ISerializer.Find(path);
+		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
 		return serializer.Deserialize<T>(File.OpenRead(AssetsUtility.GetAssetsPath(path)));
 	}
