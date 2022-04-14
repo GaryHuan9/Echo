@@ -38,41 +38,77 @@ public static class Filters
 
 	class Bilinear : IFilter
 	{
+		// /// <inheritdoc/>
+		// public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>
+		// {
+		// 	//Find x and y
+		// 	Float2 scaled = uv * texture.size;
+		//
+		// 	Vector128<int> x = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.X));
+		// 	Vector128<int> y = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.Y));
+		//
+		// 	x = Sse2.Subtract(x, Vector128.Create(1, 1, 0, 0));
+		// 	y = Sse2.Subtract(y, Vector128.Create(1, 0, 1, 0));
+		//
+		// 	//Wrap and shuffle
+		// 	int minX = x.GetElement(0);
+		// 	int minY = y.GetElement(1);
+		//
+		// 	texture.Wrapper.Wrap(texture, ref x, ref y);
+		//
+		// 	//OPTIMIZE shuffle x and y so we only use half of the GetElement calls
+		//
+		// 	//Fetch color data
+		// 	RGBA128 y0x0 = texture[new Int2(x.GetElement(0), y.GetElement(0))].ToRGBA128();
+		// 	RGBA128 y0x1 = texture[new Int2(x.GetElement(1), y.GetElement(1))].ToRGBA128();
+		//
+		// 	RGBA128 y1x0 = texture[new Int2(x.GetElement(2), y.GetElement(2))].ToRGBA128();
+		// 	RGBA128 y1x1 = texture[new Int2(x.GetElement(3), y.GetElement(3))].ToRGBA128();
+		//
+		// 	//Interpolate
+		// 	float timeX = scaled.X - 0.5f - minX;
+		// 	float timeY = scaled.Y - 0.5f - minY;
+		//
+		// 	Float4 y0 = Float4.Lerp(y0x0, y0x1, timeX);
+		// 	Float4 y1 = Float4.Lerp(y1x0, y1x1, timeX);
+		//
+		// 	return (RGBA128)Float4.Lerp(y0, y1, timeY);
+		// }
+
 		/// <inheritdoc/>
 		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>
 		{
-			//Find x and y
-			Float2 scaled = uv * texture.size;
+			uv *= texture.size;
 
-			Vector128<int> x = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.X));
-			Vector128<int> y = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.Y));
+			Int2 upperRight = uv.Rounded;
+			Int2 bottomLeft = upperRight - Int2.One;
 
-			x = Sse2.Subtract(x, Vector128.Create(1, 1, 0, 0));
-			y = Sse2.Subtract(y, Vector128.Create(1, 0, 1, 0));
+			upperRight = upperRight.Min(texture.oneLess);
+			bottomLeft = bottomLeft.Max(Int2.Zero);
 
-			//Wrap and shuffle
-			int minX = x.GetElement(0);
-			int minY = y.GetElement(1);
+			//Prefetch color data (273.6 ns => 194.6 ns)
+			RGBA128 y0x0 = texture[bottomLeft].ToRGBA128();
+			RGBA128 y0x1 = texture[new Int2(upperRight.X, bottomLeft.Y)].ToRGBA128();
 
-			texture.Wrapper.Wrap(texture, ref x, ref y);
-
-			//OPTIMIZE shuffle x and y so we only use half of the GetElement calls
-
-			//Fetch color data
-			RGBA128 y0x0 = texture[new Int2(x.GetElement(0), y.GetElement(0))].ToRGBA128();
-			RGBA128 y0x1 = texture[new Int2(x.GetElement(1), y.GetElement(1))].ToRGBA128();
-
-			RGBA128 y1x0 = texture[new Int2(x.GetElement(2), y.GetElement(2))].ToRGBA128();
-			RGBA128 y1x1 = texture[new Int2(x.GetElement(3), y.GetElement(3))].ToRGBA128();
+			RGBA128 y1x0 = texture[new Int2(bottomLeft.X, upperRight.Y)].ToRGBA128();
+			RGBA128 y1x1 = texture[upperRight].ToRGBA128();
 
 			//Interpolate
-			float timeX = scaled.X - 0.5f - minX;
-			float timeY = scaled.Y - 0.5f - minY;
+			float timeX = InverseLerp(bottomLeft.X, upperRight.X, uv.X - 0.5f);
+			float timeY = InverseLerp(bottomLeft.Y, upperRight.Y, uv.Y - 0.5f);
 
 			Float4 y0 = Float4.Lerp(y0x0, y0x1, timeX);
 			Float4 y1 = Float4.Lerp(y1x0, y1x1, timeX);
 
 			return (RGBA128)Float4.Lerp(y0, y1, timeY);
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static float InverseLerp(int left, int right, float value)
+			{
+				if (left == right) return 0f;
+				Assert.AreEqual(right, left + 1);
+				return value - left; //Gap is always one
+			}
 		}
 	}
 }

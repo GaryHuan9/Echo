@@ -15,42 +15,6 @@ public static class Utilities
 	public static ref readonly Float3 ToFloat3(in Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float3>(ref Unsafe.AsRef(pixel));
 	public static ref readonly Vector128<float> ToVector(in Float4 value) => ref Unsafe.As<Float4, Vector128<float>>(ref Unsafe.AsRef(value));
 
-	//NOTE: to vector with ref values is unsafe and not provided for float3 since we can access weird memory with it.
-	public static Vector128<float> ToVector(Float3 value) => Unsafe.As<Float3, Vector128<float>>(ref value);
-
-	/// <summary>
-	/// Skips the initialization of output <paramref name="value"/>.
-	/// Assigns <see cref="float.NaN"/> to it if we are in debug mode.
-	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static unsafe void Skip<T>(out T value) where T : unmanaged
-	{
-		Unsafe.SkipInit(out value);
-		Fill(ref value);
-
-		[Conditional(Assert.DebugSymbol)]
-		static void Fill(ref T value)
-		{
-			const int ChunkSize = sizeof(uint);
-			const uint CustomNaN = 0xFFC02A2A;
-
-			ref uint head0 = ref Unsafe.As<T, uint>(ref value);
-
-			int size = sizeof(T);
-
-			while (size >= ChunkSize)
-			{
-				head0 = CustomNaN;
-				size -= ChunkSize;
-
-				head0 = ref Unsafe.Add(ref head0, 1);
-			}
-
-			ref byte head1 = ref Unsafe.As<uint, byte>(ref head0);
-			for (; size >= 0; --size) Unsafe.Add(ref head1, size) = 0x2A;
-		}
-	}
-
 	/// <summary>
 	/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns
 	/// the item it points. Otherwise, <paramref name="defaultValue"/> is returned.

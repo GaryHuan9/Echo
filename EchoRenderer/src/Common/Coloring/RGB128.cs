@@ -14,10 +14,10 @@ namespace EchoRenderer.Common.Coloring;
 public readonly struct RGB128 : IColor<RGB128>, IFormattable
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public RGB128(float r, float g, float b) : this(CheckInput(new Float4(r, g, b, 0f))) { }
+	public RGB128(float r, float g, float b) : this(Check(new Float4(r, g, b, 0f))) { }
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public RGB128(float value) : this(CheckInput(((Float4)value).XYZ_)) { }
+	public RGB128(float value) : this(Check(((Float4)value).XYZ_)) { }
 
 	/// <summary>
 	/// Create an <see cref="RGB128"/> without any checks.
@@ -61,7 +61,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	public string ToString(string format, IFormatProvider provider) => d.ToString(format, provider);
 
 	public static implicit operator Float4(in RGB128 value) => value.d;
-	public static explicit operator RGB128(in Float4 value) => new(CheckInput(value.XYZ_));
+	public static explicit operator RGB128(in Float4 value) => new(Check(value.XYZ_));
 	public static explicit operator RGB128(in RGBA128 value) => new(((Float4)value).XYZ_);
 
 	public static RGB128 operator +(in RGB128 first, in RGB128 second) => new(first.d + second.d);
@@ -76,7 +76,9 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 		return new RGB128(first.d * second);
 	}
 
-	public static RGB128 operator /(in RGB128 first, float second) => new(CheckInput(first.d / second));
+	public static RGB128 operator -(in RGB128 first, in RGB128 second) => new(Check(first.d - second.d));
+
+	public static RGB128 operator /(in RGB128 first, float second) => new(Check(first.d / second));
 	public static RGB128 operator /(in RGB128 first, in RGB128 second) => Divide(first.d, second.d);
 	public static RGB128 operator /(float first, in RGB128 second) => Divide(((Float4)first).XYZ_, second.d);
 
@@ -84,11 +86,11 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	static RGB128 Divide(in Float4 first, in Float4 second)
 	{
 		Float4 result = first / (second + Float4.Ana);
-		return new RGB128(CheckInput(result));
+		return new RGB128(Check(result));
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float4 CheckInput(in Float4 value)
+	static Float4 Check(in Float4 value)
 	{
 		Assert.AreEqual(value.W, 0f);
 		Assert.IsTrue(value.XYZ >= Float3.Zero);
