@@ -76,7 +76,7 @@ public readonly struct FresnelDielectric
 		if (sinT >= 1f)
 		{
 			//Total internal reflection
-			Utilities.Skip(out cosT);
+			cosT = 0f;
 			return true;
 		}
 

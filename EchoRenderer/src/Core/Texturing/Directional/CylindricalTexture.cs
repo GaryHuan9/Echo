@@ -53,8 +53,8 @@ public class CylindricalTexture : IDirectionalTexture
 		Parallel.For(0, size.Y, () => Summation.Zero, (y, _, sum) =>
 		{
 			//Calculate sin weights and create fill for this horizontal row
-			float sin0 = MathF.Sin(Scalars.Pi * (y + 0f) * sizeR.Y);
-			float sin1 = MathF.Sin(Scalars.Pi * (y + 1f) * sizeR.Y);
+			float sin0 = MathF.Sin(Scalars.Pi * (y + 0f) * sizeR.Y).Clamp();
+			float sin1 = MathF.Sin(Scalars.Pi * (y + 1f) * sizeR.Y).Clamp();
 			SpanFill<float> fill = weights.AsSpan(y * size.X, size.X);
 
 			//Loop horizontally, caching the sum of the two previous x colors
@@ -118,7 +118,11 @@ public class CylindricalTexture : IDirectionalTexture
 		FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
 		FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
 
-		if (sinP <= 0f) return (RGB128.Black, 0f);
+		if (sinP <= 0f)
+		{
+			incident = Float3.Zero;
+			return Probable<RGB128>.Impossible;
+		}
 
 		incident = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
 		return ((RGB128)Texture[uv], probable.pdf * Jacobian / sinP);
