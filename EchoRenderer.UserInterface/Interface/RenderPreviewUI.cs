@@ -1,4 +1,4 @@
-﻿using EchoRenderer.Core.Texturing.Grid;
+﻿using EchoRenderer.Core.Textures.Grid;
 using EchoRenderer.UserInterface.Core;
 using EchoRenderer.UserInterface.Core.Areas;
 using SFML.Graphics;

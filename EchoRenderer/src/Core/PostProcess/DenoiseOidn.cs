@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
 
 namespace EchoRenderer.Core.PostProcess;
 
