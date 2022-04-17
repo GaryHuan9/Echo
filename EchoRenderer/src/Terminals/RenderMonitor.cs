@@ -2,6 +2,7 @@ using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.Evaluation.Engines;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -112,7 +113,7 @@ public class RenderMonitor : Terminal.Section
 		long rejectedSample = Engine.RejectedSample;
 
 		double progress = Progress;
-		TimeSpan remain = TimeSpan.FromSeconds(seconds / Math.Max(progress, Scalars.Epsilon) - seconds);
+		TimeSpan remain = TimeSpan.FromSeconds(seconds / Math.Max(progress, FastMath.Epsilon) - seconds);
 
 		builders.SetLine(2, $" | Time Elapsed {elapsed:hh\\:mm\\:ss\\:ff} | Time Remain {remain:hh\\:mm\\:ss\\:ff} | Complete Percent {progress * 100d:F2}% | Rejected Sample {rejectedSample:N0} |");
 	}

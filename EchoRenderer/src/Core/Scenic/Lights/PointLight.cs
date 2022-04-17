@@ -20,7 +20,7 @@ public class PointLight : LightSource
 	{
 		base.Prepare(scene);
 
-		_power = 4f * Scalars.Pi * PackedMath.GetLuminance(Utilities.ToVector(Intensity));
+		_power = 4f * Scalars.Pi * Intensity.Luminance;
 	}
 
 	public override Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)

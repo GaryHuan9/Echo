@@ -138,13 +138,13 @@ public class PreparedInstance
 
 			static float FindSingle(Sample1D sample, ref PreparedInstance instance, ref GeometryToken stack)
 			{
-				var probable = instance.powerDistribution.Find(sample);
-				ref readonly NodeToken token = ref probable.content;
+				var found = instance.powerDistribution.Find(sample);
+				ref readonly NodeToken token = ref found.content;
 
 				if (token.IsTriangle || token.IsSphere) stack.Geometry = token;
 				else stack.Push(instance = instance.pack.GetInstance(token));
 
-				return probable.pdf;
+				return found.pdf;
 			}
 		}
 

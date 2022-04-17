@@ -2,7 +2,9 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Core.Textures.Colors;
 
@@ -26,7 +28,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 
 	readonly Float4 d; //The W component should always be zero
 
-	const float EpsilonWeight = 1E-5f;
+	const float EpsilonWeight = FastMath.Epsilon;
 	const float RadianceWeightR = 0.212671f;
 	const float RadianceWeightG = 0.715160f;
 	const float RadianceWeightB = 0.072169f;

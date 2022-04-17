@@ -17,6 +17,11 @@ public static class FastMath
 	//2 = the square (eg: three = 3f -> three2 = three * three = 9f)
 
 	/// <summary>
+	/// A positive number that is really small and close to zero.
+	/// </summary>
+	public const float Epsilon = 8E-7f;
+
+	/// <summary>
 	/// This is the largest IEEE-754 float32 value that is smaller than 1f (ie. 1f - 1ulp).
 	/// </summary>
 	const float OneMinusEpsilon = 0.99999994f;
@@ -114,11 +119,11 @@ public static class FastMath
 	/// Returns whether <paramref name="value"/> is positive based on <paramref name="epsilon"/>.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static bool Positive(float value, float epsilon = 1E-8f) => value > epsilon;
+	public static bool Positive(float value, float epsilon = Epsilon) => value > epsilon;
 
 	/// <summary>
 	/// Returns whether <paramref name="value"/> is almost zero based on <paramref name="epsilon"/>.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static bool AlmostZero(float value, float epsilon = 1E-8f) => (-epsilon < value) & (value < epsilon);
+	public static bool AlmostZero(float value, float epsilon = Epsilon) => (-epsilon < value) & (value < epsilon);
 }
