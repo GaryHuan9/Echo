@@ -1,6 +1,8 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Core.Evaluation.Distributions;
 using EchoRenderer.Core.Textures.Colors;
@@ -25,7 +27,7 @@ public abstract class DirectionalTextureBaseTests
 	public void Average()
 	{
 		RGB128 average = texture.ConvergeAverage();
-		Assert.That(Difference(average, texture.Average), Is.LessThan(0.001f));
+		Assert.That(FastMath.AlmostZero(Difference(average, texture.Average)));
 	}
 
 	[Test]
@@ -35,7 +37,7 @@ public abstract class DirectionalTextureBaseTests
 
 		(RGB128 sampled, float pdf) = texture.Sample(sample, out Float3 incident);
 
-		Assert.That(Difference(sampled, texture.Evaluate(incident)), Is.LessThan(0.001f));
+		Assert.That(FastMath.AlmostZero(Difference(sampled, texture.Evaluate(incident))));
 		Assert.That(pdf, Is.EqualTo(texture.ProbabilityDensity(incident)).Roughly(0.01f));
 	}
 
