@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using EchoRenderer.Common.Mathematics.Primitives;
-using EchoRenderer.Core.Rendering.Distributions;
-using EchoRenderer.Core.Rendering.Distributions.Discrete;
+using EchoRenderer.Core.Evaluation.Distributions;
+using EchoRenderer.Core.Evaluation.Distributions.Discrete;
 using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests;

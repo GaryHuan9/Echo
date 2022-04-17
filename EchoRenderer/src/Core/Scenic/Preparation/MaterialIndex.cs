@@ -1,4 +1,4 @@
-﻿using EchoRenderer.Core.Rendering.Materials;
+﻿using EchoRenderer.Core.Evaluation.Materials;
 
 namespace EchoRenderer.Core.Scenic.Preparation;
 

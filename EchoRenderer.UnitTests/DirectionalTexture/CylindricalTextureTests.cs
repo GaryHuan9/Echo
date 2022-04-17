@@ -1,5 +1,5 @@
 ﻿using CodeHelpers.Packed;
-using EchoRenderer.Core.Texturing.Directional;
+using EchoRenderer.Core.Textures.Directional;
 using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests.DirectionalTexture;

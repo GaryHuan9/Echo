@@ -3,7 +3,7 @@ using System.Linq;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common.Mathematics.Randomization;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 
 namespace EchoRenderer.Core.Scenic.Instancing;
 

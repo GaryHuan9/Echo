@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using EchoRenderer.Common.Mathematics;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic.Instancing;
 
 namespace EchoRenderer.Core.Scenic.Preparation;

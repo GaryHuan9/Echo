@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
-using EchoRenderer.Common;
-using EchoRenderer.Common.Coloring;
-using EchoRenderer.Core.Texturing;
+using EchoRenderer.Core.Textures;
+using EchoRenderer.Core.Textures.Colors;
 using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.PostProcess;

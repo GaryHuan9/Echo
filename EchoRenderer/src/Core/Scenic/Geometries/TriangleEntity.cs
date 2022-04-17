@@ -8,7 +8,7 @@ using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Evaluation.Distributions;
 using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Scenic.Geometries;

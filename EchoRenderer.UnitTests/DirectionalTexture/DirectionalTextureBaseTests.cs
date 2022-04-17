@@ -1,11 +1,11 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Randomization;
-using EchoRenderer.Core.Rendering.Distributions;
-using EchoRenderer.Core.Texturing.Directional;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Evaluation.Distributions;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Directional;
+using EchoRenderer.Core.Textures.Grid;
 using NUnit.Framework;
 
 namespace EchoRenderer.UnitTests.DirectionalTexture;

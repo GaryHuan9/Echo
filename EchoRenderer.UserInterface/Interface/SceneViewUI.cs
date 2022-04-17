@@ -3,12 +3,12 @@ using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using EchoRenderer.Core.Rendering.Engines;
-using EchoRenderer.Core.Rendering.Evaluators;
+using EchoRenderer.Core.Evaluation.Engines;
+using EchoRenderer.Core.Evaluation.Evaluators;
 using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Examples;
 using EchoRenderer.Core.Scenic.Preparation;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Grid;
 using EchoRenderer.UserInterface.Core.Areas;
 
 namespace EchoRenderer.UserInterface.Interface;

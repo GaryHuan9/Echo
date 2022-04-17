@@ -7,7 +7,7 @@ using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Core.Aggregation;
 using EchoRenderer.Core.Aggregation.Acceleration;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Preparation;

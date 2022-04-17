@@ -2,9 +2,9 @@
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Grid;
 
 namespace EchoRenderer.Core.PostProcess.Operators;
 

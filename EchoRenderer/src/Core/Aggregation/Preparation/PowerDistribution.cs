@@ -3,8 +3,8 @@ using CodeHelpers.Diagnostics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Distributions;
-using EchoRenderer.Core.Rendering.Distributions.Discrete;
+using EchoRenderer.Core.Evaluation.Distributions;
+using EchoRenderer.Core.Evaluation.Distributions.Discrete;
 
 namespace EchoRenderer.Core.Aggregation.Preparation;
 

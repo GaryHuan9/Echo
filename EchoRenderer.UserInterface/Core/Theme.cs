@@ -3,7 +3,7 @@ using System.Globalization;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common;
-using EchoRenderer.Common.Coloring;
+using EchoRenderer.Core.Textures.Colors;
 using SFML.Graphics;
 
 namespace EchoRenderer.UserInterface.Core;

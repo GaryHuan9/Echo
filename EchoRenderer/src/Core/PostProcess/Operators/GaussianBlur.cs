@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
-using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Grid;
 
 namespace EchoRenderer.Core.PostProcess.Operators;
 
