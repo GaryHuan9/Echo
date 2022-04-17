@@ -93,7 +93,7 @@ public class CylindricalTexture : IDirectionalTexture
 
 		//Construct distribution and calculate average from total sum
 		distribution = new DiscreteDistribution2D(weights, size.X);
-		Average = (RGB128)(total.Result * 2f * Scalars.PiR / size.Product);
+		Average = (RGB128)(total.Result * Scalars.Pi / 2f / size.Product);
 	}
 
 	/// <inheritdoc/>
