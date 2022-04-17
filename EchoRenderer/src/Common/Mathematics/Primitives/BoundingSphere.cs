@@ -28,7 +28,7 @@ public readonly struct BoundingSphere
 		//Because floating point arithmetic accuracy issues, we will increase the radius of
 		//the sphere by an epsilon to ensure that the sphere contains all the input points.
 
-		radius *= 1f + Scalars.Epsilon;
+		radius *= 1f + FastMath.Epsilon;
 	}
 
 	public BoundingSphere(in Float3 center, float radius)

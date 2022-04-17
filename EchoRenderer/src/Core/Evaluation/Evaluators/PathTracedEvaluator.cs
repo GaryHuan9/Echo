@@ -108,8 +108,6 @@ public class PathTracedEvaluator : Evaluator
 					break;
 				}
 
-				//TODO: hitting emissive surface immediately ends path
-
 				//Try add emission with MIS
 				//FIX: area light could get recollected after allocator restarts
 				if (area is GeometryLight geometry && geometry.Token == path.touch.token)

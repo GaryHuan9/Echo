@@ -73,6 +73,7 @@ public class PreparedScene
 	/// </summary>
 	public bool Trace(ref TraceQuery query)
 	{
+		if (!FastMath.Positive(query.distance)) return false;
 		float original = query.distance;
 
 		rootInstance.TraceRoot(ref query);
@@ -85,6 +86,7 @@ public class PreparedScene
 	/// </summary>
 	public bool Occlude(ref OccludeQuery query)
 	{
+		if (!FastMath.Positive(query.travel)) return false;
 		Interlocked.Increment(ref _occludeCount);
 		return rootInstance.OccludeRoot(ref query);
 	}

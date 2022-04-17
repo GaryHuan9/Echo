@@ -138,9 +138,9 @@ public class BSDF
 
 		//Sample the selected function
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Probable<RGB128> probable = selected.Sample(outgoing, sample, out Float3 incident);
+		Probable<RGB128> sampled = selected.Sample(outgoing, sample, out Float3 incident);
 
-		if (probable.NotPossible | probable.content.IsZero)
+		if (sampled.NotPossible | sampled.content.IsZero)
 		{
 			incidentWorld = Float3.Zero;
 			return Probable<RGB128>.Impossible;
@@ -149,21 +149,21 @@ public class BSDF
 		incidentWorld = transform.LocalToWorld(incident);
 
 		//If there is only one function, we have finished
-		if (matched == 1) return probable;
+		if (matched == 1) return sampled;
 		Assert.IsTrue(matched > 1);
 
 		//If the selected function is specular, we are also finished
 		if (selected.type.Any(FunctionType.specular))
 		{
 			//Specular functions are Dirac delta distributions
-			Assert.AreEqual(probable.pdf, 1f);
-			return (probable, 1f / matched);
+			Assert.AreEqual(sampled.pdf, 1f);
+			return (sampled, 1f / matched);
 		}
 
 		//Sample the other matching functions
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
 
-		(RGB128 total, float pdf) = probable;
+		(RGB128 total, float pdf) = sampled;
 
 		for (int i = 0; i < count; i++)
 		{

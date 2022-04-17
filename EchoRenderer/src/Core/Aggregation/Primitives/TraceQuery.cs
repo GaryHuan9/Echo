@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Preparation;
@@ -79,7 +80,7 @@ public struct TraceQuery
 		get
 		{
 			AssertHit();
-			return ray.GetPoint(Math.Max(distance, Scalars.Epsilon));
+			return ray.GetPoint(Math.Max(distance, FastMath.Epsilon));
 		}
 	}
 

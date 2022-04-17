@@ -48,31 +48,12 @@ public static class PackedMath
 		if (Fma.IsSupported) return Fma.MultiplyAdd(value, multiplier, adder);
 		return Sse.Add(Sse.Multiply(value, multiplier), adder);
 	}
-
-	/// <summary>
-	/// Returns the approximated luminance of <paramref name="color"/>.
-	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static float GetLuminance(in Vector128<float> color)
-	{
-		if (Sse41.IsSupported) return Sse41.DotProduct(color, Constants.LuminanceVector, 0b0111_0001).GetElement(0);
-
-		Vector128<float> result = Sse.Multiply(color, Constants.LuminanceVector);
-		return result.GetElement(0) + result.GetElement(1) + result.GetElement(2);
-	}
-
-	/// <summary>
-	/// Returns a color with minimal individual component sum that has <paramref name="luminance"/>.
-	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Vector128<float> CreateLuminance(float luminance) => Sse.Multiply(Constants.LuminanceVector, Vector128.Create(luminance));
-
 	/// <summary>
 	/// Returns whether all elements in <paramref name="value"/> is less than positive
 	/// <paramref name="epsilon"/> and greater than negative <paramref name="epsilon"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool AlmostZero(in Vector128<float> value, float epsilon = Scalars.Epsilon)
+	public static bool AlmostZero(in Vector128<float> value, float epsilon = FastMath.Epsilon)
 	{
 		Vector128<float> compare = Sse.Or
 		(
