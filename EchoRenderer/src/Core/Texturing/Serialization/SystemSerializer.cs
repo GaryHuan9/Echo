@@ -23,10 +23,10 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 	public static readonly SystemSerializer gif = new(ImageFormat.Gif);
 	public static readonly SystemSerializer exif = new(ImageFormat.Exif);
 
-	const float GammaThreshold = 0.0031308f;
-	const float GammaMultiplier = 12.92f;
-	const float GammaOffset = 0.055f;
-	const float GammaExponent = 2.4f;
+	const double GammaThreshold = 0.0031308d;
+	const double GammaMultiplier = 12.92d;
+	const double GammaOffset = 0.055d;
+	const double GammaExponent = 2.4d;
 
 	public override unsafe void Serialize<T>(TextureGrid<T> texture, Stream stream)
 	{
@@ -57,7 +57,7 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 			pointer[3] = color.a;
 		}
 
-		int Offset(Int2 position) => position.X + (texture.oneLess.Y - position.Y) * size.X;
+		nuint Offset(Int2 position) => (uint)(position.X + (texture.oneLess.Y - position.Y) * size.X);
 	}
 
 	public override unsafe TextureGrid<T> Deserialize<T>(Stream stream)
@@ -123,8 +123,12 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 
 		static void Operate(ref float target)
 		{
-			if (target <= GammaThreshold) target *= GammaMultiplier;
-			else target = (1f + GammaOffset) * MathF.Pow(target, 1f / GammaExponent) - GammaOffset;
+			double result;
+
+			if (target <= GammaThreshold) result = target * GammaMultiplier;
+			else result = (1d + GammaOffset) * Math.Pow(target, 1d / GammaExponent) - GammaOffset;
+
+			target = (float)result;
 		}
 	}
 
@@ -135,8 +139,12 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 
 		static void Operate(ref float target)
 		{
-			if (target <= GammaThreshold * GammaMultiplier) target *= 1f / GammaMultiplier;
-			else target = MathF.Pow((target + GammaOffset) * (1f / (1f + GammaOffset)), GammaExponent);
+			double result;
+
+			if (target <= GammaThreshold * GammaMultiplier) result = target / GammaMultiplier;
+			else result = Math.Pow((target + GammaOffset) * (1d / (1d + GammaOffset)), GammaExponent);
+
+			target = (float)result;
 		}
 	}
 
