@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Runtime.Intrinsics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
-using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Core.PostProcess.Operators;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Grid;
 
 namespace EchoRenderer.Core.PostProcess;
 

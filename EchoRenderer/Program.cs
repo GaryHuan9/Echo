@@ -4,16 +4,16 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
-using EchoRenderer.Common.Coloring;
+using EchoRenderer.Core.Evaluation.Engines;
+using EchoRenderer.Core.Evaluation.Evaluators;
 using EchoRenderer.Core.PostProcess;
 using EchoRenderer.Core.PostProcess.ToneMappers;
-using EchoRenderer.Core.Rendering.Engines;
-using EchoRenderer.Core.Rendering.Evaluators;
 using EchoRenderer.Core.Scenic;
 using EchoRenderer.Core.Scenic.Examples;
 using EchoRenderer.Core.Scenic.Preparation;
-using EchoRenderer.Core.Texturing.Generative;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Generative;
+using EchoRenderer.Core.Textures.Grid;
 using EchoRenderer.InOut;
 using EchoRenderer.Terminals;
 
@@ -105,7 +105,7 @@ public class Program
 
 		var renderProfile = new TiledRenderProfile
 		{
-			Method = new PathTracedEvaluator(),
+			Method = new BruteForcedEvaluator(),
 			TilePattern = new CheckerboardPattern(),
 			// WorkerSize = 1,
 			PixelSample = 64,

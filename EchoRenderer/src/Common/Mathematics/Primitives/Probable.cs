@@ -1,6 +1,4 @@
-﻿using EchoRenderer.Common.Coloring;
-
-namespace EchoRenderer.Common.Mathematics.Primitives;
+﻿namespace EchoRenderer.Common.Mathematics.Primitives;
 
 /// <summary>
 /// Represents something of type <typeparamref name="T"/> with a certain probability density function (pdf) value.

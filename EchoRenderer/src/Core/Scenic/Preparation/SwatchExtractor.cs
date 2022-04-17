@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
 

@@ -4,17 +4,17 @@ using System.Linq;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Common.Memory;
 using EchoRenderer.Core.Aggregation.Preparation;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Distributions;
-using EchoRenderer.Core.Rendering.Distributions.Discrete;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Distributions;
+using EchoRenderer.Core.Evaluation.Distributions.Discrete;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Lights;
+using EchoRenderer.Core.Textures.Colors;
 
 namespace EchoRenderer.Core.Scenic.Preparation;
 

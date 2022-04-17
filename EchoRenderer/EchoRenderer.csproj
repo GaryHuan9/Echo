@@ -37,14 +37,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="src\Core\Rendering\Materials\Diffuse.cs" />
-        <Compile Remove="src\Core\Rendering\Materials\Glass.cs" />
-        <Compile Remove="src\Core\Rendering\Materials\Glossy.cs" />
-        <Compile Remove="src\Core\Rendering\Materials\MaterialOld.cs" />
+        <Compile Remove="src\Core\Evaluation\Materials\Diffuse.cs" />
+        <Compile Remove="src\Core\Evaluation\Materials\Glass.cs" />
+        <Compile Remove="src\Core\Evaluation\Materials\Glossy.cs" />
+        <Compile Remove="src\Core\Evaluation\Materials\MaterialOld.cs" />
+        <Compile Remove="src\Core\Evaluation\Materials\EmissiveOld.cs" />
         <Compile Remove="src\Core\Scenic\Examples\BMWs.cs" />
         <Compile Remove="src\Core\Scenic\Examples\TestScenes.cs" />
         <Compile Remove="src\Core\Scenic\Examples\MaterialBalls.cs" />
-        <Compile Remove="src\Core\Rendering\Materials\EmissiveOld.cs" />
     </ItemGroup>
 
 </Project>

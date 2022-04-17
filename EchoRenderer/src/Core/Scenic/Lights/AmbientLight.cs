@@ -1,16 +1,13 @@
 using System;
-using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
-using EchoRenderer.Common.Coloring;
-using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Evaluation.Distributions;
 using EchoRenderer.Core.Scenic.Preparation;
-using EchoRenderer.Core.Texturing.Directional;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Directional;
 
 namespace EchoRenderer.Core.Scenic.Lights;
 
@@ -19,7 +16,7 @@ namespace EchoRenderer.Core.Scenic.Lights;
 /// </summary>
 public class AmbientLight : AreaLightSource
 {
-	NotNull<object> _texture = Texturing.Texture.black; //Interfaces and implicit casts are not so nice to each other so object is used here
+	NotNull<object> _texture = Textures.Texture.black; //Interfaces and implicit casts are not so nice to each other so object is used here
 
 	public IDirectionalTexture Texture
 	{

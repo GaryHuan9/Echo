@@ -1,8 +1,8 @@
 ﻿using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
-using EchoRenderer.Core.Rendering.Materials;
-using EchoRenderer.Core.Rendering.Scattering;
+using EchoRenderer.Core.Evaluation.Materials;
+using EchoRenderer.Core.Evaluation.Scattering;
 using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Aggregation.Primitives;

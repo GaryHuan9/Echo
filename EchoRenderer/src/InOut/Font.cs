@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Mathematics.Enumerable;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Grid;
 
 namespace EchoRenderer.InOut;
 

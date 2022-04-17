@@ -1,8 +1,8 @@
 ﻿using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Lights;
-using EchoRenderer.Core.Texturing;
+using EchoRenderer.Core.Textures;
+using EchoRenderer.Core.Textures.Colors;
 using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.Scenic.Examples;
