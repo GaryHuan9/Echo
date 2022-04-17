@@ -1,10 +1,10 @@
 ﻿using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
 using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Aggregation.Primitives;
-using EchoRenderer.Core.Rendering.Distributions;
+using EchoRenderer.Core.Evaluation.Distributions;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Preparation;
+using EchoRenderer.Core.Textures.Colors;
 
 namespace EchoRenderer.Core.Scenic.Lights;
 

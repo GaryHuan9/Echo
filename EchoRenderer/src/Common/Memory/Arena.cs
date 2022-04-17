@@ -1,5 +1,5 @@
 ﻿using CodeHelpers;
-using EchoRenderer.Core.Rendering.Distributions.Continuous;
+using EchoRenderer.Core.Evaluation.Distributions.Continuous;
 
 namespace EchoRenderer.Common.Memory;
 

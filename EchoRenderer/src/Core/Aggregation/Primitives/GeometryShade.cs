@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 
 namespace EchoRenderer.Core.Aggregation.Primitives;
 

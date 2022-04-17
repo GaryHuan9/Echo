@@ -8,11 +8,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
-using EchoRenderer.Common.Coloring;
-using EchoRenderer.Core.Rendering.Materials;
-using EchoRenderer.Core.Texturing;
-using EchoRenderer.Core.Texturing.Grid;
-using EchoRenderer.Core.Texturing.Serialization;
+using EchoRenderer.Core.Evaluation.Materials;
+using EchoRenderer.Core.Textures;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Grid;
+using EchoRenderer.Core.Textures.Serialization;
 
 namespace EchoRenderer.InOut;
 

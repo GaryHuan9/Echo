@@ -2,14 +2,14 @@
 using CodeHelpers.Mathematics;
 using CodeHelpers.Mathematics.Enumerable;
 using CodeHelpers.Packed;
-using EchoRenderer.Common.Coloring;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
 using EchoRenderer.Core.Scenic.Lights;
-using EchoRenderer.Core.Texturing;
-using EchoRenderer.Core.Texturing.Directional;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Directional;
+using EchoRenderer.Core.Textures.Grid;
 using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.Scenic.Examples;

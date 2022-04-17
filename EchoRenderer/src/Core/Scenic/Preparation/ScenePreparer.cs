@@ -4,7 +4,7 @@ using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Pooling;
 using EchoRenderer.Core.Aggregation.Preparation;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
 using EchoRenderer.Core.Scenic.Instancing;
 

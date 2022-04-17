@@ -1,10 +1,7 @@
-﻿using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Packed;
-using EchoRenderer.Common;
-using EchoRenderer.Common.Coloring;
+﻿using CodeHelpers.Packed;
 using EchoRenderer.Core.PostProcess.Operators;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Grid;
 using EchoRenderer.InOut;
 
 namespace EchoRenderer.Core.PostProcess;

@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
-using EchoRenderer.Common.Coloring;
-using EchoRenderer.Core.Texturing.Grid;
+using EchoRenderer.Core.Textures.Colors;
+using EchoRenderer.Core.Textures.Grid;
 
 namespace EchoRenderer.Core.PostProcess;
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using CodeHelpers;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic.Preparation;
 
 namespace EchoRenderer.Core.Scenic.Geometries;

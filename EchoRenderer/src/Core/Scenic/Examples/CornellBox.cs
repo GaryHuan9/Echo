@@ -1,11 +1,10 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using EchoRenderer.Common;
-using EchoRenderer.Common.Coloring;
-using EchoRenderer.Core.Rendering.Materials;
+using EchoRenderer.Core.Evaluation.Materials;
 using EchoRenderer.Core.Scenic.Geometries;
-using EchoRenderer.Core.Texturing;
+using EchoRenderer.Core.Textures;
+using EchoRenderer.Core.Textures.Colors;
 
 namespace EchoRenderer.Core.Scenic.Examples
 {

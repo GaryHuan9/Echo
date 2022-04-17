@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 
 namespace EchoRenderer.Common;
