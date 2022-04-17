@@ -58,7 +58,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
 
 	public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);
-	public string ToString(string format, IFormatProvider provider) => d.ToString(format, provider);
+	public string ToString(string format, IFormatProvider provider) => d.XYZ.ToString(format, provider);
 
 	public static implicit operator Float4(in RGB128 value) => value.d;
 	public static explicit operator RGB128(in Float4 value) => new(Check(value.XYZ_));

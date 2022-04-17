@@ -54,11 +54,20 @@ public class RenderBuffer : ArrayGrid<RGB128>
 		{
 			Parallel.ForEach(layers, pair =>
 			{
+				if (pair.Value == this) return;
+
 				var source = buffer.layers.TryGetValue(pair.Key);
 				if (source != null) pair.Value.CopyFrom(source);
 			});
 		}
-		else Parallel.ForEach(layers, pair => pair.Value.CopyFrom(texture));
+		else
+		{
+			Parallel.ForEach(layers, pair =>
+			{
+				if (pair.Value == this) return;
+				pair.Value.CopyFrom(texture);
+			});
+		}
 	}
 
 	/// <summary>
