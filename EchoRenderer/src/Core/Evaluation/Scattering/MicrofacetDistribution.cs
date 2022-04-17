@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using EchoRenderer.Common.Mathematics;
 
 namespace EchoRenderer.Core.Evaluation.Scattering;
 
@@ -34,7 +35,7 @@ public abstract class MicrofacetDistribution
 	/// </summary>
 	protected static float GetAlpha(float roughness)
 	{
-		float a = MathF.Log(Math.Max(roughness, Scalars.Epsilon));
+		float a = MathF.Log(Math.Max(roughness, FastMath.Epsilon));
 		float a2 = a * a;
 
 		return 1.62142f + 0.819955f * a + 0.1734f * a2 + 0.0171201f * a2 * a + 0.000640711f * a2 * a2;
@@ -48,7 +49,7 @@ public class BeckmannDistribution : MicrofacetDistribution
 {
 	public void Reset(Float2 newAlpha)
 	{
-		alpha = newAlpha.Max((Float2)Scalars.Epsilon);
+		alpha = newAlpha.Max((Float2)FastMath.Epsilon);
 	}
 
 	Float2 alpha;
@@ -83,7 +84,7 @@ public class TrowbridgeReitzDistribution : MicrofacetDistribution
 {
 	public void Reset(Float2 newAlpha)
 	{
-		alpha = newAlpha.Max((Float2)Scalars.Epsilon);
+		alpha = newAlpha.Max((Float2)FastMath.Epsilon);
 	}
 
 	Float2 alpha;

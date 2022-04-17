@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Primitives;
@@ -64,7 +65,8 @@ public class GeometryLight : IAreaLight
 		travel = FastMath.Sqrt0(travel2);
 		incident = delta * (1f / travel);
 
-		return (Emissive.Emit(sampled, -incident), 1f);
+		travel = FastMath.Max0(travel - FastMath.Epsilon);
+		return (Emissive.Emit(sampled, -incident), sampled.pdf);
 	}
 
 	/// <inheritdoc/>

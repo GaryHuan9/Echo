@@ -105,11 +105,11 @@ public class Program
 
 		var renderProfile = new TiledRenderProfile
 		{
-			Method = new BruteForcedEvaluator(),
+			Method = new PathTracedEvaluator(),
 			TilePattern = new CheckerboardPattern(),
 			// WorkerSize = 1,
 			PixelSample = 64,
-			//AdaptiveSample = 400
+			// AdaptiveSample = 400
 		};
 
 		DebugHelper.Log("Assets loaded");

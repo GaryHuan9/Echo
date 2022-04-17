@@ -102,15 +102,15 @@ public class CylindricalTexture : IDirectionalTexture
 	/// <inheritdoc/>
 	public Probable<RGB128> Sample(Sample2D sample, out Float3 incident)
 	{
-		Probable<Sample2D> probable = distribution.Sample(sample);
+		Probable<Sample2D> sampled = distribution.Sample(sample);
 
-		if (probable.NotPossible)
+		if (sampled.NotPossible)
 		{
 			incident = Float3.Zero;
 			return Probable<RGB128>.Impossible;
 		}
 
-		Float2 uv = probable.content;
+		Float2 uv = sampled.content;
 
 		float angle0 = uv.X * Scalars.Tau;
 		float angle1 = uv.Y * Scalars.Pi;
@@ -125,7 +125,7 @@ public class CylindricalTexture : IDirectionalTexture
 		}
 
 		incident = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
-		return ((RGB128)Texture[uv], probable.pdf * Jacobian / sinP);
+		return ((RGB128)Texture[uv], sampled.pdf * Jacobian / sinP);
 	}
 
 	/// <inheritdoc/>
