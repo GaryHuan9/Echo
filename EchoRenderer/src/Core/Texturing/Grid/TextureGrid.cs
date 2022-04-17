@@ -136,8 +136,10 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	public void Save(string path, Serializer serializer = null)
 	{
 		serializer ??= Serializer.Find(path);
-		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
-		serializer.Serialize(this, File.Open(AssetsUtility.GetAssetsPath(path), FileMode.Create));
+		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "cannot be found");
+
+		using Stream stream = File.Open(AssetsUtility.GetAssetsPath(path), FileMode.Create);
+		serializer.Serialize(this, stream);
 	}
 
 	/// <summary>
@@ -169,7 +171,9 @@ public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
 	{
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
-		return serializer.Deserialize<T>(File.OpenRead(AssetsUtility.GetAssetsPath(path)));
+
+		using Stream stream = File.OpenRead(AssetsUtility.GetAssetsPath(path));
+		return serializer.Deserialize<T>(stream);
 	}
 
 	static Int2 IsPowerOfTwo(Int2 size)
