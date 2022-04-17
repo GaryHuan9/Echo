@@ -1,7 +1,4 @@
-﻿using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+﻿using CodeHelpers.Packed;
 using EchoRenderer.Common.Mathematics;
 using EchoRenderer.Common.Mathematics.Randomization;
 using EchoRenderer.Core.Evaluation.Distributions;
