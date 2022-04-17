@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using EchoRenderer.Common.Mathematics.Primitives;
 using EchoRenderer.Core.Evaluation.Distributions;
 using EchoRenderer.Core.Evaluation.Distributions.Discrete;
 using NUnit.Framework;
