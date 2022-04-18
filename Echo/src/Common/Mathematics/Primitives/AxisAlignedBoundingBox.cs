@@ -109,8 +109,8 @@ public readonly struct AxisAlignedBoundingBox
 	{
 		//The well known 'slab method'. Referenced from https://tavianator.com/2011/ray_box.html
 
-		Vector128<float> lengths0 = Sse.Multiply(Sse.Subtract(minV, ray.originV), ray.inverseDirectionV);
-		Vector128<float> lengths1 = Sse.Multiply(Sse.Subtract(maxV, ray.originV), ray.inverseDirectionV);
+		Vector128<float> lengths0 = Sse.Multiply(Sse.Subtract(minV, ray.originV), ray.directionRV);
+		Vector128<float> lengths1 = Sse.Multiply(Sse.Subtract(maxV, ray.originV), ray.directionRV);
 
 		Vector128<float> lengthsMin = Sse.Max(lengths0, lengths1);
 		Vector128<float> lengthsMax = Sse.Min(lengths0, lengths1);

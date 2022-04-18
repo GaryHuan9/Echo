@@ -12,20 +12,25 @@ public class Program
 {
 	static void Main()
 	{
-		TestJitter();
+		// TestJitter();
 		// TestUnmanaged();
+
+		// var test = new AabbSimd();
+		//
+		// test.Quad();
+		// test.Quad2();
 
 		// BenchmarkRunner.Run<PackedFloats>();
 		// BenchmarkRunner.Run<Aggregators>();
 		// BenchmarkRunner.Run<RadixSort>();
 		// BenchmarkRunner.Run<Loops>();
-		// BenchmarkRunner.Run<AabbSimd>();
+		BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
 	}
 
 	static void TestJitter()
 	{
-		var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
+		var method = typeof(AxisAlignedBoundingBox4V2).GetMethod(nameof(AxisAlignedBoundingBox4V2.Intersect));
 		DebugHelper.Log(method.ToAsm());
 	}
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
@@ -61,34 +62,35 @@ public readonly struct AxisAlignedBoundingBox4
 	/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
 	/// Returns either the intersection distance or <see cref="float.PositiveInfinity"/> if none was found.
 	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public Vector128<float> Intersect(in Ray ray)
 	{
 		//X axis
 		Vector128<float> origin = Make(ray.origin.X);
-		Vector128<float> inverseDirection = Make(ray.inverseDirection.X);
+		Vector128<float> directionR = Make(ray.directionR.X);
 
-		Vector128<float> length0 = Sse.Multiply(Sse.Subtract(minX, origin), inverseDirection);
-		Vector128<float> length1 = Sse.Multiply(Sse.Subtract(maxX, origin), inverseDirection);
+		Vector128<float> length0 = Sse.Multiply(Sse.Subtract(minX, origin), directionR);
+		Vector128<float> length1 = Sse.Multiply(Sse.Subtract(maxX, origin), directionR);
 
 		Vector128<float> far = Sse.Max(length0, length1);
 		Vector128<float> near = Sse.Min(length0, length1);
 
 		//Y axis
 		origin = Make(ray.origin.Y);
-		inverseDirection = Make(ray.inverseDirection.Y);
+		directionR = Make(ray.directionR.Y);
 
-		length0 = Sse.Multiply(Sse.Subtract(minY, origin), inverseDirection);
-		length1 = Sse.Multiply(Sse.Subtract(maxY, origin), inverseDirection);
+		length0 = Sse.Multiply(Sse.Subtract(minY, origin), directionR);
+		length1 = Sse.Multiply(Sse.Subtract(maxY, origin), directionR);
 
 		far = Sse.Min(far, Sse.Max(length0, length1));
 		near = Sse.Max(near, Sse.Min(length0, length1));
 
 		//Z axis
 		origin = Make(ray.origin.Z);
-		inverseDirection = Make(ray.inverseDirection.Z);
+		directionR = Make(ray.directionR.Z);
 
-		length0 = Sse.Multiply(Sse.Subtract(minZ, origin), inverseDirection);
-		length1 = Sse.Multiply(Sse.Subtract(maxZ, origin), inverseDirection);
+		length0 = Sse.Multiply(Sse.Subtract(minZ, origin), directionR);
+		length1 = Sse.Multiply(Sse.Subtract(maxZ, origin), directionR);
 
 		far = Sse.Min(far, Sse.Max(length0, length1));
 		near = Sse.Max(near, Sse.Min(length0, length1));
