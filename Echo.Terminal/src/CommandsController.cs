@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
-namespace Echo.Terminals;
+namespace Echo.Terminal;
 
 public class CommandsController : Terminal.Section, ILogger
 {

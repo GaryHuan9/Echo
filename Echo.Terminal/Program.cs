@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using CodeHelpers;
+﻿using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
@@ -15,9 +13,8 @@ using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Generative;
 using Echo.Core.Textures.Grid;
 using Echo.InOut;
-using Echo.Terminals;
 
-namespace Echo;
+namespace Echo.Terminal;
 
 public class Program
 {
@@ -30,7 +27,7 @@ public class Program
 
 		// return;
 
-		using Terminal terminal = renderTerminal = new Terminal();
+		using Echo.Terminal.Terminal terminal = renderTerminal = new Echo.Terminal.Terminal();
 
 		terminal.AddSection(new CommandsController(terminal));
 		terminal.AddSection(renderMonitor = new RenderMonitor(terminal));
@@ -43,11 +40,11 @@ public class Program
 #endif
 
 		PerformRender();
-		Console.ReadKey();
+		System.Console.ReadKey();
 	}
 
 	static TiledRenderEngine renderEngine;
-	static Terminal renderTerminal;
+	static Echo.Terminal.Terminal renderTerminal;
 	static RenderMonitor renderMonitor;
 
 	static readonly TiledRenderProfile pathTraceFastProfile = new()
