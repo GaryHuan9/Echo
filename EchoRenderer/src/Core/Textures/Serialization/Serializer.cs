@@ -11,7 +11,7 @@ namespace EchoRenderer.Core.Textures.Serialization;
 public abstract record Serializer
 {
 	/// <summary>
-	/// Whether the <see cref="Serializer"/> should use the standard RGB color space and gamma
+	/// Whether the <see cref="Serializer"/> should use the standard RGB color-space and gamma
 	/// correct the converted data? This property might not be applicable to all implementations.
 	/// </summary>
 	public bool sRGB { get; init; } = true;

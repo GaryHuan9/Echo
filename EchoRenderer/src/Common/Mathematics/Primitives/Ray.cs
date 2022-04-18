@@ -11,10 +11,10 @@ namespace EchoRenderer.Common.Mathematics.Primitives;
 public readonly struct Ray
 {
 	/// <summary>
-	/// Constructs a ray.
+	/// Constructs a <see cref="Ray"/>.
 	/// </summary>
-	/// <param name="origin">The origin of the ray</param>
-	/// <param name="direction">The direction of the ray. NOTE: it should be normalized.</param>
+	/// <param name="origin">The origin of the ray.</param>
+	/// <param name="direction">The unit direction of the ray.</param>
 	public Ray(Float3 origin, Float3 direction)
 	{
 		Assert.AreEqual(direction.SquaredMagnitude, 1f);

@@ -130,9 +130,11 @@ public readonly struct PreparedSphere
 	}
 
 	/// <summary>
-	/// Samples this <see cref="PreparedSphere"/> based on <paramref name="sample"/> at <paramref name="origin"/> and
-	/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
+	/// Samples this <see cref="PreparedSphere"/>.
 	/// </summary>
+	/// <param name="origin">The geometry-space point of whose perspective the result should be sampled through.</param>
+	/// <param name="sample">The <see cref="Sample2D"/> used to sample the result.</param>
+	/// <returns>The <see cref="Probable{T}"/> point that was sampled.</returns>
 	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
 	{
 		//Check whether origin is inside sphere
@@ -174,8 +176,11 @@ public readonly struct PreparedSphere
 	}
 
 	/// <summary>
-	/// Returns the probability density function over solid angles of sampling <paramref name="incident"/> from <paramref name="origin"/>.
+	/// Calculates the pdf of selecting <see cref="incident"/> with <see cref="Sample"/>.
 	/// </summary>
+	/// <param name="origin">The geometry-space point of whose perspective the pdf should be calculated through.</param>
+	/// <param name="incident">The selected geometry-space unit direction that points from <paramref name="origin"/>.</param>
+	/// <returns>The probability density function (pdf) value over solid angles.</returns>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 	{
 		//Check whether point is inside this sphere

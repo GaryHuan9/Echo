@@ -40,7 +40,7 @@ public class SpecularReflection : BxDF
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
 
-	public override Probable<RGB128> Sample(in Float3 outgoing, Sample2D sample, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
 		incident = new Float3(-outgoing.X, -outgoing.Y, outgoing.Z);
 		float cosI = CosineP(incident);
@@ -79,7 +79,7 @@ public class SpecularTransmission : BxDF
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
 
-	public override Probable<RGB128> Sample(in Float3 outgoing, Sample2D sample, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
 		RGB128 evaluated = RGB128.White - dielectric.Evaluate(outgoing, out incident);
 		return (evaluated * transmittance / Math.Abs(CosineP(incident)), 1f);

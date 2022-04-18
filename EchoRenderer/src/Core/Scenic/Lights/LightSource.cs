@@ -46,7 +46,7 @@ public abstract class AreaLightSource : LightSource, IAreaLight
 
 /// <summary>
 /// A source of photons; creates radiance and illuminates the <see cref="Scene"/>.
-/// NOTE: the entirety of the light system (ie. parameters etc.) is in world space.
+/// NOTE: the entirety of the light system (ie. parameters etc.) is in world-space.
 /// </summary>
 public interface ILight
 {

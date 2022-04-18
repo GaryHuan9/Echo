@@ -97,7 +97,19 @@ public class CylindricalTexture : IDirectionalTexture
 	}
 
 	/// <inheritdoc/>
-	public RGB128 Evaluate(in Float3 direction) => (RGB128)Texture[ToUV(direction)];
+	public RGB128 Evaluate(in Float3 incident) => (RGB128)Texture[ToUV(incident)];
+
+	/// <inheritdoc/>
+	public float ProbabilityDensity(in Float3 incident)
+	{
+		Float2 uv = ToUV(incident);
+		float cosP = -incident.Y;
+		float sinP = FastMath.Identity(cosP);
+
+		if (!FastMath.Positive(sinP)) return 0f;
+
+		return distribution.ProbabilityDensity((Sample2D)uv) * Jacobian / sinP;
+	}
 
 	/// <inheritdoc/>
 	public Probable<RGB128> Sample(Sample2D sample, out Float3 incident)
@@ -118,7 +130,7 @@ public class CylindricalTexture : IDirectionalTexture
 		FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
 		FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
 
-		if (sinP <= 0f)
+		if (!FastMath.Positive(sinP))
 		{
 			incident = Float3.Zero;
 			return Probable<RGB128>.Impossible;
@@ -126,18 +138,6 @@ public class CylindricalTexture : IDirectionalTexture
 
 		incident = new Float3(-sinP * sinT, -cosP, -sinP * cosT);
 		return ((RGB128)Texture[uv], sampled.pdf * Jacobian / sinP);
-	}
-
-	/// <inheritdoc/>
-	public float ProbabilityDensity(in Float3 incident)
-	{
-		Float2 uv = ToUV(incident);
-		float cosP = -incident.Y;
-		float sinP = FastMath.Identity(cosP);
-
-		if (sinP <= 0f) return 0f;
-
-		return distribution.ProbabilityDensity((Sample2D)uv) * Jacobian / sinP;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]

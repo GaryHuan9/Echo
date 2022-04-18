@@ -42,7 +42,7 @@ public struct Touch
 	public readonly GeometryToken token;
 
 	/// <summary>
-	/// World space outgoing direction of this <see cref="Touch"/>.
+	/// World-space outgoing direction of this <see cref="Touch"/>.
 	/// </summary>
 	public readonly Float3 outgoing;
 

@@ -24,8 +24,8 @@ public class AmbientLight : AreaLightSource
 		set => _texture = new NotNull<object>(value);
 	}
 
-	Float3x3 localToWorld; //From local space to world space, rotation only
-	Float3x3 worldToLocal; //From world space to local space, rotation only
+	Float3x3 localToWorld; //From local-space to world-space, rotation only
+	Float3x3 worldToLocal; //From world-space to local-space, rotation only
 
 	public override Float3 Position
 	{
