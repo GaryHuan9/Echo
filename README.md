@@ -1,8 +1,8 @@
-# EchoRenderer
+# Echo
 
 ---
 
-EchoRenderer (Echo) is a CPU photorealistic rendering software written in pure C# completely from scratch<sup>1</sup>.
+Echo is a CPU photorealistic rendering software written in pure C# completely from scratch<sup>1</sup>.
 
 Echo currently support four materials: Diffuse, Glossy, Glass, and Emissive.
 All material properties can be controlled by texture maps, which are either loaded from file or dynamically generated.
@@ -39,13 +39,13 @@ Finally, the image is saved as a .png file as the render result.
 ---
 
 _Cornell Box No Ambient (512x512; 128 spp; 20000 adaptive spp; 38 triangles)_
-![Cornell Box](https://github.com/GaryHuan9/EchoRenderer/blob/main/EchoRenderer/Renders/V4%20-%20Path%20Tracing%20More/render%20new%20cornell%20box%2040k%20sp.png?raw=true)
+![Cornell Box](https://github.com/GaryHuan9/Echo/blob/main/Echo/Renders/V4%20-%20Path%20Tracing%20More/render%20new%20cornell%20box%2040k%20sp.png?raw=true)
 
 _Blender BMW Multiple Lights No Ambient (1920x1080; 128 spp; 16000 adaptive spp; 1.7M triangles)_
-![Lighted Blender BMW](https://github.com/GaryHuan9/EchoRenderer/blob/main/EchoRenderer/Renders/V3%20-%20Path%20Tracing%20Naive/Old%20Tracer/render%20bmw%20lights%20transparency%20128%2016000%20samples.png?raw=true)
+![Lighted Blender BMW](https://github.com/GaryHuan9/Echo/blob/main/Echo/Renders/V3%20-%20Path%20Tracing%20Naive/Old%20Tracer/render%20bmw%20lights%20transparency%20128%2016000%20samples.png?raw=true)
 
 _Blender Material Ball Transparency (1920x1080; 128 spp; 12000 adaptive spp; 2.4M triangles)_
-![Material Ball](https://github.com/GaryHuan9/EchoRenderer/blob/main/EchoRenderer/Renders/V4%20-%20Path%20Tracing%20More/render%20material%20ball%20128%2012000%20v1.png?raw=true)
+![Material Ball](https://github.com/GaryHuan9/Echo/blob/main/Echo/Renders/V4%20-%20Path%20Tracing%20More/render%20material%20ball%20128%2012000%20v1.png?raw=true)
 
 _Instanced Material Balls (1920x1080; 64 spp; 1600 adaptive spp; 5.8B triangles)_
-![Instanced Balls](https://github.com/GaryHuan9/EchoRenderer/blob/main/EchoRenderer/Renders/V4%20-%20Path%20Tracing%20More/render%20instancing%206%20billion%20tris.png?raw=true)
+![Instanced Balls](https://github.com/GaryHuan9/Echo/blob/main/Echo/Renders/V4%20-%20Path%20Tracing%20More/render%20instancing%206%20billion%20tris.png?raw=true)
