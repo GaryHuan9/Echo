@@ -1,3 +1,3 @@
-[submodule "EchoRenderer/CodeHelpers"]
+[submodule "Echo/CodeHelpers"]
 	path = CodeHelpers/CodeHelpers
-	url = https://github.com/MMXXX-VIII/CodeHelpers.git
+	url = https://github.com/GaryHuan9/CodeHelpers.git
