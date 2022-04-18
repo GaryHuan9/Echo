@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Echo.UserInterface": {
+      "commandName": "Project",
+      "workingDirectory": "C:\\Users\\MMXXXVIII\\Things\\CodingStuff\\C#\\Echo\\Echo"
+    }
+  }
+}
