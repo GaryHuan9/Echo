@@ -4,7 +4,7 @@ using CodeHelpers.Packed;
 namespace EchoRenderer.Common.Mathematics.Primitives;
 
 /// <summary>
-/// A transform constructed from a surface normal. Can be used to transform a direction between local and world space.
+/// A transform constructed from a surface normal. Can be used to transform a direction between local and world-space.
 /// </summary>
 public readonly struct NormalTransform
 {
@@ -27,12 +27,12 @@ public readonly struct NormalTransform
 	readonly Float3 binormal;
 
 	/// <summary>
-	/// Transforms a <paramref name="direction"/> from world space to local space using this <see cref="NormalTransform"/>.
+	/// Transforms a <paramref name="direction"/> from world-space to local-space using this <see cref="NormalTransform"/>.
 	/// </summary>
 	public Float3 WorldToLocal(in Float3 direction) => new(direction.Dot(tangent), direction.Dot(binormal), direction.Dot(normal));
 
 	/// <summary>
-	/// Transforms a <paramref name="direction"/> from local space to world space using this <see cref="NormalTransform"/>.
+	/// Transforms a <paramref name="direction"/> from local-space to world-space using this <see cref="NormalTransform"/>.
 	/// </summary>
 	public Float3 LocalToWorld(in Float3 direction) => new
 	(

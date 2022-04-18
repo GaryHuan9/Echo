@@ -19,12 +19,12 @@ public readonly struct GeometryPoint
 	}
 
 	/// <summary>
-	/// The world space position of this point.
+	/// The world-space position of this point.
 	/// </summary>
 	public readonly Float3 position;
 
 	/// <summary>
-	/// The world space surface normal of the geometry at this point.
+	/// The world-space surface normal of the geometry at this point.
 	/// </summary>
 	public readonly Float3 normal;
 

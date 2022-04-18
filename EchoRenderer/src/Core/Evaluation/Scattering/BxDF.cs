@@ -11,9 +11,9 @@ namespace EchoRenderer.Core.Evaluation.Scattering;
 
 /// <summary>
 /// The base class for either a bidirectional reflectance or transmittance distribution function.
-/// NOTE: unless specifically indicated, all directions in this class is in local space, meaning
+/// NOTE: unless specifically indicated, all directions in this class is in local-space, meaning
 /// <see cref="Float3.Forward"/> is the surface normal at our point of interest, and incident and
-/// outgoing directions point away from that point.
+/// outgoing unit directions point away from that point.
 /// </summary>
 public abstract class BxDF
 {
@@ -22,15 +22,21 @@ public abstract class BxDF
 	public readonly FunctionType type;
 
 	/// <summary>
-	/// Evaluates and returns the value of this <see cref="BxDF"/> from two pairs of <see cref="BxDF"/> local directions,
-	/// the leaving <paramref name="incident"/> direction and the returning <paramref name="outgoing"/> direction.
+	/// Evaluates this <see cref="BxDF"/> from <see cref="outgoing"/> to <paramref name="incident"/>.
 	/// </summary>
+	/// <param name="outgoing">The unit local direction from which we enter.</param>
+	/// <param name="incident">The unit local direction towards which we exit.</param>
+	/// <returns>The <see cref="RGB128"/> value evaluated.</returns>
+	/// <seealso cref="Sample"/>
 	public abstract RGB128 Evaluate(in Float3 outgoing, in Float3 incident);
 
 	/// <summary>
-	/// Returns the probability density function (pdf) value from two pairs of <see cref="BxDF"/> local directions,
-	/// the leaving <paramref name="incident"/> direction and the returning <paramref name="outgoing"/> direction.
+	/// Calculates the pdf of selecting <paramref name="incident"/> from <see cref="outgoing"/> with <see cref="Sample"/>.
 	/// </summary>
+	/// <param name="outgoing">The unit local source direction from which we enter.</param>
+	/// <param name="incident">The selected unit local direction towards which we exit.</param>
+	/// <returns>The probability density function (pdf) value of this selection.</returns>
+	/// <seealso cref="Sample"/>
 	public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
 		if (!SameHemisphere(outgoing, incident)) return 0f;
@@ -38,12 +44,13 @@ public abstract class BxDF
 	}
 
 	/// <summary>
-	/// Samples a leaving <paramref name="incident"/> local direction based on <paramref name="sample"/>, outputs
-	/// the probability density function (pdf) value of doing so to <paramref name="pdf"/>, and returns the value
-	/// of this <see cref="BxDF"/> evaluated from the returning local <paramref name="outgoing"/> direction to the
-	/// <paramref name="incident"/> direction that we just sampled.
+	/// Samples <paramref name="incident"/> based on <paramref name="outgoing"/> for this <see cref="BxDF"/>.
 	/// </summary>
-	public virtual Probable<RGB128> Sample(in Float3 outgoing, Sample2D sample, out Float3 incident)
+	/// <param name="sample">The <see cref="Sample2D"/> used to sample <paramref name="incident"/>.</param>
+	/// <param name="outgoing">The unit local source direction from which we enter.</param>
+	/// <param name="incident">The sampled unit local direction towards which we exit.</param>
+	/// <returns>The <see cref="Probable{T}"/> value evaluated from <paramref name="outgoing"/> to <paramref name="incident"/>.</returns>
+	public virtual Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
 		incident = sample.CosineHemisphere;
 		if (outgoing.Z < 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
@@ -61,7 +68,7 @@ public abstract class BxDF
 
 		foreach (ref readonly Sample2D sample in samples)
 		{
-			Probable<RGB128> sampled = Sample(outgoing, sample, out Float3 incident);
+			Probable<RGB128> sampled = Sample(sample, outgoing, out Float3 incident);
 
 			if (sampled.NotPossible | sampled.content.IsZero) continue;
 
@@ -84,7 +91,7 @@ public abstract class BxDF
 		for (int i = 0; i < samples0.Length; i++)
 		{
 			Float3 outgoing = samples0[i].UniformHemisphere;
-			Probable<RGB128> sampled = Sample(outgoing, samples1[i], out Float3 incident);
+			Probable<RGB128> sampled = Sample(samples1[i], outgoing, out Float3 incident);
 
 			if (sampled.NotPossible | sampled.content.IsZero) continue;
 
@@ -136,7 +143,7 @@ public abstract class BxDF
 	public static float CosineT(in Float3 direction)
 	{
 		float sin = SineP(direction);
-		if (sin == 0f) return 1f;
+		if (FastMath.AlmostZero(sin)) return 1f;
 		return FastMath.Clamp11(direction.X / sin);
 	}
 
@@ -146,7 +153,7 @@ public abstract class BxDF
 	public static float SineT(in Float3 direction)
 	{
 		float sin = SineP(direction);
-		if (sin == 0f) return 0f;
+		if (FastMath.AlmostZero(sin)) return 0f;
 		return FastMath.Clamp11(direction.Y / sin);
 	}
 
@@ -156,7 +163,7 @@ public abstract class BxDF
 	public static float CosineT2(in Float3 direction)
 	{
 		float sin2 = SineP2(direction);
-		if (sin2 == 0f) return 1f;
+		if (FastMath.AlmostZero(sin2)) return 1f;
 		return FastMath.Clamp01(direction.X * direction.X / sin2);
 	}
 
@@ -166,7 +173,7 @@ public abstract class BxDF
 	public static float SineT2(in Float3 direction)
 	{
 		float sin2 = SineP2(direction);
-		if (sin2 == 0f) return 0f;
+		if (FastMath.AlmostZero(sin2)) return 0f;
 		return FastMath.Clamp01(direction.Y * direction.Y / sin2);
 	}
 

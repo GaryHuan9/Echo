@@ -191,8 +191,8 @@ public class PreparedPack
 	}
 
 	/// <summary>
-	/// <inheritdoc cref="PreparedScene.Sample"/>
-	/// NOTE: this method functions according to the local coordinate system of this <see cref="PreparedPack"/>.
+	/// Underlying implementation of <see cref="PreparedScene.Sample"/>, functional
+	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
 	public Probable<GeometryPoint> Sample(in NodeToken token, in Float3 origin, Sample2D sample)
 	{
@@ -214,8 +214,8 @@ public class PreparedPack
 	}
 
 	/// <summary>
-	/// <inheritdoc cref="PreparedScene.ProbabilityDensity"/>
-	/// NOTE: this method functions according to the local coordinate system of this <see cref="PreparedPack"/>.
+	/// Underlying implementation of <see cref="PreparedScene.ProbabilityDensity"/>, functional
+	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
 	public float ProbabilityDensity(in NodeToken token, in Float3 origin, in Float3 incident)
 	{

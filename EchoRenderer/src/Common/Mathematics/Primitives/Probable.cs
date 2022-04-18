@@ -1,7 +1,7 @@
 ﻿namespace EchoRenderer.Common.Mathematics.Primitives;
 
 /// <summary>
-/// Represents something of type <typeparamref name="T"/> with a certain probability density function (pdf) value.
+/// Represents something of type <typeparamref name="T"/> with a particular probability density function (pdf) value associated with it.
 /// </summary>
 public readonly struct Probable<T>
 {
@@ -14,6 +14,9 @@ public readonly struct Probable<T>
 	public readonly T content;
 	public readonly float pdf;
 
+	/// <summary>
+	/// Returns a <see cref="Probable{T}"/> with a <see cref="pdf"/> of 0.
+	/// </summary>
 	public static Probable<T> Impossible => default;
 
 	/// <summary>
@@ -21,13 +24,19 @@ public readonly struct Probable<T>
 	/// </summary>
 	public bool NotPossible => !FastMath.Positive(pdf);
 
+	/// <summary>
+	/// Converts a tuple with (<see cref="content"/>, <see cref="pdf"/>) to a matching <see cref="Probable{T}"/>.
+	/// </summary>
 	public static implicit operator Probable<T>(in (T content, float pdf) pair) => new(pair.content, pair.pdf);
 
+	/// <summary>
+	/// Converts a <see cref="Probable{T}"/> to its <see cref="content"/>.
+	/// </summary>
 	public static implicit operator T(in Probable<T> probable) => probable.content;
 
-	public void Deconstruct(out T outContent, out float outPdf)
+	public void Deconstruct(out T _content, out float _pdf)
 	{
-		outContent = content;
-		outPdf = pdf;
+		_content = content;
+		_pdf = pdf;
 	}
 }

@@ -84,7 +84,7 @@ public class DiscreteDistribution1Tests
 	static void ProbabilityDensitySingle(DiscreteDistribution1D distribution, Sample1D sample)
 	{
 		var one = distribution.Sample(sample);
-		var two = distribution.Find(sample);
+		var two = distribution.Pick(sample);
 
 		Assert.That(distribution.ProbabilityDensity(one), Is.EqualTo(one.pdf).Roughly());
 		Assert.That(distribution.ProbabilityDensity(two), Is.EqualTo(two.pdf).Roughly());

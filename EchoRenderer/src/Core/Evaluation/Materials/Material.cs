@@ -67,7 +67,7 @@ public abstract class Material
 		local *= NormalIntensity;
 		if (local == Float4.Zero) return false;
 
-		//Create transform to move local direction to world space
+		//Create transform to move local direction to world-space
 		NormalTransform transform = new NormalTransform(normal);
 		Float3 delta = transform.LocalToWorld(local.XYZ);
 
