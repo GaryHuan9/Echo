@@ -21,23 +21,23 @@ public readonly struct Ray
 
 		Unsafe.SkipInit(out originV);
 		Unsafe.SkipInit(out directionV);
-		Unsafe.SkipInit(out inverseDirection);
+		Unsafe.SkipInit(out directionR);
 
 		this.origin = origin;
 		this.direction = direction;
 
 		//Because _mm_rcp_ps is only an approximation, we cannot use it here
-		inverseDirectionV = Sse.Divide(Vector128.Create(1f), directionV);
+		directionRV = Sse.Divide(Vector128.Create(1f), directionV);
 	}
 
 	[FieldOffset(0)] public readonly Float3 origin;
 	[FieldOffset(12)] public readonly Float3 direction;
-	[FieldOffset(24)] public readonly Float3 inverseDirection;
+	[FieldOffset(24)] public readonly Float3 directionR;
 
 	//NOTE: these fields have overlapping memory offsets to reduce footprint. Pay extra attention when assigning them.
 	[FieldOffset(0)] public readonly Vector128<float> originV;
 	[FieldOffset(12)] public readonly Vector128<float> directionV;
-	[FieldOffset(24)] public readonly Vector128<float> inverseDirectionV;
+	[FieldOffset(24)] public readonly Vector128<float> directionRV;
 
 	/// <summary>
 	/// Returns the point this <see cref="Ray"/> points at <paramref name="distance"/>.
