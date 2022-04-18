@@ -138,7 +138,7 @@ public class BSDF
 
 		//Sample the selected function
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Probable<RGB128> sampled = selected.Sample(outgoing, sample, out Float3 incident);
+		var sampled = selected.Sample(sample, outgoing, out Float3 incident);
 
 		if (sampled.NotPossible | sampled.content.IsZero)
 		{

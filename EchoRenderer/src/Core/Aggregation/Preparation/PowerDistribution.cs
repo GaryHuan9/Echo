@@ -49,13 +49,14 @@ public class PowerDistribution
 	public float Total => distribution.sum;
 
 	/// <summary>
-	/// Finds one <see cref="NodeToken"/> from this <see cref="PowerDistribution"/>
-	/// based on <paramref name="sample"/> and outputs <paramref name="pdf"/>.
+	/// Picks a light from this <see cref="PowerDistribution"/>.
 	/// </summary>
-	public Probable<NodeToken> Find(Sample1D sample)
+	/// <param name="sample">The <see cref="Sample1D"/> used to pick the result</param>
+	/// <returns>The <see cref="Probable{T}"/> token representing the light.</returns>
+	public Probable<NodeToken> Pick(Sample1D sample)
 	{
 		//Sample from distribution and do binary search
-		Probable<int> index = distribution.Find(sample);
+		Probable<int> index = distribution.Pick(sample);
 		int segment = starts.AsSpan().BinarySearch(index.content);
 
 		//Find token from index

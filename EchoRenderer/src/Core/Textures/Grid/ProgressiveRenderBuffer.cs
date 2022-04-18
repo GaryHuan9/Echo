@@ -111,14 +111,11 @@ public class ProgressiveRenderBuffer : RenderBuffer
 		ClearWrittenFlagArray();
 	}
 
-	public void ClearWrittenFlagArray() => Array.Clear(flags, 0, flags.Length);
+	public void ClearWrittenFlagArray() => Array.Clear(flags);
 
 	unsafe void ClearSerializedByteArray()
 	{
-		int length = bytes.Length / 4;
 		var color32 = new Color32(0, 0, 0);
-
-		if (length == 0) return;
 
 		fixed (byte* origin = bytes)
 		{

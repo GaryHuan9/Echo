@@ -206,9 +206,11 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	}
 
 	/// <summary>
-	/// Uniformly samples this <see cref="PreparedTriangle"/> based on <paramref name="sample"/> and outputs
-	/// the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
+	/// Uniformly samples this <see cref="PreparedTriangle"/>.
 	/// </summary>
+	/// <param name="origin">The geometry-space point of whose perspective the result should be sampled through.</param>
+	/// <param name="sample">The <see cref="Sample2D"/> used to sample the result.</param>
+	/// <returns>The <see cref="Probable{T}"/> point that was sampled.</returns>
 	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
 	{
 		Float2 uv = sample.UniformTriangle;
@@ -220,8 +222,11 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	}
 
 	/// <summary>
-	/// Returns the probability density function over solid angles of sampling <paramref name="incident"/> from <paramref name="origin"/>.
+	/// Calculates the pdf of selecting <see cref="incident"/> with <see cref="Sample"/>.
 	/// </summary>
+	/// <param name="origin">The geometry-space point of whose perspective the pdf should be calculated through.</param>
+	/// <param name="incident">The selected geometry-space unit direction that points from <paramref name="origin"/>.</param>
+	/// <returns>The probability density function (pdf) value over solid angles.</returns>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 	{
 		Ray ray = new Ray(origin, incident);

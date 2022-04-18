@@ -10,7 +10,7 @@ namespace EchoRenderer.Core.Evaluation.Distributions.Discrete;
 /// <summary>
 /// A one dimensional piecewise distribution constructed from a function of discrete probability destiny values.
 /// </summary>
-public class DiscreteDistribution1D
+public readonly struct DiscreteDistribution1D
 {
 	public DiscreteDistribution1D(ReadOnlySpan<float> pdfValues)
 	{
@@ -85,9 +85,10 @@ public class DiscreteDistribution1D
 	public int Count => cdfValues.Length;
 
 	/// <summary>
-	/// Samples this <see cref="DiscreteDistribution1D"/> at continuous linear intervals
-	/// based on <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
+	/// Samples a continuous value based on linear intervals from this <see cref="DiscreteDistribution1D"/>.
 	/// </summary>
+	/// <param name="sample">The <see cref="Sample1D"/> used to sample the result.</param>
+	/// <returns>The continuous <see cref="Probable{T}"/> value sampled.</returns>
 	public Probable<Sample1D> Sample(Sample1D sample)
 	{
 		//Find index and lower and upper bounds
@@ -104,10 +105,11 @@ public class DiscreteDistribution1D
 	}
 
 	/// <summary>
-	/// Finds a discrete point from this <see cref="DiscreteDistribution1D"/> based on
-	/// <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
+	/// Picks a discrete value from this <see cref="DiscreteDistribution1D"/>.
 	/// </summary>
-	public Probable<int> Find(Sample1D sample)
+	/// <param name="sample">The <see cref="Sample1D"/> used to pick the result.</param>
+	/// <returns>The discrete <see cref="Probable{T}"/> value picked.</returns>
+	public Probable<int> Pick(Sample1D sample)
 	{
 		int index = FindIndex(sample);
 		GetBounds(index, out float lower, out float upper);
@@ -115,22 +117,26 @@ public class DiscreteDistribution1D
 	}
 
 	/// <summary>
-	/// Returns the probability destiny function of this <see cref="DiscreteDistribution1D"/>
-	/// if we sampled <paramref name="sample"/> from <see cref="Sample"/>.
+	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Sample"/>.
 	/// </summary>
-	public float ProbabilityDensity(Sample1D sample)
+	/// <param name="result">The selected continuous value.</param>
+	/// <returns>The probability density function (pdf) value of the selection.</returns>
+	/// <seealso cref="Sample"/>
+	public float ProbabilityDensity(Sample1D result)
 	{
-		GetBounds(sample.Range(Count), out float lower, out float upper);
+		GetBounds(result.Range(Count), out float lower, out float upper);
 		return (upper - lower) * Count;
 	}
 
 	/// <summary>
-	/// Returns the probability destiny function of this <see cref="DiscreteDistribution1D"/>
-	/// if we found <paramref name="point"/> from <see cref="Find"/>.
+	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Pick"/>.
 	/// </summary>
-	public float ProbabilityDensity(int point)
+	/// <param name="result">The selected discrete value.</param>
+	/// <returns>The probability density function (pdf) value of the selection.</returns>
+	/// <seealso cref="Pick"/>
+	public float ProbabilityDensity(int result)
 	{
-		GetBounds(point, out float lower, out float upper);
+		GetBounds(result, out float lower, out float upper);
 		return upper - lower;
 	}
 

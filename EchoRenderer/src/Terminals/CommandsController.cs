@@ -75,7 +75,7 @@ public class CommandsController : Terminal.Section, ILogger
 		Log(input);
 
 		if (!input.StartsWith(CommandPrefix)) return;
-		input = input.Substring(CommandPrefix.Length);
+		input = input[CommandPrefix.Length..];
 
 		string[] parts = input.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
 
