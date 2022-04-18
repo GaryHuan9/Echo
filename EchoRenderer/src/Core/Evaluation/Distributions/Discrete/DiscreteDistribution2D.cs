@@ -9,7 +9,7 @@ namespace EchoRenderer.Core.Evaluation.Distributions.Discrete;
 /// <summary>
 /// A two dimensional piecewise distribution constructed from a function of discrete points.
 /// </summary>
-public class DiscreteDistribution2D
+public readonly struct DiscreteDistribution2D
 {
 	/// <summary>
 	/// Constructs a <see cref="DiscreteDistribution2D"/> from discrete points on a 2D <see cref="function"/>,
@@ -57,9 +57,10 @@ public class DiscreteDistribution2D
 	public float Integral => vertical.integral;
 
 	/// <summary>
-	/// Samples this <see cref="DiscreteDistribution2D"/> at continuous linear intervals
-	/// based on <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
+	/// Samples a continuous point based on linear intervals from this <see cref="DiscreteDistribution2D"/>.
 	/// </summary>
+	/// <param name="sample">The <see cref="Sample2D"/> used to sample the result.</param>
+	/// <returns>The continuous <see cref="Probable{T}"/> point sampled.</returns>
 	public Probable<Sample2D> Sample(Sample2D sample)
 	{
 		Probable<Sample1D> y = vertical.Sample(sample.y);
@@ -69,41 +70,46 @@ public class DiscreteDistribution2D
 	}
 
 	/// <summary>
-	/// Finds a discrete point from this <see cref="DiscreteDistribution2D"/> based on
-	/// <paramref name="sample"/> and outputs the <paramref name="pdf"/>.
+	/// Picks a discrete point from this <see cref="DiscreteDistribution2D"/>.
 	/// </summary>
-	public Probable<Int2> Find(Sample2D sample)
+	/// <param name="sample">The <see cref="Sample2D"/> used to pick the result.</param>
+	/// <returns>The discrete <see cref="Probable{T}"/> point picked.</returns>
+	public Probable<Int2> Pick(Sample2D sample)
 	{
-		Probable<int> y = vertical.Find(sample.y);
-		Probable<int> x = slices[y].Find(sample.x);
+		Probable<int> y = vertical.Pick(sample.y);
+		Probable<int> x = slices[y].Pick(sample.x);
 
 		return (new Int2(x, y), x.pdf * y.pdf);
 	}
 
 	/// <summary>
-	/// Returns the probability destiny function of this <see cref="DiscreteDistribution2D"/>
-	/// if we sampled <paramref name="sample"/> from <see cref="Sample"/>.
+	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Sample"/>.
 	/// </summary>
-	public float ProbabilityDensity(Sample2D sample)
+	/// <param name="result">The selected continuous point.</param>
+	/// <returns>The probability density function (pdf) value of the selection.</returns>
+	/// <seealso cref="Sample"/>
+	public float ProbabilityDensity(Sample2D result)
 	{
-		DiscreteDistribution1D slice = slices[sample.y.Range(size.Y)];
+		ref readonly DiscreteDistribution1D slice = ref slices[result.y.Range(size.Y)];
 
-		float pdfX = slice.ProbabilityDensity(sample.x);
-		float pdfY = vertical.ProbabilityDensity(sample.y);
+		float pdfX = slice.ProbabilityDensity(result.x);
+		float pdfY = vertical.ProbabilityDensity(result.y);
 
 		return pdfX * pdfY;
 	}
 
 	/// <summary>
-	/// Returns the probability destiny function of this <see cref="DiscreteDistribution2D"/>
-	/// if we sampled <paramref name="point"/> from <see cref="Find"/>.
+	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Pick"/>.
 	/// </summary>
-	public float ProbabilityDensity(Int2 point)
+	/// <param name="result">The selected discrete point.</param>
+	/// <returns>The probability density function (pdf) value of the selection.</returns>
+	/// <seealso cref="Pick"/>
+	public float ProbabilityDensity(Int2 result)
 	{
-		DiscreteDistribution1D slice = slices[point.Y];
+		ref readonly DiscreteDistribution1D slice = ref slices[result.Y];
 
-		float pdfX = slice.ProbabilityDensity(point.X);
-		float pdfY = vertical.ProbabilityDensity(point.Y);
+		float pdfX = slice.ProbabilityDensity(result.X);
+		float pdfY = vertical.ProbabilityDensity(result.Y);
 
 		return pdfX * pdfY;
 	}

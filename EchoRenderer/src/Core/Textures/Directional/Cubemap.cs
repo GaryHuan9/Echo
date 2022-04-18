@@ -76,23 +76,23 @@ public class Cubemap : IDirectionalTexture
 	public void Prepare() => Average = this.ConvergeAverage();
 
 	/// <inheritdoc/>
-	public RGB128 Evaluate(in Float3 direction)
+	public RGB128 Evaluate(in Float3 incident)
 	{
-		Direction target = (Direction)direction;
+		Direction target = (Direction)incident;
 
 		int index = target.Index;
 		Float2 uv = index switch
 		{
-			0 => new Float2(-direction.Z, direction.Y),
-			1 => direction.ZY,
-			2 => new Float2(direction.X, -direction.Z),
-			3 => direction.XZ,
-			4 => direction.XY,
-			5 => new Float2(-direction.X, direction.Y),
+			0 => new Float2(-incident.Z, incident.Y),
+			1 => incident.ZY,
+			2 => new Float2(incident.X, -incident.Z),
+			3 => incident.XZ,
+			4 => incident.XY,
+			5 => new Float2(-incident.X, incident.Y),
 			_ => throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.unexpected)
 		};
 
-		uv *= 0.5f / target.ExtractComponent(direction);
+		uv *= 0.5f / target.ExtractComponent(incident);
 		return (RGB128)this[index][uv + Float2.Half];
 	}
 }

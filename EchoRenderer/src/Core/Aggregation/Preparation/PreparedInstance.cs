@@ -74,15 +74,15 @@ public class PreparedInstance
 	{
 		var oldRay = query.ray;
 
-		//Convert from parent space to local space
+		//Convert from parent-space to local-space
 		TransformForward(ref query.ray);
 		query.distance *= forwardScale;
 		query.current.Push(this);
 
-		//Gets intersection from aggregator in local space
+		//Gets intersection from aggregator in local-space
 		pack.aggregator.Trace(ref query);
 
-		//Convert back to parent space
+		//Convert back to parent-space
 		query.distance *= inverseScale;
 		query.ray = oldRay;
 		query.current.Pop();
@@ -95,15 +95,15 @@ public class PreparedInstance
 	{
 		var oldRay = query.ray;
 
-		//Convert from parent space to local space
+		//Convert from parent-space to local-space
 		TransformForward(ref query.ray);
 		query.travel *= forwardScale;
 		query.current.Push(this);
 
-		//Gets intersection from aggregator in local space
+		//Gets intersection from aggregator in local-space
 		if (pack.aggregator.Occlude(ref query)) return true;
 
-		//Convert back to parent space
+		//Convert back to parent-space
 		query.travel *= inverseScale;
 		query.ray = oldRay;
 		query.current.Pop();
@@ -138,7 +138,7 @@ public class PreparedInstance
 
 			static float FindSingle(Sample1D sample, ref PreparedInstance instance, ref GeometryToken stack)
 			{
-				var found = instance.powerDistribution.Find(sample);
+				var found = instance.powerDistribution.Pick(sample);
 				ref readonly NodeToken token = ref found.content;
 
 				if (token.IsTriangle || token.IsSphere) stack.Geometry = token;
@@ -157,21 +157,21 @@ public class PreparedInstance
 	/// </summary>
 	public int TraceCost(Ray ray, ref float distance)
 	{
-		//Forward transform distance to local space
+		//Forward transform distance to local-space
 		distance *= forwardScale;
 
-		//Gets intersection cost, calculation done in local space
+		//Gets intersection cost, calculation done in local-space
 		TransformForward(ref ray);
 
 		int cost = pack.aggregator.TraceCost(ray, ref distance);
 
-		//Restore distance back to parent space
+		//Restore distance back to parent-space
 		distance *= inverseScale;
 		return cost;
 	}
 
 	/// <summary>
-	/// Transforms <paramref name="ray"/> from parent to local space.
+	/// Transforms <paramref name="ray"/> from parent to local-space.
 	/// </summary>
 	void TransformForward(ref Ray ray)
 	{

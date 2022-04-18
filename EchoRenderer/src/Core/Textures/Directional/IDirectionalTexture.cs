@@ -15,7 +15,7 @@ namespace EchoRenderer.Core.Textures.Directional;
 public interface IDirectionalTexture
 {
 	/// <summary>
-	/// Returns the average of this <see cref="IDirectionalTexture"/> on all directions.
+	/// The average of this <see cref="IDirectionalTexture"/> across all directions.
 	/// </summary>
 	RGB128 Average { get; }
 
@@ -26,25 +26,32 @@ public interface IDirectionalTexture
 	virtual void Prepare() { }
 
 	/// <summary>
-	/// Evaluates this <see cref="IDirectionalTexture"/> at <paramref name="direction"/>.
-	/// NOTE: <paramref name="direction"/> should have a squared magnitude of exactly one.
+	/// Evaluates this <see cref="IDirectionalTexture"/> at <paramref name="incident"/>.
 	/// </summary>
-	RGB128 Evaluate(in Float3 direction);
+	/// <param name="incident">The unit local direction to evaluate at.</param>
+	/// <returns>The <see cref="RGB128"/> value evaluated.</returns>
+	/// <seealso cref="Sample"/>
+	RGB128 Evaluate(in Float3 incident);
 
 	/// <summary>
-	/// Samples this <see cref="IDirectionalTexture"/> based on <paramref name="sample"/> and outputs the
-	/// <see cref="Evaluate"/> <paramref name="incident"/> direction and its <paramref name="pdf"/>.
+	/// Calculates the pdf of selecting <paramref name="incident"/> with <see cref="Sample"/>.
 	/// </summary>
+	/// <param name="incident">The unit local direction that was selected.</param>
+	/// <returns>The probability density function (pdf) value of the selection.</returns>
+	/// <seealso cref="Sample"/>
+	float ProbabilityDensity(in Float3 incident) => Sample2D.UniformSpherePdf;
+
+	/// <summary>
+	/// Samples <paramref name="incident"/> for this <see cref="IDirectionalTexture"/>.
+	/// </summary>
+	/// <param name="sample">The <see cref="Sample2D"/> used to sample <paramref name="incident"/>.</param>
+	/// <param name="incident">The unit local direction specifically sampled for this texture.</param>
+	/// <returns>The <see cref="Probable{T}"/> value evaluated at <paramref name="incident"/>.</returns>
 	Probable<RGB128> Sample(Sample2D sample, out Float3 incident)
 	{
 		incident = sample.UniformSphere;
 		return (Evaluate(incident), Sample2D.UniformSpherePdf);
 	}
-
-	/// <summary>
-	/// Returns the probability density function for <paramref name="incident"/> direction on this <see cref="IDirectionalTexture"/>.
-	/// </summary>
-	float ProbabilityDensity(in Float3 incident) => Sample2D.UniformSpherePdf;
 }
 
 public static class IDirectionalTextureExtensions

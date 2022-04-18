@@ -98,8 +98,11 @@ public class PreparedScene
 	public Touch Interact(in TraceQuery query) => rootInstance.Interact(query);
 
 	/// <summary>
-	/// Picks a <see cref="ILight"/> in this <see cref="PreparedScene"/> and outputs its probability density function to <paramref name="pdf"/>.
+	/// Picks an <see cref="ILight"/> in this <see cref="PreparedScene"/>.
 	/// </summary>
+	/// <param name="samples">The <see cref="ReadOnlySpan{T}"/> of <see cref="Sample1D"/> values used for sampling.</param>
+	/// <param name="allocator">The <see cref="Allocator"/> used to allocate a <see cref="GeometryLight"/> if needed.</param>
+	/// <returns>The <see cref="Probable{T}"/> light picked.</returns>
 	public Probable<ILight> PickLight(ReadOnlySpan<Sample1D> samples, Allocator allocator)
 	{
 		Probable<LightSource> primary = lights.PickLightSource(samples[0]);
@@ -117,9 +120,12 @@ public class PreparedScene
 	}
 
 	/// <summary>
-	/// Samples the object represented by <paramref name="token"/> from the perspective of <paramref name="origin"/> and
-	/// outputs the probability density function <paramref name="pdf"/> over solid angles from <paramref name="origin"/>.
+	/// Samples a <see cref="GeometryPoint"/> on an object in this <see cref="PreparedScene"/>.
 	/// </summary>
+	/// <param name="token">The <see cref="GeometryToken"/> that represents the object to be sampled.</param>
+	/// <param name="origin">The world-space point of whose perspective the result should be sampled through.</param>
+	/// <param name="sample">The <see cref="Sample2D"/> used the sample the result.</param>
+	/// <returns>The <see cref="Probable{T}"/> world-space point that was sampled.</returns>
 	public Probable<GeometryPoint> Sample(in GeometryToken token, in Float3 origin, Sample2D sample)
 	{
 		if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.Geometry, origin, sample);
@@ -129,9 +135,13 @@ public class PreparedScene
 	}
 
 	/// <summary>
-	/// On the object represented by <paramref name="token"/>, returns the probability density function
-	/// (pdf) over solid angles of sampling <paramref name="incident"/> from <paramref name="origin"/>.
+	/// Calculates the pdf of selecting <see cref="incident"/> on an object with <see cref="Sample"/>.
 	/// </summary>
+	/// <param name="token">The <see cref="GeometryToken"/> that represents the object.</param>
+	/// <param name="origin">The world-space point of whose perspective the pdf should be calculated through.</param>
+	/// <param name="incident">The selected world-space unit direction that points from <paramref name="origin"/> to the object.</param>
+	/// <returns>The probability density function (pdf) value over solid angles of this selection.</returns>
+	/// <seealso cref="Sample"/>
 	public float ProbabilityDensity(in GeometryToken token, in Float3 origin, in Float3 incident)
 	{
 		if (token.InstanceCount == 0) return rootInstance.pack.ProbabilityDensity(token.Geometry, origin, incident);
@@ -234,13 +244,15 @@ public class PreparedScene
 		public ReadOnlySpan<AmbientLight> Ambient => _ambient;
 
 		/// <summary>
-		/// Selects a <see cref="LightSource"/> that is in <see cref="PreparedScene"/> based on <paramref name="sample"/>.
-		/// If a <see cref="GeometryLight"/> is selected, null is returned. <paramref name="pdf"/> contains the probability
-		/// density function value of this selection.
+		/// Picks a <see cref="LightSource"/> based on <paramref name="sample"/>.
 		/// </summary>
+		/// <param name="sample">The <see cref="Sample1D"/> used to select our <see cref="LightSource"/>.</param>
+		/// <returns>The <see cref="Probable{T}"/> light picked, or null if <see cref="GeometryLight"/> was picked.</returns>
+		/// <remarks>Even if a <see cref="GeometryLight"/> was picked and <see cref="Probable{T}.content"/> is null,
+		/// <see cref="Probable{T}.pdf"/> will still contain the probability density function (pdf) value as per usual.</remarks>
 		public Probable<LightSource> PickLightSource(Sample1D sample)
 		{
-			Probable<int> index = distribution.Find(sample);
+			Probable<int> index = distribution.Pick(sample);
 			return (index < _all.Length ? _all[index] : null, index.pdf);
 		}
 
