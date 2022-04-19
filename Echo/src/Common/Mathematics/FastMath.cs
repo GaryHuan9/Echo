@@ -1,5 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
@@ -35,35 +37,63 @@ public static class FastMath
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float Max0(float value) => value < 0f ? 0f : value;
+	public static float Max0(float value)
+	{
+		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
+		return Sse.MaxScalar(Vector128<float>.Zero, valueV).ToScalar();
+	}
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is numerically clamped between zero and one.
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float Clamp01(float value) => value < 0f ? 0f : value > 1f ? 1f : value;
+	public static float Clamp01(float value)
+	{
+		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
+		Vector128<float> min = Vector128.CreateScalarUnsafe(1f);
+		valueV = Sse.MaxScalar(Vector128<float>.Zero, valueV);
+		return Sse.MinScalar(min, valueV).ToScalar();
+	}
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is numerically clamped between negative one and one.
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float Clamp11(float value) => value < -1f ? -1f : value > 1f ? 1f : value;
+	public static float Clamp11(float value)
+	{
+		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
+		Vector128<float> max = Vector128.CreateScalarUnsafe(-1f);
+		Vector128<float> min = Vector128.CreateScalarUnsafe(1f);
+		valueV = Sse.MaxScalar(max, valueV);
+		return Sse.MinScalar(min, valueV).ToScalar();
+	}
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is clamped between zero (inclusive) and one (exclusive).
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float ClampEpsilon(float value) => value < 0f ? 0f : value >= 1f ? OneMinusEpsilon : value;
+	public static float ClampEpsilon(float value)
+	{
+		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
+		Vector128<float> min = Vector128.CreateScalarUnsafe(OneMinusEpsilon);
+		valueV = Sse.MaxScalar(Vector128<float>.Zero, valueV);
+		return Sse.MinScalar(min, valueV).ToScalar();
+	}
 
 	/// <summary>
 	/// Returns the absolute value of <paramref name="value"/>.
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float Abs(float value) => value < 0f ? -value : value;
+	public static float Abs(float value)
+	{
+		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
+		Vector128<uint> mask = Vector128.CreateScalarUnsafe(~0u >> 1);
+		return Sse.And(valueV, mask.AsSingle()).ToScalar();
+	}
 
 	/// <summary>
 	/// Returns the square root of <paramref name="value"/> if is larger than zero, or zero otherwise.
@@ -85,7 +115,12 @@ public static class FastMath
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static float OneMinus2(float value) => FMA(value, -value, 1f);
+	public static float OneMinus2(float value)
+	{
+		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
+		Vector128<float> one = Vector128.CreateScalarUnsafe(1f);
+		return Fma.MultiplyAddNegatedScalar(valueV, valueV, one).ToScalar();
+	}
 
 	/// <summary>
 	/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1.

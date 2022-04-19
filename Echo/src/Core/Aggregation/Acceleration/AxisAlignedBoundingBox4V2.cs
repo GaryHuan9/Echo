@@ -34,7 +34,6 @@ public readonly struct AxisAlignedBoundingBox4V2
 	/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
 	/// Returns either the intersection distance or <see cref="float.PositiveInfinity"/> if none was found.
 	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 	public Vector128<float> Intersect(in Ray ray)
 	{
 		//X axis
