@@ -147,7 +147,7 @@ public class BoundingVolumeHierarchy : Aggregator
 				Push(hit1, child1.token, ref query);
 			}
 
-			[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+			[MethodImpl(ImplementationOptions)]
 			void Push(float hit, in NodeToken token, ref TraceQuery refQuery)
 			{
 				if (hit >= refQuery.distance) return;
