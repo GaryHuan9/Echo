@@ -15,8 +15,9 @@ public static class FastMath
 	static FastMath() => Assert.AreEqual(Scalars.SingleToUInt32Bits(OneMinusEpsilon), Scalars.SingleToUInt32Bits(1f) - 1u);
 
 	//NOTE: Some naming conversions used in this project:
-	//R = reciprocal (eg: three = 3f -> threeR = 1f / three = 1f / 3f)
-	//2 = the square (eg: three = 3f -> three2 = three * three = 9f)
+	//R = reciprocal    (eg: three = 3f -> threeR = 1f / three = 1f / 3f)
+	//2 = the square    (eg: three = 3f -> three2 = three * three = 9f)
+	//V = packed vector (eg. three = 3f -> threeV = <3f, 3f, 3f, 3f>)
 
 	/// <summary>
 	/// A positive number that is really small and close to zero.
@@ -124,7 +125,8 @@ public static class FastMath
 
 	/// <summary>
 	/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1.
-	/// The value returned is always positive, unlike regular trigonometric functions.
+	/// If <paramref name="value"/> is out of range (-1 to 1), then zero is returned.
+	/// The value returned is always nonnegative, unlike regular trigonometric functions.
 	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
 	[MethodImpl(Options)]
@@ -148,7 +150,15 @@ public static class FastMath
 	/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static void SinCos(float radians, out float sin, out float cos) => (sin, cos) = MathF.SinCos(radians);
+	public static void SinCos(float radians, out float sin, out float cos)
+	{
+		if (Abs(radians) > 1024f)
+		{
+			sin = MathF.Sin(radians);
+			cos = MathF.Cos(radians);
+		}
+		else (sin, cos) = MathF.SinCos(radians);
+	}
 
 	/// <summary>
 	/// Returns whether <paramref name="value"/> is positive based on <paramref name="epsilon"/>.
