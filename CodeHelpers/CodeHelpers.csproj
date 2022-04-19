@@ -2,17 +2,17 @@
 
     <PropertyGroup>
         <TargetFramework>net5.0</TargetFramework>
-        <RootNamespace />
+        <RootNamespace/>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-      <DefineConstants>TRACE; CODE_HELPERS_UNSAFE; </DefineConstants>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DefineConstants>TRACE; CODE_HELPERS_UNSAFE;</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-      <DefineConstants>TRACE; CODE_HELPERS_UNSAFE; </DefineConstants>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DefineConstants>TRACE; CODE_HELPERS_UNSAFE;</DefineConstants>
     </PropertyGroup>
 
 </Project>
