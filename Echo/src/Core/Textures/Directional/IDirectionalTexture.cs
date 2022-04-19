@@ -61,16 +61,23 @@ public static class IDirectionalTextureExtensions
 	/// </summary>
 	public static RGB128 ConvergeAverage(this IDirectionalTexture texture, int sampleCount = (int)1E6)
 	{
-		using ThreadLocal<SumPackage> sums = new(SumPackage.factory, true);
+		using var sums = new ThreadLocal<SumPackage>(SumPackage.factory, true);
 
-		//Sample random directions
-		Parallel.For(0, sampleCount, _ =>
+		int size = (int)Math.Sqrt(sampleCount);
+		float sizeR = 1f / size;
+		int count = size * size;
+
+		//Sample random directions using stratified sampling
+		Parallel.For(0, count, index =>
 		{
 			// ReSharper disable once AccessToDisposedClosure
 			SumPackage package = sums.Value;
 
-			var direction = package.random.NextOnSphere();
-			package.Sum += texture.Evaluate(direction);
+			Int2 strata = new Int2(index % size, index / size);
+			Float2 position = strata + package.random.Next2();
+			Sample2D sample = (Sample2D)(position * sizeR);
+
+			package.Sum += texture.Evaluate(sample.UniformSphere);
 		});
 
 		//Total the sums for individual threads
@@ -78,7 +85,7 @@ public static class IDirectionalTextureExtensions
 
 		foreach (SumPackage package in sums.Values) sum += package.Sum;
 
-		return (RGB128)(sum.Result / sampleCount);
+		return (RGB128)(sum.Result / count);
 	}
 
 	class SumPackage
