@@ -1,7 +1,14 @@
 ﻿using System;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Running;
+using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Packed;
+using Echo.Common.Mathematics;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Experimental.Benchmarks;
 using JitBuddy;
@@ -12,7 +19,7 @@ public class Program
 {
 	static void Main()
 	{
-		// TestJitter();
+		TestJitter();
 		// TestUnmanaged();
 
 		// var test = new AabbSimd();
@@ -24,13 +31,28 @@ public class Program
 		// BenchmarkRunner.Run<Aggregators>();
 		// BenchmarkRunner.Run<RadixSort>();
 		// BenchmarkRunner.Run<Loops>();
-		BenchmarkRunner.Run<AabbSimd>();
+		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
 	}
 
+	public static void SinCos(float radians, out float sin, out float cos) => (sin, cos) = MathF.SinCos(radians);
+
+	// 00007FFA114A83D0 vzeroupper
+	// 00007FFA114A83D3 vucomiss  xmm0,xmm1
+	// 00007FFA114A83D7 seta      al
+	// 00007FFA114A83DA movzx     eax,al
+	// 00007FFA114A83DD ret
+
 	static void TestJitter()
 	{
-		var method = typeof(AxisAlignedBoundingBox4V2).GetMethod(nameof(AxisAlignedBoundingBox4V2.Intersect));
+		// var method = typeof(AxisAlignedBoundingBox4V2).GetMethod(nameof(AxisAlignedBoundingBox4V2.Intersect));
+		// DebugHelper.Log(method.ToAsm());
+
+		// var property = typeof(Float4).GetProperty(nameof(Float4.X));
+		// DebugHelper.Log(property!.GetMethod.ToAsm());
+
+		var method = typeof(MathF).GetMethod(nameof(SinCos), BindingFlags.NonPublic | BindingFlags.Static);
+		DebugHelper.Log(method.ToMethodSignature());
 		DebugHelper.Log(method.ToAsm());
 	}
 
