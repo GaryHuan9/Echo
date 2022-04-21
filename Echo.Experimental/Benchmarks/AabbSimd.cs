@@ -1,9 +1,9 @@
-﻿using System;
-using System.Runtime.Intrinsics;
+﻿using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Primitives;
+using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
 
 namespace Echo.Experimental.Benchmarks;
@@ -12,7 +12,7 @@ public class AabbSimd
 {
 	public AabbSimd()
 	{
-		Random random = new Random(42);
+		IRandom random = new SystemRandom(42);
 
 		aabb0 = CreateAABB();
 		aabb1 = CreateAABB();
@@ -22,6 +22,7 @@ public class AabbSimd
 		aabb0 = new AxisAlignedBoundingBox(Float3.NegativeOne, Float3.One);
 
 		aabb = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
+		aabbV2 = new AxisAlignedBoundingBox4.V2(aabb0, aabb1, aabb2, aabb3);
 
 		Float3 origin = CreateFloat3(10f);
 
@@ -35,14 +36,9 @@ public class AabbSimd
 			return new AxisAlignedBoundingBox(point0.Min(point1), point0.Max(point1));
 		}
 
-		Float3 CreateFloat3(float range) => new
-		(
-			(float)(random.NextDouble() * 2f * range - range),
-			(float)(random.NextDouble() * 2f * range - range),
-			(float)(random.NextDouble() * 2f * range - range)
-		);
+		Float3 CreateFloat3(float range) => random.Next3(-range, range);
 
-		DebugHelper.Log(Regular(), Quad());
+		DebugHelper.Log(Regular(), Quad(), Quad2());
 	}
 
 	readonly AxisAlignedBoundingBox aabb0;
@@ -51,6 +47,7 @@ public class AabbSimd
 	readonly AxisAlignedBoundingBox aabb3;
 
 	readonly AxisAlignedBoundingBox4 aabb;
+	readonly AxisAlignedBoundingBox4.V2 aabbV2;
 
 	readonly Ray ray;
 
@@ -69,5 +66,8 @@ public class AabbSimd
 	);
 
 	[Benchmark]
-	public Vector128<float> Quad() => aabb.Intersect(ray);
+	public Float4 Quad() => aabb.Intersect(ray);
+
+	[Benchmark]
+	public Vector128<float> Quad2() => aabbV2.Intersect(ray);
 }

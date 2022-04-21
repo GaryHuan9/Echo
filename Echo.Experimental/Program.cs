@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Running;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
+using Echo.Common.Mathematics.Primitives;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Experimental.Benchmarks;
 using JitBuddy;
@@ -12,11 +17,11 @@ public class Program
 {
 	static void Main()
 	{
-		TestJitter();
+		// TestJitter();
 		// TestUnmanaged();
 
 		// BenchmarkRunner.Run<PackedFloats>();
-		// BenchmarkRunner.Run<Aggregators>();
+		BenchmarkRunner.Run<Aggregators>();
 		// BenchmarkRunner.Run<RadixSort>();
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
@@ -25,8 +30,16 @@ public class Program
 
 	static void TestJitter()
 	{
-		var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
-		DebugHelper.Log(method.ToAsm());
+		DebugHelper.Log(new Float4(7f, -0f, -2f, 3f).XYZ);
+
+		// var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
+		// DebugHelper.Log(method.ToAsm());
+
+		var property = typeof(AxisAlignedBoundingBox4).GetProperty(nameof(AxisAlignedBoundingBox4.Encapsulated));
+		DebugHelper.Log(property!.GetMethod.ToAsm());
+
+		// var method = typeof(MathF).GetMethod(nameof(Round));
+		// DebugHelper.Log(method.ToAsm());
 	}
 
 	static unsafe void TestUnmanaged()
