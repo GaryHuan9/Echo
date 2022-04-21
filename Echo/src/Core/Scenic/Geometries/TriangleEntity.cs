@@ -229,6 +229,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	/// <returns>The probability density function (pdf) value over solid angles.</returns>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 	{
+		//OPTIMIZE: avoid expensive div in ray init by extracting Intersect to IntersectCore
 		Ray ray = new Ray(origin, incident);
 
 		float distance = Intersect(ray, out Float2 uv);
