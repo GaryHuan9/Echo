@@ -27,7 +27,7 @@ public class Program
 
 		// return;
 
-		using Echo.Terminal.Terminal terminal = renderTerminal = new Echo.Terminal.Terminal();
+		using Terminal terminal = renderTerminal = new Terminal();
 
 		terminal.AddSection(new CommandsController(terminal));
 		terminal.AddSection(renderMonitor = new RenderMonitor(terminal));
@@ -40,11 +40,11 @@ public class Program
 #endif
 
 		PerformRender();
-		System.Console.ReadKey();
+		Console.ReadKey();
 	}
 
 	static TiledRenderEngine renderEngine;
-	static Echo.Terminal.Terminal renderTerminal;
+	static Terminal renderTerminal;
 	static RenderMonitor renderMonitor;
 
 	static readonly TiledRenderProfile pathTraceFastProfile = new()

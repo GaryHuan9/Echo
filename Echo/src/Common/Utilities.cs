@@ -7,10 +7,6 @@ namespace Echo.Common;
 
 public static class Utilities
 {
-	public static ref readonly Float4 ToFloat4(in Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float4>(ref Unsafe.AsRef(pixel));
-	public static ref readonly Float3 ToFloat3(in Vector128<float> pixel) => ref Unsafe.As<Vector128<float>, Float3>(ref Unsafe.AsRef(pixel));
-	public static ref readonly Vector128<float> ToVector(in Float4 value) => ref Unsafe.As<Float4, Vector128<float>>(ref Unsafe.AsRef(value));
-
 	/// <summary>
 	/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns
 	/// the item it points. Otherwise, <paramref name="defaultValue"/> is returned.

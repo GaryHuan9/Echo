@@ -1,13 +1,12 @@
-﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
+﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
 namespace Echo.Common.Mathematics.Primitives;
 
-[StructLayout(LayoutKind.Explicit, Size = 40)]
+/// <summary>
+/// An <see cref="origin"/> and a <see cref="direction"/> that represents a geometric ray together.
+/// The reciprocal of <see cref="direction"/> is precalculated during <see cref="Ray"/> construction.
+/// </summary>
 public readonly struct Ray
 {
 	/// <summary>
@@ -19,36 +18,19 @@ public readonly struct Ray
 	{
 		Assert.AreEqual(direction.SquaredMagnitude, 1f);
 
-		Unsafe.SkipInit(out originV);
-		Unsafe.SkipInit(out directionV);
-		Unsafe.SkipInit(out inverseDirection);
-
 		this.origin = origin;
 		this.direction = direction;
-
-		//Because _mm_rcp_ps is only an approximation, we cannot use it here
-		inverseDirectionV = Sse.Divide(Vector128.Create(1f), directionV);
+		directionR = (Float3)(1f / (Float4)direction);
 	}
 
-	[FieldOffset(0)] public readonly Float3 origin;
-	[FieldOffset(12)] public readonly Float3 direction;
-	[FieldOffset(24)] public readonly Float3 inverseDirection;
-
-	//NOTE: these fields have overlapping memory offsets to reduce footprint. Pay extra attention when assigning them.
-	[FieldOffset(0)] public readonly Vector128<float> originV;
-	[FieldOffset(12)] public readonly Vector128<float> directionV;
-	[FieldOffset(24)] public readonly Vector128<float> inverseDirectionV;
+	public readonly Float3 origin;
+	public readonly Float3 direction;
+	public readonly Float3 directionR;
 
 	/// <summary>
 	/// Returns the point this <see cref="Ray"/> points at <paramref name="distance"/>.
 	/// </summary>
-	public unsafe Float3 GetPoint(float distance)
-	{
-		Vector128<float> length = Vector128.Create(distance);
-		Vector128<float> result = PackedMath.FMA(directionV, length, originV);
-
-		return *(Float3*)&result;
-	}
+	public Float3 GetPoint(float distance) => direction * distance + origin;
 
 	public override string ToString() => $"{nameof(origin)}: {origin}, {nameof(direction)}: {direction}";
 }
