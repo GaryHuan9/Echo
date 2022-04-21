@@ -7,7 +7,6 @@ using CodeHelpers.Packed;
 
 namespace Echo.Common.Mathematics.Primitives;
 
-[StructLayout(LayoutKind.Explicit, Size = 40)]
 public readonly struct Ray
 {
 	/// <summary>
@@ -19,36 +18,23 @@ public readonly struct Ray
 	{
 		Assert.AreEqual(direction.SquaredMagnitude, 1f);
 
-		Unsafe.SkipInit(out originV);
-		Unsafe.SkipInit(out directionV);
-		Unsafe.SkipInit(out directionR);
-
-		this.origin = origin;
-		this.direction = direction;
-
-		//Because _mm_rcp_ps is only an approximation, we cannot use it here
-		directionRV = Sse.Divide(Vector128.Create(1f), directionV);
+		this.origin = (Float4)origin;
+		this.direction = (Float4)direction;
+		directionR = 1f / this.direction;
 	}
 
-	[FieldOffset(0)] public readonly Float3 origin;
-	[FieldOffset(12)] public readonly Float3 direction;
-	[FieldOffset(24)] public readonly Float3 directionR;
+	public readonly Float4 origin;
+	public readonly Float4 direction;
+	public readonly Float4 directionR;
 
-	//NOTE: these fields have overlapping memory offsets to reduce footprint. Pay extra attention when assigning them.
-	[FieldOffset(0)] public readonly Vector128<float> originV;
-	[FieldOffset(12)] public readonly Vector128<float> directionV;
-	[FieldOffset(24)] public readonly Vector128<float> directionRV;
+	public Float3 Origin => (Float3)origin;
+	public Float3 Direction => (Float3)direction;
+	public Float3 DirectionR => (Float3)directionR;
 
 	/// <summary>
 	/// Returns the point this <see cref="Ray"/> points at <paramref name="distance"/>.
 	/// </summary>
-	public unsafe Float3 GetPoint(float distance)
-	{
-		Vector128<float> length = Vector128.Create(distance);
-		Vector128<float> result = PackedMath.FMA(directionV, length, originV);
+	public Float3 GetPoint(float distance) => (Float3)(direction * distance + origin);
 
-		return *(Float3*)&result;
-	}
-
-	public override string ToString() => $"{nameof(origin)}: {origin}, {nameof(direction)}: {direction}";
+	public override string ToString() => $"{nameof(origin)}: {(Float3)origin}, {nameof(direction)}: {(Float3)direction}";
 }

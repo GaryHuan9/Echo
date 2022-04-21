@@ -12,32 +12,21 @@ namespace Echo.Common.Mathematics.Primitives;
 /// <summary>
 /// A 3D box that is aligned to the coordinate axes, usually used to bound other objects.
 /// </summary>
-[StructLayout(LayoutKind.Explicit)]
 public readonly struct AxisAlignedBoundingBox
 {
-	public AxisAlignedBoundingBox(in Float3 min, in Float3 max)
-	{
-		Unsafe.SkipInit(out minV);
-		Unsafe.SkipInit(out maxV);
-
-		this.min = min;
-		this.max = max;
-
-		Assert.IsTrue(max >= min);
-	}
+	public AxisAlignedBoundingBox(in Float3 min, in Float3 max) : this((Float4)min, (Float4)max) { }
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
 	{
-		Unsafe.SkipInit(out minV);
-		Unsafe.SkipInit(out maxV);
-
-		min = Float3.PositiveInfinity;
-		max = Float3.NegativeInfinity;
+		min = Float4.PositiveInfinity;
+		max = Float4.NegativeInfinity;
 
 		foreach (ref readonly Float3 point in points)
 		{
-			min = min.Min(point);
-			max = max.Max(point);
+			Float4 value = (Float4)point;
+
+			min = min.Min(value);
+			max = max.Max(value);
 		}
 
 		Assert.IsTrue(max >= min);
@@ -45,53 +34,50 @@ public readonly struct AxisAlignedBoundingBox
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
 	{
-		Unsafe.SkipInit(out min);
-		Unsafe.SkipInit(out max);
-
-		minV = Vector128.Create(float.PositiveInfinity);
-		maxV = Vector128.Create(float.NegativeInfinity);
+		min = Float4.PositiveInfinity;
+		max = Float4.NegativeInfinity;
 
 		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
 		{
-			minV = Sse.Min(minV, aabb.minV);
-			maxV = Sse.Max(maxV, aabb.maxV);
+			min = min.Min(aabb.min);
+			max = max.Max(aabb.max);
 		}
 
 		Assert.IsTrue(max >= min);
 	}
 
-	AxisAlignedBoundingBox(in Vector128<float> minV, in Vector128<float> maxV)
+	AxisAlignedBoundingBox(in Float4 min, in Float4 max)
 	{
-		Unsafe.SkipInit(out min);
-		Unsafe.SkipInit(out max);
-
-		this.minV = minV;
-		this.maxV = maxV;
+		this.min = min;
+		this.max = max;
 
 		Assert.IsTrue(max >= min);
 	}
 
 	public static readonly AxisAlignedBoundingBox none = new(Float3.PositiveInfinity, Float3.PositiveInfinity);
 
-	[FieldOffset(00)] public readonly Float3 min;
-	[FieldOffset(16)] public readonly Float3 max;
+	public readonly Float4 min;
+	public readonly Float4 max;
 
-	[FieldOffset(00)] readonly Vector128<float> minV;
-	[FieldOffset(16)] readonly Vector128<float> maxV;
+	public Float3 Min => (Float3)min;
+	public Float3 Max => (Float3)max;
 
-	public Float3 Center => Utilities.ToFloat3(Sse.Multiply(Sse.Add /**/(maxV, minV), Vector128.Create(0.5f)));
-	public Float3 Extend => Utilities.ToFloat3(Sse.Multiply(Sse.Subtract(maxV, minV), Vector128.Create(0.5f)));
+	public Float3 Center => (Float3)((max + min) / 2f);
+	public Float3 Extend => (Float3)((max - min) / 2f);
 
-	public float Area
+	/// <summary>
+	/// Returns half of the surface area of this <see cref="AxisAlignedBoundingBox"/>.
+	/// </summary>
+	public float HalfArea
 	{
 		get
 		{
-			Float3 size = Utilities.ToFloat3(Sse.Subtract(maxV, minV));
-			return size.X * size.Y + size.X * size.Z + size.Y * size.Z;
+			Float4 size = (max - min).XYZ_;
+			return (size.XXYW * size.YZZW).Sum;
 		}
 	}
 
-	public int MajorAxis => (max - min).MaxIndex;
+	public int MajorAxis => (Max - Min).MaxIndex;
 
 	/// <summary>
 	/// Multiplier used on the far distance to remove floating point arithmetic errors when calculating
@@ -105,50 +91,19 @@ public readonly struct AxisAlignedBoundingBox
 	/// NOTE: return can be negative, which means the ray origins inside this box.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public unsafe float Intersect(in Ray ray)
+	public float Intersect(in Ray ray)
 	{
 		//The well known 'slab method'. Referenced from https://tavianator.com/2011/ray_box.html
+		Float4 lengths0 = (min - ray.origin) * ray.directionR;
+		Float4 lengths1 = (max - ray.origin) * ray.directionR;
 
-		Vector128<float> lengths0 = Sse.Multiply(Sse.Subtract(minV, ray.originV), ray.directionRV);
-		Vector128<float> lengths1 = Sse.Multiply(Sse.Subtract(maxV, ray.originV), ray.directionRV);
+		//Compute the min of the max lengths for far and the max of the min lengths for near
+		Float4 lengthsMin = lengths0.Max(lengths1);
+		Float4 lengthsMax = lengths0.Min(lengths1);
 
-		Vector128<float> lengthsMin = Sse.Max(lengths0, lengths1);
-		Vector128<float> lengthsMax = Sse.Min(lengths0, lengths1);
-
-		//The previous two lines could be a bit confusing: we are trying to find
-		//the min of the max lengths for far and the max of the min lengths for near
-
-		float far;
-		float near;
-
-		//Compute horizontal min and max
-
-		if (Avx.IsSupported)
-		{
-			//Permute vector for min max, ignore last component
-			Vector128<float> minPermute = Avx.Permute(lengthsMin, 0b0100_1010);
-			Vector128<float> maxPermute = Avx.Permute(lengthsMax, 0b0100_1010);
-
-			lengthsMin = Sse.Min(lengthsMin, minPermute);
-			lengthsMax = Sse.Max(lengthsMax, maxPermute);
-
-			//Second permute for min max
-			minPermute = Avx.Permute(lengthsMin, 0b1011_0001);
-			maxPermute = Avx.Permute(lengthsMax, 0b1011_0001);
-
-			lengthsMin = Sse.Min(lengthsMin, minPermute);
-			lengthsMax = Sse.Max(lengthsMax, maxPermute);
-
-			//Extract result
-			far = *(float*)&lengthsMin;
-			near = *(float*)&lengthsMax;
-		}
-		else
-		{
-			//Software implementation
-			far = (*(Float3*)&lengthsMin).MinComponent;
-			near = (*(Float3*)&lengthsMax).MaxComponent;
-		}
+		//Get horizontal min and max
+		float far = lengthsMin.Min(lengthsMin.YYYY.Min(lengthsMin.ZZZZ)).X;
+		float near = lengthsMax.Max(lengthsMax.YYYY.Max(lengthsMax.ZZZZ)).X;
 
 		far *= FarMultiplier;
 
@@ -163,8 +118,8 @@ public readonly struct AxisAlignedBoundingBox
 	/// </summary>
 	public AxisAlignedBoundingBox Encapsulate(in AxisAlignedBoundingBox other) => new
 	(
-		Sse.Min(minV, other.minV),
-		Sse.Max(maxV, other.maxV)
+		min.Min(other.min),
+		max.Max(other.max)
 	);
 
 	/// <summary>
@@ -176,8 +131,8 @@ public readonly struct AxisAlignedBoundingBox
 	{
 		if (span.Length < 8) throw ExceptionHelper.Invalid(nameof(span.Length), span.Length, "is not large enough");
 
-		span[0] = min;
-		span[1] = max;
+		span[0] = Min;
+		span[1] = Max;
 
 		span[2] = new Float3(min.X, min.Y, max.Z);
 		span[3] = new Float3(min.X, max.Y, min.Z);

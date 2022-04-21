@@ -175,8 +175,8 @@ public class PreparedInstance
 	/// </summary>
 	void TransformForward(ref Ray ray)
 	{
-		Float3 origin = forwardTransform.MultiplyPoint(ray.origin);
-		Float3 direction = forwardTransform.MultiplyDirection(ray.direction);
+		Float3 origin = forwardTransform.MultiplyPoint(ray.Origin);
+		Float3 direction = forwardTransform.MultiplyDirection(ray.Direction);
 
 		ray = new Ray(origin, direction * inverseScale);
 	}

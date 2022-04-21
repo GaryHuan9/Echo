@@ -74,9 +74,9 @@ public readonly struct PreparedSphere
 		Unsafe.SkipInit(out uv);
 
 		//Test ray direction
-		Float3 offset = ray.origin - position;
+		Float3 offset = ray.Origin - position;
 		float radius2 = radius * radius;
-		float center = -offset.Dot(ray.direction);
+		float center = -offset.Dot(ray.Direction);
 
 		float extend2 = FastMath.F2A(center, radius2 - offset.SquaredMagnitude);
 
@@ -92,7 +92,7 @@ public readonly struct PreparedSphere
 		if (distance < threshold) return Infinity;
 
 		//Calculate uv
-		Float3 point = offset + ray.direction * distance;
+		Float3 point = offset + ray.Direction * distance;
 		float sinP = FastMath.Clamp11(point.Y / radius);
 		float sinT = 0f;
 
@@ -112,8 +112,8 @@ public readonly struct PreparedSphere
 	public bool Intersect(in Ray ray, float travel, bool findFar = false)
 	{
 		//Test ray direction
-		Float3 offset = ray.origin - position;
-		float center = -offset.Dot(ray.direction);
+		Float3 offset = ray.Origin - position;
+		float center = -offset.Dot(ray.Direction);
 
 		float squared = FastMath.F2A(center, FastMath.F2A(radius, -offset.SquaredMagnitude));
 
