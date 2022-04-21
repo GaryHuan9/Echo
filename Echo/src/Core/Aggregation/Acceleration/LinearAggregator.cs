@@ -45,11 +45,11 @@ public class LinearAggregator : Aggregator
 	{
 		foreach (ref readonly Node node in nodes.AsSpan())
 		{
-			Vector128<float> intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.aabb4.Intersect(query.ray);
 
 			for (int i = 0; i < Width; i++)
 			{
-				if (intersections.GetElement(i) >= query.distance) continue;
+				if (intersections[i] >= query.distance) continue;
 				ref readonly NodeToken token = ref node.token4[i];
 				pack.Trace(ref query, token);
 			}
@@ -60,11 +60,11 @@ public class LinearAggregator : Aggregator
 	{
 		foreach (ref readonly Node node in nodes.AsSpan())
 		{
-			Vector128<float> intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.aabb4.Intersect(query.ray);
 
 			for (int i = 0; i < Width; i++)
 			{
-				if (intersections.GetElement(i) >= query.travel) continue;
+				if (intersections[i] >= query.travel) continue;
 				ref readonly NodeToken token = ref node.token4[i];
 				if (pack.Occlude(ref query, token)) return true;
 			}
@@ -79,11 +79,11 @@ public class LinearAggregator : Aggregator
 
 		foreach (ref readonly Node node in nodes.AsSpan())
 		{
-			Vector128<float> intersections = node.aabb4.Intersect(ray);
+			Float4 intersections = node.aabb4.Intersect(ray);
 
 			for (int i = 0; i < Width; i++)
 			{
-				if (intersections.GetElement(i) >= distance) continue;
+				if (intersections[i] >= distance) continue;
 				ref readonly NodeToken token = ref node.token4[i];
 				cost += pack.GetTraceCost(ray, ref distance, token);
 			}
@@ -147,8 +147,8 @@ public class LinearAggregator : Aggregator
 			span[i] = new AxisAlignedBoundingBox(aabb4);
 		}
 
-		Float4 min = Float4.PositiveInfinity;
-		Float4 max = Float4.NegativeInfinity;
+		Float3 min = Float3.PositiveInfinity;
+		Float3 max = Float3.NegativeInfinity;
 
 		for (int i = span.Length; i < nodes.Length; i++)
 		{

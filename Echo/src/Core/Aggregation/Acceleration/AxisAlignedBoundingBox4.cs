@@ -14,13 +14,13 @@ public readonly struct AxisAlignedBoundingBox4
 {
 	public AxisAlignedBoundingBox4(in AxisAlignedBoundingBox aabb0, in AxisAlignedBoundingBox aabb1, in AxisAlignedBoundingBox aabb2, in AxisAlignedBoundingBox aabb3)
 	{
-		minX = Make(aabb0.min.X, aabb1.min.X, aabb2.min.X, aabb3.min.X);
-		minY = Make(aabb0.min.Y, aabb1.min.Y, aabb2.min.Y, aabb3.min.Y);
-		minZ = Make(aabb0.min.Z, aabb1.min.Z, aabb2.min.Z, aabb3.min.Z);
+		minX = new Float4(aabb0.min.X, aabb1.min.X, aabb2.min.X, aabb3.min.X);
+		minY = new Float4(aabb0.min.Y, aabb1.min.Y, aabb2.min.Y, aabb3.min.Y);
+		minZ = new Float4(aabb0.min.Z, aabb1.min.Z, aabb2.min.Z, aabb3.min.Z);
 
-		maxX = Make(aabb0.max.X, aabb1.max.X, aabb2.max.X, aabb3.max.X);
-		maxY = Make(aabb0.max.Y, aabb1.max.Y, aabb2.max.Y, aabb3.max.Y);
-		maxZ = Make(aabb0.max.Z, aabb1.max.Z, aabb2.max.Z, aabb3.max.Z);
+		maxX = new Float4(aabb0.max.X, aabb1.max.X, aabb2.max.X, aabb3.max.X);
+		maxY = new Float4(aabb0.max.Y, aabb1.max.Y, aabb2.max.Y, aabb3.max.Y);
+		maxZ = new Float4(aabb0.max.Z, aabb1.max.Z, aabb2.max.Z, aabb3.max.Z);
 	}
 
 	public AxisAlignedBoundingBox4(ReadOnlySpan<AxisAlignedBoundingBox> aabbs) : this
@@ -29,13 +29,13 @@ public readonly struct AxisAlignedBoundingBox4
 		aabbs.TryGetValue(2, AxisAlignedBoundingBox.none), aabbs.TryGetValue(3, AxisAlignedBoundingBox.none)
 	) { }
 
-	readonly Vector128<float> minX;
-	readonly Vector128<float> minY;
-	readonly Vector128<float> minZ;
+	readonly Float4 minX;
+	readonly Float4 minY;
+	readonly Float4 minZ;
 
-	readonly Vector128<float> maxX;
-	readonly Vector128<float> maxY;
-	readonly Vector128<float> maxZ;
+	readonly Float4 maxX;
+	readonly Float4 maxY;
+	readonly Float4 maxZ;
 
 	/// <summary>
 	/// Extracts out and returns a particular <see cref="AxisAlignedBoundingBox"/> at
@@ -43,8 +43,8 @@ public readonly struct AxisAlignedBoundingBox4
 	/// </summary>
 	public AxisAlignedBoundingBox this[int index] => new
 	(
-		new Float3(minX.GetElement(index), minY.GetElement(index), minZ.GetElement(index)),
-		new Float3(maxX.GetElement(index), maxY.GetElement(index), maxZ.GetElement(index))
+		new Float3(minX[index], minY[index], minZ[index]),
+		new Float3(maxX[index], maxY[index], maxZ[index])
 	);
 
 	/// <summary>
@@ -53,67 +53,68 @@ public readonly struct AxisAlignedBoundingBox4
 	/// </summary>
 	public AxisAlignedBoundingBox Encapsulated => new
 	(
-		new Float3(Utilities.ToFloat4(minX).MinComponent, Utilities.ToFloat4(minY).MinComponent, Utilities.ToFloat4(minZ).MinComponent),
-		new Float3(Utilities.ToFloat4(maxX).MaxComponent, Utilities.ToFloat4(maxY).MaxComponent, Utilities.ToFloat4(maxZ).MaxComponent)
+		new Float3(minX.MinComponent, minY.MinComponent, minZ.MinComponent),
+		new Float3(maxX.MaxComponent, maxY.MaxComponent, maxZ.MaxComponent)
 	);
 
 	/// <summary>
 	/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
 	/// Returns either the intersection distance or <see cref="float.PositiveInfinity"/> if none was found.
 	/// </summary>
-	public Vector128<float> Intersect(in Ray ray)
+	public Float4 Intersect(in Ray ray)
 	{
 		//X axis
-		Vector128<float> origin = Make(ray.origin.X);
-		Vector128<float> directionR = Make(ray.directionR.X);
+		Float4 origin = (Float4)ray.origin.X;
+		Float4 directionR = (Float4)ray.directionR.X;
 
-		Vector128<float> length0 = Sse.Multiply(Sse.Subtract(minX, origin), directionR);
-		Vector128<float> length1 = Sse.Multiply(Sse.Subtract(maxX, origin), directionR);
+		//NOTE
+		//For some reason the following subtraction generates a weird lea instruction before the actual vmovupd
+		//This can be avoided if we replace all of the Float4 in this struct with Vector128<float>, but there is
+		//basically no performance difference. Additionally, note that the JIT ASM is significantly larger if
+		//the fields in Ray are Float4 rather than Float3, which is super weird.
 
-		Vector128<float> far = Sse.Max(length0, length1);
-		Vector128<float> near = Sse.Min(length0, length1);
+		Float4 length0 = (minX - origin) * directionR;
+		Float4 length1 = (maxX - origin) * directionR;
+
+		Float4 far = length0.Max(length1);
+		Float4 near = length0.Min(length1);
 
 		//Y axis
-		origin = Make(ray.origin.Y);
-		directionR = Make(ray.directionR.Y);
+		origin = (Float4)ray.origin.Y;
+		directionR = (Float4)ray.directionR.Y;
 
-		length0 = Sse.Multiply(Sse.Subtract(minY, origin), directionR);
-		length1 = Sse.Multiply(Sse.Subtract(maxY, origin), directionR);
+		length0 = (minY - origin) * directionR;
+		length1 = (maxY - origin) * directionR;
 
-		far = Sse.Min(far, Sse.Max(length0, length1));
-		near = Sse.Max(near, Sse.Min(length0, length1));
+		far = far.Min(length0.Max(length1));
+		near = near.Max(length0.Min(length1));
 
 		//Z axis
-		origin = Make(ray.origin.Z);
-		directionR = Make(ray.directionR.Z);
+		origin = (Float4)ray.origin.Z;
+		directionR = (Float4)ray.directionR.Z;
 
-		length0 = Sse.Multiply(Sse.Subtract(minZ, origin), directionR);
-		length1 = Sse.Multiply(Sse.Subtract(maxZ, origin), directionR);
+		length0 = (minZ - origin) * directionR;
+		length1 = (maxZ - origin) * directionR;
 
-		far = Sse.Min(far, Sse.Max(length0, length1));
-		near = Sse.Max(near, Sse.Min(length0, length1));
+		far = far.Min(length0.Max(length1));
+		near = near.Max(length0.Min(length1));
 
-		far = Sse.Multiply(far, Make(AxisAlignedBoundingBox.FarMultiplier));
+		far *= AxisAlignedBoundingBox.FarMultiplier;
 
-		//See the single AABB implementation about the order of the positive infinity vs near
-		return Sse41.BlendVariable
+		return new Float4(Sse41.BlendVariable
 		(
-			Make(float.PositiveInfinity), near, Sse.And
+			Vector128.Create(float.PositiveInfinity), near.v, Sse.And
 			(
-				Sse.CompareGreaterThanOrEqual(far, near),
-				Sse.CompareGreaterThanOrEqual(far, Vector128<float>.Zero)
+				Sse.CompareGreaterThanOrEqual(far.v, near.v),
+				Sse.CompareGreaterThanOrEqual(far.v, Vector128<float>.Zero)
 			)
-		);
+		));
 	}
 
 	public override unsafe int GetHashCode()
 	{
 		fixed (AxisAlignedBoundingBox4* ptr = &this) return Utilities.GetHashCode(ptr);
 	}
-
-	static Vector128<float> Make(float value) => Vector128.Create(value);
-
-	static Vector128<float> Make(float value0, float value1, float value2, float value3) => Vector128.Create(value0, value1, value2, value3);
 
 	public readonly struct V2
 	{

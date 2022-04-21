@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Packed;
 using Echo.Common;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Memory;
@@ -153,7 +154,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			if (*--hits >= query.distance) continue;
 
 			ref readonly Node node = ref Unsafe.Add(ref origin, index);
-			var intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.aabb4.Intersect(query.ray);
 
 			if (orders[node.axisMajor])
 			{
@@ -205,10 +206,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static void Push(in Vector128<float> intersections, in NodeToken4 token4, PreparedPack pack,
+			static void Push(in Float4 intersections, in NodeToken4 token4, PreparedPack pack,
 							 int offset, ref NodeToken* next, ref float* hits, ref TraceQuery query)
 			{
-				float hit = intersections.GetElement(offset);
+				float hit = intersections[offset];
 				if (hit >= query.distance) return;
 
 				ref readonly NodeToken token = ref token4[offset];
@@ -248,7 +249,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		{
 			uint index = (--next)->NodeValue;
 			ref readonly Node node = ref Unsafe.Add(ref origin, index);
-			var intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.aabb4.Intersect(query.ray);
 
 			if (orders[node.axisMajor])
 			{
@@ -300,10 +301,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static bool Push(in Vector128<float> intersections, in NodeToken4 token4, PreparedPack pack,
+			static bool Push(in Float4 intersections, in NodeToken4 token4, PreparedPack pack,
 							 int offset, ref NodeToken* next, ref OccludeQuery query)
 			{
-				float hit = intersections.GetElement(offset);
+				float hit = intersections[offset];
 				if (hit >= query.travel) return false;
 
 				ref readonly NodeToken token = ref token4[offset];
@@ -326,7 +327,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		if (token.IsGeometry) return pack.GetTraceCost(ray, ref distance, token);
 
 		ref readonly Node node = ref nodes[token.NodeValue];
-		Vector128<float> intersections = node.aabb4.Intersect(ray);
+		Float4 intersections = node.aabb4.Intersect(ray);
 
 		Span<bool> orders = stackalloc bool[Width]
 		{
@@ -352,19 +353,19 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		return cost;
 	}
 
-	int GetTraceCost2(bool order, int offset, in NodeToken4 child4, in Vector128<float> intersections, in Ray ray, ref float distance)
+	int GetTraceCost2(bool order, int offset, in NodeToken4 child4, in Float4 intersections, in Ray ray, ref float distance)
 	{
 		int cost = 0;
 
 		if (order)
 		{
-			cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
-			cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
+			cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections[0 + offset]);
+			cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections[1 + offset]);
 		}
 		else
 		{
-			cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections.GetElement(1 + offset));
-			cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections.GetElement(0 + offset));
+			cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections[1 + offset]);
+			cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections[0 + offset]);
 		}
 
 		return cost;

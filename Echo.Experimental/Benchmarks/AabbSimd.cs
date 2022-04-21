@@ -66,7 +66,7 @@ public class AabbSimd
 	);
 
 	[Benchmark]
-	public Vector128<float> Quad() => aabb.Intersect(ray);
+	public Float4 Quad() => aabb.Intersect(ray);
 
 	[Benchmark]
 	public Vector128<float> Quad2() => aabbV2.Intersect(ray);
