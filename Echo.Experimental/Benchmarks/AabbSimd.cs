@@ -22,7 +22,7 @@ public class AabbSimd
 		aabb0 = new AxisAlignedBoundingBox(Float3.NegativeOne, Float3.One);
 
 		aabb = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
-		aabbV2 = new AxisAlignedBoundingBox4V2(aabb0, aabb1, aabb2, aabb3);
+		aabbV2 = new AxisAlignedBoundingBox4.V2(aabb0, aabb1, aabb2, aabb3);
 
 		Float3 origin = CreateFloat3(10f);
 
@@ -47,7 +47,7 @@ public class AabbSimd
 	readonly AxisAlignedBoundingBox aabb3;
 
 	readonly AxisAlignedBoundingBox4 aabb;
-	readonly AxisAlignedBoundingBox4V2 aabbV2;
+	readonly AxisAlignedBoundingBox4.V2 aabbV2;
 
 	readonly Ray ray;
 
