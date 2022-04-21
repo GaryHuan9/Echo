@@ -23,7 +23,7 @@ public record AggregatorProfile : IProfile
 	/// </summary>
 	public bool LinearForInstances { get; init; } = false;
 
-	//NOTE: These thresholds have not been tested yet, they are just pulled from the back of my head
+	//NOTE: These thresholds are not scientific, they are just pulled from the back of my head
 	const ulong ThresholdBVH = 32;
 	const ulong ThresholdQuadBVH = 512;
 
