@@ -28,7 +28,7 @@ public struct Touch
 	{
 		query.AssertHit();
 		token = query.token;
-		outgoing = -query.ray.direction;
+		outgoing = -query.ray.Direction;
 
 		this.point = point;
 		this.shade = shade;

@@ -104,7 +104,7 @@ public struct TraceQuery
 	/// <summary>
 	/// Spawns a new <see cref="TraceQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
 	/// </summary>
-	public readonly TraceQuery SpawnTrace() => SpawnTrace(ray.direction);
+	public readonly TraceQuery SpawnTrace() => SpawnTrace(ray.Direction);
 
 	/// <summary>
 	/// Spawns a new <see cref="OccludeQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
@@ -114,7 +114,7 @@ public struct TraceQuery
 	/// <summary>
 	/// Spawns a new <see cref="OccludeQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
 	/// </summary>
-	public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(ray.direction, travel);
+	public readonly OccludeQuery SpawnOcclude(float travel = float.PositiveInfinity) => SpawnOcclude(ray.Direction, travel);
 
 	/// <summary>
 	/// Ensures that this <see cref="TraceQuery"/> has <see cref="Hit"/> something.

@@ -21,10 +21,10 @@ public class AlbedoEvaluator : Evaluator
 			/*if (!HitPassThrough(query, albedo, touch.outgoing))*/
 			return albedo; //Return intersected albedo color
 
-			query = query.SpawnTrace(query.ray.direction);
+			query = query.SpawnTrace();
 		}
 
 		//Sample ambient
-		return scene.lights.EvaluateAmbient(query.ray.direction);
+		return scene.lights.EvaluateAmbient(query.ray.Direction);
 	}
 }
