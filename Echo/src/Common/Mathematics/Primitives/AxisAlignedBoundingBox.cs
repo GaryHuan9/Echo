@@ -14,19 +14,23 @@ namespace Echo.Common.Mathematics.Primitives;
 /// </summary>
 public readonly struct AxisAlignedBoundingBox
 {
-	public AxisAlignedBoundingBox(in Float3 min, in Float3 max) : this((Float4)min, (Float4)max) { }
+	public AxisAlignedBoundingBox(in Float3 min, in Float3 max)
+	{
+		this.min = min;
+		this.max = max;
+
+		Assert.IsTrue(max >= min);
+	}
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
 	{
-		min = Float4.PositiveInfinity;
-		max = Float4.NegativeInfinity;
+		min = Float3.PositiveInfinity;
+		max = Float3.NegativeInfinity;
 
 		foreach (ref readonly Float3 point in points)
 		{
-			Float4 value = (Float4)point;
-
-			min = min.Min(value);
-			max = max.Max(value);
+			min = min.Min(point);
+			max = max.Max(point);
 		}
 
 		Assert.IsTrue(max >= min);
@@ -34,8 +38,8 @@ public readonly struct AxisAlignedBoundingBox
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
 	{
-		min = Float4.PositiveInfinity;
-		max = Float4.NegativeInfinity;
+		min = Float3.PositiveInfinity;
+		max = Float3.NegativeInfinity;
 
 		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
 		{
@@ -46,24 +50,13 @@ public readonly struct AxisAlignedBoundingBox
 		Assert.IsTrue(max >= min);
 	}
 
-	AxisAlignedBoundingBox(in Float4 min, in Float4 max)
-	{
-		this.min = min;
-		this.max = max;
-
-		Assert.IsTrue(max >= min);
-	}
-
 	public static readonly AxisAlignedBoundingBox none = new(Float3.PositiveInfinity, Float3.PositiveInfinity);
 
-	public readonly Float4 min;
-	public readonly Float4 max;
+	public readonly Float3 min;
+	public readonly Float3 max;
 
-	public Float3 Min => (Float3)min;
-	public Float3 Max => (Float3)max;
-
-	public Float3 Center => (Float3)((max + min) / 2f);
-	public Float3 Extend => (Float3)((max - min) / 2f);
+	public Float3 Center => (max + min) / 2f;
+	public Float3 Extend => (max - min) / 2f;
 
 	/// <summary>
 	/// Returns half of the surface area of this <see cref="AxisAlignedBoundingBox"/>.
@@ -72,12 +65,15 @@ public readonly struct AxisAlignedBoundingBox
 	{
 		get
 		{
-			Float4 size = (max - min).XYZ_;
-			return (size.XXYW * size.YZZW).Sum;
+			Float3 size = max - min;
+			return size.X * size.Y + size.X * size.Z + size.Y * size.Z;
 		}
 	}
 
-	public int MajorAxis => (Max - Min).MaxIndex;
+	/// <summary>
+	/// Returns the axis (0 = x, 1 = y, 2 = z) that this <see cref="AxisAlignedBoundingBox"/> is the longest in.
+	/// </summary>
+	public int MajorAxis => (max - min).MaxIndex;
 
 	/// <summary>
 	/// Multiplier used on the far distance to remove floating point arithmetic errors when calculating
@@ -94,8 +90,11 @@ public readonly struct AxisAlignedBoundingBox
 	public float Intersect(in Ray ray)
 	{
 		//The well known 'slab method'. Referenced from https://tavianator.com/2011/ray_box.html
-		Float4 lengths0 = (min - ray.origin) * ray.directionR;
-		Float4 lengths1 = (max - ray.origin) * ray.directionR;
+		Float4 origin = (Float4)ray.origin;
+		Float4 directionR = (Float4)ray.directionR;
+
+		Float4 lengths0 = ((Float4)min - origin) * directionR;
+		Float4 lengths1 = ((Float4)max - origin) * directionR;
 
 		//Compute the min of the max lengths for far and the max of the min lengths for near
 		Float4 lengthsMin = lengths0.Max(lengths1);
@@ -131,8 +130,8 @@ public readonly struct AxisAlignedBoundingBox
 	{
 		if (span.Length < 8) throw ExceptionHelper.Invalid(nameof(span.Length), span.Length, "is not large enough");
 
-		span[0] = Min;
-		span[1] = Max;
+		span[0] = min;
+		span[1] = max;
 
 		span[2] = new Float3(min.X, min.Y, max.Z);
 		span[3] = new Float3(min.X, max.Y, min.Z);

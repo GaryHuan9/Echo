@@ -25,6 +25,6 @@ public class AlbedoEvaluator : Evaluator
 		}
 
 		//Sample ambient
-		return scene.lights.EvaluateAmbient(query.ray.Direction);
+		return scene.lights.EvaluateAmbient(query.ray.direction);
 	}
 }
