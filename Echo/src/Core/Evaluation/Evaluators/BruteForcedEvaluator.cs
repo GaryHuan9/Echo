@@ -44,7 +44,7 @@ public class BruteForcedEvaluator : PathTracedEvaluator //Interesting inheritanc
 			query = query.SpawnTrace(incident);
 		}
 
-		if (!energy.IsZero) radiant += energy * scene.lights.EvaluateAmbient(query.ray.direction);
+		if (!energy.IsZero) radiant += energy * scene.lights.EvaluateAmbient(query.ray.Direction);
 
 		return radiant;
 	}

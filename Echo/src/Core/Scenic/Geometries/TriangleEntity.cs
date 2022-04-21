@@ -149,21 +149,21 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		ref float v = ref Unsafe.Add(ref u, 1);
 
 		//Calculate determinant and u
-		Float3 cross2 = Float3.Cross(ray.direction, edge2);
+		Float3 cross2 = Float3.Cross(ray.Direction, edge2);
 		float determinant = Float3.Dot(edge1, cross2);
 
 		//If determinant is close to zero, ray is parallel to triangle
 		if (determinant == 0f) return Infinity;
 		float determinantR = 1f / determinant;
 
-		Float3 offset = ray.origin - vertex0;
+		Float3 offset = ray.Origin - vertex0;
 		u = offset.Dot(cross2) * determinantR;
 
 		//Check if is outside barycentric bounds
 		if ((u < 0f) | (u > 1f)) return Infinity;
 
 		Float3 cross1 = Float3.Cross(offset, edge1);
-		v = ray.direction.Dot(cross1) * determinantR;
+		v = ray.Direction.Dot(cross1) * determinantR;
 
 		//Check if is outside barycentric bounds
 		if ((v < 0f) | (u + v > 1f)) return Infinity;
@@ -180,7 +180,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	public bool Intersect(in Ray ray, float travel)
 	{
 		//Calculate determinant and u
-		Float3 cross2 = Float3.Cross(ray.direction, edge2);
+		Float3 cross2 = Float3.Cross(ray.Direction, edge2);
 		float determinant = Float3.Dot(edge1, cross2);
 
 		//If determinant is close to zero, ray is parallel to triangle
@@ -188,14 +188,14 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 		float sign = MathF.Sign(determinant);
 		determinant *= sign;
 
-		Float3 offset = ray.origin - vertex0;
+		Float3 offset = ray.Origin - vertex0;
 		float u = offset.Dot(cross2) * sign;
 
 		//Check if is outside barycentric bounds
 		if ((u < 0f) | (u > determinant)) return false;
 
 		Float3 cross1 = Float3.Cross(offset, edge1);
-		float v = ray.direction.Dot(cross1) * sign;
+		float v = ray.Direction.Dot(cross1) * sign;
 
 		//Check if is outside barycentric bounds
 		if ((v < 0f) | (u + v > determinant)) return false;
