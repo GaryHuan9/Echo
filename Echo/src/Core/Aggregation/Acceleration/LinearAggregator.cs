@@ -147,8 +147,8 @@ public class LinearAggregator : Aggregator
 			span[i] = new AxisAlignedBoundingBox(aabb4);
 		}
 
-		Float3 min = Float3.PositiveInfinity;
-		Float3 max = Float3.NegativeInfinity;
+		Float4 min = Float4.PositiveInfinity;
+		Float4 max = Float4.NegativeInfinity;
 
 		for (int i = span.Length; i < nodes.Length; i++)
 		{
@@ -165,7 +165,7 @@ public class LinearAggregator : Aggregator
 			}
 		}
 
-		span[^1] = new AxisAlignedBoundingBox(min, max);
+		span[^1] = new AxisAlignedBoundingBox((Float3)min, (Float3)max);
 
 		return span.Length;
 	}

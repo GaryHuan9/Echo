@@ -90,7 +90,7 @@ public class BranchBuilder
 		}
 
 		//Places the child with the larger surface area first to improve branch prediction
-		if (headVolume.Area < tailVolume.Area) CodeHelper.Swap(ref child0, ref child1);
+		if (headVolume.HalfArea < tailVolume.HalfArea) CodeHelper.Swap(ref child0, ref child1);
 
 		return new Node(child0, child1, aabb, axis);
 	}
@@ -156,7 +156,7 @@ public class BranchBuilder
 		for (int i = 1; i < length; i++)
 		{
 			ref readonly AxisAlignedBoundingBox cutTailVolume = ref cutTailVolumes[i];
-			float cost = cutHeadVolume.Area * i + cutTailVolume.Area * (length - i);
+			float cost = cutHeadVolume.HalfArea * i + cutTailVolume.HalfArea * (length - i);
 
 			if (cost < minCost)
 			{
