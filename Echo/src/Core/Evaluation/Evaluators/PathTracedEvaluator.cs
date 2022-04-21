@@ -179,7 +179,7 @@ public class PathTracedEvaluator : Evaluator
 		RGB128 energy;
 		TraceQuery query;
 
-		public readonly Float3 CurrentDirection => query.ray.Direction;
+		public readonly Float3 CurrentDirection => query.ray.direction;
 
 		public readonly Material Material => touch.shade.material;
 

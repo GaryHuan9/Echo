@@ -2,9 +2,13 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using BenchmarkDotNet.Running;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Common.Mathematics.Primitives;
+using Echo.Core.Aggregation.Acceleration;
+using Echo.Experimental.Benchmarks;
 using JitBuddy;
 
 namespace Echo.Experimental;
@@ -13,16 +17,11 @@ public class Program
 {
 	static void Main()
 	{
-		TestJitter();
+		// TestJitter();
 		// TestUnmanaged();
 
-		// var test = new AabbSimd();
-		//
-		// test.Quad();
-		// test.Quad2();
-
 		// BenchmarkRunner.Run<PackedFloats>();
-		// BenchmarkRunner.Run<Aggregators>();
+		BenchmarkRunner.Run<Aggregators>();
 		// BenchmarkRunner.Run<RadixSort>();
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
@@ -33,10 +32,10 @@ public class Program
 	{
 		DebugHelper.Log(new Float4(7f, -0f, -2f, 3f).XYZ);
 
-		// var method = typeof(AxisAlignedBoundingBox4V2).GetMethod(nameof(AxisAlignedBoundingBox4V2.Intersect));
+		// var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
 		// DebugHelper.Log(method.ToAsm());
 
-		var property = typeof(Float4).GetProperty(nameof(Float4.XYZ));
+		var property = typeof(AxisAlignedBoundingBox4).GetProperty(nameof(AxisAlignedBoundingBox4.Encapsulated));
 		DebugHelper.Log(property!.GetMethod.ToAsm());
 
 		// var method = typeof(MathF).GetMethod(nameof(Round));

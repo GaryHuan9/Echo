@@ -11,6 +11,7 @@ using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures;
 using Echo.InOut;
 
 namespace Echo.Experimental.Benchmarks;
@@ -56,15 +57,17 @@ public class Aggregators
 			occludeQueries[i] = new OccludeQuery(ray);
 		}
 
-		// scene.children.Add(new PlaneObject(new Matte { Albedo = (Pure)0.75f }, new Float2(32f, 24f)));
+		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"));
+		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad"));
+		// Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(LinearAggregator) } }), "Linear"));
 
-		Types = new[]
+		if (true)
 		{
-			// new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDiv"),
-			// new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(LinearAggregator) }}), "Linear"),
-			new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) } }), "Regular"),
-			new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad")
-		};
+			scene.children.Add(new PlaneEntity { Material = new Matte { Albedo = Texture.white }, Size = new Float2(32f, 24f) });
+
+			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivRegular"));
+			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivQuad"));
+		}
 	}
 
 	readonly TraceQuery[] traceQueries;
@@ -73,7 +76,7 @@ public class Aggregators
 	[ParamsSource(nameof(Types))]
 	public Pair Type { get; set; }
 
-	public IEnumerable<Pair> Types { get; set; }
+	public List<Pair> Types { get; set; } = new List<Pair>();
 
 	//First test set. Different sets will have different timings
 	//V0: 903.5us per 1000 intersections (recursive)
@@ -110,6 +113,18 @@ public class Aggregators
 	// | Occlude |    Quad | 32.79 ms | 0.284 ms | 0.266 ms |
 	// |   Trace | Regular | 59.15 ms | 0.317 ms | 0.297 ms |
 	// | Occlude | Regular | 47.05 ms | 0.334 ms | 0.296 ms |
+
+	// Using CodeHelpers Float4 SIMD
+	// |  Method |         Type |      Mean |     Error |    StdDev |
+	// |-------- |------------- |----------:|----------:|----------:|
+	// |   Trace |    NoDivQuad | 41.065 ms | 0.2996 ms | 0.2802 ms |
+	// | Occlude |    NoDivQuad | 17.666 ms | 0.1583 ms | 0.1481 ms |
+	// |   Trace | NoDivRegular |  5.619 ms | 0.0354 ms | 0.0331 ms |	There is something fishy going on here
+	// | Occlude | NoDivRegular |  5.528 ms | 0.0436 ms | 0.0408 ms |	But I have no idea what exactly
+	// |   Trace |         Quad | 39.008 ms | 0.2657 ms | 0.2485 ms |
+	// | Occlude |         Quad | 31.822 ms | 0.2202 ms | 0.1952 ms |
+	// |   Trace |      Regular | 54.702 ms | 0.4270 ms | 0.3994 ms |
+	// | Occlude |      Regular | 43.802 ms | 0.3461 ms | 0.3237 ms |
 
 	[Benchmark]
 	public bool Trace()
