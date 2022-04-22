@@ -54,9 +54,9 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	/// </summary>
 	AxisAlignedBoundingBox RootAABB => nodes[NodeToken.Root.NodeValue].aabb4.Encapsulated;
 
-	public override void Trace(ref TraceQuery query) => TraceCore(ref query);
+	public override void Trace(ref TraceQuery query) => TraceImpl(ref query);
 
-	public override bool Occlude(ref OccludeQuery query) => OccludeCore(ref query);
+	public override bool Occlude(ref OccludeQuery query) => OccludeImpl(ref query);
 
 	public override int TraceCost(in Ray ray, ref float distance) => GetTraceCost(NodeToken.Root, ray, ref distance);
 
@@ -128,7 +128,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 	[SkipLocalsInit]
 	[MethodImpl(ImplementationOptions)]
-	unsafe void TraceCore(ref TraceQuery query)
+	unsafe void TraceImpl(ref TraceQuery query)
 	{
 		var stack = stackalloc NodeToken[stackSize];
 		float* hits = stackalloc float[stackSize];
@@ -228,7 +228,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 	[SkipLocalsInit]
 	[MethodImpl(ImplementationOptions)]
-	unsafe bool OccludeCore(ref OccludeQuery query)
+	unsafe bool OccludeImpl(ref OccludeQuery query)
 	{
 		NodeToken* stack = stackalloc NodeToken[stackSize];
 

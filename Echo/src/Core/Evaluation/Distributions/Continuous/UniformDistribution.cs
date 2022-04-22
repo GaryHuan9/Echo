@@ -15,13 +15,13 @@ public class UniformDistribution : ContinuousDistribution
 
 	public override ContinuousDistribution Replicate() => new UniformDistribution(this);
 
-	protected override Sample1D Next1DCore()
+	protected override Sample1D Next1DImpl()
 	{
 		if (Prng == null) return (Sample1D)0.5f;
 		return (Sample1D)Prng.Next1();
 	}
 
-	protected override Sample2D Next2DCore()
+	protected override Sample2D Next2DImpl()
 	{
 		if (Prng == null) return (Sample2D)Float2.Half;
 		return (Sample2D)Prng.Next2();
@@ -29,11 +29,11 @@ public class UniformDistribution : ContinuousDistribution
 
 	protected override void FillSpan1D(Span<Sample1D> samples)
 	{
-		foreach (ref Sample1D sample in samples) sample = Next1DCore();
+		foreach (ref Sample1D sample in samples) sample = Next1DImpl();
 	}
 
 	protected override void FillSpan2D(Span<Sample2D> samples)
 	{
-		foreach (ref Sample2D sample in samples) sample = Next2DCore();
+		foreach (ref Sample2D sample in samples) sample = Next2DImpl();
 	}
 }
