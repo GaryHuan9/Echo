@@ -41,7 +41,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		ref readonly Node root = ref nodes[0];
 		float hit = root.aabb.Intersect(query.ray);
 
-		if (hit < query.distance) TraceCore(ref query);
+		if (hit < query.distance) TraceImpl(ref query);
 	}
 
 	public override bool Occlude(ref OccludeQuery query)
@@ -49,7 +49,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		ref readonly Node root = ref nodes[0];
 		float hit = root.aabb.Intersect(query.ray);
 
-		return hit <= query.travel && OccludeCore(ref query);
+		return hit <= query.travel && OccludeImpl(ref query);
 	}
 
 	public override int TraceCost(in Ray ray, ref float distance)
@@ -112,7 +112,7 @@ public class BoundingVolumeHierarchy : Aggregator
 
 	[SkipLocalsInit]
 	[MethodImpl(ImplementationOptions)]
-	unsafe void TraceCore(ref TraceQuery query)
+	unsafe void TraceImpl(ref TraceQuery query)
 	{
 		var stack = stackalloc NodeToken[maxDepth];
 		float* hits = stackalloc float[maxDepth];
@@ -166,7 +166,7 @@ public class BoundingVolumeHierarchy : Aggregator
 
 	[SkipLocalsInit]
 	[MethodImpl(ImplementationOptions)]
-	unsafe bool OccludeCore(ref OccludeQuery query)
+	unsafe bool OccludeImpl(ref OccludeQuery query)
 	{
 		NodeToken* stack = stackalloc NodeToken[maxDepth];
 		NodeToken* next = stack; //A pointer pointing at the top of the stack

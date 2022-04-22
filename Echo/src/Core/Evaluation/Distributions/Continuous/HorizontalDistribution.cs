@@ -31,14 +31,14 @@ public abstract class HorizontalDistribution : ContinuousDistribution
 		singles2D.Reset(true);
 	}
 
-	protected override Sample1D Next1DCore()
+	protected override Sample1D Next1DImpl()
 	{
 		if (singles1D.TryFetch(extend, out var buffer)) FillSpan1D(buffer);
 
 		return buffer[SampleNumber];
 	}
 
-	protected override Sample2D Next2DCore()
+	protected override Sample2D Next2DImpl()
 	{
 		if (singles2D.TryFetch(extend, out var buffer)) FillSpan2D(buffer);
 
