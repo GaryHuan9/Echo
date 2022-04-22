@@ -15,7 +15,7 @@ namespace Echo.Core.Textures.Grid;
 /// <summary>
 /// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and <see cref="size"/> (exclusive).
 /// </summary>
-public abstract partial class TextureGrid<T> : Texture where T : IColor<T>
+public abstract class TextureGrid<T> : Texture where T : IColor<T>
 {
 	protected TextureGrid(Int2 size)
 	{

@@ -103,43 +103,43 @@ public abstract class ContinuousDistribution
 	public Sample1D Next1D([FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
-		return Next1DCore();
+		return Next1DImpl();
 	}
 
 	/// <inheritdoc cref="Next2DCore"/>
 	public Sample2D Next2D([FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
-		return Next2DCore();
+		return Next2DImpl();
 	}
 
 	/// <inheritdoc cref="NextSpan2DCore"/>
 	public ReadOnlySpan<Sample1D> NextSpan1D(int length, [FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
-		return NextSpan1DCore(length);
+		return NextSpan1DImpl(length);
 	}
 
 	/// <inheritdoc cref="NextSpan2DCore"/>
 	public ReadOnlySpan<Sample2D> NextSpan2D(int length, [FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
-		return NextSpan2DCore(length);
+		return NextSpan2DImpl(length);
 	}
 
 #else
 	//
 	/// <inheritdoc cref="Next1DCore"/>
-	public Sample1D Next1D() => Next1DCore();
+	public Sample1D Next1D() => Next1DImpl();
 
 	/// <inheritdoc cref="Next2DCore"/>
-	public Sample2D Next2D() => Next2DCore();
+	public Sample2D Next2D() => Next2DImpl();
 
 	/// <inheritdoc cref="NextSpan1DCore"/>
-	public ReadOnlySpan<Sample1D> NextSpan1D(int length) => NextSpan1DCore(length);
+	public ReadOnlySpan<Sample1D> NextSpan1D(int length) => NextSpan1DImpl(length);
 
 	/// <inheritdoc cref="NextSpan2DCore"/>
-	public ReadOnlySpan<Sample2D> NextSpan2D(int length) => NextSpan2DCore(length);
+	public ReadOnlySpan<Sample2D> NextSpan2D(int length) => NextSpan2DImpl(length);
 
 #endif
 
@@ -151,12 +151,12 @@ public abstract class ContinuousDistribution
 	/// <summary>
 	/// Draws and returns a new <see cref="Sample1D"/> from this <see cref="ContinuousDistribution"/>.
 	/// </summary>
-	protected abstract Sample1D Next1DCore();
+	protected abstract Sample1D Next1DImpl();
 
 	/// <summary>
 	/// Draws and returns a new <see cref="Sample2D"/> from this <see cref="ContinuousDistribution"/>.
 	/// </summary>
-	protected abstract Sample2D Next2DCore();
+	protected abstract Sample2D Next2DImpl();
 
 	/// <summary>
 	/// Fills <paramref name="samples"/> with <see cref="Sample1D"/> values from this <see cref="ContinuousDistribution"/>.
@@ -171,7 +171,7 @@ public abstract class ContinuousDistribution
 	/// <summary>
 	/// Draws and returns a span with <paramref name="length"/> of <see cref="Sample1D"/> values from this <see cref="ContinuousDistribution"/>.
 	/// </summary>
-	ReadOnlySpan<Sample1D> NextSpan1DCore(int length)
+	ReadOnlySpan<Sample1D> NextSpan1DImpl(int length)
 	{
 		spans1D.TryFetch(length, out var span);
 
@@ -182,7 +182,7 @@ public abstract class ContinuousDistribution
 	/// <summary>
 	/// Draws and returns a span with <paramref name="length"/> of <see cref="Sample2D"/> values from this <see cref="ContinuousDistribution"/>.
 	/// </summary>
-	ReadOnlySpan<Sample2D> NextSpan2DCore(int length)
+	ReadOnlySpan<Sample2D> NextSpan2DImpl(int length)
 	{
 		spans2D.TryFetch(length, out var span);
 
