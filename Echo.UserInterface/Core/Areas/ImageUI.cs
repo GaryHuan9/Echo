@@ -42,7 +42,7 @@ public class ImageUI : AreaUI
 		set => display.FillColor = value;
 	}
 
-	readonly RectangleShape display = new RectangleShape();
+	readonly RectangleShape display = new();
 
 	protected override void Reorient(Float2 position, Float2 dimension)
 	{

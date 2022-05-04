@@ -12,8 +12,8 @@ public class ApplicationStatusUI : AreaUI
 		Add(label);
 	}
 
-	readonly StringBuilder builder = new StringBuilder();
-	readonly LabelUI label = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.left};
+	readonly StringBuilder builder = new();
+	readonly LabelUI label = new() {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.left};
 
 	int frameCount;
 	double interval;
