@@ -34,7 +34,7 @@ public class RootUI : AreaUI, IHoverable
 	readonly Shader borderRegularShader = Shader.FromString(null, null, BorderRegularShader);
 	readonly Shader borderTextureShader = Shader.FromString(null, null, BorderTextureShader);
 
-	readonly Dictionary<Type, AreaUI> typeMapper = new Dictionary<Type, AreaUI>();
+	readonly Dictionary<Type, AreaUI> typeMapper = new();
 
 	const string BorderShader = @"
 

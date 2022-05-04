@@ -82,8 +82,8 @@ public partial class AreaUI : IDisposable
 		set => panel.FillColor = value;
 	}
 
-	readonly RectangleShape panel = new RectangleShape();
-	readonly List<AreaUI> children = new List<AreaUI>();
+	readonly RectangleShape panel = new();
+	readonly List<AreaUI> children = new();
 
 	public Float2 Position => panel.Position.As();
 	public Float2 Dimension => panel.Size.As();

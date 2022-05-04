@@ -4,7 +4,7 @@ using SFML.Graphics;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public partial class AreaUI
+partial class AreaUI
 {
 	public class Transform
 	{
