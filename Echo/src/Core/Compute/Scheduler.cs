@@ -1,6 +1,9 @@
-﻿namespace Echo.Core.Compute;
+﻿using System;
 
-public sealed class Scheduler
+namespace Echo.Core.Compute;
+
+public sealed class Scheduler : IDisposable
 {
-	
+
+	public void Dispose() { }
 }
