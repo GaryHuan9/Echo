@@ -4,7 +4,7 @@ using CodeHelpers.Diagnostics;
 
 namespace Echo.Core.Textures.Colors;
 
-public partial struct RGBA128
+partial struct RGBA128
 {
 	readonly ref struct Parser
 	{

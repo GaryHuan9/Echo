@@ -4,10 +4,10 @@ using System.Runtime.CompilerServices;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public partial class AreaUI
+partial class AreaUI
 {
-	public ForwardLoop LoopForward(bool skipDisabled = true) => new ForwardLoop(children, skipDisabled);
-	public BackwardLoop LoopBackward(bool skipDisabled = true) => new BackwardLoop(children, skipDisabled);
+	public ForwardLoop LoopForward(bool skipDisabled = true) => new(children, skipDisabled);
+	public BackwardLoop LoopBackward(bool skipDisabled = true) => new(children, skipDisabled);
 
 	public readonly struct ForwardLoop : IEnumerable<AreaUI>
 	{
