@@ -9,7 +9,7 @@ public class Float3FieldUI : FloatsFieldUI
 
 	public Float3 Value
 	{
-		get => new Float3(values[0], values[1], values[2]);
+		get => new(values[0], values[1], values[2]);
 		set
 		{
 			values[0] = value.X;

@@ -80,8 +80,8 @@ public class LabelUI : AreaUI
 
 	static float Margin => Theme.SmallMargin;
 
-	readonly Text display = new Text {Font = mono, FillColor = Theme.Current.ContrastColor};
-	static readonly Font mono = new Font("Assets/Fonts/JetBrainsMono/JetBrainsMono-Bold.ttf");
+	readonly Text display = new() {Font = mono, FillColor = Theme.Current.ContrastColor};
+	static readonly Font mono = new("Assets/Fonts/JetBrainsMono/JetBrainsMono-Bold.ttf");
 
 	public float GetPosition(int index) => display.FindCharacterPos((uint)index).X + LeftPadding;
 

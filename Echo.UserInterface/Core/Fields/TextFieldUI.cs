@@ -37,13 +37,13 @@ public class TextFieldUI : PressableUI
 
 	public event Action<TextFieldUI> OnTextChangedMethods;
 
-	readonly LabelUI currentDisplay = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.center};
-	readonly LabelUI editingDisplay = new LabelUI {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.left};
+	readonly LabelUI currentDisplay = new() {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.center};
+	readonly LabelUI editingDisplay = new() {transform = {UniformMargins = Theme.SmallMargin}, Align = LabelUI.Alignment.left};
 
 	readonly CursorUI cursor;
 
-	readonly CharBuffer currentBuffer = new CharBuffer();
-	readonly CharBuffer editingBuffer = new CharBuffer();
+	readonly CharBuffer currentBuffer = new();
+	readonly CharBuffer editingBuffer = new();
 
 	bool _editing;
 
