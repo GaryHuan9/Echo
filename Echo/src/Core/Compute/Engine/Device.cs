@@ -5,7 +5,7 @@ using CodeHelpers.Threads;
 
 namespace Echo.Core.Compute;
 
-public sealed class Device : IDisposable
+public sealed partial class Device : IDisposable
 {
 	public Device(int population)
 	{
