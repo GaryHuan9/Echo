@@ -1,4 +1,5 @@
 ﻿using CodeHelpers;
+using Echo.Core.Evaluation.Operations;
 
 namespace Echo.Core.Evaluation.Engines;
 

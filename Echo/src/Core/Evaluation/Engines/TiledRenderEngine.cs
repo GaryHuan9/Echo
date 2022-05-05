@@ -20,6 +20,8 @@ public class TiledRenderEngine : IDisposable
 		{
 			if (Interlocked.Exchange(ref _currentState, (int)value) == (int)value) return;
 			lock (signalLocker) Monitor.PulseAll(signalLocker);
+
+			var c = CurrentProfile with { };
 		}
 	}
 
@@ -100,7 +102,7 @@ public class TiledRenderEngine : IDisposable
 	void CreateTilePositions()
 	{
 		TotalTileSize = CurrentProfile.RenderBuffer.size.CeiledDivide(CurrentProfile.TileSize);
-		tilePositions = CurrentProfile.TilePattern.GetPattern(TotalTileSize);
+		tilePositions = CurrentProfile.TilePattern.CreateSequence(TotalTileSize);
 
 		for (int i = 0; i < tilePositions.Length; i++) tilePositions[i] *= CurrentProfile.TileSize;
 
