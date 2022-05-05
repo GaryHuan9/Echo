@@ -59,7 +59,7 @@ public sealed partial class Device : IDisposable
 
 	public void Dispatch(Operation operation)
 	{
-		operation.Validate();
+		operation.Prepare();
 
 		//Abandon previous operation if needed
 		using var _0 = locker.FetchUpgradeableReadLock();

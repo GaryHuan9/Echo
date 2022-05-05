@@ -7,13 +7,11 @@ namespace Echo.Core.Evaluation.Distributions.Continuous;
 /// A uniform <see cref="ContinuousDistribution"/>. Either returns purely random values
 /// if <see cref="ContinuousDistribution.Prng"/> is assigned, or simply return just 1/2.
 /// </summary>
-public class UniformDistribution : ContinuousDistribution
+public record UniformDistribution : ContinuousDistribution
 {
-	public UniformDistribution(int extend) : base(extend) { }
+	public UniformDistribution() { }
 
-	UniformDistribution(UniformDistribution source) : base(source) { }
-
-	public override ContinuousDistribution Replicate() => new UniformDistribution(this);
+	protected UniformDistribution(UniformDistribution source) : base(source) { }
 
 	protected override Sample1D Next1DImpl()
 	{
