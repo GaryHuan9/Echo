@@ -17,33 +17,44 @@ using LN = CallerLineNumberAttribute;
 /// of the same pixel, the sequence of samples that we draw from this <see cref="ContinuousDistribution"/> should be identical.
 /// NOTE: this class is not thread safe, create multiple instances for different threads using the copy constructor.
 /// </summary>
-public abstract class ContinuousDistribution
+public abstract record ContinuousDistribution
 {
 	/// <summary>
-	/// Constructs a new <see cref="ContinuousDistribution"/> with <see cref="extend"/>.
+	/// Constructs a new <see cref="ContinuousDistribution"/> with <see cref="Extend"/>.
 	/// </summary>
-	protected ContinuousDistribution(int extend)
+	protected ContinuousDistribution() => Extend = 16;
+
+	/// <summary>
+	/// Copy constructs a <see cref="ContinuousDistribution"/> from <paramref name="source"/>.
+	/// </summary>
+	protected ContinuousDistribution(ContinuousDistribution source)
 	{
-		if (extend <= 0) throw ExceptionHelper.Invalid(nameof(extend), extend, InvalidType.outOfBounds);
+		spans1D = new BufferDomain<Sample1D>();
+		spans2D = new BufferDomain<Sample2D>();
 
-		this.extend = extend;
+		Extend = source.Extend;
+		SampleNumber = int.MinValue;
 	}
-
-	/// <summary>
-	/// Constructs a copy of <paramref name="source"/>.
-	/// NOTE: only information that specially defines this <see cref="ContinuousDistribution"/> needs to be cloned over.
-	/// </summary>
-	protected ContinuousDistribution(ContinuousDistribution source) : this(source.extend) { }
-
-	/// <summary>
-	/// The maximum number of pixel samples that will be performed for one pixel.
-	/// </summary>
-	public readonly int extend;
 
 	readonly BufferDomain<Sample1D> spans1D = new();
 	readonly BufferDomain<Sample2D> spans2D = new();
 
 	MonoThread monoThread;
+
+	readonly int _extend;
+
+	/// <summary>
+	/// The maximum number of pixel samples that will be performed for one pixel.
+	/// </summary>
+	public int Extend
+	{
+		get => _extend;
+		init
+		{
+			if (value > 0) _extend = value;
+			else throw ExceptionHelper.Invalid(nameof(value), value, InvalidType.outOfBounds);
+		}
+	}
 
 	/// <summary>
 	/// The position of the current processing pixel. This property is undefined if <see cref="BeginPixel"/> is never invoked.
@@ -52,7 +63,7 @@ public abstract class ContinuousDistribution
 
 	/// <summary>
 	/// The index (number) of the current processing pixel sample. After invoking <see cref="BeginSample"/>
-	/// once, this property will always be between zero (inclusive) and <see cref="extend"/> (exclusive).
+	/// once, this property will always be between zero (inclusive) and <see cref="Extend"/> (exclusive).
 	/// </summary>
 	protected int SampleNumber { get; private set; } = int.MinValue;
 
@@ -91,7 +102,7 @@ public abstract class ContinuousDistribution
 		monoThread.Ensure();
 
 		if (SampleNumber < -1) throw new Exception($"Operation invalid before {nameof(BeginPixel)} is invoked!");
-		if (++SampleNumber >= extend) throw new Exception($"More than {extend} pixel samples has been requested!");
+		if (++SampleNumber >= Extend) throw new Exception($"More than {Extend} pixel samples has been requested!");
 
 		spans1D.Reset(true);
 		spans2D.Reset(true);
@@ -129,24 +140,19 @@ public abstract class ContinuousDistribution
 
 #else
 	//
-	/// <inheritdoc cref="Next1DCore"/>
+	/// <inheritdoc cref="Next1DImpl"/>
 	public Sample1D Next1D() => Next1DImpl();
 
-	/// <inheritdoc cref="Next2DCore"/>
+	/// <inheritdoc cref="Next2DImpl"/>
 	public Sample2D Next2D() => Next2DImpl();
 
-	/// <inheritdoc cref="NextSpan1DCore"/>
+	/// <inheritdoc cref="NextSpan1DImpl"/>
 	public ReadOnlySpan<Sample1D> NextSpan1D(int length) => NextSpan1DImpl(length);
 
-	/// <inheritdoc cref="NextSpan2DCore"/>
+	/// <inheritdoc cref="NextSpan2DImpl"/>
 	public ReadOnlySpan<Sample2D> NextSpan2D(int length) => NextSpan2DImpl(length);
 
 #endif
-
-	/// <summary>
-	/// Produces and returns another copy of this <see cref="ContinuousDistribution"/> of the same <see cref="Object.GetType()"/> to be used for different threads.
-	/// </summary>
-	public abstract ContinuousDistribution Replicate();
 
 	/// <summary>
 	/// Draws and returns a new <see cref="Sample1D"/> from this <see cref="ContinuousDistribution"/>.

@@ -6,6 +6,7 @@ using CodeHelpers.Threads;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Evaluators;
+using Echo.Core.Evaluation.Operations;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grid;
 
@@ -137,7 +138,7 @@ public class TileWorker : IDisposable
 		if (position.Clamp(Int2.Zero, renderBuffer.oneLess) != position) return; //Ignore pixels outside of buffer
 
 		float aspect = 1f / renderBuffer.aspect;
-		RenderPixel pixel = new RenderPixel();
+		Accumulator pixel = new Accumulator();
 
 		//Regular pixel sampling
 		arena.Distribution.BeginPixel(position);
@@ -167,7 +168,7 @@ public class TileWorker : IDisposable
 				arena.allocator.Release();
 
 				//Write to pixel
-				bool successful = pixel.Accumulate(radiance);
+				bool successful = pixel.Add(radiance);
 				Interlocked.Increment(ref _completedSample);
 
 				if (!successful) Interlocked.Increment(ref _rejectedSample);

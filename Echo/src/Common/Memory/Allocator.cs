@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 
@@ -11,13 +12,20 @@ namespace Echo.Common.Memory;
 /// objects have undefined state. Remember to explicitly invoke "reset" methods for them.
 /// NOTE: All the static methods are thread safe, while the instance methods are unsafe.
 /// </summary>
-public class Allocator
+public sealed record Allocator
 {
-	/// <param name="capacity">The maximum number of objects of the same type that the internal <see cref="poolers"/> can store.</param>
-	public Allocator(int capacity = 32)
+	public Allocator()
 	{
-		this.capacity = capacity;
+		Capacity = 32;
 		lock (tokens) { } //Wait for token preparation
+	}
+
+	Allocator(Allocator source)
+	{
+		Capacity = source.Capacity;
+
+		poolers = new object[InitialSize];
+		pointers = new ushort[InitialSize];
 	}
 
 	/// <summary>
@@ -30,7 +38,21 @@ public class Allocator
 	/// </summary>
 	bool allocating;
 
-	readonly int capacity;
+	readonly int _capacity;
+
+	/// <summary>
+	/// The maximum number of objects of the same type that the internal <see cref="poolers"/> can store.
+	/// </summary>
+	public int Capacity
+	{
+		get => _capacity;
+		init
+		{
+			if (value > 0) _capacity = value;
+			else throw ExceptionHelper.Invalid(nameof(value), value, InvalidType.outOfBounds);
+		}
+	}
+
 	static int tokenCount;
 
 	object[] poolers = new object[InitialSize];
@@ -98,15 +120,15 @@ public class Allocator
 		int index = pointer++;
 
 		//Within capacity, use pooled object
-		if (index < capacity)
+		if (index < Capacity)
 		{
-			pooler ??= new T[capacity];
+			pooler ??= new T[Capacity];
 
 			ref T target = ref ((T[])pooler)[index];
 			return target ??= new T();
 		}
 
-		DebugHelper.LogWarning($"Exceeding {nameof(capacity)}: consider setting a larger {nameof(capacity)} or expect a performance degradation!");
+		DebugHelper.LogWarning($"Exceeding {nameof(Capacity)}: consider setting a larger {nameof(Capacity)} or expect a performance degradation!");
 		return new T();
 	}
 
