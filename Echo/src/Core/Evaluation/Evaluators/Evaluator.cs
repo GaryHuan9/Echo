@@ -1,19 +1,46 @@
-﻿using Echo.Common.Mathematics.Primitives;
+﻿using CodeHelpers;
+using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Distributions.Continuous;
+using Echo.Core.Scenic;
+using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
-public abstract class Evaluator
+public abstract record Evaluator
 {
-	ContinuousDistribution sourceDistribution;
+	protected Evaluator() { }
+
+	protected Evaluator(Evaluator source)
+	{
+		allocator = source.allocator with { };
+		Scene = source.Scene;
+		Distribution = source.Distribution with { };
+	}
+
+	protected readonly Allocator allocator = new();
+
+	readonly NotNull<PreparedScene> _scene;
+	readonly NotNull<ContinuousDistribution> _distribution;
+
+	public PreparedScene Scene
+	{
+		get => _scene;
+		init => _scene = value;
+	}
+
+	public ContinuousDistribution Distribution
+	{
+		get => _distribution;
+		init => _distribution = value;
+	}
 
 	/// <summary>
 	/// Invoked once before a new rendering process begin on this <see cref="Evaluator"/>.
 	/// </summary>
-	public void Prepare(RenderProfile profile) => sourceDistribution = CreateDistribution(profile);
+	public void Prepare(RenderProfile profile) => Distribution = CreateDistribution(profile);
 
 	/// <summary>
 	/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Evaluate"/>.
@@ -24,7 +51,7 @@ public abstract class Evaluator
 	{
 		Arena arena = CreateArena(profile);
 
-		arena.Distribution = sourceDistribution.Replicate();
+		arena.Distribution = Distribution with { };
 		arena.Distribution.Prng = CreateRandom(seed);
 
 		return arena;
@@ -45,7 +72,7 @@ public abstract class Evaluator
 
 	/// <summary>
 	/// Creates a new <see cref="Arena"/> to be used for this <see cref="Evaluator"/>.
-	/// Override this method if a different <see cref="Arena"/> child type is needed.
+	/// Override this method if a different <see cref="Arena"/> child type if needed.
 	/// </summary>
 	protected virtual Arena CreateArena(RenderProfile profile) => new();
 
@@ -55,3 +82,5 @@ public abstract class Evaluator
 	/// </summary>
 	protected virtual IRandom CreateRandom(uint? seed = null) => new SquirrelRandom(seed);
 }
+
+public abstract record Evaluator<T> : Evaluator where T : IColor<T> { }

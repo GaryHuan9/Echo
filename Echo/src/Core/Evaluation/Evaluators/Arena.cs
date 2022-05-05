@@ -1,7 +1,8 @@
 ﻿using CodeHelpers;
+using Echo.Common.Memory;
 using Echo.Core.Evaluation.Distributions.Continuous;
 
-namespace Echo.Common.Memory;
+namespace Echo.Core.Evaluation.Evaluators;
 
 /// <summary>
 /// A region of memory that can be used to store localized temporary objects or access shared immutable objects.

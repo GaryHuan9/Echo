@@ -7,6 +7,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Primitives;
+using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Experimental.Benchmarks;
 using JitBuddy;
@@ -17,15 +18,51 @@ public class Program
 {
 	static void Main()
 	{
+		TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
 
 		// BenchmarkRunner.Run<PackedFloats>();
-		BenchmarkRunner.Run<Aggregators>();
+		// BenchmarkRunner.Run<Aggregators>();
 		// BenchmarkRunner.Run<RadixSort>();
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
+	}
+
+	static void TestMonteCarlo()
+	{
+		IRandom random = new SquirrelRandom();
+
+		const decimal Threshold = 0.001m;
+
+		int count = 0;
+
+		decimal mean = 0m;
+		decimal squared = 0m;
+
+		decimal variance;
+		decimal noise;
+
+		do
+		{
+			float sample = random.Next1();
+			// sample *= sample;
+			// sample = sample <= 0.01f ? 1f : 0f;
+			decimal value = (decimal)sample;
+
+			++count;
+
+			decimal oldMean = mean;
+			mean += (value - oldMean) / count;
+			squared += (value - oldMean) * (value - mean);
+
+			variance = squared / Math.Max(count - 1, 1);
+			noise = variance / (decimal)Math.Sqrt(count); // 1 / (count ^ 3) ^ 0.5
+		}
+		while (count < 16 || noise > Threshold);
+
+		DebugHelper.Log(count, mean, variance, noise);
 	}
 
 	static void TestJitter()
