@@ -85,5 +85,5 @@ public class SummationTests
 		Assert.That(truth, Is.EqualTo(total.Result.X).Roughly());
 	}
 
-	static float NextBiased(IRandom random) => random.Next1() < 0.5f ? -random.Next1() : random.Next1() * 8f;
+	static float NextBiased(Prng random) => random.Next1() < 0.5f ? -random.Next1() : random.Next1() * 8f;
 }

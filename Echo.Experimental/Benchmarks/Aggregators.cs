@@ -31,7 +31,7 @@ public class Aggregators
 		traceQueries = new TraceQuery[Length];
 		occludeQueries = new OccludeQuery[Length];
 
-		IRandom random = new SystemRandom(42);
+		Prng random = new SystemPrng(42);
 
 		const float Radius = 9f;
 		const float Height = 5f;

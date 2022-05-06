@@ -15,14 +15,14 @@ using LN = CallerLineNumberAttribute;
 /// A continuous distribution that we can draw two different kinds of sample from: <see cref="Sample1D"/> and <see cref="Sample2D"/>.
 /// We can also draw <see cref="Span{T}"/> of particular lengths of those two types of sample. Note that for different pixel samples
 /// of the same pixel, the sequence of samples that we draw from this <see cref="ContinuousDistribution"/> should be identical.
-/// NOTE: this class is not thread safe, create multiple instances for different threads using the copy constructor.
+/// NOTE: this class is not thread safe, create multiple instances for different threads using nondestructive mutation.
 /// </summary>
 public abstract record ContinuousDistribution
 {
 	/// <summary>
-	/// Constructs a new <see cref="ContinuousDistribution"/> with <see cref="Extend"/>.
+	/// Constructs a new <see cref="ContinuousDistribution"/> with <paramref name="extend"/>.
 	/// </summary>
-	protected ContinuousDistribution() => Extend = 16;
+	protected ContinuousDistribution(int extend = 16) => Extend = extend;
 
 	/// <summary>
 	/// Copy constructs a <see cref="ContinuousDistribution"/> from <paramref name="source"/>.
@@ -33,7 +33,8 @@ public abstract record ContinuousDistribution
 		spans2D = new BufferDomain<Sample2D>();
 
 		Extend = source.Extend;
-		SampleNumber = int.MinValue;
+		Prng = source.Prng with { };
+		SessionNumber = int.MinValue;
 	}
 
 	readonly BufferDomain<Sample1D> spans1D = new();
@@ -57,52 +58,43 @@ public abstract record ContinuousDistribution
 	}
 
 	/// <summary>
-	/// The position of the current processing pixel. This property is undefined if <see cref="BeginPixel"/> is never invoked.
+	/// The specific <see cref="Prng"/> associated with this <see cref="ContinuousDistribution"/>.
 	/// </summary>
-	protected Int2 PixelPosition { get; private set; }
+	public Prng Prng { get; init; }
 
 	/// <summary>
-	/// The index (number) of the current processing pixel sample. After invoking <see cref="BeginSample"/>
+	/// The position of the series of sampling session. The value is never negative.
+	/// </summary>
+	protected Int2 SeriesPosition { get; private set; }
+
+	/// <summary>
+	/// The index of the current session that is being sampled. After invoking <see cref="BeginSession"/>
 	/// once, this property will always be between zero (inclusive) and <see cref="Extend"/> (exclusive).
 	/// </summary>
-	protected int SampleNumber { get; private set; } = int.MinValue;
-
-	IRandom _prng;
+	protected int SessionNumber { get; private set; } = int.MinValue;
 
 	/// <summary>
-	/// The specific pseudo random number generator associated with this <see cref="ContinuousDistribution"/>. Note that
-	/// this property is not cloned but rather simply set to null on the new instance when we use the copy constructor.
+	/// Begins a new series of sampling sessions.
 	/// </summary>
-	public IRandom Prng
+	/// <param name="position">The </param>
+	public virtual void BeginSeries(Int2 position)
 	{
-		get => _prng;
-		set
-		{
-			if (value != null || _prng == null) _prng = value;
-			else throw new Exception($"Once a {nameof(Prng)} is assigned, it cannot be removed to null.");
-		}
+		monoThread.Ensure();
+		Assert.IsTrue(position >= Int2.Zero);
+
+		SeriesPosition = position;
+		SessionNumber = -1;
 	}
 
 	/// <summary>
-	/// Begins sampling on a new pixel at <paramref name="position"/>.
+	/// Begins a sampling session in the current series. Must be invoked after <see cref="BeginSeries"/>.
 	/// </summary>
-	public virtual void BeginPixel(Int2 position)
+	public virtual void BeginSession()
 	{
 		monoThread.Ensure();
 
-		PixelPosition = position;
-		SampleNumber = -1;
-	}
-
-	/// <summary>
-	/// Begins a new pixel sample on the current pixel at <see cref="PixelPosition"/>. Must be invoked after <see cref="BeginPixel"/>.
-	/// </summary>
-	public virtual void BeginSample()
-	{
-		monoThread.Ensure();
-
-		if (SampleNumber < -1) throw new Exception($"Operation invalid before {nameof(BeginPixel)} is invoked!");
-		if (++SampleNumber >= Extend) throw new Exception($"More than {Extend} pixel samples has been requested!");
+		if (SessionNumber < -1) throw new Exception($"Operation invalid before {nameof(BeginSeries)} is invoked!");
+		if (++SessionNumber >= Extend) throw new Exception($"More than {Extend} sessions requested in this series!");
 
 		spans1D.Reset(true);
 		spans2D.Reset(true);
@@ -110,28 +102,28 @@ public abstract record ContinuousDistribution
 
 #if DEBUG
 	//
-	/// <inheritdoc cref="Next1DCore"/>
+	/// <inheritdoc cref="Next1DImpl"/>
 	public Sample1D Next1D([FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
 		return Next1DImpl();
 	}
 
-	/// <inheritdoc cref="Next2DCore"/>
+	/// <inheritdoc cref="Next2DImpl"/>
 	public Sample2D Next2D([FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
 		return Next2DImpl();
 	}
 
-	/// <inheritdoc cref="NextSpan2DCore"/>
+	/// <inheritdoc cref="NextSpan2DImpl"/>
 	public ReadOnlySpan<Sample1D> NextSpan1D(int length, [FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
 		return NextSpan1DImpl(length);
 	}
 
-	/// <inheritdoc cref="NextSpan2DCore"/>
+	/// <inheritdoc cref="NextSpan2DImpl"/>
 	public ReadOnlySpan<Sample2D> NextSpan2D(int length, [FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
@@ -196,17 +188,13 @@ public abstract record ContinuousDistribution
 		return span;
 	}
 
-#if DEBUG
-	//
 	void EnsureIsSampling()
 	{
 		monoThread.Ensure();
 
-		if (SampleNumber < 0) throw new Exception($"Operation invalid before {nameof(BeginSample)} is invoked!");
-		if (SampleNumber >= extend) throw new Exception($"More than {extend} pixel samples has been requested!");
+		if (SessionNumber < 0) throw new Exception($"Operation invalid before {nameof(BeginSession)} is invoked!");
+		if (SessionNumber >= Extend) throw new Exception($"More than {Extend} sessions requested in this series!");
 	}
-
-#endif
 
 	/// <summary>
 	/// A collection of array buffers of <typeparamref name="T"/> with different <see cref="Array.Length"/>.

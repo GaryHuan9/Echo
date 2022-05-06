@@ -32,7 +32,7 @@ public class Program
 
 	static void TestMonteCarlo()
 	{
-		IRandom random = new SquirrelRandom();
+		Prng random = new SquirrelPrng();
 
 		const decimal Threshold = 0.001m;
 

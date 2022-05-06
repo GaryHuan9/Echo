@@ -14,7 +14,7 @@ public class Vignette : PostProcessingWorker
 
 	void HorizontalPass(int horizontal)
 	{
-		IRandom random = new SystemRandom((uint)horizontal);
+		Prng random = new SystemPrng((uint)horizontal);
 
 		for (int y = 0; y < renderBuffer.size.Y; y++)
 		{
