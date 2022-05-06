@@ -141,7 +141,7 @@ public class TileWorker : IDisposable
 		Accumulator pixel = new Accumulator();
 
 		//Regular pixel sampling
-		arena.Distribution.BeginPixel(position);
+		arena.Distribution.BeginSeries(position);
 		Sample(profile.PixelSample);
 
 		//Adaptive sampling (temporary)
@@ -157,7 +157,7 @@ public class TileWorker : IDisposable
 		{
 			for (int i = 0; i < count; i++)
 			{
-				arena.Distribution.BeginSample();
+				arena.Distribution.BeginSession();
 				Float2 offset = arena.Distribution.Next2D();
 
 				//Sample radiance

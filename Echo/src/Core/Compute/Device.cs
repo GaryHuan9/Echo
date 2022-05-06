@@ -59,7 +59,7 @@ public sealed partial class Device : IDisposable
 
 	public void Dispatch(Operation operation)
 	{
-		operation.Prepare();
+		operation.Prepare(Population);
 
 		//Abandon previous operation if needed
 		using var _0 = locker.FetchUpgradeableReadLock();
@@ -125,12 +125,12 @@ public sealed partial class Device : IDisposable
 			Name = $"{nameof(Device)} {guid} {nameof(Thread)} {index}"
 		};
 
-		thread.Start();
+		thread.Start(index);
 	}
 
-	void Main()
+	void Main(object id)
 	{
-		using var scheduler = new Scheduler();
+		using var scheduler = new Scheduler((int)id);
 
 		while (true)
 		{

@@ -44,7 +44,7 @@ public class Camera : Entity
 	/// </summary>
 	/// <param name="uv">X component from -0.5 to 0.5; Y component an aspect radio corrected version of X.</param>
 	/// <param name="random">An PRNG used for Depth of Field. Can be null if no DoF is wanted.</param>
-	public Ray GetRay(Float2 uv, IRandom random = null)
+	public Ray GetRay(Float2 uv, Prng random = null)
 	{
 		Float3 direction = uv.CreateXY(fieldDistance);
 

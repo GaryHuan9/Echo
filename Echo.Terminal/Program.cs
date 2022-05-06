@@ -17,6 +17,22 @@ using Echo.InOut;
 
 namespace Echo.Terminal;
 
+//        ..      .
+//     x88f` `..x88. .>             .uef^"
+//   :8888   xf`*8888%            :d88E              u.
+//  :8888f .888  `"`          .   `888E        ...ue888b
+//  88888' X8888. >"8x   .udR88N   888E .z8k   888R Y888r
+//  88888  ?88888< 888> <888'888k  888E~?888L  888R I888>
+//  88888   "88888 "8%  9888 'Y"   888E  888E  888R I888>
+//  88888 '  `8888>     9888       888E  888E  888R I888>
+//  `8888> %  X88!      9888       888E  888E u8888cJ888
+//   `888X  `~""`   :   ?8888u../  888E  888E  "*888*P"
+//     "88k.      .~     "8888P'  m888N= 888>    'Y"
+//       `""*==~~`         "P'     `Y"   888
+//                                      J88"
+//                                      @%
+//                                    :"
+
 public class Program
 {
 	static void Main()
@@ -72,21 +88,21 @@ public class Program
 		AdaptiveSample = 1600
 	};
 
-	static readonly TiledRenderProfile albedoProfile = new()
-	{
-		Method = new AlbedoEvaluator(),
-		TilePattern = new ScrambledPattern(),
-		PixelSample = 12,
-		AdaptiveSample = 80
-	};
-
-	static readonly TiledRenderProfile aggregatorQualityProfile = new()
-	{
-		Method = new AggregatorQualityEvaluator(),
-		TilePattern = new OrderedPattern(),
-		PixelSample = 1,
-		AdaptiveSample = 0
-	};
+	// static readonly TiledRenderProfile albedoProfile = new()
+	// {
+	// 	Method = new AlbedoEvaluator(),
+	// 	TilePattern = new ScrambledPattern(),
+	// 	PixelSample = 12,
+	// 	AdaptiveSample = 80
+	// };
+	//
+	// static readonly TiledRenderProfile aggregatorQualityProfile = new()
+	// {
+	// 	Method = new AggregatorQualityEvaluator(),
+	// 	TilePattern = new OrderedPattern(),
+	// 	PixelSample = 1,
+	// 	AdaptiveSample = 0
+	// };
 
 	static readonly ScenePrepareProfile scenePrepareProfile = new();
 
@@ -138,7 +154,7 @@ public class Program
 
 		using var postProcess = new PostProcessingEngine(buffer);
 
-		if (renderProfile.Method is AggregatorQualityEvaluator) //Creates different post processing workers based on render method
+		if (renderProfile.Method is null /*AggregatorQualityEvaluator*/) //Creates different post processing workers based on render method
 		{
 			postProcess.AddWorker(new AggregatorQualityVisualizer(postProcess)); //Only used for aggregator quality testing
 		}

@@ -10,7 +10,7 @@ public abstract class ViewBaseTests<T>
 	[SetUp]
 	public void SetUp()
 	{
-		IRandom random = Utilities.NewRandom();
+		Prng random = Utilities.NewRandom();
 
 		T[] reference = GetReference();
 		random.Shuffle<T>(reference);

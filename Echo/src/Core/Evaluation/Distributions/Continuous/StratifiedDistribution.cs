@@ -19,9 +19,9 @@ public record StratifiedDistribution : HorizontalDistribution
 	/// </summary>
 	public bool Jitter { get; set; } = true;
 
-	public override void BeginPixel(Int2 position)
+	public override void BeginSeries(Int2 position)
 	{
-		base.BeginPixel(position);
+		base.BeginSeries(position);
 		Assert.IsNotNull(Prng);
 	}
 
