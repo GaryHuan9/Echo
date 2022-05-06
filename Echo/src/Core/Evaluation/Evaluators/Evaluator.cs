@@ -1,8 +1,10 @@
 ﻿using CodeHelpers;
+using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Distributions.Continuous;
+using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
@@ -22,8 +24,8 @@ public abstract record Evaluator
 
 	protected readonly Allocator allocator = new();
 
-	readonly NotNull<PreparedScene> _scene;
-	readonly NotNull<ContinuousDistribution> _distribution;
+	readonly NotNull<PreparedScene> _scene = PreparedScene.empty;
+	readonly NotNull<ContinuousDistribution> _distribution = new StratifiedDistribution();
 
 	public PreparedScene Scene
 	{
@@ -38,49 +40,40 @@ public abstract record Evaluator
 	}
 
 	/// <summary>
-	/// Invoked once before a new rendering process begin on this <see cref="Evaluator"/>.
+	/// Evaluates <see cref="Scene"/> based on <see cref="Distribution"/> using many samples.
 	/// </summary>
-	public void Prepare(RenderProfile profile) => Distribution = CreateDistribution(profile);
+	/// <param name="spawner">The <see cref="RaySpawner"/> we use to create new rays for evaluation.</param>
+	/// <param name="accumulator">Samples of the evaluation are added to this <see cref="Accumulator"/>.</param>
+	/// <returns>The number of invalid samples that are rejected.</returns>
+	/// <remarks>The exact number of samples that are used to evaluates <see cref="Scene"/> is <see cref="ContinuousDistribution.Extend"/>.</remarks>
+	public abstract uint Evaluate(RaySpawner spawner, ref Accumulator accumulator);
+}
 
-	/// <summary>
-	/// Returns an object with base type <see cref="Arena"/> which will be passed into the subsequent invocations to <see cref="Evaluate"/>.
-	/// NOTE: This method will be invoked after <see cref="Prepare"/>, and it will be invoked once on every rendering thread.
-	/// <param name="seed">Can be null or a unique number that varies between each thread.</param>
-	/// </summary>
-	public Arena CreateArena(RenderProfile profile, uint? seed)
+public abstract record Evaluator<T> : Evaluator where T : IColor<T>
+{
+	public sealed override uint Evaluate(RaySpawner spawner, ref Accumulator accumulator)
 	{
-		Arena arena = CreateArena(profile);
+		uint rejection = 0;
 
-		arena.Distribution = Distribution with { };
-		arena.Distribution.Prng = CreateRandom(seed);
+		for (int i = 0; i < Distribution.Extend; i++)
+		{
+			Distribution.BeginSession();
 
-		return arena;
+			Ray ray = spawner.Spawn(Scene.camera, Distribution);
+			Float4 sampled = Evaluate(ray).ToFloat4();
+			if (!accumulator.Add(sampled)) ++rejection;
+
+			allocator.Release();
+		}
+
+		return rejection;
 	}
 
 	/// <summary>
-	/// Evaluates <see cref="RenderProfile.Scene"/> through <paramref name="ray"/> using <paramref name="profile"/> and <paramref name="arena"/>.
-	/// Note that the implementation do not need to <see cref="Allocator.Release"/> the <see cref="Allocator"/> after this method is finished.
+	/// Evaluates <see cref="Evaluator.Scene"/> through <paramref name="ray"/>.
 	/// </summary>
-	public abstract RGB128 Evaluate(in Ray ray, RenderProfile profile, Arena arena);
-
-	/// <summary>
-	/// Invoked once before a new rendering process begins on this <see cref="Evaluator"/>.
-	/// Can be used to prepare the evaluator for future invocations to <see cref="Evaluate"/>.
-	/// Should create and return a source <see cref="ContinuousDistribution"/> that will be used.
-	/// </summary>
-	protected virtual ContinuousDistribution CreateDistribution(RenderProfile profile) => new UniformDistribution(profile.TotalSample);
-
-	/// <summary>
-	/// Creates a new <see cref="Arena"/> to be used for this <see cref="Evaluator"/>.
-	/// Override this method if a different <see cref="Arena"/> child type if needed.
-	/// </summary>
-	protected virtual Arena CreateArena(RenderProfile profile) => new();
-
-	/// <summary>
-	/// Optionally creates a <see cref="IRandom"/> with an optional <paramref name="seed"/>. If this method does not return null,
-	/// its returned value will be assigned to <see cref="ContinuousDistribution.Prng"/> created in <see cref="CreateDistribution"/>.
-	/// </summary>
-	protected virtual IRandom CreateRandom(uint? seed = null) => new SquirrelRandom(seed);
+	/// <param name="ray">The <see cref="Ray"/> that we should start evaluation on.</param>
+	/// <returns>The evaluated value of type <typeparamref name="T"/>.</returns>
+	/// <remarks>The implementation do not need to invoke <see cref="Allocator.Release"/> before this method returns.</remarks>
+	protected abstract T Evaluate(in Ray ray);
 }
-
-public abstract record Evaluator<T> : Evaluator where T : IColor<T> { }

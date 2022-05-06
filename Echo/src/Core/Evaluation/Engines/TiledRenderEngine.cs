@@ -20,8 +20,6 @@ public class TiledRenderEngine : IDisposable
 		{
 			if (Interlocked.Exchange(ref _currentState, (int)value) == (int)value) return;
 			lock (signalLocker) Monitor.PulseAll(signalLocker);
-
-			var c = CurrentProfile with { };
 		}
 	}
 

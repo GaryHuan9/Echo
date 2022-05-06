@@ -92,11 +92,11 @@ public static class IDirectionalTextureExtensions
 	{
 		SumPackage()
 		{
-			random = new SquirrelRandom();
+			random = new SquirrelPrng();
 			Sum = Summation.Zero;
 		}
 
-		public readonly IRandom random;
+		public readonly Prng random;
 		public Summation Sum { get; set; }
 
 		public static readonly Func<SumPackage> factory = () => new SumPackage();

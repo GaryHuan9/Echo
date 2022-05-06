@@ -11,13 +11,13 @@ public abstract record OutOfOrderDistribution : ContinuousDistribution
 
 	protected OutOfOrderDistribution(OutOfOrderDistribution source) : base(source) { }
 
-	public override void BeginPixel(Int2 position)
+	public override void BeginSeries(Int2 position)
 	{
-		base.BeginPixel(position);
+		base.BeginSeries(position);
 	}
 
-	public override void BeginSample()
+	public override void BeginSession()
 	{
-		base.BeginSample();
+		base.BeginSession();
 	}
 }
