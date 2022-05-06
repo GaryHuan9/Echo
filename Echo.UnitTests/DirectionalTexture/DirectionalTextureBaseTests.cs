@@ -42,14 +42,14 @@ public abstract class DirectionalTextureBaseTests
 
 	protected static ArrayGrid<RGB128> GenerateRandomTexture(Int2 maxSize)
 	{
-		IRandom random = Utilities.NewRandom();
+		Prng random = Utilities.NewRandom();
 
 		var texture = new ArrayGrid<RGB128>(Next2(random, maxSize - Int2.One) + Int2.One);
 		texture.ForEach(position => texture[position] = (RGB128)(Float4)random.Next3());
 
 		return texture;
 
-		static Int2 Next2(IRandom random, Int2 max) => new(random.Next1(max.X), random.Next1(max.Y));
+		static Int2 Next2(Prng random, Int2 max) => new(random.Next1(max.X), random.Next1(max.Y));
 	}
 
 	static float Difference(in RGB128 value, in RGB128 other) => ((Float4)value - other).SquaredMagnitude;

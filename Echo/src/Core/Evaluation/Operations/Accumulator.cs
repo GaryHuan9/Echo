@@ -34,7 +34,7 @@ public struct Accumulator
 	/// Adds a <paramref name="sample"/> to this <see cref="Accumulator"/>.
 	/// </summary>
 	/// <param name="sample">The new input sample to add to this pixel.</param>
-	/// <returns>Whether the input was rejected because it was invalid.</returns>
+	/// <returns>False if the input was rejected because it was invalid, true otherwise.</returns>
 	public bool Add(in Float4 sample)
 	{
 		if (!float.IsFinite(sample.Sum)) return false; //Gates degenerate values

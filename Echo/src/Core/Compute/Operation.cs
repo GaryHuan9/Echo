@@ -6,7 +6,7 @@ public abstract class Operation
 {
 	ulong currentProcedure;
 
-	public virtual void Prepare()
+	public virtual void Prepare(int population)
 	{
 		Interlocked.Exchange(ref currentProcedure, 0);
 	}

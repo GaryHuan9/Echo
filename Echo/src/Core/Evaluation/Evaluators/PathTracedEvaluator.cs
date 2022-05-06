@@ -9,6 +9,7 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.Evaluation.Operations;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Scenic.Preparation;
@@ -16,7 +17,7 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
-public class PathTracedEvaluator : Evaluator
+public record PathTracedEvaluator : Evaluator<RGB128>
 {
 	/// <summary>
 	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
@@ -36,19 +37,15 @@ public class PathTracedEvaluator : Evaluator
 	//same length as the word 'scatter'.
 
 	[SkipLocalsInit]
-	public override RGB128 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
+	protected override RGB128 Evaluate(in Ray ray)
 	{
-		Allocator allocator = arena.allocator;
-		var distribution = arena.Distribution;
-
-		var scene = profile.Scene;
 		var path = new Path(ray);
 
 		//Quick exit with ambient light if no intersection
-		if (!path.Advance(scene, allocator)) return EvaluateAllAmbient();
+		if (!path.Advance(Scene, allocator)) return EvaluateAllAmbient();
 
 		//Allocate memory for samples used for lights
-		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
+		Span<Sample1D> lightSamples = stackalloc Sample1D[Scene.info.depth + 1];
 
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
@@ -56,22 +53,22 @@ public class PathTracedEvaluator : Evaluator
 		for (int depth = 0; depth < BounceLimit; depth++)
 		{
 			//Sample the bsdf
-			var bounce = new Bounce(path.touch, distribution.Next2D());
+			var bounce = new Bounce(path.touch, Distribution.Next2D());
 			if (bounce.IsZero) break;
 
-			Sample2D radiantSample = distribution.Next2D();
-			foreach (ref var sample in lightSamples) sample = distribution.Next1D();
+			Sample2D radiantSample = Distribution.Next2D();
+			foreach (ref var sample in lightSamples) sample = Distribution.Next1D();
 
 			//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 			if (bounce.IsSpecular)
 			{
 				//Check if the path is exhausted
-				if (!path.Continue(bounce, Survivability, distribution.Next1D())) break;
+				if (!path.Continue(bounce, Survivability, Distribution.Next1D())) break;
 
 				//Begin finding a new bounce
 				allocator.Restart();
 
-				if (!path.Advance(scene, allocator))
+				if (!path.Advance(Scene, allocator))
 				{
 					//None found, accumulate ambient and exit
 					path.Contribute(EvaluateAllAmbient());
@@ -84,12 +81,12 @@ public class PathTracedEvaluator : Evaluator
 			else
 			{
 				//Select light from scene for MIS
-				(ILight light, float lightPdf) = scene.PickLight(lightSamples, allocator);
+				(ILight light, float lightPdf) = Scene.PickLight(lightSamples, allocator);
 
 				float weight = 1f / lightPdf;
 				var area = light as IAreaLight;
 
-				path.Contribute(weight * ImportanceSampleRadiant(light, path.touch, radiantSample, scene, out bool mis));
+				path.Contribute(weight * ImportanceSampleRadiant(light, path.touch, radiantSample, Scene, out bool mis));
 
 				if (mis)
 				{
@@ -97,12 +94,12 @@ public class PathTracedEvaluator : Evaluator
 					weight *= PowerHeuristic(bounce.pdf, area!.ProbabilityDensity(path.touch.point, bounce.incident));
 				}
 
-				if (!path.Continue(bounce, Survivability, distribution.Next1D())) break; //Path exhausted
+				if (!path.Continue(bounce, Survivability, Distribution.Next1D())) break; //Path exhausted
 
 				allocator.Restart();
 
 				//Add ambient light and exit if no intersection
-				if (!path.Advance(scene, allocator))
+				if (!path.Advance(Scene, allocator))
 				{
 					if (area is AmbientLight ambient) path.Contribute(weight * ambient.Evaluate(path.CurrentDirection));
 					break;
@@ -120,10 +117,8 @@ public class PathTracedEvaluator : Evaluator
 		return path.Result;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		RGB128 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(path.CurrentDirection);
+		RGB128 EvaluateAllAmbient() => Scene.lights.EvaluateAmbient(path.CurrentDirection);
 	}
-
-	protected override ContinuousDistribution CreateDistribution(RenderProfile profile) => new StratifiedDistribution(profile.TotalSample);
 
 	/// <summary>
 	/// Importance samples <paramref name="light"/> at <paramref name="touch"/> and returns the sampled radiant.
