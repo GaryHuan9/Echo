@@ -4,6 +4,8 @@ using CodeHelpers.Packed;
 using Echo.Core.Compute;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures;
+using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Operations;
 
@@ -39,9 +41,10 @@ public class TiledEvaluationOperation : Operation
 
 		Evaluator evaluator = evaluators[scheduler.id];
 		PreparedScene scene = profile.Scene;
+		RenderBuffer buffer = profile.Buffer;
 
 		Int2 min = tilePositionSequence[procedure] * profile.TileSize;
-		Int2 max = profile.Buffer.size.Min(min + (Int2)profile.TileSize);
+		Int2 max = buffer.size.Min(min + (Int2)profile.TileSize);
 
 		for (int y = min.Y; y < max.Y; y++)
 		for (int x = min.X; x < max.X; x++)
@@ -51,18 +54,18 @@ public class TiledEvaluationOperation : Operation
 			Int2 position = new Int2(x, y);
 			Accumulator accumulator = new();
 
-			evaluator.Evaluate()
+			var region = new RaySpawner(buffer, position);
 
 			int epoch = 0;
 
 			do
 			{
 				++epoch;
-
-				evaluator.Distribution.BeginSeries(position);
-				evaluator.Evaluate(profile.Scene, , ref accumulator);
+				uint rejectionCount = evaluator.Evaluate(scene, region, ref accumulator);
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
+
+			evaluator.Store(buffer, position, accumulator);
 		}
 
 		return true;

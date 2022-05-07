@@ -5,6 +5,7 @@ using Echo.Common.Mathematics;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Textures;
 
 namespace Echo.Core.Scenic;
@@ -14,7 +15,7 @@ public class Camera : Entity
 	public Camera(float fieldOfView) => FieldOfView = fieldOfView;
 
 	float fieldOfView;
-	float fieldDistance;
+	float forwardLength;
 
 	/// <summary>
 	/// Horizontal field of view in degrees.
@@ -25,7 +26,7 @@ public class Camera : Entity
 		set
 		{
 			fieldOfView = value;
-			fieldDistance = 0.5f / MathF.Tan(Scalars.ToRadians(value) / 2f);
+			forwardLength = 0.5f / MathF.Tan(Scalars.ToRadians(value) / 2f);
 		}
 	}
 
@@ -42,36 +43,14 @@ public class Camera : Entity
 	public float Aperture { get; set; } = 0f;
 
 	/// <summary>
-	/// Returns a ray emitted from the camera at <paramref name="uv"/>.
+	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>.
 	/// </summary>
-	/// <param name="uv">X component from -0.5 to 0.5; Y component an aspect radio corrected version of X.</param>
-	/// <param name="random">An PRNG used for Depth of Field. Can be null if no DoF is wanted.</param>
-	public Ray GetRay(Float2 uv, Prng random = null)
+	public Ray SpawnRay(in CameraSample sample, in RaySpawner spawner)
 	{
-		Float3 direction = uv.CreateXY(fieldDistance);
+		Float3 direction = spawner.SpawnX(sample.uv).CreateXY(forwardLength);
+		direction = LocalToWorld.MultiplyDirection(direction).Normalized;
 
-		if (FastMath.AlmostZero(Aperture) || random == null)
-		{
-			//No depth of field
-
-			direction = LocalToWorld.MultiplyDirection(direction);
-			return new Ray(Position, direction.Normalized);
-		}
-
-		//With randomized origin to add depth of field
-
-		Float3 origin = random.Next2(-Aperture, Aperture).XY_;
-		direction = direction.Normalized * FocalLength - origin;
-
-		origin = LocalToWorld.MultiplyPoint(origin);
-		direction = LocalToWorld.MultiplyDirection(direction);
-
-		return new Ray(origin, direction.Normalized);
-	}
-
-	public Ray SpawnRay(CameraSample sample, TextureRegion region)
-	{
-
+		return new Ray(Position, direction);
 	}
 
 	public void LookAt(Entity target) => LookAt(target.Position);
