@@ -6,7 +6,7 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Textures.Grid;
 
 /// <summary>
-/// The default <see cref="TextureGrid{T}"/>; stores RGBA color information with 32 bits per channel, supports full float range.
+/// The default <see cref="TextureGrid{T}"/> implemented with a contiguous array.
 /// </summary>
 public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 {

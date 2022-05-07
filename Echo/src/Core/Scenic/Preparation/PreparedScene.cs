@@ -68,8 +68,6 @@ public class PreparedScene
 
 	readonly PreparedInstanceRoot rootInstance;
 
-	public static readonly PreparedScene empty = new(new Scene(), new ScenePrepareProfile());
-
 	/// <summary>
 	/// Processes the <paramref name="query"/> and returns whether it intersected with something.
 	/// </summary>

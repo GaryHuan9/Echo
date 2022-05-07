@@ -3,6 +3,7 @@ using CodeHelpers;
 using CodeHelpers.Packed;
 using Echo.Core.Compute;
 using Echo.Core.Evaluation.Evaluators;
+using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Evaluation.Operations;
 
@@ -37,7 +38,7 @@ public class TiledEvaluationOperation : Operation
 		if (procedure >= (ulong)tilePositionSequence.Length) return false;
 
 		Evaluator evaluator = evaluators[scheduler.id];
-		RaySpawner spawner = null;
+		PreparedScene scene = profile.Scene;
 
 		Int2 min = tilePositionSequence[procedure] * profile.TileSize;
 		Int2 max = profile.Buffer.size.Min(min + (Int2)profile.TileSize);
@@ -50,6 +51,8 @@ public class TiledEvaluationOperation : Operation
 			Int2 position = new Int2(x, y);
 			Accumulator accumulator = new();
 
+			evaluator.Evaluate()
+
 			int epoch = 0;
 
 			do
@@ -57,7 +60,7 @@ public class TiledEvaluationOperation : Operation
 				++epoch;
 
 				evaluator.Distribution.BeginSeries(position);
-				evaluator.Evaluate(spawner, ref accumulator);
+				evaluator.Evaluate(profile.Scene, , ref accumulator);
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 		}
