@@ -4,6 +4,8 @@ using CodeHelpers.Packed;
 using Echo.Common.Mathematics;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Mathematics.Randomization;
+using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Textures;
 
 namespace Echo.Core.Scenic;
 
@@ -65,6 +67,11 @@ public class Camera : Entity
 		direction = LocalToWorld.MultiplyDirection(direction);
 
 		return new Ray(origin, direction.Normalized);
+	}
+
+	public Ray SpawnRay(CameraSample sample, TextureRegion region)
+	{
+
 	}
 
 	public void LookAt(Entity target) => LookAt(target.Position);
