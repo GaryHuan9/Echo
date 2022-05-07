@@ -7,6 +7,8 @@ namespace Echo.Core.Compute;
 
 public sealed partial class Device : IDisposable
 {
+	public Device() : this(Environment.ProcessorCount) { }
+
 	public Device(int population)
 	{
 		guid = Guid.NewGuid();
@@ -19,7 +21,7 @@ public sealed partial class Device : IDisposable
 	readonly DualLock locker = new();
 	readonly Signaler signaler = new();
 
-	int idleCount;
+	int runningCount;
 
 	public int Population => threads.Length;
 
@@ -74,7 +76,19 @@ public sealed partial class Device : IDisposable
 		Status = State.Running;
 
 		//Launch threads
-		for (int i = 0; i < threads.Length; i++) LaunchThread(i);
+		for (uint i = 0; i < threads.Length; i++)
+		{
+			ref Thread thread = ref threads[i];
+			if (thread != null) continue;
+
+			thread = new Thread(Main)
+			{
+				IsBackground = true, Priority = ThreadPriority.Normal,
+				Name = $"{nameof(Device)} {guid} {nameof(Thread)} {i}"
+			};
+
+			thread.Start(i);
+		}
 	}
 
 	public void Pause() { }
@@ -114,23 +128,9 @@ public sealed partial class Device : IDisposable
 		//TODO: dispose
 	}
 
-	void LaunchThread(int index)
-	{
-		ref Thread thread = ref threads[index];
-		if (thread != null) return;
-
-		thread = new Thread(Main)
-		{
-			IsBackground = true, Priority = ThreadPriority.AboveNormal,
-			Name = $"{nameof(Device)} {guid} {nameof(Thread)} {index}"
-		};
-
-		thread.Start(index);
-	}
-
 	void Main(object id)
 	{
-		using var scheduler = new Scheduler((int)id);
+		using var scheduler = new Scheduler((uint)id);
 
 		while (true)
 		{
@@ -139,34 +139,42 @@ public sealed partial class Device : IDisposable
 			Operation operation = Operation;
 			if (operation == null) continue;
 
-			Interlocked.Increment(ref idleCount);
+			bool running;
 
-			bool completed;
+			Interlocked.Increment(ref runningCount);
 
-			try
+			do
 			{
-				completed = !operation.Execute(scheduler);
+				try
+				{
+					running = operation.Execute(scheduler);
+				}
+				catch (OperationAbortedException)
+				{
+					throw;
+				}
 			}
-			catch (OperationAbortedException)
-			{
-				throw;
-			}
+			while (running);
 
-			bool allIdle = Interlocked.Decrement(ref idleCount) == 0;
-
-			if (completed)
+			if (Interlocked.Decrement(ref runningCount) == 0)
 			{
-				AssertNotDisposed();
 				CompleteOperation();
 			}
-			else if (allIdle)
-			{
-				using var _ = locker.FetchWriteLock();
-				Assert.AreEqual(InterlockedHelper.Read(ref idleCount), 0);
+			else AwaitStatus(State.Idle);
 
-				if (Status == State.Pausing) Status = State.Paused;
-				if (Status == State.Abandoning) Status = State.Idle;
-			}
+			// if (completed)
+			// {
+			// 	AssertNotDisposed();
+			// 	CompleteOperation();
+			// }
+			// else if (allIdle)
+			// {
+			// 	using var _ = locker.FetchWriteLock();
+			// 	Assert.AreEqual(InterlockedHelper.Read(ref runningCount), 0);
+			//
+			// 	if (Status == State.Pausing) Status = State.Paused;
+			// 	if (Status == State.Abandoning) Status = State.Idle;
+			// }
 		}
 	}
 
@@ -190,7 +198,7 @@ public sealed partial class Device : IDisposable
 			State current = Status;
 
 			if (current == status || current == State.Disposed) return;
-			lock (signaler) Monitor.Wait(signaler);
+			signaler.Wait();
 		}
 	}
 
