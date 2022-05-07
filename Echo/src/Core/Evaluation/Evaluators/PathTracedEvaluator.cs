@@ -37,15 +37,15 @@ public record PathTracedEvaluator : Evaluator<RGB128>
 	//same length as the word 'scatter'.
 
 	[SkipLocalsInit]
-	protected override RGB128 Evaluate(in Ray ray)
+	protected override RGB128 Evaluate(PreparedScene scene, in Ray ray)
 	{
 		var path = new Path(ray);
 
 		//Quick exit with ambient light if no intersection
-		if (!path.Advance(Scene, allocator)) return EvaluateAllAmbient();
+		if (!path.Advance(scene, allocator)) return EvaluateAllAmbient();
 
 		//Allocate memory for samples used for lights
-		Span<Sample1D> lightSamples = stackalloc Sample1D[Scene.info.depth + 1];
+		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
 
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
@@ -68,7 +68,7 @@ public record PathTracedEvaluator : Evaluator<RGB128>
 				//Begin finding a new bounce
 				allocator.Restart();
 
-				if (!path.Advance(Scene, allocator))
+				if (!path.Advance(scene, allocator))
 				{
 					//None found, accumulate ambient and exit
 					path.Contribute(EvaluateAllAmbient());
@@ -81,12 +81,12 @@ public record PathTracedEvaluator : Evaluator<RGB128>
 			else
 			{
 				//Select light from scene for MIS
-				(ILight light, float lightPdf) = Scene.PickLight(lightSamples, allocator);
+				(ILight light, float lightPdf) = scene.PickLight(lightSamples, allocator);
 
 				float weight = 1f / lightPdf;
 				var area = light as IAreaLight;
 
-				path.Contribute(weight * ImportanceSampleRadiant(light, path.touch, radiantSample, Scene, out bool mis));
+				path.Contribute(weight * ImportanceSampleRadiant(light, path.touch, radiantSample, scene, out bool mis));
 
 				if (mis)
 				{
@@ -99,7 +99,7 @@ public record PathTracedEvaluator : Evaluator<RGB128>
 				allocator.Restart();
 
 				//Add ambient light and exit if no intersection
-				if (!path.Advance(Scene, allocator))
+				if (!path.Advance(scene, allocator))
 				{
 					if (area is AmbientLight ambient) path.Contribute(weight * ambient.Evaluate(path.CurrentDirection));
 					break;
@@ -117,7 +117,7 @@ public record PathTracedEvaluator : Evaluator<RGB128>
 		return path.Result;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		RGB128 EvaluateAllAmbient() => Scene.lights.EvaluateAmbient(path.CurrentDirection);
+		RGB128 EvaluateAllAmbient() => scene.lights.EvaluateAmbient(path.CurrentDirection);
 	}
 
 	/// <summary>

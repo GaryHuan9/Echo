@@ -17,18 +17,18 @@ public struct Accumulator
 	/// <summary>
 	/// The average of all of the samples.
 	/// </summary>
-	public Float4 Value => average.Result;
+	public readonly Float4 Value => average.Result;
 
 	/// <summary>
 	/// The unbiased sample variance of all of the samples using Welford's online algorithm.
 	/// </summary>
-	public Float4 Variance => squared.Result / Math.Max(1, count - 1);
+	public readonly Float4 Variance => count == 0 ? squared.Result : squared.Result / (count - 1);
 
 	/// <summary>
 	/// The remaining noise of the samples, which is their <see cref="Variance"/>
 	/// divided by the square root of their population (the number of samples).
 	/// </summary>
-	public Float4 Noise => squared.Result * MathF.ReciprocalSqrtEstimate(Math.Max(1, count * count * count));
+	public readonly Float4 Noise => squared.Result * MathF.ReciprocalSqrtEstimate(Math.Max(1, count * count * count));
 
 	/// <summary>
 	/// Adds a <paramref name="sample"/> to this <see cref="Accumulator"/>.
