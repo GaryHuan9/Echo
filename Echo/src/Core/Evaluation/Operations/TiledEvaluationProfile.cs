@@ -27,7 +27,7 @@ public record TiledEvaluationProfile : EvaluationProfile
 	/// <summary>
 	/// The <see cref="ITilePattern"/> used to determine the sequence of the tiles.
 	/// </summary>
-	public ITilePattern Pattern { get; init; }
+	public ITilePattern Pattern { get; init; } = new ScrambledPattern();
 
 	public override void Validate()
 	{
@@ -36,5 +36,8 @@ public record TiledEvaluationProfile : EvaluationProfile
 		if (MinEpoch <= 0) throw ExceptionHelper.Invalid(nameof(MinEpoch), MinEpoch, InvalidType.outOfBounds);
 		if (MaxEpoch < MinEpoch) throw ExceptionHelper.Invalid(nameof(MaxEpoch), MaxEpoch, InvalidType.outOfBounds);
 		if (NoiseThreshold < 0f) throw ExceptionHelper.Invalid(nameof(NoiseThreshold), NoiseThreshold, InvalidType.outOfBounds);
+
+		if (TileSize <= 0) throw ExceptionHelper.Invalid(nameof(TileSize), TileSize, InvalidType.outOfBounds);
+		if (Pattern == null) throw ExceptionHelper.Invalid(nameof(Pattern), InvalidType.isNull);
 	}
 }

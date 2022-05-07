@@ -23,6 +23,7 @@ public abstract record Evaluator
 	{
 		allocator = source.allocator with { };
 		Distribution = source.Distribution with { };
+		DestinationLabel = source.DestinationLabel;
 	}
 
 	protected readonly Allocator allocator = new();
