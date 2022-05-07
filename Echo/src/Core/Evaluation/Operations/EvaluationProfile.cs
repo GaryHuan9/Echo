@@ -25,6 +25,7 @@ public record EvaluationProfile : IProfile
 
 	public virtual void Validate()
 	{
+		if (Scene == null) throw ExceptionHelper.Invalid(nameof(Scene), InvalidType.isNull);
 		if (Evaluator == null) throw ExceptionHelper.Invalid(nameof(Evaluator), InvalidType.isNull);
 		if (Buffer == null) throw ExceptionHelper.Invalid(nameof(Buffer), InvalidType.isNull);
 	}

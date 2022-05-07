@@ -43,6 +43,7 @@ public abstract record ContinuousDistribution
 	MonoThread monoThread;
 
 	readonly int _extend;
+	readonly NotNull<Prng> _prng = new SquirrelPrng();
 
 	/// <summary>
 	/// The maximum number of pixel samples that will be performed for one pixel.
@@ -60,7 +61,11 @@ public abstract record ContinuousDistribution
 	/// <summary>
 	/// The specific <see cref="Prng"/> associated with this <see cref="ContinuousDistribution"/>.
 	/// </summary>
-	public Prng Prng { get; init; }
+	public Prng Prng
+	{
+		get => _prng;
+		init => _prng = value;
+	}
 
 	/// <summary>
 	/// The position of the series of sampling session. The value is never negative.
