@@ -4,8 +4,7 @@ using CodeHelpers.Packed;
 namespace Echo.Core.Evaluation.Distributions.Continuous;
 
 /// <summary>
-/// A uniform <see cref="ContinuousDistribution"/>. Either returns purely random values
-/// if <see cref="ContinuousDistribution.Prng"/> is assigned, or simply return just 1/2.
+/// A uniform <see cref="ContinuousDistribution"/> that returns purely random values.
 /// </summary>
 public record UniformDistribution : ContinuousDistribution
 {
@@ -13,17 +12,9 @@ public record UniformDistribution : ContinuousDistribution
 
 	protected UniformDistribution(UniformDistribution source) : base(source) { }
 
-	protected override Sample1D Next1DImpl()
-	{
-		if (Prng == null) return (Sample1D)0.5f;
-		return (Sample1D)Prng.Next1();
-	}
+	protected override Sample1D Next1DImpl() => (Sample1D)Prng.Next1();
 
-	protected override Sample2D Next2DImpl()
-	{
-		if (Prng == null) return (Sample2D)Float2.Half;
-		return (Sample2D)Prng.Next2();
-	}
+	protected override Sample2D Next2DImpl() => (Sample2D)Prng.Next2();
 
 	protected override void FillSpan1D(Span<Sample1D> samples)
 	{
