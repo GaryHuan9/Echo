@@ -25,7 +25,12 @@ public abstract class TextureGrid<T> : Texture where T : IColor<T>
 		sizeR = 1f / size;
 		oneLess = size - Int2.One;
 
-		aspect = (float)size.X / size.Y;
+		aspects = new Float2
+		(
+			(float)size.X / size.Y,
+			(float)size.Y / size.X
+		);
+
 		power = IsPowerOfTwo(size);
 
 		Wrapper = Wrappers.clamp;
@@ -38,7 +43,7 @@ public abstract class TextureGrid<T> : Texture where T : IColor<T>
 	public readonly Int2 size;
 
 	/// <summary>
-	/// The reciprocal of <see cref="size"/>.
+	/// The reciprocal of <see cref="size"/>, which is also the normalized size of one pixel.
 	/// </summary>
 	public readonly Float2 sizeR;
 
@@ -48,9 +53,11 @@ public abstract class TextureGrid<T> : Texture where T : IColor<T>
 	public readonly Int2 oneLess;
 
 	/// <summary>
-	/// The aspect ratio of this <see cref="TextureGrid{T}"/>, equals to width over height.
+	/// The aspect ratios of this <see cref="TextureGrid{T}"/>,
+	/// the <see cref="Float2.X"/> component equals to width over height, and
+	/// the <see cref="Float2.Y"/> component equals to height over width.
 	/// </summary>
-	public readonly float aspect;
+	public readonly Float2 aspects;
 
 	/// <summary>
 	/// If the <see cref="size"/> of this <see cref="TextureGrid{T}"/> is a power of two on any axis, then the
