@@ -32,10 +32,12 @@ public abstract class Aggregator
 		const int FetchDepth = 6; //How deep do we go into this aggregator to get the AABB of the nodes
 		using var _ = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
-		aabbs = aabbs[..FillAABB(FetchDepth, aabbs)];
-		Float4x4 absoluteTransform = inverseTransform.Absoluted;
-
+		SpanFill<AxisAlignedBoundingBox> fill = aabbs.AsFill();
+		pack.aggregator.FillAABB(FetchDepth, ref fill);
+		aabbs = aabbs[..fill.Count];
 		Assert.IsFalse(aabbs.IsEmpty);
+
+		Float4x4 absoluteTransform = inverseTransform.Absoluted;
 
 		Float3 min = Float3.PositiveInfinity;
 		Float3 max = Float3.NegativeInfinity;
@@ -73,12 +75,13 @@ public abstract class Aggregator
 	public abstract int TraceCost(in Ray ray, ref float distance);
 
 	/// <summary>
-	/// Fills <paramref name="span"/> with the <see cref="AxisAlignedBoundingBox"/> of nodes in this <see cref="Aggregator"/>
-	/// at <paramref name="depth"/>, with the root node having a <paramref name="depth"/> of 1. Returns the actual length of
-	/// <paramref name="span"/> used to store the <see cref="AxisAlignedBoundingBox"/>. NOTE: <paramref name="span"/> should
-	/// not be smaller than 2^depth, and the returned value will not be greater than <paramref name="span.Length"/>.
+	/// Fills a <see cref="SpanFill{T}"/> with the <see cref="AxisAlignedBoundingBox"/> in this <see cref="Aggregator"/>.
 	/// </summary>
-	public abstract int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span);
+	/// <param name="depth">How deep to gather all of the <see cref="AxisAlignedBoundingBox"/>s (with the root node at 1).</param>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/>; it should not be smaller than 2^<paramref name="depth"/>.</param>
+	/// <remarks>It is guaranteed that the entirety of this <see cref="Aggregator"/> will be
+	/// enclosed by all the <see cref="AxisAlignedBoundingBox"/>s that are filled.</remarks>
+	public abstract void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill);
 
 	/// <summary>
 	/// Validates that <paramref name="aabbs"/> and <paramref name="tokens"/>
@@ -90,8 +93,8 @@ public abstract class Aggregator
 		if (lengthValidator?.Invoke(tokens.Length) == false) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "has invalid length");
 
 #if DEBUG
-			foreach (ref readonly NodeToken token in tokens) Assert.IsTrue(token.IsGeometry);
-			foreach (ref readonly var aabb in aabbs) Assert.IsFalse(aabb.min.EqualsExact(aabb.max));
+		foreach (ref readonly NodeToken token in tokens) Assert.IsTrue(token.IsGeometry);
+		foreach (ref readonly var aabb in aabbs) Assert.IsFalse(aabb.min.EqualsExact(aabb.max));
 #endif
 	}
 

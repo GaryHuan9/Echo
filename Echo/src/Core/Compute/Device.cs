@@ -2,6 +2,7 @@
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using Echo.Common;
+using Echo.Common.Memory;
 
 namespace Echo.Core.Compute;
 
@@ -48,19 +49,9 @@ public sealed class Device : IDisposable
 	}
 
 	/// <summary>
-	/// Blocks the calling thread until this <see cref="Device"/> idles.
+	/// The number of <see cref="Worker"/> for this <see cref="Device"/>.
 	/// </summary>
-	/// <seealso cref="IsIdle"/>
-	public void AwaitIdle()
-	{
-		using var _ = signalLocker.Fetch();
-
-		while (runningCount > 0 && Volatile.Read(ref disposed) == 0)
-		{
-			signalLocker.Wait();
-			Assert.IsFalse(runningCount < 0);
-		}
-	}
+	public int Population => workers.Length;
 
 	/// <summary>
 	/// Begins the execution of a new <see cref="Operation"/>.
@@ -106,6 +97,31 @@ public sealed class Device : IDisposable
 	{
 		using var _ = manageLocker.Fetch();
 		foreach (var worker in workers) worker.Abort();
+	}
+
+	/// <summary>
+	/// Blocks the calling thread until this <see cref="Device"/> idles.
+	/// </summary>
+	/// <seealso cref="IsIdle"/>
+	public void AwaitIdle()
+	{
+		using var _ = signalLocker.Fetch();
+
+		while (runningCount > 0 && Volatile.Read(ref disposed) == 0)
+		{
+			signalLocker.Wait();
+			Assert.IsFalse(runningCount < 0);
+		}
+	}
+
+	/// <summary>
+	/// Retrieves the <see cref="Worker.State"/> of the <see cref="Worker"/>s in this <see cref="Device"/>.
+	/// </summary>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> which will contain the result.</param>
+	public void FillStatuses(SpanFill<Worker.State> fill)
+	{
+		int length = Math.Min(fill.Length, workers.Length);
+		for (int i = 0; i < length; i++) fill.Add(workers[i].Status);
 	}
 
 	public void Dispose()

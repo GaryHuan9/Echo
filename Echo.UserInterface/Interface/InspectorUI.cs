@@ -80,8 +80,11 @@ public class InspectorUI : WindowUI
 	{
 		base.Update();
 
-		SceneViewUI sceneView = Root.Find<SceneViewUI>();
-		Camera camera = sceneView?.Profile.Scene?.camera;
+		// SceneViewUI sceneView = Root.Find<SceneViewUI>();
+		// Camera camera = sceneView?.Profile.Scene?.camera;
+
+		SceneViewUI sceneView = null;
+		Camera camera = null;
 
 		if (camera == null) return;
 
