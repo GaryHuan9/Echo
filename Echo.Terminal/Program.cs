@@ -14,6 +14,11 @@ public class Program
 {
 	public static void Main()
 	{
+		using var terminal = new Terminal();
+
+		Console.ReadKey();
+		return;
+
 		Console.WriteLine
 		(
 			@"
