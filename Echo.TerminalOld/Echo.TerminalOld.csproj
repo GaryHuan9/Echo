@@ -16,4 +16,5 @@
     <ItemGroup>
         <ProjectReference Include="..\Echo\Echo.csproj" />
     </ItemGroup>
+
 </Project>
