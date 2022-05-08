@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Packed;
 
-namespace Echo.Terminal.Areas;
+namespace Echo.Terminal.Core;
 
 public class RootUI : ParentUI
 {
