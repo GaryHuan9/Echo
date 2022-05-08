@@ -66,10 +66,11 @@ public class BoundingVolumeHierarchy : Aggregator
 		fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, maxDepth);
 	}
 
-	public override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
+	public override unsafe void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
 	{
 		int length = 1 << (int)depth;
-		if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
+		fill.ThrowIfNotEmpty();
+		fill.ThrowIfTooSmall(length);
 
 		NodeToken* stack0 = stackalloc NodeToken[length];
 		NodeToken* stack1 = stackalloc NodeToken[length];
@@ -78,7 +79,6 @@ public class BoundingVolumeHierarchy : Aggregator
 		NodeToken* next1 = stack1;
 
 		*next0++ = NodeToken.Root;
-		var fill = span.AsFill();
 
 		for (uint i = 0; i < depth; i++)
 		{
@@ -106,8 +106,6 @@ public class BoundingVolumeHierarchy : Aggregator
 			ref readonly Node node = ref nodes[(--next0)->NodeValue];
 			fill.Add(node.aabb);
 		}
-
-		return fill.Count;
 	}
 
 	[SkipLocalsInit]

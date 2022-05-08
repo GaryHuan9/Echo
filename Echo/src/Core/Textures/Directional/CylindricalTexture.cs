@@ -55,7 +55,7 @@ public class CylindricalTexture : IDirectionalTexture
 			//Calculate sin weights and create fill for this horizontal row
 			float sin0 = MathF.Sin(Scalars.Pi * (y + 0f) * sizeR.Y).Clamp();
 			float sin1 = MathF.Sin(Scalars.Pi * (y + 1f) * sizeR.Y).Clamp();
-			SpanFill<float> fill = weights.AsSpan(y * size.X, size.X);
+			var fill = new SpanFill<float>(weights.AsSpan(y * size.X, size.X));
 
 			//Loop horizontally, caching the sum of the two previous x colors
 			var previous = Grab(0);

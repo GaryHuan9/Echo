@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Echo.Core.Evaluation.Engines;
 using Echo.UserInterface.Core.Areas;
 
 namespace Echo.UserInterface.Interface;
@@ -27,25 +26,25 @@ public class ApplicationStatusUI : AreaUI
 		UpdateFPS();
 
 		SceneViewUI sceneView = Root.Find<SceneViewUI>();
-		ProgressiveRenderEngine engine = sceneView?.engine;
-
-		if (engine == null)
-		{
-			builder.Append("Missing Engine");
-			AppendGap();
-		}
-		else if (engine.CurrentState == ProgressiveRenderEngine.State.rendering)
-		{
-			long traceCount = engine.CurrentProfile.Scene.TraceCount;
-			double rate = traceCount / engine.Elapsed.TotalSeconds;
-
-			builder.Append($"Rate: {rate:F2}");
-			AppendGap();
-
-			builder.Append($"Epoch: {engine.Epoch:N0}");
-			AppendGap();
-		}
-		else
+		// ProgressiveRenderEngine engine = sceneView?.engine;
+		//
+		// if (engine == null)
+		// {
+		// 	builder.Append("Missing Engine");
+		// 	AppendGap();
+		// }
+		// else if (engine.CurrentState == ProgressiveRenderEngine.State.rendering)
+		// {
+		// 	long traceCount = engine.CurrentProfile.Scene.TraceCount;
+		// 	double rate = traceCount / engine.Elapsed.TotalSeconds;
+		//
+		// 	builder.Append($"Rate: {rate:F2}");
+		// 	AppendGap();
+		//
+		// 	builder.Append($"Epoch: {engine.Epoch:N0}");
+		// 	AppendGap();
+		// }
+		// else
 		{
 			builder.Append("Engine Awaiting");
 			AppendGap();
