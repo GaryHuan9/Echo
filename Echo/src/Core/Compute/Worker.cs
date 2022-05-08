@@ -6,6 +6,9 @@ using Echo.Common;
 
 namespace Echo.Core.Compute;
 
+/// <summary>
+/// A <see cref="Thread"/> that works under a <see cref="Device"/> to jointly perform certain <see cref="Operation"/>s.
+/// </summary>
 public sealed class Worker : IScheduler, IDisposable
 {
 	public Worker(uint id) => Id = id;
@@ -21,6 +24,9 @@ public sealed class Worker : IScheduler, IDisposable
 
 	uint _status = (uint)State.Idle;
 
+	/// <summary>
+	/// Accesses the current <see cref="State"/> of this <see cref="Worker"/>.
+	/// </summary>
 	public State Status
 	{
 		get => (State)Volatile.Read(ref _status);
@@ -47,6 +53,11 @@ public sealed class Worker : IScheduler, IDisposable
 	readonly Locker manageLocker = new();
 	readonly Locker signalLocker = new();
 
+	/// <summary>
+	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
+	/// </summary>
+	/// <param name="operation">The <see cref="Operation"/> to dispatch</param>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is not <see cref="State.Idle"/>.</exception>
 	public void Dispatch(Operation operation)
 	{
 		using var _ = manageLocker.Fetch();
@@ -70,6 +81,10 @@ public sealed class Worker : IScheduler, IDisposable
 		Status = State.Running;
 	}
 
+	/// <summary>
+	/// If possible, pauses the <see cref="Operation"/> this <see cref="Worker"/> is currently performing as soon as possible.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is <see cref="State.Disposed"/>.</exception>
 	public void Pause()
 	{
 		using var _ = manageLocker.Fetch();
@@ -88,6 +103,10 @@ public sealed class Worker : IScheduler, IDisposable
 		Status = State.Pausing;
 	}
 
+	/// <summary>
+	/// If possible, resumes the <see cref="Operation"/> this <see cref="Worker"/> was performing prior to pausing.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is <see cref="State.Disposed"/>.</exception>
 	public void Resume()
 	{
 		using var _ = manageLocker.Fetch();
@@ -106,6 +125,10 @@ public sealed class Worker : IScheduler, IDisposable
 		Status = State.Running;
 	}
 
+	/// <summary>
+	/// If necessary, aborts the <see cref="Operation"/> this <see cref="Worker"/> is currently performing as soon as possible.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is <see cref="State.Disposed"/>.</exception>
 	public void Abort()
 	{
 		using var _ = manageLocker.Fetch();
