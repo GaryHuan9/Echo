@@ -1,4 +1,4 @@
-﻿namespace Echo.Terminal.Areas;
+﻿namespace Echo.Terminal.Core;
 
 public sealed class FilledUI : AreaUI
 {
