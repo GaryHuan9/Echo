@@ -14,13 +14,13 @@ public abstract class Operation
 	/// <summary>
 	/// Joins the execution of this <see cref="Operation"/> once.
 	/// </summary>
-	/// <param name="scheduler">The <see cref="Scheduler"/> used.</param>
+	/// <param name="scheduler">The <see cref="IScheduler"/> used.</param>
 	/// <returns>Whether this execution performed no work.</returns>
-	public bool Execute(Scheduler scheduler)
+	public bool Execute(IScheduler scheduler)
 	{
 		ulong procedure = Interlocked.Increment(ref currentProcedure);
 		return Execute(procedure - 1, scheduler);
 	}
 
-	protected abstract bool Execute(ulong procedure, Scheduler scheduler);
+	protected abstract bool Execute(ulong procedure, IScheduler scheduler);
 }
