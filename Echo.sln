@@ -10,7 +10,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeHelpers", "CodeHelpers\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.UnitTests", "Echo.UnitTests\Echo.UnitTests.csproj", "{B572EFFB-4119-4069-B99D-49D219987E79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Terminal", "Echo.Terminal\Echo.Terminal.csproj", "{483E09CD-9011-465D-8BD0-A3549F8A7131}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.TerminalOld", "Echo.TerminalOld\Echo.TerminalOld.csproj", "{483E09CD-9011-465D-8BD0-A3549F8A7131}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Terminal", "Echo.Terminal\Echo.Terminal.csproj", "{BDEEEECA-AB0B-4061-816D-A4604A9248F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,5 +44,9 @@ Global
 		{483E09CD-9011-465D-8BD0-A3549F8A7131}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{483E09CD-9011-465D-8BD0-A3549F8A7131}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{483E09CD-9011-465D-8BD0-A3549F8A7131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDEEEECA-AB0B-4061-816D-A4604A9248F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDEEEECA-AB0B-4061-816D-A4604A9248F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDEEEECA-AB0B-4061-816D-A4604A9248F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDEEEECA-AB0B-4061-816D-A4604A9248F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
