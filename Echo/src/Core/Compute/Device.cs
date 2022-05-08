@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using CodeHelpers.Diagnostics;
 using Echo.Common;
 
@@ -25,6 +26,7 @@ public sealed class Device : IDisposable
 	readonly Worker[] workers;
 
 	int runningCount;
+	int disposed;
 
 	readonly Locker manageLocker = new();
 	readonly Locker signalLocker = new();
@@ -42,8 +44,12 @@ public sealed class Device : IDisposable
 	public void AwaitIdle()
 	{
 		using var _ = signalLocker.Fetch();
-		while (runningCount > 0) signalLocker.Wait();
-		Assert.IsFalse(runningCount < 0);
+
+		while (runningCount > 0 && Volatile.Read(ref disposed) == 0)
+		{
+			signalLocker.Wait();
+			Assert.IsFalse(runningCount < 0);
+		}
 	}
 
 	public void Dispatch(Operation operation)
@@ -78,7 +84,17 @@ public sealed class Device : IDisposable
 		foreach (var worker in workers) worker.Abort();
 	}
 
-	void IDisposable.Dispose() { }
+	public void Dispose()
+	{
+		if (Interlocked.Exchange(ref disposed, 1) == 1) return;
+
+		Abort();
+
+		using var _ = manageLocker.Fetch();
+		signalLocker.Signaling = false;
+
+		foreach (var worker in workers) worker.Dispose();
+	}
 
 	void OnWorkerRun(Worker worker)
 	{
