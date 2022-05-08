@@ -28,6 +28,8 @@ public readonly struct Summation
 	/// </summary>
 	public Float4 Result => total;
 
+	public override string ToString() => Result.ToString();
+
 	public static Summation operator -(in Summation summation, in Float4 value) => summation + -value;
 	public static Summation operator /(in Summation summation, in Float4 value) => summation * (1f / value);
 

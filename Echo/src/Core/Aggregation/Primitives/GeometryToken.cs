@@ -116,7 +116,7 @@ public unsafe struct GeometryToken : IEquatable<GeometryToken>
 		Unsafe.As<uint, NodeToken>(ref content) = token;
 		Assert.IsTrue(NodeToken.Size <= sizeof(uint));
 
-		uint hash = SquirrelRandom.Mangle(content);
+		uint hash = SquirrelPrng.Mangle(content);
 		return BitOperations.RotateLeft(hash, layer);
 	}
 
