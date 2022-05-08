@@ -6,12 +6,9 @@ using Echo.Common;
 
 namespace Echo.Core.Compute;
 
-public class Worker : IScheduler
+public sealed class Worker : IScheduler, IDisposable
 {
-	public Worker(uint id)
-	{
-		Id = id;
-	}
+	public Worker(uint id) => Id = id;
 
 	Operation nextOperation;
 	Thread thread;
@@ -52,83 +49,92 @@ public class Worker : IScheduler
 
 	public void Dispatch(Operation operation)
 	{
-		lock (manageLocker)
+		using var _ = manageLocker.Fetch();
+
+		if (Status != State.Idle) throw new InvalidOperationException();
+
+		//Launch thread if needed
+		if (thread == null)
 		{
-			if (Status != State.Idle) throw new InvalidOperationException();
-
-			//Launch thread if needed
-			if (thread == null)
+			thread = new Thread(Main)
 			{
-				thread = new Thread(Main)
-				{
-					IsBackground = true, Priority = ThreadPriority.Normal,
-					Name = $"{nameof(Worker)} Thread {Guid.NewGuid():N}"
-				};
+				IsBackground = true, Priority = ThreadPriority.Normal,
+				Name = $"{nameof(Worker)} Thread {Guid.NewGuid():N}"
+			};
 
-				thread.Start();
-			}
-
-			//Assign operation
-			Volatile.Write(ref nextOperation, operation);
-			Status = State.Running;
+			thread.Start();
 		}
+
+		//Assign operation
+		Volatile.Write(ref nextOperation, operation);
+		Status = State.Running;
 	}
 
 	public void Pause()
 	{
-		lock (manageLocker)
-		{
-			switch (Status)
-			{
-				case State.Running: break;
-				case State.Idle:
-				case State.Pausing:
-				case State.Aborting:
-				case State.Awaiting: return;
-				case State.Disposed: throw new InvalidOperationException();
-				default:             throw new ArgumentOutOfRangeException();
-			}
+		using var _ = manageLocker.Fetch();
 
-			Status = State.Pausing;
+		switch (Status)
+		{
+			case State.Running: break;
+			case State.Idle:
+			case State.Pausing:
+			case State.Aborting:
+			case State.Awaiting: return;
+			case State.Disposed: throw new InvalidOperationException();
+			default:             throw new ArgumentOutOfRangeException();
 		}
+
+		Status = State.Pausing;
 	}
 
 	public void Resume()
 	{
-		lock (manageLocker)
-		{
-			switch (Status)
-			{
-				case State.Pausing:
-				case State.Awaiting: break;
-				case State.Idle:
-				case State.Running:
-				case State.Aborting: return;
-				case State.Disposed: throw new InvalidOperationException();
-				default:             throw new ArgumentOutOfRangeException();
-			}
+		using var _ = manageLocker.Fetch();
 
-			Status = State.Running;
+		switch (Status)
+		{
+			case State.Pausing:
+			case State.Awaiting: break;
+			case State.Idle:
+			case State.Running:
+			case State.Aborting: return;
+			case State.Disposed: throw new InvalidOperationException();
+			default:             throw new ArgumentOutOfRangeException();
 		}
+
+		Status = State.Running;
 	}
 
 	public void Abort()
 	{
-		lock (manageLocker)
-		{
-			switch (Status)
-			{
-				case State.Running:
-				case State.Pausing:
-				case State.Awaiting: break;
-				case State.Idle:
-				case State.Aborting: return;
-				case State.Disposed: throw new InvalidOperationException();
-				default:             throw new ArgumentOutOfRangeException();
-			}
+		using var _ = manageLocker.Fetch();
 
-			Status = State.Aborting;
+		switch (Status)
+		{
+			case State.Running:
+			case State.Pausing:
+			case State.Awaiting: break;
+			case State.Idle:
+			case State.Aborting: return;
+			case State.Disposed: throw new InvalidOperationException();
+			default:             throw new ArgumentOutOfRangeException();
 		}
+
+		Status = State.Aborting;
+	}
+
+	public void Dispose()
+	{
+		using var _ = manageLocker.Fetch();
+		if (Status == State.Disposed) return;
+
+		Abort();
+		AwaitStatus(State.Idle);
+		Status = State.Disposed;
+
+		signalLocker.Signaling = false;
+		thread.Join();
 	}
 
 	/// <inheritdoc/>
@@ -155,11 +161,11 @@ public class Worker : IScheduler
 
 	void Main()
 	{
-		while (true)
+		while (Status != State.Disposed)
 		{
 			AwaitStatus(State.Running);
 
-			var operation = Volatile.Read(ref nextOperation);
+			var operation = Interlocked.Exchange(ref nextOperation, null);
 			if (operation == null) continue;
 
 			bool running;
@@ -177,16 +183,14 @@ public class Worker : IScheduler
 			}
 			while (running);
 
-			lock (manageLocker) Status = State.Idle;
+			Status = State.Idle;
 		}
 	}
 
 	void AwaitStatus(State status)
 	{
-		while ((Status | status) != status)
-		{
-			lock (signalLocker) Monitor.Wait(signalLocker);
-		}
+		status |= State.Disposed;
+		while ((Status | status) != status) signalLocker.Wait();
 	}
 
 	[Flags]
