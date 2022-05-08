@@ -5,18 +5,19 @@ namespace Echo.Core.Evaluation.Distributions.Continuous;
 /// <summary>
 /// An abstract <see cref="ContinuousDistribution"/> that allows pixel samples to be drawn out of their conventional order.
 /// </summary>
-public abstract class OutOfOrderDistribution : ContinuousDistribution
+public abstract record OutOfOrderDistribution : ContinuousDistribution
 {
-	protected OutOfOrderDistribution(int extend) : base(extend) { }
+	protected OutOfOrderDistribution() { }
+
 	protected OutOfOrderDistribution(OutOfOrderDistribution source) : base(source) { }
 
-	public override void BeginPixel(Int2 position)
+	public override void BeginSeries(Int2 position)
 	{
-		base.BeginPixel(position);
+		base.BeginSeries(position);
 	}
 
-	public override void BeginSample()
+	public override void BeginSession()
 	{
-		base.BeginSample();
+		base.BeginSession();
 	}
 }

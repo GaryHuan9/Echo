@@ -65,7 +65,7 @@ public class MaterialSwatch
 		}
 	}
 
-	static uint Hash(Material material) => SquirrelRandom.Mangle((uint)material.GetHashCode());
+	static uint Hash(Material material) => SquirrelPrng.Mangle((uint)material.GetHashCode());
 
 	/// <summary>
 	/// A <see cref="IEqualityComparer{T}"/> that compares the actual value/content of two different <see cref="MaterialSwatch"/> (rather than just references).

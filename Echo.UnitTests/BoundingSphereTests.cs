@@ -27,7 +27,7 @@ public class BoundingSphereTests
 
 	static Float3[] GenerateRandomPoints()
 	{
-		IRandom random = Utilities.NewRandom();
+		Prng random = Utilities.NewRandom();
 
 		var points = new Float3[random.Next1(1000)];
 		FillRandom(points, random.Next1(), random);
@@ -35,7 +35,7 @@ public class BoundingSphereTests
 		return points;
 	}
 
-	static void FillRandom(Span<Float3> points, float maxRadius, IRandom random)
+	static void FillRandom(Span<Float3> points, float maxRadius, Prng random)
 	{
 		foreach (ref Float3 point in points) point = random.NextInSphere(maxRadius);
 	}

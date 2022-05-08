@@ -18,8 +18,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Drawing.Common" Version="5.0.3"/>
-        <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj"/>
+        <PackageReference Include="System.Drawing.Common" Version="5.0.3" />
+        <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,14 +33,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="src\Core\Evaluation\Materials\Diffuse.cs"/>
-        <Compile Remove="src\Core\Evaluation\Materials\Glass.cs"/>
-        <Compile Remove="src\Core\Evaluation\Materials\Glossy.cs"/>
-        <Compile Remove="src\Core\Evaluation\Materials\MaterialOld.cs"/>
-        <Compile Remove="src\Core\Evaluation\Materials\EmissiveOld.cs"/>
-        <Compile Remove="src\Core\Scenic\Examples\BMWs.cs"/>
-        <Compile Remove="src\Core\Scenic\Examples\TestScenes.cs"/>
-        <Compile Remove="src\Core\Scenic\Examples\MaterialBalls.cs"/>
+        <Compile Remove="src\Core\Evaluation\Engines\**" />
+        <Compile Remove="src\Core\Evaluation\MaterialsOld\**" />
+        <Compile Remove="src\Core\Scenic\ExamplesOld\**" />
     </ItemGroup>
 
 </Project>
