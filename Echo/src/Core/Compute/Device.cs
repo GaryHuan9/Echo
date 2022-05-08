@@ -5,6 +5,9 @@ using Echo.Common;
 
 namespace Echo.Core.Compute;
 
+/// <summary>
+/// A controlled compute engine to execute different <see cref="Operation"/>s.
+/// </summary>
 public sealed class Device : IDisposable
 {
 	public Device() : this(Environment.ProcessorCount) { }
@@ -31,6 +34,9 @@ public sealed class Device : IDisposable
 	readonly Locker manageLocker = new();
 	readonly Locker signalLocker = new();
 
+	/// <summary>
+	/// Whether this <see cref="Device"/> is currently idling (ie. not executing any <see cref="Operation"/>).
+	/// </summary>
 	public bool IsIdle
 	{
 		get
@@ -41,6 +47,10 @@ public sealed class Device : IDisposable
 		}
 	}
 
+	/// <summary>
+	/// Blocks the calling thread until this <see cref="Device"/> idles.
+	/// </summary>
+	/// <seealso cref="IsIdle"/>
 	public void AwaitIdle()
 	{
 		using var _ = signalLocker.Fetch();
@@ -52,6 +62,11 @@ public sealed class Device : IDisposable
 		}
 	}
 
+	/// <summary>
+	/// Begins the execution of a new <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="operation">The <see cref="Operation"/> to execute.</param>
+	/// <remarks>If an <see cref="Operation"/> is already dispatched, it will be prematurely aborted.</remarks>
 	public void Dispatch(Operation operation)
 	{
 		operation.Prepare(workers.Length);
@@ -66,18 +81,27 @@ public sealed class Device : IDisposable
 		foreach (var worker in workers) worker.Dispatch(operation);
 	}
 
+	/// <summary>
+	/// If an <see cref="Operation"/> is dispatched, pauses it as soon as possible.
+	/// </summary>
 	public void Pause()
 	{
 		using var _ = manageLocker.Fetch();
 		foreach (var worker in workers) worker.Pause();
 	}
 
+	/// <summary>
+	/// If a dispatched <see cref="Operation"/> is paused, resumes its execution.
+	/// </summary>
 	public void Resume()
 	{
 		using var _ = manageLocker.Fetch();
 		foreach (var worker in workers) worker.Resume();
 	}
 
+	/// <summary>
+	/// If an <see cref="Operation"/> is dispatched, aborts it as soon as possible.
+	/// </summary>
 	public void Abort()
 	{
 		using var _ = manageLocker.Fetch();
