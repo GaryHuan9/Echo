@@ -1,10 +1,13 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Packed;
 
-namespace Echo.Terminal;
+namespace Echo.TerminalOld;
 
 public class Terminal : IDisposable
 {

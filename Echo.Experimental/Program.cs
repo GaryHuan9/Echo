@@ -1,15 +1,10 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using BenchmarkDotNet.Running;
+using System.Threading;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
-using Echo.Experimental.Benchmarks;
 using JitBuddy;
 
 namespace Echo.Experimental;
@@ -18,7 +13,8 @@ public class Program
 {
 	static void Main()
 	{
-		TestMonteCarlo();
+		TestConsole();
+		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
 
@@ -28,6 +24,20 @@ public class Program
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
+	}
+
+	static void TestConsole()
+	{
+		while (true)
+		{
+			Console.WriteLine(Console.WindowWidth);
+			Console.WriteLine(Console.WindowHeight);
+
+			Thread.Sleep(100);
+			Console.Clear();
+		}
+
+		Console.ReadKey();
 	}
 
 	static void TestMonteCarlo()
