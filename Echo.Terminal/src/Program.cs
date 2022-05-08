@@ -14,7 +14,7 @@ public class Program
 {
 	public static void Main()
 	{
-		using var terminal = new Terminal();
+		using var terminal = new Terminal<EchoTerminalUI>();
 
 		Console.ReadKey();
 		return;

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
-namespace Echo.Terminal.Areas;
+namespace Echo.Terminal.Core;
 
 public readonly struct Domain : IEquatable<Domain>
 {
