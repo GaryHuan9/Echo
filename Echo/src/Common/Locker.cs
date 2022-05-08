@@ -5,20 +5,20 @@ namespace Echo.Common;
 
 public sealed class Locker
 {
-	bool signaling = true;
+	bool _signaling = true;
 
 	public bool Signaling
 	{
 		get
 		{
 			using var _ = Fetch();
-			return signaling;
+			return _signaling;
 		}
 		set
 		{
 			using var _ = Fetch();
-			bool old = signaling;
-			signaling = value;
+			bool old = _signaling;
+			_signaling = value;
 
 			if (old & !value) Monitor.PulseAll(this);
 		}
@@ -33,7 +33,7 @@ public sealed class Locker
 	public void Wait()
 	{
 		using var _ = Fetch();
-		if (!signaling) return;
+		if (!_signaling) return;
 		Monitor.Wait(this);
 	}
 
