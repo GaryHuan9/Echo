@@ -12,7 +12,7 @@ public class AabbSimd
 {
 	public AabbSimd()
 	{
-		IRandom random = new SystemRandom(42);
+		Prng random = new SystemPrng(42);
 
 		aabb0 = CreateAABB();
 		aabb1 = CreateAABB();

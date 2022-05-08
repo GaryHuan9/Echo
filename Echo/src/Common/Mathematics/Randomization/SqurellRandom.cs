@@ -5,14 +5,18 @@ namespace Echo.Common.Mathematics.Randomization;
 /// <summary>
 /// Hash based pseudorandom number generator based on Squirrel Eiserloh's GDC 2017 talk "Noise-Based RNG"
 /// </summary>
-public class SquirrelRandom : IRandom
+public sealed record SquirrelPrng : Prng
 {
-	public SquirrelRandom(uint? seed = null) : this(IRandom.GetSeed(seed)) { }
-
-	public SquirrelRandom(uint seed)
+	public SquirrelPrng(uint? seed = null)
 	{
-		this.seed = seed;
-		state = seed;
+		this.seed = seed ?? RandomValue;
+		state = 1;
+	}
+
+	SquirrelPrng(SquirrelPrng source) : base(source)
+	{
+		seed = RandomValue;
+		state = 1;
 	}
 
 	readonly uint seed;
@@ -20,14 +24,11 @@ public class SquirrelRandom : IRandom
 
 	const double Scale = 1d / (uint.MaxValue + 1L);
 
-	/// <inheritdoc/>
-	public float Next1() => (float)(Next() * Scale);
+	public override float Next1() => (float)(Next() * Scale);
 
-	/// <inheritdoc/>
-	public int Next1(int max) => Next(max);
+	public override int Next1(int max) => Next(max);
 
-	/// <inheritdoc/>
-	public int Next1(int min, int max) => Next((long)max - min) + min;
+	public override int Next1(int min, int max) => Next((long)max - min) + min;
 
 	int Next(long max) => (int)(Next() * Scale * max);
 
