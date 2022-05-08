@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Diagnostics;
 
-namespace Echo.Terminal.Areas;
+namespace Echo.Terminal.Core;
 
 public abstract class AreaUI
 {
