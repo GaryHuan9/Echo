@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using CodeHelpers.Packed;
-using Echo.Terminal.Areas;
+using Echo.Terminal.Core;
 
 namespace Echo.Terminal;
 
-public sealed class Terminal : IDisposable
+public sealed class Terminal<T> : IDisposable where T : RootUI, new()
 {
 	public Terminal()
 	{
@@ -37,7 +36,7 @@ public sealed class Terminal : IDisposable
 	{
 		var stopwatch = Stopwatch.StartNew();
 
-		var root = new RootUI { };
+		RootUI root = new T();
 
 		while (Volatile.Read(ref disposed) == 0)
 		{
