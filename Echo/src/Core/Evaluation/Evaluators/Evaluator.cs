@@ -1,5 +1,4 @@
-﻿using System;
-using CodeHelpers;
+﻿using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Primitives;
@@ -9,7 +8,6 @@ using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic;
 using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grid;
 
@@ -28,7 +26,7 @@ public abstract record Evaluator
 
 	protected readonly Allocator allocator = new();
 
-	readonly NotNull<ContinuousDistribution> _distribution = new UniformDistribution();
+	readonly NotNull<ContinuousDistribution> _distribution = new StratifiedDistribution();
 	readonly NotNull<string> _destinationLabel = "main";
 
 	public ContinuousDistribution Distribution

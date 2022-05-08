@@ -17,7 +17,7 @@ public record TiledEvaluationProfile : EvaluationProfile
 	/// <summary>
 	/// Evaluation is completed after noise is under this threshold.
 	/// </summary>
-	public float NoiseThreshold = 0.0005f;
+	public float NoiseThreshold = 0.03f;
 
 	/// <summary>
 	/// The size of one square tile.
