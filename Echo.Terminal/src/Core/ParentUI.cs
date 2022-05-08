@@ -1,7 +1,7 @@
 ﻿using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 
-namespace Echo.Terminal.Areas;
+namespace Echo.Terminal.Core;
 
 public class ParentUI : AreaUI
 {
@@ -12,8 +12,8 @@ public class ParentUI : AreaUI
 		ReorientChildren();
 	}
 
-	readonly FilledUI filled0 = new() { Filling = '0' };
-	readonly FilledUI filled1 = new() { Filling = '1' };
+	readonly FilledUI filled0 = new();
+	readonly FilledUI filled1 = new();
 
 	bool _horizontal;
 	float _division = 0.5f;
@@ -74,11 +74,7 @@ public class ParentUI : AreaUI
 	{
 		if (Domain.size.MinComponent < 1) return;
 
-		int axis = MajorAxis;
-		int divider = Divider;
-		int width = Width;
-
-		for (int i = 0; i < width; i++) Domain[Int2.Create(axis, divider, i)] = 'o';
+		DrawDivider();
 
 		_child0.Update();
 		_child1.Update();
@@ -88,6 +84,20 @@ public class ParentUI : AreaUI
 	{
 		base.OnResize(previous);
 		ReorientChildren();
+	}
+
+	void DrawDivider()
+	{
+		if (Horizontal)
+		{
+			int divider = Divider;
+			int height = Domain.size.Y;
+
+			for (int y = 0; y < height; y++) Domain[new Int2(divider, y)] = '\u2502';
+		}
+		else Domain.FillLine(Divider, '\u2500');
+
+		//TODO: connect vertical and horizontal divisors
 	}
 
 	void ReorientChildren()
