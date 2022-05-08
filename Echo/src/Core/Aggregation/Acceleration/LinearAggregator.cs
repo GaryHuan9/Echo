@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
+using System.Xml.Schema;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Common;
@@ -97,77 +99,79 @@ public class LinearAggregator : Aggregator
 		fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, totalCount);
 	}
 
-	public override int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
+	public override void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
 	{
-		//If theres enough room to store every individual AABB
-		if (span.Length >= totalCount)
-		{
-			var fill = span[..totalCount].AsFill();
+		fill.ThrowIfNotEmpty();
 
-			foreach (ref readonly Node node in nodes.AsSpan())
+		//If theres enough room to store every individual AABB
+		if (fill.Length >= totalCount)
+		{
+			for (int i = 0; i < nodes.Length; i++)
+			for (int j = 0; j < Width; j++)
 			{
-				for (int i = 0; i < Width; i++)
-				{
-					if (fill.IsFull) goto exit;
-					fill.Add(node.aabb4[i]);
-				}
+				if (fill.Count == totalCount) return;
+				fill.Add(nodes[i].aabb4[i]);
 			}
 
-		exit:
-			return totalCount;
+			return;
 		}
 
-		Span<AxisAlignedBoundingBox> aabb4 = stackalloc AxisAlignedBoundingBox[Width];
-
 		//If there is enough space to store AABBs that enclose every node's AABB4
-		if (span.Length >= nodes.Length)
+		if (fill.Length >= nodes.Length)
 		{
+			Span<AxisAlignedBoundingBox> aabb4 = stackalloc AxisAlignedBoundingBox[Width];
+
 			for (int i = 0; i < nodes.Length; i++)
 			{
 				ref readonly Node node = ref nodes[i];
-
 				int count = Math.Min(totalCount - i * Width, Width);
-				Span<AxisAlignedBoundingBox> slice = aabb4[count..];
 
-				for (int j = 0; j < count; j++) slice[j] = node.aabb4[j];
+				if (count < Width)
+				{
+					for (int j = 0; j < count; j++) aabb4[j] = node.aabb4[j];
+					fill.Add(new AxisAlignedBoundingBox(aabb4[count..]));
 
-				span[i] = new AxisAlignedBoundingBox(slice);
+					break;
+				}
+
+				fill.Add(node.aabb4.Encapsulated);
 			}
 
-			return nodes.Length;
+			return;
 		}
 
 		//Finally, store all enclosure AABBs and then one last big AABB that encloses all the remaining AABBs
-		for (int i = 0; i < span.Length - 1; i++)
+		while (fill.Count < fill.Length - 1)
 		{
-			ref readonly Node node = ref nodes[i];
-
-			for (int j = 0; j < Width; j++) aabb4[j] = node.aabb4[j];
-
-			span[i] = new AxisAlignedBoundingBox(aabb4);
+			ref readonly Node node = ref nodes[fill.Count];
+			fill.Add(node.aabb4.Encapsulated);
 		}
 
-		Float3 min = Float3.PositiveInfinity;
-		Float3 max = Float3.NegativeInfinity;
+		var min = Float3.PositiveInfinity;
+		var max = Float3.NegativeInfinity;
 
-		for (int i = span.Length; i < nodes.Length; i++)
+		for (int i = fill.Count; i < nodes.Length; i++)
 		{
 			ref readonly Node node = ref nodes[i];
-
 			int count = Math.Min(totalCount - i * Width, Width);
 
-			for (int j = 0; j < count; j++)
+			if (count < Width)
 			{
-				AxisAlignedBoundingBox aabb = node.aabb4[j];
+				for (int j = 0; j < count; j++) Encapsulate(node.aabb4[j]);
+				break;
+			}
 
+			Encapsulate(node.aabb4.Encapsulated);
+
+			void Encapsulate(in AxisAlignedBoundingBox aabb)
+			{
 				min = min.Min(aabb.min);
 				max = max.Max(aabb.max);
 			}
 		}
 
-		span[^1] = new AxisAlignedBoundingBox((Float3)min, (Float3)max);
-
-		return span.Length;
+		fill.Add(new AxisAlignedBoundingBox(min, max));
+		Assert.IsTrue(fill.IsFull);
 	}
 
 	readonly struct Node
