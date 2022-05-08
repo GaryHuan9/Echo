@@ -5,7 +5,7 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Textures;
 
 /// <summary>
-/// An infinite two-dimensional region of <see cref="RGBA128"/> four-channelled colors that can be arbitrarily sampled.
+/// An infinite two-dimensional plane of data that can be arbitrarily sampled as <see cref="RGBA128"/> four-channelled colors.
 /// </summary>
 public abstract class Texture
 {

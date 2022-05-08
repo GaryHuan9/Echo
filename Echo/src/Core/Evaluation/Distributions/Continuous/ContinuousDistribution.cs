@@ -15,83 +15,91 @@ using LN = CallerLineNumberAttribute;
 /// A continuous distribution that we can draw two different kinds of sample from: <see cref="Sample1D"/> and <see cref="Sample2D"/>.
 /// We can also draw <see cref="Span{T}"/> of particular lengths of those two types of sample. Note that for different pixel samples
 /// of the same pixel, the sequence of samples that we draw from this <see cref="ContinuousDistribution"/> should be identical.
-/// NOTE: this class is not thread safe, create multiple instances for different threads using the copy constructor.
+/// NOTE: this class is not thread safe, create multiple instances for different threads using nondestructive mutation.
 /// </summary>
-public abstract class ContinuousDistribution
+public abstract record ContinuousDistribution
 {
 	/// <summary>
-	/// Constructs a new <see cref="ContinuousDistribution"/> with <see cref="extend"/>.
+	/// Constructs a new <see cref="ContinuousDistribution"/> with <paramref name="extend"/>.
 	/// </summary>
-	protected ContinuousDistribution(int extend)
+	protected ContinuousDistribution(int extend = 16) => Extend = extend;
+
+	/// <summary>
+	/// Copy constructs a <see cref="ContinuousDistribution"/> from <paramref name="source"/>.
+	/// </summary>
+	protected ContinuousDistribution(ContinuousDistribution source)
 	{
-		if (extend <= 0) throw ExceptionHelper.Invalid(nameof(extend), extend, InvalidType.outOfBounds);
+		spans1D = new BufferDomain<Sample1D>();
+		spans2D = new BufferDomain<Sample2D>();
 
-		this.extend = extend;
+		Extend = source.Extend;
+		Prng = source.Prng with { };
+		SessionNumber = int.MinValue;
 	}
-
-	/// <summary>
-	/// Constructs a copy of <paramref name="source"/>.
-	/// NOTE: only information that specially defines this <see cref="ContinuousDistribution"/> needs to be cloned over.
-	/// </summary>
-	protected ContinuousDistribution(ContinuousDistribution source) : this(source.extend) { }
-
-	/// <summary>
-	/// The maximum number of pixel samples that will be performed for one pixel.
-	/// </summary>
-	public readonly int extend;
 
 	readonly BufferDomain<Sample1D> spans1D = new();
 	readonly BufferDomain<Sample2D> spans2D = new();
 
 	MonoThread monoThread;
 
-	/// <summary>
-	/// The position of the current processing pixel. This property is undefined if <see cref="BeginPixel"/> is never invoked.
-	/// </summary>
-	protected Int2 PixelPosition { get; private set; }
+	readonly int _extend;
+	readonly NotNull<Prng> _prng = new SquirrelPrng();
 
 	/// <summary>
-	/// The index (number) of the current processing pixel sample. After invoking <see cref="BeginSample"/>
-	/// once, this property will always be between zero (inclusive) and <see cref="extend"/> (exclusive).
+	/// The maximum number of pixel samples that will be performed for one pixel.
 	/// </summary>
-	protected int SampleNumber { get; private set; } = int.MinValue;
-
-	IRandom _prng;
-
-	/// <summary>
-	/// The specific pseudo random number generator associated with this <see cref="ContinuousDistribution"/>. Note that
-	/// this property is not cloned but rather simply set to null on the new instance when we use the copy constructor.
-	/// </summary>
-	public IRandom Prng
+	public int Extend
 	{
-		get => _prng;
-		set
+		get => _extend;
+		init
 		{
-			if (value != null || _prng == null) _prng = value;
-			else throw new Exception($"Once a {nameof(Prng)} is assigned, it cannot be removed to null.");
+			if (value > 0) _extend = value;
+			else throw ExceptionHelper.Invalid(nameof(value), value, InvalidType.outOfBounds);
 		}
 	}
 
 	/// <summary>
-	/// Begins sampling on a new pixel at <paramref name="position"/>.
+	/// The specific <see cref="Prng"/> associated with this <see cref="ContinuousDistribution"/>.
 	/// </summary>
-	public virtual void BeginPixel(Int2 position)
+	public Prng Prng
 	{
-		monoThread.Ensure();
-
-		PixelPosition = position;
-		SampleNumber = -1;
+		get => _prng;
+		init => _prng = value;
 	}
 
 	/// <summary>
-	/// Begins a new pixel sample on the current pixel at <see cref="PixelPosition"/>. Must be invoked after <see cref="BeginPixel"/>.
+	/// The position of the series of sampling session. The value is never negative.
 	/// </summary>
-	public virtual void BeginSample()
+	protected Int2 SeriesPosition { get; private set; }
+
+	/// <summary>
+	/// The index of the current session that is being sampled. After invoking <see cref="BeginSession"/>
+	/// once, this property will always be between zero (inclusive) and <see cref="Extend"/> (exclusive).
+	/// </summary>
+	protected int SessionNumber { get; private set; } = int.MinValue;
+
+	/// <summary>
+	/// Begins a new series of sampling sessions.
+	/// </summary>
+	/// <param name="position">The </param>
+	public virtual void BeginSeries(Int2 position)
+	{
+		monoThread.Ensure();
+		Assert.IsTrue(position >= Int2.Zero);
+
+		SeriesPosition = position;
+		SessionNumber = -1;
+	}
+
+	/// <summary>
+	/// Begins a sampling session in the current series. Must be invoked after <see cref="BeginSeries"/>.
+	/// </summary>
+	public virtual void BeginSession()
 	{
 		monoThread.Ensure();
 
-		if (SampleNumber < -1) throw new Exception($"Operation invalid before {nameof(BeginPixel)} is invoked!");
-		if (++SampleNumber >= extend) throw new Exception($"More than {extend} pixel samples has been requested!");
+		if (SessionNumber < -1) throw new Exception($"Operation invalid before {nameof(BeginSeries)} is invoked!");
+		if (++SessionNumber >= Extend) throw new Exception($"More than {Extend} sessions requested in this series!");
 
 		spans1D.Reset(true);
 		spans2D.Reset(true);
@@ -99,28 +107,28 @@ public abstract class ContinuousDistribution
 
 #if DEBUG
 	//
-	/// <inheritdoc cref="Next1DCore"/>
+	/// <inheritdoc cref="Next1DImpl"/>
 	public Sample1D Next1D([FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
 		return Next1DImpl();
 	}
 
-	/// <inheritdoc cref="Next2DCore"/>
+	/// <inheritdoc cref="Next2DImpl"/>
 	public Sample2D Next2D([FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
 		return Next2DImpl();
 	}
 
-	/// <inheritdoc cref="NextSpan2DCore"/>
+	/// <inheritdoc cref="NextSpan2DImpl"/>
 	public ReadOnlySpan<Sample1D> NextSpan1D(int length, [FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
 		return NextSpan1DImpl(length);
 	}
 
-	/// <inheritdoc cref="NextSpan2DCore"/>
+	/// <inheritdoc cref="NextSpan2DImpl"/>
 	public ReadOnlySpan<Sample2D> NextSpan2D(int length, [FP] string filePath = default, [LN] int lineNumber = default)
 	{
 		EnsureIsSampling();
@@ -129,24 +137,19 @@ public abstract class ContinuousDistribution
 
 #else
 	//
-	/// <inheritdoc cref="Next1DCore"/>
+	/// <inheritdoc cref="Next1DImpl"/>
 	public Sample1D Next1D() => Next1DImpl();
 
-	/// <inheritdoc cref="Next2DCore"/>
+	/// <inheritdoc cref="Next2DImpl"/>
 	public Sample2D Next2D() => Next2DImpl();
 
-	/// <inheritdoc cref="NextSpan1DCore"/>
+	/// <inheritdoc cref="NextSpan1DImpl"/>
 	public ReadOnlySpan<Sample1D> NextSpan1D(int length) => NextSpan1DImpl(length);
 
-	/// <inheritdoc cref="NextSpan2DCore"/>
+	/// <inheritdoc cref="NextSpan2DImpl"/>
 	public ReadOnlySpan<Sample2D> NextSpan2D(int length) => NextSpan2DImpl(length);
 
 #endif
-
-	/// <summary>
-	/// Produces and returns another copy of this <see cref="ContinuousDistribution"/> of the same <see cref="Object.GetType()"/> to be used for different threads.
-	/// </summary>
-	public abstract ContinuousDistribution Replicate();
 
 	/// <summary>
 	/// Draws and returns a new <see cref="Sample1D"/> from this <see cref="ContinuousDistribution"/>.
@@ -190,17 +193,13 @@ public abstract class ContinuousDistribution
 		return span;
 	}
 
-#if DEBUG
-	//
 	void EnsureIsSampling()
 	{
 		monoThread.Ensure();
 
-		if (SampleNumber < 0) throw new Exception($"Operation invalid before {nameof(BeginSample)} is invoked!");
-		if (SampleNumber >= extend) throw new Exception($"More than {extend} pixel samples has been requested!");
+		if (SessionNumber < 0) throw new Exception($"Operation invalid before {nameof(BeginSession)} is invoked!");
+		if (SessionNumber >= Extend) throw new Exception($"More than {Extend} sessions requested in this series!");
 	}
-
-#endif
 
 	/// <summary>
 	/// A collection of array buffers of <typeparamref name="T"/> with different <see cref="Array.Length"/>.

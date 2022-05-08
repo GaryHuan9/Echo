@@ -7,6 +7,7 @@ using CodeHelpers.Packed;
 using CodeHelpers.Threads;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Evaluators;
+using Echo.Core.Evaluation.Operations;
 using Echo.Core.Textures.Grid;
 using ThreadState = System.Threading.ThreadState;
 
@@ -128,7 +129,7 @@ public class ProgressiveRenderEngine : IDisposable
 		Int2 position = renderData.GetPosition(index);
 
 		if (CurrentState != State.rendering) state.Break();
-		ref RenderPixel pixel = ref renderData[position];
+		ref Accumulator pixel = ref renderData[position];
 
 		var buffer = profile.RenderBuffer;
 		var method = profile.Method;
@@ -189,12 +190,12 @@ public class ProgressiveRenderEngine : IDisposable
 		public RenderBuffer Buffer { get; private set; }
 		public int Size => Buffer.size.Product;
 
-		RenderPixel[] pixels;
+		Accumulator[] pixels;
 
 		int[] patternMajor;
 		int[] patternMinor;
 
-		public ref RenderPixel this[Int2 position] => ref pixels[Buffer.ToIndex(position)];
+		public ref Accumulator this[Int2 position] => ref pixels[Buffer.ToIndex(position)];
 
 		public void Recreate(RenderBuffer newBuffer)
 		{
@@ -205,7 +206,7 @@ public class ProgressiveRenderEngine : IDisposable
 			int newLength = newBuffer.size.Product;
 
 			if (oldLength >= newLength) Array.Clear(pixels, 0, newLength);
-			else pixels = new RenderPixel[newLength];
+			else pixels = new Accumulator[newLength];
 
 			if (newBuffer is ProgressiveRenderBuffer buffer) buffer.ClearWrittenFlagArray();
 

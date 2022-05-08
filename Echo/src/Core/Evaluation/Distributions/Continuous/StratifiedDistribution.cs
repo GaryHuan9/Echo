@@ -8,9 +8,9 @@ namespace Echo.Core.Evaluation.Distributions.Continuous;
 /// <summary>
 /// A stratified <see cref="ContinuousDistribution"/> that partitions the domain to improve the spread of the values drawn.
 /// </summary>
-public class StratifiedDistribution : HorizontalDistribution
+public record StratifiedDistribution : HorizontalDistribution
 {
-	public StratifiedDistribution(int extend) : base(extend) { }
+	public StratifiedDistribution() { }
 
 	public StratifiedDistribution(StratifiedDistribution source) : base(source) => Jitter = source.Jitter;
 
@@ -19,13 +19,11 @@ public class StratifiedDistribution : HorizontalDistribution
 	/// </summary>
 	public bool Jitter { get; set; } = true;
 
-	public override void BeginPixel(Int2 position)
+	public override void BeginSeries(Int2 position)
 	{
-		base.BeginPixel(position);
+		base.BeginSeries(position);
 		Assert.IsNotNull(Prng);
 	}
-
-	public override ContinuousDistribution Replicate() => new StratifiedDistribution(this);
 
 	protected override void FillSpan1D(Span<Sample1D> samples)
 	{
