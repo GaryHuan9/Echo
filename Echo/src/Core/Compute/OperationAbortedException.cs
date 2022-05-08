@@ -2,4 +2,7 @@
 
 namespace Echo.Core.Compute;
 
-public sealed class OperationAbortedException : Exception { }
+/// <summary>
+/// Exception thrown by <see cref="IScheduler"/> during an <see cref="Operation"/> abortion.
+/// </summary>
+sealed class OperationAbortedException : Exception { }
