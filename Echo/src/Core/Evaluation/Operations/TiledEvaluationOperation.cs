@@ -35,11 +35,11 @@ public class TiledEvaluationOperation : Operation
 		for (int i = 0; i < population; i++) evaluators[i] = profile.Evaluator with { };
 	}
 
-	protected override bool Execute(ulong procedure, Scheduler scheduler)
+	protected override bool Execute(ulong procedure, IScheduler scheduler)
 	{
 		if (procedure >= (ulong)tilePositionSequence.Length) return false;
 
-		Evaluator evaluator = evaluators[scheduler.id];
+		Evaluator evaluator = evaluators[scheduler.Id];
 		PreparedScene scene = profile.Scene;
 		RenderBuffer buffer = profile.Buffer;
 
