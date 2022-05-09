@@ -19,10 +19,15 @@ public abstract class AreaUI
 		}
 	}
 
-	public abstract void Update();
+	public bool InvertY { get; set; }
 
-	protected virtual void OnResize(Domain previous)
+	public virtual void Update()
 	{
-		Assert.AreNotEqual(previous, Domain);
+		if (Domain.size.MinComponent < 1) return;
+		Draw(Domain.MakeDrawer(InvertY));
 	}
+
+	protected abstract void Draw(in Domain.Drawer drawer);
+
+	protected virtual void OnResize(Domain previous) => Assert.AreNotEqual(previous, Domain);
 }
