@@ -7,10 +7,8 @@ public class TileReportUI : AreaUI
 {
 	public TiledEvaluationOperation Operation { get; set; }
 
-	public override void Update()
+	protected override void Draw(in Domain.Drawer drawer)
 	{
 		TiledEvaluationOperation operation = Operation;
-
-
 	}
 }

@@ -5,7 +5,7 @@ using CodeHelpers.Packed;
 
 namespace Echo.Terminal.Core;
 
-public readonly struct Domain : IEquatable<Domain>
+public readonly partial struct Domain : IEquatable<Domain>
 {
 	public Domain(Int2 size) : this(size, new char[GetArrayLength(size)]) { }
 
@@ -39,45 +39,7 @@ public readonly struct Domain : IEquatable<Domain>
 
 	public bool IsRoot => size == realSize;
 
-	public ref char this[Int2 position] => ref this[position.X, position.Y];
-
-	public ref char this[int x, int y]
-	{
-		get
-		{
-			Assert.IsTrue(new Int2(x, y) >= Int2.Zero);
-			Assert.IsTrue(new Int2(x, y) < size);
-
-			x += origin.X;
-			y = realSize.Y - 1 - y - origin.Y;
-			return ref array[realSize.X * y + x];
-		}
-	}
-
-	public Span<char> this[int y] => MemoryMarshal.CreateSpan(ref this[0, y], size.X);
-
-	public Domain this[Int2 min, Int2 max] => new(this, min, max);
-
-	public void Fill(char value = ' ') => FillAbove(0, value);
-
-	public void FillAbove(int y, char value = ' ')
-	{
-		for (; y < size.Y; y++) FillLine(y, value);
-	}
-
-	public void FillBelow(int y, char value = ' ')
-	{
-		for (; y >= 0; y--) FillLine(y, value);
-	}
-
-	public void FillLine(int y, char value = ' ') => this[y].Fill(value);
-
-	public void WriteLine(int y, ReadOnlySpan<char> value)
-	{
-		Span<char> line = this[y];
-		value.CopyTo(line);
-		line[value.Length..].Fill(' ');
-	}
+	public Domain Slice(Int2 min, Int2 max) => new(this, min, max);
 
 	public Domain Resize(Int2 newSize)
 	{
@@ -94,7 +56,9 @@ public readonly struct Domain : IEquatable<Domain>
 		return new Domain(newSize, new char[current]);
 	}
 
-	public void DrawToConsole() => Console.Write(array, 0, GetArrayLength(size));
+	public Drawer MakeDrawer(bool invertY = false) => new(this, invertY);
+
+	public void CopyToConsole() => Console.Write(array, 0, GetArrayLength(size));
 
 	public bool Equals(in Domain other) => (size == other.size) & (origin == other.origin) &
 										   (realSize == other.realSize) & (array == other.array);
