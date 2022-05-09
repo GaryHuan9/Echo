@@ -7,8 +7,14 @@ public class DeviceReportUI : AreaUI
 {
 	public Device Device { get; set; }
 
-	public override void Update()
+	protected override void Draw(in Domain.Drawer drawer)
 	{
+		Device device = Device;
 
+		if (device == null)
+		{
+			// Domain
+		}
+		else { }
 	}
 }

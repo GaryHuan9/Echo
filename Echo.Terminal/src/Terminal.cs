@@ -49,7 +49,7 @@ public sealed class Terminal<T> : IDisposable where T : RootUI, new()
 			if (size > Int2.Zero)
 			{
 				Console.SetCursorPosition(0, 0);
-				root.Domain.DrawToConsole();
+				root.Domain.CopyToConsole();
 				Console.SetCursorPosition(0, 0);
 			}
 
