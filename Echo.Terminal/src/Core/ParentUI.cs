@@ -72,32 +72,30 @@ public class ParentUI : AreaUI
 
 	public override void Update()
 	{
-		if (Domain.size.MinComponent < 1) return;
-
-		DrawDivider();
+		base.Update();
 
 		_child0.Update();
 		_child1.Update();
 	}
 
-	protected override void OnResize(Domain previous)
-	{
-		base.OnResize(previous);
-		ReorientChildren();
-	}
-
-	void DrawDivider()
+	protected override void Draw(in Domain.Drawer drawer)
 	{
 		if (Horizontal)
 		{
 			int divider = Divider;
 			int height = Domain.size.Y;
 
-			for (int y = 0; y < height; y++) Domain[new Int2(divider, y)] = '\u2502';
+			for (int y = 0; y < height; y++) drawer[new Int2(divider, y)] = '\u2502';
 		}
-		else Domain.FillLine(Divider, '\u2500');
+		else drawer.FillLine(Divider, '\u2500');
 
 		//TODO: connect vertical and horizontal divisors
+	}
+
+	protected override void OnResize(Domain previous)
+	{
+		base.OnResize(previous);
+		ReorientChildren();
 	}
 
 	void ReorientChildren()
@@ -110,13 +108,13 @@ public class ParentUI : AreaUI
 			Int2 max0 = Int2.Create(axis, Divider, Width);
 			Int2 min1 = Int2.Create(axis, max0[axis] + 1);
 
-			_child0.Domain = domain[Int2.Zero, max0];
-			_child1.Domain = domain[min1, domain.size];
+			_child0.Domain = domain.Slice(Int2.Zero, max0);
+			_child1.Domain = domain.Slice(min1, domain.size);
 		}
 		else
 		{
-			_child0.Domain = domain[Int2.Zero, Int2.Zero];
-			_child1.Domain = domain[Int2.Zero, Int2.Zero];
+			_child0.Domain = domain.Slice(Int2.Zero, Int2.Zero);
+			_child1.Domain = domain.Slice(Int2.Zero, Int2.Zero);
 		}
 	}
 }

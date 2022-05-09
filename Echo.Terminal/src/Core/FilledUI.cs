@@ -4,5 +4,5 @@ public sealed class FilledUI : AreaUI
 {
 	public char Filling { get; set; } = ' ';
 
-	public override void Update() => Domain.Fill(Filling);
+	protected override void Draw(in Domain.Drawer drawer) => drawer.FillAll(Filling);
 }
