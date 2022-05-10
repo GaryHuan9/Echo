@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
@@ -13,7 +15,6 @@ public class Program
 {
 	static void Main()
 	{
-		TestConsole();
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
@@ -24,20 +25,6 @@ public class Program
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
-	}
-
-	static void TestConsole()
-	{
-		while (true)
-		{
-			Console.WriteLine(Console.WindowWidth);
-			Console.WriteLine(Console.WindowHeight);
-
-			Thread.Sleep(100);
-			Console.Clear();
-		}
-
-		Console.ReadKey();
 	}
 
 	static void TestMonteCarlo()
