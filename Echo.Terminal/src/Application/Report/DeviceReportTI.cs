@@ -1,9 +1,10 @@
 ﻿using Echo.Core.Compute;
-using Echo.Terminal.Core;
+using Echo.Terminal.Core.Display;
+using Echo.Terminal.Core.Interface;
 
-namespace Echo.Terminal.Interface.Report;
+namespace Echo.Terminal.Application.Report;
 
-public class DeviceReportUI : AreaUI
+public class DeviceReportTI : AreaTI
 {
 	public Device Device { get; set; }
 
