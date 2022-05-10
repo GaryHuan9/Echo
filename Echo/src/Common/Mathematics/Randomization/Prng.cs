@@ -1,5 +1,7 @@
 using System;
+using System.Numerics;
 using CodeHelpers;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 
@@ -25,9 +27,38 @@ public abstract record Prng
 	}
 
 	/// <summary>
+	/// Returns the next uniform pseudorandom <see cref="uint"/> value.
+	/// </summary>
+	/// <returns>The <see cref="uint"/> value, from <see cref="uint.MinValue"/>
+	/// (inclusive) to <see cref="uint.MaxValue"/> (inclusive).</returns>
+	public abstract uint NextUInt32();
+
+	/// <summary>
 	/// Returns the next pseudorandom number between zero (inclusive) and one (exclusive).
 	/// </summary>
-	public abstract float Next1();
+	public float Next1()
+	{
+		//Implemented based on blog from Marc B. Reynolds:
+		//https://marc-b-reynolds.github.io/distribution/2017/01/17/DenseFloat.html#the-parts-im-not-tell-you
+
+		ulong source = ((ulong)NextUInt32() << 32) | NextUInt32();
+		uint count = (uint)BitOperations.LeadingZeroCount(source);
+
+		if (count <= 40)
+		{
+			const uint Mask = (1u << 23) - 1u;
+
+			uint exponent = (126u - count) << 23;
+			uint mantissa = (uint)source & Mask;
+
+			return Scalars.UInt32ToSingleBits(exponent | mantissa);
+		}
+
+		//The following code will only be reached 1 out of 2^40 times (probabilistically).
+		//The magic multiplier equals IEEE float with mantissa = zero and exponent = 0b111111.
+
+		return (uint)source * 5.421011e-20f;
+	}
 
 	/// <summary>
 	/// Returns the next pseudorandom number between zero (inclusive) and <paramref name="max"/> (exclusive).
@@ -46,19 +77,20 @@ public abstract record Prng
 	/// <summary>
 	/// Returns the next pseudorandom number between zero (inclusive) and <paramref name="max"/> (exclusive).
 	/// </summary>
-	public virtual int Next1(int max) => (int)Next1((float)max);
+	public int Next1(int max)
+	{
+		Assert.IsTrue(max > 0);
+		return (int)Next1Impl((uint)max);
+	}
 
 	/// <summary>
 	/// Returns the next pseudorandom number between <paramref name="min"/> (inclusive) and <paramref name="max"/> (exclusive).
 	/// </summary>
-	public virtual int Next1(int min, int max)
+	public int Next1(int min, int max)
 	{
-		long distance = (long)max - min;
-
-		if (distance <= int.MaxValue) return Next1((int)distance) + min;
-		throw new Exception($"Cannot fetch value with range {distance}");
-
-		//We must manually override this in implementations to support larger ranges
+		Assert.IsTrue(max > min);
+		uint distance = (uint)((long)max - min);
+		return (int)Next1Impl(distance) + min;
 	}
 
 	/// <summary>
@@ -192,5 +224,23 @@ public abstract record Prng
 	public void Shuffle<T>(Span<T> span)
 	{
 		for (int i = span.Length - 1; i > 0; i--) CodeHelper.Swap(ref span[i], ref span[Next1(i + 1)]);
+	}
+
+	/// <summary>
+	/// Computes a discrete uniform random value from 0 (inclusive) to <paramref name="max"/> (exclusive).
+	/// Implementation based on academic paper by Daniel Lemire: https://arxiv.org/abs/1805.10941
+	/// </summary>
+	uint Next1Impl(uint max)
+	{
+		Assert.AreNotEqual(max, 0u);
+
+		ulong value = (ulong)NextUInt32() * max;
+		if ((uint)value >= max) goto exit;
+
+		uint threshold = (uint)-max - (uint)-max / max * max;
+		while ((uint)value < threshold) value = (ulong)NextUInt32() * max;
+
+	exit:
+		return (uint)(value >> 32);
 	}
 }
