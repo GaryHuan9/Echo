@@ -3,7 +3,8 @@
 namespace Echo.Common.Mathematics.Randomization;
 
 /// <summary>
-/// Hash based pseudorandom number generator based on Squirrel Eiserloh's GDC 2017 talk "Noise-Based RNG"
+/// Hash based pseudorandom number generator based on
+/// Squirrel Eiserloh's GDC 2017 talk "Noise-Based RNG".
 /// </summary>
 public sealed record SquirrelPrng : Prng
 {
@@ -22,17 +23,7 @@ public sealed record SquirrelPrng : Prng
 	readonly uint seed;
 	uint state;
 
-	const double Scale = 1d / (uint.MaxValue + 1L);
-
-	public override float Next1() => (float)(Next() * Scale);
-
-	public override int Next1(int max) => Next(max);
-
-	public override int Next1(int min, int max) => Next((long)max - min) + min;
-
-	int Next(long max) => (int)(Next() * Scale * max);
-
-	uint Next()
+	public override uint NextUInt32()
 	{
 		Mangle(ref state);
 		return state;
