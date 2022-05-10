@@ -14,7 +14,9 @@ public class ControlUI : AreaUI
 
 		Int2 position = Int2.Zero;
 
-		position = drawer.Write(position, "abcdefghijklmnopqrstuvwxyz___" + "abcdefghijklmnopqrstuvwxyz___".ToUpperInvariant(), new TextOptions() { WrapOptions = WrapOptions.LineBreak, Truncate = false });
-		position = drawer.WriteLine(position, "1234567890" + "1234567890", new TextOptions() { WrapOptions = WrapOptions.NoWrap, Truncate = false });
+		const string Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi vulputate quam in condimentum ultrices. Aenean quis tortor ac tellus scelerisque volutpat nec scelerisque ipsum. Donec at eleifend ipsum, sit amet blandit nisi. Aenean rhoncus fringilla sollicitudin. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas faucibus congue vehicula. Curabitur molestie malesuada risus. Donec maximus dui urna, eget aliquam felis fringilla at. Praesent varius rutrum magna non sollicitudin. Nullam in purus sit amet tellus elementum imperdiet at sit amet diam. Vestibulum consectetur lacus magna, sed dignissim justo suscipit eu. Maecenas sed odio nulla. Donec tristique elit et metus iaculis pretium.";
+
+		position = drawer.WriteLine(position, Text, new TextOptions() { WrapOptions = WrapOptions.LineBreak, Truncate = false });
+		position = drawer.WriteLine(position, Text, new TextOptions() { WrapOptions = WrapOptions.NoWrap, Truncate = false });
 	}
 }
