@@ -1,19 +1,20 @@
 ﻿using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Terminal.Core.Display;
 
-namespace Echo.Terminal.Core;
+namespace Echo.Terminal.Core.Interface;
 
-public class ParentUI : AreaUI
+public class ParentTI : AreaTI
 {
-	public ParentUI()
+	public ParentTI()
 	{
 		_child0 = filled0;
 		_child1 = filled1;
 		ReorientChildren();
 	}
 
-	readonly FilledUI filled0 = new();
-	readonly FilledUI filled1 = new();
+	readonly FilledTI filled0 = new();
+	readonly FilledTI filled1 = new();
 
 	bool _horizontal;
 	float _division = 0.5f;
@@ -40,10 +41,10 @@ public class ParentUI : AreaUI
 		}
 	}
 
-	AreaUI _child0;
-	AreaUI _child1;
+	AreaTI _child0;
+	AreaTI _child1;
 
-	public AreaUI Child0
+	public AreaTI Child0
 	{
 		get => _child0 == filled0 ? null : _child0;
 		set
@@ -54,7 +55,7 @@ public class ParentUI : AreaUI
 		}
 	}
 
-	public AreaUI Child1
+	public AreaTI Child1
 	{
 		get => _child1 == filled1 ? null : _child1;
 		set

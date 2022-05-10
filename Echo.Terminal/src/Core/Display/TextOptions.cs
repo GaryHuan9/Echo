@@ -1,4 +1,4 @@
-﻿namespace Echo.Terminal.Core;
+﻿namespace Echo.Terminal.Core.Display;
 
 /// <summary>
 /// Options used to format texts.
@@ -6,7 +6,7 @@
 public readonly record struct TextOptions
 {
 	/// <summary>
-	/// Defines the <see cref="Core.WrapOptions"/> for texts.
+	/// Defines the <see cref="Display.WrapOptions"/> for texts.
 	/// </summary>
 	public WrapOptions WrapOptions { get; init; }
 

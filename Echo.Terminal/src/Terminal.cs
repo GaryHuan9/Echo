@@ -4,10 +4,11 @@ using System.Text;
 using System.Threading;
 using CodeHelpers.Packed;
 using Echo.Terminal.Core;
+using Echo.Terminal.Core.Interface;
 
 namespace Echo.Terminal;
 
-public sealed class Terminal<T> : IDisposable where T : RootUI, new()
+public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 {
 	public Terminal()
 	{
@@ -36,7 +37,7 @@ public sealed class Terminal<T> : IDisposable where T : RootUI, new()
 	{
 		var stopwatch = Stopwatch.StartNew();
 
-		RootUI root = new T();
+		RootTI root = new T();
 
 		while (Volatile.Read(ref disposed) == 0)
 		{
