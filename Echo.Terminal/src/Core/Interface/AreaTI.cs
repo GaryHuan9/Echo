@@ -1,8 +1,9 @@
 ﻿using CodeHelpers.Diagnostics;
+using Echo.Terminal.Core.Display;
 
-namespace Echo.Terminal.Core;
+namespace Echo.Terminal.Core.Interface;
 
-public abstract class AreaUI
+public abstract class AreaTI //TI = Terminal Interface
 {
 	Domain _domain;
 

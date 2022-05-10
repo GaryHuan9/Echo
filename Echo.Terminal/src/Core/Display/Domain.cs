@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
-namespace Echo.Terminal.Core;
+namespace Echo.Terminal.Core.Display;
 
 public readonly partial struct Domain : IEquatable<Domain>
 {

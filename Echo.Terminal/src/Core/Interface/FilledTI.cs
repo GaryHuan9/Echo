@@ -1,6 +1,8 @@
-﻿namespace Echo.Terminal.Core;
+﻿using Echo.Terminal.Core.Display;
 
-public sealed class FilledUI : AreaUI
+namespace Echo.Terminal.Core.Interface;
+
+public sealed class FilledTI : AreaTI
 {
 	public char Filling { get; set; } = ' ';
 
