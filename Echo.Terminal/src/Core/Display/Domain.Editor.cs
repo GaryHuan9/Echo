@@ -2,7 +2,7 @@
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
-namespace Echo.Terminal.Core;
+namespace Echo.Terminal.Core.Display;
 
 using CharSpan = ReadOnlySpan<char>;
 

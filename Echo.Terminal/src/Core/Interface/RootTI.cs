@@ -1,8 +1,9 @@
 ﻿using CodeHelpers.Packed;
+using Echo.Terminal.Core.Display;
 
-namespace Echo.Terminal.Core;
+namespace Echo.Terminal.Core.Interface;
 
-public class RootUI : ParentUI
+public class RootTI : ParentTI
 {
 	Int2 _size;
 
