@@ -72,7 +72,7 @@ public partial struct Domain
 		{
 			if (CheckBounds(position)) return position;
 			this[position.Y][position.X..].Fill(value);
-			return new Int2(0, position.Y + 1);
+			return NextLine(position);
 		}
 
 		public int WriteLine(int y, CharSpan texts, in TextOptions options = default) => WriteLine(new Int2(0, y), texts, options).Y;
@@ -90,59 +90,70 @@ public partial struct Domain
 		{
 			if (CheckBounds(position)) return position;
 
-			switch (options.WrapOptions)
+			WrapOptions wrap = options.WrapOptions;
+			Span<char> span = this[position.Y][position.X..];
+			if (wrap == WrapOptions.NoWrap) goto finalLine;
+
+			while (texts.Length > span.Length && position.Y + 1 < size.Y)
 			{
-				case WrapOptions.Justified: break;
-				case WrapOptions.WordBreak: break;
-				case WrapOptions.LineBreak:
+				if (wrap == WrapOptions.LineBreak)
 				{
-					int space = size.X - position.X;
+					texts[..span.Length].CopyTo(span);
+					texts = texts[span.Length..];
+				}
+				else
+				{
+					int end = span.Length;
 
-					while (texts.Length > space && position.Y + 1 < size.Y)
+					if (!char.IsWhiteSpace(texts[end]))
 					{
-						var slice = texts[..space];
-						texts = texts[space..];
-
-						position = WriteShort(position, slice);
-						space = size.X;
+						int index = LastIndexOfWhiteSpace(texts[..end]);
+						if (index >= 0) end = index;
 					}
 
-					goto case WrapOptions.NoWrap;
-				}
-				case WrapOptions.NoWrap:
-				{
-					if (texts.IsEmpty) return position;
-
-					int space = size.X - position.X;
-					bool tooLong = texts.Length > space;
-					if (tooLong) texts = texts[..space];
-
-					if (tooLong && !options.Truncate)
+					switch (wrap)
 					{
-						position = WriteShort(position, texts);
-						this[size.X - 1, position.Y - 1] = '…';
-
-						return position;
+						case WrapOptions.Justified:
+						{
+							JustifiedCopy(texts[..end], span);
+							break;
+						}
+						case WrapOptions.WordBreak:
+						{
+							OverwriteCopy(texts[..end], span);
+							break;
+						}
+						case WrapOptions.LineBreak:
+						case WrapOptions.NoWrap:
+						default: throw new ArgumentOutOfRangeException(nameof(options));
 					}
 
-					return WriteShort(position, texts);
+					texts = texts[end..].TrimStart();
 				}
-				default: throw new ArgumentOutOfRangeException(nameof(options));
+
+				NextLine(ref position);
+				span = this[position.Y];
 			}
 
-			throw new NotImplementedException();
-		}
+		finalLine:
+			if (texts.Length > span.Length)
+			{
+				texts[..span.Length].CopyTo(span);
+				if (!options.Truncate) span[^1] = '…';
+				return NextLine(position);
+			}
 
-		Int2 WriteShort(Int2 position, CharSpan value)
-		{
-			Span<char> span = this[position.Y][position.X..];
-			Assert.IsTrue(value.Length <= span.Length);
+			if (texts.Length == span.Length)
+			{
+				texts.CopyTo(span);
+				return NextLine(position);
+			}
 
-			value.CopyTo(span);
+			if (texts.IsEmpty) return position;
+			position += new Int2(texts.Length, 0);
 
-			position += new Int2(value.Length, 0);
-			if (position.X < size.X) return position;
-			return new Int2(0, position.Y + 1);
+			OverwriteCopy(texts, span);
+			return position;
 		}
 
 		bool CheckBounds(int y)
@@ -158,12 +169,12 @@ public partial struct Domain
 			throw new ArgumentOutOfRangeException(nameof(position));
 		}
 
-		static int CalculateStride(in Domain domain, bool invertY) => invertY ? domain.realSize.X : -domain.realSize.X;
+		static int CalculateStride(in Domain domain, bool invertY) => invertY ? -domain.realSize.X : domain.realSize.X;
 
 		static int CalculateOffset(in Domain domain, bool invertY)
 		{
-			int offsetY = invertY ? domain.size.Y : 1;
-			return domain.realSize.X * (domain.realSize.Y - domain.origin.Y - offsetY) + domain.origin.X;
+			int offsetY = invertY ? domain.realSize.Y - domain.origin.Y - 1 : domain.origin.Y;
+			return domain.realSize.X * offsetY + domain.origin.X;
 		}
 
 		static int LastIndexOfWhiteSpace(ReadOnlySpan<char> span)
@@ -174,6 +185,82 @@ public partial struct Domain
 			}
 
 			return -1;
+		}
+
+		static void NextLine(ref Int2 position) => position = NextLine(position);
+		static Int2 NextLine(Int2 position) => new(0, position.Y + 1);
+
+		static void OverwriteCopy(CharSpan source, Span<char> target)
+		{
+			source.CopyTo(target);
+			if (target.Length == source.Length) return;
+			target[source.Length..].Fill(' ');
+		}
+
+		static void JustifiedCopy(CharSpan source, Span<char> target)
+		{
+			source = source.TrimEnd();
+			Assert.IsTrue(source.Length <= target.Length);
+			CopyStart(ref source, ref target, true);
+
+			Count(source, out int wordCount, out int charCount);
+
+			if (wordCount <= 1)
+			{
+				OverwriteCopy(source, target);
+				return;
+			}
+
+			int gap = wordCount - 1;               //The number of gaps between words in source
+			int space = target.Length - charCount; //The total count of spaces to be added
+			int average = space / gap;             //The average number of spaces per gap (rounded down)
+			int remain = space - average * gap;    //The remain number of spaces because of the round down
+
+			for (int i = 0; i < gap; i++)
+			{
+				CopyStart(ref source, ref target, false);
+				int count = average + (i < remain ? 1 : 0);
+
+				target[..count].Fill(' ');
+				target = target[count..];
+				source = source.TrimStart();
+			}
+
+			Assert.AreEqual(source.Length, target.Length);
+			source.CopyTo(target);
+
+			static void CopyStart(ref CharSpan source, ref Span<char> target, bool whiteSpace)
+			{
+				int index = 0;
+
+				for (; index < source.Length; index++)
+				{
+					char value = source[index];
+					if (char.IsWhiteSpace(value) != whiteSpace) break;
+					target[index] = value;
+				}
+
+				if (index == 0) return;
+				source = source[index..];
+				target = target[index..];
+			}
+
+			static void Count(CharSpan source, out int wordCount, out int charCount)
+			{
+				wordCount = 0;
+				charCount = 0;
+
+				bool wasSpace = true;
+
+				foreach (char value in source)
+				{
+					bool isSpace = char.IsWhiteSpace(value);
+					if (!isSpace & wasSpace) ++wordCount;
+					if (!isSpace) ++charCount;
+
+					wasSpace = isSpace;
+				}
+			}
 		}
 	}
 }

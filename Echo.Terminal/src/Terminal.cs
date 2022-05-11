@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using CodeHelpers.Packed;
-using Echo.Terminal.Core;
 using Echo.Terminal.Core.Interface;
 
 namespace Echo.Terminal;
@@ -13,7 +12,6 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 	public Terminal()
 	{
 		//Configure console
-		Console.CursorVisible = false;
 		Console.Title = nameof(Echo);
 		Console.OutputEncoding = Encoding.UTF8;
 
@@ -50,6 +48,7 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 			if (size > Int2.Zero)
 			{
 				Console.SetCursorPosition(0, 0);
+				Console.CursorVisible = false;
 				root.Domain.CopyToConsole();
 				Console.SetCursorPosition(0, 0);
 			}
