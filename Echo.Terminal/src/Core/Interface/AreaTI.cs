@@ -1,34 +1,38 @@
-﻿using CodeHelpers.Diagnostics;
+﻿using System;
+using CodeHelpers.Packed;
 using Echo.Terminal.Core.Display;
 
 namespace Echo.Terminal.Core.Interface;
 
 public abstract class AreaTI //TI = Terminal Interface
 {
-	Domain _domain;
-
-	public Domain Domain
-	{
-		get => _domain;
-		set
-		{
-			if (_domain == value) return;
-
-			var old = _domain;
-			_domain = value;
-			OnResize(old);
-		}
-	}
+	public Int2 Min { get; private set; }
+	public Int2 Max { get; private set; }
 
 	public bool InvertY { get; set; }
 
-	public virtual void Update()
+	public bool IsZeroSize => (Min.X == Max.X) | (Min.Y == Max.Y);
+
+	public virtual void Draw(in Domain domain)
 	{
-		if (Domain.size.MinComponent < 1) return;
-		Draw(Domain.MakeDrawer(InvertY));
+		if (IsZeroSize) return;
+		Paint(domain.MakePainter(Min, Max, InvertY));
 	}
 
-	protected abstract void Draw(in Domain.Drawer drawer);
+	public void SetTransform(Int2 min, Int2 max)
+	{
+		if (Min == min && Max == max) return;
 
-	protected virtual void OnResize(Domain previous) => Assert.AreNotEqual(previous, Domain);
+		if (min <= max)
+		{
+			Min = min;
+			Max = max;
+			Reorient();
+		}
+		else throw new ArgumentException("Invalid transform", nameof(min));
+	}
+
+	protected abstract void Paint(in Painter painter);
+
+	protected virtual void Reorient() { }
 }

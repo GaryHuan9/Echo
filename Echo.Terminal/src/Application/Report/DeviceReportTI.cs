@@ -8,7 +8,7 @@ public class DeviceReportTI : AreaTI
 {
 	public Device Device { get; set; }
 
-	protected override void Draw(in Domain.Drawer drawer)
+	protected override void Paint(in Painter painter)
 	{
 		Device device = Device;
 

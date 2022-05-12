@@ -6,9 +6,9 @@ namespace Echo.Terminal.Application;
 
 public class CommandTI : AreaTI
 {
-	protected override void Draw(in Domain.Drawer drawer)
+	protected override void Paint(in Painter painter)
 	{
-		drawer.FillAll();
+		painter.FillAll();
 
 		Int2 position = Int2.Zero;
 
@@ -17,16 +17,16 @@ public class CommandTI : AreaTI
 							"Donec quis tortor ac tellus scelerisque volutpat nec scelerisque ipsum. " +
 							"Aenean rhoncus fringilla sollicitudin. ";
 
-		position = drawer.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.NoWrap });
-		position = drawer.FillLine(position);
+		position = painter.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.NoWrap });
+		position = painter.FillLine(position);
 
-		position = drawer.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.LineBreak });
-		position = drawer.FillLine(position);
+		position = painter.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.LineBreak });
+		position = painter.FillLine(position);
 
-		position = drawer.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.WordBreak });
-		position = drawer.FillLine(position);
+		position = painter.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.WordBreak });
+		position = painter.FillLine(position);
 
-		position = drawer.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.Justified });
-		position = drawer.FillLine(position);
+		position = painter.WriteLine(position, Text, new TextOptions { WrapOptions = WrapOptions.Justified });
+		position = painter.FillLine(position);
 	}
 }

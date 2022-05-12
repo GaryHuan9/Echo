@@ -55,7 +55,13 @@ public readonly partial struct Domain : IEquatable<Domain>
 		return new Domain(newSize, new char[current]);
 	}
 
-	public Drawer MakeDrawer(bool invertY = false) => new(this, invertY);
+	public Painter MakePainter(Int2 min, Int2 max, bool invertY = false)
+	{
+		Domain slice = Slice(min, max);
+		int stride = slice.GetStride(invertY);
+		int offset = slice.GetOffset(invertY);
+		return new Painter(slice.size, array, stride, offset);
+	}
 
 	public void CopyToConsole() => Console.Write(array, 0, GetArrayLength(size));
 
@@ -66,6 +72,14 @@ public readonly partial struct Domain : IEquatable<Domain>
 	public override int GetHashCode() => HashCode.Combine(size, origin, realSize, array);
 
 	bool IEquatable<Domain>.Equals(Domain other) => Equals(other);
+
+	int GetStride(bool invertY) => invertY ? -realSize.X : realSize.X;
+
+	int GetOffset(bool invertY)
+	{
+		int offsetY = invertY ? realSize.Y - origin.Y - 1 : origin.Y;
+		return realSize.X * offsetY + origin.X;
+	}
 
 	public static bool operator ==(in Domain value, in Domain other) => value.Equals(other);
 	public static bool operator !=(in Domain value, in Domain other) => !value.Equals(other);
