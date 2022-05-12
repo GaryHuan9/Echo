@@ -91,7 +91,7 @@ public abstract class ParentTI : AreaTI
 
 	public override void Draw(in Domain domain)
 	{
-		if (IsZeroSize) return;
+		if (!(Max > Min)) return;
 
 		Paint(domain.MakePainter(dividerMin, dividerMax, InvertY));
 

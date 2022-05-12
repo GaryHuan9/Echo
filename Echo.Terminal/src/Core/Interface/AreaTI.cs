@@ -11,11 +11,9 @@ public abstract class AreaTI //TI = Terminal Interface
 
 	public bool InvertY { get; set; }
 
-	public bool IsZeroSize => (Min.X == Max.X) | (Min.Y == Max.Y);
-
 	public virtual void Draw(in Domain domain)
 	{
-		if (IsZeroSize) return;
+		if (!(Max > Min)) return;
 		Paint(domain.MakePainter(Min, Max, InvertY));
 	}
 
