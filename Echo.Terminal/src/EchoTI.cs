@@ -7,9 +7,10 @@ public class EchoTI : RootTI
 {
 	public EchoTI()
 	{
+		// Horizontal = true;
 		// Child0 = new CommandTI();
-		Child1 = new ParentTI { Horizontal = true, Child0 = new CommandTI() };
-
-		Division = 0.15f;
+		Child1 = new BisectionTI() {Horizontal = true, Child0 = new CommandTI() };
+		
+		Balance = 0.15f;
 	}
 }
