@@ -45,6 +45,7 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 
 			if (size > Int2.Zero)
 			{
+				Console.SetCursorPosition(0, 0);
 				root.DrawToConsole();
 				Console.CursorVisible = false;
 				Console.SetCursorPosition(0, 0);

@@ -4,85 +4,57 @@ using CodeHelpers.Packed;
 
 namespace Echo.Terminal.Core.Display;
 
-public readonly partial struct Domain : IEquatable<Domain>
+public readonly struct Domain
 {
-	public Domain(Int2 size) : this(size, new char[GetArrayLength(size)]) { }
+	public Domain(Int2 size) : this(size, new char[GetArrayLength(size)])
+	{
+		if (!(size > Int2.Zero)) throw new ArgumentOutOfRangeException(nameof(size));
+	}
 
-	Domain(Int2 size, char[] array) : this(size, Int2.Zero, size, array) { }
-
-	Domain(in Domain source, Int2 min, Int2 max) : this
-	(
-		max - min, min + source.origin,
-		source.realSize, source.array
-	) { }
-
-	Domain(Int2 size, Int2 origin, Int2 realSize, char[] array)
+	Domain(Int2 size, char[] array)
 	{
 		Assert.IsTrue(size >= Int2.Zero);
-		Assert.IsTrue(realSize >= size);
-		Assert.IsTrue((array?.Length ?? 0) >= realSize.Product);
-
-		Assert.IsTrue(origin >= Int2.Zero);
-		Assert.IsTrue(realSize >= origin + size);
+		Assert.IsTrue(array.Length >= size.Product);
 
 		this.size = size;
-		this.origin = origin;
-		this.realSize = realSize;
 		this.array = array;
 	}
 
 	public readonly Int2 size;
-	readonly Int2 origin;
-	readonly Int2 realSize;
 	readonly char[] array;
-
-	public bool IsRoot => size == realSize;
-
-	public Domain Slice(Int2 min, Int2 max) => new(this, min, max);
 
 	public Domain Resize(Int2 newSize)
 	{
-		if (!IsRoot) throw new InvalidOperationException();
+		if (!(newSize > Int2.Zero)) throw new ArgumentOutOfRangeException(nameof(newSize));
+		if ((array?.Length ?? 0) == 0) return new Domain(newSize);
 
 		int current = array.Length;
-		int target = GetArrayLength(newSize);
+		int length = GetArrayLength(newSize);
 
-		if (target <= current) return new Domain(newSize, array);
+		if (length <= current) return new Domain(newSize, array);
 
 		do current *= 2;
-		while (current < target);
+		while (current < length);
 
 		return new Domain(newSize, new char[current]);
 	}
 
 	public Painter MakePainter(Int2 min, Int2 max, bool invertY = false)
 	{
-		Domain slice = Slice(min, max);
-		int stride = slice.GetStride(invertY);
-		int offset = slice.GetOffset(invertY);
-		return new Painter(slice.size, array, stride, offset);
+		int stride = GetStride(invertY);
+		int offset = GetOffset(invertY, min);
+		return new Painter(max - min, array, stride, offset);
 	}
 
 	public void CopyToConsole() => Console.Write(array, 0, GetArrayLength(size));
 
-	public bool Equals(in Domain other) => (size == other.size) & (origin == other.origin) &
-										   (realSize == other.realSize) & (array == other.array);
+	int GetStride(bool invertY) => invertY ? -size.X : size.X;
 
-	public override bool Equals(object obj) => obj is Domain other && Equals(other);
-	public override int GetHashCode() => HashCode.Combine(size, origin, realSize, array);
-
-	bool IEquatable<Domain>.Equals(Domain other) => Equals(other);
-
-	int GetStride(bool invertY) => invertY ? -realSize.X : realSize.X;
-
-	int GetOffset(bool invertY)
+	int GetOffset(bool invertY, Int2 min)
 	{
-		int offsetY = invertY ? realSize.Y - origin.Y - 1 : origin.Y;
-		return realSize.X * offsetY + origin.X;
+		int offsetY = invertY ? size.Y - min.Y - 1 : min.Y;
+		return size.X * offsetY + min.X;
 	}
-
-	public static bool operator ==(in Domain value, in Domain other) => value.Equals(other);
-	public static bool operator !=(in Domain value, in Domain other) => !value.Equals(other);
 
 	static int GetArrayLength(Int2 size) => size.Product;
 }
