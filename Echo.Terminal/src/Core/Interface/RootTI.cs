@@ -3,20 +3,22 @@ using Echo.Terminal.Core.Display;
 
 namespace Echo.Terminal.Core.Interface;
 
-public class RootTI : ParentTI
+public class RootTI : BisectionTI
 {
-	Int2 _size;
+	Domain domain;
 
-	public Int2 Size
+	public void DrawToConsole()
 	{
-		get => _size;
-		set
-		{
-			if (_size == value) return;
-			_size = value;
-			UpdateDomain();
-		}
+		Draw(domain);
+		domain.CopyToConsole();
 	}
 
-	void UpdateDomain() => Domain = Domain == default ? new Domain(Size) : Domain.Resize(Size);
+	protected override void Reorient()
+	{
+		base.Reorient();
+
+		Int2 size = Max - Min;
+		if (domain == default) domain = new Domain(size);
+		if (domain.size != size) domain = domain.Resize(size);
+	}
 }

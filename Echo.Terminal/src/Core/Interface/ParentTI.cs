@@ -1,12 +1,13 @@
-﻿using CodeHelpers.Mathematics;
+﻿using System;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Terminal.Core.Display;
 
 namespace Echo.Terminal.Core.Interface;
 
-public class ParentTI : AreaTI
+public abstract class ParentTI : AreaTI
 {
-	public ParentTI()
+	protected ParentTI()
 	{
 		_child0 = filled0;
 		_child1 = filled1;
@@ -16,8 +17,12 @@ public class ParentTI : AreaTI
 	readonly FilledTI filled0 = new();
 	readonly FilledTI filled1 = new();
 
+	Int2 dividerMin;
+	Int2 dividerMax;
+
 	bool _horizontal;
-	float _division = 0.5f;
+	float _balance = 0.5f;
+	int _dividerSize;
 
 	public bool Horizontal
 	{
@@ -30,13 +35,28 @@ public class ParentTI : AreaTI
 		}
 	}
 
-	public float Division
+	public float Balance
 	{
-		get => _division;
+		get => _balance;
 		set
 		{
-			if (_division.AlmostEquals(value)) return;
-			_division = value;
+			if (_balance.AlmostEquals(value)) return;
+			if (value is < 0f or > 1f) throw new ArgumentOutOfRangeException(nameof(value));
+
+			_balance = value;
+			ReorientChildren();
+		}
+	}
+
+	public int DividerSize
+	{
+		get => _dividerSize;
+		set
+		{
+			if (_dividerSize == value) return;
+			if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
+
+			_dividerSize = value;
 			ReorientChildren();
 		}
 	}
@@ -68,54 +88,48 @@ public class ParentTI : AreaTI
 
 	int MajorAxis => Horizontal ? 0 : 1;
 	int MinorAxis => Horizontal ? 1 : 0;
-	int Divider => (Domain.size[MajorAxis] * Division).Floor();
-	int Width => Domain.size[MinorAxis];
 
-	public override void Update()
+	public override void Draw(in Domain domain)
 	{
-		base.Update();
+		if (IsZeroSize) return;
 
-		_child0.Update();
-		_child1.Update();
+		Paint(domain.MakePainter(dividerMin, dividerMax, InvertY));
+
+		_child0.Draw(domain);
+		_child1.Draw(domain);
 	}
 
-	protected override void Draw(in Domain.Drawer drawer)
+	protected override void Reorient()
 	{
-		if (Horizontal)
-		{
-			int divider = Divider;
-			int height = Domain.size.Y;
-
-			for (int y = 0; y < height; y++) drawer[new Int2(divider, y)] = '\u2502';
-		}
-		else drawer.FillLine(Divider, '\u2500');
-
-		//TODO: connect vertical and horizontal divisors
-	}
-
-	protected override void OnResize(Domain previous)
-	{
-		base.OnResize(previous);
+		base.Reorient();
 		ReorientChildren();
 	}
 
 	void ReorientChildren()
 	{
-		int axis = MajorAxis;
-		Domain domain = Domain;
+		int majorAxis = MajorAxis;
+		int minorAxis = MinorAxis;
+		int remain = (Max - Min)[majorAxis] - DividerSize;
 
-		if (domain.size[axis] > 1)
+		if (remain > 0)
 		{
-			Int2 max0 = Int2.Create(axis, Divider, Width);
-			Int2 min1 = Int2.Create(axis, max0[axis] + 1);
+			int divider = (remain * Balance).Round() + Min[majorAxis];
+			Int2 max0 = Int2.Create(minorAxis, Max[minorAxis], divider);
+			Int2 min1 = Int2.Create(minorAxis, Min[minorAxis], divider + DividerSize);
 
-			_child0.Domain = domain.Slice(Int2.Zero, max0);
-			_child1.Domain = domain.Slice(min1, domain.size);
+			dividerMin = max0.Min(min1);
+			dividerMax = max0.Max(min1);
+
+			_child0.SetTransform(Min, max0);
+			_child1.SetTransform(min1, Max);
 		}
 		else
 		{
-			_child0.Domain = domain.Slice(Int2.Zero, Int2.Zero);
-			_child1.Domain = domain.Slice(Int2.Zero, Int2.Zero);
+			dividerMin = Min;
+			dividerMax = Max;
+
+			_child0.SetTransform(Min, Min);
+			_child1.SetTransform(Max, Max);
 		}
 	}
 }
