@@ -4,7 +4,7 @@ namespace Echo.Terminal.Core.Interface;
 
 public sealed class FilledTI : AreaTI
 {
-	public char Filling { get; set; } = ' ';
+	public char Filling { get; set; } = '0';
 
-	protected override void Draw(in Domain.Drawer drawer) => drawer.FillAll(Filling);
+	protected override void Paint(in Painter painter) => painter.FillAll(Filling);
 }

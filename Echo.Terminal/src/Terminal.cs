@@ -41,15 +41,12 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 		{
 			//Update and draw
 			Int2 size = new Int2(Console.WindowWidth, Console.WindowHeight);
-
-			root.Size = size;
-			root.Update();
+			root.SetTransform(Int2.Zero, size);
 
 			if (size > Int2.Zero)
 			{
-				Console.SetCursorPosition(0, 0);
+				root.DrawToConsole();
 				Console.CursorVisible = false;
-				root.Domain.CopyToConsole();
 				Console.SetCursorPosition(0, 0);
 			}
 

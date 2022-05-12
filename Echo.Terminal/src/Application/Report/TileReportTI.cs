@@ -8,7 +8,7 @@ public class TileReportTI : AreaTI
 {
 	public TiledEvaluationOperation Operation { get; set; }
 
-	protected override void Draw(in Domain.Drawer drawer)
+	protected override void Paint(in Painter painter)
 	{
 		TiledEvaluationOperation operation = Operation;
 	}
