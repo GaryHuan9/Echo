@@ -18,7 +18,7 @@ public class RootTI : BisectionTI
 		base.Reorient();
 
 		Int2 size = Max - Min;
-		if (domain == default) domain = new Domain(size);
-		if (domain.size != size) domain = domain.Resize(size);
+		if (!(size > Int2.Zero)) return;
+		domain = domain.Resize(size);
 	}
 }
