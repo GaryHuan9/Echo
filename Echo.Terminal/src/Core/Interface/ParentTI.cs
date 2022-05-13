@@ -89,6 +89,13 @@ public abstract class ParentTI : AreaTI
 	int MajorAxis => Horizontal ? 0 : 1;
 	int MinorAxis => Horizontal ? 1 : 0;
 
+	public override void Update()
+	{
+		base.Update();
+		_child0.Update();
+		_child1.Update();
+	}
+
 	public override void Draw(in Domain domain)
 	{
 		if (!(Max > Min)) return;

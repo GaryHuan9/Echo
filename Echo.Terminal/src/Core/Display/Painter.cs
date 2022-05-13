@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using Echo.Common.Memory;
 
 namespace Echo.Terminal.Core.Display;
 
@@ -119,46 +120,76 @@ public readonly struct Painter
 		return NextLine(position);
 	}
 
-	/// <summary>
-	/// Writes a string of texts and ends in a new line.
-	/// </summary>
-	/// <param name="y">The Y location to start writing.</param>
-	/// <param name="texts">The text to write.</param>
-	/// <param name="options">Options used to format the texts.</param>
-	/// <returns>The T location the writing ends; this will always be on a new line.</returns>
-	public int WriteLine(int y, CharSpan texts, in TextOptions options = default) => WriteLine(new Int2(0, y), texts, options).Y;
+	/// <inheritdoc cref="WriteLine(int,ReadOnlySpan{char},TextOptions)"/>
+	public int WriteLine<T>(int y, T item, TextOptions options = default, string format = default, IFormatProvider provider = default) where T : ISpanFormattable
+	{
+		CharSpan texts = AsText(stackalloc char[size.X], item, format, provider, out var handle);
+		using (handle) return WriteLine(y, texts, options);
+	}
 
 	/// <summary>
-	/// Writes a string of texts and ends in a new line.
+	/// Writes a string of texts and ends in a new line using this <see cref="Painter"/>.
 	/// </summary>
-	/// <param name="position">The location to start writing.</param>
-	/// <param name="texts">The text to write.</param>
-	/// <param name="options">Options used to format the texts.</param>
-	/// <returns>The location the writing ends; this will always be on a new line.</returns>
-	public Int2 WriteLine(Int2 position, CharSpan texts, in TextOptions options = default)
+	/// <param name="y">The Y location to begin writing.</param>
+	/// <param name="item">The object to write as texts.</param>
+	/// <param name="options">Options used to control the output.</param>
+	/// <returns>The Y location the writing ends; this will always be on a new line.</returns>
+	public int WriteLine(int y, CharSpan item, TextOptions options = default) => WriteLine(new Int2(0, y), item, options).Y;
+
+	/// <inheritdoc cref="WriteLine(Int2,ReadOnlySpan{char},TextOptions)"/>
+	public Int2 WriteLine<T>(Int2 position, T item, TextOptions options = default, string format = default, IFormatProvider provider = default) where T : ISpanFormattable
 	{
-		position = Write(position, texts, options);
+		CharSpan texts = AsText(stackalloc char[size.X], item, format, provider, out var handle);
+		using (handle) return WriteLine(position, texts, options);
+	}
+
+	/// <summary>
+	/// Writes a string of texts and ends in a new line using this <see cref="Painter"/>.
+	/// </summary>
+	/// <param name="position">The location to begin writing.</param>
+	/// <param name="item">The object to write as texts.</param>
+	/// <param name="options">Options used to control the output.</param>
+	/// <returns>The location the writing ends; this will always be on a new line.</returns>
+	public Int2 WriteLine(Int2 position, CharSpan item, TextOptions options = default)
+	{
+		position = WriteImpl(position, item, options);
 		if (position.X == 0) return position;
 		return FillLine(position);
 	}
 
-	/// <summary>
-	/// Writes a string of texts.
-	/// </summary>
-	/// <param name="y">The Y location to start writing.</param>
-	/// <param name="texts">The text to write.</param>
-	/// <param name="options">Options used to format the texts.</param>
-	/// <returns>The Y location the writing ends.</returns>
-	public int Write(int y, CharSpan texts, in TextOptions options = default) => Write(new Int2(0, y), texts, options).Y;
+	/// <inheritdoc cref="Write(int,ReadOnlySpan{char},TextOptions)"/>
+	public int Write<T>(int y, T item, TextOptions options = default, string format = default, IFormatProvider provider = default) where T : ISpanFormattable
+	{
+		CharSpan texts = AsText(stackalloc char[size.X], item, format, provider, out var handle);
+		using (handle) return Write(y, texts, options);
+	}
 
 	/// <summary>
-	/// Writes a string of texts.
+	/// Writes a string of texts using this <see cref="Painter"/>.
 	/// </summary>
-	/// <param name="position">The location to start writing.</param>
-	/// <param name="texts">The text to write.</param>
-	/// <param name="options">Options used to format the texts.</param>
+	/// <param name="y">The Y location to begin writing.</param>
+	/// <param name="item">The object to write as texts.</param>
+	/// <param name="options">Options used to control the output.</param>
+	/// <returns>The Y location the writing ends.</returns>
+	public int Write(int y, CharSpan item, TextOptions options = default) => WriteImpl(new Int2(0, y), item, options).Y;
+
+	/// <inheritdoc cref="Write(Int2,ReadOnlySpan{char},TextOptions)"/>
+	public Int2 Write<T>(Int2 position, T item, TextOptions options = default, string format = default, IFormatProvider provider = default) where T : ISpanFormattable
+	{
+		CharSpan texts = AsText(stackalloc char[size.X], item, format, provider, out var handle);
+		using (handle) return Write(position, texts, options);
+	}
+
+	/// <summary>
+	/// Writes a string of texts using this <see cref="Painter"/>.
+	/// </summary>
+	/// <param name="position">The location to begin writing.</param>
+	/// <param name="item">The object to write as texts.</param>
+	/// <param name="options">Options used to control the output.</param>
 	/// <returns>The location the writing ends.</returns>
-	public Int2 Write(Int2 position, CharSpan texts, in TextOptions options = default)
+	public Int2 Write(Int2 position, CharSpan item, TextOptions options = default) => WriteImpl(position, item, options);
+
+	Int2 WriteImpl(Int2 position, CharSpan texts, TextOptions options)
 	{
 		if (CheckBounds(position)) return position;
 
@@ -166,23 +197,37 @@ public readonly struct Painter
 		Span<char> span = this[position.Y][position.X..];
 		if (wrap == WrapOptions.NoWrap) goto finalLine;
 
+		//Write multi-line
 		while (texts.Length > span.Length && position.Y + 1 < size.Y)
 		{
 			if (wrap == WrapOptions.LineBreak)
 			{
+				//Simply chop the text with line break
 				texts[..span.Length].CopyTo(span);
 				texts = texts[span.Length..];
 			}
 			else
 			{
+				//Find appropriate word break location
 				int end = span.Length;
 
 				if (!char.IsWhiteSpace(texts[end]))
 				{
 					int index = LastIndexOfWhiteSpace(texts[..end]);
+
 					if (index >= 0) end = index;
+					else if (position.X > 0)
+					{
+						//Skip this line if there is not space for even one word
+						//and the width of this line is not at the maximum width
+
+						position = FillLine(position);
+						span = this[position.Y];
+						continue;
+					}
 				}
 
+				//Execute different copy operation based on options
 				switch (wrap)
 				{
 					case WrapOptions.Justified:
@@ -203,15 +248,17 @@ public readonly struct Painter
 				texts = texts[end..].TrimStart();
 			}
 
+			//Move to the next line
 			NextLine(ref position);
 			span = this[position.Y];
 		}
 
 	finalLine:
+		//Write the last line (a single line)
 		if (texts.Length > span.Length)
 		{
 			texts[..span.Length].CopyTo(span);
-			if (!options.Truncate) span[^1] = '…';
+			if (options.Ellipsis) span[^1] = '…';
 			return NextLine(position);
 		}
 
@@ -325,5 +372,19 @@ public readonly struct Painter
 				wasSpace = isSpace;
 			}
 		}
+	}
+
+	static CharSpan AsText<T>(Span<char> stack, T item, string format, IFormatProvider provider, out Pool<char>.ReleaseHandle handle) where T : ISpanFormattable
+	{
+		if (item.TryFormat(stack, out int length, format, provider))
+		{
+			handle = default;
+			return stack[..length];
+		}
+
+		handle = Pool<char>.Fetch(stack.Length * 4, out View<char> view);
+		if (item.TryFormat(view, out length, format, provider)) return view[..length];
+
+		return item.ToString(format, provider);
 	}
 }
