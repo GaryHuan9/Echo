@@ -43,6 +43,8 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 			Int2 size = new Int2(Console.WindowWidth, Console.WindowHeight);
 			root.SetTransform(Int2.Zero, size);
 
+			root.Update();
+
 			if (size > Int2.Zero)
 			{
 				Console.SetCursorPosition(0, 0);
