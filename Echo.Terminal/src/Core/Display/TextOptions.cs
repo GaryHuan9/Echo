@@ -5,22 +5,24 @@
 /// </summary>
 public readonly record struct TextOptions
 {
+	public TextOptions() { }
+
 	/// <summary>
 	/// Defines the <see cref="Display.WrapOptions"/> for texts.
 	/// </summary>
-	public WrapOptions WrapOptions { get; init; }
+	public WrapOptions WrapOptions { get; init; } = WrapOptions.WordBreak;
 
 	/// <summary>
-	/// If false, ellipsis `…` will be used to signify texts that overflew.
+	/// If true, ellipsis `…` will be used to signify texts that overflew.
 	/// Otherwise, texts will be simply truncated without any indication.
 	/// </summary>
-	public bool Truncate { get; init; }
+	public bool Ellipsis { get; init; } = true;
 }
 
 /// <summary>
 /// Options used to layout texts.
 /// </summary>
-public enum WrapOptions
+public enum WrapOptions : byte
 {
 	/// <summary>
 	/// Gaps between individual words are spaced out to occupy all available space from wrapping.
