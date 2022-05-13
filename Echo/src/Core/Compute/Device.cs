@@ -118,7 +118,7 @@ public sealed class Device : IDisposable
 	/// Retrieves the <see cref="Worker.State"/> of the <see cref="Worker"/>s in this <see cref="Device"/>.
 	/// </summary>
 	/// <param name="fill">The destination <see cref="SpanFill{T}"/> which will contain the result.</param>
-	public void FillStatuses(SpanFill<Worker.State> fill)
+	public void FillStatuses(ref SpanFill<Worker.State> fill)
 	{
 		int length = Math.Min(fill.Length, workers.Length);
 		for (int i = 0; i < length; i++) fill.Add(workers[i].Status);
