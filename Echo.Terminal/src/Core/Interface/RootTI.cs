@@ -1,11 +1,14 @@
-﻿using CodeHelpers.Packed;
+﻿using System;
+using CodeHelpers.Packed;
 using Echo.Terminal.Core.Display;
 
 namespace Echo.Terminal.Core.Interface;
 
-public class RootTI : BisectionTI
+public class RootTI : BisectionTI, IDisposable
 {
 	Domain domain;
+
+	public virtual void ProcessArguments(string[] arguments) { }
 
 	public void DrawToConsole()
 	{
@@ -20,5 +23,13 @@ public class RootTI : BisectionTI
 		Int2 size = Max - Min;
 		if (!(size > Int2.Zero)) return;
 		domain = domain.Resize(size);
+	}
+
+	protected virtual void Dispose(bool disposing) { }
+
+	public void Dispose()
+	{
+		Dispose(true);
+		GC.SuppressFinalize(this);
 	}
 }
