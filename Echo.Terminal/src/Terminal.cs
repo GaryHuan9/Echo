@@ -15,36 +15,31 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 		Console.Title = nameof(Echo);
 		Console.OutputEncoding = Encoding.UTF8;
 
-		//Launch thread
-		thread = new Thread(Main)
-		{
-			Priority = ThreadPriority.AboveNormal,
-			IsBackground = true, Name = "Terminal"
-		};
-
-		thread.Start();
+		//Build root
+		root = new T();
 	}
 
-	readonly Thread thread;
+	readonly RootTI root;
 
 	int disposed;
 
-	public TimeSpan UpdateDelay { get; set; } = TimeSpan.FromSeconds(1f / 24f);
+	public TimeSpan UpdateDelay { get; set; } = TimeSpan.FromSeconds(1f / 16f);
 
-	void Main()
+	public void Await()
 	{
-		var stopwatch = Stopwatch.StartNew();
+		root.ProcessArguments(Environment.GetCommandLineArgs());
 
-		RootTI root = new T();
+		var stopwatch = Stopwatch.StartNew();
 
 		while (Volatile.Read(ref disposed) == 0)
 		{
-			//Update and draw
+			//Update
 			Int2 size = new Int2(Console.WindowWidth, Console.WindowHeight);
-			root.SetTransform(Int2.Zero, size);
 
+			root.SetTransform(Int2.Zero, size);
 			root.Update();
 
+			//Draw
 			if (size > Int2.Zero)
 			{
 				Console.SetCursorPosition(0, 0);
@@ -53,7 +48,7 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 				Console.SetCursorPosition(0, 0);
 			}
 
-			//Sleep for update delay
+			//Sleep for delay
 			TimeSpan remain = UpdateDelay - stopwatch.Elapsed;
 			if (remain > TimeSpan.Zero) Thread.Sleep(remain);
 
@@ -65,6 +60,6 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 	{
 		if (Interlocked.Exchange(ref disposed, 1) == 1) return;
 
-		thread.Join();
+		root.Dispose();
 	}
 }

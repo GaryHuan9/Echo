@@ -6,5 +6,5 @@ public sealed class FilledTI : AreaTI
 {
 	public char Filling { get; set; } = ' ';
 
-	protected override void Paint(in Painter painter) => painter.FillAll(Filling);
+	protected override void Paint(in Canvas canvas) => canvas.FillAll(Filling);
 }
