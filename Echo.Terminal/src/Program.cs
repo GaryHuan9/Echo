@@ -16,7 +16,7 @@ public class Program
 	{
 		using var terminal = new Terminal<EchoTI>();
 
-		Console.ReadKey();
+		terminal.Await();
 		return;
 
 		Console.WriteLine
@@ -39,7 +39,7 @@ public class Program
                                     :"""
 		);
 
-		using Device device = new Device();
+		using var device = Device.Create();
 
 		var scene = new SingleBunny();
 

@@ -36,27 +36,42 @@ public class EchoTI : RootTI
 
 		Balance = 0.16f;
 
-		deviceReport.Device = new Device();
+		device = Device.Create();
 
-		var scene = new SingleBunny();
-
-		var prepareProfile = new ScenePrepareProfile();
-
-		var evaluationProfile = new TiledEvaluationProfile
-		{
-			Scene = new PreparedScene(scene, prepareProfile),
-			Evaluator = new PathTracedEvaluator(),
-			Buffer = new RenderBuffer(new Int2(960, 540))
-		};
-
-		var operation = new TiledEvaluationOperation
-		{
-			Profile = evaluationProfile
-		};
-
-		deviceReport.Device.Dispatch(operation);
+		// var scene = new SingleBunny();
+		//
+		// var prepareProfile = new ScenePrepareProfile();
+		//
+		// var evaluationProfile = new TiledEvaluationProfile
+		// {
+		// 	Scene = new PreparedScene(scene, prepareProfile),
+		// 	Evaluator = new PathTracedEvaluator(),
+		// 	Buffer = new RenderBuffer(new Int2(960, 540))
+		// };
+		//
+		// var operation = new TiledEvaluationOperation
+		// {
+		// 	Profile = evaluationProfile
+		// };
+		//
+		// deviceReport.Device.Dispatch(operation);
 	}
 
 	readonly TileReportTI tileReport;
 	readonly DeviceReportTI deviceReport;
+
+	readonly Device device;
+
+	public override void ProcessArguments(string[] arguments)
+	{
+		base.ProcessArguments(arguments);
+		
+		
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		base.Dispose(disposing);
+		if (disposing) device?.Dispose();
+	}
 }
