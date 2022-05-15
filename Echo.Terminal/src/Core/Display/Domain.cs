@@ -6,7 +6,7 @@ namespace Echo.Terminal.Core.Display;
 
 public readonly struct Domain
 {
-	public Domain(Int2 size) : this(size, new char[GetArrayLength(size)])
+	Domain(Int2 size) : this(size, new char[GetArrayLength(size)])
 	{
 		if (!(size > Int2.Zero)) throw new ArgumentOutOfRangeException(nameof(size));
 	}
@@ -39,11 +39,11 @@ public readonly struct Domain
 		return new Domain(newSize, new char[current]);
 	}
 
-	public Painter MakePainter(Int2 min, Int2 max, bool invertY = false)
+	public Canvas MakePainter(Int2 min, Int2 max, bool invertY = false)
 	{
 		int stride = GetStride(invertY);
 		int offset = GetOffset(invertY, min);
-		return new Painter(max - min, array, stride, offset);
+		return new Canvas(max - min, array, stride, offset);
 	}
 
 	public void CopyToConsole() => Console.Write(array, 0, GetArrayLength(size));

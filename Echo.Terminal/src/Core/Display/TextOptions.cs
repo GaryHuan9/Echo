@@ -3,20 +3,20 @@
 /// <summary>
 /// Options used to format texts.
 /// </summary>
-public readonly record struct TextOptions
+public readonly record struct TextOptions(WrapOptions Wrap, bool Ellipsis = true)
 {
-	public TextOptions() { }
+	public TextOptions() : this(WrapOptions.WordBreak) { }
 
 	/// <summary>
-	/// Defines the <see cref="Display.WrapOptions"/> for texts.
+	/// Defines the <see cref="WrapOptions"/> for texts.
 	/// </summary>
-	public WrapOptions WrapOptions { get; init; } = WrapOptions.WordBreak;
+	public WrapOptions Wrap { get; init; } = Wrap;
 
 	/// <summary>
 	/// If true, ellipsis `…` will be used to signify texts that overflew.
 	/// Otherwise, texts will be simply truncated without any indication.
 	/// </summary>
-	public bool Ellipsis { get; init; } = true;
+	public bool Ellipsis { get; init; } = Ellipsis;
 }
 
 /// <summary>

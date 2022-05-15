@@ -32,7 +32,7 @@ public abstract class AreaTI //TI = Terminal Interface
 		else throw new ArgumentException("Invalid transform", nameof(min));
 	}
 
-	protected abstract void Paint(in Painter painter);
+	protected abstract void Paint(in Canvas canvas);
 
 	protected virtual void Reorient() { }
 }
