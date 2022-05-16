@@ -142,6 +142,40 @@ public readonly struct Canvas
 	/// <param name="item">The object to write as texts.</param>
 	public void Write(ref Brush brush, CharSpan item) => WriteImpl(ref brush, item);
 
+	/// <summary>
+	/// Shifts a <see cref="Brush"/> on this <see cref="Canvas"/> horizontally.
+	/// </summary>
+	/// <param name="brush">The <see cref="Brush"/> to shift.</param>
+	/// <param name="value">The amount to shift; can be negative.</param>
+	/// <remarks>This operation will wrap around the left and right edges and be clamp between the top and bottom edges.</remarks>
+	public void Shift(ref Brush brush, int value)
+	{
+		brush.CheckBounds(size);
+		brush.X += value;
+
+		while (brush.X >= size.X)
+		{
+			if (brush.Y + 1 >= size.Y)
+			{
+				brush.Position = new Int2(0, size.Y);
+				return;
+			}
+
+			brush.Position = new Int2(brush.X - size.X, brush.Y + 1);
+		}
+
+		while (brush.X < 0)
+		{
+			if (brush.Y <= 0)
+			{
+				brush.Position = Int2.Zero;
+				return;
+			}
+
+			brush.Position = new Int2(brush.X + size.X, brush.Y - 1);
+		}
+	}
+
 	void WriteImpl(ref Brush brush, CharSpan texts)
 	{
 		if (brush.CheckBounds(size)) return;

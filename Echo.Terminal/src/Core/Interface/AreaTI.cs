@@ -11,7 +11,7 @@ public abstract class AreaTI //TI = Terminal Interface
 
 	public bool InvertY { get; set; }
 
-	public virtual void Update() { }
+	public virtual void Update(in Moment moment) { }
 
 	public virtual void Draw(in Domain domain)
 	{
