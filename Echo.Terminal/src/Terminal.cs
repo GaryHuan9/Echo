@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using CodeHelpers.Packed;
+using Echo.Terminal.Core;
 using Echo.Terminal.Core.Interface;
 
 namespace Echo.Terminal;
@@ -12,8 +13,8 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 	public Terminal()
 	{
 		//Configure console
-		Console.Title = nameof(Echo);
-		Console.OutputEncoding = Encoding.UTF8;
+		Console.Title = "Echo Terminal Interface";
+		Console.OutputEncoding = Encoding.Unicode;
 
 		//Build root
 		root = new T();
@@ -30,14 +31,16 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 		root.ProcessArguments(Environment.GetCommandLineArgs());
 
 		var stopwatch = Stopwatch.StartNew();
+		var moment = new Moment();
 
 		while (Volatile.Read(ref disposed) == 0)
 		{
 			//Update
+			moment = new Moment(moment, stopwatch);
 			Int2 size = new Int2(Console.WindowWidth, Console.WindowHeight);
 
 			root.SetTransform(Int2.Zero, size);
-			root.Update();
+			root.Update(moment);
 
 			//Draw
 			if (size > Int2.Zero)
@@ -49,10 +52,8 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 			}
 
 			//Sleep for delay
-			TimeSpan remain = UpdateDelay - stopwatch.Elapsed;
+			var remain = moment.elapsed - stopwatch.Elapsed + UpdateDelay;
 			if (remain > TimeSpan.Zero) Thread.Sleep(remain);
-
-			stopwatch.Restart();
 		}
 	}
 

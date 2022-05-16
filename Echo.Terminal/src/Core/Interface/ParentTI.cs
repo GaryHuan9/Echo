@@ -89,11 +89,11 @@ public abstract class ParentTI : AreaTI
 	int MajorAxis => Horizontal ? 0 : 1;
 	int MinorAxis => Horizontal ? 1 : 0;
 
-	public override void Update()
+	public override void Update(in Moment moment)
 	{
-		base.Update();
-		_child0.Update();
-		_child1.Update();
+		base.Update(moment);
+		_child0.Update(moment);
+		_child1.Update(moment);
 	}
 
 	public override void Draw(in Domain domain)
