@@ -20,6 +20,7 @@
     <ItemGroup>
         <PackageReference Include="System.Drawing.Common" Version="5.0.3" />
         <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
+        <ProjectReference Include="..\Echo.Generation\Echo.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
     <ItemGroup>

@@ -15,6 +15,7 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 		//Configure console
 		Console.Title = "Echo Terminal Interface";
 		Console.OutputEncoding = Encoding.Unicode;
+		Console.TreatControlCAsInput = true;
 
 		//Build root
 		root = new T();
