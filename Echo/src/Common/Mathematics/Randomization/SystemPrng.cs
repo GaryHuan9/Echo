@@ -13,4 +13,7 @@ public sealed record SystemPrng : Prng
 	public override int Next1(int max) => random.Next(max);
 
 	public override int Next1(int min, int max) => random.Next(min, max);
+
+	public bool Equals(SquirrelPrng other) => base.Equals(other);
+	public override int GetHashCode() => base.GetHashCode();
 }

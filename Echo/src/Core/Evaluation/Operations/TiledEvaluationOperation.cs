@@ -1,10 +1,13 @@
 ﻿using System;
 using CodeHelpers;
 using CodeHelpers.Packed;
+using Echo.Common.Mathematics.Primitives;
+using Echo.Common.Memory;
 using Echo.Core.Compute;
+using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures;
 using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Operations;
@@ -16,7 +19,7 @@ public class TiledEvaluationOperation : Operation
 	TiledEvaluationProfile profile;
 	Int2[] tilePositionSequence;
 
-	Evaluator[] evaluators;
+	Context[] contexts;
 
 	public override void Prepare(int population)
 	{
@@ -30,16 +33,24 @@ public class TiledEvaluationOperation : Operation
 		Int2 size = profile.Buffer.size.CeiledDivide(profile.TileSize);
 		tilePositionSequence = profile.Pattern.CreateSequence(size);
 
-		//Duplicate evaluators
-		if (evaluators == null || evaluators?.Length < population) evaluators = new Evaluator[population];
-		for (int i = 0; i < population; i++) evaluators[i] = profile.Evaluator with { };
+		//Duplicate context tuples
+		if ((contexts?.Length ?? 0) < population) Array.Resize(ref contexts, population);
+		ContinuousDistribution source = profile.Distribution;
+
+		foreach (ref Context context in contexts.AsSpan())
+		{
+			if (context.Distribution != source) context.Distribution = source with { };
+			context.Allocator ??= new Allocator();
+		}
 	}
 
 	protected override bool Execute(ulong procedure, IScheduler scheduler)
 	{
 		if (procedure >= (ulong)tilePositionSequence.Length) return false;
 
-		Evaluator evaluator = evaluators[scheduler.Id];
+		(ContinuousDistribution distribution, Allocator allocator) = contexts[scheduler.Id];
+
+		Evaluator evaluator = profile.Evaluator;
 		PreparedScene scene = profile.Scene;
 		RenderBuffer buffer = profile.Buffer;
 
@@ -54,20 +65,37 @@ public class TiledEvaluationOperation : Operation
 			Int2 position = new Int2(x, y);
 			Accumulator accumulator = new();
 
-			var region = new RaySpawner(buffer, position);
+			var spawner = new RaySpawner(buffer, position);
 
 			int epoch = 0;
 
 			do
 			{
 				++epoch;
-				uint rejectionCount = evaluator.Evaluate(scene, region, ref accumulator);
+
+				uint rejection = 0;
+
+				distribution.BeginSeries(position);
+
+				for (int i = 0; i < distribution.Extend; i++)
+				{
+					distribution.BeginSession();
+
+					Ray ray = scene.camera.SpawnRay(new CameraSample(distribution), spawner);
+					Float4 evaluated = evaluator.Evaluate(scene, ray, distribution, allocator);
+
+					allocator.Release();
+
+					if (!accumulator.Add(evaluated)) ++rejection;
+				}
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
-			evaluator.Store(buffer, position, accumulator);
+			// buffer.Store(position, accumulator.Value);
 		}
 
 		return true;
 	}
+
+	record struct Context(ContinuousDistribution Distribution, Allocator Allocator);
 }
