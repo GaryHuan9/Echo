@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Echo.Common.Mathematics.Randomization;
 
@@ -29,6 +30,9 @@ public sealed record SquirrelPrng : Prng
 	public override int Next1(int max) => Next(max);
 
 	public override int Next1(int min, int max) => Next((long)max - min) + min;
+
+	public bool Equals(SquirrelPrng other) => base.Equals(other);
+	public override int GetHashCode() => base.GetHashCode();
 
 	int Next(long max) => (int)(Next() * Scale * max);
 
