@@ -17,6 +17,8 @@ public class CommandTI : AreaTI
 
 	static readonly TimeSpan cursorBlinkPeriod = TimeSpan.FromMilliseconds(500f);
 
+	//NOTE: console shortcuts: https://www.bigsmoke.us/readline/shortcuts
+
 	public override void Update(in Moment moment)
 	{
 		base.Update(moment);
