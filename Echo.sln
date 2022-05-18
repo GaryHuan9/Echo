@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.TerminalOld", "Echo.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Terminal", "Echo.Terminal\Echo.Terminal.csproj", "{BDEEEECA-AB0B-4061-816D-A4604A9248F9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Generation", "Echo.Generation\Echo.Generation.csproj", "{FC80E6FD-AACD-4121-91C5-81D90CC74EA6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{BDEEEECA-AB0B-4061-816D-A4604A9248F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDEEEECA-AB0B-4061-816D-A4604A9248F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDEEEECA-AB0B-4061-816D-A4604A9248F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC80E6FD-AACD-4121-91C5-81D90CC74EA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC80E6FD-AACD-4121-91C5-81D90CC74EA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC80E6FD-AACD-4121-91C5-81D90CC74EA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC80E6FD-AACD-4121-91C5-81D90CC74EA6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
