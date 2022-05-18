@@ -1,5 +1,6 @@
 ﻿using CodeHelpers;
 using Echo.Common;
+using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Grid;
@@ -19,6 +20,12 @@ public record EvaluationProfile : IProfile
 	public Evaluator Evaluator { get; init; }
 
 	/// <summary>
+	/// The <see cref="ContinuousDistribution"/> used for this evaluation.
+	/// </summary>
+	/// <remarks>The <see cref="ContinuousDistribution.Extend"/> value specifies the precise number of samples used per epoch.</remarks>
+	public ContinuousDistribution Distribution { get; init; }
+
+	/// <summary>
 	/// The destination <see cref="RenderBuffer"/> to store the evaluated data.
 	/// </summary>
 	public RenderBuffer Buffer { get; init; }
@@ -27,6 +34,7 @@ public record EvaluationProfile : IProfile
 	{
 		if (Scene == null) throw ExceptionHelper.Invalid(nameof(Scene), InvalidType.isNull);
 		if (Evaluator == null) throw ExceptionHelper.Invalid(nameof(Evaluator), InvalidType.isNull);
+		if (Distribution == null) throw ExceptionHelper.Invalid(nameof(Distribution), InvalidType.isNull);
 		if (Buffer == null) throw ExceptionHelper.Invalid(nameof(Buffer), InvalidType.isNull);
 	}
 }

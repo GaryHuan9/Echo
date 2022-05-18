@@ -193,4 +193,7 @@ public abstract record Prng
 	{
 		for (int i = span.Length - 1; i > 0; i--) CodeHelper.Swap(ref span[i], ref span[Next1(i + 1)]);
 	}
+
+	public virtual bool Equals(Prng other) => other?.GetType() == GetType();
+	public override int GetHashCode() => GetType().GetHashCode();
 }

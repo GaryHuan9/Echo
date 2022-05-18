@@ -13,7 +13,7 @@ namespace Echo.Core.Textures.Grid;
 
 /// <summary>
 /// A <see cref="ArrayGrid{T}"/> of type <see cref="RGB128"/> primarily used as a rendering destination.
-/// Allows for optional auxiliary layers for data such as albedo, normal, or depth to support later reconstruction.
+/// Allows for optional auxiliary layers for data such as albedo or normal support later reconstruction.
 /// </summary>
 public class RenderBuffer : ArrayGrid<RGB128>
 {
