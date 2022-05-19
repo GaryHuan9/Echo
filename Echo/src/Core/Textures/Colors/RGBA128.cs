@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
@@ -22,6 +24,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// <summary>
 	/// Create an <see cref="RGBA128"/> without any checks.
 	/// </summary>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	RGBA128(in Float4 value) => d = value;
 
 	readonly Float4 d;
@@ -36,8 +39,9 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// </summary>
 	public RGBA128 AlphaOne
 	{
+		//Replaces the W component of the Float4 with 1; see Float4.XYZ_ for more info
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new(new Float4(d.X, d.Y, d.Z, 1f)); //OPTIMIZE use FMA
+		get => new(new Float4(Sse41.Blend(d.v, Vector128.Create(1f), 0b1000)));
 	}
 
 	public static RGBA128 Zero => new(Float4.Zero);
@@ -59,13 +63,13 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// <summary>
 	/// Returns this <see cref="RGBA128"/> converted as <typeparamref name="T"/> using <see cref="IColor{T}.FromRGBA128"/>.
 	/// </summary>
-	public T As<T>() where T : IColor<T> => default(T)!.FromRGBA128(this);
+	public T As<T>() where T : unmanaged, IColor<T> => default(T)!.FromRGBA128(this);
 
 	/// <summary>
 	/// Parses the input <paramref name="span"/> as a <typeparamref name="T"/> and returns the
 	/// result. An exception is thrown if the <paramref name="span"/> format is invalid.
 	/// </summary>
-	public static T Parse<T>(ReadOnlySpan<char> span) where T : IColor<T> => Parse(span).As<T>();
+	public static T Parse<T>(ReadOnlySpan<char> span) where T : unmanaged, IColor<T> => Parse(span).As<T>();
 
 	/// <summary>
 	/// Parses the input <paramref name="span"/> as a <see cref="RGBA128"/> and returns the
@@ -81,7 +85,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// Tries to parse the input <paramref name="span"/> as a <typeparamref name="T"/> and outputs
 	/// to <paramref name="result"/>. Returns true if the operation was successful, false otherwise.
 	/// </summary>
-	public static bool TryParse<T>(ReadOnlySpan<char> span, out T result) where T : IColor<T>
+	public static bool TryParse<T>(ReadOnlySpan<char> span, out T result) where T : unmanaged, IColor<T>
 	{
 		bool successful = TryParse(span, out RGBA128 parsed);
 
