@@ -9,6 +9,7 @@ using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
+using Echo.Core.Textures.Colors;
 using Echo.Experimental.Benchmarks;
 using JitBuddy;
 
@@ -18,7 +19,7 @@ public class Program
 {
 	static void Main()
 	{
-		TestMonteCarlo();
+		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
 
@@ -28,6 +29,7 @@ public class Program
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
+		BenchmarkRunner.Run<BufferCopy>();
 	}
 
 	static void TestMonteCarlo()

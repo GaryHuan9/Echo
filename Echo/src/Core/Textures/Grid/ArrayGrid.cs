@@ -1,6 +1,7 @@
-﻿using System;
+﻿using System.ComponentModel;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using Echo.Common;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Grid;
@@ -8,7 +9,7 @@ namespace Echo.Core.Textures.Grid;
 /// <summary>
 /// The default <see cref="TextureGrid{T}"/> implemented with a contiguous array.
 /// </summary>
-public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
+public class ArrayGrid<T> : TextureGrid<T> where T : unmanaged, IColor<T>
 {
 	public ArrayGrid(Int2 size) : base(size)
 	{
@@ -55,17 +56,23 @@ public class ArrayGrid<T> : TextureGrid<T> where T : IColor<T>
 		return new Int2(index % size.X, index / size.X);
 	}
 
-	public override void CopyFrom(Texture texture)
+	public override unsafe void CopyFrom(Texture texture)
 	{
 		if (texture is ArrayGrid<T> array && array.size == size)
 		{
-			//Span is faster on dotnet core
-#if NETCOREAPP
-			array.pixels.AsSpan().CopyTo(pixels);
-#else
-			Array.Copy(array.pixels, pixels, length);
-#endif
+			fixed (T* source = array)
+			fixed (T* target = this)
+			{
+				Utilities.MemoryCopy(source, target, length);
+			}
 		}
 		else base.CopyFrom(texture);
 	}
+
+	/// <summary>
+	/// Implements the pattern-based fixed statement context for `fixed` statements. See the following link for more:
+	/// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-7.3/pattern-based-fixed
+	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public ref readonly T GetPinnableReference() => ref pixels[0];
 }
