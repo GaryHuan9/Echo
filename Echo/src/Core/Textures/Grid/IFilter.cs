@@ -15,7 +15,7 @@ public interface IFilter
 	/// </summary>
 	/// <param name="texture">The target texture to retrieve the color from.</param>
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-	RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>;
+	RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>;
 }
 
 public static class Filters
@@ -26,7 +26,7 @@ public static class Filters
 	class Point : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>
+		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>
 		{
 			Int2 position = (uv * texture.size).Floored;
 			texture.Wrapper.Wrap(texture, ref position);
@@ -37,7 +37,7 @@ public static class Filters
 	class Bilinear : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : IColor<T>
+		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>
 		{
 			//Find x and y
 			Float2 scaled = uv * texture.size;
