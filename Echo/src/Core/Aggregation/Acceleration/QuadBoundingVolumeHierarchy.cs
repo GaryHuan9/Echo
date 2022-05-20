@@ -65,16 +65,17 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, stackSize);
 	}
 
-	public override unsafe int FillAABB(uint depth, Span<AxisAlignedBoundingBox> span)
+	public override unsafe void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
 	{
 		int length = 1 << (int)depth;
-		if (length > span.Length) throw new Exception($"{nameof(span)} is not large enough! Length: '{span.Length}'");
+		fill.ThrowIfNotEmpty();
+		fill.ThrowIfTooSmall(length);
 
-		//Span is too small
+		//Output is too small
 		if (length < Width)
 		{
-			span[0] = RootAABB;
-			return 1;
+			fill.Add(RootAABB);
+			return;
 		}
 
 		//Because we fetch the aabbs in packs of Width (4), moving down one more level yields 4x more aabbs
@@ -88,7 +89,6 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		NodeToken* next1 = stack1;
 
 		*next0++ = NodeToken.Root;
-		var fill = span.AsFill();
 
 		for (int i = 0; i < iteration; i++)
 		{
@@ -122,8 +122,6 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 				if (!child.IsEmpty) fill.Add(node.aabb4[i]);
 			}
 		}
-
-		return fill.Count;
 	}
 
 	[SkipLocalsInit]
