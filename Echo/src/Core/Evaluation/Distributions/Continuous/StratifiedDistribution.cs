@@ -17,13 +17,16 @@ public record StratifiedDistribution : HorizontalDistribution
 	/// <summary>
 	/// Returns whether the stratified samples are randomly shifted inside their individual cells.
 	/// </summary>
-	public bool Jitter { get; set; } = true;
+	public bool Jitter { get; init; } = true;
 
 	public override void BeginSeries(Int2 position)
 	{
 		base.BeginSeries(position);
 		Assert.IsNotNull(Prng);
 	}
+
+	public virtual bool Equals(StratifiedDistribution other) => base.Equals(other) && other!.Jitter == Jitter;
+	public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), Jitter);
 
 	protected override void FillSpan1D(Span<Sample1D> samples)
 	{

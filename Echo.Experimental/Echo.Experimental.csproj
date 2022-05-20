@@ -24,7 +24,6 @@
         <PackageReference Include="JitBuddy" Version="0.5.0" />
         <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="11.1.0" />
         <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.1.2" />
-        <PackageReference Include="Pastel" Version="3.0.0" />
     </ItemGroup>
 
     <ItemGroup>
