@@ -151,6 +151,9 @@ public abstract record ContinuousDistribution
 
 #endif
 
+	public virtual bool Equals(ContinuousDistribution other) => other?.GetType() == GetType() && other.Extend == Extend && other.Prng == Prng;
+	public override int GetHashCode() => HashCode.Combine(GetType(), Extend, Prng);
+
 	/// <summary>
 	/// Draws and returns a new <see cref="Sample1D"/> from this <see cref="ContinuousDistribution"/>.
 	/// </summary>
