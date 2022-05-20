@@ -18,6 +18,16 @@ public static class Utilities
 	}
 
 	/// <summary>
+	/// Unsafe fast memory copy.
+	/// </summary>
+	/// <param name="source">The origin.</param>
+	/// <param name="target">The destination.</param>
+	/// <param name="length">The number of items to copy.</param>
+	/// <typeparam name="T">The type of item to copy.</typeparam>
+	public static unsafe void MemoryCopy<T>(T* source, T* target, long length) where T : unmanaged =>
+		Buffer.MemoryCopy(source, target, length * sizeof(Float4), length * sizeof(Float4));
+
+	/// <summary>
 	/// Calculates and returns a deterministic hash code for <paramref name="value"/>.
 	/// </summary>
 	public static unsafe int GetHashCode<T>(Vector128<T> value) where T : struct => GetHashCode(&value);
