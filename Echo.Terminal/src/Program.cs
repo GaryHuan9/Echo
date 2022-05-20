@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Threading;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Compute;
+using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Examples;
@@ -16,7 +17,7 @@ public class Program
 	{
 		using var terminal = new Terminal<EchoTI>();
 
-		terminal.Await();
+		terminal.Launch();
 		return;
 
 		Console.WriteLine
@@ -49,7 +50,10 @@ public class Program
 		{
 			Scene = new PreparedScene(scene, prepareProfile),
 			Evaluator = new PathTracedEvaluator(),
-			Buffer = new RenderBuffer(new Int2(960, 540))
+			Distribution = new StratifiedDistribution { Extend = 64 },
+			Buffer = new RenderBuffer(new Int2(960, 540)),
+			MinEpoch = 1,
+			MaxEpoch = 1
 		};
 
 		var operation = new TiledEvaluationOperation
@@ -57,32 +61,15 @@ public class Program
 			Profile = evaluationProfile
 		};
 
-		device.Dispatch(operation);
-		// device.AwaitIdle();
+		PerformanceTest test = new();
 
-		bool paused = false;
-
-		while (!device.IsIdle)
+		using (test.Start())
 		{
-			Thread.Sleep(10);
-
-			if (Console.KeyAvailable)
-			{
-				Console.ReadKey(true);
-				Console.WriteLine("Keyed.");
-				// device.Abort();
-				// device.AwaitIdle();
-
-				if (paused) device.Resume();
-				else
-				{
-					device.Pause();
-					evaluationProfile.Buffer.Save("render.png");
-				}
-
-				paused = !paused;
-			}
+			device.Dispatch(operation);
+			device.AwaitIdle();
 		}
+
+		Console.WriteLine(test);
 
 		Console.WriteLine("Done.");
 		evaluationProfile.Buffer.Save("render.png");

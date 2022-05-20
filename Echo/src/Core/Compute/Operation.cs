@@ -24,7 +24,7 @@ public abstract class Operation
 	/// Joins the execution of this <see cref="Operation"/> once.
 	/// </summary>
 	/// <param name="scheduler">The <see cref="IScheduler"/> used.</param>
-	/// <returns>Whether this execution performed no work.</returns>
+	/// <returns>Whether this execution performed any work.</returns>
 	public bool Execute(IScheduler scheduler)
 	{
 		ulong procedure = Interlocked.Increment(ref currentProcedure);
@@ -36,8 +36,8 @@ public abstract class Operation
 	/// </summary>
 	/// <param name="procedure">The number/index of the step to execute.</param>
 	/// <param name="scheduler">The <see cref="IScheduler"/> used.</param>
-	/// <returns>Whether this step performed no work.</returns>
-	/// <remarks>Once this method returns true, most steps after this one will not be executed.
+	/// <returns>Whether this step performed any work.</returns>
+	/// <remarks>Once this method returns false, most steps after this one will not be executed.
 	/// However, it is not guaranteed that ALL later steps will not be executed.</remarks>
 	protected abstract bool Execute(ulong procedure, IScheduler scheduler);
 }

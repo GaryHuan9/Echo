@@ -27,8 +27,9 @@ public sealed class Terminal<T> : IDisposable where T : RootTI, new()
 
 	public TimeSpan UpdateDelay { get; set; } = TimeSpan.FromSeconds(1f / 16f);
 
-	public void Await()
+	public void Launch()
 	{
+		Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
 		root.ProcessArguments(Environment.GetCommandLineArgs());
 
 		var stopwatch = Stopwatch.StartNew();

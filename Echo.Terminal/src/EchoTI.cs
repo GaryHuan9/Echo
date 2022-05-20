@@ -1,5 +1,6 @@
 ﻿using CodeHelpers.Packed;
 using Echo.Core.Compute;
+using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Examples;
@@ -46,7 +47,10 @@ public class EchoTI : RootTI
 		// {
 		// 	Scene = new PreparedScene(scene, prepareProfile),
 		// 	Evaluator = new PathTracedEvaluator(),
-		// 	Buffer = new RenderBuffer(new Int2(960, 540))
+		// 	Distribution = new StratifiedDistribution { Extend = 64 },
+		// 	Buffer = new RenderBuffer(new Int2(960, 540)),
+		// 	MinEpoch = 1,
+		// 	MaxEpoch = 1
 		// };
 		//
 		// var operation = new TiledEvaluationOperation
@@ -54,7 +58,7 @@ public class EchoTI : RootTI
 		// 	Profile = evaluationProfile
 		// };
 		//
-		// deviceReport.Device.Dispatch(operation);
+		// device.Dispatch(operation);
 	}
 
 	readonly TileReportTI tileReport;
@@ -65,8 +69,6 @@ public class EchoTI : RootTI
 	public override void ProcessArguments(string[] arguments)
 	{
 		base.ProcessArguments(arguments);
-		
-		
 	}
 
 	protected override void Dispose(bool disposing)
