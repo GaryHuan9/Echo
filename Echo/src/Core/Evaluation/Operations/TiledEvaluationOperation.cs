@@ -14,12 +14,19 @@ namespace Echo.Core.Evaluation.Operations;
 
 public class TiledEvaluationOperation : Operation
 {
-	public TiledEvaluationProfile Profile { get; set; }
-
 	TiledEvaluationProfile profile;
+	RenderBuffer.Writer writer;
 	Int2[] tilePositionSequence;
 
 	Context[] contexts;
+
+	NotNull<TiledEvaluationProfile> _profile;
+
+	public TiledEvaluationProfile Profile
+	{
+		get => _profile;
+		set => _profile = value;
+	}
 
 	public override void Prepare(int population)
 	{
@@ -28,6 +35,10 @@ public class TiledEvaluationOperation : Operation
 		//Validate profile
 		profile = Profile ?? throw ExceptionHelper.Invalid(nameof(Profile), InvalidType.isNull);
 		profile.Validate();
+
+		//Create render buffer writer
+		if (profile.Buffer.TryGetWriter(profile.Evaluator.Destination, out writer)) { }
+		else throw new Exception("Invalid destination layer assigned to evaluator.");
 
 		//Create tile sequence
 		Int2 size = profile.Buffer.size.CeiledDivide(profile.TileSize);
@@ -91,7 +102,7 @@ public class TiledEvaluationOperation : Operation
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
-			// buffer.Store(position, accumulator.Value);
+			writer(position, accumulator);
 		}
 
 		return true;
