@@ -72,8 +72,8 @@ public abstract class ViewBaseTests<T>
 		var buffer0 = new T[rgView.Length];
 		var buffer1 = new T[roView.Length];
 
-		SpanFill<T> fill0 = buffer0.AsSpan();
-		SpanFill<T> fill1 = buffer1.AsSpan();
+		var fill0 = new SpanFill<T>(buffer0);
+		var fill1 = new SpanFill<T>(buffer1);
 
 		foreach (T item in rgView) fill0.Add(item);
 		foreach (T item in roView) fill1.Add(item);
@@ -129,7 +129,7 @@ public abstract class ViewBaseTests<T>
 
 	protected abstract T[] GetReference();
 
-	
+
 	void AsSpanSliceOne(Range range)
 	{
 		Span<T> reference = array.AsSpan(range);
@@ -151,7 +151,7 @@ public abstract class ViewBaseTests<T>
 		//TODO: reenable after we added the overloads
 		rgSpan = rgView.AsSpan(range);
 		roSpan = roView.AsSpan(range);
-		
+
 		Assert.That(rgSpan.SequenceEqual(reference));
 		Assert.That(roSpan.SequenceEqual(reference));
 	}

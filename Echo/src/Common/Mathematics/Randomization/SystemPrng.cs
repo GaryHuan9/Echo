@@ -8,11 +8,7 @@ public sealed record SystemPrng : Prng
 
 	readonly Random random;
 
-	public override float Next1() => random.NextSingle();
-
-	public override int Next1(int max) => random.Next(max);
-
-	public override int Next1(int min, int max) => random.Next(min, max);
+	public override uint NextUInt32() => (uint)(random.NextInt64() >> 1);
 
 	public bool Equals(SquirrelPrng other) => base.Equals(other);
 	public override int GetHashCode() => base.GetHashCode();
