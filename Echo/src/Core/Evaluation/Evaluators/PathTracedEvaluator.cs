@@ -7,6 +7,7 @@ using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Memory;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Scenic.Lights;
@@ -15,27 +16,26 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
-public record PathTracedEvaluator : Evaluator<RGB128>
+public record PathTracedEvaluator : Evaluator
 {
 	/// <summary>
 	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
 	/// If such occurrence appears, the sample becomes biased and this property should be increased.
 	/// </summary>
-	public int BounceLimit { get; set; } = 128;
+	public int BounceLimit { get; init; } = 128;
 
 	/// <summary>
 	/// The survivability of a path with during unbiased path termination. As this value goes up, the amount of variance decreases,
 	/// and the time spend on each path increases. This value should be relatively high for interior scenes while low for outdoors.
 	/// </summary>
-	public float Survivability { get; set; } = 2.5f;
+	public float Survivability { get; init; } = 2.5f;
 
 	//NOTE: although the word 'radiant' is frequently used here to denote particles of energy accumulating,
 	//technically it is not correct because the size of the emitter could be either a point or an area,
 	//(so for the same reason the word 'radiance' is also wrong) we just chose 'radiant' because it has the
 	//same length as the word 'scatter'.
 
-	[SkipLocalsInit]
-	protected override RGB128 Evaluate(PreparedScene scene, in Ray ray)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		var path = new Path(ray);
 
@@ -51,17 +51,17 @@ public record PathTracedEvaluator : Evaluator<RGB128>
 		for (int depth = 0; depth < BounceLimit; depth++)
 		{
 			//Sample the bsdf
-			var bounce = new Bounce(path.touch, Distribution.Next2D());
+			var bounce = new Bounce(path.touch, distribution.Next2D());
 			if (bounce.IsZero) break;
 
-			Sample2D radiantSample = Distribution.Next2D();
-			foreach (ref var sample in lightSamples) sample = Distribution.Next1D();
+			Sample2D radiantSample = distribution.Next2D();
+			foreach (ref var sample in lightSamples) sample = distribution.Next1D();
 
 			//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 			if (bounce.IsSpecular)
 			{
 				//Check if the path is exhausted
-				if (!path.Continue(bounce, Survivability, Distribution.Next1D())) break;
+				if (!path.Continue(bounce, Survivability, distribution.Next1D())) break;
 
 				//Begin finding a new bounce
 				allocator.Restart();
@@ -92,7 +92,7 @@ public record PathTracedEvaluator : Evaluator<RGB128>
 					weight *= PowerHeuristic(bounce.pdf, area!.ProbabilityDensity(path.touch.point, bounce.incident));
 				}
 
-				if (!path.Continue(bounce, Survivability, Distribution.Next1D())) break; //Path exhausted
+				if (!path.Continue(bounce, Survivability, distribution.Next1D())) break; //Path exhausted
 
 				allocator.Restart();
 

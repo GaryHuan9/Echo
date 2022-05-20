@@ -9,4 +9,7 @@ public sealed record SystemPrng : Prng
 	readonly Random random;
 
 	public override uint NextUInt32() => (uint)(random.NextInt64() >> 1);
+
+	public bool Equals(SquirrelPrng other) => base.Equals(other);
+	public override int GetHashCode() => base.GetHashCode();
 }

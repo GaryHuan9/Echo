@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Echo.Common.Mathematics.Randomization;
 
@@ -28,6 +29,9 @@ public sealed record SquirrelPrng : Prng
 		Mangle(ref state);
 		return state;
 	}
+
+	public bool Equals(SquirrelPrng other) => base.Equals(other);
+	public override int GetHashCode() => base.GetHashCode();
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void Mangle(ref uint source)
