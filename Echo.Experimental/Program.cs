@@ -5,6 +5,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
+using Echo.Core.Textures.Colors;
 using Echo.Experimental.Benchmarks;
 using JitBuddy;
 
@@ -24,6 +25,7 @@ public class Program
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
+		BenchmarkRunner.Run<BufferCopy>();
 	}
 
 	static void TestMonteCarlo()
