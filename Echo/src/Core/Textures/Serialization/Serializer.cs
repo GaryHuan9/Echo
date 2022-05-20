@@ -19,12 +19,12 @@ public abstract record Serializer
 	/// <summary>
 	/// Converts and writes <paramref name="texture"/> to <paramref name="stream"/>.
 	/// </summary>
-	public abstract void Serialize<T>(TextureGrid<T> texture, Stream stream) where T : IColor<T>;
+	public abstract void Serialize<T>(TextureGrid<T> texture, Stream stream) where T : unmanaged, IColor<T>;
 
 	/// <summary>
 	/// Reads and converts <paramref name="stream"/> into a <see cref="TextureGrid{T}"/>.
 	/// </summary>
-	public abstract TextureGrid<T> Deserialize<T>(Stream stream) where T : IColor<T>;
+	public abstract TextureGrid<T> Deserialize<T>(Stream stream) where T : unmanaged, IColor<T>;
 
 	/// <summary>
 	/// Tries to find and return the appropriate <see cref="Serializer"/> for a

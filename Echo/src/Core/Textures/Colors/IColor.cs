@@ -2,7 +2,7 @@
 
 namespace Echo.Core.Textures.Colors;
 
-public interface IColor<out T> where T : IColor<T>
+public interface IColor<out T> where T : unmanaged, IColor<T>
 {
 	/// <summary>
 	/// Returns this <see cref="IColor{T}"/> converted as an <see cref="RGBA128"/>.
