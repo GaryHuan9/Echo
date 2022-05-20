@@ -29,10 +29,10 @@ public sealed class Worker : IScheduler, IDisposable
 	/// </summary>
 	public State Status
 	{
-		get => (State)Volatile.Read(ref _status);
+		get => (State)_status;
 		private set
 		{
-			using var _ = manageLocker.Fetch();
+			using var _ = locker.Fetch();
 
 			State old = Status;
 			if (old == value) return;
@@ -41,8 +41,8 @@ public sealed class Worker : IScheduler, IDisposable
 			Assert.AreNotEqual(old, State.Disposed);
 			Assert.AreEqual(BitOperations.PopCount(integer), 1);
 
-			Volatile.Write(ref _status, integer);
-			signalLocker.Signal();
+			Interlocked.Exchange(ref _status, integer);
+			locker.Signal();
 
 			bool wasIdle = old == State.Idle;
 			bool isIdle = value == State.Idle;
@@ -50,8 +50,7 @@ public sealed class Worker : IScheduler, IDisposable
 		}
 	}
 
-	readonly Locker manageLocker = new();
-	readonly Locker signalLocker = new();
+	readonly Locker locker = new();
 
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
@@ -60,9 +59,16 @@ public sealed class Worker : IScheduler, IDisposable
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is not <see cref="State.Idle"/>.</exception>
 	public void Dispatch(Operation operation)
 	{
-		using var _ = manageLocker.Fetch();
+		using var _ = locker.Fetch();
 
-		if (Status != State.Idle) throw new InvalidOperationException();
+		lock (locker)
+		{
+			if (Status != State.Idle) throw new InvalidOperationException();
+
+			//Assign operation
+			Volatile.Write(ref nextOperation, operation);
+			Status = State.Running;
+		}
 
 		//Launch thread if needed
 		if (thread == null)
@@ -75,10 +81,6 @@ public sealed class Worker : IScheduler, IDisposable
 
 			thread.Start();
 		}
-
-		//Assign operation
-		Volatile.Write(ref nextOperation, operation);
-		Status = State.Running;
 	}
 
 	/// <summary>
@@ -87,7 +89,7 @@ public sealed class Worker : IScheduler, IDisposable
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is <see cref="State.Disposed"/>.</exception>
 	public void Pause()
 	{
-		using var _ = manageLocker.Fetch();
+		using var _ = locker.Fetch();
 
 		switch (Status)
 		{
@@ -109,7 +111,7 @@ public sealed class Worker : IScheduler, IDisposable
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is <see cref="State.Disposed"/>.</exception>
 	public void Resume()
 	{
-		using var _ = manageLocker.Fetch();
+		using var _ = locker.Fetch();
 
 		switch (Status)
 		{
@@ -131,7 +133,7 @@ public sealed class Worker : IScheduler, IDisposable
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="Status"/> is <see cref="State.Disposed"/>.</exception>
 	public void Abort()
 	{
-		using var _ = manageLocker.Fetch();
+		using var _ = locker.Fetch();
 
 		switch (Status)
 		{
@@ -149,14 +151,17 @@ public sealed class Worker : IScheduler, IDisposable
 
 	public void Dispose()
 	{
-		using var _ = manageLocker.Fetch();
-		if (Status == State.Disposed) return;
+		lock (locker)
+		{
+			if (Status == State.Disposed) return;
 
-		Abort();
-		AwaitStatus(State.Idle);
-		Status = State.Disposed;
+			Abort();
+			AwaitStatus(State.Idle);
+			Status = State.Disposed;
 
-		signalLocker.Signaling = false;
+			locker.Signaling = false;
+		}
+
 		thread.Join();
 	}
 
@@ -166,7 +171,7 @@ public sealed class Worker : IScheduler, IDisposable
 		CheckForAbortion();
 		if (Status != State.Pausing) return;
 
-		lock (manageLocker)
+		lock (locker)
 		{
 			if (Status != State.Pausing) return;
 			Status = State.Awaiting;
@@ -213,7 +218,11 @@ public sealed class Worker : IScheduler, IDisposable
 	void AwaitStatus(State status)
 	{
 		status |= State.Disposed;
-		while ((Status | status) != status) signalLocker.Wait();
+
+		lock (locker)
+		{
+			while ((Status | status) != status) locker.Wait();
+		}
 	}
 
 	[Flags]
