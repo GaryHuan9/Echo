@@ -226,6 +226,9 @@ public abstract record Prng
 		for (int i = span.Length - 1; i > 0; i--) CodeHelper.Swap(ref span[i], ref span[Next1(i + 1)]);
 	}
 
+	public virtual bool Equals(Prng other) => other?.GetType() == GetType();
+	public override int GetHashCode() => GetType().GetHashCode();
+  
 	/// <summary>
 	/// Computes a discrete uniform random value from 0 (inclusive) to <paramref name="max"/> (exclusive).
 	/// Implementation based on academic paper by Daniel Lemire: https://arxiv.org/abs/1805.10941

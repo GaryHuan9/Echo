@@ -15,13 +15,13 @@ public interface IWrapper
 	/// <summary>
 	/// Wraps the integer texture <paramref name="position"/> to be within the bounds of <paramref name="texture"/>.
 	/// </summary>
-	void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : IColor<T>;
+	void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T>;
 
 	/// <summary>
 	/// Wraps the packed integer texture coordinates from <paramref name="x"/> and
 	/// <paramref name="y"/> to be within the bounds of <paramref name="texture"/>.
 	/// </summary>
-	void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : IColor<T>;
+	void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>;
 }
 
 public static class Wrappers
@@ -33,9 +33,9 @@ public static class Wrappers
 	class Clamp : IWrapper
 	{
 		/// <inheritdoc/>
-		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : IColor<T> => position = position.Clamp(Int2.Zero, texture.oneLess);
+		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T> => position = position.Clamp(Int2.Zero, texture.oneLess);
 
-		public void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : IColor<T>
+		public void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>
 		{
 			if (Sse41.IsSupported)
 			{
@@ -66,9 +66,9 @@ public static class Wrappers
 	class Repeat : IWrapper
 	{
 		/// <inheritdoc/>
-		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : IColor<T> => position = position.Repeat(texture.size);
+		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T> => position = position.Repeat(texture.size);
 
-		public void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : IColor<T>
+		public void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>
 		{
 			x = RepeatFast(x, texture.size.X, texture.power.X >= 0);
 			y = RepeatFast(y, texture.size.Y, texture.power.Y >= 0);
@@ -78,14 +78,14 @@ public static class Wrappers
 	class Mirror : IWrapper
 	{
 		/// <inheritdoc/>
-		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : IColor<T>
+		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T>
 		{
 			Int2 length = texture.size * 2;
 			Int2 repeated = position.Repeat(length);
 			position = repeated.Min(length - Int2.One - repeated);
 		}
 
-		public void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : IColor<T>
+		public void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>
 		{
 			Int2 length = texture.size * 2;
 

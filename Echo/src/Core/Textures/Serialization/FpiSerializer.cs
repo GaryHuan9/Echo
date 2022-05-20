@@ -34,7 +34,7 @@ public record FpiSerializer : Serializer
 		return Read<T>(reader);
 	}
 
-	static void Write<T>(TextureGrid<T> texture, DataWriter writer) where T : IColor<T>
+	static void Write<T>(TextureGrid<T> texture, DataWriter writer) where T : unmanaged, IColor<T>
 	{
 		writer.WriteCompact(texture.size);
 		var sequence = Vector128<uint>.Zero;
@@ -61,7 +61,7 @@ public record FpiSerializer : Serializer
 		}
 	}
 
-	static unsafe ArrayGrid<T> Read<T>(DataReader reader) where T : IColor<T>
+	static unsafe ArrayGrid<T> Read<T>(DataReader reader) where T : unmanaged, IColor<T>
 	{
 		Int2 size = reader.ReadInt2Compact();
 		var texture = new ArrayGrid<T>(size);
