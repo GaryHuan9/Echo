@@ -66,7 +66,7 @@ public readonly struct AxisAlignedBoundingBox
 		get
 		{
 			Float3 size = max - min;
-			return size.X * size.Y + size.X * size.Z + size.Y * size.Z;
+			return size.X * (size.Y + size.Z) + size.Y * size.Z;
 		}
 	}
 
