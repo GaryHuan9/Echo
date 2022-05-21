@@ -1,79 +1,73 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
+using System.Diagnostics;
+using System.Text;
+using System.Threading;
 using CodeHelpers.Packed;
-using Echo.Core.Compute;
-using Echo.Core.Evaluation.Distributions.Continuous;
-using Echo.Core.Evaluation.Evaluators;
-using Echo.Core.Evaluation.Operations;
-using Echo.Core.Scenic.Examples;
-using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures.Grid;
+using Echo.Terminal;
+using Echo.Terminal.Core;
+using Echo.Terminal.Core.Interface;
 
-namespace Echo.Terminal;
+using var program = new Program<EchoTI>();
+program.Launch();
 
-public class Program
+namespace Echo.Terminal
 {
-	public static void Main()
+	public sealed class Program<T> : IDisposable where T : RootTI, new()
 	{
-		using var terminal = new Terminal<EchoTI>();
-
-		terminal.Launch();
-		return;
-
-		Console.WriteLine
-		(
-			@"
-        ..      .
-     x88f` `..x88. .>             .uef^""
-   :8888   xf`*8888%            :d88E              u.
-  :8888f .888  `""`          .   `888E        ...ue888b
-  88888' X8888. >""8x   .udR88N   888E .z8k   888R Y888r
-  88888  ?88888< 888> <888'888k  888E~?888L  888R I888>
-  88888   ""88888 ""8%  9888 'Y""   888E  888E  888R I888>
-  88888 '  `8888>     9888       888E  888E  888R I888>
-  `8888> %  X88!      9888       888E  888E u8888cJ888
-   `888X  `~""""`   :   ?8888u../  888E  888E  ""*888*P""
-     ""88k.      .~     ""8888P'  m888N= 888>    'Y""
-       `""""*==~~`         ""P'     `Y""   888
-                                      J88""
-                                      @%
-                                    :"""
-		);
-
-		using var device = Device.Create();
-
-		var scene = new SingleBunny();
-
-		var prepareProfile = new ScenePrepareProfile();
-
-		var evaluationProfile = new TiledEvaluationProfile
+		public Program()
 		{
-			Scene = new PreparedScene(scene, prepareProfile),
-			Evaluator = new PathTracedEvaluator(),
-			Distribution = new StratifiedDistribution { Extend = 64 },
-			Buffer = new RenderBuffer(new Int2(960, 540)),
-			MinEpoch = 1,
-			MaxEpoch = 1
-		};
+			//Configure console
+			Console.Title = "Echo Terminal Interface";
+			Console.OutputEncoding = Encoding.Unicode;
+			Console.TreatControlCAsInput = true;
 
-		var operation = new TiledEvaluationOperation
-		{
-			Profile = evaluationProfile
-		};
-
-		PerformanceTest test = new();
-
-		using (test.Start())
-		{
-			device.Dispatch(operation);
-			device.AwaitIdle();
+			//Build root
+			root = new T();
 		}
 
-		Console.WriteLine(test);
+		readonly RootTI root;
 
-		Console.WriteLine("Done.");
-		evaluationProfile.Buffer.Save("render.png");
+		int disposed;
 
-		Console.ReadKey();
+		public TimeSpan UpdateDelay { get; set; } = TimeSpan.FromSeconds(1f / 16f);
+
+		public void Launch()
+		{
+			Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
+			root.ProcessArguments(Environment.GetCommandLineArgs());
+
+			var stopwatch = Stopwatch.StartNew();
+			var moment = new Moment();
+
+			while (Volatile.Read(ref disposed) == 0)
+			{
+				//Update
+				moment = new Moment(moment, stopwatch);
+				Int2 size = new Int2(Console.WindowWidth, Console.WindowHeight);
+
+				root.SetTransform(Int2.Zero, size);
+				root.Update(moment);
+
+				//Draw
+				if (size > Int2.Zero)
+				{
+					Console.SetCursorPosition(0, 0);
+					root.DrawToConsole();
+					Console.CursorVisible = false;
+					Console.SetCursorPosition(0, 0);
+				}
+
+				//Sleep for delay
+				var remain = moment.elapsed - stopwatch.Elapsed + UpdateDelay;
+				if (remain > TimeSpan.Zero) Thread.Sleep(remain);
+			}
+		}
+
+		public void Dispose()
+		{
+			if (Interlocked.Exchange(ref disposed, 1) == 1) return;
+
+			root.Dispose();
+		}
 	}
 }
