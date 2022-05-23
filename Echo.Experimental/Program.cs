@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using BenchmarkDotNet.Running;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using Echo.Common.Mathematics;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
-using Echo.Experimental.Benchmarks;
 using JitBuddy;
 
 namespace Echo.Experimental;
@@ -15,7 +15,7 @@ public class Program
 	static void Main()
 	{
 		// TestMonteCarlo();
-		// TestJitter();
+		TestJitter();
 		// TestUnmanaged();
 
 		// BenchmarkRunner.Run<PackedFloats>();
@@ -25,7 +25,7 @@ public class Program
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
 		// BenchmarkRunner.Run<BufferCopy>();
-		BenchmarkRunner.Run<Timing>();
+		// BenchmarkRunner.Run<Timing>();
 	}
 
 	static void TestMonteCarlo()
@@ -70,11 +70,11 @@ public class Program
 		// var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
 		// DebugHelper.Log(method.ToAsm());
 
-		var property = typeof(AxisAlignedBoundingBox4).GetProperty(nameof(AxisAlignedBoundingBox4.Encapsulated));
-		DebugHelper.Log(property!.GetMethod.ToAsm());
+		// var property = typeof(AxisAlignedBoundingBox4).GetProperty(nameof(AxisAlignedBoundingBox4.Encapsulated));
+		// DebugHelper.Log(property!.GetMethod.ToAsm());
 
-		// var method = typeof(MathF).GetMethod(nameof(Round));
-		// DebugHelper.Log(method.ToAsm());
+		var method = typeof(Statistics).GetMethod(nameof(Statistics.ReportConst));
+		DebugHelper.Log(method.ToAsm());
 	}
 
 	static unsafe void TestUnmanaged()

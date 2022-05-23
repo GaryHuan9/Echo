@@ -1,6 +1,7 @@
 ﻿using System;
 using CodeHelpers;
 using CodeHelpers.Packed;
+using Echo.Common.Mathematics;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Memory;
 using Echo.Core.Compute;
@@ -64,6 +65,21 @@ public class TiledEvaluationOperation : Operation
 		Evaluator evaluator = profile.Evaluator;
 		PreparedScene scene = profile.Scene;
 		RenderBuffer buffer = profile.Buffer;
+
+		Statistics statistics = default;
+		statistics.Report("hehe");
+		statistics.Report("haha");
+		statistics.Report("huhu");
+
+		statistics.Report("this is a very long test");
+		statistics.Report("duplicate");
+		statistics.Report("duplicate");
+
+		statistics.Report("ignored because of invalid syntax --");
+		statistics.Report("not ignored because vali");
+		statistics.Report("not ignored again h nice");
+
+		statistics.Report("Does it still work");
 
 		Int2 min = tilePositionSequence[procedure] * profile.TileSize;
 		Int2 max = buffer.size.Min(min + (Int2)profile.TileSize);
