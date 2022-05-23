@@ -49,7 +49,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	public static RGBA128 White => new(Float4.One);
 
 	public override int GetHashCode() => d.GetHashCode();
-	public override string ToString() => ToString(null);
+	public override string ToString() => ToString(default);
 
 	/// <inheritdoc/>
 	public RGBA128 ToRGBA128() => this;
