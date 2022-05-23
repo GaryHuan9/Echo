@@ -51,17 +51,16 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	public static RGB128 White => new(new Float4(1f, 1f, 1f, 0f));
 
 	public override int GetHashCode() => d.GetHashCode();
-	public override string ToString() => ToString(string.Empty);
+	public override string ToString() => ToString(default);
+	
+	public string ToString(string format, IFormatProvider provider = null) => d.XYZ.ToString(format, provider);
 
 	/// <inheritdoc/>
 	public RGBA128 ToRGBA128() => (RGBA128)this;
 
 	/// <inheritdoc/>
 	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
-
-	public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);
-	public string ToString(string format, IFormatProvider provider) => d.XYZ.ToString(format, provider);
-
+	
 	public static implicit operator Float4(in RGB128 value) => value.d;
 	public static explicit operator RGB128(in Float4 value) => new(Check(value.XYZ_));
 	public static explicit operator RGB128(in RGBA128 value) => new(((Float4)value).XYZ_);

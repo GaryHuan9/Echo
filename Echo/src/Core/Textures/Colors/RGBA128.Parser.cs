@@ -39,7 +39,7 @@ partial struct RGBA128
 			{
 				Assert.IsTrue(prefix.Length > 0);
 
-				if (!span.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase)) return false;
+				if (!span.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
 
 				span = span[prefix.Length..];
 				return true;
