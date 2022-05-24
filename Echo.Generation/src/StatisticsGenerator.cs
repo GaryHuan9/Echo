@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -14,10 +11,13 @@ namespace Echo.Generation;
 [Generator]
 public class StatisticsGenerator : IIncrementalGenerator
 {
-	const string TargetName = "Report";
-	const string TargetContainingTypeName = "Statistics";
-	const string TargetNamespace = "Echo.Common.Mathematics";
+	const string ReportMethodName = "Report";
+	const string StatisticsTypeName = "Statistics";
+	const string NamespaceName = "Echo.Common.Mathematics";
 	const string LabelParameterName = "label";
+
+	const int PackWidth = 4; //How many UInt64s are packed together
+	const int LineWidth = 2; //How many packs per 64-byte cache line
 
 	static readonly Regex filter = new(@"^[\w :/]+$", RegexOptions.Compiled);
 
@@ -29,20 +29,22 @@ public class StatisticsGenerator : IIncrementalGenerator
 			TargetExpressionOrNull
 		);
 
-		expressions = expressions.Where(static expression => expression != null);
+		expressions = expressions.Where(static expression => expression != null)
+								 .Where(static expression => expression.IsKind(SyntaxKind.StringLiteralExpression));
 
-		var literals = expressions.Where(static expression => expression.IsKind(SyntaxKind.StringLiteralExpression))
-								  .Select(static (expression, _) => (string)((LiteralExpressionSyntax)expression).Token.Value)
-								  .Where(static literal => !string.IsNullOrWhiteSpace(literal) && filter.IsMatch(literal));
-		var invalids = expressions.Where(static expression => !expression.IsKind(SyntaxKind.StringLiteralExpression));
+		var literals = expressions.Select(static (expression, _) => (string)((LiteralExpressionSyntax)expression).Token.Value)
+								  .Where(static literal => !string.IsNullOrWhiteSpace(literal) && filter.IsMatch(literal))
+								  .Collect().Select((array, _) => array.Distinct().ToArray());
 
-		context.RegisterSourceOutput(literals.Collect(), CreateSource);
-		context.RegisterSourceOutput(invalids, CreateDiagnosticErrors);
+		var packCount = literals.Select(static (literals, _) => CeilingDivide(literals.Length, PackWidth));
+
+		context.RegisterSourceOutput(packCount, CreateFields);
+		context.RegisterSourceOutput(literals, CreateMethods);
 	}
 
 	static bool CouldBeTargetInvocation(SyntaxNode node, CancellationToken token) => node is InvocationExpressionSyntax
 	{
-		Expression: MemberAccessExpressionSyntax { Name.Identifier.Text: TargetName },
+		Expression: MemberAccessExpressionSyntax { Name.Identifier.Text: ReportMethodName },
 		ArgumentList.Arguments.Count: 1
 	};
 
@@ -56,116 +58,191 @@ public class StatisticsGenerator : IIncrementalGenerator
 			context.SemanticModel.GetSymbolInfo(context.Node, token).Symbol is IMethodSymbol symbol &&
 			symbol.ContainingSymbol is INamedTypeSymbol parent && IsTargetContainingType(parent);
 
-		static bool IsTargetContainingType(INamedTypeSymbol symbol) => symbol.Name == TargetContainingTypeName && symbol.ContainingNamespace.ToDisplayString() == TargetNamespace;
+		static bool IsTargetContainingType(INamedTypeSymbol symbol) => symbol.Name == StatisticsTypeName && symbol.ContainingNamespace.ToDisplayString() == NamespaceName;
 	}
 
-	static void CreateSource(SourceProductionContext context, ImmutableArray<string> array)
+	static int CeilingDivide(int value, int divisor) => (value + divisor - 1) / divisor;
+
+	static void CreateFields(SourceProductionContext context, int packCount)
 	{
-		ReadOnlySpan<string> literals = SortDistinct(array);
 		var builder = new SourceBuilder(nameof(StatisticsGenerator));
 
 		builder.NewSection();
 		builder.Using("System");
 		builder.Using("System.Runtime.CompilerServices");
 		builder.Using("System.Runtime.InteropServices");
+		builder.Using("System.Runtime.Intrinsics");
+		builder.Using("System.Runtime.Intrinsics.X86");
 
 		builder.NewSection();
-		builder.Namespace(TargetNamespace);
+		builder.Namespace(NamespaceName);
 
 		builder.NewSection();
-		builder.Attribute("StructLayout", "LayoutKind.Sequential");
-		using (builder.FetchBlock($"partial struct {TargetContainingTypeName}"))
+		int ulongCount = CeilingDivide(packCount, LineWidth) * PackWidth * LineWidth;
+		int structSize = Math.Max(ulongCount * sizeof(ulong), 1);
+		builder.Attribute("StructLayout", $"LayoutKind.Sequential, Size = {structSize}");
+		using (builder.FetchBlock($"partial struct {StatisticsTypeName}"))
 		{
-			for (int i = 0; i < literals.Length; i++) builder.Line($"ulong count{i}");
+			if (packCount > 0)
+			{
+				for (int i = 0; i < packCount * PackWidth; i++) builder.Line($"ulong count{i}");
 
-			CreateSourceMethodReport(builder, literals);
+				builder.NewSection();
+				Sum();
+
+				builder.NewSection();
+				SumAvx2();
+
+				builder.NewSection();
+				SumSoftware();
+			}
+			else Sum();
 		}
 
-		context.AddSource("Statistics.g.cs", builder.ToString());
-	}
+		context.AddSource("Statistics.fields.g.cs", builder.ToString());
 
-	/// <summary>
-	/// Sorts an <see cref="ImmutableArray{T}"/> of <see cref="string"/>s by the <see cref="string.Length"/>
-	/// of the individual <see cref="string"/>s and remove all the duplicated <see cref="string"/>s.
-	/// </summary>
-	/// <param name="array">The <see cref="ImmutableArray{T}"/> to sort.</param>
-	/// <returns>A <see cref="ReadOnlySpan{T}"/> of <see cref="string"/> that contains the result.</returns>
-	static ReadOnlySpan<string> SortDistinct(ImmutableArray<string> array)
-	{
-		string[] result = array.ToArray();
-		Array.Sort(result, LengthComparer);
-
-		var set = new HashSet<string>(StringComparer.Ordinal);
-
-		int currentLength = 0;
-		int distinctCount = 0;
-
-		foreach (string current in result)
+		void Sum()
 		{
-			if (currentLength != current.Length)
+			using var _ = builder.FetchBlock($"public static unsafe partial {StatisticsTypeName} Sum({StatisticsTypeName}* source, int length)");
+
+			if (packCount == 0)
 			{
-				set.Clear();
-				currentLength = current.Length;
+				builder.Line("return default");
+				return;
 			}
 
-			if (set.Add(current)) result[distinctCount++] = current;
+			builder.Line("if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length))");
+			builder.Line("if (Avx2.IsSupported) return SumAvx2(source, length)");
+
+			builder.NewSection();
+			builder.Line("return SumSoftware(source, length)");
 		}
 
-		return result.AsSpan(0, distinctCount);
-
-		static int LengthComparer(string value0, string value1) => value0.Length.CompareTo(value1.Length);
-	}
-
-	static void CreateSourceMethodReport(SourceBuilder builder, ReadOnlySpan<string> literals)
-	{
-		builder.NewSection();
-		builder.Attribute("MethodImpl", "MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization");
-		using var _ = builder.FetchBlock($"public partial void {TargetName}(string {LabelParameterName})");
-
-		using (builder.FetchBlock($"switch ({LabelParameterName}.Length)"))
+		void SumAvx2()
 		{
-			for (int index = 0; index < literals.Length;)
+			builder.Attribute("SkipLocalsInit");
+			using var _ = builder.FetchBlock($"static unsafe {StatisticsTypeName} SumAvx2({StatisticsTypeName}* source, int length)");
+
+			builder.Line($"Unsafe.SkipInit(out {StatisticsTypeName} target)");
+			builder.Line("ulong* ptrTarget = (ulong*)&target");
+
+			builder.NewSection();
+			using (builder.FetchBlock($"for (int i = 0; i < {packCount}; i++)"))
 			{
-				string literal = literals[index];
-				int length = literal.Length;
-				int startIndex = index;
+				builder.Line($"int offset = i * {PackWidth}");
+				builder.Line("ulong* ptrSource = (ulong*)source + offset");
+				builder.Line("Vector256<ulong> accumulator = Avx.LoadVector256(ptrSource)");
 
-				using (builder.FetchBlock($"case {length}:"))
+				builder.NewSection();
+				using (builder.FetchBlock("for (int j = 1; j < length; j++)"))
 				{
-					do
-					{
-						if (index > startIndex)
-						{
-							literal = literals[index];
-							if (literal.Length != length) break;
-							builder.Prefix("else if (");
-						}
-						else builder.Prefix("if (");
+					builder.Line($"accumulator = Avx2.Add(accumulator, Avx.LoadVector256(ptrSource + j * {ulongCount}))");
+				}
 
-						for (int i = 0; i < length; i++)
-						{
-							builder.Append($"{LabelParameterName}[{i}] == '{literal[i]}'");
-							if (i + 1 < length) builder.Append(" && ");
-						}
+				builder.NewSection();
+				builder.Line("Avx.Store(ptrTarget + offset, accumulator)");
+			}
 
-						builder.Postfix($") ++count{index}");
-					}
-					while (++index < literals.Length);
+			builder.NewSection();
+			builder.Line("return target");
+		}
 
-					builder.Line("else break");
-					builder.Line("return");
+		void SumSoftware()
+		{
+			using var _ = builder.FetchBlock($"static unsafe {StatisticsTypeName} SumSoftware({StatisticsTypeName}* source, int length)");
+
+			builder.Line($"{StatisticsTypeName} target = *source");
+
+			builder.NewSection();
+			using (builder.FetchBlock("for (int i = 1; i < length; i++)"))
+			{
+				builder.Line($"ref readonly var refSource = ref Unsafe.AsRef<{StatisticsTypeName}>(source + i)");
+
+				builder.NewSection();
+				for (int i = 0; i < packCount * PackWidth; i++)
+				{
+					builder.Line($"target.count{i} += refSource.count{i}");
 				}
 			}
-		}
 
-		builder.NewSection();
-		builder.Line($"throw new ArgumentOutOfRangeException({LabelParameterName})");
+			builder.NewSection();
+			builder.Line("return target");
+		}
 	}
 
-	static void CreateDiagnosticErrors(SourceProductionContext context, ExpressionSyntax syntax)
+	static void CreateMethods(SourceProductionContext context, string[] literals)
 	{
-		// Diagnostic diagnostic = Diagnostic.Create();
-		//
-		// context.ReportDiagnostic();
+		Array.Sort(literals, LengthComparer);
+
+		context.CancellationToken.ThrowIfCancellationRequested();
+		var builder = new SourceBuilder(nameof(StatisticsGenerator));
+
+		builder.NewSection();
+		builder.Using("System");
+		builder.Using("System.Runtime.CompilerServices");
+
+		builder.NewSection();
+		builder.Namespace(NamespaceName);
+
+		builder.NewSection();
+		using (builder.FetchBlock($"partial struct {StatisticsTypeName}"))
+		{
+			Report();
+		}
+
+		context.AddSource("Statistics.methods.g.cs", builder.ToString());
+
+		void Report()
+		{
+			builder.Attribute("MethodImpl", "MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization");
+			using var _ = builder.FetchBlock($"public partial void {ReportMethodName}(string {LabelParameterName})");
+
+			if (literals.Length == 0)
+			{
+				builder.Line($"throw new ArgumentOutOfRangeException({LabelParameterName})");
+				return;
+			}
+
+			using (builder.FetchBlock($"switch ({LabelParameterName}.Length)"))
+			{
+				for (int index = 0; index < literals.Length;)
+				{
+					string literal = literals[index];
+					int length = literal.Length;
+					int startIndex = index;
+
+					using (builder.FetchBlock($"case {length}:"))
+					{
+						do
+						{
+							if (index > startIndex)
+							{
+								literal = literals[index];
+								if (literal.Length != length) break;
+								builder.Prefix("else if (");
+							}
+							else builder.Prefix("if (");
+
+							for (int i = 0; i < length; i++)
+							{
+								builder.Append($"{LabelParameterName}[{i}] == '{literal[i]}'");
+								if (i + 1 < length) builder.Append(" && ");
+							}
+
+							builder.Postfix($") ++count{index}");
+						}
+						while (++index < literals.Length);
+
+						builder.Line("else break");
+						builder.Line("return");
+					}
+				}
+			}
+
+			builder.NewSection();
+			builder.Line($"throw new ArgumentOutOfRangeException({LabelParameterName})");
+		}
+
+		static int LengthComparer(string value0, string value1) => value0.Length.CompareTo(value1.Length);
 	}
 }
