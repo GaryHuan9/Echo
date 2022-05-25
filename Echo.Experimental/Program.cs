@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using Echo.Common.Mathematics;
 using Echo.Common.Mathematics.Randomization;
-using Echo.Core.Aggregation.Acceleration;
-using JitBuddy;
 
 namespace Echo.Experimental;
 
@@ -15,7 +11,7 @@ public class Program
 	static void Main()
 	{
 		// TestMonteCarlo();
-		TestJitter();
+		// TestJitter();
 		// TestUnmanaged();
 
 		// BenchmarkRunner.Run<PackedFloats>();
@@ -73,8 +69,8 @@ public class Program
 		// var property = typeof(AxisAlignedBoundingBox4).GetProperty(nameof(AxisAlignedBoundingBox4.Encapsulated));
 		// DebugHelper.Log(property!.GetMethod.ToAsm());
 
-		var method = typeof(Statistics).GetMethod(nameof(Statistics.ReportConst));
-		DebugHelper.Log(method.ToAsm());
+		// var method = typeof(Float4x4).GetMethod(nameof(Float4x4.MultiplyPoint));
+		// DebugHelper.Log(method.ToAsm());
 	}
 
 	static unsafe void TestUnmanaged()
