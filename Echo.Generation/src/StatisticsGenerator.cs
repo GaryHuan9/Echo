@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -35,29 +37,24 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 								CouldBeTargetStruct,
 								TargetStructOrNull
 							)
-						   .Where(static type => type != null);
+						   .Where(static type => type != null)
+						   .Collect().Select(DistinctSelector);
 
 		var invocations = context.SyntaxProvider.CreateSyntaxProvider
 								  (
 									  CouldBeTargetInvocation,
 									  TargetInvocationOrDefault
 								  )
-								 .Where(static invocation => invocation.type != null && invocation.literal != null)
-								 .Where(static invocation => IsValidLiteral(invocation.literal));
+								 .Where(static invocation => invocation != default)
+								 .Where(static invocation => IsValidLiteral(invocation.value))
+								 .Collect().Select(InvocationDistributor);
 
-		invocations.Collect().SelectMany(static invocations =>
-		{
-			var map = new Dictionary<INamedTypeSymbol, HashSet<string>>(SymbolEqualityComparer.Default);
+		var labels = types.Combine(invocations).SelectMany(TypeInvocationMerger)
+						  .Select((pair, _) => new SymbolPair<StringSet>(pair.Key, pair.Value));
 
-			foreach (Invocation invocation in invocations) { }
-		});
+		var packCounts = labels.Select(PackCountSelector);
 
-		var labels = invocations.Select(static (invocation, _) => ((LiteralExpressionSyntax)invocation.expression).Token.Text)
-								.Collect().Select((array, _) => array.Distinct(StringComparer.Ordinal).ToArray());
-
-		var packCount = labels.Select(static (labels, _) => CeilingDivide(labels.Length, PackWidth));
-
-		context.RegisterSourceOutput(packCount, Generation.CreateMembersWithoutLabels);
+		context.RegisterSourceOutput(packCounts, Generation.CreateMembersWithoutLabels);
 		context.RegisterSourceOutput(labels, Generation.CreateMembersWithLabels);
 	}
 
@@ -88,7 +85,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	/// Returns either the invocation parameter into <see cref="MethodName"/> if
 	/// the node is actually the invocation that we are looking for, or otherwise null.
 	/// </summary>
-	static Invocation TargetInvocationOrDefault(GeneratorSyntaxContext context, CancellationToken token)
+	static SymbolPair<string> TargetInvocationOrDefault(GeneratorSyntaxContext context, CancellationToken token)
 	{
 		var syntax = (InvocationExpressionSyntax)context.Node;
 		var expression = syntax.ArgumentList.Arguments[0].Expression;
@@ -99,10 +96,8 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		if (context.SemanticModel.GetDeclaredSymbol(syntax, token) is not IMethodSymbol symbol) return default;
 		if (symbol.ContainingSymbol is not INamedTypeSymbol type || !IsTargetType(type)) return default;
 
-		return new Invocation(type, literal);
+		return new SymbolPair<string>(type, literal);
 	}
-
-	record struct Invocation(INamedTypeSymbol type, string literal);
 
 	static bool IsTargetType(INamedTypeSymbol symbol)
 	{
@@ -141,4 +136,139 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	/// Divides while rounding up; only works with positive numbers.
 	/// </summary>
 	static int CeilingDivide(int value, int divisor) => (value + divisor - 1) / divisor;
+
+	static SymbolSet DistinctSelector(ImmutableArray<INamedTypeSymbol> array, CancellationToken _) => new(array);
+
+	static DeclarationMap InvocationDistributor(ImmutableArray<SymbolPair<string>> invocations, CancellationToken token)
+	{
+		var map = new DeclarationMap();
+
+		foreach ((INamedTypeSymbol type, string literal) in invocations)
+		{
+			token.ThrowIfCancellationRequested();
+
+			if (!map.TryGetValue(type, out StringSet set))
+			{
+				set = new StringSet();
+				map.Add(type, set);
+			}
+
+			set.Add(literal);
+		}
+
+		return map;
+	}
+
+	static DeclarationMap TypeInvocationMerger((SymbolSet, DeclarationMap) pair, CancellationToken token)
+	{
+		(SymbolSet types, DeclarationMap invocations) = pair;
+
+		foreach (INamedTypeSymbol symbol in types)
+		{
+			token.ThrowIfCancellationRequested();
+			if (invocations.ContainsKey(symbol)) continue;
+			invocations.Add(symbol, new StringSet());
+		}
+
+		return invocations;
+	}
+
+	static SymbolPair<int> PackCountSelector(SymbolPair<StringSet> declaration, CancellationToken _) => new(declaration.type, CeilingDivide(declaration.value.Count, PackWidth));
+
+	readonly record struct FlatSymbol
+	{
+		public FlatSymbol(ISymbol type)
+		{
+			container = type.ContainingNamespace.ToDisplayString();
+			name = type.Name;
+		}
+
+		public readonly string container; //The namespace, but the namespace keyword is reserved XD
+		public readonly string name;
+	}
+
+	readonly record struct SymbolPair<T>(INamedTypeSymbol type, T value)
+	{
+		public readonly INamedTypeSymbol type = type;
+		public readonly T value = value;
+	}
+
+	sealed class SymbolSet : EquitableSet<INamedTypeSymbol>
+	{
+		public SymbolSet(IEnumerable<INamedTypeSymbol> collection) : base(collection, SymbolEqualityComparer.Default) { }
+	}
+
+	sealed class StringSet : EquitableSet<string>
+	{
+		public StringSet() : base(StringComparer.Ordinal) { }
+	}
+
+	class EquitableSet<T> : IEquatable<EquitableSet<T>>
+	{
+		protected EquitableSet(IEqualityComparer<T> comparer)
+		{
+			this.comparer = comparer;
+			set = new HashSet<T>(comparer);
+		}
+
+		protected EquitableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
+		{
+			this.comparer = comparer;
+			set = new HashSet<T>(collection, comparer);
+		}
+
+		readonly IEqualityComparer<T> comparer;
+		readonly HashSet<T> set;
+		uint totalHash = 0xB706441D;
+
+		public int Count => set.Count;
+
+		public bool Add(T item)
+		{
+			if (set.Add(item))
+			{
+				uint hash = (uint)comparer.GetHashCode(item);
+				totalHash ^= RotateLeft(hash, set.Count - 1);
+
+				return true;
+			}
+
+			return false;
+
+			static uint RotateLeft(uint value, int shift) => (value << shift) | (value >> (32 - shift));
+		}
+
+		public T[] ToArray() => set.ToArray();
+
+		public bool Equals(EquitableSet<T> other)
+		{
+			if (other is null) return false;
+			if (set == other.set) return true;
+			if (set.Count != other.set.Count || totalHash != other.totalHash) return false;
+
+			foreach (T item in other.set)
+			{
+				if (!set.Contains(item)) return false;
+			}
+
+			return true;
+		}
+
+		public HashSet<T>.Enumerator GetEnumerator() => set.GetEnumerator();
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != GetType()) return false;
+			return Equals((EquitableSet<T>)obj);
+		}
+
+		public override int GetHashCode() => throw new NotSupportedException();
+	}
+
+	class DeclarationMap : Dictionary<INamedTypeSymbol, StringSet>
+	{
+		public DeclarationMap() : base(SymbolEqualityComparer.Default) { }
+	}
 }

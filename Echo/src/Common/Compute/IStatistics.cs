@@ -5,10 +5,11 @@
 /// Within this interface, an event consists of a label and a count, and this interface
 /// keeps tracks of how many times each event has been seen.
 /// </summary>
-/// <typeparam name="T">Should be the type itself (ie. the type that is implementing this interface.</typeparam>
+/// <typeparam name="T">Should be the type itself (ie. the type that is implementing this interface).</typeparam>
 /// <remarks>The implementation of this interface can be automatically generated. See
 /// the <see cref="GeneratedStatisticsAttribute"/> for more details and usage.</remarks>
-public interface IStatistics<T> where T : unmanaged, IStatistics<T>
+// ReSharper disable once TypeParameterCanBeVariant
+public interface IStatistics< /*should not be made as covariant!*/ T> where T : unmanaged, IStatistics<T>
 {
 	/// <summary>
 	/// The number of different events tracked by this <see cref="IStatistics{T}"/>.
@@ -38,6 +39,6 @@ public interface IStatistics<T> where T : unmanaged, IStatistics<T>
 	/// </summary>
 	/// <param name="source">A pointer to the series of <see cref="IStatistics{T}"/> to be summed together..</param>
 	/// <param name="length">The number of <see cref="IStatistics{T}"/> to add together; must be positive.</param>
-	/// <remarks>The content of this <see cref="IStatistics{T}"/> will be replaced by the result of this summation.</remarks>
-	unsafe void Sum(T* source, int length);
+	/// <returns>A new <see cref="IStatistics{T}"/> containing the sum.</returns>
+	unsafe T Sum(T* source, int length); //OPTIMIZE: convert to static method when we upgrade to dotnet 7
 }
