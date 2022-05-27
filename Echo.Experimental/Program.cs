@@ -2,14 +2,20 @@
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using Echo.Common.Compute;
 using Echo.Common.Mathematics.Randomization;
+using Echo.Core.Textures;
 
 namespace Echo.Experimental;
 
 public class Program
 {
-	static void Main()
+	static unsafe void Main()
 	{
+		TestStats stats = default;
+
+		stats.Sum(null, default);
+
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
