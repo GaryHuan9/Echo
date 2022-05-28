@@ -13,7 +13,7 @@ partial class StatisticsGenerator
 		/// </summary>
 		public static void CreateMembersWithoutLabels(SourceProductionContext context, SymbolPair<int> pair)
 		{
-			(INamedTypeSymbol type, int packCount) = pair;
+			(FlatSymbol type, int packCount) = pair;
 
 			var builder = new SourceBuilder(nameof(StatisticsGenerator));
 
@@ -24,13 +24,13 @@ partial class StatisticsGenerator
 			builder.NewLine("using System.Runtime.Intrinsics.X86");
 
 			builder.NewLine();
-			builder.NewLine($"namespace {type.ContainingNamespace.ToDisplayString()}");
+			builder.NewLine($"namespace {type.container}");
 
 			builder.NewLine();
 			int ulongCount = CeilingDivide(packCount, LineWidth) * PackWidth * LineWidth;
 			int structSize = Math.Max(ulongCount * sizeof(ulong), 1);
 			builder.Attribute("StructLayout", $"LayoutKind.Sequential, Size = {structSize}");
-			using (builder.FetchBlock($"partial struct {type.Name}"))
+			using (builder.FetchBlock($"partial struct {type.name}"))
 			{
 				if (packCount > 0)
 				{
@@ -48,7 +48,7 @@ partial class StatisticsGenerator
 				else MethodSum();
 			}
 
-			context.AddSource($"{type.Name}.fields.g.cs", builder.ToString());
+			context.AddSource($"{type.name}.fields.g.cs", builder.ToString());
 
 			void FieldCounts()
 			{
@@ -57,7 +57,7 @@ partial class StatisticsGenerator
 
 			void MethodSum()
 			{
-				using var _ = builder.FetchBlock($"public unsafe {type.Name} Sum({type.Name}* source, int length)");
+				using var _ = builder.FetchBlock($"public unsafe {type.name} Sum({type.name}* source, int length)");
 
 				builder.NewLine("if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length))");
 
@@ -74,9 +74,9 @@ partial class StatisticsGenerator
 			void MethodSumAvx2()
 			{
 				builder.Attribute("SkipLocalsInit");
-				using var _ = builder.FetchBlock($"static unsafe {type.Name} SumAvx2({type.Name}* source, int length)");
+				using var _ = builder.FetchBlock($"static unsafe {type.name} SumAvx2({type.name}* source, int length)");
 
-				builder.NewLine($"Unsafe.SkipInit(out {type.Name} target)");
+				builder.NewLine($"Unsafe.SkipInit(out {type.name} target)");
 				builder.NewLine("ulong* ptrTarget = (ulong*)&target");
 
 				builder.NewLine();
@@ -102,14 +102,14 @@ partial class StatisticsGenerator
 
 			void MethodSumSoftware()
 			{
-				using var _ = builder.FetchBlock($"static unsafe {type.Name} SumSoftware({type.Name}* source, int length)");
+				using var _ = builder.FetchBlock($"static unsafe {type.name} SumSoftware({type.name}* source, int length)");
 
-				builder.NewLine($"{type.Name} target = *source");
+				builder.NewLine($"{type.name} target = *source");
 
 				builder.NewLine();
 				using (builder.FetchBlock("for (int i = 1; i < length; i++)"))
 				{
-					builder.NewLine($"ref readonly var refSource = ref Unsafe.AsRef<{type.Name}>(source + i)");
+					builder.NewLine($"ref readonly var refSource = ref Unsafe.AsRef<{type.name}>(source + i)");
 
 					builder.NewLine();
 					for (int i = 0; i < packCount * PackWidth; i++)
@@ -128,7 +128,7 @@ partial class StatisticsGenerator
 		/// </summary>
 		public static void CreateMembersWithLabels(SourceProductionContext context, SymbolPair<StringSet> pair)
 		{
-			(INamedTypeSymbol type, StringSet set) = pair;
+			(FlatSymbol type, StringSet set) = pair;
 
 			string[] labels = set.ToArray();
 			Array.Sort(labels, StringComparer.OrdinalIgnoreCase);
@@ -140,10 +140,10 @@ partial class StatisticsGenerator
 			builder.NewLine("using System.Runtime.CompilerServices");
 
 			builder.NewLine();
-			builder.NewLine($"namespace {type.ContainingNamespace.ToDisplayString()}");
+			builder.NewLine($"namespace {type.container}");
 
 			builder.NewLine();
-			using (builder.FetchBlock($"partial struct {type.Name}"))
+			using (builder.FetchBlock($"partial struct {type.name}"))
 			{
 				FieldEventLabels();
 
@@ -157,7 +157,7 @@ partial class StatisticsGenerator
 				MethodReport();
 			}
 
-			context.AddSource($"{type.Name}.methods.g.cs", builder.ToString());
+			context.AddSource($"{type.name}.methods.g.cs", builder.ToString());
 
 			void FieldEventLabels()
 			{
@@ -214,7 +214,7 @@ partial class StatisticsGenerator
 
 				if (labels.Length == 0)
 				{
-					builder.NewLine("throw new ArgumentOutOfRangeException(label)");
+					builder.NewLine("throw new ArgumentOutOfRangeException(nameof(label))");
 					return;
 				}
 
@@ -265,7 +265,7 @@ partial class StatisticsGenerator
 				}
 
 				builder.NewLine();
-				builder.NewLine("throw new ArgumentOutOfRangeException(label)");
+				builder.NewLine("throw new ArgumentOutOfRangeException(nameof(label))");
 
 				int LabelLengthComparer(int index0, int index1) => labels[index0].Length.CompareTo(labels[index1].Length);
 			}
