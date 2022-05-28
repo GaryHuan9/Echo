@@ -1,4 +1,4 @@
-﻿namespace Echo.Core.Compute;
+﻿namespace Echo.Common.Compute;
 
 /// <summary>
 /// A delegation into an <see cref="Operation"/> representing the <see cref="Worker"/> that is executing the said <see cref="Operation"/>.

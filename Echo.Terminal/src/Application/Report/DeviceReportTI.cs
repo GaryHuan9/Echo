@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Numerics;
 using CodeHelpers.Diagnostics;
+using Echo.Common.Compute;
 using Echo.Common.Memory;
-using Echo.Core.Compute;
 using Echo.Terminal.Core.Display;
 using Echo.Terminal.Core.Interface;
 

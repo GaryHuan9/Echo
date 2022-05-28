@@ -4,7 +4,7 @@ using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
-using Echo.Core.Compute;
+using Echo.Common.Compute;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grid;
 
