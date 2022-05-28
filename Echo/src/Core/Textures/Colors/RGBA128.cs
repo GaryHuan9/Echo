@@ -49,7 +49,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	public static RGBA128 White => new(Float4.One);
 
 	public override int GetHashCode() => d.GetHashCode();
-	public override string ToString() => ToString(string.Empty);
+	public override string ToString() => ToString(default);
 
 	/// <inheritdoc/>
 	public RGBA128 ToRGBA128() => this;
@@ -57,8 +57,8 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// <inheritdoc/>
 	public RGBA128 FromRGBA128(in RGBA128 value) => value;
 
-	public string ToString(string format) => ToString(format, CultureInfo.InvariantCulture);
-	public string ToString(string format, IFormatProvider provider) => d.ToString(format, provider);
+	/// <inheritdoc cref="ToString()"/>
+	public string ToString(string format, IFormatProvider provider = null) => d.ToString(format, provider);
 
 	/// <summary>
 	/// Returns this <see cref="RGBA128"/> converted as <typeparamref name="T"/> using <see cref="IColor{T}.FromRGBA128"/>.

@@ -1,4 +1,6 @@
-﻿using CodeHelpers;
+﻿using System;
+using System.Threading;
+using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using CodeHelpers.Threads;
@@ -14,7 +16,7 @@ using Echo.Core.Textures.Generative;
 using Echo.Core.Textures.Grid;
 using Echo.InOut;
 
-namespace Echo.Terminal;
+namespace Echo.TerminalOld;
 
 //        ..      .
 //     x88f` `..x88. .>             .uef^"

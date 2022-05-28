@@ -1,3 +1,4 @@
+using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
@@ -7,7 +8,7 @@ using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Grid;
 
-namespace Echo.Terminal;
+namespace Echo.TerminalOld;
 
 public class RenderMonitor : Terminal.Section
 {

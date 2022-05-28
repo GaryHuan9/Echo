@@ -1,17 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
-using BenchmarkDotNet.Running;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Mathematics.Randomization;
-using Echo.Core.Aggregation.Acceleration;
-using Echo.Core.Textures.Colors;
-using Echo.Experimental.Benchmarks;
-using JitBuddy;
 
 namespace Echo.Experimental;
 
@@ -29,7 +20,8 @@ public class Program
 		// BenchmarkRunner.Run<Loops>();
 		// BenchmarkRunner.Run<AabbSimd>();
 		// BenchmarkRunner.Run<MathFunctions>();
-		BenchmarkRunner.Run<BufferCopy>();
+		// BenchmarkRunner.Run<BufferCopy>();
+		// BenchmarkRunner.Run<Timing>();
 	}
 
 	static void TestMonteCarlo()
@@ -74,10 +66,10 @@ public class Program
 		// var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
 		// DebugHelper.Log(method.ToAsm());
 
-		var property = typeof(AxisAlignedBoundingBox4).GetProperty(nameof(AxisAlignedBoundingBox4.Encapsulated));
-		DebugHelper.Log(property!.GetMethod.ToAsm());
+		// var property = typeof(AxisAlignedBoundingBox4).GetProperty(nameof(AxisAlignedBoundingBox4.Encapsulated));
+		// DebugHelper.Log(property!.GetMethod.ToAsm());
 
-		// var method = typeof(MathF).GetMethod(nameof(Round));
+		// var method = typeof(Float4x4).GetMethod(nameof(Float4x4.MultiplyPoint));
 		// DebugHelper.Log(method.ToAsm());
 	}
 
