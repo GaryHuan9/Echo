@@ -287,6 +287,6 @@ public class BoundingVolumeHierarchy : Aggregator
 		/// This is the <see cref="NodeToken"/> stored in this <see cref="Node"/>, which might represent either the leaf geometry if this <see cref="NodeToken.IsGeometry"/>,
 		/// or the index of the first child of this <see cref="Node"/> if <see cref="NodeToken.IsNode"/> (and the second child can be accessed using <see cref="NodeToken.Next"/>.
 		/// </summary>
-		[FieldOffset(28)] public readonly NodeToken token;
+		[FieldOffset(24)] public readonly NodeToken token;
 	}
 }

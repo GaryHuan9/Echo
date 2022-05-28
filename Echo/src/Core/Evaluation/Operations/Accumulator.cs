@@ -22,7 +22,7 @@ public struct Accumulator
 	/// <summary>
 	/// The unbiased sample variance of all of the samples using Welford's online algorithm.
 	/// </summary>
-	public readonly Float4 Variance => count == 0 ? squared.Result : squared.Result / (count - 1);
+	public readonly Float4 Variance => count < 3 ? squared.Result : squared.Result / (count - 1);
 
 	/// <summary>
 	/// The remaining noise of the samples, which is their <see cref="Variance"/>
