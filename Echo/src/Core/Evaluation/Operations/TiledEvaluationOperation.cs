@@ -12,7 +12,7 @@ using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Operations;
 
-public class TiledEvaluationOperation : Operation
+public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 {
 	TiledEvaluationProfile profile;
 	RenderBuffer.Writer writer;
@@ -28,10 +28,8 @@ public class TiledEvaluationOperation : Operation
 		set => _profile = value;
 	}
 
-	public override void Prepare(int population)
+	protected override ulong WarmUp(int population)
 	{
-		base.Prepare(population);
-
 		//Validate profile
 		profile = Profile ?? throw ExceptionHelper.Invalid(nameof(Profile), InvalidType.isNull);
 		profile.Validate();
@@ -40,25 +38,17 @@ public class TiledEvaluationOperation : Operation
 		if (profile.Buffer.TryGetWriter(profile.Evaluator.Destination, out writer)) { }
 		else throw new Exception("Invalid destination layer assigned to evaluator.");
 
-		//Create tile sequence
+		//Create tile sequence and contexts
 		Int2 size = profile.Buffer.size.CeiledDivide(profile.TileSize);
 		tilePositionSequence = profile.Pattern.CreateSequence(size);
 
-		//Duplicate context tuples
-		if ((contexts?.Length ?? 0) < population) Array.Resize(ref contexts, population);
-		ContinuousDistribution source = profile.Distribution;
+		CreateContexts(population);
 
-		foreach (ref Context context in contexts.AsSpan())
-		{
-			if (context.Distribution != source) context.Distribution = source with { };
-			context.Allocator ??= new Allocator();
-		}
+		return (ulong)tilePositionSequence.Length;
 	}
 
-	protected override bool Execute(ulong procedure, IScheduler scheduler)
+	protected override void Execute(ulong procedure, IScheduler scheduler, ref EvaluationStatistics statistics)
 	{
-		if (procedure >= (ulong)tilePositionSequence.Length) return false;
-
 		(ContinuousDistribution distribution, Allocator allocator) = contexts[scheduler.Id];
 
 		Evaluator evaluator = profile.Evaluator;
@@ -104,9 +94,20 @@ public class TiledEvaluationOperation : Operation
 
 			writer(position, accumulator);
 		}
-
-		return true;
 	}
 
-	record struct Context(ContinuousDistribution Distribution, Allocator Allocator);
+	void CreateContexts(int population)
+	{
+		if (contexts == null || contexts.Length < population) Array.Resize(ref contexts, population);
+
+		ContinuousDistribution source = profile.Distribution;
+
+		foreach (ref Context context in contexts.AsSpan(0, population))
+		{
+			if (context.Distribution != source) context = context with { Distribution = source with { } };
+			if (context.Allocator == null) context = context with { Allocator = new Allocator() };
+		}
+	}
+
+	readonly record struct Context(ContinuousDistribution Distribution, Allocator Allocator);
 }
