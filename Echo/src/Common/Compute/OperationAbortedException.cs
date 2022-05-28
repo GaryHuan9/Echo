@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Echo.Core.Compute;
+namespace Echo.Common.Compute;
 
 /// <summary>
 /// Exception thrown by <see cref="IScheduler"/> during an <see cref="Operation"/> abortion.

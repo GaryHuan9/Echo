@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using Echo.Common;
 using Echo.Common.Memory;
 
-namespace Echo.Core.Compute;
+namespace Echo.Common.Compute;
 
 /// <summary>
 /// A controlled compute engine to execute different <see cref="Operation"/>s.
