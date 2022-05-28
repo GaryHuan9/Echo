@@ -1,9 +1,9 @@
 ﻿using System;
 using CodeHelpers;
 using CodeHelpers.Packed;
+using Echo.Common.Compute;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Memory;
-using Echo.Core.Compute;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;

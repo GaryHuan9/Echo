@@ -2,9 +2,8 @@
 using System.Numerics;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using Echo.Common;
 
-namespace Echo.Core.Compute;
+namespace Echo.Common.Compute;
 
 /// <summary>
 /// A <see cref="Thread"/> that works under a <see cref="Device"/> to jointly perform certain <see cref="Operation"/>s.

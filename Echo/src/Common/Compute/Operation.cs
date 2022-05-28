@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Echo.Core.Compute;
+namespace Echo.Common.Compute;
 
 /// <summary>
 /// A task with individual steps to be executed both sequentially and concurrently.
