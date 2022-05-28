@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -12,7 +11,14 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace Echo.Generation;
 
 /// <summary>
-/// Source generator for the GeneratedStatisticsAttribute in Echo.Common.Compute.
+/// Source generator for the GeneratedStatisticsAttribute in Echo.Common.Compute; all structs that
+/// implements the IStatistics interface and are attributed with the GeneratedStatisticsAttribute
+/// will be candidates for generation.
+///
+/// The generation will also look for invocations to the Report method with constant string literals
+/// as parameters for the different statistics types. At then end, it will generate two files for each
+/// candidate struct, one containing members relating only to the numerical fields, and the other
+/// creates members relating to the main Report method that is specially treated for the Jitter.
 /// </summary>
 [Generator]
 public partial class StatisticsGenerator : IIncrementalGenerator
@@ -22,9 +28,6 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	const string NamespaceName = "Echo.Common.Compute";
 	const string AttributeName = "GeneratedStatisticsAttribute";
 
-	const int PackWidth = 4; //How many UInt64s are packed together
-	const int LineWidth = 2; //How many packs per 64-byte cache line
-
 	/// <summary>
 	/// <see cref="Regex"/> filter allowing only words (A-Z a-z 0-9), space ` `, and slash `/`.
 	/// </summary>
@@ -32,9 +35,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		var wait = new SpinWait();
-		while (!Debugger.IsAttached) wait.SpinOnce();
-
+		//The candidate struct types that we found
 		var types = context.SyntaxProvider.CreateSyntaxProvider
 							(
 								CouldBeTargetStruct,
@@ -43,6 +44,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 						   .Where(static type => type != default)
 						   .Collect().Select(DistinctSelector);
 
+		//The invocations into the Report method
 		var invocations = context.SyntaxProvider.CreateSyntaxProvider
 								  (
 									  CouldBeTargetInvocation,
@@ -51,21 +53,30 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 								 .Where(static invocation => invocation != default)
 								 .Collect().Select(InvocationDistributor);
 
+		//Combine the two pipelines into one with the invocations paired with the type
 		var labels = types.Combine(invocations).SelectMany(TypeInvocationMerger)
 						  .Select((pair, _) => new SymbolPair<StringSet>(pair.Key, pair.Value));
 
-		var packCounts = labels.Select(PackCountSelector);
+		//Create another pipeline with the divided invocation count for reduced field generation
+		var packCounts = labels.Select(PackCountDivider);
 
+		//Generate sources from the pipelines
 		context.RegisterSourceOutput(packCounts, Generation.CreateMembersWithoutLabels);
 		context.RegisterSourceOutput(labels, Generation.CreateMembersWithLabels);
 	}
 
+	/// <summary>
+	/// Whether <paramref name="node"/> could be a declaration of a struct type that matches our criteria.
+	/// </summary>
 	static bool CouldBeTargetStruct(SyntaxNode node, CancellationToken token) => node is StructDeclarationSyntax
 	{
 		AttributeLists.Count: > 0,
 		BaseList.Types.Count: > 0
 	};
 
+	/// <summary>
+	/// Returns the struct <see cref="FlatSymbol"/> if the declaration is 
+	/// </summary>
 	static FlatSymbol TargetStructOrDefault(GeneratorSyntaxContext context, CancellationToken token)
 	{
 		var syntax = (StructDeclarationSyntax)context.Node;
@@ -74,8 +85,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	}
 
 	/// <summary>
-	/// Whether <paramref name="node"/> might be the invocation
-	/// on <see cref="MethodName"/> that we are looking for.
+	/// Whether <paramref name="node"/> might be the invocation on <see cref="MethodName"/> that we are looking for.
 	/// </summary>
 	static bool CouldBeTargetInvocation(SyntaxNode node, CancellationToken token) => node is InvocationExpressionSyntax
 	{
@@ -100,15 +110,25 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		var symbol = context.SemanticModel.GetSymbolInfo(expression, token).Symbol;
 
 		if (GetSymbolType(symbol) is not INamedTypeSymbol type || !IsTargetType(type)) return default;
-
 		return new SymbolPair<string>(new FlatSymbol(type), literal);
+
+		static ITypeSymbol GetSymbolType(ISymbol symbol) => symbol switch
+		{
+			ILocalSymbol local => local.Type,
+			IFieldSymbol field => field.Type,
+			IPropertySymbol property => property.Type,
+			_ => null
+		};
 	}
 
-	static bool IsTargetType(ITypeSymbol symbol)
+	/// <summary>
+	/// Returns whether <paramref name="symbol"/> is a type that matches our criteria for generation.
+	/// </summary>
+	static bool IsTargetType(INamedTypeSymbol symbol)
 	{
 		return HasTargetAttribute(symbol) && HasTargetInterface(symbol);
 
-		static bool HasTargetAttribute(ISymbol symbol)
+		static bool HasTargetAttribute(INamedTypeSymbol symbol)
 		{
 			foreach (AttributeData data in symbol.GetAttributes())
 			{
@@ -121,7 +141,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 			return false;
 		}
 
-		static bool HasTargetInterface(ITypeSymbol symbol)
+		static bool HasTargetInterface(INamedTypeSymbol symbol)
 		{
 			foreach (INamedTypeSymbol type in symbol.Interfaces)
 			{
@@ -135,21 +155,14 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		}
 	}
 
-	static ITypeSymbol GetSymbolType(ISymbol symbol) => symbol switch
-	{
-		ILocalSymbol local => local.Type,
-		IFieldSymbol field => field.Type,
-		IPropertySymbol property => property.Type,
-		_ => null
-	};
-
 	/// <summary>
-	/// Divides while rounding up; only works with positive numbers.
+	/// Creates a <see cref="SymbolSet"/> from an <see cref="ImmutableArray{T}"/> of <see cref="FlatSymbol"/>.
 	/// </summary>
-	static int CeilingDivide(int value, int divisor) => (value + divisor - 1) / divisor;
-
 	static SymbolSet DistinctSelector(ImmutableArray<FlatSymbol> array, CancellationToken _) => new(array);
 
+	/// <summary>
+	/// Distributes invocations based on the type that they are invoking into. 
+	/// </summary>
 	static Dictionary<FlatSymbol, StringSet> InvocationDistributor(ImmutableArray<SymbolPair<string>> invocations, CancellationToken token)
 	{
 		var map = new Dictionary<FlatSymbol, StringSet>();
@@ -170,6 +183,10 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		return map;
 	}
 
+	/// <summary>
+	/// Merges all struct types with their corresponding invocations. If no invocation
+	/// is present for a type, then a new empty entry is created for that type. 
+	/// </summary>
 	static Dictionary<FlatSymbol, StringSet> TypeInvocationMerger((SymbolSet, Dictionary<FlatSymbol, StringSet>) pair, CancellationToken token)
 	{
 		(SymbolSet types, Dictionary<FlatSymbol, StringSet> invocations) = pair;
@@ -184,11 +201,23 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		return invocations;
 	}
 
-	static SymbolPair<int> PackCountSelector(SymbolPair<StringSet> declaration, CancellationToken _) => new(declaration.type, CeilingDivide(declaration.value.Count, PackWidth));
+	/// <summary>
+	/// Ceiling divides the number of invocations.
+	/// </summary>
+	static SymbolPair<int> PackCountDivider(SymbolPair<StringSet> declaration, CancellationToken _) => new(declaration.type, CeilingDivide(declaration.value.Count, PackWidth));
 
+	/// <summary>
+	/// Divides while rounding up; only works with positive numbers.
+	/// </summary>
+	static int CeilingDivide(int value, int divisor) => (value + divisor - 1) / divisor;
+
+	/// <summary>
+	/// A flattened version of a <see cref="ITypeSymbol"/>, stores only the namespace and the type name.
+	/// This allows two <see cref="ITypeSymbol"/> from different compilations to be compared and reused.
+	/// </summary>
 	readonly record struct FlatSymbol
 	{
-		public FlatSymbol(ISymbol type)
+		public FlatSymbol(ITypeSymbol type)
 		{
 			container = type.ContainingNamespace.ToDisplayString();
 			name = type.Name;
@@ -198,22 +227,35 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		public readonly string name;
 	}
 
+	/// <summary>
+	/// A generic pair mapping from a <see cref="FlatSymbol"/> to a <see cref="value"/> of type <see cref="T"/>.
+	/// </summary>
 	readonly record struct SymbolPair<T>(FlatSymbol type, T value)
 	{
 		public readonly FlatSymbol type = type;
 		public readonly T value = value;
 	}
 
+	/// <summary>
+	/// An <see cref="EquitableSet{T}"/> of <see cref="FlatSymbol"/>s.
+	/// </summary>
 	sealed class SymbolSet : EquitableSet<FlatSymbol>
 	{
 		public SymbolSet(IEnumerable<FlatSymbol> collection) : base(collection) { }
 	}
 
+	/// <summary>
+	/// An <see cref="EquitableSet{T}"/> of <see cref="string"/>s.
+	/// </summary>
 	sealed class StringSet : EquitableSet<string>
 	{
 		public StringSet() : base(StringComparer.Ordinal) { }
 	}
 
+	/// <summary>
+	/// A hash set that can be used to compare content equality.
+	/// Used for better caching between different compilations.
+	/// </summary>
 	class EquitableSet<T> : IEquatable<EquitableSet<T>>
 	{
 		protected EquitableSet(IEqualityComparer<T> comparer)
