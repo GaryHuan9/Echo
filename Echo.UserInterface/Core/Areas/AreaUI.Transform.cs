@@ -106,19 +106,19 @@ partial class AreaUI
 			set => RightMargin = BottomMargin = LeftMargin = TopMargin = value;
 		}
 
-		float _preferedWidth = -1f;
-		float _preferedHeight = -1f;
+		float _preferredWidth = -1f;
+		float _preferredHeight = -1f;
 
-		public float? PreferedWidth //Currently unused, will have similar functionally as PreferedHeight
+		public float? PreferedWidth //Currently unused, will have similar functionally as PreferredHeight
 		{
-			get => _preferedWidth < 0f ? null : _preferedWidth;
-			set => Assign(ref _preferedWidth, value ?? -1f, area.Parent.transform);
+			get => _preferredWidth < 0f ? null : _preferredWidth;
+			set => Assign(ref _preferredWidth, value ?? -1f, area.Parent.transform);
 		}
 
-		public float? PreferedHeight //Used by auto layout components to calculate positioning
+		public float? PreferredHeight //Used by auto layout components to calculate positioning
 		{
-			get => _preferedHeight < 0f ? null : _preferedHeight;
-			set => Assign(ref _preferedHeight, value ?? -1f, area.Parent.transform);
+			get => _preferredHeight < 0f ? null : _preferredHeight;
+			set => Assign(ref _preferredHeight, value ?? -1f, area.Parent.transform);
 		}
 
 		/// <summary>

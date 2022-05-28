@@ -16,7 +16,7 @@ public class RenderBuffer : ArrayGrid<RGB128>
 {
 	public RenderBuffer(Int2 size) : base(size) => AddLayer("main", this);
 
-	readonly Dictionary<string, Layer> layers = new(StringComparer.InvariantCultureIgnoreCase);
+	readonly Dictionary<string, Layer> layers = new(StringComparer.OrdinalIgnoreCase);
 
 	/// <inheritdoc cref="TryGetTexture"/>
 	public bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T>

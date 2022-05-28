@@ -20,7 +20,7 @@ public class AutoLayoutAreaUI : AreaUI
 
 		if (count == 0)
 		{
-			transform.PreferedHeight = null;
+			transform.PreferredHeight = null;
 			return;
 		}
 
@@ -61,7 +61,7 @@ public class AutoLayoutAreaUI : AreaUI
 			foreach (AreaUI child in LoopForward())
 			{
 				Transform target = child.transform;
-				float height = target.PreferedHeight ?? Theme.LayoutHeight;
+				float height = target.PreferredHeight ?? Theme.LayoutHeight;
 
 				//Vertical layouts are controlled solely by margins
 				target.TopMargin = current;
@@ -78,7 +78,7 @@ public class AutoLayoutAreaUI : AreaUI
 				current += spaceSize;
 			}
 
-			transform.PreferedHeight = current + marginSize - spaceSize;
+			transform.PreferredHeight = current + marginSize - spaceSize;
 		}
 	}
 }
