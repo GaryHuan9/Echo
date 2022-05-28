@@ -29,9 +29,11 @@ public interface IStatistics< /*should not be made as covariant!*/ T> where T : 
 	/// </summary>
 	/// <param name="label">The unique string identifier for that event. Only the
 	/// English characters, the 10 digits, spaces and slashes are allowed.</param>
-	/// <remarks> If this <see cref="IStatistics{T}"/> is automatically generated, <paramref name="label"/> *must* be
-	/// a literal constant <see cref="string"/> passed directly into this method, and invocations to this method can
-	/// only occur in the main <see cref="Echo"/> project, otherwise it might not work properly.</remarks>
+	/// <remarks>If this <see cref="IStatistics{T}"/> is automatically generated, the following *must* be followed:
+	/// <para>(1) The input to parameter <paramref name="label"/> is a literal constant <see cref="string"/> that is
+	/// passed directly. (2) Invocations can only occur within the main <see cref="Echo"/> project. (3) The invocation
+	/// expression is in the form <c>stats.Report("item");</c> (ie. <c>array[0].Report("item");</c> is not allowed)</para>
+	/// Otherwise, this method might not work properly.</remarks>
 	void Report(string label);
 
 	/// <summary>
