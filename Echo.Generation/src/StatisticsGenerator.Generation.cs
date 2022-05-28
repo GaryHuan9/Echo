@@ -5,6 +5,9 @@ namespace Echo.Generation;
 
 partial class StatisticsGenerator
 {
+	const int PackWidth = 4; //How many UInt64s are packed together
+	const int LineWidth = 2; //How many packs per 64-byte cache line
+
 	static class Generation
 	{
 		/// <summary>
@@ -17,18 +20,20 @@ partial class StatisticsGenerator
 
 			var builder = new SourceBuilder(nameof(StatisticsGenerator));
 
-			builder.NewLine("using System");
-			builder.NewLine("using System.Runtime.CompilerServices");
-			builder.NewLine("using System.Runtime.InteropServices");
-			builder.NewLine("using System.Runtime.Intrinsics");
-			builder.NewLine("using System.Runtime.Intrinsics.X86");
+			builder.NewCode("using System");
+			builder.NewCode("using System.Runtime.CompilerServices");
+			builder.NewCode("using System.Runtime.InteropServices");
+			builder.NewCode("using System.Runtime.Intrinsics");
+			builder.NewCode("using System.Runtime.Intrinsics.X86");
 
 			builder.NewLine();
-			builder.NewLine($"namespace {type.container}");
+			builder.NewCode($"namespace {type.container}");
 
 			builder.NewLine();
-			int ulongCount = CeilingDivide(packCount, LineWidth) * PackWidth * LineWidth;
-			int structSize = Math.Max(ulongCount * sizeof(ulong), 1);
+			int lineCount = CeilingDivide(packCount, LineWidth);
+			int ulongCount = lineCount * PackWidth * LineWidth;
+
+			int structSize = Math.Max(lineCount, 1) * PackWidth * LineWidth * sizeof(ulong);
 			builder.Attribute("StructLayout", $"LayoutKind.Sequential, Size = {structSize}");
 			using (builder.FetchBlock($"partial struct {type.name}"))
 			{
@@ -52,23 +57,24 @@ partial class StatisticsGenerator
 
 			void FieldCounts()
 			{
-				for (int i = 0; i < packCount * PackWidth; i++) builder.NewLine($"ulong count{i}");
+				for (int i = 0; i < packCount * PackWidth; i++) builder.NewCode($"ulong count{i}");
 			}
 
 			void MethodSum()
 			{
+				builder.NewLine("/// <inheritdoc/>");
 				using var _ = builder.FetchBlock($"public unsafe {type.name} Sum({type.name}* source, int length)");
 
-				builder.NewLine("if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length))");
+				builder.NewCode("if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length))");
 
 				if (packCount == 0)
 				{
-					builder.NewLine("return default");
+					builder.NewCode("return default");
 					return;
 				}
 
-				builder.NewLine("if (Avx2.IsSupported) return SumAvx2(source, length)");
-				builder.NewLine("return SumSoftware(source, length)");
+				builder.NewCode("if (Avx2.IsSupported) return SumAvx2(source, length)");
+				builder.NewCode("return SumSoftware(source, length)");
 			}
 
 			void MethodSumAvx2()
@@ -76,50 +82,50 @@ partial class StatisticsGenerator
 				builder.Attribute("SkipLocalsInit");
 				using var _ = builder.FetchBlock($"static unsafe {type.name} SumAvx2({type.name}* source, int length)");
 
-				builder.NewLine($"Unsafe.SkipInit(out {type.name} target)");
-				builder.NewLine("ulong* ptrTarget = (ulong*)&target");
+				builder.NewCode($"Unsafe.SkipInit(out {type.name} target)");
+				builder.NewCode("ulong* ptrTarget = (ulong*)&target");
 
 				builder.NewLine();
 				using (builder.FetchBlock($"for (int i = 0; i < {packCount}; i++)"))
 				{
-					builder.NewLine($"int offset = i * {PackWidth}");
-					builder.NewLine("ulong* ptrSource = (ulong*)source + offset");
-					builder.NewLine("Vector256<ulong> accumulator = Avx.LoadVector256(ptrSource)");
+					builder.NewCode($"int offset = i * {PackWidth}");
+					builder.NewCode("ulong* ptrSource = (ulong*)source + offset");
+					builder.NewCode("Vector256<ulong> accumulator = Avx.LoadVector256(ptrSource)");
 
 					builder.NewLine();
 					using (builder.FetchBlock("for (int j = 1; j < length; j++)"))
 					{
-						builder.NewLine($"accumulator = Avx2.Add(accumulator, Avx.LoadVector256(ptrSource + j * {ulongCount}))");
+						builder.NewCode($"accumulator = Avx2.Add(accumulator, Avx.LoadVector256(ptrSource + j * {ulongCount}))");
 					}
 
 					builder.NewLine();
-					builder.NewLine("Avx.Store(ptrTarget + offset, accumulator)");
+					builder.NewCode("Avx.Store(ptrTarget + offset, accumulator)");
 				}
 
 				builder.NewLine();
-				builder.NewLine("return target");
+				builder.NewCode("return target");
 			}
 
 			void MethodSumSoftware()
 			{
 				using var _ = builder.FetchBlock($"static unsafe {type.name} SumSoftware({type.name}* source, int length)");
 
-				builder.NewLine($"{type.name} target = *source");
+				builder.NewCode($"{type.name} target = *source");
 
 				builder.NewLine();
 				using (builder.FetchBlock("for (int i = 1; i < length; i++)"))
 				{
-					builder.NewLine($"ref readonly var refSource = ref Unsafe.AsRef<{type.name}>(source + i)");
+					builder.NewCode($"ref readonly var refSource = ref Unsafe.AsRef<{type.name}>(source + i)");
 
 					builder.NewLine();
 					for (int i = 0; i < packCount * PackWidth; i++)
 					{
-						builder.NewLine($"target.count{i} += refSource.count{i}");
+						builder.NewCode($"target.count{i} += refSource.count{i}");
 					}
 				}
 
 				builder.NewLine();
-				builder.NewLine("return target");
+				builder.NewCode("return target");
 			}
 		}
 
@@ -136,11 +142,11 @@ partial class StatisticsGenerator
 
 			var builder = new SourceBuilder(nameof(StatisticsGenerator));
 
-			builder.NewLine("using System");
-			builder.NewLine("using System.Runtime.CompilerServices");
+			builder.NewCode("using System");
+			builder.NewCode("using System.Runtime.CompilerServices");
 
 			builder.NewLine();
-			builder.NewLine($"namespace {type.container}");
+			builder.NewCode($"namespace {type.container}");
 
 			builder.NewLine();
 			using (builder.FetchBlock($"partial struct {type.name}"))
@@ -189,32 +195,38 @@ partial class StatisticsGenerator
 				//Add the missing semicolon at the end of the array declaration
 				//The generated syntax is a bit weird but I am lazy and this works
 
-				builder.NewLine("");
+				builder.NewCode("");
 			}
 
-			void PropertyCount() => builder.NewLine($"public int Count => {labels.Length}");
+			void PropertyCount()
+			{
+				builder.NewLine("/// <inheritdoc/>");
+				builder.NewCode($"public int Count => {labels.Length}");
+			}
 
 			void PropertyIndexer()
 			{
+				builder.NewLine("/// <inheritdoc/>");
 				using var _0 = builder.FetchBlock("public (string label, ulong count) this[int index]");
 				using var _1 = builder.FetchBlock("get");
 
 				if (labels.Length > 0)
 				{
-					builder.NewLine($"if ((uint)index >= {labels.Length}) throw new ArgumentOutOfRangeException(nameof(index))");
-					builder.NewLine("return (label: eventLabels[index], count: Unsafe.Add<ulong>(ref count0, index))");
+					builder.NewCode($"if ((uint)index >= {labels.Length}) throw new ArgumentOutOfRangeException(nameof(index))");
+					builder.NewCode("return (label: eventLabels[index], count: Unsafe.Add<ulong>(ref count0, index))");
 				}
-				else builder.NewLine("throw new ArgumentOutOfRangeException(nameof(index))");
+				else builder.NewCode("throw new ArgumentOutOfRangeException(nameof(index))");
 			}
 
 			void MethodReport()
 			{
+				builder.NewLine("/// <inheritdoc/>");
 				builder.Attribute("MethodImpl", "MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization");
 				using var _ = builder.FetchBlock($"public void {MethodName}(string label)");
 
 				if (labels.Length == 0)
 				{
-					builder.NewLine("throw new ArgumentOutOfRangeException(nameof(label))");
+					builder.NewCode("throw new ArgumentOutOfRangeException(nameof(label))");
 					return;
 				}
 
@@ -258,14 +270,14 @@ partial class StatisticsGenerator
 							}
 							while (++index < labels.Length);
 
-							builder.NewLine("else break");
-							builder.NewLine("return");
+							builder.NewCode("else break");
+							builder.NewCode("return");
 						}
 					}
 				}
 
 				builder.NewLine();
-				builder.NewLine("throw new ArgumentOutOfRangeException(nameof(label))");
+				builder.NewCode("throw new ArgumentOutOfRangeException(nameof(label))");
 
 				int LabelLengthComparer(int index0, int index1) => labels[index0].Length.CompareTo(labels[index1].Length);
 			}
