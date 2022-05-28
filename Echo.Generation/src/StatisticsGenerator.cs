@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -32,12 +32,15 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
+		var wait = new SpinWait();
+		while (!Debugger.IsAttached) wait.SpinOnce();
+
 		var types = context.SyntaxProvider.CreateSyntaxProvider
 							(
 								CouldBeTargetStruct,
-								TargetStructOrNull
+								TargetStructOrDefault
 							)
-						   .Where(static type => type != null)
+						   .Where(static type => type != default)
 						   .Collect().Select(DistinctSelector);
 
 		var invocations = context.SyntaxProvider.CreateSyntaxProvider
@@ -46,7 +49,6 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 									  TargetInvocationOrDefault
 								  )
 								 .Where(static invocation => invocation != default)
-								 .Where(static invocation => IsValidLiteral(invocation.value))
 								 .Collect().Select(InvocationDistributor);
 
 		var labels = types.Combine(invocations).SelectMany(TypeInvocationMerger)
@@ -64,11 +66,11 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		BaseList.Types.Count: > 0
 	};
 
-	static INamedTypeSymbol TargetStructOrNull(GeneratorSyntaxContext context, CancellationToken token)
+	static FlatSymbol TargetStructOrDefault(GeneratorSyntaxContext context, CancellationToken token)
 	{
 		var syntax = (StructDeclarationSyntax)context.Node;
 		var symbol = context.SemanticModel.GetDeclaredSymbol(syntax, token);
-		return IsTargetType(symbol) ? symbol : null;
+		return IsTargetType(symbol) ? new FlatSymbol(symbol) : default;
 	}
 
 	/// <summary>
@@ -88,22 +90,25 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	static SymbolPair<string> TargetInvocationOrDefault(GeneratorSyntaxContext context, CancellationToken token)
 	{
 		var syntax = (InvocationExpressionSyntax)context.Node;
-		var expression = syntax.ArgumentList.Arguments[0].Expression;
+		var argument = syntax.ArgumentList.Arguments[0].Expression;
 
-		if (!expression.IsKind(SyntaxKind.StringLiteralExpression)) return default;
-		var literal = (string)((LiteralExpressionSyntax)expression).Token.Value;
+		if (!argument.IsKind(SyntaxKind.StringLiteralExpression)) return default;
+		var literal = (string)((LiteralExpressionSyntax)argument).Token.Value;
+		if (string.IsNullOrWhiteSpace(literal) || !filter.IsMatch(literal)) return default;
 
-		if (context.SemanticModel.GetDeclaredSymbol(syntax, token) is not IMethodSymbol symbol) return default;
-		if (symbol.ContainingSymbol is not INamedTypeSymbol type || !IsTargetType(type)) return default;
+		var expression = ((MemberAccessExpressionSyntax)syntax.Expression).Expression;
+		var symbol = context.SemanticModel.GetSymbolInfo(expression, token).Symbol;
 
-		return new SymbolPair<string>(type, literal);
+		if (GetSymbolType(symbol) is not INamedTypeSymbol type || !IsTargetType(type)) return default;
+
+		return new SymbolPair<string>(new FlatSymbol(type), literal);
 	}
 
-	static bool IsTargetType(INamedTypeSymbol symbol)
+	static bool IsTargetType(ITypeSymbol symbol)
 	{
 		return HasTargetAttribute(symbol) && HasTargetInterface(symbol);
 
-		static bool HasTargetAttribute(INamedTypeSymbol symbol)
+		static bool HasTargetAttribute(ISymbol symbol)
 		{
 			foreach (AttributeData data in symbol.GetAttributes())
 			{
@@ -116,7 +121,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 			return false;
 		}
 
-		static bool HasTargetInterface(INamedTypeSymbol symbol)
+		static bool HasTargetInterface(ITypeSymbol symbol)
 		{
 			foreach (INamedTypeSymbol type in symbol.Interfaces)
 			{
@@ -130,20 +135,26 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		}
 	}
 
-	static bool IsValidLiteral(string literal) => !string.IsNullOrWhiteSpace(literal) && filter.IsMatch(literal);
+	static ITypeSymbol GetSymbolType(ISymbol symbol) => symbol switch
+	{
+		ILocalSymbol local => local.Type,
+		IFieldSymbol field => field.Type,
+		IPropertySymbol property => property.Type,
+		_ => null
+	};
 
 	/// <summary>
 	/// Divides while rounding up; only works with positive numbers.
 	/// </summary>
 	static int CeilingDivide(int value, int divisor) => (value + divisor - 1) / divisor;
 
-	static SymbolSet DistinctSelector(ImmutableArray<INamedTypeSymbol> array, CancellationToken _) => new(array);
+	static SymbolSet DistinctSelector(ImmutableArray<FlatSymbol> array, CancellationToken _) => new(array);
 
-	static DeclarationMap InvocationDistributor(ImmutableArray<SymbolPair<string>> invocations, CancellationToken token)
+	static Dictionary<FlatSymbol, StringSet> InvocationDistributor(ImmutableArray<SymbolPair<string>> invocations, CancellationToken token)
 	{
-		var map = new DeclarationMap();
+		var map = new Dictionary<FlatSymbol, StringSet>();
 
-		foreach ((INamedTypeSymbol type, string literal) in invocations)
+		foreach ((FlatSymbol type, string literal) in invocations)
 		{
 			token.ThrowIfCancellationRequested();
 
@@ -159,11 +170,11 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		return map;
 	}
 
-	static DeclarationMap TypeInvocationMerger((SymbolSet, DeclarationMap) pair, CancellationToken token)
+	static Dictionary<FlatSymbol, StringSet> TypeInvocationMerger((SymbolSet, Dictionary<FlatSymbol, StringSet>) pair, CancellationToken token)
 	{
-		(SymbolSet types, DeclarationMap invocations) = pair;
+		(SymbolSet types, Dictionary<FlatSymbol, StringSet> invocations) = pair;
 
-		foreach (INamedTypeSymbol symbol in types)
+		foreach (FlatSymbol symbol in types)
 		{
 			token.ThrowIfCancellationRequested();
 			if (invocations.ContainsKey(symbol)) continue;
@@ -183,19 +194,19 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 			name = type.Name;
 		}
 
-		public readonly string container; //The namespace, but the namespace keyword is reserved XD
+		public readonly string container; //The namespace, but the keyword is reserved XD
 		public readonly string name;
 	}
 
-	readonly record struct SymbolPair<T>(INamedTypeSymbol type, T value)
+	readonly record struct SymbolPair<T>(FlatSymbol type, T value)
 	{
-		public readonly INamedTypeSymbol type = type;
+		public readonly FlatSymbol type = type;
 		public readonly T value = value;
 	}
 
-	sealed class SymbolSet : EquitableSet<INamedTypeSymbol>
+	sealed class SymbolSet : EquitableSet<FlatSymbol>
 	{
-		public SymbolSet(IEnumerable<INamedTypeSymbol> collection) : base(collection, SymbolEqualityComparer.Default) { }
+		public SymbolSet(IEnumerable<FlatSymbol> collection) : base(collection) { }
 	}
 
 	sealed class StringSet : EquitableSet<string>
@@ -207,33 +218,28 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	{
 		protected EquitableSet(IEqualityComparer<T> comparer)
 		{
-			this.comparer = comparer;
 			set = new HashSet<T>(comparer);
-		}
-
-		protected EquitableSet(IEnumerable<T> collection, IEqualityComparer<T> comparer)
-		{
 			this.comparer = comparer;
-			set = new HashSet<T>(collection, comparer);
 		}
 
-		readonly IEqualityComparer<T> comparer;
+		protected EquitableSet(IEnumerable<T> collection)
+		{
+			set = new HashSet<T>(collection);
+			comparer = set.Comparer;
+		}
+
 		readonly HashSet<T> set;
+		readonly IEqualityComparer<T> comparer;
 		uint totalHash = 0xB706441D;
 
 		public int Count => set.Count;
 
-		public bool Add(T item)
+		public void Add(T item)
 		{
-			if (set.Add(item))
-			{
-				uint hash = (uint)comparer.GetHashCode(item);
-				totalHash ^= RotateLeft(hash, set.Count - 1);
+			if (!set.Add(item)) return;
 
-				return true;
-			}
-
-			return false;
+			uint hash = (uint)comparer.GetHashCode(item);
+			totalHash ^= RotateLeft(hash, set.Count - 1);
 
 			static uint RotateLeft(uint value, int shift) => (value << shift) | (value >> (32 - shift));
 		}
@@ -265,10 +271,5 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		}
 
 		public override int GetHashCode() => throw new NotSupportedException();
-	}
-
-	class DeclarationMap : Dictionary<INamedTypeSymbol, StringSet>
-	{
-		public DeclarationMap() : base(SymbolEqualityComparer.Default) { }
 	}
 }
