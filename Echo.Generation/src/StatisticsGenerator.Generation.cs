@@ -144,6 +144,7 @@ partial class StatisticsGenerator
 
 			builder.NewCode("using System");
 			builder.NewCode("using System.Runtime.CompilerServices");
+			builder.NewCode($"using {NamespaceName}");
 
 			builder.NewLine();
 			builder.NewCode($"namespace {type.Namespace}");
@@ -207,13 +208,13 @@ partial class StatisticsGenerator
 			void PropertyIndexer()
 			{
 				builder.NewLine("/// <inheritdoc/>");
-				using var _0 = builder.FetchBlock("public (string label, ulong count) this[int index]");
+				using var _0 = builder.FetchBlock("public EventRow this[int index]");
 				using var _1 = builder.FetchBlock("get");
 
 				if (labels.Length > 0)
 				{
 					builder.NewCode($"if ((uint)index >= {labels.Length}) throw new ArgumentOutOfRangeException(nameof(index))");
-					builder.NewCode("return (label: eventLabels[index], count: Unsafe.Add<ulong>(ref count0, index))");
+					builder.NewCode("return new EventRow(eventLabels[index], Unsafe.Add<ulong>(ref count0, index))");
 				}
 				else builder.NewCode("throw new ArgumentOutOfRangeException(nameof(index))");
 			}

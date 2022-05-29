@@ -1,4 +1,4 @@
-﻿namespace Echo.Common.Compute;
+﻿namespace Echo.Common.Compute.Statistics;
 
 /// <summary>
 /// A specialized interface with the ability to quickly and cheaply count things.
@@ -14,15 +14,14 @@ public interface IStatistics< /*should not be made as covariant!*/ T> where T : 
 	/// <summary>
 	/// The number of different events tracked by this <see cref="IStatistics{T}"/>.
 	/// </summary>
-	int Count { get; }
+	int Count { get; } //OPTIMIZE: convert to static property when we upgrade to dotnet 7
 
 	/// <summary>
 	/// Retrieves recorded information about a event.
 	/// </summary>
 	/// <param name="index">The numerical number of the target event. Must be
 	/// between 0 (inclusive) and <see cref="Count"/> (exclusive). </param>
-	/// <remarks>The second value in the returned tuple (count) contains the number of recorded occurrence.</remarks>
-	(string label, ulong count) this[int index] { get; }
+	EventRow this[int index] { get; }
 
 	/// <summary>
 	/// Notes down the occurrence of an event.

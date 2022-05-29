@@ -27,6 +27,7 @@ public sealed unsafe class AlignedArray<T> : IDisposable where T : unmanaged
 		{
 			nuint byteCount = (nuint)((long)length * sizeof(T));
 			array = (T*)NativeMemory.AlignedAlloc(byteCount, CacheWidth);
+			Clear();
 		}
 		else array = null;
 	}
