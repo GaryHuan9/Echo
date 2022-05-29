@@ -100,7 +100,7 @@ public abstract class ParentTI : AreaTI
 	{
 		if (!(Max > Min)) return;
 
-		Paint(domain.MakePainter(dividerMin, dividerMax, InvertY));
+		Paint(domain.MakeCanvas(dividerMin, dividerMax, InvertY));
 
 		_child0.Draw(domain);
 		_child1.Draw(domain);

@@ -47,9 +47,9 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 		return (ulong)tilePositionSequence.Length;
 	}
 
-	protected override void Execute(ulong procedure, IScheduler scheduler, ref EvaluationStatistics statistics)
+	protected override void Execute(ulong procedure, IWorker worker, ref EvaluationStatistics statistics)
 	{
-		(ContinuousDistribution distribution, Allocator allocator) = contexts[scheduler.Id];
+		(ContinuousDistribution distribution, Allocator allocator) = contexts[worker.Id];
 
 		Evaluator evaluator = profile.Evaluator;
 		PreparedScene scene = profile.Scene;
@@ -61,7 +61,7 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 		for (int y = min.Y; y < max.Y; y++)
 		for (int x = min.X; x < max.X; x++)
 		{
-			scheduler.CheckSchedule();
+			worker.CheckSchedule();
 
 			Int2 position = new Int2(x, y);
 			Accumulator accumulator = new();
@@ -74,8 +74,6 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 			{
 				++epoch;
 
-				uint rejection = 0;
-
 				distribution.BeginSeries(position);
 
 				for (int i = 0; i < distribution.Extend; i++)
@@ -85,12 +83,12 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 					Ray ray = scene.camera.SpawnRay(new CameraSample(distribution), spawner);
 					Float4 evaluated = evaluator.Evaluate(scene, ray, distribution, allocator);
 
+					statistics.Report("Evaluated Sample");
+
 					allocator.Release();
 
-					if (!accumulator.Add(evaluated)) ++rejection;
+					if (!accumulator.Add(evaluated)) statistics.Report("Rejected Sample");
 				}
-
-				statistics.Report("Rejected Sample", rejection);
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
