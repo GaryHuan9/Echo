@@ -89,9 +89,12 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 
 					if (!accumulator.Add(evaluated)) ++rejection;
 				}
+
+				statistics.Report("Rejected Sample", rejection);
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
+			statistics.Report("Pixel");
 			writer(position, accumulator);
 		}
 	}
