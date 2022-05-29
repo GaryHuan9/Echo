@@ -16,22 +16,20 @@ public class EchoTI : RootTI
 {
 	public EchoTI()
 	{
-		tileReport = new TileReportTI();
-		deviceReport = new DeviceReportTI();
-
 		Child0 = new CommandTI();
 		Child1 = new BisectionTI
 		{
 			Horizontal = true,
 			Balance = 0.48f,
 
-			Child0 = tileReport,
+			Child0 = new TileReportTI(),
 			Child1 = new BisectionTI
 			{
 				Horizontal = true,
 				Balance = 0.55f,
 
-				Child1 = deviceReport
+				Child0 = new OperationReportTI(),
+				Child1 = new DeviceReportTI()
 			}
 		};
 
@@ -39,30 +37,27 @@ public class EchoTI : RootTI
 
 		device = Device.Create();
 
-		// var scene = new SingleBunny();
-		//
-		// var prepareProfile = new ScenePrepareProfile();
-		//
-		// var evaluationProfile = new TiledEvaluationProfile
-		// {
-		// 	Scene = new PreparedScene(scene, prepareProfile),
-		// 	Evaluator = new PathTracedEvaluator(),
-		// 	Distribution = new StratifiedDistribution { Extend = 64 },
-		// 	Buffer = new RenderBuffer(new Int2(960, 540)),
-		// 	MinEpoch = 1,
-		// 	MaxEpoch = 1
-		// };
-		//
-		// var operation = new TiledEvaluationOperation
-		// {
-		// 	Profile = evaluationProfile
-		// };
-		//
-		// device.Dispatch(operation);
-	}
+		var scene = new SingleBunny();
 
-	readonly TileReportTI tileReport;
-	readonly DeviceReportTI deviceReport;
+		var prepareProfile = new ScenePrepareProfile();
+
+		var evaluationProfile = new TiledEvaluationProfile
+		{
+			Scene = new PreparedScene(scene, prepareProfile),
+			Evaluator = new PathTracedEvaluator(),
+			Distribution = new StratifiedDistribution { Extend = 64 },
+			Buffer = new RenderBuffer(new Int2(960, 540)),
+			MinEpoch = 1,
+			MaxEpoch = 1
+		};
+
+		var operation = new TiledEvaluationOperation
+		{
+			Profile = evaluationProfile
+		};
+
+		device.Dispatch(operation);
+	}
 
 	readonly Device device;
 

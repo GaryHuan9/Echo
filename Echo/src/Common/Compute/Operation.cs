@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading;
+using CodeHelpers.Diagnostics;
+using Echo.Common.Compute.Statistics;
 using Echo.Common.Memory;
 
 namespace Echo.Common.Compute;
@@ -22,10 +24,15 @@ public abstract class Operation : IDisposable
 	public ulong TotalProcedureCount { get; private set; }
 
 	/// <summary>
+	/// The number of <see cref="EventRow"/> available from <see cref="FillEventRows"/>.
+	/// </summary>
+	public virtual int EventCount => 0;
+
+	/// <summary>
 	/// Prepares this <see cref="Operation"/> for execution.
 	/// </summary>
-	/// <param name="population">The maximum number of concurrent <see cref="IScheduler"/> executing. Note that
-	/// all <see cref="IScheduler.Id"/> will be between zero (inclusive) and this value (exclusive).</param>
+	/// <param name="population">The maximum number of concurrent <see cref="IWorker"/> executing. Note that
+	/// all <see cref="IWorker.Id"/> will be between zero (inclusive) and this value (exclusive).</param>
 	/// <remarks>This method is invoked once before all execution begins</remarks>
 	public virtual void Prepare(int population)
 	{
@@ -36,16 +43,24 @@ public abstract class Operation : IDisposable
 	/// <summary>
 	/// Joins the execution of this <see cref="Operation"/> once.
 	/// </summary>
-	/// <param name="scheduler">The <see cref="IScheduler"/> to use.</param>
+	/// <param name="worker">The <see cref="IWorker"/> to use.</param>
 	/// <returns>Whether this execution performed any work.</returns>
-	public bool Execute(IScheduler scheduler)
+	public bool Execute(IWorker worker)
 	{
 		ulong procedure = Interlocked.Increment(ref nextProcedure) - 1;
 		if (procedure >= TotalProcedureCount) return false;
 
-		Execute(procedure, scheduler);
+		Execute(procedure, worker);
 		return true;
 	}
+
+	/// <summary>
+	/// Fills information about the events occured in this <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="fill">The destination to fill with <see cref="EventRow"/> elements.</param>
+	/// <remarks>The maximum number of available <see cref="EventRow"/> can be determined by the
+	/// value of <see cref="EventCount"/>.</remarks>
+	public virtual void FillEventRows(ref SpanFill<EventRow> fill) => Assert.AreEqual(EventCount, 0);
 
 	public void Dispose()
 	{
@@ -63,8 +78,8 @@ public abstract class Operation : IDisposable
 	/// <param name="procedure">The number/index of the step to execute; this value is between 0 (inclusive)
 	/// and the returned number from <see cref="WarmUp"/> (exclusive). This value will gradually increase as
 	/// this <see cref="Operation"/> gets completed.</param>
-	/// <param name="scheduler">The to <see cref="IScheduler"/> use.</param>
-	protected abstract void Execute(ulong procedure, IScheduler scheduler);
+	/// <param name="worker">The to <see cref="IWorker"/> use.</param>
+	protected abstract void Execute(ulong procedure, IWorker worker);
 
 	/// <summary>
 	/// Releases the resources owned by this <see cref="Operation"/>.
@@ -82,10 +97,7 @@ public abstract class Operation<T> : Operation where T : unmanaged, IStatistics<
 	AlignedArray<T> array;
 	int statisticsCount;
 
-	/// <summary>
-	/// Retrieves the current statistics of this <see cref="Operation"/>.
-	/// </summary>
-	public unsafe T Statistics => default(T).Sum(array.Pointer, statisticsCount);
+	public sealed override int EventCount => default(T).Count;
 
 	public override void Prepare(int population)
 	{
@@ -101,16 +113,25 @@ public abstract class Operation<T> : Operation where T : unmanaged, IStatistics<
 		statisticsCount = population;
 	}
 
-	protected sealed override void Execute(ulong procedure, IScheduler scheduler)
+	public override unsafe void FillEventRows(ref SpanFill<EventRow> fill)
 	{
-		ref T statistics = ref array[(int)scheduler.Id];
-		Execute(procedure, scheduler, ref statistics);
+		fill.ThrowIfNotEmpty();
+
+		T sum = default(T).Sum(array.Pointer, statisticsCount);
+		int length = Math.Min(fill.Length, EventCount);
+		for (int i = 0; i < length; i++) fill.Add(sum[i]);
 	}
 
-	/// <inheritdoc cref="Execute(ulong, Echo.Common.Compute.IScheduler)"/>
+	protected sealed override void Execute(ulong procedure, IWorker worker)
+	{
+		ref T statistics = ref array[(int)worker.Id];
+		Execute(procedure, worker, ref statistics);
+	}
+
+	/// <inheritdoc cref="Execute(ulong, IWorker)"/>
 	/// <param name="statistics">The <see cref="IStatistics{T}"/> to be used with this execution.</param>
 	// ReSharper disable InvalidXmlDocComment
-	protected abstract void Execute(ulong procedure, IScheduler scheduler, ref T statistics);
+	protected abstract void Execute(ulong procedure, IWorker worker, ref T statistics);
 	// ReSharper restore InvalidXmlDocComment
 
 	protected override void Dispose(bool disposing)
@@ -119,3 +140,8 @@ public abstract class Operation<T> : Operation where T : unmanaged, IStatistics<
 		if (disposing) array?.Dispose();
 	}
 }
+
+/// <summary>
+/// Exception thrown by <see cref="IWorker"/> during an <see cref="Operation"/> abortion.
+/// </summary>
+sealed class OperationAbortedException : Exception { }

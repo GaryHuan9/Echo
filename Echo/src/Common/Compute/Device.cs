@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using Echo.Common.Memory;
 
 namespace Echo.Common.Compute;
 
@@ -45,17 +44,32 @@ public sealed class Device : IDisposable
 	}
 
 	/// <summary>
-	/// The number of <see cref="Worker"/> for this <see cref="Device"/>.
+	/// The number of <see cref="Worker"/>s for this <see cref="Device"/>.
 	/// </summary>
 	public int Population => workers.Length;
 
+	/// <summary>
+	/// A <see cref="ReadOnlySpan{T}"/> of <see cref="IWorker"/>s representing
+	/// the <see cref="Worker"/>s of this <see cref="Device"/>.
+	/// </summary>
+	/// <remarks>The <see cref="ReadOnlySpan{T}.Length"/> of the returned
+	/// <see cref="ReadOnlySpan{T}"/> is the same as <see cref="Population"/>.</remarks>
+	public ReadOnlySpan<IWorker> Workers => workers;
+
+	Operation _startedOperation;
 	int _disposed;
+
+	/// <summary>
+	/// The last <see cref="Operation"/> that was dispatched.
+	/// </summary>
+	/// <remarks>This includes completed <see cref="Operation"/>s.</remarks>
+	public Operation StartedOperation => _startedOperation;
 
 	/// <summary>
 	/// Whether this <see cref="Device"/> is disposed.
 	/// Disposed <see cref="Device"/> should not be used.
 	/// </summary>
-	public bool Disposed => Volatile.Read(ref _disposed) != 0;
+	public bool Disposed => _disposed != 0;
 
 	static readonly Locker instanceLocker = new();
 	static Device _instance;
@@ -102,6 +116,7 @@ public sealed class Device : IDisposable
 			AwaitIdle();
 		}
 
+		Interlocked.Exchange(ref _startedOperation, operation);
 		foreach (var worker in workers) worker.Dispatch(operation);
 	}
 
@@ -149,16 +164,6 @@ public sealed class Device : IDisposable
 			signalLocker.Wait();
 			Assert.IsFalse(runningCount < 0);
 		}
-	}
-
-	/// <summary>
-	/// Retrieves the <see cref="Worker.State"/> of the <see cref="Worker"/>s in this <see cref="Device"/>.
-	/// </summary>
-	/// <param name="fill">The destination <see cref="SpanFill{T}"/> which will contain the result.</param>
-	public void FillStatuses(ref SpanFill<Worker.State> fill)
-	{
-		int length = Math.Min(fill.Length, workers.Length);
-		for (int i = 0; i < length; i++) fill.Add(workers[i].Status);
 	}
 
 	public void Dispose()
@@ -214,9 +219,7 @@ public sealed class Device : IDisposable
 	{
 		using var _ = instanceLocker.Fetch();
 
-		Device instance = Instance;
-		if (instance != null) throw new InvalidOperationException($"Only one {nameof(Device)} can exist within one {nameof(AppDomain)}.");
-
-		return Instance = new Device(Environment.ProcessorCount);
+		if (Instance == null) return Instance = new Device(Environment.ProcessorCount);
+		throw new InvalidOperationException($"Only one {nameof(Device)} can exist within one {nameof(AppDomain)}.");
 	}
 }
