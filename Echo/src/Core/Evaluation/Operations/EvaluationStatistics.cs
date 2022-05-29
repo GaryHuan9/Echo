@@ -1,4 +1,4 @@
-﻿using Echo.Common.Compute;
+﻿using Echo.Common.Compute.Statistics;
 
 namespace Echo.Core.Evaluation.Operations;
 
