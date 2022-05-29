@@ -103,7 +103,7 @@ public abstract class Operation<T> : Operation where T : unmanaged, IStatistics<
 
 	protected sealed override void Execute(ulong procedure, IScheduler scheduler)
 	{
-		ref T statistics = ref array[(int)procedure];
+		ref T statistics = ref array[(int)scheduler.Id];
 		Execute(procedure, scheduler, ref statistics);
 	}
 
