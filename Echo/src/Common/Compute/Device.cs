@@ -18,8 +18,8 @@ public sealed class Device : IDisposable
 			ref Worker worker = ref workers[i];
 			worker = new Worker((uint)i);
 
-			worker.OnRunEvent += OnWorkerRun;
-			worker.OnIdleEvent += OnWorkerIdle;
+			worker.OnIdleChangedEvent += OnIdleChanged;
+			worker.OnAwaitChangedEvent += OnAwaitChanged;
 		}
 	}
 
@@ -64,6 +64,30 @@ public sealed class Device : IDisposable
 	/// </summary>
 	/// <remarks>This includes completed <see cref="Operation"/>s.</remarks>
 	public Operation StartedOperation => _startedOperation;
+
+	/// <summary>
+	/// The progress on the <see cref="StartedOperation"/>.
+	/// </summary>
+	/// <remarks>This value is between zero and one (both inclusive).</remarks>
+	public double StartedProgress
+	{
+		get
+		{
+			Operation operation = StartedOperation;
+			if (operation == null) return 0d;
+
+			double progress = 0d;
+
+			if (!IsIdle)
+			{
+				//If the device is idle, all workers should have a progress of zero
+				foreach (Worker worker in workers) progress += worker.Progress;
+			}
+
+			progress += operation.CompletedProcedureCount;
+			return progress / operation.TotalProcedureCount;
+		}
+	}
 
 	/// <summary>
 	/// Whether this <see cref="Device"/> is disposed.
@@ -118,6 +142,8 @@ public sealed class Device : IDisposable
 
 		Interlocked.Exchange(ref _startedOperation, operation);
 		foreach (var worker in workers) worker.Dispatch(operation);
+
+		AwaitState(false); //Returns from method when at least one worker started working
 	}
 
 	/// <summary>
@@ -155,16 +181,7 @@ public sealed class Device : IDisposable
 	/// Blocks the calling thread until this <see cref="Device"/> idles.
 	/// </summary>
 	/// <seealso cref="IsIdle"/>
-	public void AwaitIdle()
-	{
-		using var _ = signalLocker.Fetch();
-
-		while (runningCount > 0 && !Disposed)
-		{
-			signalLocker.Wait();
-			Assert.IsFalse(runningCount < 0);
-		}
-	}
+	public void AwaitIdle() => AwaitState(true);
 
 	public void Dispose()
 	{
@@ -184,22 +201,38 @@ public sealed class Device : IDisposable
 		foreach (var worker in workers) worker.Abort();
 	}
 
-	void OnWorkerRun(Worker worker)
+	void AwaitState(bool idle)
 	{
 		using var _ = signalLocker.Fetch();
-		Assert.IsFalse(runningCount >= workers.Length);
-		++runningCount;
+
+		while (idle == runningCount > 0 && !Disposed) signalLocker.Wait();
 	}
 
-	void OnWorkerIdle(Worker worker)
+	void OnIdleChanged(Worker worker, bool entered)
 	{
 		using var _ = signalLocker.Fetch();
-		Assert.IsFalse(runningCount <= 0);
-		--runningCount;
 
-		//Signal if all workers are idle
-		if (runningCount == 0) signalLocker.Signal();
+		if (entered)
+		{
+			//Just entered idle
+			Assert.IsFalse(runningCount <= 0);
+			--runningCount;
+
+			//Signal if all workers are idle
+			if (runningCount == 0) signalLocker.Signal();
+		}
+		else
+		{
+			//Just exited idle
+			Assert.IsFalse(runningCount >= workers.Length);
+			++runningCount;
+
+			//Signal if not all workers are idle
+			if (runningCount == 1) signalLocker.Signal();
+		}
 	}
+
+	void OnAwaitChanged(Worker worker, bool entered) { }
 
 	void ThrowIfDisposed()
 	{

@@ -11,7 +11,9 @@ public class DeviceReportTI : ReportTI
 		//Write device status
 		ReadOnlySpan<IWorker> workers = device.Workers;
 
-		canvas.WriteLine(ref brush, $"CPU compute device {(device.IsIdle ? "idle" : "running")} ({workers.Length})");
+		canvas.WriteLine(ref brush, $"CPU compute device {(device.IsIdle ? "idle" : "running")}");
+		canvas.WriteLine(ref brush, $"Population {device.Population}");
+		canvas.WriteLine(ref brush, $"Progress {device.StartedProgress:P2}");
 		canvas.FillLine(ref brush);
 
 		//Write worker status

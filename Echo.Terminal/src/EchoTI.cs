@@ -36,6 +36,13 @@ public class EchoTI : RootTI
 		Balance = 0.16f;
 
 		device = Device.Create();
+	}
+
+	readonly Device device;
+
+	public override void ProcessArguments(string[] arguments)
+	{
+		base.ProcessArguments(arguments);
 
 		var scene = new SingleBunny();
 
@@ -57,13 +64,6 @@ public class EchoTI : RootTI
 		};
 
 		device.Dispatch(operation);
-	}
-
-	readonly Device device;
-
-	public override void ProcessArguments(string[] arguments)
-	{
-		base.ProcessArguments(arguments);
 	}
 
 	protected override void Dispose(bool disposing)
