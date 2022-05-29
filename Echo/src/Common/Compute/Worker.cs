@@ -1,8 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
+using Echo.Common.Mathematics;
 
 namespace Echo.Common.Compute;
 
@@ -24,9 +26,38 @@ public interface IWorker
 	WorkerState State { get; }
 
 	/// <summary>
+	/// The progress of this <see cref="IWorker"/> on the step that it is currently working on.
+	/// </summary>
+	/// <remarks>This value is between zero and one (both inclusive).</remarks>
+	float Progress { get; }
+
+	/// <summary>
 	/// The <see cref="string"/> label of this <see cref="IWorker"/> to be displayed.
 	/// </summary>
 	sealed string DisplayLabel => $"Worker 0x{Id:X2}";
+}
+
+/// <summary>
+/// A <see cref="Worker"/> delegation into an <see cref="Operation"/> used to communicate various information.
+/// </summary>
+public interface IProcedureWorker : IWorker
+{
+	/// <summary>
+	/// Invoked by the <see cref="Operation"/> before a step is worked by this <see cref="IProcedureWorker"/>.
+	/// </summary>
+	/// <param name="totalWork">The total amount of work for the said step.</param>
+	/// <remarks>It is optional to invoke this method, just like <see cref="AdvanceProcedure"/>.
+	/// They are only used for correctly updating <see cref="IWorker.Progress"/>.</remarks>
+	void BeginProcedure(uint totalWork);
+
+	/// <summary>
+	/// Invoked by the <see cref="Operation"/> when it made some progress on the current step.
+	/// </summary>
+	/// <param name="amount">The amount of progress made. The scale of this value
+	/// is in conjecture with value passed to <see cref="BeginProcedure"/>.</param>
+	/// <remarks>It is optional to invoke this method, just like <see cref="BeginProcedure"/>.
+	/// They are only used for correctly updating <see cref="IWorker.Progress"/>.</remarks>
+	void AdvanceProcedure(uint amount = 1);
 
 	/// <summary>
 	/// Checks if there are any schedule changes.
@@ -35,14 +66,43 @@ public interface IWorker
 	void CheckSchedule();
 }
 
+/// <summary>
+/// Different states of a <see cref="Worker"/>.
+/// </summary>
+/// <remarks>Almost always, the value of enum should be one-hot (eg. <see cref="Idle"/> and <see cref="Pausing"/>
+/// should not be present at the same time). The <see cref="FlagsAttribute"/> is only there for the convenience of
+/// some implementation details in <see cref="Worker.AwaitStatus"/>.</remarks>
 [Flags]
 public enum WorkerState : uint
 {
+	/// <summary>
+	/// The <see cref="Worker"/> is has no assigned <see cref="Operation"/>.
+	/// </summary>
 	Idle = 1 << 0,
+
+	/// <summary>
+	/// The <see cref="Worker"/> is currently executing an <see cref="Operation"/>.
+	/// </summary>
 	Running = 1 << 1,
+
+	/// <summary>
+	/// The <see cref="Worker"/> is executing an <see cref="Operation"/> but will pause at its earliest convenience.
+	/// </summary>
 	Pausing = 1 << 2,
+
+	/// <summary>
+	/// The <see cref="Worker"/> is executing an <see cref="Operation"/> but will abort as soon as possible.
+	/// </summary>
 	Aborting = 1 << 3,
+
+	/// <summary>
+	/// The <see cref="Worker"/> is paused and is not utilizing any computational resources.
+	/// </summary>
 	Awaiting = 1 << 4,
+
+	/// <summary>
+	/// The <see cref="Worker"/> is disposed and should no longer be used.
+	/// </summary>
 	Disposed = 1 << 5
 }
 
@@ -69,15 +129,31 @@ public static class WorkerStateExtensions
 /// <summary>
 /// A <see cref="Thread"/> that works under a <see cref="Device"/> to jointly perform certain <see cref="Operation"/>s.
 /// </summary>
-sealed class Worker : IWorker, IDisposable
+sealed class Worker : IProcedureWorker, IDisposable
 {
 	public Worker(uint id) => Id = id;
 
 	Operation nextOperation;
 	Thread thread;
 
-	public event Action<Worker> OnRunEvent;
-	public event Action<Worker> OnIdleEvent;
+	float procedureTotalWorkR;
+	uint procedureCompletedWork;
+
+	readonly Locker locker = new();
+
+	/// <summary>
+	/// Invoked when this <see cref="Worker"/> either begins or stops being idle.
+	/// </summary>
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
+	public event Action<Worker, bool> OnIdleChangedEvent;
+
+	/// <summary>
+	/// Invoked when this <see cref="Worker"/> either begins or stops being awaiting for resumption (ie. paused).
+	/// </summary>
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
+	public event Action<Worker, bool> OnAwaitChangedEvent;
 
 	/// <inheritdoc/>
 	public uint Id { get; }
@@ -101,14 +177,11 @@ sealed class Worker : IWorker, IDisposable
 
 			Interlocked.Exchange(ref _state, integer);
 			locker.Signal();
-
-			bool wasIdle = old == WorkerState.Idle;
-			bool isIdle = value == WorkerState.Idle;
-			if (wasIdle != isIdle) (isIdle ? OnIdleEvent : OnRunEvent)?.Invoke(this);
 		}
 	}
 
-	readonly Locker locker = new();
+	/// <inheritdoc/>
+	public float Progress => FastMath.Clamp01(procedureCompletedWork * procedureTotalWorkR);
 
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
@@ -225,7 +298,21 @@ sealed class Worker : IWorker, IDisposable
 	}
 
 	/// <inheritdoc/>
-	void IWorker.CheckSchedule()
+	void IProcedureWorker.BeginProcedure(uint totalWork)
+	{
+		procedureTotalWorkR = totalWork <= 1 ? 1f : 1f / totalWork;
+		CheckForAbortion();
+	}
+
+	/// <inheritdoc/>
+	void IProcedureWorker.AdvanceProcedure(uint amount)
+	{
+		procedureCompletedWork += amount;
+		CheckForAbortion();
+	}
+
+	/// <inheritdoc/>
+	void IProcedureWorker.CheckSchedule()
 	{
 		CheckForAbortion();
 		if (State != WorkerState.Pausing) return;
@@ -236,15 +323,11 @@ sealed class Worker : IWorker, IDisposable
 			State = WorkerState.Awaiting;
 		}
 
+		OnAwaitChangedEvent?.Invoke(this, true);
 		AwaitStatus(WorkerState.Running | WorkerState.Aborting);
-		CheckForAbortion();
+		OnAwaitChangedEvent?.Invoke(this, false);
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void CheckForAbortion()
-		{
-			if (State != WorkerState.Aborting) return;
-			throw new OperationAbortedException();
-		}
+		CheckForAbortion();
 	}
 
 	void Main()
@@ -253,25 +336,33 @@ sealed class Worker : IWorker, IDisposable
 		{
 			AwaitStatus(WorkerState.Running);
 
-			var operation = Interlocked.Exchange(ref nextOperation, null);
-			if (operation == null) continue;
+			Operation operation = Interlocked.Exchange(ref nextOperation, null);
+			if (operation == null) throw new InvalidAsynchronousStateException();
 
+			OnIdleChangedEvent?.Invoke(this, false);
 			bool running;
 
 			do
 			{
+				Assert.AreEqual(procedureCompletedWork, 0u);
+
 				try
 				{
+					procedureTotalWorkR = 0f;
 					running = operation.Execute(this);
 				}
 				catch (OperationAbortedException)
 				{
+					procedureCompletedWork = 0;
 					break;
 				}
+
+				procedureCompletedWork = 0;
 			}
 			while (running);
 
 			State = WorkerState.Idle;
+			OnIdleChangedEvent?.Invoke(this, true);
 		}
 	}
 
@@ -284,5 +375,12 @@ sealed class Worker : IWorker, IDisposable
 		{
 			while ((State | status) != status) locker.Wait();
 		}
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	void CheckForAbortion()
+	{
+		if (State != WorkerState.Aborting) return;
+		throw new OperationAbortedException();
 	}
 }

@@ -28,7 +28,7 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 		set => _profile = value;
 	}
 
-	protected override ulong WarmUp(int population)
+	protected override uint WarmUp(int population)
 	{
 		//Validate profile
 		profile = Profile ?? throw ExceptionHelper.Invalid(nameof(Profile), InvalidType.isNull);
@@ -44,10 +44,10 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 
 		CreateContexts(population);
 
-		return (ulong)tilePositionSequence.Length;
+		return (uint)tilePositionSequence.Length;
 	}
 
-	protected override void Execute(ulong procedure, IWorker worker, ref EvaluationStatistics statistics)
+	protected override void Execute(uint procedure, IProcedureWorker worker, ref EvaluationStatistics statistics)
 	{
 		(ContinuousDistribution distribution, Allocator allocator) = contexts[worker.Id];
 
@@ -57,6 +57,8 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 
 		Int2 min = tilePositionSequence[procedure] * profile.TileSize;
 		Int2 max = buffer.size.Min(min + (Int2)profile.TileSize);
+
+		worker.BeginProcedure((uint)(max - min).Product);
 
 		for (int y = min.Y; y < max.Y; y++)
 		for (int x = min.X; x < max.X; x++)
@@ -92,8 +94,9 @@ public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
-			statistics.Report("Pixel");
 			writer(position, accumulator);
+			statistics.Report("Pixel");
+			worker.AdvanceProcedure();
 		}
 	}
 

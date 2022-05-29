@@ -11,17 +11,23 @@ namespace Echo.Common.Compute;
 /// </summary>
 public abstract class Operation : IDisposable
 {
-	ulong nextProcedure;
-
-	/// <summary>
-	/// The number of steps that is either currently executing or has already been executed.
-	/// </summary>
-	public ulong StartedProcedureCount => Math.Min(TotalProcedureCount, nextProcedure);
+	uint nextProcedure;
+	uint completedCount;
 
 	/// <summary>
 	/// The total number of steps that this operation has.
 	/// </summary>
-	public ulong TotalProcedureCount { get; private set; }
+	public uint TotalProcedureCount { get; private set; }
+
+	/// <summary>
+	/// The number of steps in this operation that has been completed.
+	/// </summary>
+	public uint CompletedProcedureCount => completedCount;
+
+	/// <summary>
+	/// Returns whether this operation has been fully completed.
+	/// </summary>
+	public bool IsCompleted => completedCount == TotalProcedureCount;
 
 	/// <summary>
 	/// The number of <see cref="EventRow"/> available from <see cref="FillEventRows"/>.
@@ -37,6 +43,7 @@ public abstract class Operation : IDisposable
 	public virtual void Prepare(int population)
 	{
 		Interlocked.Exchange(ref nextProcedure, 0);
+		Interlocked.Exchange(ref completedCount, 0);
 		TotalProcedureCount = WarmUp(population);
 	}
 
@@ -45,12 +52,14 @@ public abstract class Operation : IDisposable
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> to use.</param>
 	/// <returns>Whether this execution performed any work.</returns>
-	public bool Execute(IWorker worker)
+	public bool Execute(IProcedureWorker worker)
 	{
-		ulong procedure = Interlocked.Increment(ref nextProcedure) - 1;
+		uint procedure = Interlocked.Increment(ref nextProcedure) - 1;
 		if (procedure >= TotalProcedureCount) return false;
 
 		Execute(procedure, worker);
+		Interlocked.Increment(ref completedCount);
+
 		return true;
 	}
 
@@ -70,16 +79,16 @@ public abstract class Operation : IDisposable
 
 	/// <inheritdoc cref="Prepare"/>
 	/// <returns>The number of steps the entire <see cref="Operation"/> has.</returns>
-	protected abstract ulong WarmUp(int population);
+	protected abstract uint WarmUp(int population);
 
 	/// <summary>
 	/// Executes one step of this <see cref="Operation"/>.
 	/// </summary>
 	/// <param name="procedure">The number/index of the step to execute; this value is between 0 (inclusive)
-	/// and the returned number from <see cref="WarmUp"/> (exclusive). This value will gradually increase as
-	/// this <see cref="Operation"/> gets completed.</param>
+	///     and the returned number from <see cref="WarmUp"/> (exclusive). This value will gradually increase as
+	///     this <see cref="Operation"/> gets completed.</param>
 	/// <param name="worker">The to <see cref="IWorker"/> use.</param>
-	protected abstract void Execute(ulong procedure, IWorker worker);
+	protected abstract void Execute(uint procedure, IProcedureWorker worker);
 
 	/// <summary>
 	/// Releases the resources owned by this <see cref="Operation"/>.
@@ -122,16 +131,16 @@ public abstract class Operation<T> : Operation where T : unmanaged, IStatistics<
 		for (int i = 0; i < length; i++) fill.Add(sum[i]);
 	}
 
-	protected sealed override void Execute(ulong procedure, IWorker worker)
+	protected sealed override void Execute(uint procedure, IProcedureWorker worker)
 	{
 		ref T statistics = ref array[(int)worker.Id];
 		Execute(procedure, worker, ref statistics);
 	}
 
-	/// <inheritdoc cref="Execute(ulong, IWorker)"/>
+	/// <inheritdoc cref="Execute(uint,Echo.Common.Compute.IProcedureWorker)"/>
 	/// <param name="statistics">The <see cref="IStatistics{T}"/> to be used with this execution.</param>
 	// ReSharper disable InvalidXmlDocComment
-	protected abstract void Execute(ulong procedure, IWorker worker, ref T statistics);
+	protected abstract void Execute(uint procedure, IProcedureWorker worker, ref T statistics);
 	// ReSharper restore InvalidXmlDocComment
 
 	protected override void Dispose(bool disposing)
