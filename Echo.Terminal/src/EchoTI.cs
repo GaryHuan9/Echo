@@ -68,17 +68,17 @@ public class EchoTI : RootTI
 		device.Dispatch(operation);
 	}
 
-	public override void Update(in Moment moment)
-	{
-		base.Update(in moment);
-
-		while (Console.KeyAvailable)
-		{
-			ConsoleKeyInfo key = Console.ReadKey(true);
-			if (key.KeyChar == 'p') device.Pause();
-			if (key.KeyChar == 'r') device.Resume();
-		}
-	}
+	// public override void Update(in Moment moment)
+	// {
+	// 	base.Update(in moment);
+	//
+	// 	while (Console.KeyAvailable)
+	// 	{
+	// 		ConsoleKeyInfo key = Console.ReadKey(true);
+	// 		if (key.KeyChar == 'p') device.Pause();
+	// 		if (key.KeyChar == 'r') device.Resume();
+	// 	}
+	// }
 
 	protected override void Dispose(bool disposing)
 	{
