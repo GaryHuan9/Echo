@@ -9,19 +9,20 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-      <DefineConstants>TRACE;</DefineConstants>
+        <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-      <DefineConstants>TRACE;</DefineConstants>
+        <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="SFML.Net" Version="2.5.0" />
+        <PackageReference Include="ImGui.NET" Version="1.87.3" />
+        <PackageReference Include="ppy.SDL2-CS" Version="1.0.501-alpha" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Echo\Echo.csproj" />
+        <ProjectReference Include="..\Echo\Echo.csproj" />
     </ItemGroup>
 
 </Project>
