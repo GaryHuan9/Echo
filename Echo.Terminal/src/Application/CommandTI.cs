@@ -24,17 +24,17 @@ public class CommandTI : AreaTI
 		base.Update(moment);
 
 		//Read keys
-		// while (Console.KeyAvailable)
-		// {
-		// 	ConsoleKeyInfo info = Console.ReadKey(true);
-		//
-		// 	if (IsValidCharacter(info.KeyChar))
-		// 	{
-		// 		prompt.Add(info.KeyChar);
-		// 		ResetCursorBlink();
-		// 	}
-		// 	else ProcessButton(info.Key);
-		// }
+		while (Console.KeyAvailable)
+		{
+			ConsoleKeyInfo info = Console.ReadKey(true);
+
+			if (IsValidCharacter(info.KeyChar))
+			{
+				prompt.Add(info.KeyChar);
+				ResetCursorBlink();
+			}
+			else ProcessButton(info.Key);
+		}
 
 		//Update cursor visibility
 		cursorTime += moment.delta;
