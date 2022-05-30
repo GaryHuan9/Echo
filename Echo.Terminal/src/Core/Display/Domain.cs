@@ -39,7 +39,7 @@ public readonly struct Domain
 		return new Domain(newSize, new char[current]);
 	}
 
-	public Canvas MakePainter(Int2 min, Int2 max, bool invertY = false)
+	public Canvas MakeCanvas(Int2 min, Int2 max, bool invertY = false)
 	{
 		int stride = GetStride(invertY);
 		int offset = GetOffset(invertY, min);

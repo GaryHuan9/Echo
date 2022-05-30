@@ -16,7 +16,7 @@ public abstract class AreaTI //TI = Terminal Interface
 	public virtual void Draw(in Domain domain)
 	{
 		if (!(Max > Min)) return;
-		Paint(domain.MakePainter(Min, Max, InvertY));
+		Paint(domain.MakeCanvas(Min, Max, InvertY));
 	}
 
 	public void SetTransform(Int2 min, Int2 max)
