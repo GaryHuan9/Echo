@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Packed;
+﻿using System;
+using CodeHelpers.Packed;
 using Echo.Common.Compute;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
@@ -8,6 +9,7 @@ using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Grid;
 using Echo.Terminal.Application;
 using Echo.Terminal.Application.Report;
+using Echo.Terminal.Core;
 using Echo.Terminal.Core.Interface;
 
 namespace Echo.Terminal;
@@ -64,6 +66,18 @@ public class EchoTI : RootTI
 		};
 
 		device.Dispatch(operation);
+	}
+
+	public override void Update(in Moment moment)
+	{
+		base.Update(in moment);
+
+		while (Console.KeyAvailable)
+		{
+			ConsoleKeyInfo key = Console.ReadKey(true);
+			if (key.KeyChar == 'p') device.Pause();
+			if (key.KeyChar == 'r') device.Resume();
+		}
 	}
 
 	protected override void Dispose(bool disposing)
