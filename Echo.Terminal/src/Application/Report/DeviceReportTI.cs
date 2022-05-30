@@ -1,61 +1,33 @@
 ﻿using System;
-using System.Numerics;
-using CodeHelpers.Diagnostics;
-using Echo.Common.Memory;
-using Echo.Core.Compute;
+using Echo.Common.Compute;
 using Echo.Terminal.Core.Display;
-using Echo.Terminal.Core.Interface;
 
 namespace Echo.Terminal.Application.Report;
 
-public class DeviceReportTI : AreaTI
+public class DeviceReportTI : ReportTI
 {
-	static readonly string[] workerStatusLabels = Enum.GetNames<Worker.State>();
-
-	protected override void Paint(in Canvas canvas)
+	protected override void Paint(in Canvas canvas, Brush brush, Device device)
 	{
-		var device = Device.Instance;
-		var brush = new Brush();
+		//Write device status
+		ReadOnlySpan<IWorker> workers = device.Workers;
 
-		if (device == null)
+		canvas.WriteLine(ref brush, $"CPU compute device {(device.IsIdle ? "idle" : "running")}");
+		canvas.WriteLine(ref brush, $"Population {device.Population}");
+		canvas.WriteLine(ref brush, $"Progress {device.StartedProgress:P2}");
+		canvas.WriteLine(ref brush, $"Total Time {device.StartedTotalTime:hh\\:mm\\:ss}");
+		canvas.WriteLine(ref brush, $"Time {device.StartedTime:hh\\:mm\\:ss}");
+		canvas.FillLine(ref brush);
+
+		//Write worker status
+		foreach (IWorker worker in workers)
 		{
-			canvas.WriteLine(ref brush, "No compute device found.");
-			canvas.WriteLine(ref brush, "Attach a device to begin.");
-		}
-		else
-		{
-			//Write device status
-			int population = device.Population;
+			string label = worker.DisplayLabel;
+			string state = worker.State.ToDisplayString();
 
-			canvas.WriteLine(ref brush, $"CPU compute device {(device.IsIdle ? "idle" : "running")} with population {population}");
-			canvas.FillLine(ref brush);
-
-			//Write worker statuses
-			Span<Worker.State> statuses = stackalloc Worker.State[population];
-			SpanFill<Worker.State> fill = statuses.AsFill();
-
-			device.FillStatuses(ref fill);
-			Assert.IsTrue(fill.IsFull);
-
-			for (int i = 0; i < population; i++)
-			{
-				//Write worker number and label
-				Worker.State status = fill.Filled[i];
-				string label = GetWorkerStatusLabel(status);
-				canvas.WriteLine(ref brush, $"Worker 0x{i:X2} {label}");
-			}
+			canvas.WriteLine(ref brush, $"{label} {state}");
 		}
 
+		//Fill remaining space
 		canvas.FillAll(ref brush);
-	}
-
-	static string GetWorkerStatusLabel(Worker.State status)
-	{
-		//NOTE: this implementation is a bit sus, but it works because the enum is a flag
-
-		uint integer = (uint)status;
-		Assert.AreEqual(BitOperations.PopCount(integer), 1);
-		int index = BitOperations.LeadingZeroCount(integer);
-		return workerStatusLabels[31 - index];
 	}
 }

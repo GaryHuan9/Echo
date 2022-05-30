@@ -1,9 +1,9 @@
 ﻿using System;
 using CodeHelpers;
 using CodeHelpers.Packed;
+using Echo.Common.Compute;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Memory;
-using Echo.Core.Compute;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
@@ -12,7 +12,7 @@ using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Operations;
 
-public class TiledEvaluationOperation : Operation
+public class TiledEvaluationOperation : Operation<EvaluationStatistics>
 {
 	TiledEvaluationProfile profile;
 	RenderBuffer.Writer writer;
@@ -28,10 +28,8 @@ public class TiledEvaluationOperation : Operation
 		set => _profile = value;
 	}
 
-	public override void Prepare(int population)
+	protected override uint WarmUp(int population)
 	{
-		base.Prepare(population);
-
 		//Validate profile
 		profile = Profile ?? throw ExceptionHelper.Invalid(nameof(Profile), InvalidType.isNull);
 		profile.Validate();
@@ -40,26 +38,18 @@ public class TiledEvaluationOperation : Operation
 		if (profile.Buffer.TryGetWriter(profile.Evaluator.Destination, out writer)) { }
 		else throw new Exception("Invalid destination layer assigned to evaluator.");
 
-		//Create tile sequence
+		//Create tile sequence and contexts
 		Int2 size = profile.Buffer.size.CeiledDivide(profile.TileSize);
 		tilePositionSequence = profile.Pattern.CreateSequence(size);
 
-		//Duplicate context tuples
-		if ((contexts?.Length ?? 0) < population) Array.Resize(ref contexts, population);
-		ContinuousDistribution source = profile.Distribution;
+		CreateContexts(population);
 
-		foreach (ref Context context in contexts.AsSpan())
-		{
-			if (context.Distribution != source) context.Distribution = source with { };
-			context.Allocator ??= new Allocator();
-		}
+		return (uint)tilePositionSequence.Length;
 	}
 
-	protected override bool Execute(ulong procedure, IScheduler scheduler)
+	protected override void Execute(uint procedure, IProcedureWorker worker, ref EvaluationStatistics statistics)
 	{
-		if (procedure >= (ulong)tilePositionSequence.Length) return false;
-
-		(ContinuousDistribution distribution, Allocator allocator) = contexts[scheduler.Id];
+		(ContinuousDistribution distribution, Allocator allocator) = contexts[worker.Id];
 
 		Evaluator evaluator = profile.Evaluator;
 		PreparedScene scene = profile.Scene;
@@ -68,10 +58,12 @@ public class TiledEvaluationOperation : Operation
 		Int2 min = tilePositionSequence[procedure] * profile.TileSize;
 		Int2 max = buffer.size.Min(min + (Int2)profile.TileSize);
 
+		worker.BeginProcedure((uint)(max - min).Product);
+
 		for (int y = min.Y; y < max.Y; y++)
 		for (int x = min.X; x < max.X; x++)
 		{
-			scheduler.CheckSchedule();
+			worker.CheckSchedule();
 
 			Int2 position = new Int2(x, y);
 			Accumulator accumulator = new();
@@ -84,8 +76,6 @@ public class TiledEvaluationOperation : Operation
 			{
 				++epoch;
 
-				uint rejection = 0;
-
 				distribution.BeginSeries(position);
 
 				for (int i = 0; i < distribution.Extend; i++)
@@ -95,18 +85,33 @@ public class TiledEvaluationOperation : Operation
 					Ray ray = scene.camera.SpawnRay(new CameraSample(distribution), spawner);
 					Float4 evaluated = evaluator.Evaluate(scene, ray, distribution, allocator);
 
+					statistics.Report("Evaluated Sample");
+
 					allocator.Release();
 
-					if (!accumulator.Add(evaluated)) ++rejection;
+					if (!accumulator.Add(evaluated)) statistics.Report("Rejected Sample");
 				}
 			}
 			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
 			writer(position, accumulator);
+			statistics.Report("Pixel");
+			worker.AdvanceProcedure();
 		}
-
-		return true;
 	}
 
-	record struct Context(ContinuousDistribution Distribution, Allocator Allocator);
+	void CreateContexts(int population)
+	{
+		if (contexts == null || contexts.Length < population) Array.Resize(ref contexts, population);
+
+		ContinuousDistribution source = profile.Distribution;
+
+		foreach (ref Context context in contexts.AsSpan(0, population))
+		{
+			if (context.Distribution != source) context = context with { Distribution = source with { } };
+			if (context.Allocator == null) context = context with { Allocator = new Allocator() };
+		}
+	}
+
+	readonly record struct Context(ContinuousDistribution Distribution, Allocator Allocator);
 }

@@ -25,7 +25,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 {
 	const string MethodName = "Report";
 	const string InterfaceName = "IStatistics";
-	const string NamespaceName = "Echo.Common.Compute";
+	const string NamespaceName = "Echo.Common.Compute.Statistics";
 	const string AttributeName = "GeneratedStatisticsAttribute";
 
 	/// <summary>
@@ -55,7 +55,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 
 		//Combine the two pipelines into one with the invocations paired with the type
 		var labels = types.Combine(invocations).SelectMany(TypeInvocationMerger)
-						  .Select((pair, _) => new SymbolPair<StringSet>(pair.Key, pair.Value));
+						  .Select((pair, _) => new TypePair<StringSet>(pair.Key, pair.Value));
 
 		//Create another pipeline with the divided invocation count for reduced field generation
 		var packCounts = labels.Select(PackCountDivider);
@@ -75,13 +75,13 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	};
 
 	/// <summary>
-	/// Returns the struct <see cref="FlatSymbol"/> if the declaration is 
+	/// Returns the struct <see cref="FlatType"/> if the declaration is 
 	/// </summary>
-	static FlatSymbol TargetStructOrDefault(GeneratorSyntaxContext context, CancellationToken token)
+	static FlatType TargetStructOrDefault(GeneratorSyntaxContext context, CancellationToken token)
 	{
 		var syntax = (StructDeclarationSyntax)context.Node;
 		var symbol = context.SemanticModel.GetDeclaredSymbol(syntax, token);
-		return IsTargetType(symbol) ? new FlatSymbol(symbol) : default;
+		return IsTargetType(symbol) ? new FlatType(symbol) : default;
 	}
 
 	/// <summary>
@@ -90,14 +90,14 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	static bool CouldBeTargetInvocation(SyntaxNode node, CancellationToken token) => node is InvocationExpressionSyntax
 	{
 		Expression: MemberAccessExpressionSyntax { Name.Identifier.Text: MethodName },
-		ArgumentList.Arguments.Count: 1
+		ArgumentList.Arguments.Count: 1 or 2
 	};
 
 	/// <summary>
 	/// Returns either the invocation parameter into <see cref="MethodName"/> if
 	/// the node is actually the invocation that we are looking for, or otherwise null.
 	/// </summary>
-	static SymbolPair<string> TargetInvocationOrDefault(GeneratorSyntaxContext context, CancellationToken token)
+	static TypePair<string> TargetInvocationOrDefault(GeneratorSyntaxContext context, CancellationToken token)
 	{
 		var syntax = (InvocationExpressionSyntax)context.Node;
 		var argument = syntax.ArgumentList.Arguments[0].Expression;
@@ -110,13 +110,14 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 		var symbol = context.SemanticModel.GetSymbolInfo(expression, token).Symbol;
 
 		if (GetSymbolType(symbol) is not INamedTypeSymbol type || !IsTargetType(type)) return default;
-		return new SymbolPair<string>(new FlatSymbol(type), literal);
+		return new TypePair<string>(new FlatType(type), literal);
 
 		static ITypeSymbol GetSymbolType(ISymbol symbol) => symbol switch
 		{
 			ILocalSymbol local => local.Type,
 			IFieldSymbol field => field.Type,
 			IPropertySymbol property => property.Type,
+			IParameterSymbol parameter => parameter.Type,
 			_ => null
 		};
 	}
@@ -156,18 +157,18 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	}
 
 	/// <summary>
-	/// Creates a <see cref="SymbolSet"/> from an <see cref="ImmutableArray{T}"/> of <see cref="FlatSymbol"/>.
+	/// Creates a <see cref="TypeSet"/> from an <see cref="ImmutableArray{T}"/> of <see cref="FlatType"/>.
 	/// </summary>
-	static SymbolSet DistinctSelector(ImmutableArray<FlatSymbol> array, CancellationToken _) => new(array);
+	static TypeSet DistinctSelector(ImmutableArray<FlatType> array, CancellationToken _) => new(array);
 
 	/// <summary>
 	/// Distributes invocations based on the type that they are invoking into. 
 	/// </summary>
-	static Dictionary<FlatSymbol, StringSet> InvocationDistributor(ImmutableArray<SymbolPair<string>> invocations, CancellationToken token)
+	static Dictionary<FlatType, StringSet> InvocationDistributor(ImmutableArray<TypePair<string>> invocations, CancellationToken token)
 	{
-		var map = new Dictionary<FlatSymbol, StringSet>();
+		var map = new Dictionary<FlatType, StringSet>();
 
-		foreach ((FlatSymbol type, string literal) in invocations)
+		foreach ((FlatType type, string literal) in invocations)
 		{
 			token.ThrowIfCancellationRequested();
 
@@ -187,11 +188,11 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	/// Merges all struct types with their corresponding invocations. If no invocation
 	/// is present for a type, then a new empty entry is created for that type. 
 	/// </summary>
-	static Dictionary<FlatSymbol, StringSet> TypeInvocationMerger((SymbolSet, Dictionary<FlatSymbol, StringSet>) pair, CancellationToken token)
+	static Dictionary<FlatType, StringSet> TypeInvocationMerger((TypeSet, Dictionary<FlatType, StringSet>) pair, CancellationToken token)
 	{
-		(SymbolSet types, Dictionary<FlatSymbol, StringSet> invocations) = pair;
+		(TypeSet types, Dictionary<FlatType, StringSet> invocations) = pair;
 
-		foreach (FlatSymbol symbol in types)
+		foreach (FlatType symbol in types)
 		{
 			token.ThrowIfCancellationRequested();
 			if (invocations.ContainsKey(symbol)) continue;
@@ -204,7 +205,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	/// <summary>
 	/// Ceiling divides the number of invocations.
 	/// </summary>
-	static SymbolPair<int> PackCountDivider(SymbolPair<StringSet> declaration, CancellationToken _) => new(declaration.type, CeilingDivide(declaration.value.Count, PackWidth));
+	static TypePair<int> PackCountDivider(TypePair<StringSet> declaration, CancellationToken _) => new(declaration.Type, CeilingDivide(declaration.Value.Count, PackWidth));
 
 	/// <summary>
 	/// Divides while rounding up; only works with positive numbers.
@@ -215,33 +216,33 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 	/// A flattened version of a <see cref="ITypeSymbol"/>, stores only the namespace and the type name.
 	/// This allows two <see cref="ITypeSymbol"/> from different compilations to be compared and reused.
 	/// </summary>
-	readonly record struct FlatSymbol
+	readonly record struct FlatType
 	{
-		public FlatSymbol(ITypeSymbol type)
+		public FlatType(ITypeSymbol type)
 		{
-			container = type.ContainingNamespace.ToDisplayString();
-			name = type.Name;
+			Namespace = type.ContainingNamespace.ToDisplayString();
+			TypeName = type.Name;
 		}
 
-		public readonly string container; //The namespace, but the keyword is reserved XD
-		public readonly string name;
+		public readonly string Namespace;
+		public readonly string TypeName;
 	}
 
 	/// <summary>
-	/// A generic pair mapping from a <see cref="FlatSymbol"/> to a <see cref="value"/> of type <see cref="T"/>.
+	/// A generic pair mapping from a <see cref="FlatType"/> to a <see cref="Value"/> of type <see cref="T"/>.
 	/// </summary>
-	readonly record struct SymbolPair<T>(FlatSymbol type, T value)
+	readonly record struct TypePair<T>(FlatType Type, T Value)
 	{
-		public readonly FlatSymbol type = type;
-		public readonly T value = value;
+		public readonly FlatType Type = Type;
+		public readonly T Value = Value;
 	}
 
 	/// <summary>
-	/// An <see cref="EquitableSet{T}"/> of <see cref="FlatSymbol"/>s.
+	/// An <see cref="EquitableSet{T}"/> of <see cref="FlatType"/>s.
 	/// </summary>
-	sealed class SymbolSet : EquitableSet<FlatSymbol>
+	sealed class TypeSet : EquitableSet<FlatType>
 	{
-		public SymbolSet(IEnumerable<FlatSymbol> collection) : base(collection) { }
+		public TypeSet(IEnumerable<FlatType> collection) : base(collection) { }
 	}
 
 	/// <summary>
