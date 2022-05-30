@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 
@@ -12,6 +13,8 @@ public sealed class Device : IDisposable
 	Device(int population)
 	{
 		workers = new Worker[population];
+		startTimes = new TimeSpan[population];
+		stopwatch = Stopwatch.StartNew();
 
 		for (int i = 0; i < workers.Length; i++)
 		{
@@ -24,11 +27,15 @@ public sealed class Device : IDisposable
 	}
 
 	readonly Worker[] workers;
-
 	int runningCount;
+
+	readonly TimeSpan[] startTimes;
+	readonly Stopwatch stopwatch;
+	TimeSpan totalTime;
 
 	readonly Locker manageLocker = new();
 	readonly Locker signalLocker = new();
+	readonly Locker timingLocker = new();
 
 	/// <summary>
 	/// Whether this <see cref="Device"/> is currently idling (ie. not executing any <see cref="Operation"/>).
@@ -90,6 +97,37 @@ public sealed class Device : IDisposable
 	}
 
 	/// <summary>
+	/// The total time all the <see cref="Worker"/>s of this <see cref="Device"/> spent working on the <see cref="StartedOperation"/>.
+	/// </summary>
+	/// <remarks>This value is scaled by the <see cref="Population"/> (eg. this value will 
+	/// be 6 seconds if a <see cref="Population"/> of 3 worked for 2 seconds each).</remarks>
+	public TimeSpan StartedTotalTime
+	{
+		get
+		{
+			TimeSpan time = stopwatch.Elapsed;
+			using var _ = timingLocker.Fetch();
+
+			TimeSpan result = totalTime;
+			if (IsIdle) return result;
+
+			foreach (TimeSpan startTime in startTimes)
+			{
+				//A start time of zero means that the worker is not running
+				if (startTime != TimeSpan.Zero) result += time - startTime;
+			}
+
+			return result;
+		}
+	}
+
+	/// <summary>
+	/// The time this <see cref="Device"/> spent working on the <see cref="StartedOperation"/>.
+	/// </summary>
+	/// <remarks>This is equals to <see cref="StartedTotalTime"/> divided by <see cref="Population"/>.</remarks>
+	public TimeSpan StartedTime => StartedTotalTime / Population;
+
+	/// <summary>
 	/// Whether this <see cref="Device"/> is disposed.
 	/// Disposed <see cref="Device"/> should not be used.
 	/// </summary>
@@ -138,6 +176,12 @@ public sealed class Device : IDisposable
 		{
 			Abort();
 			AwaitIdle();
+		}
+
+		lock (timingLocker)
+		{
+			startTimes.AsSpan().Clear();
+			totalTime = TimeSpan.Zero;
 		}
 
 		Interlocked.Exchange(ref _startedOperation, operation);
@@ -210,11 +254,12 @@ public sealed class Device : IDisposable
 
 	void OnIdleChanged(Worker worker, bool entered)
 	{
-		using var _ = signalLocker.Fetch();
-
 		if (entered)
 		{
-			//Just entered idle
+			//Just stopped running
+			StopWorkerTimer(worker);
+
+			using var _ = signalLocker.Fetch();
 			Assert.IsFalse(runningCount <= 0);
 			--runningCount;
 
@@ -223,7 +268,10 @@ public sealed class Device : IDisposable
 		}
 		else
 		{
-			//Just exited idle
+			//Just started running
+			StartWorkerTimer(worker);
+
+			using var _ = signalLocker.Fetch();
 			Assert.IsFalse(runningCount >= workers.Length);
 			++runningCount;
 
@@ -232,7 +280,28 @@ public sealed class Device : IDisposable
 		}
 	}
 
-	void OnAwaitChanged(Worker worker, bool entered) { }
+	void OnAwaitChanged(Worker worker, bool entered)
+	{
+		if (entered) StopWorkerTimer(worker); //Just paused
+		else StartWorkerTimer(worker);        //Just resumed;
+	}
+
+	void StartWorkerTimer(Worker worker)
+	{
+		TimeSpan time = stopwatch.Elapsed;
+		using var _ = timingLocker.Fetch();
+		startTimes[worker.Id] = time;
+	}
+
+	void StopWorkerTimer(Worker worker)
+	{
+		TimeSpan time = stopwatch.Elapsed;
+		using var _ = timingLocker.Fetch();
+
+		ref var start = ref startTimes[worker.Id];
+		totalTime += time - start;
+		start = TimeSpan.Zero;
+	}
 
 	void ThrowIfDisposed()
 	{

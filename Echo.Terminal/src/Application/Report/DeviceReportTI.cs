@@ -14,6 +14,8 @@ public class DeviceReportTI : ReportTI
 		canvas.WriteLine(ref brush, $"CPU compute device {(device.IsIdle ? "idle" : "running")}");
 		canvas.WriteLine(ref brush, $"Population {device.Population}");
 		canvas.WriteLine(ref brush, $"Progress {device.StartedProgress:P2}");
+		canvas.WriteLine(ref brush, $"Total Time {device.StartedTotalTime:hh\\:mm\\:ss}");
+		canvas.WriteLine(ref brush, $"Time {device.StartedTime:hh\\:mm\\:ss}");
 		canvas.FillLine(ref brush);
 
 		//Write worker status
