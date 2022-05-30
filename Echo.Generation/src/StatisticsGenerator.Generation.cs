@@ -14,9 +14,9 @@ partial class StatisticsGenerator
 		/// Creates the source containing all members that only depend on the pack count.
 		/// A pack is a group of <see cref="PackWidth"/> ulong to be calculated with AVX2.
 		/// </summary>
-		public static void CreateMembersWithoutLabels(SourceProductionContext context, SymbolPair<int> pair)
+		public static void CreateMembersWithoutLabels(SourceProductionContext context, TypePair<int> pair)
 		{
-			(FlatSymbol type, int packCount) = pair;
+			(FlatType type, int packCount) = pair;
 
 			var builder = new SourceBuilder(nameof(StatisticsGenerator));
 
@@ -27,7 +27,7 @@ partial class StatisticsGenerator
 			builder.NewCode("using System.Runtime.Intrinsics.X86");
 
 			builder.NewLine();
-			builder.NewCode($"namespace {type.container}");
+			builder.NewCode($"namespace {type.Namespace}");
 
 			builder.NewLine();
 			int lineCount = CeilingDivide(packCount, LineWidth);
@@ -35,7 +35,7 @@ partial class StatisticsGenerator
 
 			int structSize = Math.Max(lineCount, 1) * PackWidth * LineWidth * sizeof(ulong);
 			builder.Attribute("StructLayout", $"LayoutKind.Sequential, Size = {structSize}");
-			using (builder.FetchBlock($"partial struct {type.name}"))
+			using (builder.FetchBlock($"partial struct {type.TypeName}"))
 			{
 				if (packCount > 0)
 				{
@@ -53,7 +53,7 @@ partial class StatisticsGenerator
 				else MethodSum();
 			}
 
-			context.AddSource($"{type.name}.fields.g.cs", builder.ToString());
+			context.AddSource($"{type.TypeName}.fields.g.cs", builder.ToString());
 
 			void FieldCounts()
 			{
@@ -63,7 +63,7 @@ partial class StatisticsGenerator
 			void MethodSum()
 			{
 				builder.NewLine("/// <inheritdoc/>");
-				using var _ = builder.FetchBlock($"public unsafe {type.name} Sum({type.name}* source, int length)");
+				using var _ = builder.FetchBlock($"public unsafe {type.TypeName} Sum({type.TypeName}* source, int length)");
 
 				builder.NewCode("if (length <= 0) throw new ArgumentOutOfRangeException(nameof(length))");
 
@@ -80,9 +80,9 @@ partial class StatisticsGenerator
 			void MethodSumAvx2()
 			{
 				builder.Attribute("SkipLocalsInit");
-				using var _ = builder.FetchBlock($"static unsafe {type.name} SumAvx2({type.name}* source, int length)");
+				using var _ = builder.FetchBlock($"static unsafe {type.TypeName} SumAvx2({type.TypeName}* source, int length)");
 
-				builder.NewCode($"Unsafe.SkipInit(out {type.name} target)");
+				builder.NewCode($"Unsafe.SkipInit(out {type.TypeName} target)");
 				builder.NewCode("ulong* ptrTarget = (ulong*)&target");
 
 				builder.NewLine();
@@ -108,14 +108,14 @@ partial class StatisticsGenerator
 
 			void MethodSumSoftware()
 			{
-				using var _ = builder.FetchBlock($"static unsafe {type.name} SumSoftware({type.name}* source, int length)");
+				using var _ = builder.FetchBlock($"static unsafe {type.TypeName} SumSoftware({type.TypeName}* source, int length)");
 
-				builder.NewCode($"{type.name} target = *source");
+				builder.NewCode($"{type.TypeName} target = *source");
 
 				builder.NewLine();
 				using (builder.FetchBlock("for (int i = 1; i < length; i++)"))
 				{
-					builder.NewCode($"ref readonly var refSource = ref Unsafe.AsRef<{type.name}>(source + i)");
+					builder.NewCode($"ref readonly var refSource = ref Unsafe.AsRef<{type.TypeName}>(source + i)");
 
 					builder.NewLine();
 					for (int i = 0; i < packCount * PackWidth; i++)
@@ -132,9 +132,9 @@ partial class StatisticsGenerator
 		/// <summary>
 		/// Creates the source containing all members that depend on the actual string labels/literals.
 		/// </summary>
-		public static void CreateMembersWithLabels(SourceProductionContext context, SymbolPair<StringSet> pair)
+		public static void CreateMembersWithLabels(SourceProductionContext context, TypePair<StringSet> pair)
 		{
-			(FlatSymbol type, StringSet set) = pair;
+			(FlatType type, StringSet set) = pair;
 
 			string[] labels = set.ToArray();
 			Array.Sort(labels, StringComparer.OrdinalIgnoreCase);
@@ -144,12 +144,13 @@ partial class StatisticsGenerator
 
 			builder.NewCode("using System");
 			builder.NewCode("using System.Runtime.CompilerServices");
+			builder.NewCode($"using {NamespaceName}");
 
 			builder.NewLine();
-			builder.NewCode($"namespace {type.container}");
+			builder.NewCode($"namespace {type.Namespace}");
 
 			builder.NewLine();
-			using (builder.FetchBlock($"partial struct {type.name}"))
+			using (builder.FetchBlock($"partial struct {type.TypeName}"))
 			{
 				FieldEventLabels();
 
@@ -163,7 +164,7 @@ partial class StatisticsGenerator
 				MethodReport();
 			}
 
-			context.AddSource($"{type.name}.methods.g.cs", builder.ToString());
+			context.AddSource($"{type.TypeName}.methods.g.cs", builder.ToString());
 
 			void FieldEventLabels()
 			{
@@ -207,13 +208,13 @@ partial class StatisticsGenerator
 			void PropertyIndexer()
 			{
 				builder.NewLine("/// <inheritdoc/>");
-				using var _0 = builder.FetchBlock("public (string label, ulong count) this[int index]");
+				using var _0 = builder.FetchBlock("public EventRow this[int index]");
 				using var _1 = builder.FetchBlock("get");
 
 				if (labels.Length > 0)
 				{
 					builder.NewCode($"if ((uint)index >= {labels.Length}) throw new ArgumentOutOfRangeException(nameof(index))");
-					builder.NewCode("return (label: eventLabels[index], count: Unsafe.Add<ulong>(ref count0, index))");
+					builder.NewCode("return new EventRow(eventLabels[index], Unsafe.Add<ulong>(ref count0, index))");
 				}
 				else builder.NewCode("throw new ArgumentOutOfRangeException(nameof(index))");
 			}
@@ -222,7 +223,7 @@ partial class StatisticsGenerator
 			{
 				builder.NewLine("/// <inheritdoc/>");
 				builder.Attribute("MethodImpl", "MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization");
-				using var _ = builder.FetchBlock($"public void {MethodName}(string label)");
+				using var _ = builder.FetchBlock($"public void {MethodName}(string label, ulong count = 1)");
 
 				if (labels.Length == 0)
 				{
@@ -266,7 +267,7 @@ partial class StatisticsGenerator
 									if (i + 1 < length) builder.Append(" && ");
 								}
 
-								builder.Postfix($") ++count{labelIndices[index]}");
+								builder.Postfix($") count{labelIndices[index]} += count");
 							}
 							while (++index < labels.Length);
 

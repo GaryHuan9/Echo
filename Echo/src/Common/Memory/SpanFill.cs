@@ -73,12 +73,19 @@ public ref struct SpanFill<T>
 public static class SpanFillExtensions
 {
 	/// <summary>
-	/// Creates a new <see cref="SpanFill{T}"/> over <paramref name="span"/> starting at <paramref name="start"/>.
+	/// Creates a new <see cref="SpanFill{T}"/>.
 	/// </summary>
-	public static SpanFill<T> AsFill<T>(this Span<T> span, int start = 0) => new(span, start);
+	/// <param name="memory">The destination region in memory that
+	/// the new <see cref="SpanFill{T}"/> should target.</param>
+	/// <param name="start">Optionally offset <paramref name="memory"/>. Must be between
+	/// 0 (inclusive) and the length of <paramref name="memory"/> (exclusive).</param>
+	/// <typeparam name="T">The type to fill.</typeparam>
+	/// <returns>The newly created <see cref="SpanFill{T}"/>.</returns>
+	public static SpanFill<T> AsFill<T>(this T[] memory, int start = 0) => new(memory, start);
 
-	/// <summary>
-	/// Creates a new <see cref="SpanFill{T}"/> over <paramref name="view"/> starting at <paramref name="start"/>.
-	/// </summary>
-	public static SpanFill<T> AsFill<T>(this View<T> view, int start = 0) => new(view, start);
+	/// <inheritdoc cref="AsFill{T}(T[],int)"/>
+	public static SpanFill<T> AsFill<T>(this Span<T> memory, int start = 0) => new(memory, start);
+
+	/// <inheritdoc cref="AsFill{T}(T[],int)"/>
+	public static SpanFill<T> AsFill<T>(this View<T> memory, int start = 0) => new(memory, start);
 }
