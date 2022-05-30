@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Echo.Common.Compute;
+namespace Echo.Common.Compute.Statistics;
 
 /// <summary>
 /// An attribute that marks an unmanaged struct implementing <see cref="IStatistics{T}"/> to be automatically source generated.
