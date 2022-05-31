@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Packed;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Backend;
 
-//
 using static SDL2.SDL;
 using static Native;
 
@@ -20,18 +22,17 @@ public sealed unsafe class ImGuiDevice : IDisposable
 	{
 		this.window = window;
 		this.renderer = renderer;
+		io = ImGui.GetIO();
 
 		//Setup flags
-		var io = ImGui.GetIO();
-
 		io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
 		io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
 		io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 
 		//Create resources
 		mouseCursors = CreateMouseCursors();
-		fontTexture = CreateFontTexture(renderer);
-		CreateClipboardSetup();
+		fontTexture = CreateFontTexture(io, renderer);
+		CreateClipboardSetup(io);
 
 		//Link viewport data
 		SDL_SysWMinfo info = default;
@@ -49,6 +50,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 	readonly IntPtr window;
 	readonly IntPtr renderer;
+	ImGuiIOPtr io;
 
 	IntPtr[] mouseCursors;
 	IntPtr fontTexture;
@@ -63,8 +65,6 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 	public void ProcessEvent(in SDL_Event sdlEvent)
 	{
-		var io = ImGui.GetIO();
-
 		switch (sdlEvent.type)
 		{
 			case SDL_EventType.SDL_MOUSEMOTION:
@@ -80,7 +80,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 			case SDL_EventType.SDL_MOUSEBUTTONDOWN:
 			case SDL_EventType.SDL_MOUSEBUTTONUP:
 			{
-				ProcessMouseButtonEvent(io, sdlEvent.button);
+				ProcessMouseButtonEvent(sdlEvent.button);
 				break;
 			}
 			case SDL_EventType.SDL_TEXTINPUT:
@@ -91,12 +91,12 @@ public sealed unsafe class ImGuiDevice : IDisposable
 			case SDL_EventType.SDL_KEYDOWN:
 			case SDL_EventType.SDL_KEYUP:
 			{
-				ProcessKeyboardEvent(io, sdlEvent.key);
+				ProcessKeyboardEvent(sdlEvent.key);
 				break;
 			}
 			case SDL_EventType.SDL_WINDOWEVENT:
 			{
-				ProcessWindowEvent(io, sdlEvent.window);
+				ProcessWindowEvent(sdlEvent.window);
 				break;
 			}
 		}
@@ -104,12 +104,11 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 	public void NewFrame(in TimeSpan deltaTime)
 	{
-		var io = ImGui.GetIO();
 		io.DeltaTime = (float)deltaTime.TotalSeconds;
 
-		RefreshDisplaySize(io);
-		UpdateMouseData(io);
-		UpdateMouseCursor(io);
+		RefreshDisplaySize();
+		UpdateMouseData();
+		UpdateMouseCursor();
 	}
 
 	public void Render(ImDrawDataPtr data)
@@ -185,11 +184,12 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		disposed = true;
 
 		DestroyMouseCursors(ref mouseCursors);
-		DestroyFontTexture(ref fontTexture);
-		DestroyClipboardSetup();
+		DestroyFontTexture(io, ref fontTexture);
+		DestroyClipboardSetup(io);
+		io = null;
 	}
 
-	void ProcessMouseButtonEvent(ImGuiIOPtr io, SDL_MouseButtonEvent mouseButtonEvent)
+	void ProcessMouseButtonEvent(SDL_MouseButtonEvent mouseButtonEvent)
 	{
 		int mouseButton = (uint)mouseButtonEvent.button switch
 		{
@@ -208,7 +208,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		mouseButtonDownCount += down ? 1 : -1;
 	}
 
-	void ProcessKeyboardEvent(ImGuiIOPtr io, in SDL_KeyboardEvent keyboardEvent)
+	void ProcessKeyboardEvent(in SDL_KeyboardEvent keyboardEvent)
 	{
 		ref readonly SDL_Keysym key = ref keyboardEvent.keysym;
 		bool down = keyboardEvent.type == SDL_EventType.SDL_KEYDOWN;
@@ -221,7 +221,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		io.AddKeyEvent(SDL_KeycodeToImGuiKey(key.sym), down);
 	}
 
-	void ProcessWindowEvent(ImGuiIOPtr io, in SDL_WindowEvent windowEvent)
+	void ProcessWindowEvent(in SDL_WindowEvent windowEvent)
 	{
 		switch (windowEvent.windowEvent)
 		{
@@ -248,7 +248,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		}
 	}
 
-	void RefreshDisplaySize(ImGuiIOPtr io)
+	void RefreshDisplaySize()
 	{
 		SDL_GetWindowSize(window, out int width, out int height);
 		var size = io.DisplaySize = new Vector2(width, height);
@@ -259,7 +259,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		if (size.X > 0f && size.Y > 0f) io.DisplayFramebufferScale = new Vector2(displayWidth, displayHeight) / size;
 	}
 
-	void UpdateMouseData(ImGuiIOPtr io)
+	void UpdateMouseData()
 	{
 		if (pendingMouseLeaveFrame >= ImGui.GetFrameCount() && mouseButtonDownCount == 0)
 		{
@@ -274,14 +274,14 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 		if (mouseButtonDownCount == 0)
 		{
-			SDL_GetGlobalMouseState(out int mouseGlobalX, out int mouseGlobalY).ThrowOnError();
+			_ = SDL_GetGlobalMouseState(out int globalX, out int globalY);
 			SDL_GetWindowPosition(window, out int windowX, out int windowY);
 
-			io.AddMousePosEvent(mouseGlobalX - windowX, mouseGlobalY - windowY);
+			io.AddMousePosEvent(globalX - windowX, globalY - windowY);
 		}
 	}
 
-	void UpdateMouseCursor(ImGuiIOPtr io)
+	void UpdateMouseCursor()
 	{
 		if ((io.ConfigFlags & ImGuiConfigFlags.NoMouseCursorChange) != 0) return;
 
@@ -295,15 +295,9 @@ public sealed unsafe class ImGuiDevice : IDisposable
 			if (mouseCursor == IntPtr.Zero) mouseCursor = mouseCursors[Fallback];
 
 			SDL_SetCursor(mouseCursor);
-			SDL_ShowCursor((int)SDL_bool.SDL_TRUE).ThrowOnError();
+			_ = SDL_ShowCursor((int)SDL_bool.SDL_TRUE);
 		}
-		else SDL_ShowCursor((int)SDL_bool.SDL_FALSE).ThrowOnError();
-	}
-
-	void SetupRenderState()
-	{
-		SDL_RenderSetViewport(renderer, IntPtr.Zero).ThrowOnError();
-		SDL_RenderSetClipRect(renderer, IntPtr.Zero).ThrowOnError();
+		else _ = SDL_ShowCursor((int)SDL_bool.SDL_FALSE);
 	}
 
 	static IntPtr[] CreateMouseCursors()
@@ -336,10 +330,8 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		cursors = null;
 	}
 
-	static IntPtr CreateFontTexture(IntPtr renderer)
+	static IntPtr CreateFontTexture(ImGuiIOPtr io, IntPtr renderer)
 	{
-		var io = ImGui.GetIO();
-
 		io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height);
 
 		IntPtr texture = SDL_CreateTexture
@@ -359,33 +351,28 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		return texture;
 	}
 
-	static void DestroyFontTexture(ref IntPtr texture)
+	static void DestroyFontTexture(ImGuiIOPtr io, ref IntPtr texture)
 	{
 		if (texture == IntPtr.Zero) return;
-
-		var io = ImGui.GetIO();
 
 		io.Fonts.SetTexID(IntPtr.Zero);
 		SDL_DestroyTexture(texture);
 		texture = IntPtr.Zero;
 	}
 
-	static void CreateClipboardSetup()
+	static void CreateClipboardSetup(ImGuiIOPtr io)
 	{
-		var io = ImGui.GetIO();
-
 		io.SetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(SetClipboardText);
 		io.GetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(GetClipboardText);
 	}
 
-	static void DestroyClipboardSetup()
+	static void DestroyClipboardSetup(ImGuiIOPtr io)
 	{
-		var io = ImGui.GetIO();
-
 		io.SetClipboardTextFn = IntPtr.Zero;
 		io.GetClipboardTextFn = IntPtr.Zero;
 	}
 
 	delegate void SetClipboardTextFn(IntPtr _, string text);
 	delegate string GetClipboardTextFn(IntPtr _);
+	delegate void ImDrawCallback(IntPtr list, IntPtr cmd);
 }
