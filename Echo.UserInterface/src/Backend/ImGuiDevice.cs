@@ -24,7 +24,8 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		this.renderer = renderer;
 		io = ImGui.GetIO();
 
-		//Setup flags
+		//Assign global names and flags
+		AssignBackendNames(io, renderer);
 		io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
 		io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
 		io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
@@ -117,65 +118,23 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, byte.MaxValue).ThrowOnError();
 		SDL_RenderClear(renderer).ThrowOnError();
 
-		float renderScaleX = data.FramebufferScale.X;
-		float renderScaleY = data.FramebufferScale.Y;
+		//Setup clip information
+		Float4 clipSize = Widen(data.FramebufferScale * data.DisplaySize);
+		if (clipSize.X <= 0f || clipSize.Y <= 0f) return;
 
-		int width = (int)(data.DisplaySize.X * renderScaleX);
-		int height = (int)(data.DisplaySize.Y * renderScaleY);
+		Float4 clipOffset = Widen(data.DisplayPos);
+		Float4 clipScale = Widen(data.FramebufferScale);
 
-		if (width == 0 || height == 0) return;
+		//Render
+		SDL_RenderSetViewport(renderer, IntPtr.Zero).ThrowOnError();
+		SDL_RenderSetClipRect(renderer, IntPtr.Zero).ThrowOnError();
 
-		bool old_clipEnabled = SDL_RenderIsClipEnabled(renderer) == SDL_bool.SDL_TRUE;
-		SDL_RenderGetViewport(renderer, out SDL_Rect old_viewport).ThrowOnError();
-		SDL_RenderGetClipRect(renderer, out SDL_Rect old_clipRect);
-
-		Vector2 clipOff = data.DisplayPos;
-		Vector2 clipScale = new Vector2(renderScaleY, renderScaleY);
-
-		SetupRenderState();
-
-		for (int i = 0; i < data.CmdListsCount; i++)
-		{
-			ImDrawListPtr cmdList = data.CmdListsRange[i];
-			var vertices = (ImDrawVert*)cmdList.VtxBuffer.Data;
-			var indices = (ushort*)cmdList.IdxBuffer.Data;
-
-			for (int j = 0; j < cmdList.CmdBuffer.Size; j++)
-			{
-				ImDrawCmdPtr cmd = cmdList.CmdBuffer[j];
-
-				if (cmd.UserCallback == IntPtr.Zero)
-				{
-					Vector2 clipMin = new Vector2((cmd.ClipRect.X - clipOff.X) * clipScale.X, (cmd.ClipRect.Y - clipOff.Y) * clipScale.Y);
-					Vector2 clipMax = new Vector2((cmd.ClipRect.Z - clipOff.X) * clipScale.X, (cmd.ClipRect.W - clipOff.Y) * clipScale.Y);
-
-					clipMin = Vector2.Max(clipMin, Vector2.Zero);
-					clipMax = Vector2.Min(clipMax, new Vector2(width, height));
-
-					if (clipMax.X <= clipMin.X || clipMax.Y <= clipMin.Y) continue;
-
-					SDL_Rect r = new SDL_Rect { x = (int)clipMin.X, y = (int)clipMin.Y, w = (int)(clipMax.X - clipMin.X), h = (int)(clipMax.Y - clipMin.Y) };
-					SDL_RenderSetClipRect(renderer, (IntPtr)(&r));
-
-					ImDrawVert* vertex = vertices + cmd.VtxOffset;
-
-					float* xy = (float*)&vertex->pos;
-					float* uv = (float*)&vertex->uv;
-					int* color = (int*)&vertex->col;
-
-					IntPtr texture = cmd.GetTexID();
-					int stride = sizeof(ImDrawVert);
-
-					SDL_RenderGeometryRaw(renderer, texture, xy, stride, color, stride, uv, stride, cmdList.VtxBuffer.Size - (int)cmd.VtxOffset, (IntPtr)(indices + cmd.IdxOffset), (int)cmd.ElemCount, sizeof(ushort));
-				}
-				else throw new NotSupportedException("???"); //How to use cmd.UserCallback?
-			}
-		}
-
-		SDL_RenderSetViewport(renderer, (IntPtr)(&old_viewport)).ThrowOnError();
-		SDL_RenderSetClipRect(renderer, old_clipEnabled ? (IntPtr)(&old_clipRect) : IntPtr.Zero).ThrowOnError();
+		var lists = data.CmdListsRange;
+		for (int i = 0; i < lists.Count; i++) ExecuteCommandList(lists[i], clipOffset, clipScale, clipSize);
 
 		SDL_RenderPresent(renderer);
+
+		static Float4 Widen(Vector2 vector) => new Float4(vector.AsVector128()).XYXY;
 	}
 
 	public void Dispose()
@@ -298,6 +257,66 @@ public sealed unsafe class ImGuiDevice : IDisposable
 			_ = SDL_ShowCursor((int)SDL_bool.SDL_TRUE);
 		}
 		else _ = SDL_ShowCursor((int)SDL_bool.SDL_FALSE);
+	}
+
+	void ExecuteCommandList(ImDrawListPtr list, in Float4 clipOffset, in Float4 clipScale, in Float4 clipSize)
+	{
+		ImPtrVector<ImDrawCmdPtr> buffer = list.CmdBuffer;
+		var vertices = (ImDrawVert*)list.VtxBuffer.Data;
+		var indices = (ushort*)list.IdxBuffer.Data;
+
+		for (int j = 0; j < buffer.Size; j++)
+		{
+			ImDrawCmdPtr command = buffer[j];
+
+			if (command.UserCallback == IntPtr.Zero)
+			{
+				var clipRect = new Float4(command.ClipRect.AsVector128());
+				clipRect = (clipRect - clipOffset) * clipScale;
+
+				Float4 clipMin = clipRect.Max(Float4.Zero); //(minX, minY, ____, ____).Max(zero)
+				Float4 clipMax = clipRect.Min(clipSize);    //(____, ____, maxX, maxY).Min(size)
+
+				if (clipMax.Z <= clipMin.X || clipMax.W <= clipMin.Y) continue;
+
+				clipMin = clipMin.XYXY; //(minX, minY, minX, minY)
+				clipMax = clipMax.__ZW; //(0000, 0000, maxX, maxY)
+
+				Float4 clip = (clipMax - clipMin).Absoluted;     //(-minX, -minY, maxX - minX, maxY - minY).Absoluted
+				var rect = Sse2.ConvertToVector128Int32(clip.v); //(    X,     Y,       width,      height)
+				ImDrawVert* vertex = vertices + command.VtxOffset;
+				int stride = sizeof(ImDrawVert);
+
+				SDL_RenderSetClipRect(renderer, (IntPtr)(&rect)).ThrowOnError();
+
+				SDL_RenderGeometryRaw
+				(
+					renderer, command.GetTexID(),
+					(float*)&vertex->pos, stride,
+					(int*)&vertex->col, stride,
+					(float*)&vertex->uv, stride,
+					list.VtxBuffer.Size - (int)command.VtxOffset,
+					(IntPtr)(indices + command.IdxOffset),
+					(int)command.ElemCount, sizeof(ushort)
+				).ThrowOnError();
+			}
+			else
+			{
+				var callback = Marshal.GetDelegateForFunctionPointer<ImDrawCallback>(command.UserCallback);
+				callback(new IntPtr(list), new IntPtr(command)); //Perform user callback, not really used
+			}
+		}
+	}
+
+	static void AssignBackendNames(ImGuiIOPtr io, IntPtr renderer)
+	{
+		SDL_GetRendererInfo(renderer, out SDL_RendererInfo info).ThrowOnError();
+
+		var name = (Marshal.PtrToStringAnsi(info.name) ?? "unknown").ToUpper();
+		var size = new Int2(info.max_texture_width, info.max_texture_height);
+
+		io.NativePtr->BackendPlatformName = (byte*)Marshal.StringToHGlobalAnsi("SDL2 & Dear ImGui for C#");
+		io.NativePtr->BackendRendererName = (byte*)Marshal.StringToHGlobalAnsi($"{name} {size.X}x{size.Y}");
 	}
 
 	static IntPtr[] CreateMouseCursors()
