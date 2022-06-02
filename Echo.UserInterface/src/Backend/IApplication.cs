@@ -4,9 +4,11 @@ namespace Echo.UserInterface.Backend;
 
 public interface IApplication : IDisposable
 {
-	TimeSpan UpdateDelay { get; }
-
 	string Label { get; }
+	
+	TimeSpan UpdateDelay { get; }
+	
+	bool RequestTermination { get; }
 
 	void Initialize();
 
