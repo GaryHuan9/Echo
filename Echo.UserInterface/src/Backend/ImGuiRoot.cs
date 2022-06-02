@@ -57,7 +57,7 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 
 		TimeSpan lastTime = TimeSpan.Zero;
 
-		while (true)
+		while (!application.RequestTermination)
 		{
 			//Setup for frame
 			TimeSpan time = stopwatch.Elapsed;
