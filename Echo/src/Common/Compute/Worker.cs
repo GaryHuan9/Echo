@@ -32,6 +32,12 @@ public interface IWorker
 	float Progress { get; }
 
 	/// <summary>
+	/// The <see cref="Thread.ManagedThreadId"/> of the underlying 
+	/// <see cref="Thread"/>. Null if it is currently unknown.
+	/// </summary>
+	int? ThreadId { get; }
+
+	/// <summary>
 	/// The <see cref="string"/> label of this <see cref="IWorker"/> to be displayed.
 	/// </summary>
 	sealed string DisplayLabel => $"Worker 0x{Id:X2}";
@@ -183,6 +189,9 @@ sealed class Worker : IProcedureWorker, IDisposable
 	/// <inheritdoc/>
 	public float Progress => FastMath.Clamp01(procedureCompletedWork * procedureTotalWorkR);
 
+	/// <inheritdoc/>
+	public int? ThreadId => thread?.ManagedThreadId;
+
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
 	/// </summary>
@@ -294,7 +303,7 @@ sealed class Worker : IProcedureWorker, IDisposable
 			locker.Signaling = false;
 		}
 
-		thread.Join();
+		thread?.Join();
 	}
 
 	/// <inheritdoc/>
@@ -334,7 +343,7 @@ sealed class Worker : IProcedureWorker, IDisposable
 	{
 		while (State != WorkerState.Disposed)
 		{
-			AwaitStatus(WorkerState.Running);
+			if (!AwaitStatus(WorkerState.Running)) break; //Disposed
 
 			Operation operation = Interlocked.Exchange(ref nextOperation, null);
 			if (operation == null) throw new InvalidAsynchronousStateException();
@@ -358,6 +367,7 @@ sealed class Worker : IProcedureWorker, IDisposable
 				}
 
 				procedureCompletedWork = 0;
+				((IProcedureWorker)this).CheckSchedule();
 			}
 			while (running);
 
@@ -367,13 +377,21 @@ sealed class Worker : IProcedureWorker, IDisposable
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	void AwaitStatus(WorkerState status)
+	bool AwaitStatus(WorkerState status)
 	{
 		status |= WorkerState.Disposed;
 
 		lock (locker)
 		{
-			while ((State | status) != status) locker.Wait();
+			WorkerState state = State;
+
+			while ((state | status) != status)
+			{
+				locker.Wait();
+				state = State;
+			}
+
+			return state != WorkerState.Disposed;
 		}
 	}
 
