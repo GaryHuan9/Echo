@@ -11,7 +11,8 @@ public sealed class EchoUI : IApplication
 	{
 		var builder = ImmutableArray.CreateBuilder<AreaUI>();
 
-		builder.Add(new DomainUI());
+		builder.Add(new SystemUI());
+		builder.Add(new OperationUI());
 
 		areas = builder.ToImmutable();
 	}
