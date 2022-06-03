@@ -14,6 +14,9 @@ public static class DefaultFormattingExtensions
 	public static string ToStringDefault(this uint value) => value.ToString("N0");
 	public static string ToStringDefault(this ulong value) => value.ToString("N0");
 
+	public static string ToStringDefault(this TimeSpan value) => value.ToString(@"hh\:mm\:ss\.ff");
+	public static string ToStringDefault(this DateTime value) => value.ToString("HH:mm:ss");
+
 	public static string ToStringPercentage(this float value) => value.ToString("P2");
 	public static string ToStringPercentage(this double value) => value.ToString("P3");
 
