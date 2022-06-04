@@ -13,6 +13,8 @@ public sealed class EchoUI : IApplication
 
 		builder.Add(new SystemUI());
 		builder.Add(new OperationUI());
+		builder.Add(new TilesUI());
+		builder.Add(new ActionsUI());
 
 		areas = builder.ToImmutable();
 	}
