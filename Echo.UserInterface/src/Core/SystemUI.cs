@@ -104,7 +104,7 @@ public class SystemUI : AreaUI
 		bool idle = device.IsIdle;
 		ImGui.BeginDisabled(!idle);
 
-		if (ImGui.Button("Dispatch")) DispatchToDevice(device);
+		if (ImGui.Button("Dispatch")) DispatchDevice(device);
 
 		ImGui.EndDisabled();
 		ImGui.BeginDisabled(idle);
@@ -120,7 +120,7 @@ public class SystemUI : AreaUI
 		ImGui.SameLine();
 		if (ImGui.Button("Dispose"))
 		{
-			device.Dispose();
+			DisposeDevice(device);
 			device = null;
 			return;
 		}
@@ -154,7 +154,6 @@ public class SystemUI : AreaUI
 				ImGuiCustom.Property("Completion Time", timeFinish.ToStringDefault());
 			}
 
-
 			ImGuiCustom.EndProperties();
 		}
 	}
@@ -184,27 +183,34 @@ public class SystemUI : AreaUI
 		}
 	}
 
-	static void DispatchToDevice(Device device)
+	static void DispatchDevice(Device device)
 	{
-		var scene = new SingleBunny();
+		ActionQueue.Enqueue(Dispatch, "Device Dispatch");
 
-		var prepareProfile = new ScenePrepareProfile();
-
-		var evaluationProfile = new TiledEvaluationProfile
+		void Dispatch()
 		{
-			Scene = new PreparedScene(scene, prepareProfile),
-			Evaluator = new PathTracedEvaluator(),
-			Distribution = new StratifiedDistribution { Extend = 64 },
-			Buffer = new RenderBuffer(new Int2(960, 540)),
-			MinEpoch = 1,
-			MaxEpoch = 1
-		};
+			var scene = new SingleBunny();
 
-		var operation = new TiledEvaluationOperation
-		{
-			Profile = evaluationProfile
-		};
+			var prepareProfile = new ScenePrepareProfile();
 
-		device.Dispatch(operation);
+			var evaluationProfile = new TiledEvaluationProfile
+			{
+				Scene = new PreparedScene(scene, prepareProfile),
+				Evaluator = new PathTracedEvaluator(),
+				Distribution = new StratifiedDistribution { Extend = 64 },
+				Buffer = new RenderBuffer(new Int2(960, 540)),
+				MinEpoch = 1,
+				MaxEpoch = 1
+			};
+
+			var operation = new TiledEvaluationOperation
+			{
+				Profile = evaluationProfile
+			};
+
+			device.Dispatch(operation);
+		}
 	}
+
+	static void DisposeDevice(Device device) => ActionQueue.Enqueue(device.Dispose, "Device Dispose");
 }
