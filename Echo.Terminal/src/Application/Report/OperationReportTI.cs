@@ -12,7 +12,7 @@ public class OperationReportTI : ReportTI
 
 	protected override void Paint(in Canvas canvas, Brush brush, Device device)
 	{
-		Operation operation = device.StartedOperation;
+		Operation operation = device.LatestOperation;
 
 		if (operation == null)
 		{
@@ -21,7 +21,11 @@ public class OperationReportTI : ReportTI
 		}
 		else
 		{
-			if (rows.Length < operation.EventCount) rows = new EventRow[operation.EventCount];
+			canvas.WriteLine(ref brush, $"Progress {operation.Progress:P2}");
+			canvas.WriteLine(ref brush, $"Total Time {operation.TotalTime:hh\\:mm\\:ss}");
+			canvas.WriteLine(ref brush, $"Time {operation.Time:hh\\:mm\\:ss}");
+
+			if (rows.Length < operation.EventRowCount) rows = new EventRow[operation.EventRowCount];
 
 			SpanFill<EventRow> fill = rows.AsFill();
 			operation.FillEventRows(ref fill);

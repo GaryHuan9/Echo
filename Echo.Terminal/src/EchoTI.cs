@@ -60,12 +60,12 @@ public class EchoTI : RootTI
 			MaxEpoch = 1
 		};
 
-		var operation = new TiledEvaluationOperation
+		var factory = new TiledEvaluationFactory
 		{
-			Profile = evaluationProfile
+			NextProfile = evaluationProfile
 		};
 
-		device.Dispatch(operation);
+		device.Dispatch(factory);
 	}
 
 	// public override void Update(in Moment moment)
