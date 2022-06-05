@@ -33,12 +33,6 @@ public interface IWorker
 	WorkerState State { get; }
 
 	/// <summary>
-	/// The <see cref="Thread.ManagedThreadId"/> of the underlying 
-	/// <see cref="Thread"/>. Null if it is currently unknown.
-	/// </summary>
-	int? ThreadId { get; }
-
-	/// <summary>
 	/// The <see cref="string"/> label of this <see cref="IWorker"/> to be displayed.
 	/// </summary>
 	sealed string DisplayLabel => $"Worker {Guid:D}";
