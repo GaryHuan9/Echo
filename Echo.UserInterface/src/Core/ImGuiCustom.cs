@@ -5,8 +5,8 @@ namespace Echo.UserInterface.Core;
 public static class ImGuiCustom
 {
 	public const ImGuiTableFlags DefaultTableFlags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
-													 ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Reorderable |
-													 ImGuiTableFlags.NoSavedSettings;
+													 ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Reorderable |
+													 ImGuiTableFlags.Borders;
 
 	public static void TableItem(string value, bool wrap = false)
 	{
