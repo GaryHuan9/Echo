@@ -1,5 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Runtime.InteropServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 
@@ -12,30 +14,29 @@ public sealed class Device : IDisposable
 {
 	Device(int population)
 	{
-		workers = new Worker[population];
-		startTimes = new TimeSpan[population];
-		stopwatch = Stopwatch.StartNew();
+		var builder = ImmutableArray.CreateBuilder<Worker>(population);
 
-		for (int i = 0; i < workers.Length; i++)
+		for (int i = 0; i < population; i++)
 		{
-			ref Worker worker = ref workers[i];
-			worker = new Worker((uint)i);
+			Worker worker = new Worker(i);
 
 			worker.OnIdleChangedEvent += OnIdleChanged;
 			worker.OnAwaitChangedEvent += OnAwaitChanged;
+
+			builder.Add(worker);
 		}
+
+		workers = builder.MoveToImmutable();
 	}
 
-	readonly Worker[] workers;
-	int runningCount;
+	readonly ImmutableArray<Worker> workers;
+	readonly List<Operation> operations = new();
 
-	readonly TimeSpan[] startTimes;
-	readonly Stopwatch stopwatch;
-	TimeSpan totalTime;
+	int runningCount;
 
 	readonly Locker manageLocker = new();
 	readonly Locker signalLocker = new();
-	readonly Locker timingLocker = new();
+	ReaderWriterLockSlim operationLocker = new();
 
 	/// <summary>
 	/// Whether this <see cref="Device"/> is currently idling (ie. not executing any <see cref="Operation"/>).
@@ -51,81 +52,55 @@ public sealed class Device : IDisposable
 	}
 
 	/// <summary>
-	/// The number of <see cref="Worker"/>s for this <see cref="Device"/>.
+	/// The <see cref="IWorker"/>s of this <see cref="Device"/>.
+	/// </summary>
+	/// <remarks>The <see cref="ImmutableArray{T}.Length"/> of this <see cref="ImmutableArray{T}"/> is identical to <see cref="Population"/>.</remarks>
+	public ImmutableArray<IWorker> Workers => workers.CastArray<IWorker>();
+
+	/// <summary>
+	/// The number of <see cref="IWorker"/>s this <see cref="Device"/> has.
 	/// </summary>
 	public int Population => workers.Length;
 
 	/// <summary>
-	/// A <see cref="ReadOnlySpan{T}"/> of <see cref="IWorker"/>s representing
-	/// the <see cref="Worker"/>s of this <see cref="Device"/>.
+	/// The most recent <see cref="Operation"/> that was dispatched from this <see cref="Device"/>.
 	/// </summary>
-	/// <remarks>The <see cref="ReadOnlySpan{T}.Length"/> of the returned
-	/// <see cref="ReadOnlySpan{T}"/> is the same as <see cref="Population"/>.</remarks>
-	public ReadOnlySpan<IWorker> Workers => workers;
+	public Operation LatestOperation
+	{
+		get
+		{
+			operationLocker.EnterReadLock();
+			try
+			{
+				return operations.Count == 0 ? null : operations[^1];
+			}
+			finally
+			{
+				operationLocker.ExitReadLock();
+			}
+		}
+	}
 
-	Operation _startedOperation;
+	/// <summary>
+	/// The <see cref="Operation"/>s that have been dispatched from this <see cref="Device"/> before.
+	/// </summary>
+	public ReadOnlySpan<Operation> PastOperations
+	{
+		get
+		{
+			operationLocker.EnterReadLock();
+			try
+			{
+				return CollectionsMarshal.AsSpan(operations);
+			}
+			finally
+			{
+				operationLocker.ExitReadLock();
+			}
+		}
+	}
+
 	int _disposed;
-
-	/// <summary>
-	/// The last <see cref="Operation"/> that was dispatched.
-	/// </summary>
-	/// <remarks>This includes completed <see cref="Operation"/>s.</remarks>
-	public Operation StartedOperation => _startedOperation;
-
-	/// <summary>
-	/// The progress on the <see cref="StartedOperation"/>.
-	/// </summary>
-	/// <remarks>This value is between zero and one (both inclusive).</remarks>
-	public double StartedProgress
-	{
-		get
-		{
-			Operation operation = StartedOperation;
-			if (operation == null) return 0d;
-
-			double progress = 0d;
-
-			if (!IsIdle)
-			{
-				//If the device is idle, all workers should have a progress of zero
-				foreach (Worker worker in workers) progress += worker.Progress;
-			}
-
-			progress += operation.CompletedProcedureCount;
-			return progress / operation.TotalProcedureCount;
-		}
-	}
-
-	/// <summary>
-	/// The total time all the <see cref="Worker"/>s of this <see cref="Device"/> spent working on the <see cref="StartedOperation"/>.
-	/// </summary>
-	/// <remarks>This value is scaled by the <see cref="Population"/> (eg. this value will 
-	/// be 6 seconds if a <see cref="Population"/> of 3 worked for 2 seconds each).</remarks>
-	public TimeSpan StartedTotalTime
-	{
-		get
-		{
-			TimeSpan time = stopwatch.Elapsed;
-			using var _ = timingLocker.Fetch();
-
-			TimeSpan result = totalTime;
-			if (IsIdle) return result;
-
-			foreach (TimeSpan startTime in startTimes)
-			{
-				//A start time of zero means that the worker is not running
-				if (startTime != TimeSpan.Zero) result += time - startTime;
-			}
-
-			return result;
-		}
-	}
-
-	/// <summary>
-	/// The time this <see cref="Device"/> spent working on the <see cref="StartedOperation"/>.
-	/// </summary>
-	/// <remarks>This is equals to <see cref="StartedTotalTime"/> divided by <see cref="Population"/>.</remarks>
-	public TimeSpan StartedTime => StartedTotalTime / Population;
 
 	/// <summary>
 	/// Whether this <see cref="Device"/> is disposed.
@@ -163,31 +138,41 @@ public sealed class Device : IDisposable
 	/// <summary>
 	/// Begins the execution of a new <see cref="Operation"/>.
 	/// </summary>
-	/// <param name="operation">The <see cref="Operation"/> to execute.</param>
-	/// <remarks>If an <see cref="Operation"/> is already dispatched, it will be prematurely aborted.</remarks>
-	public void Dispatch(Operation operation)
+	/// <param name="factory">The <see cref="IOperationFactory"/> used to create a new <see cref="Operation"/> to execute.</param>
+	/// <remarks>If <see cref="LatestOperation"/> is not null, its execution will be prematurely aborted.</remarks>
+	public void Dispatch(IOperationFactory factory)
 	{
 		ThrowIfDisposed();
 
-		operation.Prepare(workers.Length);
-		using var _ = manageLocker.Fetch();
+		//Create new operation to be dispatched
+		Operation operation = factory.CreateOperation(Workers);
 
-		if (!IsIdle)
+		lock (manageLocker)
 		{
-			Abort();
-			AwaitIdle();
+			//Abort current operation if needed
+			if (!IsIdle)
+			{
+				Abort();
+				AwaitIdle();
+			}
+
+			//Add to operation history
+			operationLocker.EnterWriteLock();
+			try
+			{
+				operations.Add(operation);
+			}
+			finally
+			{
+				operationLocker.ExitWriteLock();
+			}
+
+			//Dispatch to workers
+			foreach (var worker in workers) worker.Dispatch(operation);
 		}
 
-		lock (timingLocker)
-		{
-			startTimes.AsSpan().Clear();
-			totalTime = TimeSpan.Zero;
-		}
-
-		Interlocked.Exchange(ref _startedOperation, operation);
-		foreach (var worker in workers) worker.Dispatch(operation);
-
-		AwaitState(false); //Returns from method when at least one worker started working
+		//Blocks until when at least one worker started working
+		AwaitState(false);
 	}
 
 	/// <summary>
@@ -231,12 +216,27 @@ public sealed class Device : IDisposable
 	{
 		if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
 
-		AbortImpl();
+		//Dispose workers
+		lock (manageLocker)
+		{
+			AbortImpl();
+			signalLocker.Signaling = false;
+			foreach (var worker in workers) worker.Dispose();
+		}
 
-		using var _ = manageLocker.Fetch();
-		signalLocker.Signaling = false;
+		//Dispose operations
+		operationLocker.EnterWriteLock();
+		try
+		{
+			foreach (Operation operation in operations) operation.Dispose();
+		}
+		finally
+		{
+			operationLocker.ExitWriteLock();
+		}
 
-		foreach (var worker in workers) worker.Dispose();
+		operationLocker?.Dispose();
+		operationLocker = null;
 	}
 
 	void AbortImpl()
@@ -252,13 +252,13 @@ public sealed class Device : IDisposable
 		while (idle == runningCount > 0 && !Disposed) signalLocker.Wait();
 	}
 
-	void OnIdleChanged(Worker worker, bool entered)
+	void OnIdleChanged(IWorker worker, bool entered)
 	{
+		LatestOperation.ChangeWorkerState(worker, entered);
+
 		if (entered)
 		{
 			//Just stopped running
-			StopWorkerTimer(worker);
-
 			using var _ = signalLocker.Fetch();
 			Assert.IsFalse(runningCount <= 0);
 			--runningCount;
@@ -269,8 +269,6 @@ public sealed class Device : IDisposable
 		else
 		{
 			//Just started running
-			StartWorkerTimer(worker);
-
 			using var _ = signalLocker.Fetch();
 			Assert.IsFalse(runningCount >= workers.Length);
 			++runningCount;
@@ -280,28 +278,7 @@ public sealed class Device : IDisposable
 		}
 	}
 
-	void OnAwaitChanged(Worker worker, bool entered)
-	{
-		if (entered) StopWorkerTimer(worker); //Just paused
-		else StartWorkerTimer(worker);        //Just resumed;
-	}
-
-	void StartWorkerTimer(Worker worker)
-	{
-		TimeSpan time = stopwatch.Elapsed;
-		using var _ = timingLocker.Fetch();
-		startTimes[worker.Id] = time;
-	}
-
-	void StopWorkerTimer(Worker worker)
-	{
-		TimeSpan time = stopwatch.Elapsed;
-		using var _ = timingLocker.Fetch();
-
-		ref var start = ref startTimes[worker.Id];
-		totalTime += time - start;
-		start = TimeSpan.Zero;
-	}
+	void OnAwaitChanged(IWorker worker, bool entered) => LatestOperation.ChangeWorkerState(worker, entered);
 
 	void ThrowIfDisposed()
 	{
