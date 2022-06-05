@@ -9,16 +9,23 @@ using Echo.Common.Mathematics;
 namespace Echo.Common.Compute;
 
 /// <summary>
-/// An external delegation representing the <see cref="Worker"/> that is executing an <see cref="Operation"/>.
+/// An external delegation representing the <see cref="Worker"/> that can execute an <see cref="Operation"/>.
 /// </summary>
 public interface IWorker
 {
 	/// <summary>
-	/// Two <see cref="IWorker"/> with the same <see cref="Id"/> will never execute the
+	/// Two <see cref="IWorker"/> with the same <see cref="Index"/> will never execute the
 	/// same <see cref="Operation"/> at the same time. Additionally, the value of this property
 	/// will start at zero and continues on for different <see cref="IWorker"/>.
 	/// </summary>
-	uint Id { get; }
+	int Index { get; }
+
+	/// <summary>
+	/// A globally unique identifier (<see cref="Guid"/>) for this <see cref="IWorker"/>.
+	/// </summary>
+	/// <remarks>The uniqueness of this value transcends different <see cref="Device"/>, while the
+	/// uniqueness of <see cref="Index"/> does not; they are used for different purposes.</remarks>
+	Guid Guid { get; }
 
 	/// <summary>
 	/// The current <see cref="WorkerState"/> of this <see cref="IWorker"/>.
@@ -26,43 +33,28 @@ public interface IWorker
 	WorkerState State { get; }
 
 	/// <summary>
-	/// The progress of this <see cref="IWorker"/> on the step that it is currently working on.
-	/// </summary>
-	/// <remarks>This value is between zero and one (both inclusive).</remarks>
-	float Progress { get; }
-
-	/// <summary>
 	/// The <see cref="string"/> label of this <see cref="IWorker"/> to be displayed.
 	/// </summary>
-	sealed string DisplayLabel => $"Worker 0x{Id:X2}";
-}
-
-/// <summary>
-/// A <see cref="Worker"/> delegation into an <see cref="Operation"/> used to communicate various information.
-/// </summary>
-public interface IProcedureWorker : IWorker
-{
-	/// <summary>
-	/// Invoked by the <see cref="Operation"/> before a step is worked by this <see cref="IProcedureWorker"/>.
-	/// </summary>
-	/// <param name="totalWork">The total amount of work for the said step.</param>
-	/// <remarks>It is optional to invoke this method, just like <see cref="AdvanceProcedure"/>.
-	/// They are only used for correctly updating <see cref="IWorker.Progress"/>.</remarks>
-	void BeginProcedure(uint totalWork);
+	sealed string DisplayLabel => $"Worker {Guid:D}";
 
 	/// <summary>
-	/// Invoked by the <see cref="Operation"/> when it made some progress on the current step.
+	/// Invoked when this <see cref="IWorker"/> either begins or stops being idle.
 	/// </summary>
-	/// <param name="amount">The amount of progress made. The scale of this value
-	/// is in conjecture with value passed to <see cref="BeginProcedure"/>.</param>
-	/// <remarks>It is optional to invoke this method, just like <see cref="BeginProcedure"/>.
-	/// They are only used for correctly updating <see cref="IWorker.Progress"/>.</remarks>
-	void AdvanceProcedure(uint amount = 1);
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
+	event Action<IWorker, bool> OnIdleChangedEvent;
+
+	/// <summary>
+	/// Invoked when this <see cref="IWorker"/> either begins or stops being awaiting for resumption (ie. paused).
+	/// </summary>
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
+	event Action<IWorker, bool> OnAwaitChangedEvent;
 
 	/// <summary>
 	/// Checks if there are any schedule changes.
 	/// </summary>
-	/// <remarks>Should be invoked periodically during an <see cref="Operation"/>.</remarks>
+	/// <remarks>Should only be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
 	void CheckSchedule();
 }
 
@@ -129,34 +121,24 @@ public static class WorkerStateExtensions
 /// <summary>
 /// A <see cref="Thread"/> that works under a <see cref="Device"/> to jointly perform certain <see cref="Operation"/>s.
 /// </summary>
-sealed class Worker : IProcedureWorker, IDisposable
+sealed class Worker : IWorker, IDisposable
 {
-	public Worker(uint id) => Id = id;
+	public Worker(int index)
+	{
+		Index = index;
+		Guid = Guid.NewGuid();
+	}
 
 	Operation nextOperation;
 	Thread thread;
 
-	float procedureTotalWorkR;
-	uint procedureCompletedWork;
-
 	readonly Locker locker = new();
 
-	/// <summary>
-	/// Invoked when this <see cref="Worker"/> either begins or stops being idle.
-	/// </summary>
-	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
-	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	public event Action<Worker, bool> OnIdleChangedEvent;
-
-	/// <summary>
-	/// Invoked when this <see cref="Worker"/> either begins or stops being awaiting for resumption (ie. paused).
-	/// </summary>
-	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
-	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	public event Action<Worker, bool> OnAwaitChangedEvent;
+	/// <inheritdoc/>
+	public int Index { get; }
 
 	/// <inheritdoc/>
-	public uint Id { get; }
+	public Guid Guid { get; }
 
 	uint _state = (uint)WorkerState.Idle;
 
@@ -181,7 +163,10 @@ sealed class Worker : IProcedureWorker, IDisposable
 	}
 
 	/// <inheritdoc/>
-	public float Progress => FastMath.Clamp01(procedureCompletedWork * procedureTotalWorkR);
+	public event Action<IWorker, bool> OnIdleChangedEvent;
+
+	/// <inheritdoc/>
+	public event Action<IWorker, bool> OnAwaitChangedEvent;
 
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
@@ -294,25 +279,11 @@ sealed class Worker : IProcedureWorker, IDisposable
 			locker.Signaling = false;
 		}
 
-		thread.Join();
+		thread?.Join();
 	}
 
 	/// <inheritdoc/>
-	void IProcedureWorker.BeginProcedure(uint totalWork)
-	{
-		procedureTotalWorkR = totalWork <= 1 ? 1f : 1f / totalWork;
-		CheckForAbortion();
-	}
-
-	/// <inheritdoc/>
-	void IProcedureWorker.AdvanceProcedure(uint amount)
-	{
-		procedureCompletedWork += amount;
-		CheckForAbortion();
-	}
-
-	/// <inheritdoc/>
-	void IProcedureWorker.CheckSchedule()
+	void IWorker.CheckSchedule()
 	{
 		CheckForAbortion();
 		if (State != WorkerState.Pausing) return;
@@ -334,7 +305,7 @@ sealed class Worker : IProcedureWorker, IDisposable
 	{
 		while (State != WorkerState.Disposed)
 		{
-			AwaitStatus(WorkerState.Running);
+			if (!AwaitStatus(WorkerState.Running)) break; //Disposed
 
 			Operation operation = Interlocked.Exchange(ref nextOperation, null);
 			if (operation == null) throw new InvalidAsynchronousStateException();
@@ -344,20 +315,15 @@ sealed class Worker : IProcedureWorker, IDisposable
 
 			do
 			{
-				Assert.AreEqual(procedureCompletedWork, 0u);
-
 				try
 				{
-					procedureTotalWorkR = 0f;
 					running = operation.Execute(this);
+					((IWorker)this).CheckSchedule();
 				}
-				catch (OperationAbortedException)
+				catch (Operation.AbortException)
 				{
-					procedureCompletedWork = 0;
 					break;
 				}
-
-				procedureCompletedWork = 0;
 			}
 			while (running);
 
@@ -367,13 +333,21 @@ sealed class Worker : IProcedureWorker, IDisposable
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	void AwaitStatus(WorkerState status)
+	bool AwaitStatus(WorkerState status)
 	{
 		status |= WorkerState.Disposed;
 
 		lock (locker)
 		{
-			while ((State | status) != status) locker.Wait();
+			WorkerState state = State;
+
+			while ((state | status) != status)
+			{
+				locker.Wait();
+				state = State;
+			}
+
+			return state != WorkerState.Disposed;
 		}
 	}
 
@@ -381,6 +355,6 @@ sealed class Worker : IProcedureWorker, IDisposable
 	void CheckForAbortion()
 	{
 		if (State != WorkerState.Aborting) return;
-		throw new OperationAbortedException();
+		throw new Operation.AbortException();
 	}
 }
