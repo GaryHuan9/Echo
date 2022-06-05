@@ -17,11 +17,26 @@ public static class DefaultFormattingExtensions
 	public static string ToStringDefault(this TimeSpan value) => value.ToString(@"hh\:mm\:ss\.ff");
 	public static string ToStringDefault(this DateTime value) => value.ToString("HH:mm:ss");
 
-	public static string ToStringPercentage(this float value) => value.ToString("P2");
-	public static string ToStringPercentage(this double value) => value.ToString("P3");
+	public static string ToStringPercentage(this float value) => value.ToString("P1");
+	public static string ToStringPercentage(this double value) => value.ToString("P2");
 
 	public static string ToStringData(this uint value) => value.ToStringMetric() + 'B';
 	public static string ToStringData(this ulong value) => value.ToStringMetric() + 'B';
+
+	public static string ToStringDefault(this in Guid guid)
+	{
+		Span<char> span = stackalloc char[80]; //36x2 + a bit extra
+		bool formatted = guid.TryFormat(span, out int length, "D");
+		Assert.IsTrue(formatted && length <= span.Length / 2);
+
+		//Convert to upper case
+		ReadOnlySpan<char> lower = span[..length];
+		Span<char> upper = span[length..(length + length)];
+		lower.ToUpperInvariant(upper);
+		return new string(upper);
+	}
+
+	public static string ToStringShort(this in Guid guid) => $"0x{guid.GetHashCode():X8}";
 
 	/// <summary>
 	/// Formats <paramref name="value"/> to its abbreviations using metric prefixes.

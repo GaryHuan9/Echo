@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Globalization;
-using System.Threading.Tasks;
-using CodeHelpers.Mathematics;
+using System.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Common.Compute;
 using Echo.Core.Evaluation.Distributions.Continuous;
@@ -25,15 +23,35 @@ public class SystemUI : AreaUI
 	protected override void Draw()
 	{
 		ImGui.Text(Environment.OSVersion.VersionString);
+		ImGui.Text(Debugger.IsAttached ? "Debugger Attached" : "Debugger Not Attached");
 
+#if DEBUG
+		ImGui.Text("DEBUG Mode");
+#elif RELEASE
+		ImGui.Text("RELEASE Mode");
+#else
+		ImGui.Text("Unidentified Mode");
+#endif
+
+		ImGui.NewLine();
+
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
 		if (ImGui.CollapsingHeader("Garbage Collector")) DrawGarbageCollector();
 
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
 		if (ImGui.CollapsingHeader("Device and Workers"))
 		{
 			if (!HasDevice)
 			{
+				if (ImGui.Button("Create and Dispatch"))
+				{
+					device = Device.Create();
+					DispatchDevice(device);
+				}
+
+				ImGui.SameLine();
 				if (ImGui.Button("Create")) device = Device.Create();
-				ImGui.TextWrapped("Create a compute device to begin");
+				ImGui.TextWrapped("Create a compute device to begin!");
 			}
 			else DrawDevice();
 
@@ -51,7 +69,7 @@ public class SystemUI : AreaUI
 	{
 		var info = GC.GetGCMemoryInfo();
 
-		if (ImGui.Button("Collect All")) GC.Collect();
+		if (ImGui.Button("Collect All Generations")) GC.Collect();
 
 		//Main table
 		if (ImGuiCustom.BeginProperties("Main"))
@@ -72,16 +90,16 @@ public class SystemUI : AreaUI
 		}
 
 		//Generations table
-		if (ImGui.BeginTable("Generations", 5, ImGuiTableFlags.BordersOuter))
+		if (ImGui.BeginTable("Generations", 5, ImGuiCustom.DefaultTableFlags))
 		{
 			var generations = info.GenerationInfo;
 
-			ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-			ImGuiCustom.TableItem("Generation");
-			ImGuiCustom.TableItem("Size Before", true);
-			ImGuiCustom.TableItem("Size After", true);
-			ImGuiCustom.TableItem("Frag. Before", true);
-			ImGuiCustom.TableItem("Frag. After", true);
+			ImGui.TableSetupColumn("Generation");
+			ImGui.TableSetupColumn("Size Before");
+			ImGui.TableSetupColumn("Size After");
+			ImGui.TableSetupColumn("Frag. Before");
+			ImGui.TableSetupColumn("Frag. After");
+			ImGui.TableHeadersRow();
 
 			for (int i = 0; i < generations.Length; i++)
 			{
@@ -151,18 +169,18 @@ public class SystemUI : AreaUI
 	void DrawWorkers()
 	{
 		//Worker table
-		if (ImGui.BeginTable("State", 3, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingStretchProp))
+		if (ImGui.BeginTable("State", 3, ImGuiCustom.DefaultTableFlags))
 		{
-			ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-			ImGuiCustom.TableItem("Index");
-			ImGuiCustom.TableItem("State");
-			ImGuiCustom.TableItem("Guid");
+			ImGui.TableSetupColumn("Index");
+			ImGui.TableSetupColumn("State");
+			ImGui.TableSetupColumn("Guid");
+			ImGui.TableHeadersRow();
 
 			foreach (IWorker worker in device.Workers)
 			{
-				ImGuiCustom.TableItem($"0x{worker.Index:X8}");
+				ImGuiCustom.TableItem($"0x{worker.Index:X4}");
 				ImGuiCustom.TableItem(worker.State.ToDisplayString());
-				ImGuiCustom.TableItem(worker.Guid.ToString("D"));
+				ImGuiCustom.TableItem(worker.Guid.ToStringShort());
 			}
 
 			ImGui.EndTable();
