@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Immutable;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using Echo.Common.Compute.Statistics;
@@ -11,65 +14,229 @@ namespace Echo.Common.Compute;
 /// </summary>
 public abstract class Operation : IDisposable
 {
+	/// <summary>
+	/// Constructs a new <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="workers">All the <see cref="IWorker"/>s that will be working on this <see cref="Operation"/>.</param>
+	/// <param name="totalProcedureCount">The total number of steps this entire <see cref="Operation"/> has.</param>
+	protected Operation(ImmutableArray<IWorker> workers, uint totalProcedureCount)
+	{
+		int count = workers.Length;
+
+		this.totalProcedureCount = totalProcedureCount;
+		workerData = new AlignedArray<WorkerData>(count);
+
+		for (int i = 0; i < count; i++) workerData[i] = new WorkerData(workers[i].Guid);
+
+		creationTime = DateTime.Now;
+	}
+
+	/// <summary>
+	/// The total number of steps in this <see cref="Operation"/>.
+	/// </summary>
+	public readonly uint totalProcedureCount;
+
+	/// <summary>
+	/// The <see cref="DateTime"/> when 
+	/// </summary>
+	public readonly DateTime creationTime;
+
+	AlignedArray<WorkerData> workerData;
+
 	uint nextProcedure;
 	uint completedCount;
 
-	/// <summary>
-	/// The total number of steps that this operation has.
-	/// </summary>
-	public uint TotalProcedureCount { get; private set; }
+	TimeSpan totalRecordedTime;
 
-	/// <summary>
-	/// The number of steps in this operation that has been completed.
-	/// </summary>
-	public uint CompletedProcedureCount => completedCount;
+	readonly Locker procedureLocker = new();
+	readonly Locker totalTimeLocker = new();
+
+	static readonly Stopwatch stopwatch = Stopwatch.StartNew();
 
 	/// <summary>
 	/// Returns whether this operation has been fully completed.
 	/// </summary>
-	public bool IsCompleted => completedCount == TotalProcedureCount;
+	public bool IsCompleted
+	{
+		get
+		{
+			using var _ = procedureLocker.Fetch();
+			return completedCount == totalProcedureCount;
+		}
+	}
+
+	/// <summary>
+	/// The number of <see cref="IWorker"/>s working on completing this <see cref="Operation"/>.
+	/// </summary>
+	public int WorkerCount => workerData.Length;
 
 	/// <summary>
 	/// The number of <see cref="EventRow"/> available from <see cref="FillEventRows"/>.
 	/// </summary>
-	public virtual int EventCount => 0;
+	public virtual int EventRowCount => 0;
 
 	/// <summary>
-	/// Prepares this <see cref="Operation"/> for execution.
+	/// The progress of this <see cref="Operation"/>.
 	/// </summary>
-	/// <param name="population">The maximum number of concurrent <see cref="IWorker"/> executing. Note that
-	/// all <see cref="IWorker.Id"/> will be between zero (inclusive) and this value (exclusive).</param>
-	/// <remarks>This method is invoked once before all execution begins</remarks>
-	public virtual void Prepare(int population)
+	/// <remarks>This value is between zero and one (both inclusive).</remarks>
+	public double Progress
 	{
-		Interlocked.Exchange(ref nextProcedure, 0);
-		Interlocked.Exchange(ref completedCount, 0);
-		TotalProcedureCount = WarmUp(population);
+		get
+		{
+			using var _ = procedureLocker.Fetch();
+			if (completedCount == totalProcedureCount) return 1d; //Fully completed
+
+			double progress = 0d;
+
+			foreach (ref readonly WorkerData data in workerData.AsSpan()) progress += data.procedure.Progress;
+
+			return (progress + completedCount) / totalProcedureCount;
+		}
 	}
+
+	/// <summary>
+	/// The total time this <see cref="Operation"/> has been worked by all of its <see cref="IWorker"/>s.
+	/// </summary>
+	/// <remarks>This value is scaled by the <see cref="WorkerCount"/> (eg. this value will 
+	/// be 6 seconds if a <see cref="WorkerCount"/> of 3 worked for 2 seconds each).</remarks>
+	public TimeSpan TotalTime
+	{
+		get
+		{
+			TimeSpan time = stopwatch.Elapsed;
+			Assert.AreNotEqual(time, default);
+
+			using var _ = totalTimeLocker.Fetch();
+			TimeSpan result = totalRecordedTime;
+
+			foreach (ref readonly WorkerData data in workerData.AsSpan())
+			{
+				//A start time of default means that the worker is not running
+				if (data.timeStarted != default) result += time - data.timeStarted;
+			}
+
+			return result;
+		}
+	}
+
+	/// <summary>
+	/// The duration in realtime that this <see cref="Operation"/> has been worked on.
+	/// </summary>
+	/// <remarks>This is equals to <see cref="TotalTime"/> divided by <see cref="WorkerCount"/>.</remarks>
+	public TimeSpan Time => TotalTime / WorkerCount;
 
 	/// <summary>
 	/// Joins the execution of this <see cref="Operation"/> once.
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> to use.</param>
 	/// <returns>Whether this execution performed any work.</returns>
-	public bool Execute(IProcedureWorker worker)
+	public bool Execute(IWorker worker)
 	{
-		uint procedure = Interlocked.Increment(ref nextProcedure) - 1;
-		if (procedure >= TotalProcedureCount) return false;
+		uint index = Interlocked.Increment(ref nextProcedure) - 1;
+		if (index >= totalProcedureCount) return false;
 
-		Execute(procedure, worker);
-		Interlocked.Increment(ref completedCount);
+		//Fetch data and execute
+		ref WorkerData data = ref workerData[worker.Index];
+		ref Procedure procedure = ref data.procedure;
+		data.ThrowIfInconsistent(worker.Guid);
+
+		procedure = new Procedure(index);
+		Execute(ref procedure, worker);
+
+		//Update progress
+		lock (procedureLocker)
+		{
+			++completedCount;
+			procedure = default;
+		}
 
 		return true;
 	}
 
 	/// <summary>
+	/// Should be invoked when a <see cref="IWorker"/> is either starting or stopping to execute this <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="worker">The <see cref="IWorker"/> that is changing its idle state.</param>
+	/// <param name="idle">True if the <see cref="IWorker"/> is stopping its execution, false otherwise.</param>
+	/// <remarks>This method should be invoked directly through <see cref="IWorker.OnIdleChangedEvent"/>
+	/// and <see cref="IWorker.OnAwaitChangedEvent"/>, otherwise the behavior is undefined.</remarks>
+	public void ChangeWorkerState(IWorker worker, bool idle)
+	{
+		TimeSpan time = stopwatch.Elapsed;
+		Assert.AreNotEqual(time, default);
+
+		ref WorkerData data = ref workerData[worker.Index];
+		data.ThrowIfInconsistent(worker.Guid);
+
+		if (idle)
+		{
+			//Stop timer
+			using var _ = totalTimeLocker.Fetch();
+
+			TimeSpan elapsed = time - data.timeStarted;
+
+			totalRecordedTime += elapsed;
+			data.recordedTime += elapsed;
+			data.timeStarted = default;
+		}
+		else
+		{
+			//Start timer
+			lock (totalTimeLocker) data.timeStarted = time;
+		}
+	}
+
+	/// <summary>
+	/// Fills the <see cref="Guid"/> of the <see cref="IWorker"/>s of this <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Guid"/>s.</param>
+	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
+	public void FillWorkerGuid(ref SpanFill<Guid> fill)
+	{
+		int length = Math.Min(fill.Length, WorkerCount);
+		for (int i = 0; i < length; i++) fill.Add(workerData[i].workerGuid);
+	}
+
+	/// <summary>
+	/// Fills the current <see cref="Procedure"/> of each of the <see cref="IWorker"/>s of this <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Procedure"/>s.</param>
+	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
+	public void FillWorkerProcedures(ref SpanFill<Procedure> fill)
+	{
+		int length = Math.Min(fill.Length, WorkerCount);
+
+		using var _ = procedureLocker.Fetch();
+		for (int i = 0; i < length; i++) fill.Add(workerData[i].procedure);
+	}
+
+	/// <summary>
+	/// Fills the time the <see cref="IWorker"/>s of this <see cref="Operation"/> spent on completing this <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="TimeSpan"/>s.</param>
+	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
+	public void FillWorkerTimes(ref SpanFill<TimeSpan> fill)
+	{
+		TimeSpan time = stopwatch.Elapsed;
+		Assert.AreNotEqual(time, default);
+
+		int length = Math.Min(fill.Length, WorkerCount);
+
+		using var _ = totalTimeLocker.Fetch();
+
+		for (int i = 0; i < length; i++)
+		{
+			ref readonly WorkerData data = ref workerData[i];
+			fill.Add(data.recordedTime + time - data.timeStarted);
+		}
+	}
+
+	/// <summary>
 	/// Fills information about the events occured in this <see cref="Operation"/>.
 	/// </summary>
-	/// <param name="fill">The destination to fill with <see cref="EventRow"/> elements.</param>
-	/// <remarks>The maximum number of available <see cref="EventRow"/> can be determined by the
-	/// value of <see cref="EventCount"/>.</remarks>
-	public virtual void FillEventRows(ref SpanFill<EventRow> fill) => Assert.AreEqual(EventCount, 0);
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="EventRow"/>s.</param>
+	/// <remarks>The maximum number of available items filled from this method is <see cref="EventRowCount"/>.</remarks>
+	public virtual void FillEventRows(ref SpanFill<EventRow> fill) => Assert.AreEqual(EventRowCount, 0);
 
 	public void Dispose()
 	{
@@ -77,24 +244,60 @@ public abstract class Operation : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	/// <inheritdoc cref="Prepare"/>
-	/// <returns>The number of steps the entire <see cref="Operation"/> has.</returns>
-	protected abstract uint WarmUp(int population);
-
 	/// <summary>
 	/// Executes one step of this <see cref="Operation"/>.
 	/// </summary>
-	/// <param name="procedure">The number/index of the step to execute; this value is between 0 (inclusive)
-	///     and the returned number from <see cref="WarmUp"/> (exclusive). This value will gradually increase as
-	///     this <see cref="Operation"/> gets completed.</param>
-	/// <param name="worker">The to <see cref="IWorker"/> use.</param>
-	protected abstract void Execute(uint procedure, IProcedureWorker worker);
+	/// <param name="procedure">The step to execute.</param>
+	/// <param name="worker">The <see cref="IWorker"/> that is executing this step.</param>
+	protected abstract void Execute(ref Procedure procedure, IWorker worker);
 
 	/// <summary>
 	/// Releases the resources owned by this <see cref="Operation"/>.
 	/// </summary>
 	/// <param name="disposing">If true, this is invoked by the <see cref="IDisposable.Dispose"/> method, otherwise it is invoked by the finalizer.</param>
-	protected virtual void Dispose(bool disposing) { }
+	protected virtual void Dispose(bool disposing)
+	{
+		if (!disposing) return;
+
+		workerData?.Dispose();
+		workerData = null;
+	}
+
+	/// <summary>
+	/// Exception thrown by <see cref="IWorker"/> during an <see cref="Operation"/> abortion.
+	/// </summary>
+	internal sealed class AbortException : Exception { }
+
+	[StructLayout(LayoutKind.Sequential, Size = 64)]
+	struct WorkerData
+	{
+		public WorkerData(Guid workerGuid)
+		{
+			this.workerGuid = workerGuid;
+
+			recordedTime = TimeSpan.Zero;
+			timeStarted = TimeSpan.Zero;
+			procedure = default;
+			monoThread = new MonoThread();
+		}
+
+		public readonly Guid workerGuid;
+
+		public TimeSpan recordedTime;
+		public TimeSpan timeStarted;
+		public Procedure procedure;
+
+		MonoThread monoThread;
+
+		//The size of this struct should not be larger than 64 bytes
+		//If we really need more room, expand the total to 128 bytes
+
+		public void ThrowIfInconsistent(in Guid guid)
+		{
+			monoThread.Ensure();
+			Assert.AreEqual(workerGuid, guid);
+		}
+	}
 }
 
 /// <summary>
@@ -103,54 +306,37 @@ public abstract class Operation : IDisposable
 /// <typeparam name="T">The type of <see cref="IStatistics{T}"/> to use.</typeparam>
 public abstract class Operation<T> : Operation where T : unmanaged, IStatistics<T>
 {
-	AlignedArray<T> array;
-	int statisticsCount;
+	protected Operation(ImmutableArray<IWorker> workers, uint totalProcedureCount)
+		: base(workers, totalProcedureCount) => statsArray = new AlignedArray<T>(workers.Length);
 
-	public sealed override int EventCount => default(T).Count;
+	readonly AlignedArray<T> statsArray;
 
-	public override void Prepare(int population)
-	{
-		base.Prepare(population);
-
-		if (array == null || array.Length < population)
-		{
-			array?.Dispose();
-			array = new AlignedArray<T>(population);
-		}
-		else array.Clear();
-
-		statisticsCount = population;
-	}
+	public sealed override int EventRowCount => default(T).Count;
 
 	public override unsafe void FillEventRows(ref SpanFill<EventRow> fill)
 	{
 		fill.ThrowIfNotEmpty();
 
-		T sum = default(T).Sum(array.Pointer, statisticsCount);
-		int length = Math.Min(fill.Length, EventCount);
+		T sum = default(T).Sum(statsArray.Pointer, WorkerCount);
+		int length = Math.Min(fill.Length, EventRowCount);
 		for (int i = 0; i < length; i++) fill.Add(sum[i]);
 	}
 
-	protected sealed override void Execute(uint procedure, IProcedureWorker worker)
+	protected sealed override void Execute(ref Procedure procedure, IWorker worker)
 	{
-		ref T statistics = ref array[(int)worker.Id];
-		Execute(procedure, worker, ref statistics);
+		ref T statistics = ref statsArray[worker.Index];
+		Execute(ref procedure, worker, ref statistics);
 	}
 
-	/// <inheritdoc cref="Execute(uint,Echo.Common.Compute.IProcedureWorker)"/>
+	/// <inheritdoc cref="Execute(ref Procedure, IWorker)"/>
 	/// <param name="statistics">The <see cref="IStatistics{T}"/> to be used with this execution.</param>
 	// ReSharper disable InvalidXmlDocComment
-	protected abstract void Execute(uint procedure, IProcedureWorker worker, ref T statistics);
+	protected abstract void Execute(ref Procedure procedure, IWorker worker, ref T statistics);
 	// ReSharper restore InvalidXmlDocComment
 
 	protected override void Dispose(bool disposing)
 	{
 		base.Dispose(disposing);
-		if (disposing) array?.Dispose();
+		if (disposing) statsArray?.Dispose();
 	}
 }
-
-/// <summary>
-/// Exception thrown by <see cref="IWorker"/> during an <see cref="Operation"/> abortion.
-/// </summary>
-sealed class OperationAbortedException : Exception { }
