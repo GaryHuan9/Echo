@@ -6,7 +6,7 @@ using Echo.Common.Compute.Statistics;
 using Echo.Common.Memory;
 using ImGuiNET;
 
-namespace Echo.UserInterface.Core;
+namespace Echo.UserInterface.Core.Areas;
 
 public class OperationUI : AreaUI
 {
