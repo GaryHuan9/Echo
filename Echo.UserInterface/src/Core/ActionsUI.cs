@@ -12,6 +12,7 @@ public class ActionsUI : AreaUI
 		if (ImGui.Button("Clear All")) ActionQueue.ClearHistory();
 
 		ImGui.Separator();
+		ImGui.BeginChild("History");
 
 		foreach ((string label, (DateTime time, ActionQueue.EventType type)) in ActionQueue.History)
 		{
@@ -26,5 +27,7 @@ public class ActionsUI : AreaUI
 
 			ImGui.TextUnformatted($"[{time.ToStringDefault()}]: {text}");
 		}
+
+		ImGui.EndChild();
 	}
 }

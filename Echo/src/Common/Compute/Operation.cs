@@ -191,23 +191,10 @@ public abstract class Operation : IDisposable
 	/// </summary>
 	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Guid"/>s.</param>
 	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
-	public void FillWorkerGuid(ref SpanFill<Guid> fill)
+	public void FillWorkerGuids(ref SpanFill<Guid> fill)
 	{
 		int length = Math.Min(fill.Length, WorkerCount);
 		for (int i = 0; i < length; i++) fill.Add(workerData[i].workerGuid);
-	}
-
-	/// <summary>
-	/// Fills the current <see cref="Procedure"/> of each of the <see cref="IWorker"/>s of this <see cref="Operation"/>.
-	/// </summary>
-	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Procedure"/>s.</param>
-	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
-	public void FillWorkerProcedures(ref SpanFill<Procedure> fill)
-	{
-		int length = Math.Min(fill.Length, WorkerCount);
-
-		using var _ = procedureLocker.Fetch();
-		for (int i = 0; i < length; i++) fill.Add(workerData[i].procedure);
 	}
 
 	/// <summary>
@@ -227,8 +214,23 @@ public abstract class Operation : IDisposable
 		for (int i = 0; i < length; i++)
 		{
 			ref readonly WorkerData data = ref workerData[i];
-			fill.Add(data.recordedTime + time - data.timeStarted);
+
+			if (data.timeStarted == default) fill.Add(data.recordedTime);
+			else fill.Add(data.recordedTime + time - data.timeStarted);
 		}
+	}
+
+	/// <summary>
+	/// Fills the current <see cref="Procedure"/> of each of the <see cref="IWorker"/>s of this <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Procedure"/>s.</param>
+	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
+	public void FillWorkerProcedures(ref SpanFill<Procedure> fill)
+	{
+		int length = Math.Min(fill.Length, WorkerCount);
+
+		using var _ = procedureLocker.Fetch();
+		for (int i = 0; i < length; i++) fill.Add(workerData[i].procedure);
 	}
 
 	/// <summary>
