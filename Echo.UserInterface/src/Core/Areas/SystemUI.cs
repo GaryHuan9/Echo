@@ -10,7 +10,7 @@ using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Grid;
 using ImGuiNET;
 
-namespace Echo.UserInterface.Core;
+namespace Echo.UserInterface.Core.Areas;
 
 public class SystemUI : AreaUI
 {

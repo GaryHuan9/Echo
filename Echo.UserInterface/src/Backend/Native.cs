@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using ImGuiNET;
+using SDL2;
 
 namespace Echo.UserInterface.Backend;
 
-using static SDL2.SDL;
+using static SDL;
 
 static class Native
 {

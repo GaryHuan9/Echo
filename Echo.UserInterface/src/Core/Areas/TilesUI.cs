@@ -1,10 +1,4 @@
-﻿using System;
-using Echo.Common.Compute;
-using Echo.Core.Evaluation.Operations;
-
-namespace Echo.UserInterface.Core;
-
-using static SDL2.SDL;
+﻿namespace Echo.UserInterface.Core.Areas;
 
 public class TilesUI : AreaUI
 {

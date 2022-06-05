@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using Echo.UserInterface.Backend;
+using Echo.UserInterface.Core.Areas;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core;
