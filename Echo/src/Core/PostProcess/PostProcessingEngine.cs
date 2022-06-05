@@ -41,7 +41,7 @@ public class PostProcessingEngine : IDisposable
 
 	public void Dispatch()
 	{
-		if (Aborted) throw new OperationAbortedException();
+		// if (Aborted) throw new OperationAbortedException();
 
 		workThread.IsBackground = true;
 		workThread.Start();
@@ -50,7 +50,7 @@ public class PostProcessingEngine : IDisposable
 	public void Abort()
 	{
 		if (!Aborted) Aborted = true;
-		else throw new OperationAbortedException();
+		// else throw new OperationAbortedException();
 	}
 
 	public void Dispose()
