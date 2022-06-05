@@ -291,7 +291,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 				SDL_RenderGeometryRaw
 				(
-					renderer, command.GetTexID(),
+					renderer, command.TextureId,
 					(float*)&vertex->pos, stride,
 					(int*)&vertex->col, stride,
 					(float*)&vertex->uv, stride,

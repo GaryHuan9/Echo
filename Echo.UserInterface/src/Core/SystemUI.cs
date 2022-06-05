@@ -116,8 +116,8 @@ public class SystemUI : AreaUI
 		if (ImGui.Button("Resume")) device.Resume();
 
 		ImGui.EndDisabled();
-
 		ImGui.SameLine();
+
 		if (ImGui.Button("Dispose"))
 		{
 			DisposeDevice(device);
@@ -128,30 +128,20 @@ public class SystemUI : AreaUI
 		//Status
 		if (ImGuiCustom.BeginProperties("Main"))
 		{
-			double progress = device.StartedProgress;
-			TimeSpan time = device.StartedTime;
-
 			ImGuiCustom.Property("State", device.IsIdle ? "Idle" : "Running");
 			ImGuiCustom.Property("Population", device.Population.ToStringDefault());
-			ImGuiCustom.Property("Progress", progress.ToStringPercentage());
 
-			ImGui.NewLine();
+			var operations = device.PastOperations;
 
-			ImGuiCustom.Property("Time Spent", time.ToStringDefault());
-			ImGuiCustom.Property("Time Spend (All Worker)", device.StartedTotalTime.ToStringDefault());
-
-			if (progress.AlmostEquals())
+			if (operations.Length > 0)
 			{
-				ImGuiCustom.Property("Time Remain", "Unavailable");
-				ImGuiCustom.Property("Completion Time", "Unavailable");
+				ImGuiCustom.Property("Latest Dispatch", operations[^1].creationTime.ToStringDefault());
+				ImGuiCustom.Property("Past Operation Count", operations.Length.ToStringDefault());
 			}
 			else
 			{
-				TimeSpan timeRemain = time / progress - time;
-				DateTime timeFinish = DateTime.Now + timeRemain;
-
-				ImGuiCustom.Property("Time Remain", timeRemain.ToStringDefault());
-				ImGuiCustom.Property("Completion Time", timeFinish.ToStringDefault());
+				ImGuiCustom.Property("Latest Dispatch", "None");
+				ImGuiCustom.Property("Past Operation Count", "0");
 			}
 
 			ImGuiCustom.EndProperties();
@@ -161,22 +151,18 @@ public class SystemUI : AreaUI
 	void DrawWorkers()
 	{
 		//Worker table
-		if (ImGui.BeginTable("State", 4, ImGuiTableFlags.BordersOuter))
+		if (ImGui.BeginTable("State", 3, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingStretchProp))
 		{
 			ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-			ImGuiCustom.TableItem("Worker");
+			ImGuiCustom.TableItem("Index");
 			ImGuiCustom.TableItem("State");
-			ImGuiCustom.TableItem("Progress");
-			ImGuiCustom.TableItem("Thread Id");
+			ImGuiCustom.TableItem("Guid");
 
 			foreach (IWorker worker in device.Workers)
 			{
-				ImGuiCustom.TableItem(worker.DisplayLabel);
+				ImGuiCustom.TableItem($"0x{worker.Index:X8}");
 				ImGuiCustom.TableItem(worker.State.ToDisplayString());
-				ImGuiCustom.TableItem(worker.Progress.ToStringPercentage());
-
-				int? id = worker.ThreadId;
-				ImGuiCustom.TableItem(id == null ? "Undetermined" : id.Value.ToStringDefault());
+				ImGuiCustom.TableItem(worker.Guid.ToString("D"));
 			}
 
 			ImGui.EndTable();
@@ -203,9 +189,9 @@ public class SystemUI : AreaUI
 				MaxEpoch = 1
 			};
 
-			var operation = new TiledEvaluationOperation
+			var operation = new TiledEvaluationFactory()
 			{
-				Profile = evaluationProfile
+				NextProfile = evaluationProfile
 			};
 
 			device.Dispatch(operation);
