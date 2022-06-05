@@ -5,10 +5,11 @@ using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
 using ImGuiNET;
+using SDL2;
 
 namespace Echo.UserInterface.Backend;
 
-using static SDL2.SDL;
+using static SDL;
 using static Native;
 
 /// <summary>

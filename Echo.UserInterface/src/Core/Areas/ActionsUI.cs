@@ -1,7 +1,7 @@
 ﻿using System;
 using ImGuiNET;
 
-namespace Echo.UserInterface.Core;
+namespace Echo.UserInterface.Core.Areas;
 
 public class ActionsUI : AreaUI
 {
