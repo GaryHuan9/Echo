@@ -4,6 +4,10 @@ namespace Echo.UserInterface.Core;
 
 public static class ImGuiCustom
 {
+	public const ImGuiTableFlags DefaultTableFlags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
+													 ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Reorderable |
+													 ImGuiTableFlags.NoSavedSettings;
+
 	public static void TableItem(string value, bool wrap = false)
 	{
 		ImGui.TableNextColumn();

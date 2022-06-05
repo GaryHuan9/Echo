@@ -72,7 +72,16 @@ public class OperationUI : AreaUI
 
 	void DrawEventRows(Operation operation, TimeSpan time, double progress)
 	{
-		if (operation.EventRowCount <= 0 || !ImGui.BeginTable("Events", 4, ImGuiTableFlags.BordersOuter)) return;
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		if (!ImGui.CollapsingHeader("Events")) return;
+
+		if (operation.EventRowCount <= 0)
+		{
+			ImGui.TextUnformatted("No event found.");
+			return;
+		}
+
+		if (!ImGui.BeginTable("Events Table", 4, ImGuiCustom.DefaultTableFlags)) return;
 
 		//Gather data
 		double timeR = 1d / time.TotalSeconds;
@@ -85,11 +94,11 @@ public class OperationUI : AreaUI
 		operation.FillEventRows(ref fill);
 
 		//Draw
-		ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-		ImGuiCustom.TableItem("Label");
-		ImGuiCustom.TableItem("Total Done");
-		ImGuiCustom.TableItem("Per Second");
-		ImGuiCustom.TableItem("Estimate");
+		ImGui.TableSetupColumn("Label");
+		ImGui.TableSetupColumn("Total Done");
+		ImGui.TableSetupColumn("Per Second");
+		ImGui.TableSetupColumn("Estimate");
+		ImGui.TableHeadersRow();
 
 		foreach ((string label, ulong count) in fill.Filled)
 		{
@@ -113,27 +122,36 @@ public class OperationUI : AreaUI
 
 	void DrawWorkers(Operation operation)
 	{
-		if (operation.WorkerCount <= 0 || !ImGui.BeginTable("Workers", 4, ImGuiTableFlags.BordersOuter)) return;
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		if (!ImGui.CollapsingHeader("Workers")) return;
+
+		if (operation.WorkerCount <= 0)
+		{
+			ImGui.TextUnformatted("No worker found.");
+			return;
+		}
+
+		if (!ImGui.BeginTable("Workers Table", 4, ImGuiCustom.DefaultTableFlags)) return;
 
 		//Gather data
 		workerData.EnsureCapacity(operation.WorkerCount);
 		workerData.FillAll(operation);
 
 		//Draw
-		ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-		ImGuiCustom.TableItem("Guid");
-		ImGuiCustom.TableItem("Time Spent");
-		ImGuiCustom.TableItem("Procedure Index");
-		ImGuiCustom.TableItem("Procedure Progress");
+		ImGui.TableSetupColumn("Guid");
+		ImGui.TableSetupColumn("Time Spent");
+		ImGui.TableSetupColumn("Procedure Index");
+		ImGui.TableSetupColumn("Procedure Progress");
+		ImGui.TableHeadersRow();
 
 		for (int i = 0; i < workerData.Length; i++)
 		{
 			(Guid guid, TimeSpan time, Procedure procedure) = workerData[i];
 
-			ImGuiCustom.TableItem(guid.ToString("D"));
+			ImGuiCustom.TableItem(guid.ToStringShort());
 			ImGuiCustom.TableItem(time.ToStringDefault());
 			ImGuiCustom.TableItem(procedure.index.ToStringDefault());
-			ImGuiCustom.TableItem(procedure.Progress.ToStringDefault());
+			ImGuiCustom.TableItem(procedure.Progress.ToStringPercentage());
 		}
 
 		ImGuiCustom.EndProperties();
