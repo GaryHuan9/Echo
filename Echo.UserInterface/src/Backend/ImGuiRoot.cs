@@ -10,8 +10,6 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 {
 	public ImGuiRoot()
 	{
-		application = new T();
-
 		SDL_Init(SDL_INIT_EVERYTHING).ThrowOnError();
 
 		const SDL_WindowFlags WindowFlags = SDL_WindowFlags.SDL_WINDOW_RESIZABLE |
@@ -21,12 +19,11 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 		const SDL_RendererFlags RendererFlags = SDL_RendererFlags.SDL_RENDERER_ACCELERATED |
 												SDL_RendererFlags.SDL_RENDERER_PRESENTVSYNC;
 
-		window = SDL_CreateWindow(application.Label, 0, 0, 1920, 1080, WindowFlags);
+		window = SDL_CreateWindow("Untitled", 0, 0, 1920, 1080, WindowFlags);
 		renderer = SDL_CreateRenderer(window, -1, RendererFlags);
 		if (renderer == IntPtr.Zero) throw new BackendException();
 	}
 
-	readonly T application;
 	readonly IntPtr window;
 	readonly IntPtr renderer;
 
@@ -35,17 +32,12 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 		var stopwatch = Stopwatch.StartNew();
 
 		ImGui.CreateContext();
-
-		application.Initialize();
 		MainLoop(stopwatch);
-
 		ImGui.DestroyContext();
 	}
 
 	public void Dispose()
 	{
-		application?.Dispose();
-
 		SDL_DestroyWindow(window);
 		SDL_DestroyRenderer(renderer);
 		SDL_Quit();
@@ -54,15 +46,19 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 	void MainLoop(Stopwatch stopwatch)
 	{
 		using var device = new ImGuiDevice(window, renderer);
+		using var application = new T();
 
-		TimeSpan lastTime = TimeSpan.Zero;
+		application.Initialize(device);
+		device.Initialize();
+
+		SDL_SetWindowTitle(window, application.Label);
+
+		var moment = new Moment();
 
 		while (!application.RequestTermination)
 		{
-			//Setup for frame
-			TimeSpan time = stopwatch.Elapsed;
-			TimeSpan delta = time - lastTime;
-			lastTime = time;
+			//Capture the time for this frame
+			moment = new Moment(moment, stopwatch);
 
 			//Handle events
 			while (SDL_PollEvent(out SDL_Event sdlEvent) != 0)
@@ -72,9 +68,9 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 			}
 
 			//Begin frame
-			device.NewFrame(delta);
+			device.NewFrame(moment.delta);
 			ImGui.NewFrame();
-			application.Update();
+			application.Update(moment);
 
 			//Render frame
 			ImGui.EndFrame();
@@ -82,7 +78,7 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 			device.Render(ImGui.GetDrawData());
 
 			//Sleep for delay
-			var remain = time - stopwatch.Elapsed + application.UpdateDelay;
+			var remain = moment.elapsed - stopwatch.Elapsed + application.UpdateDelay;
 			if (remain > TimeSpan.Zero) Thread.Sleep(remain);
 		}
 	}

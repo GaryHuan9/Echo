@@ -8,6 +8,7 @@ using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Examples;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Grid;
+using Echo.UserInterface.Backend;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
@@ -20,7 +21,7 @@ public class SystemUI : AreaUI
 
 	bool HasDevice => device is { Disposed: false };
 
-	protected override void Draw()
+	protected override void Draw(in Moment moment)
 	{
 		ImGui.Text(Environment.OSVersion.VersionString);
 		ImGui.Text(Debugger.IsAttached ? "Debugger Attached" : "Debugger Not Attached");
