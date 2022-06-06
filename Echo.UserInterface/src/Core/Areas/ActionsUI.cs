@@ -1,4 +1,5 @@
 ﻿using System;
+using Echo.UserInterface.Backend;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
@@ -7,7 +8,7 @@ public class ActionsUI : AreaUI
 {
 	public ActionsUI() : base("Actions") { }
 
-	protected override void Draw()
+	protected override void Draw(in Moment moment)
 	{
 		if (ImGui.Button("Clear All")) ActionQueue.ClearHistory();
 

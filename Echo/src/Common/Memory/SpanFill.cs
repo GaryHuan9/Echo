@@ -8,6 +8,13 @@ namespace Echo.Common.Memory;
 /// </summary>
 public ref struct SpanFill<T>
 {
+	/// <summary>
+	/// Constructs a new <see cref="SpanFill{T}"/>.
+	/// </summary>
+	/// <param name="span">The destination region in memory that
+	/// the new <see cref="SpanFill{T}"/> should target.</param>
+	/// <param name="start">Optionally offset <paramref name="span"/>. Must be between
+	/// 0 (inclusive) and the length of <paramref name="span"/> (exclusive).</param>
 	public SpanFill(Span<T> span, int start = 0)
 	{
 		this.span = span;
@@ -68,6 +75,10 @@ public ref struct SpanFill<T>
 		if (Length >= threshold) return;
 		throw new InvalidOperationException();
 	}
+
+	public static implicit operator SpanFill<T>(T[] value) => new(value);
+	public static implicit operator SpanFill<T>(Span<T> value) => new(value);
+	public static implicit operator SpanFill<T>(View<T> value) => new(value);
 }
 
 public static class SpanFillExtensions
@@ -75,17 +86,17 @@ public static class SpanFillExtensions
 	/// <summary>
 	/// Creates a new <see cref="SpanFill{T}"/>.
 	/// </summary>
-	/// <param name="memory">The destination region in memory that
+	/// <param name="value">The destination region in memory that
 	/// the new <see cref="SpanFill{T}"/> should target.</param>
-	/// <param name="start">Optionally offset <paramref name="memory"/>. Must be between
-	/// 0 (inclusive) and the length of <paramref name="memory"/> (exclusive).</param>
+	/// <param name="start">Optionally offset <paramref name="value"/>. Must be between
+	/// 0 (inclusive) and the length of <paramref name="value"/> (exclusive).</param>
 	/// <typeparam name="T">The type to fill.</typeparam>
 	/// <returns>The newly created <see cref="SpanFill{T}"/>.</returns>
-	public static SpanFill<T> AsFill<T>(this T[] memory, int start = 0) => new(memory, start);
+	public static SpanFill<T> AsFill<T>(this T[] value, int start = 0) => new(value, start);
 
 	/// <inheritdoc cref="AsFill{T}(T[],int)"/>
-	public static SpanFill<T> AsFill<T>(this Span<T> memory, int start = 0) => new(memory, start);
+	public static SpanFill<T> AsFill<T>(this Span<T> value, int start = 0) => new(value, start);
 
 	/// <inheritdoc cref="AsFill{T}(T[],int)"/>
-	public static SpanFill<T> AsFill<T>(this View<T> memory, int start = 0) => new(memory, start);
+	public static SpanFill<T> AsFill<T>(this View<T> value, int start = 0) => new(value, start);
 }

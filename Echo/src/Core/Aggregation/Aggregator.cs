@@ -32,7 +32,7 @@ public abstract class Aggregator
 		const int FetchDepth = 6; //How deep do we go into this aggregator to get the AABB of the nodes
 		using var _ = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
-		SpanFill<AxisAlignedBoundingBox> fill = aabbs.AsFill();
+		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
 		pack.aggregator.FillAABB(FetchDepth, ref fill);
 		aabbs = aabbs[..fill.Count];
 		Assert.IsFalse(aabbs.IsEmpty);

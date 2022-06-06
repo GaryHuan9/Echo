@@ -26,7 +26,7 @@ public class PreparedInstanceRoot : PreparedInstance
 
 		using var _0 = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
-		SpanFill<AxisAlignedBoundingBox> fill = aabbs.AsFill();
+		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
 		pack.aggregator.FillAABB(FetchDepth, ref fill);
 		aabbs = aabbs[..fill.Count];
 

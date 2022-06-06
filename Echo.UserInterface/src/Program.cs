@@ -1,5 +1,5 @@
 ﻿using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core;
 
-using var program = new ImGuiRoot<EchoUI>();
-program.Launch();
+using var root = new ImGuiRoot<EchoUI>();
+root.Launch();

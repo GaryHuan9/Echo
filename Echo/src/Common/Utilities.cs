@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Packed;
@@ -26,6 +27,24 @@ public static class Utilities
 	/// <typeparam name="T">The type of item to copy.</typeparam>
 	public static unsafe void MemoryCopy<T>(T* source, T* target, long length) where T : unmanaged =>
 		Buffer.MemoryCopy(source, target, length * sizeof(Float4), length * sizeof(Float4));
+
+	/// <summary>
+	/// Ensures an <see cref="Array"/> is large enough for some number of items.
+	/// </summary>
+	/// <param name="array">The <see cref="Array"/> to ensure; this argument can be null.</param>
+	/// <param name="capacity">The number of items to potentially store.</param>
+	/// <param name="copy">Whether to copy over the old items in <paramref name="array"/> to the new one.</param>
+	/// <param name="capacityMin">The minimum <see cref="Array.Length"/> if a new <see cref="Array"/> is created.</param>
+	public static void EnsureCapacity<T>(ref T[] array, int capacity, bool copy = false, int capacityMin = 8)
+	{
+		if ((array?.Length ?? 0) >= capacity) return;
+
+		uint length = (uint)Math.Max(capacity, capacityMin);
+		length = BitOperations.RoundUpToPowerOf2(length);
+
+		if (!copy || array == null) array = new T[length];
+		else Array.Resize(ref array, (int)length);
+	}
 
 	/// <summary>
 	/// Calculates and returns a deterministic hash code for <paramref name="value"/>.

@@ -37,7 +37,7 @@ public abstract class Operation : IDisposable
 	public readonly uint totalProcedureCount;
 
 	/// <summary>
-	/// The <see cref="DateTime"/> when 
+	/// The <see cref="DateTime"/> when this <see cref="Operation"/> was created.
 	/// </summary>
 	public readonly DateTime creationTime;
 
@@ -54,16 +54,20 @@ public abstract class Operation : IDisposable
 	static readonly Stopwatch stopwatch = Stopwatch.StartNew();
 
 	/// <summary>
-	/// Returns whether this operation has been fully completed.
+	/// The number of steps already completed.
 	/// </summary>
-	public bool IsCompleted
+	public uint CompletedProcedureCount
 	{
 		get
 		{
-			using var _ = procedureLocker.Fetch();
-			return completedCount == totalProcedureCount;
+			lock (procedureLocker) return completedCount;
 		}
 	}
+
+	/// <summary>
+	/// Whether this operation has been fully completed.
+	/// </summary>
+	public bool IsCompleted => CompletedProcedureCount == totalProcedureCount;
 
 	/// <summary>
 	/// The number of <see cref="IWorker"/>s working on completing this <see cref="Operation"/>.
@@ -193,6 +197,7 @@ public abstract class Operation : IDisposable
 	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
 	public void FillWorkerGuids(ref SpanFill<Guid> fill)
 	{
+		fill.ThrowIfNotEmpty();
 		int length = Math.Min(fill.Length, WorkerCount);
 		for (int i = 0; i < length; i++) fill.Add(workerData[i].workerGuid);
 	}
@@ -206,6 +211,8 @@ public abstract class Operation : IDisposable
 	{
 		TimeSpan time = stopwatch.Elapsed;
 		Assert.AreNotEqual(time, default);
+
+		fill.ThrowIfNotEmpty();
 
 		int length = Math.Min(fill.Length, WorkerCount);
 
@@ -227,6 +234,7 @@ public abstract class Operation : IDisposable
 	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
 	public void FillWorkerProcedures(ref SpanFill<Procedure> fill)
 	{
+		fill.ThrowIfNotEmpty();
 		int length = Math.Min(fill.Length, WorkerCount);
 
 		using var _ = procedureLocker.Fetch();
