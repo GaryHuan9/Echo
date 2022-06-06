@@ -26,15 +26,10 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		io = ImGui.GetIO();
 
 		//Assign global names and flags
-		AssignBackendNames(io, renderer);
+		AssignBackendNames();
 		io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
 		io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
 		io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
-
-		//Create resources
-		mouseCursors = CreateMouseCursors();
-		fontTexture = CreateFontTexture(io, renderer);
-		CreateClipboardSetup(io);
 
 		//Link viewport data
 		SDL_SysWMinfo info = default;
@@ -48,6 +43,15 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 		//Setup SDL hint
 		SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest"); //Can be nearest, linear, or best
+	}
+
+	public void Initialize()
+	{
+		//Create resources
+		CreateMouseCursors();
+		CreateFontTexture();
+		CreateClipboardSetup();
 	}
 
 	readonly IntPtr window;
@@ -138,15 +142,105 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		static Float4 Widen(Vector2 vector) => new Float4(vector.AsVector128()).XYXY;
 	}
 
+	public IntPtr CreateTexture(Int2 size, bool streaming, bool bigEndian = false)
+	{
+		int access = streaming ?
+			(int)SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING :
+			(int)SDL_TextureAccess.SDL_TEXTUREACCESS_STATIC;
+		uint format = bigEndian ? SDL_PIXELFORMAT_RGBA8888 : SDL_PIXELFORMAT_ABGR8888;
+
+		IntPtr texture = SDL_CreateTexture(renderer, format, access, size.X, size.Y);
+		if (texture == IntPtr.Zero) throw new BackendException("Failed to create texture.");
+
+		return texture;
+	}
+
+	public void DestroyTexture(ref IntPtr texture)
+	{
+		if (texture == IntPtr.Zero) return;
+
+		SDL_DestroyTexture(texture);
+		texture = IntPtr.Zero;
+	}
+
 	public void Dispose()
 	{
 		if (disposed) return;
 		disposed = true;
 
-		DestroyMouseCursors(ref mouseCursors);
-		DestroyFontTexture(io, ref fontTexture);
-		DestroyClipboardSetup(io);
+		DestroyMouseCursors();
+		DestroyFontTexture();
+		DestroyClipboardSetup();
 		io = null;
+	}
+
+	void AssignBackendNames()
+	{
+		SDL_GetRendererInfo(renderer, out SDL_RendererInfo info).ThrowOnError();
+
+		var name = (Marshal.PtrToStringAnsi(info.name) ?? "unknown").ToUpper();
+		var size = new Int2(info.max_texture_width, info.max_texture_height);
+
+		io.NativePtr->BackendPlatformName = (byte*)Marshal.StringToHGlobalAnsi("SDL2 & Dear ImGui for C#");
+		io.NativePtr->BackendRendererName = (byte*)Marshal.StringToHGlobalAnsi($"{name} {size.X}x{size.Y}");
+	}
+
+	void CreateMouseCursors()
+	{
+		mouseCursors = new IntPtr[(int)ImGuiMouseCursor.COUNT];
+
+		mouseCursors[(int)ImGuiMouseCursor.Arrow] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
+		mouseCursors[(int)ImGuiMouseCursor.TextInput] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
+		mouseCursors[(int)ImGuiMouseCursor.ResizeAll] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEALL);
+		mouseCursors[(int)ImGuiMouseCursor.ResizeNS] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENS);
+		mouseCursors[(int)ImGuiMouseCursor.ResizeEW] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEWE);
+		mouseCursors[(int)ImGuiMouseCursor.ResizeNESW] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENESW);
+		mouseCursors[(int)ImGuiMouseCursor.ResizeNWSE] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENWSE);
+		mouseCursors[(int)ImGuiMouseCursor.Hand] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND);
+		mouseCursors[(int)ImGuiMouseCursor.NotAllowed] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_NO);
+	}
+
+	void DestroyMouseCursors()
+	{
+		if (mouseCursors == null) return;
+
+		foreach (IntPtr cursor in mouseCursors)
+		{
+			if (cursor == IntPtr.Zero) continue;
+			SDL_FreeCursor(cursor);
+		}
+
+		mouseCursors = null;
+	}
+
+	void CreateFontTexture()
+	{
+		io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height);
+		fontTexture = CreateTexture(new Int2(width, height), false);
+
+		SDL_UpdateTexture(fontTexture, IntPtr.Zero, pixels, 4 * width).ThrowOnError();
+		SDL_SetTextureBlendMode(fontTexture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
+		SDL_SetTextureScaleMode(fontTexture, SDL_ScaleMode.SDL_ScaleModeLinear).ThrowOnError();
+
+		io.Fonts.SetTexID(fontTexture);
+	}
+
+	void DestroyFontTexture()
+	{
+		DestroyTexture(ref fontTexture);
+		io.Fonts.SetTexID(IntPtr.Zero);
+	}
+
+	void CreateClipboardSetup()
+	{
+		io.SetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(SetClipboardText);
+		io.GetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(GetClipboardText);
+	}
+
+	void DestroyClipboardSetup()
+	{
+		io.SetClipboardTextFn = IntPtr.Zero;
+		io.GetClipboardTextFn = IntPtr.Zero;
 	}
 
 	void ProcessMouseButtonEvent(SDL_MouseButtonEvent mouseButtonEvent)
@@ -307,89 +401,6 @@ public sealed unsafe class ImGuiDevice : IDisposable
 				callback(new IntPtr(list), new IntPtr(command)); //Perform user callback, not really used
 			}
 		}
-	}
-
-	static void AssignBackendNames(ImGuiIOPtr io, IntPtr renderer)
-	{
-		SDL_GetRendererInfo(renderer, out SDL_RendererInfo info).ThrowOnError();
-
-		var name = (Marshal.PtrToStringAnsi(info.name) ?? "unknown").ToUpper();
-		var size = new Int2(info.max_texture_width, info.max_texture_height);
-
-		io.NativePtr->BackendPlatformName = (byte*)Marshal.StringToHGlobalAnsi("SDL2 & Dear ImGui for C#");
-		io.NativePtr->BackendRendererName = (byte*)Marshal.StringToHGlobalAnsi($"{name} {size.X}x{size.Y}");
-	}
-
-	static IntPtr[] CreateMouseCursors()
-	{
-		var cursors = new IntPtr[(int)ImGuiMouseCursor.COUNT];
-
-		cursors[(int)ImGuiMouseCursor.Arrow] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_ARROW);
-		cursors[(int)ImGuiMouseCursor.TextInput] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_IBEAM);
-		cursors[(int)ImGuiMouseCursor.ResizeAll] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEALL);
-		cursors[(int)ImGuiMouseCursor.ResizeNS] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENS);
-		cursors[(int)ImGuiMouseCursor.ResizeEW] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEWE);
-		cursors[(int)ImGuiMouseCursor.ResizeNESW] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENESW);
-		cursors[(int)ImGuiMouseCursor.ResizeNWSE] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENWSE);
-		cursors[(int)ImGuiMouseCursor.Hand] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND);
-		cursors[(int)ImGuiMouseCursor.NotAllowed] = SDL_CreateSystemCursor(SDL_SystemCursor.SDL_SYSTEM_CURSOR_NO);
-
-		return cursors;
-	}
-
-	static void DestroyMouseCursors(ref IntPtr[] cursors)
-	{
-		if (cursors == null) return;
-
-		foreach (IntPtr cursor in cursors)
-		{
-			if (cursor == IntPtr.Zero) continue;
-			SDL_FreeCursor(cursor);
-		}
-
-		cursors = null;
-	}
-
-	static IntPtr CreateFontTexture(ImGuiIOPtr io, IntPtr renderer)
-	{
-		io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height);
-
-		IntPtr texture = SDL_CreateTexture
-		(
-			renderer, SDL_PIXELFORMAT_ABGR8888,
-			(int)SDL_TextureAccess.SDL_TEXTUREACCESS_STATIC,
-			width, height
-		);
-
-		if (texture == IntPtr.Zero) throw new BackendException();
-
-		SDL_UpdateTexture(texture, IntPtr.Zero, pixels, 4 * width).ThrowOnError();
-		SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
-		SDL_SetTextureScaleMode(texture, SDL_ScaleMode.SDL_ScaleModeLinear).ThrowOnError();
-
-		io.Fonts.SetTexID(texture);
-		return texture;
-	}
-
-	static void DestroyFontTexture(ImGuiIOPtr io, ref IntPtr texture)
-	{
-		if (texture == IntPtr.Zero) return;
-
-		io.Fonts.SetTexID(IntPtr.Zero);
-		SDL_DestroyTexture(texture);
-		texture = IntPtr.Zero;
-	}
-
-	static void CreateClipboardSetup(ImGuiIOPtr io)
-	{
-		io.SetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(SetClipboardText);
-		io.GetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(GetClipboardText);
-	}
-
-	static void DestroyClipboardSetup(ImGuiIOPtr io)
-	{
-		io.SetClipboardTextFn = IntPtr.Zero;
-		io.GetClipboardTextFn = IntPtr.Zero;
 	}
 
 	delegate void SetClipboardTextFn(IntPtr _, string text);

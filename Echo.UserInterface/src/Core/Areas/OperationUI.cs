@@ -1,9 +1,11 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Common;
 using Echo.Common.Compute;
 using Echo.Common.Compute.Statistics;
 using Echo.Common.Memory;
+using Echo.UserInterface.Backend;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
@@ -15,7 +17,7 @@ public class OperationUI : AreaUI
 	EventRow[] eventRows = Array.Empty<EventRow>();
 	readonly WorkerData workerData = new();
 
-	protected override void Draw()
+	protected override void Draw(in Moment moment)
 	{
 		// ImGui.ListBox("Select", )
 
@@ -83,14 +85,14 @@ public class OperationUI : AreaUI
 
 		if (!ImGui.BeginTable("Events Table", 4, ImGuiCustom.DefaultTableFlags)) return;
 
-		//Gather data
+		//Gather information
 		double timeR = 1d / time.TotalSeconds;
 		double progressR = 1d / progress;
 		bool divideByZero = time == TimeSpan.Zero || progress.AlmostEquals();
 
-		if (eventRows.Length < operation.EventRowCount) eventRows = new EventRow[operation.EventRowCount];
+		Utilities.EnsureCapacity(ref eventRows, operation.EventRowCount);
 
-		SpanFill<EventRow> fill = eventRows.AsFill();
+		SpanFill<EventRow> fill = eventRows;
 		operation.FillEventRows(ref fill);
 
 		//Draw

@@ -16,10 +16,10 @@ public sealed class EchoUI : IApplication
 	{
 		var builder = ImmutableArray.CreateBuilder<AreaUI>();
 
-		builder.Add(new SystemUI());
-		builder.Add(new OperationUI());
-		builder.Add(new TilesUI());
-		builder.Add(new ActionsUI());
+		builder.Add(new SystemUI { Root = this });
+		builder.Add(new OperationUI { Root = this });
+		builder.Add(new TilesUI { Root = this });
+		builder.Add(new ActionsUI { Root = this });
 
 		areas = builder.ToImmutable();
 	}
@@ -27,10 +27,12 @@ public sealed class EchoUI : IApplication
 	readonly ImmutableArray<AreaUI> areas;
 
 	public TimeSpan UpdateDelay => TimeSpan.Zero; //For now this is basically only controlled by vsync
-	public bool RequestTermination { get; private set; }
 	public string Label => "Echo User Interface";
 
-	public void Initialize()
+	public bool RequestTermination { get; private set; }
+	public ImGuiDevice Backend { get; private set; }
+
+	public void Initialize(ImGuiDevice backend)
 	{
 		ImGuiIOPtr io = ImGui.GetIO();
 
@@ -45,17 +47,18 @@ public sealed class EchoUI : IApplication
 		ConfigureStyle(style);
 		ConfigureColors(style);
 
+		Backend = backend;
 		foreach (AreaUI area in areas) area.Initialize();
 	}
 
-	public void Update()
+	public void Update(in Moment moment)
 	{
 		DrawMenuBar();
 		ImGui.DockSpaceOverViewport(ImGui.GetMainViewport());
 
 		ImGui.ShowDemoWindow();
 
-		foreach (AreaUI area in areas) area.Update();
+		foreach (AreaUI area in areas) area.Update(moment);
 	}
 
 	public void Dispose()
@@ -123,7 +126,7 @@ public sealed class EchoUI : IApplication
 		var signature = new RGB128(0.1581f, 0.3763f, 0.6112f);
 
 		var highlight = new Vector4(0.94f, 0.96f, 0.99f, 1.00f);
-		var background = new Vector4(0.04f, 0.05f, 0.05f, 1.00f);
+		var background = new Vector4(0.04f, 0.04f, 0.05f, 1.00f);
 		var border = new Vector4(0.43f, 0.47f, 0.59f, Alpha);
 
 		var contrast0 = new Vector4(0.39f, 0.51f, 0.63f, 1.00f);

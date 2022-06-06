@@ -1,4 +1,5 @@
 ﻿using System;
+using Echo.Common;
 using Echo.Common.Compute;
 using Echo.Common.Compute.Statistics;
 using Echo.Common.Memory;
@@ -25,9 +26,9 @@ public class OperationReportTI : ReportTI
 			canvas.WriteLine(ref brush, $"Total Time {operation.TotalTime:hh\\:mm\\:ss}");
 			canvas.WriteLine(ref brush, $"Time {operation.Time:hh\\:mm\\:ss}");
 
-			if (rows.Length < operation.EventRowCount) rows = new EventRow[operation.EventRowCount];
+			Utilities.EnsureCapacity(ref rows, operation.EventRowCount);
 
-			SpanFill<EventRow> fill = rows.AsFill();
+			SpanFill<EventRow> fill = rows;
 			operation.FillEventRows(ref fill);
 
 			foreach (EventRow row in fill.Filled) canvas.WriteLine(ref brush, $"{row.Label} {row.Count}");
