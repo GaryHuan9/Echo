@@ -6,7 +6,8 @@ namespace Echo.UserInterface.Backend;
 public sealed class BackendException : Exception
 {
 	public BackendException() : base("An error occured from the SDL2 backend.") { }
-	public BackendException(int code) : base($"An error occured from the SDL2 backend (Error code: {code}, Message: {SDL.SDL_GetError()}).") { }
+	public BackendException(string message) : base($"An error occured from the SDL2 backend: {message}") { }
+	public BackendException(int code) : base($"An error occured from the SDL2 backend: {SDL.SDL_GetError()} ({code})") { }
 }
 
 public static class BackendExceptionExtensions

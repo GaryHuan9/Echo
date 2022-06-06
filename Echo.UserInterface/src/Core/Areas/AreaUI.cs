@@ -1,4 +1,5 @@
 ﻿using System;
+using Echo.UserInterface.Backend;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
@@ -9,11 +10,13 @@ public abstract class AreaUI : IDisposable
 
 	readonly string name;
 
+	public EchoUI Root { get; init; }
+
 	public virtual void Initialize() { }
 
-	public virtual void Update()
+	public virtual void Update(in Moment moment)
 	{
-		if (ImGui.Begin(name)) Draw();
+		if (ImGui.Begin(name)) Draw(moment);
 		ImGui.End();
 	}
 
@@ -23,7 +26,7 @@ public abstract class AreaUI : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	protected abstract void Draw();
+	protected abstract void Draw(in Moment moment);
 
 	protected virtual void Dispose(bool disposing) { }
 }
