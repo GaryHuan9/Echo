@@ -14,16 +14,29 @@ public class OperationUI : AreaUI
 {
 	public OperationUI() : base("Operation") { }
 
-	EventRow[] eventRows = Array.Empty<EventRow>();
+	int selectionIndex;
+	int lastOperationCount;
+
+	string[] operationLabels;
+	EventRow[] eventRows;
 	readonly WorkerData workerData = new();
 
 	protected override void Draw(in Moment moment)
 	{
-		// ImGui.ListBox("Select", )
-
 		var device = Device.Instance;
-		var operation = device?.LatestOperation;
-		if (operation == null) return;
+		var operations = device == null ? ReadOnlySpan<Operation>.Empty : device.PastOperations;
+
+		if (operations.Length == 0)
+		{
+			selectionIndex = 0;
+			lastOperationCount = 0;
+			return;
+		}
+
+		UpdateOperationLabels(operations);
+
+		ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
+		var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
 
 		double progress = operation.Progress;
 		TimeSpan time = operation.Time;
@@ -32,6 +45,21 @@ public class OperationUI : AreaUI
 		DrawMain(progress, operation, time);
 		DrawEventRows(operation, time, progress);
 		DrawWorkers(operation);
+	}
+
+	void UpdateOperationLabels(ReadOnlySpan<Operation> operations)
+	{
+		if (operations.Length == lastOperationCount) return;
+		Utilities.EnsureCapacity(ref operationLabels, operations.Length);
+
+		for (int i = 0; i < operations.Length; i++)
+		{
+			Operation operation = operations[i];
+			string creation = operation.creationTime.ToStringDefault();
+			operationLabels[i] = $"[{creation}] {operation.GetType()}";
+		}
+
+		lastOperationCount = operations.Length;
 	}
 
 	void DrawMain(double progress, Operation operation, TimeSpan time)
