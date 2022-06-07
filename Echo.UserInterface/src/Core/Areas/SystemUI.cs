@@ -204,11 +204,12 @@ public class SystemUI : AreaUI
 				Evaluator = new PathTracedEvaluator(),
 				Distribution = new StratifiedDistribution { Extend = 64 },
 				Buffer = new RenderBuffer(new Int2(960, 540)),
+				Pattern = new OrderedPattern(),
 				MinEpoch = 1,
 				MaxEpoch = 1
 			};
 
-			var operation = new TiledEvaluationFactory()
+			var operation = new TiledEvaluationFactory
 			{
 				NextProfile = evaluationProfile
 			};
