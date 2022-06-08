@@ -8,6 +8,7 @@ using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Operations;
