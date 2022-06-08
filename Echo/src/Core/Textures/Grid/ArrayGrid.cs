@@ -41,9 +41,7 @@ public class ArrayGrid<T> : TextureGrid<T> where T : unmanaged, IColor<T>
 	/// </summary>
 	public int ToIndex(Int2 position)
 	{
-		Assert.IsTrue(Int2.Zero <= position);
-		Assert.IsTrue(position < size);
-
+		AssertValidPosition(position);
 		return position.X + position.Y * size.X;
 	}
 

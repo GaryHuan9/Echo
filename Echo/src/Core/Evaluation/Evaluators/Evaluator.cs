@@ -5,6 +5,7 @@ using Echo.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Evaluators;

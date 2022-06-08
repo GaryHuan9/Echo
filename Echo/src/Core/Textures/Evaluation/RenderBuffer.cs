@@ -5,8 +5,9 @@ using CodeHelpers.Collections;
 using CodeHelpers.Packed;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Textures.Colors;
+using Echo.Core.Textures.Grid;
 
-namespace Echo.Core.Textures.Grid;
+namespace Echo.Core.Textures.Evaluation;
 
 /// <summary>
 /// A collection of layers of <see cref="ArrayGrid{T}"/> primarily used as a rendering destination.
