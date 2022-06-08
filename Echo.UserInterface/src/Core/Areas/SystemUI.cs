@@ -7,6 +7,7 @@ using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Examples;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 using Echo.UserInterface.Backend;
 using ImGuiNET;

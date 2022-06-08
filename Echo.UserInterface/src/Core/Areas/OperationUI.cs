@@ -35,7 +35,7 @@ public class OperationUI : AreaUI
 
 		UpdateOperationLabels(operations);
 
-		ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
+		// ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
 		var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
 
 		double progress = operation.Progress;

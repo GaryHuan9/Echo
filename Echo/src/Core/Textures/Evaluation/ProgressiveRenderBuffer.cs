@@ -4,7 +4,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
 
-namespace Echo.Core.Textures.Grid;
+namespace Echo.Core.Textures.Evaluation;
 
 /// <summary>
 /// A slower <see cref="RenderBuffer"/> that is designed to be rendered on
