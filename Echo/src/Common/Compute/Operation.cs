@@ -162,8 +162,8 @@ public abstract class Operation : IDisposable
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> that is changing its idle state.</param>
 	/// <param name="idle">True if the <see cref="IWorker"/> is stopping its execution, false otherwise.</param>
-	/// <remarks>This method should be invoked directly through <see cref="IWorker.OnIdleChangedEvent"/>
-	/// and <see cref="IWorker.OnAwaitChangedEvent"/>, otherwise the behavior is undefined.</remarks>
+	/// <remarks>This method should be invoked directly through <see cref="Worker.OnIdleChangedEvent"/>
+	/// and <see cref="Worker.OnAwaitChangedEvent"/>, otherwise the behavior is undefined.</remarks>
 	public void ChangeWorkerState(IWorker worker, bool idle)
 	{
 		TimeSpan time = stopwatch.Elapsed;
