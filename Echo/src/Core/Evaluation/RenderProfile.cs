@@ -3,6 +3,7 @@ using CodeHelpers;
 using Echo.Common;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation;

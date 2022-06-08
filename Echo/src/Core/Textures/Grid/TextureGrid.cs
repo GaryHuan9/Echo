@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 {
 	protected TextureGrid(Int2 size)
 	{
-		if (!(size > Int2.Zero)) throw ExceptionHelper.Invalid(nameof(size), size, InvalidType.outOfBounds);
+		if (!(size > Int2.Zero)) throw new ArgumentOutOfRangeException(nameof(size));
 
 		this.size = size;
 		sizeR = 1f / size;
@@ -157,13 +158,24 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	/// <summary>
 	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid{T}"/>'s texture coordinate.
 	/// </summary>
-	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
+	public Float2 ToUV(Int2 position)
+	{
+		AssertValidPosition(position);
+		return (position + Float2.Half) * sizeR;
+	}
 
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
 		Assert.IsTrue(float.IsFinite(uv.Sum));
 		return Filter.Evaluate(this, uv);
 	}
+
+	/// <summary>
+	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid{T}"/>.
+	/// </summary>
+	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
+	[Conditional(Assert.DebugSymbol)]
+	protected void AssertValidPosition(Int2 position) => AssertValidPosition(position, size);
 
 	/// <summary>
 	/// Performs a <see cref="Load"/> operation asynchronously.
@@ -183,14 +195,26 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 		return serializer.Deserialize<T>(stream);
 	}
 
+	/// <summary>
+	/// Ensures an <see cref="Int2"/> is between zero (inclusive) and a certain <paramref name="size"/> (exclusive).
+	/// </summary>
+	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
+	/// <param name="size">The upper limit of the bounds (exclusive).</param>
+	[Conditional(Assert.DebugSymbol)]
+	protected static void AssertValidPosition(Int2 position, Int2 size)
+	{
+		Assert.IsTrue(Int2.Zero <= position);
+		Assert.IsTrue(position < size);
+	}
+
 	static Int2 IsPowerOfTwo(Int2 size)
 	{
 		Assert.IsTrue(size > Int2.Zero);
 
 		return new Int2
 		(
-			size.X.IsPowerOfTwo() ? BitOperations.Log2((uint)size.X) : -1,
-			size.Y.IsPowerOfTwo() ? BitOperations.Log2((uint)size.Y) : -1
+			BitOperations.IsPow2(size.X) ? BitOperations.Log2((uint)size.X) : -1,
+			BitOperations.IsPow2(size.Y) ? BitOperations.Log2((uint)size.Y) : -1
 		);
 	}
 }

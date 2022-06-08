@@ -1,6 +1,7 @@
 ﻿using CodeHelpers.Packed;
 using Echo.Common.Mathematics;
 using Echo.Common.Mathematics.Primitives;
+using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Evaluators;

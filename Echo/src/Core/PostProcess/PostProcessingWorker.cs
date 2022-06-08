@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using CodeHelpers.Pooling;
 using Echo.Core.Textures.Colors;
+using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.PostProcess;
