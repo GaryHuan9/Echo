@@ -6,22 +6,17 @@ using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
-using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
 public abstract record Evaluator
 {
-	readonly NotNull<string> _destination = "main";
-
 	/// <summary>
-	/// The label of the destination buffer in the <see cref="RenderBuffer"/> to write to.
+	/// Creates or cleans an <see cref="IEvaluationLayer"/> for a new evaluation session.
 	/// </summary>
-	public string Destination
-	{
-		get => _destination;
-		init => _destination = value;
-	}
+	/// <param name="buffer">The destination containing <see cref="RenderBuffer"/>.</param>
+	/// <returns>The <see cref="IEvaluationLayer"/> for this new evaluation session.</returns>
+	public abstract IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer);
 
 	/// <summary>
 	/// Evaluates a <see cref="PreparedScene"/> using this <see cref="Evaluator"/>.

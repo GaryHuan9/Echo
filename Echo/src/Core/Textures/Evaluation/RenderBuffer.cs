@@ -1,119 +1,95 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Packed;
-using Echo.Core.Evaluation.Operations;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Textures.Evaluation;
 
 /// <summary>
-/// A collection of layers of <see cref="ArrayGrid{T}"/> primarily used as a rendering destination.
+/// A collection of layers of <see cref="TextureGrid{T}"/> used as a rendering source or destination.
 /// Allows for optional auxiliary evaluation layers (such as normal) to support later reconstruction.
 /// </summary>
-public class RenderBuffer : ArrayGrid<RGB128>
+public sealed class RenderBuffer : TextureGrid<RGB128>
 {
-	public RenderBuffer(Int2 size) : base(size) => AddLayer("main", this);
+	public RenderBuffer(Int2 size, int tileSize = 32) : this(size, (Int2)tileSize) { }
 
-	readonly Dictionary<string, Layer> layers = new(StringComparer.OrdinalIgnoreCase);
+	public RenderBuffer(Int2 size, Int2 tileSize) : base(size) => this.tileSize = tileSize;
 
-	/// <inheritdoc cref="TryGetTexture"/>
-	public bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T>
+	public readonly Int2 tileSize;
+
+	Texture mainTexture;
+
+	readonly ConcurrentDictionary<string, Texture> layers = new(StringComparer.OrdinalIgnoreCase);
+
+	public override RGB128 this[Int2 position]
+	{
+		get
+		{
+			if (mainTexture == null) return RGB128.Black;
+			return mainTexture[ToUV(position)].As<RGB128>();
+		}
+	}
+
+	/// <summary>
+	/// Tries to get a layer from this <see cref="RenderBuffer"/>.
+	/// </summary>
+	/// <param name="label">The label of the layer to find.</param>
+	/// <param name="layer">Outputs the layer if found.</param>
+	/// <returns>Whether a matching texture is found.</returns>
+	public bool TryGetTexture<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
+															   where U : TextureGrid<T>
 	{
 		if (TryGetTexture(label, out Texture candidate))
 		{
-			texture = candidate as TextureGrid<T>;
-			return texture != null;
+			layer = candidate as U;
+			return layer != null;
 		}
 
-		texture = null;
+		layer = null;
 		return false;
 	}
 
-	/// <summary>
-	/// Tries to get a layer <see cref="Texture"/> from this <see cref="RenderBuffer"/>.
-	/// </summary>
-	/// <param name="label">The label of the layer to find.</param>
-	/// <param name="texture">Outputs the texture if found.</param>
-	/// <returns>Whether a matching texture is found.</returns>
-	public bool TryGetTexture(string label, out Texture texture)
+	/// <inheritdoc cref="TryGetTexture{T, U}"/>
+	/// <remarks>Since the second parameter of this method outputs a <see cref="Texture"/>,
+	/// this method will always find a <see cref="Texture"/> if its label exist.</remarks>
+	public bool TryGetTexture(string label, out Texture layer)
 	{
-		texture = layers.TryGetValue(label).texture;
-		return texture != null;
+		layer = layers.TryGetValue(label);
+		return layer != null;
 	}
 
 	/// <summary>
-	/// Tries to get a layer <see cref="Writer"/> from this <see cref="RenderBuffer"/>.
-	/// </summary>
-	/// <param name="label">The label of the layer to find.</param>
-	/// <param name="writer">Outputs the <see cref="Writer"/> if found.</param>
-	/// <returns>Whether a matching <see cref="Writer"/> is found.</returns>
-	/// <seealso cref="Writer"/>
-	public bool TryGetWriter(string label, out Writer writer)
-	{
-		writer = layers.TryGetValue(label).writer;
-		return writer != null;
-	}
-
-	/// <summary>
-	/// Creates a new layer.
+	/// Creates a new layer to this <see cref="RenderBuffer"/>.
 	/// </summary>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
-	public void CreateLayer<T>(string label) where T : unmanaged, IColor<T>
+	/// <returns>The new <see cref="EvaluationLayer{T}"/> that was created.</returns>
+	public EvaluationLayer<T> CreateLayer<T>(string label) where T : unmanaged, IColor<T>
 	{
-		if (!layers.ContainsKey(label)) AddLayer(label, new ArrayGrid<T>(size));
-		else throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
-	}
-
-	public override void CopyFrom(Texture texture)
-	{
-		base.CopyFrom(texture);
-
-		if (texture is RenderBuffer buffer)
+		if (!layers.ContainsKey(label))
 		{
-			foreach (var pair in layers)
-			{
-				if (pair.Value.texture == this) continue;
+			var layer = new EvaluationLayer<T>(size, tileSize);
+			Interlocked.CompareExchange(ref mainTexture, layer, null);
+			if (layers.TryAdd(label, layer)) return layer;
+		}
 
-				var source = buffer.layers.TryGetValue(pair.Key).texture;
-				if (source != null) pair.Value.texture.CopyFrom(source);
-			}
-		}
-		else
-		{
-			foreach (var pair in layers)
-			{
-				if (pair.Value.texture == this) continue;
-				pair.Value.texture.CopyFrom(texture);
-			}
-		}
+		throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
 	}
 
 	/// <summary>
-	/// Completely empties the content of all of the layers and buffers in this <see cref="RenderBuffer"/>.
+	/// Adds a new layer to this <see cref="RenderBuffer"/>.
 	/// </summary>
-	public virtual void Clear() => CopyFrom(black);
-
-	void AddLayer<T>(string label, TextureGrid<T> texture) where T : unmanaged, IColor<T>
+	/// <param name="label">The <see cref="string"/> to name this new
+	/// layer. This <see cref="string"/> is case insensitive.</param>
+	/// <param name="layer">The layer to add.</param>
+	public void AddLayer<T>(string label, Texture layer)
 	{
-		layers.Add(label, new Layer(texture, Write));
-
-		void Write(Int2 position, in Accumulator accumulator) => texture[position] = default(T).FromFloat4(accumulator.Value);
-	}
-
-	/// <summary>
-	/// Delegate used to write to a specific layer in a <see cref="RenderBuffer"/>.
-	/// </summary>
-	/// <param name="position">The position to write. This is the same as the <see cref="TextureGrid{T}.Item(Int2)"/> indexer.</param>
-	/// <param name="accumulator">The value to write is exacted from this <see cref="Accumulator"/>.</param>
-	public delegate void Writer(Int2 position, in Accumulator accumulator);
-
-	readonly record struct Layer(Texture texture, Writer writer)
-	{
-		public readonly Texture texture = texture;
-		public readonly Writer writer = writer;
+		if (layers.TryAdd(label, layer)) return;
+		throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
 	}
 }

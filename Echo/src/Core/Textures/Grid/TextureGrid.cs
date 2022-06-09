@@ -5,7 +5,6 @@ using System.Numerics;
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Serialization;
@@ -16,6 +15,7 @@ namespace Echo.Core.Textures.Grid;
 /// <summary>
 /// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and <see cref="size"/> (exclusive).
 /// </summary>
+/// <typeparam name="T">The type of <see cref="IColor{T}"/> to use.</typeparam>
 public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 {
 	protected TextureGrid(Int2 size)
@@ -34,8 +34,8 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 
 		power = IsPowerOfTwo(size);
 
-		Wrapper = Wrappers.clamp;
-		Filter = Filters.bilinear;
+		Wrapper = IWrapper.clamp;
+		Filter = IFilter.bilinear;
 	}
 
 	/// <summary>
@@ -106,31 +106,29 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	public override Int2 DiscreteResolution => size;
 
 	/// <summary>
-	/// Access or assign the pixel value of type <see cref="T"/> at a specific integer <paramref name="position"/>. The input
-	/// <paramref name="position"/> must be between <see cref="Int2.Zero"/> (inclusive) and <see cref="oneLess"/> (exclusive).
+	/// Gets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
 	/// </summary>
-	public abstract T this[Int2 position] { get; set; }
+	/// <param name="position">The integral pixel position to get the value from. This <see cref="Int2"/>
+	/// must be between <see cref="Int2.Zero"/> (inclusive) and <see cref="size"/> (exclusive).</param>
+	public abstract T this[Int2 position] { get; }
 
 	/// <summary>
 	/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
 	/// </summary>
 	public virtual void ForEach(Action<Int2> action, bool parallel = true)
 	{
-		if (parallel) Parallel.ForEach(size.Loop(), action);
-		else
+		if (parallel)
 		{
-			foreach (Int2 position in size.Loop()) action(position);
+			Parallel.ForEach(size.Loop(), action);
+			return;
+		}
+
+		for (int x = 0; x < size.X; x++)
+		for (int y = 0; y < size.X; y++)
+		{
+			action(new Int2(x, y));
 		}
 	}
-
-	public override void CopyFrom(Texture texture) => ForEach
-	(
-		texture is TextureGrid<T> grid && grid.size == size ?
-			position => this[position] = grid[position] :
-			position => this[position] = texture[ToUV(position)].As<T>()
-	);
-
-	public override string ToString() => $"{base.ToString()} with size {size}";
 
 	/// <summary>
 	/// Performs a <see cref="Save"/> operation asynchronously.
@@ -151,18 +149,18 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	}
 
 	/// <summary>
-	/// Converts texture coordinate <paramref name="uv"/> to a integer position based on this <see cref="TextureGrid{T}.size"/>.
+	/// Converts a texture coordinate to an integral pixel position.
 	/// </summary>
-	public Int2 ToPosition(Float2 uv) => (uv * size).Floored.Clamp(Int2.Zero, oneLess);
+	/// <param name="uv">The texture coordinate to convert.</param>
+	/// <remarks>This operation is not bounded by this <see cref="TextureGrid{T}"/>'s <see cref="size"/>.</remarks>
+	public Int2 ToPosition(Float2 uv) => (uv * size).Floored;
 
 	/// <summary>
-	/// Converts a pixel integer <paramref name="position"/> to this <see cref="TextureGrid{T}"/>'s texture coordinate.
+	/// Converts an integral pixel position to a texture coordinate.
 	/// </summary>
-	public Float2 ToUV(Int2 position)
-	{
-		AssertValidPosition(position);
-		return (position + Float2.Half) * sizeR;
-	}
+	/// <param name="position">The integral pixel position to convert.</param>
+	/// <remarks>This operation is not bounded by this <see cref="TextureGrid{T}"/>'s <see cref="size"/>.</remarks>
+	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
 
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
@@ -180,13 +178,13 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	/// <summary>
 	/// Performs a <see cref="Load"/> operation asynchronously.
 	/// </summary>
-	public static Task<TextureGrid<T>> LoadAsync(string path, Serializer serializer = null) => Task.Run(() => Load(path, serializer));
+	public static Task<ArrayGrid<T>> LoadAsync(string path, Serializer serializer = null) => Task.Run(() => Load(path, serializer));
 
 	/// <summary>
-	/// Loads a <see cref="TextureGrid{T}"/> from <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
+	/// Loads a <see cref="ArrayGrid{T}"/> from <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
 	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
 	/// </summary>
-	public static TextureGrid<T> Load(string path, Serializer serializer = null)
+	public static ArrayGrid<T> Load(string path, Serializer serializer = null)
 	{
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");

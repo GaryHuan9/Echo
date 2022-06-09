@@ -45,7 +45,7 @@ public abstract class DirectionalTextureBaseTests
 		Prng random = Utilities.NewRandom();
 
 		var texture = new ArrayGrid<RGB128>(Next2(random, maxSize - Int2.One) + Int2.One);
-		texture.ForEach(position => texture[position] = (RGB128)(Float4)random.Next3());
+		texture.ForEach(position => texture.Set(position, (RGB128)(Float4)random.Next3()));
 
 		return texture;
 
