@@ -24,7 +24,7 @@ public record FpiSerializer : Serializer
 		Write(texture, writer);
 	}
 
-	public override TextureGrid<T> Deserialize<T>(Stream stream)
+	public override ArrayGrid<T> Deserialize<T>(Stream stream)
 	{
 		using var reader = new DataReader(stream);
 
@@ -56,6 +56,7 @@ public record FpiSerializer : Serializer
 
 		static unsafe Vector128<uint> Cast(in T value)
 		{
+			// ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
 			RGBA128 color = value.ToRGBA128();
 			return *(Vector128<uint>*)&color;
 		}
@@ -81,7 +82,7 @@ public record FpiSerializer : Serializer
 			);
 
 			Vector128<uint> current = Sse2.Xor(sequence, xor);
-			texture[position] = (*(RGBA128*)&current).As<T>();
+			texture.Set(position, (*(RGBA128*)&current).As<T>());
 
 			sequence = current;
 		}

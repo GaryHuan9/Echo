@@ -84,12 +84,7 @@ public class Gradient : IEnumerable<float>
 		anchors.RemoveAt(index);
 		return true;
 	}
-
-	/// <summary>
-	/// Draws this <see cref="Gradient"/> on <paramref name="texture"/> from <paramref name="point0"/> to <paramref name="point1"/>.
-	/// </summary>
-	public void Draw(TextureGrid<RGBA128> texture, Float2 point0, Float2 point1) => texture.CopyFrom(new GradientTexture { Gradient = this, Point0 = point0, Point1 = point1 });
-
+	
 	IEnumerator<float> IEnumerable<float>.GetEnumerator() => anchors.Select(anchor => anchor.percent).GetEnumerator();
 
 	IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<float>)this).GetEnumerator();

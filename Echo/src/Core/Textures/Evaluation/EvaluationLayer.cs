@@ -11,9 +11,11 @@ namespace Echo.Core.Textures.Evaluation;
 
 public interface IEvaluationLayer
 {
-	IEvaluationTile CreateTile(Int2 tilePosition);
+	IEvaluationWriteTile CreateTile(Int2 tilePosition);
 
-	void WriteTile(IEvaluationTile tile);
+	IEvaluationReadTile RequestTile(Int2 tilePosition);
+
+	void Write(IEvaluationWriteTile tile);
 }
 
 public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unmanaged, IColor<T>
@@ -52,23 +54,35 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 			GetTileBounds(tilePosition, out Int2 min, out Int2 max);
 			return buffer[GetLocalOffset(position, min, max)];
 		}
-		set => throw new NotSupportedException($"Use {nameof(CreateTile)} and {nameof(WriteTile)} to modify this {nameof(EvaluationLayer<T>)}.");
 	}
 
-	public IEvaluationTile CreateTile(Int2 tilePosition)
+	/// <inheritdoc/>
+	public IEvaluationWriteTile CreateTile(Int2 tilePosition)
 	{
 		AssertValidPosition(tilePosition, tileRange);
 		GetTileBounds(tilePosition, out Int2 min, out Int2 max);
-		return new Tile(tilePosition, min, max);
+		return new WriteTile(tilePosition, min, max);
 	}
 
-	public void WriteTile(IEvaluationTile tile)
+	/// <inheritdoc/>
+	public IEvaluationReadTile RequestTile(Int2 tilePosition)
 	{
-		var converted = tile as Tile;
-		T[] buffer = converted?.MoveBuffer();
+		AssertValidPosition(tilePosition, tileRange);
+		var buffer = tileBuffers[GetTileIndex(tilePosition)];
+		if (buffer == null) return null;
+
+		GetTileBounds(tilePosition, out Int2 min, out Int2 max);
+		return new ReadTile(tilePosition, min, max, buffer);
+	}
+
+	/// <inheritdoc/>
+	public void Write(IEvaluationWriteTile tile)
+	{
+		var writeTile = tile as WriteTile;
+		T[] buffer = writeTile?.MoveBuffer();
 
 		if (buffer == null) throw new ArgumentException($"Invalid {nameof(IEvaluationTile)} to write.");
-		Interlocked.Exchange(ref tileBuffers[GetTileIndex(converted.tilePosition)], buffer);
+		Interlocked.Exchange(ref tileBuffers[GetTileIndex(writeTile.tilePosition)], buffer);
 	}
 
 	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max)
@@ -80,8 +94,6 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 
 		AssertMinMax(min, max);
 	}
-
-	public ReadOnlySpan<T> GetTileBuffer(Int2 tilePosition) => tileBuffers[GetTileIndex(tilePosition)];
 
 	Int2 GetTilePosition(Int2 position)
 	{
@@ -117,34 +129,57 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		Assert.IsTrue(min >= Int2.Zero);
 	}
 
-	sealed class Tile : IEvaluationTile
+	class Tile : IEvaluationTile
 	{
 		public Tile(Int2 tilePosition, Int2 min, Int2 max)
 		{
 			AssertMinMax(min, max);
-
-			pixels = new T[(max - min).Product];
 			this.tilePosition = tilePosition;
 
 			Min = min;
 			Max = max;
 		}
 
-		T[] pixels;
 		public readonly Int2 tilePosition;
 
+		/// <inheritdoc/>
 		public Int2 Min { get; }
-		public Int2 Max { get; }
 
-		public Float4 this[Int2 position]
+		/// <inheritdoc/>
+		public Int2 Max { get; }
+	}
+
+	sealed class WriteTile : Tile, IEvaluationWriteTile
+	{
+		public WriteTile(Int2 tilePosition, Int2 min, Int2 max) : base(tilePosition, min, max) => buffer = new T[(max - min).Product];
+
+		T[] buffer;
+
+		public T[] MoveBuffer() => Interlocked.Exchange(ref buffer, null);
+
+		/// <inheritdoc/>
+		Float4 IEvaluationWriteTile.this[Int2 position]
 		{
 			set
 			{
-				Assert.IsNotNull(pixels);
-				pixels[GetLocalOffset(position, Min, Max)] = default(T).FromFloat4(value);
+				Assert.IsNotNull(buffer);
+				int offset = GetLocalOffset(position, Min, Max);
+				buffer[offset] = default(T).FromFloat4(value);
 			}
 		}
+	}
 
-		public T[] MoveBuffer() => Interlocked.Exchange(ref pixels, null);
+	sealed class ReadTile : Tile, IEvaluationReadTile
+	{
+		public ReadTile(Int2 tilePosition, Int2 min, Int2 max, T[] buffer) : base(tilePosition, min, max)
+		{
+			Assert.IsNotNull(buffer);
+			this.buffer = buffer;
+		}
+
+		readonly T[] buffer;
+
+		/// <inheritdoc/>
+		RGBA128 IEvaluationReadTile.this[Int2 position] => buffer[GetLocalOffset(position, Min, Max)].ToRGBA128();
 	}
 }

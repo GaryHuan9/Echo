@@ -60,7 +60,7 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 		nuint Offset(Int2 position) => (uint)(position.X + (texture.oneLess.Y - position.Y) * size.X);
 	}
 
-	public override unsafe TextureGrid<T> Deserialize<T>(Stream stream)
+	public override unsafe ArrayGrid<T> Deserialize<T>(Stream stream)
 	{
 		using var bitmap = new Bitmap(stream, true);
 		PixelFormat format = bitmap.PixelFormat;
@@ -99,7 +99,7 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 			var source = (RGBA128)(Float4)color;
 			if (sRGB) InverseGammaCorrect(ref source);
 
-			texture[position] = source.As<T>();
+			texture.Set(position, source.As<T>());
 		}
 
 		void LoadARGB(Int2 position)
@@ -110,7 +110,7 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 			var source = (RGBA128)(Float4)color;
 			if (sRGB) InverseGammaCorrect(ref source);
 
-			texture[position] = source.As<T>();
+			texture.Set(position, source.As<T>());
 		}
 
 		int Offset(Int2 position) => position.X + (texture.oneLess.Y - position.Y) * size.X;
