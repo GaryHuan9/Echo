@@ -27,7 +27,7 @@ public class TiledEvaluationFactory : IOperationFactory
 		set => _nextProfile = value;
 	}
 
-	/// <inheritdoc />
+	/// <inheritdoc/>
 	public Operation CreateOperation(ImmutableArray<IWorker> workers)
 	{
 		//Validate profile
