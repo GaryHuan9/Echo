@@ -13,6 +13,7 @@ using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
+using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
@@ -34,6 +35,14 @@ public record PathTracedEvaluator : Evaluator
 	//technically it is not correct because the size of the emitter could be either a point or an area,
 	//(so for the same reason the word 'radiance' is also wrong) we just chose 'radiant' because it has the
 	//same length as the word 'scatter'.
+
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer)
+	{
+		const string LayerLabel = "path";
+
+		bool found = buffer.TryGetTexture<RGB128,>(LayerLabel, out EvaluationLayer<RGB128> layer);
+		return found ? layer : buffer.CreateLayer<RGB128>(LayerLabel);
+	}
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{

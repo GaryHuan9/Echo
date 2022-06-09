@@ -9,7 +9,6 @@ using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
-using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Evaluation.Operations;
 
@@ -22,6 +21,8 @@ public sealed class TiledEvaluationOperation : Operation<EvaluationStatistics>
 		this.profile = profile;
 		this.tileSequence = tileSequence;
 		this.contexts = contexts;
+
+		IEvaluationLayer layer = profile.Evaluator.CreateOrClearLayer(profile.Buffer);
 
 		//Create render buffer writer
 		if (profile.Buffer.TryGetWriter(profile.Evaluator.Destination, out writer)) { }
