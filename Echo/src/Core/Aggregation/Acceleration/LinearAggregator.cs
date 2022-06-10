@@ -96,7 +96,7 @@ public class LinearAggregator : Aggregator
 
 	public override unsafe int GetHashCode()
 	{
-		fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, totalCount);
+		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, totalCount);
 	}
 
 	public override void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)

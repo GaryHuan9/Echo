@@ -62,7 +62,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 	public override unsafe int GetHashCode()
 	{
-		fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, stackSize);
+		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, stackSize);
 	}
 
 	public override unsafe void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)

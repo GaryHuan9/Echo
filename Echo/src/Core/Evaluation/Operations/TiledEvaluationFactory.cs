@@ -36,14 +36,14 @@ public class TiledEvaluationFactory : IOperationFactory
 
 		//Create tile sequence and contexts
 		Int2 size = profile.Buffer.size.CeiledDivide(profile.TileSize);
-		Int2[] tileSequence = profile.Pattern.CreateSequence(size);
+		Int2[] tilePositions = profile.Pattern.CreateSequence(size);
 
 		CreateContexts(profile, workers.Length);
 
 		return new TiledEvaluationOperation
 		(
 			workers, profile,
-			tileSequence.ToImmutableArray(),
+			tilePositions.ToImmutableArray(),
 			contexts.ToImmutableArray()
 		);
 	}
