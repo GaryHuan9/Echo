@@ -6,7 +6,6 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
 using Echo.Common;
 using Echo.Common.Compute;
-using Echo.Common.Mathematics.Randomization;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Textures.Evaluation;
@@ -31,6 +30,9 @@ public class TilesUI : AreaUI
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
 
+	float displayScale;
+	Vector2 displayCenter;
+
 	protected override void Draw(in Moment moment)
 	{
 		if (Device.Instance?.LatestOperation is not TiledEvaluationOperation { profile.Buffer: { } buffer } operation) return;
@@ -44,11 +46,13 @@ public class TilesUI : AreaUI
 
 		if (operation != lastOperation)
 		{
-			lastOperation = operation;
 			ClearTexture();
-
 			indexQueue.Clear();
 			nextExploreIndex = 0;
+
+			displayScale = 0f;
+			displayCenter = Vector2.Zero;
+			lastOperation = operation;
 		}
 
 		//Find and update tile from completed procedures
@@ -60,14 +64,30 @@ public class TilesUI : AreaUI
 		}
 		while (tile != null);
 
-		// ImGui.SliderFloat("Label0", )
-		ImGui.Image(texture, new Vector2(textureSize.X, textureSize.Y));
+		//Draw all
+		BeginUpdateDisplay(out ImDrawListPtr drawList, out Vector2 center, out Vector2 extend);
+
+		drawList.AddImage(texture, center - extend, center + extend);
+
+		// foreach (ref readonly Procedure procedure in GatherValidProcedures(operation)) { }
+
+		drawList.PopClipRect();
 	}
 
 	protected override void Dispose(bool disposing)
 	{
 		ReleaseUnmanagedResources();
 		base.Dispose(disposing);
+	}
+
+	unsafe void ClearTexture()
+	{
+		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
+
+		if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF1F1511u);
+		else throw new InvalidOperationException("Fill assumption with contiguous memory from SDL2 backend is violated!");
+
+		SDL_UnlockTexture(texture);
 	}
 
 	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)
@@ -84,15 +104,12 @@ public class TilesUI : AreaUI
 			if (procedure.Progress > 0d) result.Add(procedure);
 		}
 
-		//Shuffle so we randomly use them
-		Span<Procedure> span = result.Filled;
-		SystemPrng.Shared.Shuffle(span);
-		return span;
+		return result.Filled;
 	}
 
 	IEvaluationReadTile RequestUpdateTile(TiledEvaluationOperation operation)
 	{
-		//Enqueue explored indices
+		//Enqueue indices to explore
 		while (indexQueue.Count < operation.WorkerCount && nextExploreIndex < operation.totalProcedureCount)
 		{
 			indexQueue.Enqueue(nextExploreIndex++);
@@ -118,6 +135,7 @@ public class TilesUI : AreaUI
 		Int2 tileSize = tile.Size;
 		if (tileSize == Int2.Zero) return;
 
+		//Grab tile bounds to pixel destination
 		Int2 min = tile.Min;
 		Int2 max = tile.Max;
 
@@ -129,6 +147,7 @@ public class TilesUI : AreaUI
 		int stride = pitch / sizeof(uint);
 		uint* pixels = (uint*)pointer - min.X + stride * (tileSize.Y - 1);
 
+		//Convert and assign each pixel
 		for (int y = min.Y; y < max.Y; y++)
 		{
 			for (int x = min.X; x < max.X; x++)
@@ -148,24 +167,70 @@ public class TilesUI : AreaUI
 				pixel = Sse2.Or(pixel, Sse2.ShiftRightLogical128BitLane(pixel, 6));
 
 				pixels[x] = pixel.ToScalar();
+
+				static Float4 ApproximateSqrt(in Float4 value) => new(Sse.Reciprocal(Sse.ReciprocalSqrt(value.v)));
 			}
 
 			pixels -= stride;
 		}
 
 		SDL_UnlockTexture(texture);
-
-		static Float4 ApproximateSqrt(in Float4 value) => new(Sse.Reciprocal(Sse.ReciprocalSqrt(value.v)));
 	}
 
-	unsafe void ClearTexture()
+	void BeginUpdateDisplay(out ImDrawListPtr drawList, out Vector2 center, out Vector2 extend)
 	{
-		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
+		//Find available content space
+		Vector2 contentMin = ImGui.GetCursorScreenPos();
+		Vector2 contentMax = contentMin + ImGui.GetContentRegionAvail();
 
-		if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF111111u);
-		else throw new InvalidOperationException("Fill assumption with contiguous memory from SDL2 backend is violated!");
+		Vector2 contentSize = contentMax - contentMin;
+		Vector2 contentCenter = (contentMax + contentMin) / 2f;
 
-		SDL_UnlockTexture(texture);
+		//Orient display from input
+		ImGui.SetCursorScreenPos(contentMin);
+		ImGui.PushAllowKeyboardFocus(false);
+		ImGui.InvisibleButton("Display", contentSize);
+		ImGui.PopAllowKeyboardFocus();
+
+		if (ImGui.IsItemActive() || ImGui.IsItemHovered()) OrientDisplay(contentCenter);
+
+		//Calculate correct size
+		float aspect = (float)textureSize.X / textureSize.Y;
+		float contentAspect = contentSize.X / contentSize.Y;
+		Vector2 size;
+
+		if (aspect > contentAspect)
+		{
+			float width = contentSize.X;
+			size = new Vector2(width, width / aspect);
+		}
+		else
+		{
+			float height = contentSize.Y;
+			size = new Vector2(height * aspect, height);
+		}
+
+		//Output orientation and begin draw list
+		center = contentCenter + displayCenter;
+		extend = size / 2f * MathF.Exp(displayScale);
+
+		drawList = ImGui.GetWindowDrawList();
+		drawList.PushClipRect(contentMin, contentMax);
+	}
+
+	void OrientDisplay(Vector2 contentCenter)
+	{
+		var io = ImGui.GetIO();
+		float zoom = io.MouseWheel * 0.1f;
+
+		//Move if the left mouse button is held 
+		if (io.MouseDown[0]) displayCenter += io.MouseDelta;
+		if (zoom == 0) return;
+
+		//Math to zoom towards cursor
+		Vector2 offset = contentCenter - io.MousePos;
+		Vector2 point = (offset + displayCenter) / MathF.Exp(displayScale);
+		displayCenter = point * MathF.Exp(displayScale += zoom) - offset;
 	}
 
 	void ReleaseUnmanagedResources() => Root.Backend.DestroyTexture(ref texture);

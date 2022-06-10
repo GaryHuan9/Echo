@@ -1,5 +1,6 @@
 ﻿using System;
 using Echo.UserInterface.Backend;
+using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;

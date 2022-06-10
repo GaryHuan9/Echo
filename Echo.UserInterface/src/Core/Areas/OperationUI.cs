@@ -6,6 +6,7 @@ using Echo.Common.Compute;
 using Echo.Common.Compute.Statistics;
 using Echo.Common.Memory;
 using Echo.UserInterface.Backend;
+using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
