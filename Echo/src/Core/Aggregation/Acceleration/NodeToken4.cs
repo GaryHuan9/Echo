@@ -42,6 +42,6 @@ public unsafe struct NodeToken4
 
 	public override readonly int GetHashCode()
 	{
-		fixed (NodeToken4* ptr = &this) return Utilities.GetHashCode(ptr);
+		fixed (NodeToken4* ptr = &this) return Utility.GetHashCode(ptr);
 	}
 }

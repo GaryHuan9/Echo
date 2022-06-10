@@ -18,7 +18,7 @@ public abstract class SettableGrid<T> : TextureGrid<T> where T : unmanaged, ICol
 	/// <param name="value">The value of type <see cref="T"/> to set.</param>
 	/// <remarks>The reason that this is a method but not an indexer is because of C#'s
 	/// (pathetic) inability to extend abstract indexers in derived classes.</remarks>
-	/// <!--https://github.com/dotnet/csharplang/discussions/6206-->
+	/// <!--https://github.com/dotnet/csharplang/issues/1568-->
 	public abstract void Set(Int2 position, in T value);
 
 	/// <summary>

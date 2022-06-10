@@ -9,38 +9,66 @@ using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Textures.Evaluation;
 
-public interface IEvaluationLayer
+/// <summary>
+/// A tile-based evaluation destination; usually retrieved from and stored in a <see cref="RenderBuffer"/>.
+/// Allows read and write access to the content of this layer through <see cref="IEvaluationTile"/>s.
+/// </summary>
+public interface ITiledEvaluationLayer
 {
+	/// <summary>
+	/// Creates a new <see cref="IEvaluationWriteTile"/> to write on.
+	/// </summary>
+	/// <param name="tilePosition">The tile position of this new tile.</param>
+	/// <returns>The new <see cref="IEvaluationWriteTile"/> that was created.</returns>
 	IEvaluationWriteTile CreateTile(Int2 tilePosition);
 
+	/// <summary>
+	/// Requests a <see cref="IEvaluationReadTile"/> to read from.
+	/// </summary>
+	/// <param name="tilePosition">The tile position that we are requesting to read from.</param>
+	/// <returns>The requested <see cref="IEvaluationReadTile"/> if it is available, otherwise null.</returns>
 	IEvaluationReadTile RequestTile(Int2 tilePosition);
 
-	void Write(IEvaluationWriteTile tile);
+	/// <summary>
+	/// Applies the content of an <see cref="IEvaluationWriteTile"/> to this <see cref="ITiledEvaluationLayer"/>.
+	/// </summary>
+	/// <param name="tile">The <see cref="IEvaluationWriteTile"/> to apply.</param>
+	void Apply(IEvaluationWriteTile tile);
 }
 
-public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unmanaged, IColor<T>
+/// <summary>
+/// A <see cref="TextureGrid{T}"/> that is used as a tile-based evaluation destination.
+/// </summary>
+public class TiledEvaluationLayer<T> : TextureGrid<T>, ITiledEvaluationLayer where T : unmanaged, IColor<T>
 {
-	public EvaluationLayer(Int2 size, Int2 tileSize) : base(size)
+	public TiledEvaluationLayer(Int2 size, Int2 tileSize) : base(size)
 	{
 		if (!BitOperations.IsPow2(tileSize.X) || !BitOperations.IsPow2(tileSize.Y)) throw new ArgumentOutOfRangeException(nameof(tileSize));
 
 		this.tileSize = tileSize;
-		tileRange = size / tileSize;
+
+		tileRange = size.CeiledDivide(tileSize);
+		tileBuffers = new T[tileRange.Product][];
 
 		logTileSize = new Int2
 		(
 			BitOperations.Log2((uint)tileSize.X),
 			BitOperations.Log2((uint)tileSize.Y)
 		);
-
-		tileBuffers = new T[tileRange.Product][];
 	}
 
+	/// <summary>
+	/// The maximum size of the individual tiles. Some edge tiles might be smaller, since they could be cropped.
+	/// </summary>
 	public readonly Int2 tileSize;
+
+	/// <summary>
+	/// The number of tiles on the X and Y axis. This equals <see cref="TextureGrid{T}.size"/> divided by <see cref="tileSize"/> (rounding up).
+	/// </summary>
 	public readonly Int2 tileRange;
 
-	readonly Int2 logTileSize;
 	readonly T[][] tileBuffers;
+	readonly Int2 logTileSize;
 
 	public override T this[Int2 position]
 	{
@@ -76,7 +104,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	}
 
 	/// <inheritdoc/>
-	public void Write(IEvaluationWriteTile tile)
+	public void Apply(IEvaluationWriteTile tile)
 	{
 		var writeTile = tile as WriteTile;
 		T[] buffer = writeTile?.MoveBuffer();
@@ -85,6 +113,20 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		Interlocked.Exchange(ref tileBuffers[GetTileIndex(writeTile.tilePosition)], buffer);
 	}
 
+	/// <summary>
+	/// Fully clears the content of this <see cref="TiledEvaluationLayer{T}"/>.
+	/// </summary>
+	public void Clear()
+	{
+		foreach (ref T[] buffer in tileBuffers.AsSpan()) Interlocked.Exchange(ref buffer, null);
+	}
+
+	/// <summary>
+	/// Gets the tile bounds at a particular tile position.
+	/// </summary>
+	/// <param name="tilePosition">The tile position to get the bounds of.</param>
+	/// <param name="min">The minimum pixel position of the tile (inclusive).</param>
+	/// <param name="max">The maximum pixel position of the tile (exclusive).</param>
 	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max)
 	{
 		AssertValidPosition(tilePosition, tileRange);
