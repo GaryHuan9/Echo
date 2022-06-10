@@ -3,7 +3,7 @@ using System.Globalization;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 
-namespace Echo.UserInterface.Core;
+namespace Echo.UserInterface.Core.Common;
 
 public static class DefaultFormattingExtensions
 {
