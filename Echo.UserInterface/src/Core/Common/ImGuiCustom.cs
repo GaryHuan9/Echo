@@ -1,6 +1,6 @@
 ﻿using ImGuiNET;
 
-namespace Echo.UserInterface.Core;
+namespace Echo.UserInterface.Core.Common;
 
 public static class ImGuiCustom
 {
