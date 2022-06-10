@@ -10,6 +10,7 @@ using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 using Echo.UserInterface.Backend;
+using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
