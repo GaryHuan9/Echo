@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using CodeHelpers.Packed;
 using Echo.Common.Compute;
 using Echo.Common.Mathematics.Primitives;
@@ -15,31 +14,21 @@ namespace Echo.Core.Evaluation.Operations;
 public sealed class TiledEvaluationOperation : Operation<EvaluationStatistics>
 {
 	internal TiledEvaluationOperation(ImmutableArray<IWorker> workers, TiledEvaluationProfile profile,
-									  ImmutableArray<Int2> tileSequence, ImmutableArray<Context> contexts)
-		: base(workers, (uint)tileSequence.Length)
+									  ImmutableArray<Int2> tilePositions, ImmutableArray<Context> contexts)
+		: base(workers, (uint)tilePositions.Length)
 	{
 		this.profile = profile;
-		this.tileSequence = tileSequence;
+		this.tilePositions = tilePositions;
 		this.contexts = contexts;
 
-		IEvaluationLayer layer = profile.Evaluator.CreateOrClearLayer(profile.Buffer);
-
-		//Create render buffer writer
-		if (profile.Buffer.TryGetWriter(profile.Evaluator.Destination, out writer)) { }
-		else throw new Exception($"Invalid destination assigned to {profile.Evaluator}.");
+		destination = profile.Evaluator.CreateOrClearLayer(profile.Buffer);
 	}
 
 	public readonly TiledEvaluationProfile profile;
-	public readonly ImmutableArray<Int2> tileSequence;
+	public readonly ImmutableArray<Int2> tilePositions;
+	public readonly ITiledEvaluationLayer destination;
 
 	readonly ImmutableArray<Context> contexts;
-	readonly RenderBuffer.Writer writer;
-
-	public void GetTileMinMax(uint procedureIndex, out Int2 min, out Int2 max)
-	{
-		min = tileSequence[(int)procedureIndex] * profile.TileSize;
-		max = profile.Buffer.size.Min(min + (Int2)profile.TileSize);
-	}
 
 	protected override void Execute(ref Procedure procedure, IWorker worker, ref EvaluationStatistics statistics)
 	{
@@ -49,48 +38,56 @@ public sealed class TiledEvaluationOperation : Operation<EvaluationStatistics>
 		PreparedScene scene = profile.Scene;
 		RenderBuffer buffer = profile.Buffer;
 
-		GetTileMinMax(procedure.index, out Int2 min, out Int2 max);
+		Int2 tilePosition = tilePositions[(int)procedure.index];
+		IEvaluationWriteTile tile = destination.CreateTile(tilePosition);
 
-		procedure.Begin((uint)(max - min).Product);
+		procedure.Begin((uint)tile.Size.Y);
+
+		Int2 min = tile.Min;
+		Int2 max = tile.Max;
 
 		for (int y = min.Y; y < max.Y; y++)
-		for (int x = min.X; x < max.X; x++)
 		{
-			worker.CheckSchedule();
-
-			Int2 position = new Int2(x, y);
-			Accumulator accumulator = new();
-
-			var spawner = new RaySpawner(buffer, position);
-
-			int epoch = 0;
-
-			do
+			for (int x = min.X; x < max.X; x++)
 			{
-				++epoch;
+				Int2 position = new Int2(x, y);
+				Accumulator accumulator = new();
 
-				distribution.BeginSeries(position);
+				var spawner = new RaySpawner(buffer, position);
 
-				for (int i = 0; i < distribution.Extend; i++)
+				int epoch = 0;
+
+				do
 				{
-					distribution.BeginSession();
+					++epoch;
 
-					Ray ray = scene.camera.SpawnRay(new CameraSample(distribution), spawner);
-					Float4 evaluated = evaluator.Evaluate(scene, ray, distribution, allocator);
+					distribution.BeginSeries(position);
 
-					statistics.Report("Evaluated Sample");
+					for (int i = 0; i < distribution.Extend; i++)
+					{
+						distribution.BeginSession();
 
-					allocator.Release();
+						Ray ray = scene.camera.SpawnRay(new CameraSample(distribution), spawner);
+						Float4 evaluated = evaluator.Evaluate(scene, ray, distribution, allocator);
 
-					if (!accumulator.Add(evaluated)) statistics.Report("Rejected Sample");
+						statistics.Report("Evaluated Sample");
+
+						allocator.Release();
+
+						if (!accumulator.Add(evaluated)) statistics.Report("Rejected Sample");
+					}
 				}
-			}
-			while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
+				while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
-			writer(position, accumulator);
-			statistics.Report("Pixel");
+				tile[position] = accumulator.Value;
+				statistics.Report("Pixel");
+			}
+
+			worker.CheckSchedule();
 			procedure.Advance();
 		}
+
+		destination.Apply(tile);
 	}
 
 	internal readonly record struct Context(ContinuousDistribution Distribution, Allocator Allocator);

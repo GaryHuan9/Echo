@@ -49,7 +49,7 @@ public class ArrayGrid<T> : SettableGrid<T> where T : unmanaged, IColor<T>
 			fixed (T* source = array)
 			fixed (T* target = this)
 			{
-				Utilities.MemoryCopy(source, target, length);
+				Utility.MemoryCopy(source, target, length);
 			}
 		}
 		else base.CopyFrom(texture);

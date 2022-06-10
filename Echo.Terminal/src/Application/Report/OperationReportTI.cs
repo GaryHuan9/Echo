@@ -26,7 +26,7 @@ public class OperationReportTI : ReportTI
 			canvas.WriteLine(ref brush, $"Total Time {operation.TotalTime:hh\\:mm\\:ss}");
 			canvas.WriteLine(ref brush, $"Time {operation.Time:hh\\:mm\\:ss}");
 
-			Utilities.EnsureCapacity(ref rows, operation.EventRowCount);
+			Utility.EnsureCapacity(ref rows, operation.EventRowCount);
 
 			SpanFill<EventRow> fill = rows;
 			operation.FillEventRows(ref fill);

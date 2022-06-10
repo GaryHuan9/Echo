@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
@@ -68,12 +67,12 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 	/// </summary>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
-	/// <returns>The new <see cref="EvaluationLayer{T}"/> that was created.</returns>
-	public EvaluationLayer<T> CreateLayer<T>(string label) where T : unmanaged, IColor<T>
+	/// <returns>The new <see cref="TiledEvaluationLayer{T}"/> that was created.</returns>
+	public TiledEvaluationLayer<T> CreateLayer<T>(string label) where T : unmanaged, IColor<T>
 	{
 		if (!layers.ContainsKey(label))
 		{
-			var layer = new EvaluationLayer<T>(size, tileSize);
+			var layer = new TiledEvaluationLayer<T>(size, tileSize);
 			Interlocked.CompareExchange(ref mainTexture, layer, null);
 			if (layers.TryAdd(label, layer)) return layer;
 		}
@@ -89,7 +88,7 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 	/// <param name="layer">The layer to add.</param>
 	public void AddLayer<T>(string label, Texture layer)
 	{
-		if (layers.TryAdd(label, layer)) return;
-		throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
+		if (layers.TryAdd(label, layer)) Interlocked.CompareExchange(ref mainTexture, layer, null);
+		else throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
 	}
 }

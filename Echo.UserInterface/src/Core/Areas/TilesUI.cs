@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -8,9 +9,7 @@ using Echo.Common.Compute;
 using Echo.Common.Mathematics.Randomization;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Operations;
-using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
-using Echo.Core.Textures.Grid;
 using Echo.UserInterface.Backend;
 using ImGuiNET;
 using SDL2;
@@ -29,12 +28,8 @@ public class TilesUI : AreaUI
 	Procedure[] procedures;
 
 	TiledEvaluationOperation lastOperation;
-
-	uint nextProcedureIndex;
-	TimeSpan totalElapsed;
-
-	readonly TimeSpan regularUpdateDelay = TimeSpan.FromSeconds(1f / 100f);
-	readonly TimeSpan boostedUpdateDelay = TimeSpan.FromSeconds(1f / 100f);
+	readonly Queue<uint> indexQueue = new();
+	uint nextExploreIndex;
 
 	protected override void Draw(in Moment moment)
 	{
@@ -49,14 +44,21 @@ public class TilesUI : AreaUI
 
 		if (operation != lastOperation)
 		{
-			nextProcedureIndex = 0;
 			lastOperation = operation;
 			ClearTexture();
+
+			indexQueue.Clear();
+			nextExploreIndex = 0;
 		}
 
-		//Update and display texture
-		totalElapsed += moment.delta;
-		ConsumeElapsedTime(operation);
+		//Find and update tile from completed procedures
+		IEvaluationReadTile tile;
+		do
+		{
+			tile = RequestUpdateTile(operation);
+			if (tile != null) UpdateTexture(tile);
+		}
+		while (tile != null);
 
 		// ImGui.SliderFloat("Label0", )
 		ImGui.Image(texture, new Vector2(textureSize.X, textureSize.Y));
@@ -68,41 +70,9 @@ public class TilesUI : AreaUI
 		base.Dispose(disposing);
 	}
 
-	void ConsumeElapsedTime(TiledEvaluationOperation operation)
-	{
-		//Find the total number of updates
-		TimeSpan delay = operation.IsCompleted ? boostedUpdateDelay : regularUpdateDelay;
-		int updateCount = 0;
-
-		while (totalElapsed >= delay)
-		{
-			totalElapsed -= delay;
-			++updateCount;
-		}
-
-		if (updateCount == 0) return;
-
-		//Update tiles from completed procedures
-		uint count = operation.CompletedProcedureCount;
-		while (nextProcedureIndex < count)
-		{
-			UpdateTexture(operation, nextProcedureIndex++);
-			if (--updateCount == 0) return;
-		}
-
-		//Update random times from procedures that are currently being processed
-		var candidates = GatherValidProcedures(operation);
-		updateCount = Math.Min(updateCount, candidates.Length);
-
-		for (int i = 0; i < updateCount; i++)
-		{
-			UpdateTexture(operation, candidates[i].index);
-		}
-	}
-
 	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)
 	{
-		Utilities.EnsureCapacity(ref procedures, operation.WorkerCount);
+		Utility.EnsureCapacity(ref procedures, operation.WorkerCount);
 
 		//Find the filter through the procedures
 		SpanFill<Procedure> fill = procedures;
@@ -120,27 +90,50 @@ public class TilesUI : AreaUI
 		return span;
 	}
 
-	unsafe void UpdateTexture(TiledEvaluationOperation operation, uint procedureIndex)
+	IEvaluationReadTile RequestUpdateTile(TiledEvaluationOperation operation)
 	{
-		operation.GetTileMinMax(procedureIndex, out Int2 min, out Int2 max);
+		//Enqueue explored indices
+		while (indexQueue.Count < operation.WorkerCount && nextExploreIndex < operation.totalProcedureCount)
+		{
+			indexQueue.Enqueue(nextExploreIndex++);
+		}
 
-		Int2 size = max - min;
-		if (size == Int2.Zero) return;
+		//Find the first available tile
+		int count = indexQueue.Count;
+		for (int i = 0; i < count; i++)
+		{
+			uint index = indexQueue.Dequeue();
+			Int2 tilePosition = operation.tilePositions[(int)index];
+			var tile = operation.destination.RequestTile(tilePosition);
 
-		RenderBuffer buffer = operation.profile.Buffer;
-		int invertY = buffer.size.Y - min.Y - size.Y;
+			if (tile != null) return tile;
+			indexQueue.Enqueue(index);
+		}
 
-		SDL_Rect rect = new SDL_Rect { x = min.X, y = invertY, w = size.X, h = size.Y };
+		return null;
+	}
+
+	unsafe void UpdateTexture(IEvaluationReadTile tile)
+	{
+		Int2 tileSize = tile.Size;
+		if (tileSize == Int2.Zero) return;
+
+		Int2 min = tile.Min;
+		Int2 max = tile.Max;
+
+		int invertY = textureSize.Y - min.Y - tileSize.Y;
+
+		SDL_Rect rect = new SDL_Rect { x = min.X, y = invertY, w = tileSize.X, h = tileSize.Y };
 		SDL_LockTexture(texture, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
 
 		int stride = pitch / sizeof(uint);
-		uint* pixels = (uint*)pointer - min.X + stride * size.Y - stride;
+		uint* pixels = (uint*)pointer - min.X + stride * (tileSize.Y - 1);
 
 		for (int y = min.Y; y < max.Y; y++)
 		{
 			for (int x = min.X; x < max.X; x++)
 			{
-				Float4 color = (RGBA128)buffer[new Int2(x, y)];
+				Float4 color = tile[new Int2(x, y)];
 				color = ApproximateSqrt(color.Max(Float4.Zero));
 				color = color.Min(Float4.One) * byte.MaxValue;
 
@@ -168,7 +161,8 @@ public class TilesUI : AreaUI
 	unsafe void ClearTexture()
 	{
 		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
-		if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF000000u);
+
+		if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF111111u);
 		else throw new InvalidOperationException("Fill assumption with contiguous memory from SDL2 backend is violated!");
 
 		SDL_UnlockTexture(texture);

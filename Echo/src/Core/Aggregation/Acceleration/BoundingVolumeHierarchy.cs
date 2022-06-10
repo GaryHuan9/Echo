@@ -63,7 +63,7 @@ public class BoundingVolumeHierarchy : Aggregator
 
 	public override unsafe int GetHashCode()
 	{
-		fixed (Node* ptr = nodes) return Utilities.GetHashCode(ptr, (uint)nodes.Length, maxDepth);
+		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, maxDepth);
 	}
 
 	public override unsafe void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
