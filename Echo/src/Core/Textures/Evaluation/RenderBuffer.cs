@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grid;
@@ -17,8 +18,15 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 {
 	public RenderBuffer(Int2 size, int tileSize = 32) : this(size, (Int2)tileSize) { }
 
-	public RenderBuffer(Int2 size, Int2 tileSize) : base(size) => this.tileSize = tileSize;
+	public RenderBuffer(Int2 size, Int2 tileSize) : base(size)
+	{
+		Assert.IsTrue(tileSize > Int2.Zero);
+		this.tileSize = tileSize;
+	}
 
+	/// <summary>
+	/// The <see cref="EvaluationLayer{T}.tileSize"/> used when creating layers through <see cref="CreateLayer{T}"/>.
+	/// </summary>
 	public readonly Int2 tileSize;
 
 	Texture mainTexture;
@@ -67,12 +75,12 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 	/// </summary>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
-	/// <returns>The new <see cref="TiledEvaluationLayer{T}"/> that was created.</returns>
-	public TiledEvaluationLayer<T> CreateLayer<T>(string label) where T : unmanaged, IColor<T>
+	/// <returns>The new <see cref="EvaluationLayer{T}"/> that was created.</returns>
+	public EvaluationLayer<T> CreateLayer<T>(string label) where T : unmanaged, IColor<T>
 	{
 		if (!layers.ContainsKey(label))
 		{
-			var layer = new TiledEvaluationLayer<T>(size, tileSize);
+			var layer = new EvaluationLayer<T>(size, tileSize);
 			Interlocked.CompareExchange(ref mainTexture, layer, null);
 			if (layers.TryAdd(label, layer)) return layer;
 		}

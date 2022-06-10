@@ -13,7 +13,7 @@ namespace Echo.Core.Textures.Evaluation;
 /// A tile-based evaluation destination; usually retrieved from and stored in a <see cref="RenderBuffer"/>.
 /// Allows read and write access to the content of this layer through <see cref="IEvaluationTile"/>s.
 /// </summary>
-public interface ITiledEvaluationLayer
+public interface IEvaluationLayer
 {
 	/// <summary>
 	/// Creates a new <see cref="IEvaluationWriteTile"/> to write on.
@@ -30,18 +30,18 @@ public interface ITiledEvaluationLayer
 	IEvaluationReadTile RequestTile(Int2 tilePosition);
 
 	/// <summary>
-	/// Applies the content of an <see cref="IEvaluationWriteTile"/> to this <see cref="ITiledEvaluationLayer"/>.
+	/// Applies the content of an <see cref="IEvaluationWriteTile"/> to this <see cref="IEvaluationLayer"/>.
 	/// </summary>
 	/// <param name="tile">The <see cref="IEvaluationWriteTile"/> to apply.</param>
 	void Apply(IEvaluationWriteTile tile);
 }
 
 /// <summary>
-/// A <see cref="TextureGrid{T}"/> that is used as a tile-based evaluation destination.
+/// A <see cref="TextureGrid{T}"/> that is used as an evaluation destination.
 /// </summary>
-public class TiledEvaluationLayer<T> : TextureGrid<T>, ITiledEvaluationLayer where T : unmanaged, IColor<T>
+public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unmanaged, IColor<T>
 {
-	public TiledEvaluationLayer(Int2 size, Int2 tileSize) : base(size)
+	public EvaluationLayer(Int2 size, Int2 tileSize) : base(size)
 	{
 		if (!BitOperations.IsPow2(tileSize.X) || !BitOperations.IsPow2(tileSize.Y)) throw new ArgumentOutOfRangeException(nameof(tileSize));
 
@@ -114,7 +114,7 @@ public class TiledEvaluationLayer<T> : TextureGrid<T>, ITiledEvaluationLayer whe
 	}
 
 	/// <summary>
-	/// Fully clears the content of this <see cref="TiledEvaluationLayer{T}"/>.
+	/// Fully clears the content of this <see cref="EvaluationLayer{T}"/>.
 	/// </summary>
 	public void Clear()
 	{

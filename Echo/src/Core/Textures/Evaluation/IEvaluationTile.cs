@@ -4,7 +4,7 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Textures.Evaluation;
 
 /// <summary>
-/// A tile-based evaluation destination. Used by <see cref="ITiledEvaluationLayer"/>.
+/// A tile-based evaluation destination. Used by <see cref="IEvaluationLayer"/>.
 /// </summary>
 public interface IEvaluationTile
 {
@@ -21,7 +21,7 @@ public interface IEvaluationTile
 	/// <summary>
 	/// The size of this <see cref="IEvaluationTile"/>.
 	/// </summary>
-	/// <remarks>This could be smaller than <see cref="TiledEvaluationLayer{T}.tileSize"/>.</remarks>
+	/// <remarks>This could be smaller than <see cref="EvaluationLayer{T}.tileSize"/>.</remarks>
 	sealed Int2 Size => Max - Min;
 }
 
