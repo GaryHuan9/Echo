@@ -200,7 +200,7 @@ public class SystemUI : AreaUI
 
 			var prepareProfile = new ScenePrepareProfile();
 
-			var evaluationProfile = new TiledEvaluationProfile
+			var evaluationProfile = new EvaluationProfile
 			{
 				Scene = new PreparedScene(scene, prepareProfile),
 				Evaluator = new PathTracedEvaluator(),
@@ -211,7 +211,7 @@ public class SystemUI : AreaUI
 				MaxEpoch = 1
 			};
 
-			var operation = new TiledEvaluationFactory
+			var operation = new EvaluationOperation.Factory
 			{
 				NextProfile = evaluationProfile
 			};

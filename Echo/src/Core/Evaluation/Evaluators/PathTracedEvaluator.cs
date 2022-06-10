@@ -36,7 +36,7 @@ public record PathTracedEvaluator : Evaluator
 	//(so for the same reason the word 'radiance' is also wrong) we just chose 'radiant' because it has the
 	//same length as the word 'scatter'.
 
-	public override ITiledEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{

@@ -51,7 +51,7 @@ public class EchoTI : RootTI
 
 		var prepareProfile = new ScenePrepareProfile();
 
-		var evaluationProfile = new TiledEvaluationProfile
+		var evaluationProfile = new EvaluationProfile
 		{
 			Scene = new PreparedScene(scene, prepareProfile),
 			Evaluator = new PathTracedEvaluator(),
@@ -61,7 +61,7 @@ public class EchoTI : RootTI
 			MaxEpoch = 1
 		};
 
-		var factory = new TiledEvaluationFactory
+		var factory = new EvaluationOperation.Factory
 		{
 			NextProfile = evaluationProfile
 		};

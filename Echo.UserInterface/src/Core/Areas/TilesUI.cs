@@ -26,7 +26,7 @@ public class TilesUI : AreaUI
 
 	Procedure[] procedures;
 
-	TiledEvaluationOperation lastOperation;
+	EvaluationOperation lastOperation;
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
 
@@ -35,7 +35,7 @@ public class TilesUI : AreaUI
 
 	protected override void Draw(in Moment moment)
 	{
-		if (Device.Instance?.LatestOperation is not TiledEvaluationOperation { profile.Buffer: { } buffer } operation) return;
+		if (Device.Instance?.LatestOperation is not EvaluationOperation { profile.Buffer: { } buffer } operation) return;
 
 		//Check if operation or buffer changed
 		if (buffer.size != textureSize)
@@ -107,7 +107,7 @@ public class TilesUI : AreaUI
 		return result.Filled;
 	}
 
-	IEvaluationReadTile RequestUpdateTile(TiledEvaluationOperation operation)
+	IEvaluationReadTile RequestUpdateTile(EvaluationOperation operation)
 	{
 		//Enqueue indices to explore
 		while (indexQueue.Count < operation.WorkerCount && nextExploreIndex < operation.totalProcedureCount)
