@@ -11,22 +11,22 @@ using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Operations;
 
-public sealed class TiledEvaluationOperation : Operation<EvaluationStatistics>
+public sealed partial class EvaluationOperation : Operation<EvaluationStatistics>
 {
-	internal TiledEvaluationOperation(ImmutableArray<IWorker> workers, TiledEvaluationProfile profile,
-									  ImmutableArray<Int2> tilePositions, ImmutableArray<Context> contexts)
-		: base(workers, (uint)tilePositions.Length)
+	// ReSharper disable LocalVariableHidesMember
+	EvaluationOperation(EvaluationProfile profile, ImmutableArray<IWorker> workers, ImmutableArray<Context> contexts)
+		: base(workers, Construct(profile, out var tilePositions, out var destination))
+	// ReSharper restore LocalVariableHidesMember
 	{
 		this.profile = profile;
 		this.tilePositions = tilePositions;
+		this.destination = destination;
 		this.contexts = contexts;
-
-		destination = profile.Evaluator.CreateOrClearLayer(profile.Buffer);
 	}
 
-	public readonly TiledEvaluationProfile profile;
+	public readonly EvaluationProfile profile;
 	public readonly ImmutableArray<Int2> tilePositions;
-	public readonly ITiledEvaluationLayer destination;
+	public readonly IEvaluationLayer destination;
 
 	readonly ImmutableArray<Context> contexts;
 
@@ -90,5 +90,14 @@ public sealed class TiledEvaluationOperation : Operation<EvaluationStatistics>
 		destination.Apply(tile);
 	}
 
-	internal readonly record struct Context(ContinuousDistribution Distribution, Allocator Allocator);
+	static uint Construct(EvaluationProfile profile, out ImmutableArray<Int2> tilePositions, out IEvaluationLayer destination)
+	{
+		Int2 tileRange = profile.Buffer.size.CeiledDivide(profile.Buffer.tileSize);
+		tilePositions = profile.Pattern.CreateSequence(tileRange).ToImmutableArray();
+		destination = profile.Evaluator.CreateOrClearLayer(profile.Buffer);
+
+		return (uint)tilePositions.Length;
+	}
+
+	readonly record struct Context(ContinuousDistribution Distribution, Allocator Allocator);
 }
