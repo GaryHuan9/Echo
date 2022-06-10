@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using CodeHelpers.Packed;
 
 namespace Echo.Common;
 
-public static class Utilities
+public static class Utility
 {
 	/// <summary>
 	/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns

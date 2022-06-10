@@ -50,7 +50,7 @@ public class OperationUI : AreaUI
 	void UpdateOperationLabels(ReadOnlySpan<Operation> operations)
 	{
 		if (operations.Length == lastOperationCount) return;
-		Utilities.EnsureCapacity(ref operationLabels, operations.Length);
+		Utility.EnsureCapacity(ref operationLabels, operations.Length);
 
 		for (int i = 0; i < operations.Length; i++)
 		{
@@ -76,14 +76,7 @@ public class OperationUI : AreaUI
 		ImGuiCustom.Property("Time Spent", time.ToStringDefault());
 		ImGuiCustom.Property("Time Spend (All Worker)", operation.TotalTime.ToStringDefault());
 
-		if (progress.AlmostEquals(1d))
-		{
-			DateTime completionTime = operation.creationTime + time;
-
-			ImGuiCustom.Property("Time Remain", TimeSpan.Zero.ToStringDefault());
-			ImGuiCustom.Property("Completion Time", completionTime.ToStringDefault());
-		}
-		else if (progress.AlmostEquals())
+		if (progress.AlmostEquals() || progress.AlmostEquals(1d))
 		{
 			ImGuiCustom.Property("Estimated Time Remain", "Unavailable");
 			ImGuiCustom.Property("Estimated Completion Time", "Unavailable");
@@ -118,7 +111,7 @@ public class OperationUI : AreaUI
 		double progressR = 1d / progress;
 		bool divideByZero = time == TimeSpan.Zero || progress.AlmostEquals();
 
-		Utilities.EnsureCapacity(ref eventRows, operation.EventRowCount);
+		Utility.EnsureCapacity(ref eventRows, operation.EventRowCount);
 
 		SpanFill<EventRow> fill = eventRows;
 		operation.FillEventRows(ref fill);

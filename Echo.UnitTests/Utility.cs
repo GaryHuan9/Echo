@@ -4,7 +4,7 @@ using NUnit.Framework.Constraints;
 
 namespace Echo.UnitTests;
 
-public static class Utilities
+public static class Utility
 {
 	/// <summary>
 	/// Returns a new <see cref="Prng"/> for this current <see cref="TestContext"/>.

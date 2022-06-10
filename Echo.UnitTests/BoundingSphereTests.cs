@@ -27,7 +27,7 @@ public class BoundingSphereTests
 
 	static Float3[] GenerateRandomPoints()
 	{
-		Prng random = Utilities.NewRandom();
+		Prng random = Utility.NewRandom();
 
 		var points = new Float3[random.Next1(1000)];
 		FillRandom(points, random.Next1(), random);

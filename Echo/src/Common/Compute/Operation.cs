@@ -56,6 +56,10 @@ public abstract class Operation : IDisposable
 	/// <summary>
 	/// The number of steps already completed.
 	/// </summary>
+	/// <remarks>This does not mean all steps with <see cref="Procedure.index"/> from 0 (inclusive) to this
+	/// number (exclusive) are completed, because some steps with <see cref="Procedure.index"/> lower than
+	/// this number can still be worked on while other steps with <see cref="Procedure.index"/> higher than
+	/// this number might have already been completed.</remarks>
 	public uint CompletedProcedureCount
 	{
 		get
