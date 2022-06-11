@@ -151,6 +151,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 		IntPtr texture = SDL_CreateTexture(renderer, format, access, size.X, size.Y);
 		if (texture == IntPtr.Zero) throw new BackendException("Failed to create texture.");
+		SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
 
 		return texture;
 	}

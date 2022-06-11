@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Numerics;
 using System.Threading;
 using CodeHelpers;
 using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grid;
@@ -20,7 +20,8 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 
 	public RenderBuffer(Int2 size, Int2 tileSize) : base(size)
 	{
-		Assert.IsTrue(tileSize > Int2.Zero);
+		if (!BitOperations.IsPow2(tileSize.X) || !BitOperations.IsPow2(tileSize.Y)) throw new ArgumentOutOfRangeException(nameof(tileSize));
+
 		this.tileSize = tileSize;
 	}
 
