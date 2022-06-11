@@ -1,15 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Common;
 using Echo.Common.Compute;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Textures.Evaluation;
+using Echo.Core.Textures.Grid;
 using Echo.UserInterface.Backend;
+using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 using SDL2;
 
@@ -31,9 +35,9 @@ public class TilesUI : AreaUI
 	uint nextExploreIndex;
 
 	float displayScale;
-	Vector2 displayCenter;
+	Float2 displayCenter;
 
-	protected override void Draw(in Moment moment)
+	protected override void UpdateImpl(in Moment moment)
 	{
 		if (Device.Instance?.LatestOperation is not EvaluationOperation { profile.Buffer: { } buffer } operation) return;
 
@@ -46,12 +50,8 @@ public class TilesUI : AreaUI
 
 		if (operation != lastOperation)
 		{
-			ClearTexture();
-			indexQueue.Clear();
-			nextExploreIndex = 0;
-
-			displayScale = 0f;
-			displayCenter = Vector2.Zero;
+			RecenterView();
+			RestartTextureUpdate();
 			lastOperation = operation;
 		}
 
@@ -64,14 +64,8 @@ public class TilesUI : AreaUI
 		}
 		while (tile != null);
 
-		//Draw all
-		BeginUpdateDisplay(out ImDrawListPtr drawList, out Vector2 center, out Vector2 extend);
-
-		drawList.AddImage(texture, center - extend, center + extend);
-
-		// foreach (ref readonly Procedure procedure in GatherValidProcedures(operation)) { }
-
-		drawList.PopClipRect();
+		//Draw everything
+		Draw(operation);
 	}
 
 	protected override void Dispose(bool disposing)
@@ -80,31 +74,28 @@ public class TilesUI : AreaUI
 		base.Dispose(disposing);
 	}
 
-	unsafe void ClearTexture()
+	void RecenterView()
 	{
-		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
-
-		if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF1F1511u);
-		else throw new InvalidOperationException("Fill assumption with contiguous memory from SDL2 backend is violated!");
-
-		SDL_UnlockTexture(texture);
+		displayScale = 0f;
+		displayCenter = Float2.Zero;
 	}
 
-	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)
+	void RestartTextureUpdate()
 	{
-		Utility.EnsureCapacity(ref procedures, operation.WorkerCount);
+		//Clear queue
+		indexQueue.Clear();
+		nextExploreIndex = 0;
 
-		//Find the filter through the procedures
-		SpanFill<Procedure> fill = procedures;
-		SpanFill<Procedure> result = procedures;
-		operation.FillWorkerProcedures(ref fill);
+		//Clear texture
+		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
 
-		foreach (ref readonly Procedure procedure in fill.Filled)
+		unsafe
 		{
-			if (procedure.Progress > 0d) result.Add(procedure);
+			if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF1F1511u);
+			else throw new InvalidOperationException("Fill assumption with contiguous memory from SDL2 backend is violated!");
 		}
 
-		return result.Filled;
+		SDL_UnlockTexture(texture);
 	}
 
 	IEvaluationReadTile RequestUpdateTile(EvaluationOperation operation)
@@ -177,63 +168,179 @@ public class TilesUI : AreaUI
 		SDL_UnlockTexture(texture);
 	}
 
-	void BeginUpdateDisplay(out ImDrawListPtr drawList, out Vector2 center, out Vector2 extend)
+	void SaveRenderBuffer(EvaluationOperation operation)
 	{
-		//Find available content space
-		Vector2 contentMin = ImGui.GetCursorScreenPos();
-		Vector2 contentMax = contentMin + ImGui.GetContentRegionAvail();
+		TextureGrid buffer = (TextureGrid)operation.destination;
+		ActionQueue.Enqueue(Serialize, "Save Evaluation Layer");
 
-		Vector2 contentSize = contentMax - contentMin;
-		Vector2 contentCenter = (contentMax + contentMin) / 2f;
+		void Serialize() => buffer.Save("render.png");
+	}
 
-		//Orient display from input
-		ImGui.SetCursorScreenPos(contentMin);
-		ImGui.PushAllowKeyboardFocus(false);
-		ImGui.InvisibleButton("Display", contentSize);
-		ImGui.PopAllowKeyboardFocus();
+	void Draw(EvaluationOperation operation)
+	{
+		if (ImGui.Button("Save Buffer")) SaveRenderBuffer(operation);
 
-		if (ImGui.IsItemActive() || ImGui.IsItemHovered()) OrientDisplay(contentCenter);
+		ImGui.SameLine();
+		if (ImGui.Button("Recenter View")) RecenterView();
 
-		//Calculate correct size
-		float aspect = (float)textureSize.X / textureSize.Y;
-		float contentAspect = contentSize.X / contentSize.Y;
-		Vector2 size;
+		ImGui.SameLine();
+		if (ImGui.Button("Refresh Tiles")) RestartTextureUpdate();
 
-		if (aspect > contentAspect)
+		FindCurrentRegionBounds(out Bounds region);
+		CalculateContentBounds(region, out Bounds content);
+
+		ImGui.SameLine();
+		Int2? position = TryGetMousePixelPosition(operation, region, content);
+		if (position != null)
 		{
-			float width = contentSize.X;
-			size = new Vector2(width, width / aspect);
+			ImGui.TextUnformatted(position.ToString());
+		}
+		else ImGui.TextUnformatted("Pixel Content Unavailable");
+
+		var drawList = ImGui.GetWindowDrawList();
+
+		drawList.PushClipRect(region.MinVector2, region.MaxVector2);
+		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
+
+		DrawCurrentTiles(operation, drawList, content);
+
+		drawList.PopClipRect();
+		ProcessMouseInput(region);
+	}
+
+	void FindCurrentRegionBounds(out Bounds region)
+	{
+		Float2 min = ImGui.GetCursorScreenPos().AsFloat2();
+		Float2 max = min + ImGui.GetContentRegionAvail().AsFloat2();
+		region = new Bounds((max + min) / 2f, (max - min) / 2f);
+	}
+
+	void CalculateContentBounds(in Bounds region, out Bounds content)
+	{
+		float aspect = (float)textureSize.X / textureSize.Y;
+		float regionAspect = region.extend.X / region.extend.Y;
+		Float2 extend;
+
+		if (aspect > regionAspect)
+		{
+			float width = region.extend.X;
+			extend = new Float2(width, width / aspect);
 		}
 		else
 		{
-			float height = contentSize.Y;
-			size = new Vector2(height * aspect, height);
+			float height = region.extend.Y;
+			extend = new Float2(height * aspect, height);
 		}
 
-		//Output orientation and begin draw list
-		center = contentCenter + displayCenter;
-		extend = size / 2f * MathF.Exp(displayScale);
-
-		drawList = ImGui.GetWindowDrawList();
-		drawList.PushClipRect(contentMin, contentMax);
+		content = new Bounds(region.center + displayCenter, extend * MathF.Exp(displayScale));
 	}
 
-	void OrientDisplay(Vector2 contentCenter)
+	Int2? TryGetMousePixelPosition(EvaluationOperation operation, in Bounds region, in Bounds content)
 	{
+		if (!ImGui.IsMouseHoveringRect(region.MinVector2, region.MaxVector2, false)) return null;
+
+		Float2 mouse = ImGui.GetMousePos().AsFloat2();
+		Float2 size = operation.profile.Buffer.size;
+
+		Float2 percent = Float2.InverseLerp(content.Min, content.Max, mouse);
+		if (!(Float2.Zero <= percent) || !(percent <= Float2.One)) return null;
+		return (Int2)(size * percent);
+	}
+
+	void ProcessMouseInput(in Bounds region)
+	{
+		//Detect for interaction
+		ImGui.SetCursorScreenPos(region.MinVector2);
+		ImGui.PushAllowKeyboardFocus(false);
+		ImGui.InvisibleButton("Display", region.extend.AsVector2() * 2f);
+		ImGui.PopAllowKeyboardFocus();
+
+		if (!ImGui.IsItemActive() && !ImGui.IsItemHovered()) return;
+
 		var io = ImGui.GetIO();
 		float zoom = io.MouseWheel * 0.1f;
 
 		//Move if the left mouse button is held 
-		if (io.MouseDown[0]) displayCenter += io.MouseDelta;
+		if (io.MouseDown[0]) displayCenter += io.MouseDelta.AsFloat2();
 		if (zoom == 0) return;
 
 		//Math to zoom towards cursor
-		Vector2 offset = contentCenter - io.MousePos;
-		Vector2 point = (offset + displayCenter) / MathF.Exp(displayScale);
+		Float2 offset = region.center - io.MousePos.AsFloat2();
+		Float2 point = (offset + displayCenter) / MathF.Exp(displayScale);
 		displayCenter = point * MathF.Exp(displayScale += zoom) - offset;
+	}
+
+	void DrawCurrentTiles(EvaluationOperation operation, ImDrawListPtr drawList, in Bounds content)
+	{
+		Float2 sizeR = operation.profile.Buffer.sizeR;
+		IEvaluationLayer layer = operation.destination;
+
+		Float2 invertMin = new Float2(content.Min.X, content.Max.Y);
+		Float2 invertMax = new Float2(content.Max.X, content.Min.Y);
+
+		uint progressColor = GetColorFromStyle(ImGuiCol.FrameBg);
+		uint borderColor = GetColorFromStyle(ImGuiCol.CheckMark);
+
+		foreach (ref readonly Procedure procedure in GatherValidProcedures(operation))
+		{
+			Int2 tilePosition = operation.tilePositions[(int)procedure.index];
+			layer.GetTileBounds(tilePosition, out Int2 tileMin, out Int2 tileMax);
+
+			Float2 min = Float2.Lerp(invertMin, invertMax, tileMin * sizeR);
+			Float2 max = Float2.Lerp(invertMin, invertMax, tileMax * sizeR);
+
+			float progress = (float)procedure.Progress;
+			Float2 height = new(max.X, Scalars.Lerp(min.Y, max.Y, progress));
+			drawList.AddRectFilled(min.AsVector2(), height.AsVector2(), progressColor);
+			drawList.AddRect(min.AsVector2(), max.AsVector2(), borderColor);
+		}
+	}
+
+	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)
+	{
+		Utility.EnsureCapacity(ref procedures, operation.WorkerCount);
+
+		//Find the filter through the procedures
+		SpanFill<Procedure> fill = procedures;
+		SpanFill<Procedure> result = procedures;
+		operation.FillWorkerProcedures(ref fill);
+
+		foreach (ref readonly Procedure procedure in fill.Filled)
+		{
+			if (procedure.Progress > 0d || procedure.index != 0) result.Add(procedure);
+		}
+
+		return result.Filled;
 	}
 
 	void ReleaseUnmanagedResources() => Root.Backend.DestroyTexture(ref texture);
 
 	~TilesUI() => Dispose(false);
+
+	static uint GetColorFromStyle(ImGuiCol styleColor)
+	{
+		var style = ImGui.GetStyle();
+
+		Vector4 c = style.Colors[(int)styleColor];
+		var color = new Color32(c.X, c.Y, c.Z, c.W);
+		return Unsafe.As<Color32, uint>(ref color);
+	}
+
+	readonly struct Bounds
+	{
+		public Bounds(Float2 center, Float2 extend)
+		{
+			this.center = center;
+			this.extend = extend;
+		}
+
+		public readonly Float2 center;
+		public readonly Float2 extend;
+
+		public Float2 Min => center - extend;
+		public Float2 Max => center + extend;
+
+		public Vector2 MinVector2 => Min.AsVector2();
+		public Vector2 MaxVector2 => Max.AsVector2();
+	}
 }
