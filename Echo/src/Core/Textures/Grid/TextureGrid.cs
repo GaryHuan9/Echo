@@ -15,8 +15,7 @@ namespace Echo.Core.Textures.Grid;
 /// <summary>
 /// A <see cref="Texture"/> only defined on integer positions and bounded between zero (inclusive) and <see cref="size"/> (exclusive).
 /// </summary>
-/// <typeparam name="T">The type of <see cref="IColor{T}"/> to use.</typeparam>
-public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
+public abstract class TextureGrid : Texture
 {
 	protected TextureGrid(Int2 size)
 	{
@@ -106,13 +105,6 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	public override Int2 DiscreteResolution => size;
 
 	/// <summary>
-	/// Gets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
-	/// </summary>
-	/// <param name="position">The integral pixel position to get the value from. This <see cref="Int2"/>
-	/// must be between <see cref="Int2.Zero"/> (inclusive) and <see cref="size"/> (exclusive).</param>
-	public abstract T this[Int2 position] { get; }
-
-	/// <summary>
 	/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
 	/// </summary>
 	public virtual void ForEach(Action<Int2> action, bool parallel = true)
@@ -139,14 +131,7 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	/// Saves this <see cref="TextureGrid{T}"/> to <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
 	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
 	/// </summary>
-	public void Save(string path, Serializer serializer = null)
-	{
-		serializer ??= Serializer.Find(path);
-		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "cannot be found");
-
-		using Stream stream = File.Open(AssetsUtility.GetAssetsPath(path), FileMode.Create);
-		serializer.Serialize(this, stream);
-	}
+	public abstract void Save(string path, Serializer serializer = null);
 
 	/// <summary>
 	/// Converts a texture coordinate to an integral pixel position.
@@ -162,12 +147,6 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	/// <remarks>This operation is not bounded by this <see cref="TextureGrid{T}"/>'s <see cref="size"/>.</remarks>
 	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
 
-	protected sealed override RGBA128 Evaluate(Float2 uv)
-	{
-		Assert.IsTrue(float.IsFinite(uv.Sum));
-		return Filter.Evaluate(this, uv);
-	}
-
 	/// <summary>
 	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid{T}"/>.
 	/// </summary>
@@ -176,15 +155,16 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 	protected void AssertValidPosition(Int2 position) => AssertValidPosition(position, size);
 
 	/// <summary>
-	/// Performs a <see cref="Load"/> operation asynchronously.
+	/// Performs a <see cref="Load{T}"/> operation asynchronously.
 	/// </summary>
-	public static Task<ArrayGrid<T>> LoadAsync(string path, Serializer serializer = null) => Task.Run(() => Load(path, serializer));
+	public static Task<ArrayGrid<T>> LoadAsync<T>(string path, Serializer serializer = null)
+		where T : unmanaged, IColor<T> => Task.Run(() => Load<T>(path, serializer));
 
 	/// <summary>
 	/// Loads a <see cref="ArrayGrid{T}"/> from <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
 	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
 	/// </summary>
-	public static ArrayGrid<T> Load(string path, Serializer serializer = null)
+	public static ArrayGrid<T> Load<T>(string path, Serializer serializer = null) where T : unmanaged, IColor<T>
 	{
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
@@ -214,5 +194,40 @@ public abstract class TextureGrid<T> : Texture where T : unmanaged, IColor<T>
 			BitOperations.IsPow2(size.X) ? BitOperations.Log2((uint)size.X) : -1,
 			BitOperations.IsPow2(size.Y) ? BitOperations.Log2((uint)size.Y) : -1
 		);
+	}
+}
+
+/// <inheritdoc cref="TextureGrid"/>
+/// <typeparam name="T">The type of <see cref="IColor{T}"/> to use.</typeparam>
+/// <remarks>This class is the generic variant of <see cref="TextureGrid"/>. Under normal usage, this class should be 
+/// preferred over the non-generic version. Only use the non-generic version when a common base class ie needed.</remarks>
+public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T>
+{
+	protected TextureGrid(Int2 size) : base(size) { }
+
+	/// <summary>
+	/// Gets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
+	/// </summary>
+	/// <param name="position">The integral pixel position to get the value from. This <see cref="Int2"/> must
+	/// be between <see cref="Int2.Zero"/> (inclusive) and <see cref="TextureGrid.size"/> (exclusive).</param>
+	public abstract T this[Int2 position] { get; }
+
+	/// <summary>
+	/// Saves this <see cref="TextureGrid{T}"/> to <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
+	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
+	/// </summary>
+	public override void Save(string path, Serializer serializer = null)
+	{
+		serializer ??= Serializer.Find(path);
+		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "cannot be found");
+
+		using Stream stream = File.Open(AssetsUtility.GetAssetsPath(path), FileMode.Create);
+		serializer.Serialize(this, stream);
+	}
+
+	protected sealed override RGBA128 Evaluate(Float2 uv)
+	{
+		Assert.IsTrue(float.IsFinite(uv.Sum));
+		return Filter.Evaluate(this, uv);
 	}
 }

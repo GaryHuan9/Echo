@@ -16,7 +16,7 @@ public abstract class AreaUI : IDisposable
 
 	public virtual void Update(in Moment moment)
 	{
-		if (ImGui.Begin(name)) Draw(moment);
+		if (ImGui.Begin(name)) UpdateImpl(moment);
 		ImGui.End();
 	}
 
@@ -26,7 +26,7 @@ public abstract class AreaUI : IDisposable
 		GC.SuppressFinalize(this);
 	}
 
-	protected abstract void Draw(in Moment moment);
+	protected abstract void UpdateImpl(in Moment moment);
 
 	protected virtual void Dispose(bool disposing) { }
 }

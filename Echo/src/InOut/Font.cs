@@ -14,7 +14,7 @@ public class Font
 {
 	Font(string path)
 	{
-		texture = TextureGrid<RGB128>.Load(path);
+		texture = TextureGrid.Load<RGB128>(path);
 
 		Int2 size = texture.size;
 		Int2 glyph = size / MapSize;
