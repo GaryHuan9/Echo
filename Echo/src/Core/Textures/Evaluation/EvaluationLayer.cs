@@ -34,6 +34,14 @@ public interface IEvaluationLayer
 	/// </summary>
 	/// <param name="tile">The <see cref="IEvaluationWriteTile"/> to apply.</param>
 	void Apply(IEvaluationWriteTile tile);
+
+	/// <summary>
+	/// Gets the tile bounds at a particular tile position.
+	/// </summary>
+	/// <param name="tilePosition">The tile position to get the bounds of.</param>
+	/// <param name="min">The minimum pixel position of the tile (inclusive).</param>
+	/// <param name="max">The maximum pixel position of the tile (exclusive).</param>
+	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max);
 }
 
 /// <summary>
@@ -121,12 +129,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		foreach (ref T[] buffer in tileBuffers.AsSpan()) Interlocked.Exchange(ref buffer, null);
 	}
 
-	/// <summary>
-	/// Gets the tile bounds at a particular tile position.
-	/// </summary>
-	/// <param name="tilePosition">The tile position to get the bounds of.</param>
-	/// <param name="min">The minimum pixel position of the tile (inclusive).</param>
-	/// <param name="max">The maximum pixel position of the tile (exclusive).</param>
+	/// <inheritdoc/>
 	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max)
 	{
 		AssertValidPosition(tilePosition, tileRange);

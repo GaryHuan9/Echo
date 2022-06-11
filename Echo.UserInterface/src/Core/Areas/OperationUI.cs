@@ -22,7 +22,7 @@ public class OperationUI : AreaUI
 	EventRow[] eventRows;
 	readonly WorkerData workerData = new();
 
-	protected override void Draw(in Moment moment)
+	protected override void UpdateImpl(in Moment moment)
 	{
 		var device = Device.Instance;
 		var operations = device == null ? ReadOnlySpan<Operation>.Empty : device.PastOperations;

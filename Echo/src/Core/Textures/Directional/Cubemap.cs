@@ -37,7 +37,7 @@ public class Cubemap : IDirectionalTexture
 		for (int i = 0; i < length; i++)
 		{
 			string fullPath = Path.Combine(path, fileNames[i]);
-			tasks[i] = TextureGrid<RGB128>.LoadAsync(fullPath);
+			tasks[i] = TextureGrid.LoadAsync<RGB128>(fullPath);
 		}
 
 		for (int i = 0; i < length; i++) textures[i] = tasks[i].Result;

@@ -9,7 +9,7 @@ public class ActionsUI : AreaUI
 {
 	public ActionsUI() : base("Actions") { }
 
-	protected override void Draw(in Moment moment)
+	protected override void UpdateImpl(in Moment moment)
 	{
 		if (ImGui.Button("Clear All")) ActionQueue.ClearHistory();
 

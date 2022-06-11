@@ -23,7 +23,7 @@ public class SystemUI : AreaUI
 
 	bool HasDevice => device is { Disposed: false };
 
-	protected override void Draw(in Moment moment)
+	protected override void UpdateImpl(in Moment moment)
 	{
 		ImGui.Text(Environment.OSVersion.VersionString);
 		ImGui.Text(Debugger.IsAttached ? "Debugger Attached" : "Debugger Not Attached");
