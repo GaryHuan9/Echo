@@ -36,9 +36,8 @@ public class OperationUI : AreaUI
 
 		UpdateOperationLabels(operations);
 
-		// ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
-		// var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
-		var operation = operations[lastOperationCount - 1];
+		ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
+		var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
 
 		double progress = operation.Progress;
 		TimeSpan time = operation.Time;
@@ -52,15 +51,16 @@ public class OperationUI : AreaUI
 	void UpdateOperationLabels(ReadOnlySpan<Operation> operations)
 	{
 		if (operations.Length == lastOperationCount) return;
-		Utility.EnsureCapacity(ref operationLabels, operations.Length);
+		Array.Resize(ref operationLabels, operations.Length);
 
 		for (int i = 0; i < operations.Length; i++)
 		{
 			Operation operation = operations[i];
 			string creation = operation.creationTime.ToStringDefault();
-			operationLabels[i] = $"[{creation}] {operation.GetType()}";
+			operationLabels[i] = $"{operation.GetType().Name} ({creation})";
 		}
 
+		selectionIndex = operations.Length - 1;
 		lastOperationCount = operations.Length;
 	}
 
