@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
-using Echo.Common;
+using Echo.Core.Common;
 
 namespace Echo.UserInterface.Core;
 

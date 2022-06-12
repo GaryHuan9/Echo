@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Packed;
-using Echo.Common.Mathematics;
-using Echo.Common.Mathematics.Randomization;
+using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;

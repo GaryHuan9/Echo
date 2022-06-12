@@ -1,6 +1,6 @@
 using System;
-using Echo.Common.Mathematics.Randomization;
-using Echo.Common.Memory;
+using Echo.Core.Common.Mathematics.Randomization;
+using Echo.Core.Common.Memory;
 using NUnit.Framework;
 
 namespace Echo.UnitTests.View;

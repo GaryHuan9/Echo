@@ -40,7 +40,7 @@ public sealed class EchoUI : IApplication
 		io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 		io.ConfigWindowsMoveFromTitleBarOnly = true;
 
-		io.Fonts.AddFontFromFileTTF("Assets/Fonts/JetBrainsMono/JetBrainsMono-Bold.ttf", 16f);
+		io.Fonts.AddFontFromFileTTF("ext/JetBrainsMono/JetBrainsMono-Bold.ttf", 16f);
 		io.IniSavingRate = float.MaxValue;
 
 		ImGuiStylePtr style = ImGui.GetStyle();

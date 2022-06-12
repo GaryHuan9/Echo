@@ -369,16 +369,10 @@ MigrationBackup/
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
 
-*.suo
-*.user
-.vs/
-[Bb]in/
-[Oo]bj/
-_UpgradeReport_Files/
 [Pp]ackages/
 
 Thumbs.db
 Desktop.ini
 .DS_Store
-Echo/Assets/Models/Excluded/
-!Echo/Oidn/bin
+Echo.Core/ext/Scenes/*
+!Echo.Core/ext/Scenes/SingleBunny
