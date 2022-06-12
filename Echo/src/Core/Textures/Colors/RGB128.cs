@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics;
 

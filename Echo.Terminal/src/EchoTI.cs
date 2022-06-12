@@ -1,5 +1,4 @@
-﻿using System;
-using CodeHelpers.Packed;
+﻿using CodeHelpers.Packed;
 using Echo.Common.Compute;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
@@ -7,10 +6,8 @@ using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Examples;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
-using Echo.Core.Textures.Grid;
 using Echo.Terminal.Application;
 using Echo.Terminal.Application.Report;
-using Echo.Terminal.Core;
 using Echo.Terminal.Core.Interface;
 
 namespace Echo.Terminal;
