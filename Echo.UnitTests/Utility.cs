@@ -1,4 +1,4 @@
-﻿using Echo.Common.Mathematics.Randomization;
+﻿using Echo.Core.Common.Mathematics.Randomization;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 

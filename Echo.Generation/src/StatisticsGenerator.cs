@@ -25,7 +25,7 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 {
 	const string MethodName = "Report";
 	const string InterfaceName = "IStatistics";
-	const string NamespaceName = "Echo.Common.Compute.Statistics";
+	const string NamespaceName = "Echo.Core.Common.Compute.Statistics";
 	const string AttributeName = "GeneratedStatisticsAttribute";
 
 	/// <summary>

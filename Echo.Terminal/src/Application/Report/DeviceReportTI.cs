@@ -1,5 +1,5 @@
 ﻿using System.Collections.Immutable;
-using Echo.Common.Compute;
+using Echo.Core.Common.Compute;
 using Echo.Terminal.Core.Display;
 
 namespace Echo.Terminal.Application.Report;

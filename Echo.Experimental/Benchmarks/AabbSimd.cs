@@ -2,9 +2,9 @@
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using Echo.Common.Mathematics.Primitives;
-using Echo.Common.Mathematics.Randomization;
 using Echo.Core.Aggregation.Acceleration;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Mathematics.Randomization;
 
 namespace Echo.Experimental.Benchmarks;
 

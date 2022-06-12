@@ -1,8 +1,8 @@
 ﻿using System;
-using Echo.Common;
-using Echo.Common.Compute;
-using Echo.Common.Compute.Statistics;
-using Echo.Common.Memory;
+using Echo.Core.Common;
+using Echo.Core.Common.Compute;
+using Echo.Core.Common.Compute.Statistics;
+using Echo.Core.Common.Memory;
 using Echo.Terminal.Core.Display;
 
 namespace Echo.Terminal.Application.Report;

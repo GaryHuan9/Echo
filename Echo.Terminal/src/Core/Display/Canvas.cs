@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using Echo.Common.Memory;
+using Echo.Core.Common.Memory;
 
 namespace Echo.Terminal.Core.Display;
 
