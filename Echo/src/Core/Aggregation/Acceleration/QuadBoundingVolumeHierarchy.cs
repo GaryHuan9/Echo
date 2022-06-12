@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Intrinsics;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;

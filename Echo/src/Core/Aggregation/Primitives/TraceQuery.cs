@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics;
 using Echo.Common.Mathematics.Primitives;

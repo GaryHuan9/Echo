@@ -1,5 +1,4 @@
-﻿using System;
-using CodeHelpers.Packed;
+﻿using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures;

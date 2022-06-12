@@ -4,7 +4,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using CodeHelpers.Diagnostics;
-using Echo.Common.Mathematics;
 
 namespace Echo.Common.Compute;
 
