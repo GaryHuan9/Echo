@@ -52,14 +52,14 @@ public sealed class EchoUI : IApplication
 		foreach (AreaUI area in areas) area.Initialize();
 	}
 
-	public void Update(in Moment moment)
+	public void NewFrame(in Moment moment)
 	{
 		DrawMenuBar();
 		ImGui.DockSpaceOverViewport(ImGui.GetMainViewport());
 
 		ImGui.ShowDemoWindow();
 
-		foreach (AreaUI area in areas) area.Update(moment);
+		foreach (AreaUI area in areas) area.NewFrame(moment);
 	}
 
 	public void Dispose()

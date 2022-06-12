@@ -22,7 +22,7 @@ public class OperationUI : AreaUI
 	EventRow[] eventRows;
 	readonly WorkerData workerData = new();
 
-	protected override void UpdateImpl(in Moment moment)
+	protected override void Update(in Moment moment)
 	{
 		var device = Device.Instance;
 		var operations = device == null ? ReadOnlySpan<Operation>.Empty : device.PastOperations;
@@ -37,7 +37,8 @@ public class OperationUI : AreaUI
 		UpdateOperationLabels(operations);
 
 		// ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
-		var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
+		// var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
+		var operation = operations[lastOperationCount - 1];
 
 		double progress = operation.Progress;
 		TimeSpan time = operation.Time;
