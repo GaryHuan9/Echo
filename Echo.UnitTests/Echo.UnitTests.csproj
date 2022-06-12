@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Echo\Echo.csproj" />
+      <ProjectReference Include="..\Echo.Core\Echo.Core.csproj" />
     </ItemGroup>
 
 </Project>

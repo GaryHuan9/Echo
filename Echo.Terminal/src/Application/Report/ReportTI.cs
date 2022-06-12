@@ -1,4 +1,4 @@
-﻿using Echo.Common.Compute;
+﻿using Echo.Core.Common.Compute;
 using Echo.Terminal.Core.Display;
 using Echo.Terminal.Core.Interface;
 

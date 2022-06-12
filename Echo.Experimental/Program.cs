@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using Echo.Common.Mathematics.Randomization;
+using Echo.Core.Common.Mathematics.Randomization;
 
 namespace Echo.Experimental;
 

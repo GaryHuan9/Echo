@@ -1,6 +1,6 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
-using Echo.Common.Mathematics;
+using Echo.Core.Common.Mathematics;
 using NUnit.Framework;
 
 namespace Echo.UnitTests;

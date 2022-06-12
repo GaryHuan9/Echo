@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 using CodeHelpers.Packed;
-using Echo.Common.Compute;
+using Echo.Core.Common.Compute;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Operations;

@@ -7,9 +7,9 @@ using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using Echo.Common;
-using Echo.Common.Compute;
-using Echo.Common.Memory;
+using Echo.Core.Common;
+using Echo.Core.Common.Compute;
+using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
@@ -53,7 +53,6 @@ public class TilesUI : AreaUI
 
 		if (operation != lastOperation)
 		{
-			RecenterView();
 			RestartTextureUpdate();
 			lastOperation = operation;
 		}
@@ -75,12 +74,6 @@ public class TilesUI : AreaUI
 	{
 		ReleaseUnmanagedResources();
 		base.Dispose(disposing);
-	}
-
-	void RecenterView()
-	{
-		displayScale = 0f;
-		displayCenter = Float2.Zero;
 	}
 
 	void RestartTextureUpdate()
@@ -182,7 +175,11 @@ public class TilesUI : AreaUI
 		}
 
 		ImGui.SameLine();
-		if (ImGui.Button("Recenter View")) RecenterView();
+		if (ImGui.Button("Recenter View"))
+		{
+			displayScale = 0f;
+			displayCenter = Float2.Zero;
+		}
 
 		ImGui.SameLine();
 		if (ImGui.Button("Refresh Tiles")) RestartTextureUpdate();
