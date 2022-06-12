@@ -42,6 +42,13 @@ public interface IEvaluationLayer
 	/// <param name="min">The minimum pixel position of the tile (inclusive).</param>
 	/// <param name="max">The maximum pixel position of the tile (exclusive).</param>
 	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max);
+
+	/// <summary>
+	/// Gets the position of the tile that contains a particular pixel position.
+	/// </summary>
+	/// <param name="position">The input pixel position.</param>
+	/// <returns>The position of the tile.</returns>
+	public Int2 GetTilePosition(Int2 position);
 }
 
 /// <summary>
@@ -56,7 +63,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		this.tileSize = tileSize;
 
 		tileRange = size.CeiledDivide(tileSize);
-		tileBuffers = new T[tileRange.Product][];
+		tiles = new ReadTile[tileRange.Product];
 
 		logTileSize = new Int2
 		(
@@ -75,7 +82,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// </summary>
 	public readonly Int2 tileRange;
 
-	readonly T[][] tileBuffers;
+	readonly ReadTile[] tiles;
 	readonly Int2 logTileSize;
 
 	public override T this[Int2 position]
@@ -84,11 +91,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		{
 			Int2 tilePosition = GetTilePosition(position);
 			int tileIndex = GetTileIndex(tilePosition);
-			T[] buffer = tileBuffers[tileIndex];
-			if (buffer == null) return default;
-
-			GetTileBounds(tilePosition, out Int2 min, out Int2 max);
-			return buffer[GetLocalOffset(position, min, max)];
+			return tiles[tileIndex]?[position] ?? default;
 		}
 	}
 
@@ -104,11 +107,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	public IEvaluationReadTile RequestTile(Int2 tilePosition)
 	{
 		AssertValidPosition(tilePosition, tileRange);
-		var buffer = tileBuffers[GetTileIndex(tilePosition)];
-		if (buffer == null) return null;
-
-		GetTileBounds(tilePosition, out Int2 min, out Int2 max);
-		return new ReadTile(tilePosition, min, max, buffer);
+		return tiles[GetTileIndex(tilePosition)];
 	}
 
 	/// <inheritdoc/>
@@ -117,8 +116,12 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		var writeTile = tile as WriteTile;
 		T[] buffer = writeTile?.MoveBuffer();
 
-		if (buffer == null) throw new ArgumentException($"Invalid {nameof(IEvaluationTile)} to write.");
-		Interlocked.Exchange(ref tileBuffers[GetTileIndex(writeTile.tilePosition)], buffer);
+		if (buffer == null) throw new ArgumentException($"Invalid {nameof(IEvaluationTile)} to write.", nameof(tile));
+
+		GetTileBounds(writeTile.tilePosition, out Int2 min, out Int2 max);
+		var readTile = new ReadTile(writeTile.tilePosition, min, max, buffer);
+		ref ReadTile destination = ref tiles[GetTileIndex(writeTile.tilePosition)];
+		Interlocked.Exchange(ref destination, readTile);
 	}
 
 	/// <summary>
@@ -126,7 +129,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// </summary>
 	public void Clear()
 	{
-		foreach (ref T[] buffer in tileBuffers.AsSpan()) Interlocked.Exchange(ref buffer, null);
+		foreach (ref ReadTile tile in tiles.AsSpan()) Interlocked.Exchange(ref tile, null);
 	}
 
 	/// <inheritdoc/>
@@ -140,7 +143,8 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		AssertMinMax(min, max);
 	}
 
-	Int2 GetTilePosition(Int2 position)
+	/// <inheritdoc/>
+	public Int2 GetTilePosition(Int2 position)
 	{
 		AssertValidPosition(position);
 
@@ -224,7 +228,9 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 
 		readonly T[] buffer;
 
+		public T this[Int2 position] => buffer[GetLocalOffset(position, Min, Max)];
+
 		/// <inheritdoc/>
-		RGBA128 IEvaluationReadTile.this[Int2 position] => buffer[GetLocalOffset(position, Min, Max)].ToRGBA128();
+		RGBA128 IEvaluationReadTile.this[Int2 position] => this[position].ToRGBA128();
 	}
 }

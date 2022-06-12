@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using CodeHelpers.Packed;
 using Echo.Common.Compute;
 using Echo.Core.Evaluation.Distributions.Continuous;
@@ -8,7 +9,6 @@ using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Examples;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
-using Echo.Core.Textures.Grid;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -23,7 +23,18 @@ public class SystemUI : AreaUI
 
 	bool HasDevice => device is { Disposed: false };
 
-	protected override void UpdateImpl(in Moment moment)
+	public override void Initialize()
+	{
+		base.Initialize();
+
+		if (Environment.GetCommandLineArgs().Contains("-start", StringComparer.OrdinalIgnoreCase))
+		{
+			device = Device.Create();
+			DispatchDevice(device);
+		}
+	}
+
+	protected override void Update(in Moment moment)
 	{
 		ImGui.Text(Environment.OSVersion.VersionString);
 		ImGui.Text(Debugger.IsAttached ? "Debugger Attached" : "Debugger Not Attached");
@@ -206,7 +217,7 @@ public class SystemUI : AreaUI
 				Evaluator = new PathTracedEvaluator(),
 				Distribution = new StratifiedDistribution { Extend = 64 },
 				Buffer = new RenderBuffer(new Int2(960, 540)),
-				Pattern = new OrderedPattern(),
+				Pattern = new SpiralPattern(),
 				MinEpoch = 1,
 				MaxEpoch = 1
 			};
