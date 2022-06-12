@@ -16,7 +16,7 @@ namespace Echo.Core.Textures.Evaluation;
 /// </summary>
 public sealed class RenderBuffer : TextureGrid<RGB128>
 {
-	public RenderBuffer(Int2 size, int tileSize = 16) : this(size, (Int2)tileSize) { }
+	public RenderBuffer(Int2 size, int tileSize = 32) : this(size, (Int2)tileSize) { }
 
 	public RenderBuffer(Int2 size, Int2 tileSize) : base(size)
 	{

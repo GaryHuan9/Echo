@@ -12,6 +12,7 @@ public readonly struct Moment
 	{
 		elapsed = stopwatch.Elapsed;
 		delta = elapsed - previous.elapsed;
+		frame = previous.frame + 1;
 	}
 
 	/// <summary>
@@ -23,4 +24,9 @@ public readonly struct Moment
 	/// The time since the last frame that was drawn.
 	/// </summary>
 	public readonly TimeSpan delta;
+
+	/// <summary>
+	/// The frame count of the current frame.
+	/// </summary>
+	public readonly ulong frame;
 }
