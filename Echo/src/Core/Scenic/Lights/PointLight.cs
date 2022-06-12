@@ -6,7 +6,6 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
-using Echo.Common;
 
 namespace Echo.Core.Scenic.Lights;
 

@@ -8,8 +8,6 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Generative;
-using Echo.Core.Textures.Grid;
 
 namespace Echo.Core.Textures;
 

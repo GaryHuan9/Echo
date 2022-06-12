@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Runtime.Intrinsics;
-using System.Xml.Schema;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
