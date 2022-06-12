@@ -1,26 +1,25 @@
-﻿using CodeHelpers;
-using CodeHelpers.Packed;
+﻿using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Primitives;
 using Echo.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures.Grid;
+using Echo.Core.Textures.Colors;
+using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
+/// <summary>
+/// An immutable object with the ability to evaluate a <see cref="PreparedScene"/> through <see cref="Ray"/>s.
+/// </summary>
 public abstract record Evaluator
 {
-	readonly NotNull<string> _destination = "main";
-
 	/// <summary>
-	/// The label of the destination buffer in the <see cref="RenderBuffer"/> to write to.
+	/// Creates or cleans an <see cref="IEvaluationLayer"/> for a new evaluation session.
 	/// </summary>
-	public string Destination
-	{
-		get => _destination;
-		init => _destination = value;
-	}
+	/// <param name="buffer">The destination containing <see cref="RenderBuffer"/>.</param>
+	/// <returns>The <see cref="IEvaluationLayer"/> for this new evaluation session.</returns>
+	public abstract IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer);
 
 	/// <summary>
 	/// Evaluates a <see cref="PreparedScene"/> using this <see cref="Evaluator"/>.
@@ -31,4 +30,20 @@ public abstract record Evaluator
 	/// <param name="allocator">Memory allocator available to be used by this method.</param>
 	/// <remarks>The implementation do not need to invoke <see cref="Allocator.Release"/> before this method returns.</remarks>
 	public abstract Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator);
+
+	/// <summary>
+	/// Default implementation for <see cref="CreateOrClearLayer"/>.
+	/// </summary>
+	/// <param name="buffer">The destination <see cref="RenderBuffer"/>.</param>
+	/// <param name="label">The <see cref="string"/> layer label to use.</param>
+	/// <typeparam name="T">The <see cref="IColor{T}"/> type for this layer.</typeparam>
+	/// <returns>The <see cref="IEvaluationLayer"/> that was found or created.</returns>
+	protected static IEvaluationLayer CreateOrClearLayer<T>(RenderBuffer buffer, string label) where T : unmanaged, IColor<T>
+	{
+		bool found = buffer.TryGetTexture<T, EvaluationLayer<T>>(label, out var layer);
+		if (!found) return buffer.CreateLayer<T>(label);
+
+		layer.Clear();
+		return layer;
+	}
 }

@@ -37,7 +37,7 @@ public abstract class Operation : IDisposable
 	public readonly uint totalProcedureCount;
 
 	/// <summary>
-	/// The <see cref="DateTime"/> when 
+	/// The <see cref="DateTime"/> when this <see cref="Operation"/> was created.
 	/// </summary>
 	public readonly DateTime creationTime;
 
@@ -54,16 +54,24 @@ public abstract class Operation : IDisposable
 	static readonly Stopwatch stopwatch = Stopwatch.StartNew();
 
 	/// <summary>
-	/// Returns whether this operation has been fully completed.
+	/// The number of steps already completed.
 	/// </summary>
-	public bool IsCompleted
+	/// <remarks>This does not mean all steps with <see cref="Procedure.index"/> from 0 (inclusive) to this
+	/// number (exclusive) are completed, because some steps with <see cref="Procedure.index"/> lower than
+	/// this number can still be worked on while other steps with <see cref="Procedure.index"/> higher than
+	/// this number might have already been completed.</remarks>
+	public uint CompletedProcedureCount
 	{
 		get
 		{
-			using var _ = procedureLocker.Fetch();
-			return completedCount == totalProcedureCount;
+			lock (procedureLocker) return completedCount;
 		}
 	}
+
+	/// <summary>
+	/// Whether this operation has been fully completed.
+	/// </summary>
+	public bool IsCompleted => CompletedProcedureCount == totalProcedureCount;
 
 	/// <summary>
 	/// The number of <see cref="IWorker"/>s working on completing this <see cref="Operation"/>.
@@ -191,23 +199,11 @@ public abstract class Operation : IDisposable
 	/// </summary>
 	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Guid"/>s.</param>
 	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
-	public void FillWorkerGuid(ref SpanFill<Guid> fill)
+	public void FillWorkerGuids(ref SpanFill<Guid> fill)
 	{
+		fill.ThrowIfNotEmpty();
 		int length = Math.Min(fill.Length, WorkerCount);
 		for (int i = 0; i < length; i++) fill.Add(workerData[i].workerGuid);
-	}
-
-	/// <summary>
-	/// Fills the current <see cref="Procedure"/> of each of the <see cref="IWorker"/>s of this <see cref="Operation"/>.
-	/// </summary>
-	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Procedure"/>s.</param>
-	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
-	public void FillWorkerProcedures(ref SpanFill<Procedure> fill)
-	{
-		int length = Math.Min(fill.Length, WorkerCount);
-
-		using var _ = procedureLocker.Fetch();
-		for (int i = 0; i < length; i++) fill.Add(workerData[i].procedure);
 	}
 
 	/// <summary>
@@ -220,6 +216,8 @@ public abstract class Operation : IDisposable
 		TimeSpan time = stopwatch.Elapsed;
 		Assert.AreNotEqual(time, default);
 
+		fill.ThrowIfNotEmpty();
+
 		int length = Math.Min(fill.Length, WorkerCount);
 
 		using var _ = totalTimeLocker.Fetch();
@@ -227,8 +225,24 @@ public abstract class Operation : IDisposable
 		for (int i = 0; i < length; i++)
 		{
 			ref readonly WorkerData data = ref workerData[i];
-			fill.Add(data.recordedTime + time - data.timeStarted);
+
+			if (data.timeStarted == default) fill.Add(data.recordedTime);
+			else fill.Add(data.recordedTime + time - data.timeStarted);
 		}
+	}
+
+	/// <summary>
+	/// Fills the current <see cref="Procedure"/> of each of the <see cref="IWorker"/>s of this <see cref="Operation"/>.
+	/// </summary>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="Procedure"/>s.</param>
+	/// <remarks>The maximum number of available items filled from this method is <see cref="WorkerCount"/>.</remarks>
+	public void FillWorkerProcedures(ref SpanFill<Procedure> fill)
+	{
+		fill.ThrowIfNotEmpty();
+		int length = Math.Min(fill.Length, WorkerCount);
+
+		using var _ = procedureLocker.Fetch();
+		for (int i = 0; i < length; i++) fill.Add(workerData[i].procedure);
 	}
 
 	/// <summary>

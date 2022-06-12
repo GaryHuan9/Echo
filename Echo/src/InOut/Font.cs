@@ -14,7 +14,7 @@ public class Font
 {
 	Font(string path)
 	{
-		texture = TextureGrid<RGB128>.Load(path);
+		texture = TextureGrid.Load<RGB128>(path);
 
 		Int2 size = texture.size;
 		Int2 glyph = size / MapSize;
@@ -36,7 +36,7 @@ public class Font
 			foreach (Int2 local in new EnumerableSpace2D(position, position + glyph - Int2.One))
 			{
 				float strength = ((Float4)texture[local]).X;
-				texture[local] = new RGB128(strength);
+				texture.Set(local, new RGB128(strength));
 
 				if (FastMath.AlmostZero(strength)) continue;
 
@@ -54,7 +54,7 @@ public class Font
 		}
 	}
 
-	readonly TextureGrid<RGB128> texture;
+	readonly ArrayGrid<RGB128> texture;
 	readonly Glyph[] glyphs;
 
 	readonly float glyphAspect;
@@ -67,7 +67,7 @@ public class Font
 	/// Draws <paramref name="character"/> to <paramref name="destination"/> at <see cref="center"/>
 	/// with this <see cref="Font"/> and <paramref name="style"/>.
 	/// </summary>
-	public void Draw(TextureGrid<RGB128> destination, char character, Float2 center, Style style)
+	public void Draw(SettableGrid<RGB128> destination, char character, Float2 center, Style style)
 	{
 		Glyph glyph = glyphs[GetIndex(character)];
 		float multiplier = MapSize * style.Height;
@@ -97,7 +97,7 @@ public class Font
 			}
 
 			//Assigns color based on alpha
-			destination[position] = (RGB128)Float4.Lerp(source, color, alpha * lengthR * total);
+			destination.Set(position, (RGB128)Float4.Lerp(source, color, alpha * lengthR * total));
 		}
 	}
 
@@ -105,9 +105,9 @@ public class Font
 	/// Draws <paramref name="text"/> to <paramref name="destination"/> at <see cref="center"/>
 	/// with this <see cref="Font"/> and <paramref name="style"/>.
 	/// </summary>
-	public void Draw(TextureGrid<RGB128> destination, string text, Float2 center, Style style)
+	public void Draw(SettableGrid<RGB128> destination, string text, Float2 center, Style style)
 	{
-		float offset = text.Length / 2f - 0.5f;
+		float offset = text.Length / 2f - 0.5f;	
 		float aspect = style.GlyphWidth * glyphAspect;
 
 		for (int i = 0; i < text.Length; i++)

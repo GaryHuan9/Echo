@@ -168,6 +168,9 @@ sealed class Worker : IWorker, IDisposable
 	/// <inheritdoc/>
 	public event Action<IWorker, bool> OnAwaitChangedEvent;
 
+	/// <inheritdoc/>
+	public int? ThreadId => thread?.ManagedThreadId;
+
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
 	/// </summary>

@@ -113,7 +113,7 @@ public readonly struct AxisAlignedBoundingBox4
 
 	public override unsafe int GetHashCode()
 	{
-		fixed (AxisAlignedBoundingBox4* ptr = &this) return Utilities.GetHashCode(ptr);
+		fixed (AxisAlignedBoundingBox4* ptr = &this) return Utility.GetHashCode(ptr);
 	}
 
 	public readonly struct V2
