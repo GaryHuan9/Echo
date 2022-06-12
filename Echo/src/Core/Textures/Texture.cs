@@ -21,17 +21,13 @@ public abstract class Texture
 
 	public static readonly Pure white = new(RGBA128.White);
 	public static readonly Pure black = new(RGBA128.Black);
+	public static readonly Pure clear = new(RGBA128.Zero);
 	public static readonly Pure normal = new(new RGBA128(0.5f, 0.5f, 1f));
 
 	/// <summary>
 	/// Accesses the content of this <see cref="Texture"/> at <paramref name="texcoord"/>.
 	/// </summary>
 	public RGBA128 this[Float2 texcoord] => Tint.Apply(Evaluate(texcoord));
-
-	/// <summary>
-	/// Copies as much data from <paramref name="texture"/> to this <see cref="Texture"/>.
-	/// </summary>
-	public virtual void CopyFrom(Texture texture) => throw new NotSupportedException();
 
 	/// <summary>
 	/// Gets the <see cref="RGBA128"/> pixel data at the indicated texture

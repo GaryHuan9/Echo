@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Common.Mathematics.Randomization;
@@ -10,6 +11,48 @@ public class Program
 {
 	static void Main()
 	{
+		int[] array0 = new int[10000];
+		int[] array1 = null;
+
+		var resetEvent = new ManualResetEvent(false);
+
+		Thread thread0 = new Thread(Thread0);
+		Thread thread1 = new Thread(Thread1);
+
+		thread0.Start();
+		thread1.Start();
+
+		Console.ReadKey();
+		resetEvent.Set();
+
+		thread0.Join();
+		thread1.Join();
+
+		void Thread0()
+		{
+			Console.WriteLine("Waiting 0");
+			resetEvent.WaitOne();
+
+			for (int i = 0; i < array0.Length; i++) array0[i] = i;
+
+			array1 = array0;
+		}
+
+		void Thread1()
+		{
+			Console.WriteLine("Waiting 1");
+			resetEvent.WaitOne();
+			// Thread.Sleep(1);
+
+			while (array1 == null) ;
+
+			int sum = 0;
+
+			for (int i = array1.Length - 1; i >= 0; i--) sum += array1[i];
+
+			Console.WriteLine(sum);
+		}
+
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();

@@ -18,7 +18,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="5.0.3" />
         <ProjectReference Include="..\CodeHelpers\CodeHelpers.csproj" />
         <ProjectReference Include="..\Echo.Generation\Echo.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
@@ -37,6 +37,15 @@
         <Compile Remove="src\Core\Evaluation\Engines\**" />
         <Compile Remove="src\Core\Evaluation\MaterialsOld\**" />
         <Compile Remove="src\Core\Scenic\ExamplesOld\**" />
+        <Compile Remove="src\Core\PostProcess\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="src\Core\PostProcess\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="src\Core\PostProcess\**" />
     </ItemGroup>
 
 </Project>

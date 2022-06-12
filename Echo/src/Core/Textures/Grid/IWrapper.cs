@@ -12,6 +12,10 @@ namespace Echo.Core.Textures.Grid;
 /// </summary>
 public interface IWrapper
 {
+	public static readonly IWrapper clamp = new Clamp();
+	public static readonly IWrapper repeat = new Repeat();
+	public static readonly IWrapper mirror = new Mirror();
+
 	/// <summary>
 	/// Wraps the integer texture <paramref name="position"/> to be within the bounds of <paramref name="texture"/>.
 	/// </summary>
@@ -22,13 +26,6 @@ public interface IWrapper
 	/// <paramref name="y"/> to be within the bounds of <paramref name="texture"/>.
 	/// </summary>
 	void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>;
-}
-
-public static class Wrappers
-{
-	public static readonly IWrapper clamp = new Clamp();
-	public static readonly IWrapper repeat = new Repeat();
-	public static readonly IWrapper mirror = new Mirror();
 
 	class Clamp : IWrapper
 	{
@@ -47,6 +44,8 @@ public static class Wrappers
 			static void Fallback(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y)
 			{
 				Int2 max = texture.oneLess;
+
+				//OPTIMIZE: with compare and bit mask 
 
 				x = Vector128.Create
 				(

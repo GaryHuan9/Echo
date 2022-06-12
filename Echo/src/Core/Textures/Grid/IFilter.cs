@@ -10,25 +10,22 @@ namespace Echo.Core.Textures.Grid;
 /// </summary>
 public interface IFilter
 {
+	public static readonly IFilter point = new Point();
+	public static readonly IFilter bilinear = new Bilinear();
+
 	/// <summary>
 	/// Returns the color of <paramref name="texture"/> at a texture coordinate <see cref="uv"/>.
 	/// </summary>
 	/// <param name="texture">The target texture to retrieve the color from.</param>
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
 	RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>;
-}
-
-public static class Filters
-{
-	public static readonly IFilter point = new Point();
-	public static readonly IFilter bilinear = new Bilinear();
 
 	class Point : IFilter
 	{
 		/// <inheritdoc/>
 		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>
 		{
-			Int2 position = (uv * texture.size).Floored;
+			Int2 position = texture.ToPosition(uv);
 			texture.Wrapper.Wrap(texture, ref position);
 			return texture[position].ToRGBA128();
 		}

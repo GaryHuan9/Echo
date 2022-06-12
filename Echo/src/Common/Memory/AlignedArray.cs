@@ -46,17 +46,20 @@ public sealed unsafe class AlignedArray<T> : IDisposable where T : unmanaged
 	/// </summary>
 	public int Length { get; private set; }
 
+	/// <inheritdoc cref="Item(uint)"/>
+	public ref T this[int index] => ref this[(uint)index];
+
 	/// <summary>
 	/// Accesses an item in this <see cref="AlignedArray{T}"/>.
 	/// </summary>
 	/// <param name="index">The zero-based numerical index of the item to access.</param>
 	/// <exception cref="IndexOutOfRangeException">Thrown if <paramref name="index"/> is
 	/// negative or larger than or equals to <see cref="Length"/>.</exception>
-	public ref T this[int index]
+	public ref T this[uint index]
 	{
 		get
 		{
-			if ((uint)index < Length) return ref Pointer[index];
+			if (index < Length) return ref Pointer[index];
 			throw new IndexOutOfRangeException(nameof(index));
 		}
 	}

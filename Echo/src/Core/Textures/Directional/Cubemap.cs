@@ -31,13 +31,13 @@ public class Cubemap : IDirectionalTexture
 	{
 		int length = fileNames.Length;
 
-		var tasks = new Task<TextureGrid<RGB128>>[length];
+		var tasks = new Task<ArrayGrid<RGB128>>[length];
 		textures = new NotNull<Texture>[length];
 
 		for (int i = 0; i < length; i++)
 		{
 			string fullPath = Path.Combine(path, fileNames[i]);
-			tasks[i] = TextureGrid<RGB128>.LoadAsync(fullPath);
+			tasks[i] = TextureGrid.LoadAsync<RGB128>(fullPath);
 		}
 
 		for (int i = 0; i < length; i++) textures[i] = tasks[i].Result;
