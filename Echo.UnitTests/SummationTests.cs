@@ -44,7 +44,7 @@ public class SummationTests
 	[Repeat(100)]
 	public void Randoms()
 	{
-		var random = Utilities.NewRandom();
+		var random = Utility.NewRandom();
 		Summation sum = Summation.Zero;
 		decimal truth = 0m;
 
@@ -64,7 +64,7 @@ public class SummationTests
 	{
 		const int Length = 1000;
 
-		var random = Utilities.NewRandom();
+		var random = Utility.NewRandom();
 		Summation total = Summation.Zero;
 		decimal truth = 0m;
 

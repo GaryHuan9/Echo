@@ -223,8 +223,8 @@ public class PreparedInstance
 		using var _0 = Pool<float>.Fetch(powerLength, out var powerValues);
 		using var _1 = Pool<int>.Fetch(segmentLength, out var segments);
 
-		SpanFill<float> powerFill = powerValues.AsFill();
-		SpanFill<int> segmentFill = segments.AsFill();
+		SpanFill<float> powerFill = powerValues;
+		SpanFill<int> segmentFill = segments;
 
 		//Fill in the relevant power and segment values for geometries with emissive materials
 		foreach (MaterialIndex index in materials)

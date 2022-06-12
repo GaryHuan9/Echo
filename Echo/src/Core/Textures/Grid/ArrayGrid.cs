@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Common;
@@ -9,7 +10,7 @@ namespace Echo.Core.Textures.Grid;
 /// <summary>
 /// The default <see cref="TextureGrid{T}"/> implemented with a contiguous array.
 /// </summary>
-public class ArrayGrid<T> : TextureGrid<T> where T : unmanaged, IColor<T>
+public class ArrayGrid<T> : SettableGrid<T> where T : unmanaged, IColor<T>
 {
 	public ArrayGrid(Int2 size) : base(size)
 	{
@@ -17,7 +18,14 @@ public class ArrayGrid<T> : TextureGrid<T> where T : unmanaged, IColor<T>
 		pixels = new T[length];
 	}
 
+	/// <summary>
+	/// The number of pixels in this <see cref="ArrayGrid{T}"/>.
+	/// </summary>
 	protected readonly int length;
+
+	/// <summary>
+	/// The underlying pixel storage of this <see cref="ArrayGrid{T}"/>.
+	/// </summary>
 	protected readonly T[] pixels;
 
 	/// <summary>
@@ -30,31 +38,9 @@ public class ArrayGrid<T> : TextureGrid<T> where T : unmanaged, IColor<T>
 	/// </summary>
 	public const int MinorAxis = MajorAxis ^ 1;
 
-	public override T this[Int2 position]
-	{
-		get => pixels[ToIndex(position)];
-		set => pixels[ToIndex(position)] = value;
-	}
+	public override T this[Int2 position] => pixels[ToIndex(position)];
 
-	/// <summary>
-	/// Converts the integer pixel <paramref name="position"/> to an index [0, <see cref="length"/>)
-	/// </summary>
-	public int ToIndex(Int2 position)
-	{
-		Assert.IsTrue(Int2.Zero <= position);
-		Assert.IsTrue(position < size);
-
-		return position.X + position.Y * size.X;
-	}
-
-	/// <summary>
-	/// Converts <paramref name="index"/> [0, <see cref="length"/>) to an integer pixel position
-	/// </summary>
-	public Int2 ToPosition(int index)
-	{
-		Assert.IsTrue(0 <= index && index < length);
-		return new Int2(index % size.X, index / size.X);
-	}
+	public override void Set(Int2 position, in T value) => pixels[ToIndex(position)] = value;
 
 	public override unsafe void CopyFrom(Texture texture)
 	{
@@ -63,11 +49,32 @@ public class ArrayGrid<T> : TextureGrid<T> where T : unmanaged, IColor<T>
 			fixed (T* source = array)
 			fixed (T* target = this)
 			{
-				Utilities.MemoryCopy(source, target, length);
+				Utility.MemoryCopy(source, target, length);
 			}
 		}
 		else base.CopyFrom(texture);
 	}
+
+	/// <summary>
+	/// Converts the integer pixel <paramref name="position"/> to an index [0, <see cref="length"/>)
+	/// </summary>
+	public int ToIndex(Int2 position)
+	{
+		AssertValidPosition(position);
+		return position.X + position.Y * size.X;
+	}
+
+	/// <summary>
+	/// Converts a pixel <paramref name="index"/> to an integral pixel position.
+	/// </summary>
+	/// <param name="index">The index of the pixel, must be between 0 (inclusive) and <see cref="length"/> (exclusive).</param>
+	public Int2 ToPosition(int index)
+	{
+		Assert.IsTrue(0 <= index && index < length);
+		return new Int2(index % size.X, index / size.X);
+	}
+
+	public override void Clear() => Array.Clear(pixels);
 
 	/// <summary>
 	/// Implements the pattern-based fixed statement context for `fixed` statements. See the following link for more:

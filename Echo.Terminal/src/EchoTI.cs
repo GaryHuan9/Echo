@@ -6,6 +6,7 @@ using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Examples;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grid;
 using Echo.Terminal.Application;
 using Echo.Terminal.Application.Report;
@@ -50,7 +51,7 @@ public class EchoTI : RootTI
 
 		var prepareProfile = new ScenePrepareProfile();
 
-		var evaluationProfile = new TiledEvaluationProfile
+		var evaluationProfile = new EvaluationProfile
 		{
 			Scene = new PreparedScene(scene, prepareProfile),
 			Evaluator = new PathTracedEvaluator(),
@@ -60,7 +61,7 @@ public class EchoTI : RootTI
 			MaxEpoch = 1
 		};
 
-		var factory = new TiledEvaluationFactory
+		var factory = new EvaluationOperation.Factory
 		{
 			NextProfile = evaluationProfile
 		};

@@ -180,7 +180,7 @@ public class MaterialLibrary
 				serializer = serializer with { sRGB = false };
 			}
 
-			Property.SetValue(Target, TextureGrid<RGB128>.Load(path, serializer));
+			Property.SetValue(Target, TextureGrid.Load<RGB128>(path, serializer));
 		}
 	}
 }
