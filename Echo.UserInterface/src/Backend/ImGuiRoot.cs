@@ -70,7 +70,7 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 			//Begin frame
 			device.NewFrame(moment.delta);
 			ImGui.NewFrame();
-			application.Update(moment);
+			application.NewFrame(moment);
 
 			//Render frame
 			ImGui.EndFrame();

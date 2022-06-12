@@ -12,5 +12,5 @@ public interface IApplication : IDisposable
 
 	void Initialize(ImGuiDevice backend);
 
-	void Update(in Moment moment);
+	void NewFrame(in Moment moment);
 }
