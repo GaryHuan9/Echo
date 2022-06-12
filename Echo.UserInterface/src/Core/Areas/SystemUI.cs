@@ -19,10 +19,6 @@ public class SystemUI : AreaUI
 {
 	public SystemUI() : base("System") { }
 
-	Device device;
-
-	bool HasDevice => device is { Disposed: false };
-
 	public override void Initialize()
 	{
 		base.Initialize();
@@ -32,22 +28,23 @@ public class SystemUI : AreaUI
 			device = Device.Create();
 			DispatchDevice(device);
 		}
+
+		AssignUpdateFrequency();
 	}
+
+	Device device;
+
+	string frameTime;
+	string frameRate;
+	TimeSpan lastUpdateTime;
+	int updateFrequency = 100;
+
+	bool HasDevice => device is { Disposed: false };
 
 	protected override void Update(in Moment moment)
 	{
-		ImGui.Text(Environment.OSVersion.VersionString);
-		ImGui.Text(Debugger.IsAttached ? "Debugger Attached" : "Debugger Not Attached");
-
-#if DEBUG
-		ImGui.Text("DEBUG Mode");
-#elif RELEASE
-		ImGui.Text("RELEASE Mode");
-#else
-		ImGui.Text("Unidentified Mode");
-#endif
-
-		ImGui.NewLine();
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		if (ImGui.CollapsingHeader("General")) DrawGeneral(moment);
 
 		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
 		if (ImGui.CollapsingHeader("Garbage Collector")) DrawGarbageCollector();
@@ -77,6 +74,37 @@ public class SystemUI : AreaUI
 	{
 		base.Dispose(disposing);
 		if (disposing) device?.Dispose();
+	}
+
+	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
+
+	void DrawGeneral(in Moment moment)
+	{
+		if (ImGuiCustom.BeginProperties("Main"))
+		{
+			ImGuiCustom.Property("Operating System", Environment.OSVersion.VersionString);
+			ImGuiCustom.Property("Debugger", Debugger.IsAttached ? "Present" : "Not Attached");
+			ImGuiCustom.Property("Compiler Mode", GetCompilerMode());
+
+			ImGui.NewLine();
+
+			if (moment.elapsed - lastUpdateTime > TimeSpan.FromSeconds(0.5f))
+			{
+				float rate = 1f / (float)moment.delta.TotalSeconds;
+				frameTime = moment.delta.ToString("s\\.ffff");
+				frameRate = rate.ToStringDefault();
+				lastUpdateTime = moment.elapsed;
+			}
+
+			ImGuiCustom.Property("Frame Time", frameTime);
+			ImGuiCustom.Property("Frame Rate", frameRate);
+
+			ImGuiCustom.EndProperties();
+		}
+
+		int oldUpdateFrequency = updateFrequency;
+		ImGui.SliderInt("Refresh Frequency", ref updateFrequency, 1, 120);
+		if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
 	}
 
 	void DrawGarbageCollector()
@@ -199,6 +227,17 @@ public class SystemUI : AreaUI
 
 			ImGui.EndTable();
 		}
+	}
+
+	static string GetCompilerMode()
+	{
+#if DEBUG
+		return "DEBUG";
+#elif RELEASE
+		return "RELEASE";
+#else
+		return "Unknown";
+#endif
 	}
 
 	static void DispatchDevice(Device device)

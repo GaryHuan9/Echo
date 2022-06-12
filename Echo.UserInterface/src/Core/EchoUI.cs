@@ -26,7 +26,7 @@ public sealed class EchoUI : IApplication
 
 	readonly ImmutableArray<AreaUI> areas;
 
-	public TimeSpan UpdateDelay => TimeSpan.Zero; //For now this is basically only controlled by vsync
+	public TimeSpan UpdateDelay { get; set; } = TimeSpan.Zero;
 	public string Label => "Echo User Interface";
 
 	public bool RequestTermination { get; private set; }

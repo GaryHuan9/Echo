@@ -12,7 +12,10 @@ namespace Echo.Common.Mathematics;
 /// </summary>
 public static class FastMath
 {
+	//This preprocessor is quite important, otherwise the JIT compiler will add garbage inside all of the static methods
+#if !RELEASE
 	static FastMath() => Assert.AreEqual(Scalars.SingleToUInt32Bits(OneMinusEpsilon), Scalars.SingleToUInt32Bits(1f) - 1u);
+#endif
 
 	//NOTE: Some naming conversions used in this project:
 	//R = reciprocal    (eg: three = 3f -> threeR = 1f / three = 1f / 3f)
@@ -118,6 +121,7 @@ public static class FastMath
 	[MethodImpl(Options)]
 	public static float OneMinus2(float value)
 	{
+		if (!Fma.IsSupported) return MathF.FusedMultiplyAdd(value, -value, 1f);
 		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
 		Vector128<float> one = Vector128.CreateScalarUnsafe(1f);
 		return Fma.MultiplyAddNegatedScalar(valueV, valueV, one).ToScalar();

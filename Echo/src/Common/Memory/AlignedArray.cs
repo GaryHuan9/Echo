@@ -55,12 +55,18 @@ public sealed unsafe class AlignedArray<T> : IDisposable where T : unmanaged
 	/// <param name="index">The zero-based numerical index of the item to access.</param>
 	/// <exception cref="IndexOutOfRangeException">Thrown if <paramref name="index"/> is
 	/// negative or larger than or equals to <see cref="Length"/>.</exception>
+	/// <remarks>If <paramref name="index"/> is out of bounds, the behavior
+	/// in RELEASE mode is undefined for performance reasons.</remarks>
 	public ref T this[uint index]
 	{
 		get
 		{
+#if RELEASE
+			return ref Pointer[index];
+#else
 			if (index < Length) return ref Pointer[index];
 			throw new IndexOutOfRangeException(nameof(index));
+#endif
 		}
 	}
 
