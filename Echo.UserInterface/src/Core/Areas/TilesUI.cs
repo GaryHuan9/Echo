@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
@@ -172,6 +174,15 @@ public class TilesUI : AreaUI
 		{
 			ActionQueue.Enqueue(Serialize, "Serialize Evaluation Layer");
 			void Serialize() => ((TextureGrid)layer).Save("render.png");
+		}
+
+		ImGui.SameLine();
+		if (ImGui.Button("Show Working Directory"))
+		{
+			string path = Environment.CurrentDirectory;
+
+			if (!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
+			Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
 		}
 
 		ImGui.SameLine();
