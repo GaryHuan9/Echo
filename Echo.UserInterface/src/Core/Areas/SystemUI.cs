@@ -254,11 +254,11 @@ public class SystemUI : AreaUI
 			{
 				Scene = new PreparedScene(scene, prepareProfile),
 				Evaluator = new PathTracedEvaluator(),
-				Distribution = new StratifiedDistribution { Extend = 64 },
+				Distribution = new StratifiedDistribution { Extend = 16 },
 				Buffer = new RenderBuffer(new Int2(960, 540)),
 				Pattern = new SpiralPattern(),
 				MinEpoch = 1,
-				MaxEpoch = 1
+				MaxEpoch = 20
 			};
 
 			var operation = new EvaluationOperation.Factory
