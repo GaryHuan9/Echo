@@ -246,14 +246,15 @@ public class SystemUI : AreaUI
 
 		void Dispatch()
 		{
-			var scene = new SingleBunny();
+			//var scene = new SingleBunny();
+			var scene = new CornellBox();
 
 			var prepareProfile = new ScenePrepareProfile();
 
 			var evaluationProfile = new EvaluationProfile
 			{
 				Scene = new PreparedScene(scene, prepareProfile),
-				Evaluator = new AlbedoEvaluator(), //new PathTracedEvaluator(),
+				Evaluator = new AlbedoEvaluator(),
 				Distribution = new StratifiedDistribution { Extend = 64 },
 				Buffer = new RenderBuffer(new Int2(960, 540)),
 				Pattern = new SpiralPattern(),
