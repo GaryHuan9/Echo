@@ -28,7 +28,7 @@ public class Program
 	{
 		Prng random = new SquirrelPrng();
 
-		const decimal Threshold = 0.001m;
+		const double Threshold = 0.001d;
 
 		int count = 0;
 
@@ -36,13 +36,12 @@ public class Program
 		decimal squared = 0m;
 
 		decimal variance;
-		decimal noise;
+		double noise;
 
 		do
 		{
-			float sample = random.Next1();
+			float sample = random.Next1() * 100f;
 			// sample *= sample;
-			// sample = sample <= 0.01f ? 1f : 0f;
 			decimal value = (decimal)sample;
 
 			++count;
@@ -52,7 +51,8 @@ public class Program
 			squared += (value - oldMean) * (value - mean);
 
 			variance = squared / Math.Max(count - 1, 1);
-			noise = variance / (decimal)Math.Sqrt(count); // 1 / (count ^ 3) ^ 0.5
+			double deviation = Math.Sqrt((double)variance);
+			noise = deviation / Math.Sqrt(count) / (double)mean;
 		}
 		while (count < 16 || noise > Threshold);
 
