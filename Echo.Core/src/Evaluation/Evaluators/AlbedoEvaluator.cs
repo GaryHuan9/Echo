@@ -22,8 +22,8 @@ public record AlbedoEvaluator : Evaluator
 			Touch touch = preparedScene.Interact(query);
 
 			var albedo = (RGB128)touch.shade.material.SampleAlbedo(touch);
-			if (!HitPassThrough(query, albedo, touch.outgoing))
-			    return albedo; //Return intersected albedo color
+			/*if (!HitPassThrough(query, albedo, touch.outgoing))*/
+            return albedo + new Float4(0.0f, 0.0f, 0.0f, 1.0f); //Return intersected albedo color
 
 			query = query.SpawnTrace();
 		}
