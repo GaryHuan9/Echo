@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
@@ -38,6 +37,7 @@ public record PathTracedEvaluator : Evaluator
 
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
 
+	[SkipLocalsInit]
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		var path = new Path(ray);
@@ -156,9 +156,9 @@ public record PathTracedEvaluator : Evaluator
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
 
-	[SkipLocalsInit]
 	struct Path
 	{
+		[SkipLocalsInit]
 		public Path(in Ray ray)
 		{
 			Result = RGB128.Black;
