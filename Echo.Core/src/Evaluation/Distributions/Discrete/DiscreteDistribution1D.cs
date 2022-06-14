@@ -56,7 +56,7 @@ public readonly struct DiscreteDistribution1D
 		float last = cdfValues[index];
 
 		do cdfValues[index] = 1f;
-		while (--index > 0 && last.Equals(cdfValues[index]));
+		while (--index > 0 && last == cdfValues[index]);
 	}
 
 	/// <summary>
@@ -109,10 +109,18 @@ public readonly struct DiscreteDistribution1D
 	/// </summary>
 	/// <param name="sample">The <see cref="Sample1D"/> used to pick the result.</param>
 	/// <returns>The discrete <see cref="Probable{T}"/> value picked.</returns>
-	public Probable<int> Pick(Sample1D sample)
+	public Probable<int> Pick(Sample1D sample) => Pick(sample, out _, out _);
+
+	/// <inheritdoc cref="Pick(Sample1D)"/>
+	/// <param name="lower">Outputs the lower bound that caused this result to be selected.
+	/// This will always be less than or equals to the value of the input <see cref="Sample1D"/>.</param>
+	/// <param name="upper">Outputs the upper bound that caused this result to be selected.
+	/// This will always be greater than the value of the input <see cref="Sample1D"/>.</param>
+	// ReSharper disable once InvalidXmlDocComment
+	public Probable<int> Pick(Sample1D sample, out float lower, out float upper)
 	{
 		int index = FindIndex(sample);
-		GetBounds(index, out float lower, out float upper);
+		GetBounds(index, out lower, out upper);
 		return new Probable<int>(index, upper - lower);
 	}
 
@@ -129,11 +137,11 @@ public readonly struct DiscreteDistribution1D
 	}
 
 	/// <summary>
-	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Pick"/>.
+	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Pick(Sample1D)"/>.
 	/// </summary>
 	/// <param name="result">The selected discrete value.</param>
 	/// <returns>The probability density function (pdf) value of the selection.</returns>
-	/// <seealso cref="Pick"/>
+	/// <seealso cref="Pick(Sample1D)"/>
 	public float ProbabilityDensity(int result)
 	{
 		GetBounds(result, out float lower, out float upper);
@@ -160,7 +168,7 @@ public readonly struct DiscreteDistribution1D
 		GetBounds(index, out float lower, out float upper);
 
 		float pdf = upper - lower;
-		if (pdf > 0f) return index;
+		if (pdf > 0f) return index + 1;
 
 		//If our pdf is zero, then it means our binary search has landed
 		//on the first few of the several consecutive identical cdfValues
