@@ -100,19 +100,19 @@ public class PreparedScene
 	/// <summary>
 	/// Picks an <see cref="ILight"/> in this <see cref="PreparedScene"/>.
 	/// </summary>
-	/// <param name="samples">The <see cref="ReadOnlySpan{T}"/> of <see cref="Sample1D"/> values used for sampling.</param>
+	/// <param name="sample">The <see cref="Sample1D"/> value used to pick the result.</param>
 	/// <param name="allocator">The <see cref="Allocator"/> used to allocate a <see cref="GeometryLight"/> if needed.</param>
 	/// <returns>The <see cref="Probable{T}"/> light picked.</returns>
-	public Probable<ILight> PickLight(ReadOnlySpan<Sample1D> samples, Allocator allocator)
+	public Probable<ILight> PickLight(Sample1D sample, Allocator allocator)
 	{
-		Probable<LightSource> primary = lights.PickLightSource(samples[0]);
+		Probable<LightSource> primary = lights.PickLightSource(ref sample);
 		if (primary.content != null) return (primary.content, primary.pdf);
 
 		//Choose emissive geometry as light
-		var light = allocator.New<GeometryLight>();
-
-		Probable<GeometryToken> token = rootInstance.Find(samples[1..], out var instance);
+		Probable<GeometryToken> token = rootInstance.Pick(sample, out var instance);
 		MaterialIndex index = instance.pack.GetMaterialIndex(token.content.Geometry);
+
+		var light = allocator.New<GeometryLight>();
 
 		Material material = instance.GetMaterial(index);
 		light.Reset(this, token, (IEmissive)material);
@@ -248,12 +248,15 @@ public class PreparedScene
 		/// </summary>
 		/// <param name="sample">The <see cref="Sample1D"/> used to select our <see cref="LightSource"/>.</param>
 		/// <returns>The <see cref="Probable{T}"/> light picked, or null if <see cref="GeometryLight"/> was picked.</returns>
-		/// <remarks>Even if a <see cref="GeometryLight"/> was picked and <see cref="Probable{T}.content"/> is null,
-		/// <see cref="Probable{T}.pdf"/> will still contain the probability density function (pdf) value as per usual.</remarks>
-		public Probable<LightSource> PickLightSource(Sample1D sample)
+		/// <remarks>If a <see cref="GeometryLight"/> was picked, meaning that <see cref="Probable{T}.content"/> is null,
+		/// <see cref="Probable{T}.pdf"/> will still contain the probability density function (pdf) value as per usual,
+		/// and <paramref name="sample"/> will be readjusted to be uniform again through <see cref="Sample1D.Stretch"/>.</remarks>
+		public Probable<LightSource> PickLightSource(ref Sample1D sample)
 		{
-			Probable<int> index = distribution.Pick(sample);
-			return (index < _all.Length ? _all[index] : null, index.pdf);
+			(int index, float pdf) = distribution.Pick(sample);
+			if (index < _all.Length) return (_all[index], pdf);
+			sample = sample.Stretch(1f - pdf, 1f);
+			return (null, pdf);
 		}
 
 		/// <summary>

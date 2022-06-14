@@ -51,10 +51,13 @@ public abstract class AreaLightSource : LightSource, IAreaLight
 public interface ILight
 {
 	/// <summary>
-	/// Samples the contribution of this <see cref="ILight"/> to <paramref name="point"/>. The <paramref name="incident"/> direction that
-	/// points from <paramref name="point"/> towards this <see cref="ILight"/>, the probability density function <paramref name="pdf"/> value,
-	/// and the <paramref name="travel"/> distance in light-space from <paramref name="point"/> to this <see cref="ILight"/> are outputted.
+	/// Samples the contribution of this <see cref="ILight"/>.
 	/// </summary>
+	/// <param name="point">The point towards which we are sampling the contribution of this <see cref="ILight"/> to.</param>
+	/// <param name="sample">The <see cref="Sample2D"/> value to use for this sampling.</param>
+	/// <param name="incident">The incident direction pointing from <paramref name="point"/> towards this <see cref="ILight"/>.</param>
+	/// <param name="travel">The distance to travel in light-space from <paramref name="point"/> to this <see cref="ILight"/>.</param>
+	/// <returns>The sampled <see cref="Probable{T}"/> of type <see cref="RGB128"/>.</returns>
 	Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);
 }
 
