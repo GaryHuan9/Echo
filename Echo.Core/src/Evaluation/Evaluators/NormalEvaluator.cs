@@ -21,10 +21,11 @@ public record NormalEvaluator : Evaluator
 		{
 			Touch touch = preparedScene.Interact(query);
 
-			//var albedo = (RGB128)touch.shade.material.SampleAlbedo(touch);
-            var albedo = (Float4)touch.point.normal;
-			/*if (!HitPassThrough(query, albedo, touch.outgoing))*/
-            return albedo; //Return intersected albedo color
+			allocator.Restart();
+
+            touch.shade.material.Scatter(ref touch, allocator);
+
+            if(touch.bsdf != null) return (Float4)touch.shade.Normal;
 
 			query = query.SpawnTrace();
 		}
@@ -33,5 +34,5 @@ public record NormalEvaluator : Evaluator
 		return preparedScene.lights.EvaluateAmbient(query.ray.direction);
 	}
 
-    public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "normal");
+    public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<Normal96>(buffer, "normal");
 }
