@@ -236,7 +236,7 @@ public class BSDF
 		//If all stored functions match
 		if (FunctionType.all.Fits(type))
 		{
-			sample = sample.Extract(count, out index);
+			sample = sample.Range(count, out index);
 			return count;
 		}
 
@@ -254,7 +254,7 @@ public class BSDF
 		if (matched == 0) return 0;
 
 		//Select one function
-		sample = sample.Extract(matched, out index);
+		sample = sample.Range(matched, out index);
 		index = stack[index];
 
 		return matched;
