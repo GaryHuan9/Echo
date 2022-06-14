@@ -7,30 +7,34 @@ using Echo.Core.Scenic.Preparation;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Evaluation;
+using Echo.Core.Evaluation.Scattering;
+using Echo.Core.Evaluation.Materials;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
 public record AlbedoEvaluator : Evaluator
 {
-	public override Float4 Evaluate(PreparedScene preparedScene, in Ray ray, ContinuousDistribution continuousDistribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		var query = new TraceQuery(ray);
 
 		//Trace for intersection
-		while (preparedScene.Trace(ref query))
+		while (scene.Trace(ref query))
 		{
-			Touch touch = preparedScene.Interact(query);
+			Touch touch = scene.Interact(query);
 
-			var albedo = (RGB128)touch.shade.material.SampleAlbedo(touch);
-			if (!HitPassThrough(query, albedo, touch.outgoing))
-			    return albedo; //Return intersected albedo color
+            allocator.Restart();
+
+            touch.shade.material.Scatter(ref touch, allocator);
+            if(touch.bsdf != null) return (RGB128)touch.shade.material.SampleAlbedo(touch);
 
 			query = query.SpawnTrace();
 		}
 
 		//Sample ambient
-		return preparedScene.lights.EvaluateAmbient(query.ray.direction);
+		return scene.lights.EvaluateAmbient(query.ray.direction);
+        
 	}
 
-    public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGBA128>(buffer, "albedo");
+    public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "albedo");
 }
