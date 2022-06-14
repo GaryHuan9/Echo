@@ -98,6 +98,7 @@ public struct TraceQuery
 	/// <summary>
 	/// Spawns a new <see cref="TraceQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 	/// </summary>
+	[SkipLocalsInit]
 	public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(Position, direction), float.PositiveInfinity, token);
 
 	/// <summary>
