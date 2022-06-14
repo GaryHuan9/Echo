@@ -254,7 +254,7 @@ public class SystemUI : AreaUI
 			var evaluationProfile = new EvaluationProfile
 			{
 				Scene = new PreparedScene(scene, prepareProfile),
-				Evaluator = new AlbedoEvaluator(),
+				Evaluator = new NormalEvaluator(),
 				Distribution = new StratifiedDistribution { Extend = 64 },
 				Buffer = new RenderBuffer(new Int2(960, 540)),
 				Pattern = new SpiralPattern(),

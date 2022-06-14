@@ -6,7 +6,8 @@ using Echo.Core.Common.Mathematics;
 
 namespace Echo.Core.Textures.Colors;
 
-public readonly struct Normal96 : IColor<Normal96>, IFormattable{
+public readonly struct Normal96 : IColor<Normal96>, IFormattable
+{
 
     Normal96(in Float3 value) => d = value;
 
