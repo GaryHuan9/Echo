@@ -481,10 +481,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		// }
 	}
 
-	/// <summary>
-	/// The node is only 124-byte in size, however we pad it to 128 bytes to better align with cache lines and memory stuff.
-	/// </summary>
-	[StructLayout(LayoutKind.Explicit, Size = 128)]
+	[StructLayout(LayoutKind.Explicit, Size = 128)] //Pad to 128 bytes for cache line
 	readonly struct Node
 	{
 		public Node(BuildNode node, ReadOnlySpan<NodeToken> token4)
@@ -498,13 +495,12 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			ref readonly var aabb3 = ref GetAABB(ref child);
 
 			aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
-			this.token4 = new NodeToken4(token4);
 
 			axisMajor = node.axisMajor;
 			axisMinor0 = node.axisMinor0;
 			axisMinor1 = node.axisMinor1;
 
-			padding = default;
+			this.token4 = new NodeToken4(token4);
 
 			static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 			{
@@ -516,16 +512,16 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			}
 		}
 
+#if !RELEASE
 		/// <summary>
 		/// Static check to ensure our currently layout is correctly updated if <see cref="NodeToken4"/> size is changed.
 		/// </summary>
 		static unsafe Node()
 		{
-			int size = sizeof(NodeToken4);
-
-			if (size is Width * NodeToken.Size and 16) return;
-			throw new Exception("Invalid layout or size!");
+			if (sizeof(NodeToken4) is Width * NodeToken.Size and 16) return;
+			throw new Exception($"Invalid layout or size for {nameof(Node)}!");
 		}
+#endif
 
 		/// <summary>
 		/// The <see cref="AxisAlignedBoundingBox"/>s of the four children contained in this <see cref="Node"/>.
@@ -533,31 +529,25 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
 
 		/// <summary>
-		/// The <see cref="NodeToken"/> representing the four branches off from this <see cref="Node"/>,
-		/// which is either a leaf geometry object or another <see cref="Node"/> child branch.
-		/// </summary>
-		[FieldOffset(096)] public readonly NodeToken4 token4;
-
-		/// <summary>
-		/// Unused memory padding.
-		/// </summary>
-		// ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
-		[FieldOffset(112)] readonly int padding;
-
-		/// <summary>
 		/// The integer value of the axis that divided the two primary nodes.
 		/// </summary>
-		[FieldOffset(116)] public readonly int axisMajor;
+		[FieldOffset(096)] public readonly int axisMajor;
 
 		/// <summary>
 		/// The integer value of the axis that divided the first two secondary nodes.
 		/// </summary>
-		[FieldOffset(120)] public readonly int axisMinor0;
+		[FieldOffset(100)] public readonly int axisMinor0;
 
 		/// <summary>
 		/// The integer value of the axis that divided the second two secondary nodes.
 		/// </summary>
-		[FieldOffset(124)] public readonly int axisMinor1;
+		[FieldOffset(104)] public readonly int axisMinor1;
+
+		/// <summary>
+		/// The <see cref="NodeToken"/> representing the four branches off from this <see cref="Node"/>,
+		/// which is either a leaf geometry object or another <see cref="Node"/> child branch.
+		/// </summary>
+		[FieldOffset(108)] public readonly NodeToken4 token4;
 	}
 
 	class BuildNode

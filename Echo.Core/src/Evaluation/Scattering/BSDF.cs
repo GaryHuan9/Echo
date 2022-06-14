@@ -230,8 +230,11 @@ public class BSDF
 
 	int FindFunction(FunctionType type, ref Sample1D sample, out int index)
 	{
-		Unsafe.SkipInit(out index);
-		if (count == 0) return 0;
+		if (count == 0)
+		{
+			index = default;
+			return 0;
+		}
 
 		//If all stored functions match
 		if (FunctionType.all.Fits(type))
@@ -251,7 +254,11 @@ public class BSDF
 			stack[matched++] = i;
 		}
 
-		if (matched == 0) return 0;
+		if (matched == 0)
+		{
+			index = default;
+			return 0;
+		}
 
 		//Select one function
 		sample = sample.Range(matched, out index);
