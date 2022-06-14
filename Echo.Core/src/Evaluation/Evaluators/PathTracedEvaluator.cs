@@ -26,8 +26,8 @@ public record PathTracedEvaluator : Evaluator
 	public int BounceLimit { get; init; } = 128;
 
 	/// <summary>
-	/// The survivability of a path with during unbiased path termination. As this value goes up, the amount of variance decreases,
-	/// and the time spend on each path increases. This value should be relatively high for interior scenes while low for outdoors.
+	/// The survivability of a path during unbiased path termination. As this value goes up, the amount of variance decreases, and 
+	/// the time we spend on each path increases. This value should be relatively high for interior scenes while low for outdoors.
 	/// </summary>
 	public float Survivability { get; init; } = 2.5f;
 
@@ -45,9 +45,6 @@ public record PathTracedEvaluator : Evaluator
 		//Quick exit with ambient light if no intersection
 		if (!path.Advance(scene, allocator)) return EvaluateAllAmbient();
 
-		//Allocate memory for samples used for lights
-		Span<Sample1D> lightSamples = stackalloc Sample1D[scene.info.depth + 1];
-
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
 
@@ -58,7 +55,7 @@ public record PathTracedEvaluator : Evaluator
 			if (bounce.IsZero) break;
 
 			Sample2D radiantSample = distribution.Next2D();
-			foreach (ref var sample in lightSamples) sample = distribution.Next1D();
+			Sample1D lightSample = distribution.Next1D();
 
 			//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 			if (bounce.IsSpecular)
@@ -82,7 +79,7 @@ public record PathTracedEvaluator : Evaluator
 			else
 			{
 				//Select light from scene for MIS
-				(ILight light, float lightPdf) = scene.PickLight(lightSamples, allocator);
+				(ILight light, float lightPdf) = scene.PickLight(lightSample, allocator);
 
 				float weight = 1f / lightPdf;
 				var area = light as IAreaLight;
@@ -159,6 +156,7 @@ public record PathTracedEvaluator : Evaluator
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
 
+	[SkipLocalsInit]
 	struct Path
 	{
 		public Path(in Ray ray)
