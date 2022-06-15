@@ -12,27 +12,26 @@ namespace Echo.Core.Evaluation.Evaluators;
 
 public record NormalEvaluator : Evaluator
 {
-	public override Float4 Evaluate(PreparedScene preparedScene, in Ray ray, ContinuousDistribution continuousDistribution, Allocator allocator)
-	{
-		var query = new TraceQuery(ray);
+    public override Float4 Evaluate(PreparedScene preparedScene, in Ray ray, ContinuousDistribution continuousDistribution, Allocator allocator)
+    {
+        var query = new TraceQuery(ray);
 
-		//Trace for intersection
-		while (preparedScene.Trace(ref query))
-		{
-			Touch touch = preparedScene.Interact(query);
+        allocator.Restart();
 
-			allocator.Restart();
+        //Trace for intersection
+        while (preparedScene.Trace(ref query))
+        {
+            Touch touch = preparedScene.Interact(query);
 
             touch.shade.material.Scatter(ref touch, allocator);
 
-            if(touch.bsdf != null) return (Float4)touch.shade.Normal;
+            if (touch.bsdf != null) return (Float4)touch.shade.Normal;
 
-			query = query.SpawnTrace();
-		}
+            query = query.SpawnTrace();
+        }
 
-		//Sample ambient
-		return preparedScene.lights.EvaluateAmbient(query.ray.direction);
-	}
+        return (Float4)ray.direction;
+    }
 
     public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<Normal96>(buffer, "normal");
 }
