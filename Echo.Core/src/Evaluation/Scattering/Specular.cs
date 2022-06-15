@@ -9,26 +9,26 @@ namespace Echo.Core.Evaluation.Scattering;
 
 public class SpecularReflection : BxDF
 {
-	public SpecularReflection() : base(FunctionType.specular | FunctionType.reflective) { }
+	public SpecularReflection() : base(FunctionType.Specular | FunctionType.Reflective) { }
 
 	public void Reset(in RGB128 newReflectance)
 	{
 		reflectance = newReflectance;
-		mode = Mode.none;
+		mode = Mode.None;
 	}
 
 	public void Reset(in RGB128 newReflectance, in FresnelDielectric newDielectric)
 	{
 		reflectance = newReflectance;
 		dielectric = newDielectric;
-		mode = Mode.dielectric;
+		mode = Mode.Dielectric;
 	}
 
 	public void Reset(in RGB128 newReflectance, in FresnelConductor newConductor)
 	{
 		reflectance = newReflectance;
 		conductor = newConductor;
-		mode = Mode.conductor;
+		mode = Mode.Conductor;
 	}
 
 	RGB128 reflectance;
@@ -47,8 +47,8 @@ public class SpecularReflection : BxDF
 
 		RGB128 evaluated = mode switch
 		{
-			Mode.dielectric => dielectric.Evaluate(cosI),
-			Mode.conductor => conductor.Evaluate(cosI),
+			Mode.Dielectric => dielectric.Evaluate(cosI),
+			Mode.Conductor => conductor.Evaluate(cosI),
 			_ => RGB128.White
 		};
 
@@ -57,15 +57,15 @@ public class SpecularReflection : BxDF
 
 	enum Mode
 	{
-		none,
-		dielectric,
-		conductor
+		None,
+		Dielectric,
+		Conductor
 	}
 }
 
 public class SpecularTransmission : BxDF
 {
-	public SpecularTransmission() : base(FunctionType.specular | FunctionType.transmissive) { }
+	public SpecularTransmission() : base(FunctionType.Specular | FunctionType.Transmissive) { }
 
 	public void Reset(in RGB128 newTransmittance, float newEtaAbove, float newEtaBelow)
 	{
@@ -88,6 +88,6 @@ public class SpecularTransmission : BxDF
 
 public class SpecularFresnel : BxDF
 {
-	public SpecularFresnel() : base(FunctionType.specular | FunctionType.reflective | FunctionType.transmissive) { }
+	public SpecularFresnel() : base(FunctionType.Specular | FunctionType.Reflective | FunctionType.Transmissive) { }
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => throw new NotImplementedException();
 }

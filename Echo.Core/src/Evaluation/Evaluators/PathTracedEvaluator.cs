@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
+using System.Runtime.InteropServices;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
@@ -30,11 +30,6 @@ public record PathTracedEvaluator : Evaluator
 	/// </summary>
 	public float Survivability { get; init; } = 2.5f;
 
-	//NOTE: although the word 'radiant' is frequently used here to denote particles of energy accumulating,
-	//technically it is not correct because the size of the emitter could be either a point or an area,
-	//(so for the same reason the word 'radiance' is also wrong) we just chose 'radiant' because it has the
-	//same length as the word 'scatter'.
-
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
 
 	[SkipLocalsInit]
@@ -54,18 +49,18 @@ public record PathTracedEvaluator : Evaluator
 			var bounce = new Bounce(path.touch, distribution.Next2D());
 			if (bounce.IsZero) break;
 
-			Sample2D radiantSample = distribution.Next2D();
+			//Prefetch all samples so the order of them in subsequent bounces do not get messed up
 			Sample1D lightSample = distribution.Next1D();
+			Sample1D survivalSample = distribution.Next1D();
+			Sample2D radiantSample = distribution.Next2D();
 
 			//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 			if (bounce.IsSpecular)
 			{
 				//Check if the path is exhausted
-				if (!path.Continue(bounce, Survivability, distribution.Next1D())) break;
+				if (!path.Continue(bounce, Survivability, survivalSample)) break;
 
 				//Begin finding a new bounce
-				allocator.Restart();
-
 				if (!path.Advance(scene, allocator))
 				{
 					//None found, accumulate ambient and exit
@@ -83,31 +78,54 @@ public record PathTracedEvaluator : Evaluator
 
 				float weight = 1f / lightPdf;
 				var area = light as IAreaLight;
+				bool mis = area != null;
 
-				path.Contribute(weight * ImportanceSampleRadiant(light, path.touch, radiantSample, scene, out bool mis));
+				//Importance sample the selected light
+				RGB128 radiant = ImportanceSampleRadiant(light, path.touch, radiantSample, scene, mis);
 
 				if (mis)
 				{
-					Assert.IsNotNull(area);
-					weight *= PowerHeuristic(bounce.pdf, area!.ProbabilityDensity(path.touch.point, bounce.incident));
+					//Perform MIS between scatter and radiant
+					path.Contribute(weight * radiant);
+
+					float radiantPdf = area.ProbabilityDensity(path.touch.point, bounce.incident);
+					weight *= PowerHeuristic(bounce.scatterPdf, radiantPdf);
+
+					//Begin continue path to the next vertex and exit if path exhausted
+					if (!path.Continue(bounce, Survivability, survivalSample)) break;
+
+					//Cache GeometryToken from GeometryLight to potentially add emission after advancing
+					GeometryToken token;
+
+					if (area is not GeometryLight geometry)
+					{
+						//Assign the 'null' GeometryToken
+						Unsafe.SkipInit(out token);
+						token.Geometry = NodeToken.Empty;
+					}
+					else token = geometry.Token;
+
+					//Add ambient light and exit if no intersection
+					if (!path.Advance(scene, allocator))
+					{
+						if (area is AmbientLight ambient) path.Contribute(weight * ambient.Evaluate(path.CurrentDirection));
+
+						break;
+					}
+
+					//Try add emission with MIS
+					if (token == path.touch.token) path.ContributeEmissive(weight);
 				}
-
-				if (!path.Continue(bounce, Survivability, distribution.Next1D())) break; //Path exhausted
-
-				allocator.Restart();
-
-				//Add ambient light and exit if no intersection
-				if (!path.Advance(scene, allocator))
+				else
 				{
-					if (area is AmbientLight ambient) path.Contribute(weight * ambient.Evaluate(path.CurrentDirection));
-					break;
-				}
+					//Our light does not like MIS either, so no MIS is performed
+					path.Contribute(weight * radiant);
 
-				//Try add emission with MIS
-				//FIX: area light could get recollected after allocator restarts
-				if (area is GeometryLight geometry && geometry.Token == path.touch.token)
-				{
-					path.ContributeEmissive(weight);
+					//Begin continue path to the next vertex and exit if path exhausted
+					if (!path.Continue(bounce, Survivability, survivalSample)) break;
+
+					//Add ambient light and exit if no intersection
+					if (!path.Advance(scene, allocator)) break;
 				}
 			}
 		}
@@ -119,14 +137,17 @@ public record PathTracedEvaluator : Evaluator
 	}
 
 	/// <summary>
-	/// Importance samples <paramref name="light"/> at <paramref name="touch"/> and returns the sampled radiant.
-	/// If multiple importance sampling is used, <paramref name="mis"/> will be assigned to true, otherwise false.
+	/// Importance samples an <see cref="ILight"/>.
 	/// </summary>
-	static RGB128 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedScene scene, out bool mis)
+	/// <param name="light">The <see cref="ILight"/> to sample.</param>
+	/// <param name="touch">The <see cref="Touch"/> to sample from.</param>
+	/// <param name="sample">The <see cref="Sample2D"/> value to use.</param>
+	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
+	/// <param name="mis">Whether this method should use multiple importance sampling.</param>
+	/// <returns>The sampled radiant from the <see cref="ILight"/>.</returns>
+	static RGB128 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedScene scene, bool mis)
 	{
 		//Importance sample light
-		mis = light is IAreaLight;
-
 		(RGB128 radiant, float radiantPdf) = light.Sample(touch.point, sample, out Float3 incident, out float travel);
 
 		if (!FastMath.Positive(radiantPdf) | radiant.IsZero) return RGB128.Black;
@@ -145,8 +166,8 @@ public record PathTracedEvaluator : Evaluator
 		radiant /= radiantPdf;
 		if (!mis) return scatter * radiant;
 
-		float pdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
-		return PowerHeuristic(radiantPdf, pdf) * scatter * radiant;
+		float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
+		return PowerHeuristic(radiantPdf, scatterPdf) * scatter * radiant;
 	}
 
 	/// <summary>
@@ -156,6 +177,10 @@ public record PathTracedEvaluator : Evaluator
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
 
+	/// <summary>
+	/// The path of a photon within a <see cref="PreparedScene"/>. 
+	/// </summary>
+	[StructLayout(LayoutKind.Auto)]
 	struct Path
 	{
 		[SkipLocalsInit]
@@ -167,22 +192,40 @@ public record PathTracedEvaluator : Evaluator
 			query = new TraceQuery(ray);
 		}
 
+		/// <summary>
+		/// The accumulating result of this <see cref="Path"/>.
+		/// </summary>
 		public RGB128 Result { get; private set; }
-		public Touch touch;
 
 		RGB128 energy;
+
+		/// <summary>
+		/// The current <see cref="Touch"/> experienced on this <see cref="Path"/>.
+		/// </summary>
+		public Touch touch;
+
 		TraceQuery query;
 
+		/// <summary>
+		/// The current <see cref="Float3"/> direction of this <see cref="Path"/>.
+		/// </summary>
 		public readonly Float3 CurrentDirection => query.ray.direction;
 
-		public readonly Material Material => touch.shade.material;
+		readonly Material Material => touch.shade.material;
 
+		/// <summary>
+		/// Advance this <see cref="Path"/> to a new vertex.
+		/// </summary>
+		/// <param name="scene">The <see cref="PreparedScene"/> that this <see cref="Path"/> exists in.</param>
+		/// <param name="allocator">The <see cref="Allocator"/> to use.</param>
+		/// <returns>Whether a new vertex was successfully created or this <see cref="Path"/> escaped the <see cref="PreparedScene"/>.</returns>
 		public bool Advance(PreparedScene scene, Allocator allocator)
 		{
+			allocator.Restart();
+
 			while (scene.Trace(ref query))
 			{
 				touch = scene.Interact(query);
-				allocator.Restart();
 
 				Material.Scatter(ref touch, allocator);
 				if (touch.bsdf != null) return true;
@@ -193,9 +236,18 @@ public record PathTracedEvaluator : Evaluator
 			return false;
 		}
 
+		/// <summary>
+		/// Completes this <see cref="Path"/> after a <see cref="Bounce"/>.
+		/// </summary>
+		/// <param name="bounce">The <see cref="Bounce"/> of which this <see cref="Path"/> just completed.</param>
+		/// <param name="survivability">The likeliness of this <see cref="Path"/> to continue after this <see cref="Bounce"/>.</param>
+		/// <param name="sample">The <see cref="Sample1D"/> value used during this operation.</param>
+		/// <returns>True if this <see cref="Path"/> survived and it should continue tracing,
+		/// or false if the <see cref="Path"/> is exhausted and should be terminated.</returns>
+		/// <seealso cref="Survivability"/>
 		public bool Continue(in Bounce bounce, float survivability, Sample1D sample)
 		{
-			energy *= bounce.scatter / bounce.pdf;
+			energy *= bounce.scatter / bounce.scatterPdf;
 
 			//Conditional path termination with Russian Roulette
 			bool survived = RussianRoulette(ref energy, survivability, sample);
@@ -204,11 +256,21 @@ public record PathTracedEvaluator : Evaluator
 			return survived;
 		}
 
+		/// <summary>
+		/// Contributes to the <see cref="Result"/> of this <see cref="Path"/>.
+		/// </summary>
+		/// <param name="value">The <see cref="RGB128"/> value to contribute.</param>
 		public void Contribute(in RGB128 value) => Result += energy * value; //OPTIMIZE: fma
 
+		/// <summary>
+		/// Contributes the emission of the <see cref="Material"/> of the current <see cref="touch"/>.
+		/// </summary>
+		/// <param name="weight">An optionally provided value to scale this contribution.</param>
 		public void ContributeEmissive(float weight = 1f)
 		{
-			if (Material is not IEmissive emissive || !FastMath.Positive(emissive.Power)) return;
+			if (Material is not IEmissive emissive) return;
+			if (!FastMath.Positive(emissive.Power)) return;
+
 			Contribute(emissive.Emit(touch.point, touch.outgoing) * weight);
 		}
 
@@ -224,11 +286,14 @@ public record PathTracedEvaluator : Evaluator
 		}
 	}
 
+	/// <summary>
+	/// A scattering event occured when a <see cref="Path"/> is traced.
+	/// </summary>
 	readonly struct Bounce
 	{
 		public Bounce(in Touch touch, Sample2D sample)
 		{
-			(scatter, pdf) = touch.bsdf.Sample
+			(scatter, scatterPdf) = touch.bsdf.Sample
 			(
 				touch.outgoing, sample, out incident,
 				out function, TryExcludeSpecular(touch.bsdf)
@@ -237,25 +302,43 @@ public record PathTracedEvaluator : Evaluator
 			scatter *= touch.NormalDot(incident);
 		}
 
+		/// <summary>
+		/// The scattered color value of this <see cref="Bounce"/>.
+		/// </summary>
 		public readonly RGB128 scatter;
-		public readonly Float3 incident;
-		public readonly float pdf;
-		readonly BxDF function;
-
-		public bool IsZero => !FastMath.Positive(pdf) | scatter.IsZero;
-
-		public bool IsSpecular => function.type.Any(FunctionType.specular);
 
 		/// <summary>
-		/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.specular"/>.
+		/// The incident normal direction at this <see cref="Bounce"/>.
+		/// </summary>
+		public readonly Float3 incident;
+
+		/// <summary>
+		/// The probability density function (pdf) of the <see cref="scatter"/>.
+		/// </summary>
+		public readonly float scatterPdf;
+
+		readonly BxDF function;
+
+		/// <summary>
+		/// Whether this <see cref="Bounce"/> will have zero contribution to the <see cref="Path"/>.
+		/// </summary>
+		public bool IsZero => !FastMath.Positive(scatterPdf) | scatter.IsZero;
+
+		/// <summary>
+		/// Whether the <see cref="Marshal"/> that this <see cref="Bounce"/> occured on is specular.
+		/// </summary>
+		public bool IsSpecular => function.type.Any(FunctionType.Specular);
+
+		/// <summary>
+		/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.Specular"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static FunctionType TryExcludeSpecular(BSDF bsdf)
 		{
-			int count = bsdf.Count(FunctionType.specular);
-			int total = bsdf.Count(FunctionType.all);
+			int count = bsdf.Count(FunctionType.Specular);
+			int total = bsdf.Count(FunctionType.All);
 
-			return count == 0 || count == total ? FunctionType.all : ~FunctionType.specular;
+			return count == 0 || count == total ? FunctionType.All : ~FunctionType.Specular;
 		}
 	}
 }

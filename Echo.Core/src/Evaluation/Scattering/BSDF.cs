@@ -61,7 +61,7 @@ public class BSDF
 	/// </summary>
 	public int Count(FunctionType type)
 	{
-		if (FunctionType.all.Fits(type)) return count;
+		if (FunctionType.All.Fits(type)) return count;
 
 		int result = 0;
 
@@ -74,7 +74,7 @@ public class BSDF
 	/// Evaluates all <see cref="BxDF"/> contained in this <see cref="BSDF"/> that matches
 	/// <paramref name="type"/>. See <see cref="BxDF.Evaluate"/> for more information.
 	/// </summary>
-	public RGB128 Evaluate(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
+	public RGB128 Evaluate(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.All)
 	{
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		Float3 incident = transform.WorldToLocal(incidentWorld);
@@ -96,7 +96,7 @@ public class BSDF
 	/// Returns the aggregated probability density for all <see cref="BxDF"/> that matches with
 	/// <paramref name="type"/>. See <see cref="BxDF.ProbabilityDensity"/> for more information.
 	/// </summary>
-	public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.all)
+	public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.All)
 	{
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		Float3 incident = transform.WorldToLocal(incidentWorld);
@@ -122,7 +122,7 @@ public class BSDF
 	/// See <see cref="BxDF.Sample"/> for more information.
 	/// </summary>
 	public Probable<RGB128> Sample(in Float3 outgoingWorld, Sample2D sample, out Float3 incidentWorld,
-								   out BxDF selected, FunctionType type = FunctionType.all)
+								   out BxDF selected, FunctionType type = FunctionType.All)
 	{
 		//Uniformly select a matching function
 		int matched = FindFunction(type, ref Unsafe.AsRef(in sample.x), out int index);
@@ -153,7 +153,7 @@ public class BSDF
 		Assert.IsTrue(matched > 1);
 
 		//If the selected function is specular, we are also finished
-		if (selected.type.Any(FunctionType.specular))
+		if (selected.type.Any(FunctionType.Specular))
 		{
 			//Specular functions are Dirac delta distributions
 			Assert.AreEqual(sampled.pdf, 1f);
@@ -225,7 +225,7 @@ public class BSDF
 		float dot1 = incidentWorld.Dot(geometricNormal);
 
 		//Returns based on whether the two directions are on the same side of the normal
-		return dot0 * dot1 > 0f ? FunctionType.reflective : FunctionType.transmissive;
+		return dot0 * dot1 > 0f ? FunctionType.Reflective : FunctionType.Transmissive;
 	}
 
 	int FindFunction(FunctionType type, ref Sample1D sample, out int index)
@@ -237,7 +237,7 @@ public class BSDF
 		}
 
 		//If all stored functions match
-		if (FunctionType.all.Fits(type))
+		if (FunctionType.All.Fits(type))
 		{
 			sample = sample.Range(count, out index);
 			return count;
