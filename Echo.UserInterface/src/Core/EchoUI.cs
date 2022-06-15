@@ -19,7 +19,7 @@ public sealed class EchoUI : IApplication
 		builder.Add(new SystemUI { Root = this });
 		builder.Add(new OperationUI { Root = this });
 		builder.Add(new TilesUI { Root = this });
-		builder.Add(new ActionsUI { Root = this });
+		builder.Add(new LogsUI { Root = this });
 
 		areas = builder.ToImmutable();
 	}
