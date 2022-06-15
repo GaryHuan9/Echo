@@ -16,8 +16,8 @@ public record NormalEvaluator : Evaluator
     {
         var query = new TraceQuery(ray);
 
-        allocator.Restart();
 
+        allocator.Restart();
         //Trace for intersection
         while (preparedScene.Trace(ref query))
         {

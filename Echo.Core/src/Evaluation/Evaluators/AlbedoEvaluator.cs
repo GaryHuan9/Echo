@@ -38,8 +38,6 @@ public record AlbedoEvaluator : Evaluator
                 else query = query.SpawnTrace();
             }
 
-
-            //return (RGB128)material.SampleAlbedo(touch);
         }
 
         //Sample ambient

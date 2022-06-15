@@ -188,12 +188,6 @@ public record PathTracedEvaluator : Evaluator
 
                 Material.Scatter(ref touch, allocator);
                 if (touch.bsdf != null) return true;
-                float alpha = touch.shade.material.SampleAlbedo(touch).Alpha;
-                if (alpha < 1.0f)
-                {
-                    Random rand = new Random();
-                    if ((float)rand.NextDouble() > alpha) return true;
-                }
 
                 query = query.SpawnTrace();
             }
