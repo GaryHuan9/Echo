@@ -30,7 +30,7 @@ public record NormalEvaluator : Evaluator
             query = query.SpawnTrace();
         }
 
-        return (Float4)ray.direction;
+        return -(Float4)ray.direction;
     }
 
     public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<Normal96>(buffer, "normal");
