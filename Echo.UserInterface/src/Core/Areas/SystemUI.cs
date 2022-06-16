@@ -25,7 +25,7 @@ public class SystemUI : AreaUI
 
 		if (Environment.GetCommandLineArgs().Contains("-start", StringComparer.OrdinalIgnoreCase))
 		{
-			device = Device.Create();
+			CreateDevice();
 			DispatchDevice(device);
 		}
 
@@ -56,12 +56,12 @@ public class SystemUI : AreaUI
 			{
 				if (ImGui.Button("Create and Dispatch"))
 				{
-					device = Device.Create();
+					CreateDevice();
 					DispatchDevice(device);
 				}
 
 				ImGui.SameLine();
-				if (ImGui.Button("Create")) device = Device.Create();
+				if (ImGui.Button("Create")) CreateDevice();
 				ImGui.TextWrapped("Create a compute device to begin!");
 			}
 			else DrawDevice();
@@ -74,6 +74,12 @@ public class SystemUI : AreaUI
 	{
 		base.Dispose(disposing);
 		if (disposing) device?.Dispose();
+	}
+
+	void CreateDevice()
+	{
+		device = Device.Create();
+		LogList.Add("Created CPU compute device.");
 	}
 
 	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
@@ -240,35 +246,30 @@ public class SystemUI : AreaUI
 #endif
 	}
 
-	static void DispatchDevice(Device device)
+	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 	{
-		ActionQueue.Enqueue(Dispatch, "Evaluation Operation Dispatch");
+		var scene = new SingleBunny();
 
-		void Dispatch()
+		var prepareProfile = new ScenePrepareProfile();
+
+		var evaluationProfile = new EvaluationProfile
 		{
-			var scene = new SingleBunny();
+			Scene = new PreparedScene(scene, prepareProfile),
+			Evaluator = new PathTracedEvaluator(),
+			Distribution = new StratifiedDistribution { Extend = 16 },
+			Buffer = new RenderBuffer(new Int2(960, 540)),
+			Pattern = new SpiralPattern(),
+			MinEpoch = 1,
+			MaxEpoch = 4
+		};
 
-			var prepareProfile = new ScenePrepareProfile();
+		var operation = new EvaluationOperation.Factory
+		{
+			NextProfile = evaluationProfile
+		};
 
-			var evaluationProfile = new EvaluationProfile
-			{
-				Scene = new PreparedScene(scene, prepareProfile),
-				Evaluator = new PathTracedEvaluator(),
-				Distribution = new StratifiedDistribution { Extend = 16 },
-				Buffer = new RenderBuffer(new Int2(960, 540)),
-				Pattern = new SpiralPattern(),
-				MinEpoch = 1,
-				MaxEpoch = 4
-			};
+		device.Dispatch(operation);
+	});
 
-			var operation = new EvaluationOperation.Factory
-			{
-				NextProfile = evaluationProfile
-			};
-
-			device.Dispatch(operation);
-		}
-	}
-
-	static void DisposeDevice(Device device) => ActionQueue.Enqueue(device.Dispose, "Device Dispose");
+	static void DisposeDevice(Device device) => ActionQueue.Enqueue("Device Dispose", device.Dispose);
 }

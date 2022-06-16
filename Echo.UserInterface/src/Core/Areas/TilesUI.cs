@@ -6,7 +6,6 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Common;
@@ -33,10 +32,13 @@ public class TilesUI : PlaneUI
 	Float2 textureExtend;
 
 	Procedure[] procedures;
+	TextureGrid compareTexture;
 
 	EvaluationOperation lastOperation;
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
+
+	const string TextureFilePath = "render.png";
 
 	protected override void Update(in Moment moment)
 	{
@@ -114,6 +116,7 @@ public class TilesUI : PlaneUI
 
 		//Find the first available tile
 		int count = indexQueue.Count;
+
 		for (int i = 0; i < count; i++)
 		{
 			uint index = indexQueue.Dequeue();
@@ -137,6 +140,7 @@ public class TilesUI : PlaneUI
 		Int2 max = tile.Max;
 
 		int invertY = textureSize.Y - min.Y - tileSize.Y;
+		Float2 textureSizeR = 1f / textureSize;
 
 		SDL_Rect rect = new SDL_Rect { x = min.X, y = invertY, w = tileSize.X, h = tileSize.Y };
 		SDL_LockTexture(texture, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
@@ -149,7 +153,17 @@ public class TilesUI : PlaneUI
 		{
 			for (int x = min.X; x < max.X; x++)
 			{
-				Float4 color = tile[new Int2(x, y)];
+				Int2 position = new Int2(x, y);
+				Float4 color = tile[position];
+
+				if (compareTexture != null)
+				{
+					Float2 uv = (position + Float2.Half) * textureSizeR;
+					Float4 reference = compareTexture[uv];
+					color = (color - reference).Absoluted;
+					color += Float4.Ana; //Force alpha to be 1
+				}
+
 				color = ApproximateSqrt(color.Max(Float4.Zero));
 				color = color.Min(Float4.One) * byte.MaxValue;
 
@@ -176,14 +190,12 @@ public class TilesUI : PlaneUI
 
 	void DrawHeader(IEvaluationLayer layer)
 	{
-		if (ImGui.Button("Save Buffer to File"))
+		//Buttons and info label
+		if (ImGui.Button("Save to File"))
 		{
-			ActionQueue.Enqueue(Serialize, "Serialize Evaluation Layer");
-			void Serialize() => ((TextureGrid)layer).Save("render.png");
+			ActionQueue.Enqueue("Serialize Evaluation Layer", Serialize);
+			void Serialize() => ((TextureGrid)layer).Save(TextureFilePath);
 		}
-
-		ImGui.SameLine();
-		if (ImGui.Button("Compare with File")) CompareWithFile(layer);
 
 		ImGui.SameLine();
 		if (ImGui.Button("Show Working Directory"))
@@ -202,6 +214,21 @@ public class TilesUI : PlaneUI
 
 		ImGui.SameLine();
 		DrawMousePixelInformation(layer);
+
+		//Compare mode
+		bool compare = compareTexture != null;
+
+		if (ImGui.Checkbox("Compare with File", ref compare))
+		{
+			if (compare)
+			{
+				if (File.Exists(TextureFilePath)) compareTexture = ((TextureGrid)layer).Load(TextureFilePath);
+				else LogList.AddWarning($"Unable to find texture file at {Path.GetFullPath(TextureFilePath)}.");
+			}
+			else compareTexture = null;
+
+			RestartTextureUpdate();
+		}
 	}
 
 	/// <summary>
@@ -255,18 +282,23 @@ public class TilesUI : PlaneUI
 	void DrawMousePixelInformation(IEvaluationLayer layer)
 	{
 		Float2 cursorPosition = CursorPosition ?? Float2.NegativeInfinity;
-		cursorPosition = cursorPosition / textureExtend / 2f + Float2.Half;
-		cursorPosition = new Float2(1f - cursorPosition.X, cursorPosition.Y);
+		Float2 uv = (cursorPosition + Float2.One) / textureExtend / 2f;
+		uv = new Float2(-uv.X, uv.Y) + Float2.Half;
 
-		if (Float2.Zero <= cursorPosition && cursorPosition < Float2.One)
+		if (Float2.Zero <= uv && uv < Float2.One)
 		{
-			Int2 position = (Int2)(cursorPosition * textureSize);
+			Int2 position = (Int2)(uv * textureSize);
 			Int2 tilePosition = layer.GetTilePosition(position);
 			IEvaluationReadTile tile = layer.RequestTile(tilePosition);
 
-			ImGui.TextUnformatted(tile == null ?
-				$"Pixel: {position} Tile: {tilePosition}" :
-				$"Pixel: {position} Tile: {tilePosition} RGBA: {tile[position]:N4}");
+			if (tile != null)
+			{
+				Float4 color = tile[position];
+
+				if (compareTexture != null) color = (color - compareTexture[uv]).Absoluted;
+				ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {color:N4}");
+			}
+			else ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition}");
 		}
 		else ImGui.TextUnformatted("Mouse Content Unavailable");
 	}
@@ -299,18 +331,5 @@ public class TilesUI : PlaneUI
 		Vector4 c = style.Colors[(int)styleColor];
 		var color = new Color32(c.X, c.Y, c.Z, c.W);
 		return Unsafe.As<Color32, uint>(ref color);
-	}
-
-	static void CompareWithFile(IEvaluationLayer layer)
-	{
-		var device = Device.Instance;
-		if (device == null) return;
-
-		ActionQueue.Enqueue(Dispatch, "Compare Operation Dispatch");
-
-		void Dispatch()
-		{
-			// device.Dispatch(operation);
-		}
 	}
 }

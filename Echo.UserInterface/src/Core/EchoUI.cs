@@ -41,7 +41,6 @@ public sealed class EchoUI : IApplication
 		io.ConfigWindowsMoveFromTitleBarOnly = true;
 
 		io.Fonts.AddFontFromFileTTF("ext/JetBrainsMono/JetBrainsMono-Bold.ttf", 16f);
-		io.IniSavingRate = float.MaxValue;
 
 		ImGuiStylePtr style = ImGui.GetStyle();
 
