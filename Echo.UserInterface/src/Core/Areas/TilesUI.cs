@@ -27,6 +27,14 @@ public class TilesUI : PlaneUI
 {
 	public TilesUI() : base("Tiles") { }
 
+	public override void Initialize()
+	{
+		base.Initialize();
+		operationUI = Root.Find<OperationUI>();
+	}
+
+	OperationUI operationUI;
+
 	IntPtr texture;
 	Int2 textureSize;
 	Float2 textureExtend;
@@ -42,7 +50,7 @@ public class TilesUI : PlaneUI
 
 	protected override void Update(in Moment moment)
 	{
-		if (Device.Instance?.LatestOperation is not EvaluationOperation { destination: { } layer } operation) return;
+		if (operationUI.SelectedOperation is not EvaluationOperation { destination: { } layer } operation) return;
 
 		//Check if operation or buffer changed
 		Int2 layerSize = ((TextureGrid)layer).size;
@@ -223,7 +231,7 @@ public class TilesUI : PlaneUI
 			if (compare)
 			{
 				if (File.Exists(TextureFilePath)) compareTexture = ((TextureGrid)layer).Load(TextureFilePath);
-				else LogList.AddWarning($"Unable to find texture file at {Path.GetFullPath(TextureFilePath)}.");
+				else LogList.AddError($"Unable to find texture file at {Path.GetFullPath(TextureFilePath)}.");
 			}
 			else compareTexture = null;
 

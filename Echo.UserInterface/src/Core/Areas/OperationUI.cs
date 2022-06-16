@@ -22,6 +22,8 @@ public class OperationUI : AreaUI
 	EventRow[] eventRows;
 	readonly WorkerData workerData = new();
 
+	public Operation SelectedOperation { get; private set; }
+
 	protected override void Update(in Moment moment)
 	{
 		var device = Device.Instance;
@@ -36,9 +38,13 @@ public class OperationUI : AreaUI
 
 		UpdateOperationLabels(operations);
 
+		var oldOperation = SelectedOperation;
 		ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
-		var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
+		SelectedOperation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
 
+		if (oldOperation != SelectedOperation) LogList.Add($"Changed selected operation in {nameof(OperationUI)}.");
+
+		var operation = SelectedOperation;
 		double progress = operation.Progress;
 		TimeSpan time = operation.Time;
 
