@@ -96,14 +96,18 @@ public record PathTracedEvaluator : Evaluator
 
 					//Cache GeometryToken from GeometryLight to potentially add emission after advancing
 					GeometryToken token;
+					bool hasToken;
 
 					if (area is not GeometryLight geometry)
 					{
-						//Assign the 'null' GeometryToken
 						Unsafe.SkipInit(out token);
-						token.Geometry = NodeToken.Empty;
+						hasToken = false;
 					}
-					else token = geometry.Token;
+					else
+					{
+						token = geometry.Token;
+						hasToken = true;
+					}
 
 					//Add ambient light and exit if no intersection
 					if (!path.Advance(scene, allocator))
@@ -114,7 +118,7 @@ public record PathTracedEvaluator : Evaluator
 					}
 
 					//Try add emission with MIS
-					if (token == path.touch.token) path.ContributeEmissive(weight);
+					if (hasToken && token == path.touch.token) path.ContributeEmissive(weight);
 				}
 				else
 				{
