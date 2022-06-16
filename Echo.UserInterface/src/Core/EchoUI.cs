@@ -61,6 +61,16 @@ public sealed class EchoUI : IApplication
 		foreach (AreaUI area in areas) area.NewFrame(moment);
 	}
 
+	public T Find<T>() where T : AreaUI
+	{
+		foreach (AreaUI area in areas)
+		{
+			if (area is T match) return match;
+		}
+
+		return null;
+	}
+
 	public void Dispose()
 	{
 		foreach (AreaUI area in areas) area.Dispose();
