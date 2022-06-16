@@ -18,22 +18,20 @@ public record BruteForcedEvaluator : Evaluator
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
-		return Evaluate(scene, ray, distribution, allocator, bounceLimit);
+		return Evaluate(scene, ray, distribution, allocator, bounceLimit, new TraceQuery(ray));
 	}
 
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
 
-	private Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, int depth)
+	private Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, int depth, TraceQuery prevQuery)
 	{
 		if (depth <= 0) return RGB128.Black;
 
-		var query = new TraceQuery(ray);
-
 		allocator.Restart();
 
-		while (scene.Trace(ref query))
+		while (scene.Trace(ref prevQuery))
 		{
-			Touch touch = scene.Interact(query);
+			Touch touch = scene.Interact(prevQuery);
 
 			var material = touch.shade.material;
 			material.Scatter(ref touch, allocator);
@@ -41,14 +39,16 @@ public record BruteForcedEvaluator : Evaluator
 			{
 				Float3 incidentWorld = Float3.Zero;
 				Probable<RGB128> sample = touch.bsdf.Sample(touch.outgoing, distribution.Next2D(), out incidentWorld, out _);
+				if (sample.content.IsZero || sample.pdf == 0f) return Float4.Zero;
 				RGB128 color = sample.content / sample.pdf;
-				return (color * Evaluate(scene, query.SpawnTrace(incidentWorld).ray, distribution, allocator, depth - 1)) * touch.NormalDot(incidentWorld);
+				TraceQuery newTraceQuery = prevQuery.SpawnTrace(incidentWorld);
+				return (color * Evaluate(scene, newTraceQuery.ray, distribution, allocator, depth - 1, newTraceQuery)) * touch.NormalDot(incidentWorld);
 			}
 
-			query = query.SpawnTrace();
+			prevQuery = prevQuery.SpawnTrace();
 		}
 
-		return scene.lights.EvaluateAmbient(query.ray.direction);
+		return scene.lights.EvaluateAmbient(prevQuery.ray.direction);
 
 	}
 }
