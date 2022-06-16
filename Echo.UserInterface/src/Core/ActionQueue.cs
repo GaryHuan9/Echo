@@ -16,7 +16,7 @@ public static class ActionQueue
 
 	static bool hasThread;
 
-	public static void Enqueue(Action action, string label)
+	public static void Enqueue(string label, Action action)
 	{
 		using var _ = locker.Fetch();
 
