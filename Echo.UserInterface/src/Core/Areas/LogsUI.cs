@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.IO;
 using CodeHelpers.Diagnostics;
 using Echo.UserInterface.Backend;
 using ImGuiNET;
@@ -20,7 +20,7 @@ public class LogsUI : AreaUI
 		if (ImGui.Button("Clear All")) LogList.Clear();
 
 		ImGui.SameLine();
-		if (ImGui.Button("Save to File")) throw new NotImplementedException();
+		if (ImGui.Button("Save to File")) SaveToFile();
 
 		ImGui.Separator();
 		ImGui.BeginChild("History");
@@ -29,4 +29,10 @@ public class LogsUI : AreaUI
 
 		ImGui.EndChild();
 	}
+
+	static void SaveToFile() => ActionQueue.Enqueue("Log List Dump", () =>
+	{
+		using var writer = new StreamWriter("logs.txt");
+		foreach (string log in LogList.Logs) writer.WriteLine(log);
+	});
 }
