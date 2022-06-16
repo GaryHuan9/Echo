@@ -117,7 +117,11 @@ public class SystemUI : AreaUI
 	{
 		var info = GC.GetGCMemoryInfo();
 
-		if (ImGui.Button("Collect All Generations")) GC.Collect();
+		if (ImGui.Button("Collect All Generations"))
+		{
+			GC.Collect();
+			LogList.Add("Triggered garbage collection on all generations.");
+		}
 
 		//Main table
 		if (ImGuiCustom.BeginProperties("Main"))
@@ -176,10 +180,18 @@ public class SystemUI : AreaUI
 		ImGui.BeginDisabled(idle);
 
 		ImGui.SameLine();
-		if (ImGui.Button("Pause")) device.Pause();
+		if (ImGui.Button("Pause"))
+		{
+			device.Pause();
+			LogList.Add("Pausing compute device.");
+		}
 
 		ImGui.SameLine();
-		if (ImGui.Button("Resume")) device.Resume();
+		if (ImGui.Button("Resume"))
+		{
+			device.Resume();
+			LogList.Add("Resuming compute device.");
+		}
 
 		ImGui.EndDisabled();
 		ImGui.SameLine();
