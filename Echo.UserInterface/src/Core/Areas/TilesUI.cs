@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
@@ -34,12 +32,11 @@ public class TilesUI : PlaneUI
 	}
 
 	OperationUI operationUI;
+	Procedure[] procedures;
 
 	IntPtr texture;
 	Int2 textureSize;
 	Float2 textureExtend;
-
-	Procedure[] procedures;
 	TextureGrid compareTexture;
 
 	EvaluationOperation lastOperation;
@@ -57,8 +54,9 @@ public class TilesUI : PlaneUI
 
 		if (layerSize != textureSize)
 		{
-			if (texture != IntPtr.Zero) Root.Backend.DestroyTexture(ref texture);
-			texture = Root.Backend.CreateTexture(textureSize = layerSize, true);
+			textureSize = layerSize;
+			Root.Backend.DestroyTexture(ref texture);
+			texture = Root.Backend.CreateTexture(layerSize, true);
 		}
 
 		if (operation != lastOperation)
@@ -85,6 +83,8 @@ public class TilesUI : PlaneUI
 	{
 		FindContentBounds(region, out Bounds content);
 
+		uint color = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
+		drawList.AddRect(content.MinVector2, content.MaxVector2, color);
 		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
 
 		DrawCurrentTiles(lastOperation, drawList, content);
@@ -104,11 +104,12 @@ public class TilesUI : PlaneUI
 
 		//Clear texture
 		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
+		SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
 
 		unsafe
 		{
-			if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF1F1511u);
-			else throw new InvalidOperationException("Fill assumption with contiguous memory from SDL2 backend is violated!");
+			if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Clear();
+			else throw new InvalidOperationException("Fill assumption of contiguous memory from SDL2 is violated!");
 		}
 
 		SDL_UnlockTexture(texture);
@@ -269,8 +270,8 @@ public class TilesUI : PlaneUI
 		Float2 invertMin = new Float2(content.min.X, content.max.Y);
 		Float2 invertMax = new Float2(content.max.X, content.min.Y);
 
-		uint progressColor = GetColorFromStyle(ImGuiCol.FrameBg);
-		uint borderColor = GetColorFromStyle(ImGuiCol.CheckMark);
+		uint fillColor = ImGuiCustom.GetColorInteger(ImGuiCol.FrameBg);
+		uint borderColor = ImGuiCustom.GetColorInteger();
 
 		foreach (ref readonly Procedure procedure in GatherValidProcedures(operation))
 		{
@@ -282,7 +283,7 @@ public class TilesUI : PlaneUI
 
 			float progress = (float)procedure.Progress;
 			Float2 height = new(max.X, Scalars.Lerp(min.Y, max.Y, progress));
-			drawList.AddRectFilled(min.AsVector2(), height.AsVector2(), progressColor);
+			drawList.AddRectFilled(min.AsVector2(), height.AsVector2(), fillColor);
 			drawList.AddRect(min.AsVector2(), max.AsVector2(), borderColor);
 		}
 	}
@@ -331,13 +332,4 @@ public class TilesUI : PlaneUI
 	void ReleaseUnmanagedResources() => Root.Backend.DestroyTexture(ref texture);
 
 	~TilesUI() => Dispose(false);
-
-	static uint GetColorFromStyle(ImGuiCol styleColor)
-	{
-		var style = ImGui.GetStyle();
-
-		Vector4 c = style.Colors[(int)styleColor];
-		var color = new Color32(c.X, c.Y, c.Z, c.W);
-		return Unsafe.As<Color32, uint>(ref color);
-	}
 }
