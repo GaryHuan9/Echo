@@ -246,7 +246,7 @@ public class SystemUI : AreaUI
 
 		void Dispatch()
 		{
-			var scene = new SingleBunny();
+			var scene = new MirrorBox();
 			//var scene = new CornellBox();
 
 			var prepareProfile = new ScenePrepareProfile();
@@ -254,9 +254,9 @@ public class SystemUI : AreaUI
 			var evaluationProfile = new EvaluationProfile
 			{
 				Scene = new PreparedScene(scene, prepareProfile),
-				Evaluator = new BruteForcedEvaluator(),
+				Evaluator = new PathTracedEvaluator(),
 				Distribution = new StratifiedDistribution { Extend = 16 },
-				Buffer = new RenderBuffer(new Int2(960, 540)),
+				Buffer = new RenderBuffer(new Int2(512, 512)),
 				Pattern = new SpiralPattern(),
 				MinEpoch = 1,
 				MaxEpoch = 20

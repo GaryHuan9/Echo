@@ -11,6 +11,7 @@ using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
 using Echo.Core.Textures.Grid;
+using System;
 
 namespace Echo.Core.Scenic.Examples;
 
@@ -38,6 +39,45 @@ public class SingleBunny : StandardScene
 
 		children.Add(new PointLight { Intensity = new RGB128(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
 		children.Add(new PointLight { Intensity = new RGB128(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
+	}
+}
+
+public class MirrorBox : StandardScene
+{
+	public MirrorBox()
+	{
+		var green = new Matte { Albedo = (Pure)RGBA128.Parse("0x00CB21") };
+		var red = new Matte { Albedo = (Pure)RGBA128.Parse("0xCB0021") };
+		var blue = new Matte { Albedo = (Pure)RGBA128.Parse("0x0021CB") };
+		var white = new Matte { Albedo = (Pure)RGBA128.Parse("0xEEEEF2") };
+
+		var cullable = new Cullable { Base = white };
+		var light = new Emissive { Albedo = (Pure)RGBA128.Parse("0xFFFAF4") };
+
+		var matMirror = new Mirror { Albedo = (Pure)new RGBA128(0.75f) };
+
+		const float Width = 10f;
+		const float Half = Width / 2f;
+		const float Size = Half / 5f * 3f;
+
+		children.Add(new PlaneEntity { Material = matMirror, Size = (Float2)Width, Position = Float3.Zero, Rotation = Float3.Zero });                                //Floor
+		children.Add(new PlaneEntity { Material = matMirror, Size = (Float2)Width, Position = new Float3(0f, Width, 0f), Rotation = new Float3(180f, 0f, 0f) });     //Roof
+		children.Add(new PlaneEntity { Material = matMirror, Size = (Float2)Width, Position = new Float3(0f, Half, Half), Rotation = new Float3(-90f, 0f, 0f) });     //Back
+																																									  //children.Add(new PlaneEntity { Material = cullable, Size = (Float2)Width, Position = new Float3(0f, Half, -Half), Rotation = new Float3(90f, 0f, 0f) }); //Front
+
+		children.Add(new PlaneEntity { Material = matMirror, Size = (Float2)Width, Position = new Float3(Half, Half, 0f), Rotation = new Float3(0f, 0f, 90f) }); //Right
+		children.Add(new PlaneEntity { Material = matMirror, Size = (Float2)Width, Position = new Float3(-Half, Half, 0f), Rotation = new Float3(0f, 0f, -90f) }); //Left
+		children.Add(new PlaneEntity { Material = light, Size = (Float2)Half, Position = new Float3(0f, Width - 0.01f, 0f), Rotation = Float3.Zero });       //Light
+
+		children.Add(new BoxEntity { Material = white, Size = (Float3)Size, Position = new Float3(Size / 1.5f, Size / 2f, -Size / 1.5f), Rotation = Float3.Up * 21f });
+		children.Add(new BoxEntity { Material = white, Size = new Float3(Size, Size * 2f, Size), Position = new Float3(-Size / 1.5f, Size, Size / 1.5f), Rotation = Float3.Up * -21f });
+
+		Camera camera = new Camera(42f) { Position = new Float3(0f, Half, -Half) };
+
+		float radian = Scalars.ToRadians(camera.FieldOfView / 2f);
+		camera.Position += Float3.Backward * (Half / MathF.Tan(radian));
+
+		children.Add(camera); //Position: (0, 5, -18.025444)
 	}
 }
 
