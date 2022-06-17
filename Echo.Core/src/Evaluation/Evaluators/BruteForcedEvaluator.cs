@@ -47,13 +47,13 @@ public record BruteForcedEvaluator : Evaluator
 			{
 				Float3 incidentWorld = Float3.Zero;
 				Probable<RGB128> sample = touch.bsdf.Sample(touch.outgoing, distribution.Next2D(), out incidentWorld, out _);
+				if (material is IEmissive)
+				{
+					return ((IEmissive)material).Emit(touch.point, touch.outgoing);
+				}
+
 				if (sample.content.IsZero || sample.pdf == 0f) return Float4.Zero;
 				RGB128 color = sample.content / sample.pdf;
-
-				(ILight light, float lightPdf) = scene.PickLight(lightSamples, allocator);
-				float weight = 1f / lightPdf;
-
-				color += weight * ImportanceSampleRadiant(light, touch, distribution.Next2D(), scene, out _);
 
 				TraceQuery newTraceQuery = prevQuery.SpawnTrace(incidentWorld);
 				return (color * Evaluate(scene, newTraceQuery.ray, distribution, allocator, depth - 1, newTraceQuery, lightSamples)) * touch.NormalDot(incidentWorld);
@@ -66,36 +66,4 @@ public record BruteForcedEvaluator : Evaluator
 
 	}
 
-	static RGB128 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedScene scene, out bool mis)
-	{
-		//Importance sample light
-		mis = light is IAreaLight;
-
-		(RGB128 radiant, float radiantPdf) = light.Sample(touch.point, sample, out Float3 incident, out float travel);
-
-		if (!FastMath.Positive(radiantPdf) | radiant.IsZero) return RGB128.Black;
-
-		//Evaluate bsdf at the direction sampled for our light
-		ref readonly Float3 outgoing = ref touch.outgoing;
-		RGB128 scatter = touch.bsdf.Evaluate(outgoing, incident);
-		scatter *= touch.NormalDot(incident);
-
-		//Conditionally terminate if radiant cannot be positive
-		if (scatter.IsZero) return RGB128.Black;
-		var query = touch.SpawnOcclude(incident, travel);
-		if (scene.Occlude(ref query)) return RGB128.Black;
-
-		//Calculate final radiant
-		radiant /= radiantPdf;
-		if (!mis) return scatter * radiant;
-
-		float pdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
-		return PowerHeuristic(radiantPdf, pdf) * scatter * radiant;
-	}
-
-	/// <summary>
-	/// Power heuristic with a constant power of two used for multiple importance sampling.
-	/// NOTE: <paramref name="pdf0"/> will become the numerator, not <paramref name="pdf1"/>.
-	/// </summary>
-	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
 }
