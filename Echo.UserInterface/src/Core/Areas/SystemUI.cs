@@ -246,7 +246,7 @@ public class SystemUI : AreaUI
 
 		void Dispatch()
 		{
-			var scene = new MirrorBox();
+			var scene = new SingleBunny();
 			//var scene = new CornellBox();
 
 			var prepareProfile = new ScenePrepareProfile();
