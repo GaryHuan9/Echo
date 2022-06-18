@@ -16,8 +16,8 @@ public static class LogList
 	public static IEnumerable<string> Logs => logs;
 
 	public static void Add(string value) => logs.ImmediateAdd($"[{DateTime.Now.ToStringDefault()}] {value}");
-	public static void AddWarning(string value) => logs.ImmediateAdd($"[{DateTime.Now.ToStringDefault()}] Warning: {value}");
-	public static void AddError(string value) => logs.ImmediateAdd($"[{DateTime.Now.ToStringDefault()}] ERROR: {value}");
+	public static void AddWarning(string value) => logs.ImmediateAdd($"[{DateTime.Now.ToStringDefault()}] [warning] {value}");
+	public static void AddError(string value) => logs.ImmediateAdd($"[{DateTime.Now.ToStringDefault()}] [ERROR] {value}");
 
 	public static void Clear() => Interlocked.Exchange(ref logs, new ConcurrentList<string>());
 
