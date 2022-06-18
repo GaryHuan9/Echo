@@ -25,4 +25,10 @@
         <ProjectReference Include="..\Echo.Core\Echo.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <Content Include="imgui.ini">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
 </Project>

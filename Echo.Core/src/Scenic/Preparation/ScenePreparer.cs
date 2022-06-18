@@ -33,7 +33,15 @@ public class ScenePreparer
 	readonly Dictionary<EntityPack, Node> entityPacks = new();
 	readonly HashSet<Material> preparedMaterials = new();
 
-	public Dictionary<EntityPack, Node>.KeyCollection UniquePacks => entityPacks.Keys;
+	/// <summary>
+	/// The total number of prepared <see cref="Material"/>.
+	/// </summary>
+	public int MaterialCount => preparedMaterials.Count;
+
+	/// <summary>
+	/// The total number of unique <see cref="EntityPack"/>.
+	/// </summary>
+	public int EntityPackCount => entityPacks.Count;
 
 	/// <summary>
 	/// Retrieves the <see cref="PreparedPack"/> for <paramref name="pack"/> and outputs its corresponding
