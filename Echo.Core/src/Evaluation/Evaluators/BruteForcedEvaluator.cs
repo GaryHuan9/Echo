@@ -28,12 +28,12 @@ public record BruteForcedEvaluator : Evaluator
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		allocator.Restart();
-		return Evaluate(scene, ray, distribution, allocator, bounceLimit, new TraceQuery(ray));
+		return Evaluate(scene, distribution, allocator, bounceLimit, new TraceQuery(ray));
 	}
 
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
 
-	static Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, int depth, TraceQuery prevQuery)
+	static Float4 Evaluate(PreparedScene scene, ContinuousDistribution distribution, Allocator allocator, int depth, TraceQuery prevQuery)
 	{
 		if (depth <= 0) return RGB128.Black;
 		//allocator.Restart();
@@ -49,18 +49,19 @@ public record BruteForcedEvaluator : Evaluator
 				prevQuery = prevQuery.SpawnTrace();
 				continue;
 			}
-			Float3 incidentWorld = Float3.Zero;
-			Probable<RGB128> sample = touch.bsdf.Sample(touch.outgoing, distribution.Next2D(), out incidentWorld, out _);
+
 			if (material is IEmissive)
 			{
 				return ((IEmissive)material).Emit(touch.point, touch.outgoing);
 			}
+			Float3 incidentWorld = Float3.Zero;
+			Probable<RGB128> sample = touch.bsdf.Sample(touch.outgoing, distribution.Next2D(), out incidentWorld, out _);
 
 			if (sample.content.IsZero || sample.pdf == 0f) return Float4.Zero;
 			RGB128 color = sample.content / sample.pdf;
 
 			TraceQuery newTraceQuery = prevQuery.SpawnTrace(incidentWorld);
-			return (color * Evaluate(scene, newTraceQuery.ray, distribution, allocator, depth - 1, newTraceQuery)) * touch.NormalDot(incidentWorld);
+			return (color * Evaluate(scene, distribution, allocator, depth - 1, newTraceQuery)) * touch.NormalDot(incidentWorld);
 		}
 
 		return scene.lights.EvaluateAmbient(prevQuery.ray.direction);
