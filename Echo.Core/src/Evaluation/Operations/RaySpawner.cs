@@ -3,7 +3,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Textures.Evaluation;
 
-namespace Echo.Core.Evaluation.Evaluators;
+namespace Echo.Core.Evaluation.Operations;
 
 /// <summary>
 /// A container that stores information necessary to spawning a <see cref="Ray"/> from a <see cref="RenderBuffer"/>.

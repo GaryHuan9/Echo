@@ -57,7 +57,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 	public override bool Occlude(ref OccludeQuery query) => OccludeImpl(ref query);
 
-	public override int TraceCost(in Ray ray, ref float distance) => GetTraceCost(NodeToken.Root, ray, ref distance);
+	public override uint TraceCost(in Ray ray, ref float distance) => GetTraceCost(NodeToken.Root, ray, ref distance);
 
 	public override unsafe int GetHashCode()
 	{
@@ -318,7 +318,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		return false;
 	}
 
-	int GetTraceCost(in NodeToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
+	uint GetTraceCost(in NodeToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 	{
 		if (token.IsEmpty || intersection >= distance) return 0;
 		if (token.IsGeometry) return pack.GetTraceCost(ray, ref distance, token);
@@ -334,38 +334,34 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			true
 		};
 
-		int cost = Width;
+		uint cost = Width;
 
 		if (orders[node.axisMajor])
 		{
-			cost += GetTraceCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
-			cost += GetTraceCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
+			RecursiveTraceCost(orders[node.axisMinor0], 0, node.token4, ray, ref distance);
+			RecursiveTraceCost(orders[node.axisMinor1], 2, node.token4, ray, ref distance);
 		}
 		else
 		{
-			cost += GetTraceCost2(orders[node.axisMinor1], 2, node.token4, intersections, ray, ref distance);
-			cost += GetTraceCost2(orders[node.axisMinor0], 0, node.token4, intersections, ray, ref distance);
+			RecursiveTraceCost(orders[node.axisMinor1], 2, node.token4, ray, ref distance);
+			RecursiveTraceCost(orders[node.axisMinor0], 0, node.token4, ray, ref distance);
 		}
 
 		return cost;
-	}
 
-	int GetTraceCost2(bool order, int offset, in NodeToken4 child4, in Float4 intersections, in Ray ray, ref float distance)
-	{
-		int cost = 0;
-
-		if (order)
+		void RecursiveTraceCost(bool order, int offset, in NodeToken4 child4, in Ray ray, ref float distance)
 		{
-			cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections[0 + offset]);
-			cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections[1 + offset]);
+			if (order)
+			{
+				cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections[0 + offset]);
+				cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections[1 + offset]);
+			}
+			else
+			{
+				cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections[1 + offset]);
+				cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections[0 + offset]);
+			}
 		}
-		else
-		{
-			cost += GetTraceCost(child4[1 + offset], ray, ref distance, intersections[1 + offset]);
-			cost += GetTraceCost(child4[0 + offset], ray, ref distance, intersections[0 + offset]);
-		}
-
-		return cost;
 	}
 
 	Node CreateNode(BuildNode buildNode, ReadOnlySpan<NodeToken> tokens, ref uint nodeIndex, out int depth)

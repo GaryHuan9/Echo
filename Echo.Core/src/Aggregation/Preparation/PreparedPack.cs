@@ -239,7 +239,7 @@ public class PreparedPack
 	/// <summary>
 	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
 	/// </summary>
-	public int GetTraceCost(in Ray ray, ref float distance, in NodeToken token)
+	public uint GetTraceCost(in Ray ray, ref float distance, in NodeToken token)
 	{
 		Assert.IsTrue(token.IsGeometry);
 
