@@ -23,7 +23,7 @@ public class SingleBunny : StandardScene
 
 		Pure blue = (Pure)new RGBA128(0.0250f, 0.1416f, 0.3736f);
 
-		var material0 = new Matte { Albedo = (Pure)new RGBA128(1f, 0.68f, 0.16f, 1f) };
+		var material0 = new Matte { Albedo = (Pure)new RGBA128(1f, 0.68f, 0.16f) };
 		var material1 = new Matte { Albedo = blue };
 		var material2 = new Emissive { Albedo = Texture.white };
 		var material3 = new Mirror { Albedo = (Pure)new RGBA128(0.75f) };
