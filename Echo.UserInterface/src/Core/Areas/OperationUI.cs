@@ -17,10 +17,23 @@ public class OperationUI : AreaUI
 
 	int selectionIndex;
 	int lastOperationCount;
+	Operation lastOperation;
 
 	string[] operationLabels;
 	EventRow[] eventRows;
 	readonly WorkerData workerData = new();
+
+	public Operation SelectedOperation
+	{
+		get
+		{
+			var device = Device.Instance;
+			if (device == null) return null;
+			var operations = device.PastOperations;
+			if (operations.Length == 0) return null;
+			return operations[Math.Min(lastOperationCount, operations.Length - 1)];
+		}
+	}
 
 	protected override void Update(in Moment moment)
 	{
@@ -31,13 +44,21 @@ public class OperationUI : AreaUI
 		{
 			selectionIndex = 0;
 			lastOperationCount = 0;
+			lastOperation = null;
 			return;
 		}
 
 		UpdateOperationLabels(operations);
 
 		ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
-		var operation = operations[Math.Min(selectionIndex, lastOperationCount - 1)];
+
+		var operation = SelectedOperation;
+
+		if (lastOperation != operation)
+		{
+			LogList.Add($"Changed selected operation in {nameof(OperationUI)}.");
+			lastOperation = operation;
+		}
 
 		double progress = operation.Progress;
 		TimeSpan time = operation.Time;
@@ -142,7 +163,7 @@ public class OperationUI : AreaUI
 			}
 		}
 
-		ImGuiCustom.EndProperties();
+		ImGui.EndTable();
 	}
 
 	void DrawWorkers(Operation operation)
