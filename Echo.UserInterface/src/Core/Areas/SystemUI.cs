@@ -261,16 +261,15 @@ public class SystemUI : AreaUI
 	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 	{
 		var scene = new SingleBunny();
-		//var scene = new CornellBox();
 
 		var prepareProfile = new ScenePrepareProfile();
 
 		var evaluationProfile = new EvaluationProfile
 		{
 			Scene = new PreparedScene(scene, prepareProfile),
-			Evaluator = new BruteForcedEvaluator(),
+			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
-			Buffer = new RenderBuffer(new Int2(640, 480)),
+			Buffer = new RenderBuffer(new Int2(960, 540)),
 			Pattern = new SpiralPattern(),
 			MinEpoch = 1,
 			MaxEpoch = 20
@@ -282,6 +281,5 @@ public class SystemUI : AreaUI
 		};
 
 		device.Dispatch(operation);
-
 	});
 }
