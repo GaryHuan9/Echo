@@ -219,7 +219,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height);
 		fontTexture = CreateTexture(new Int2(width, height), false);
 
-		SDL_UpdateTexture(fontTexture, IntPtr.Zero, pixels, 4 * width).ThrowOnError();
+		SDL_UpdateTexture(fontTexture, IntPtr.Zero, pixels, width * sizeof(uint)).ThrowOnError();
 		SDL_SetTextureBlendMode(fontTexture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
 		SDL_SetTextureScaleMode(fontTexture, SDL_ScaleMode.SDL_ScaleModeLinear).ThrowOnError();
 

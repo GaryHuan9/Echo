@@ -68,6 +68,7 @@ public readonly struct PreparedSphere
 	/// a coordinate representing the surface location of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
 	/// NOTE: if <paramref name="findFar"/> is true, any intersection distance under <see cref="DistanceThreshold"/> is ignored.
 	/// </summary>
+	[SkipLocalsInit]
 	public float Intersect(in Ray ray, out Float2 uv, bool findFar = false)
 	{
 		const float Infinity = float.PositiveInfinity;

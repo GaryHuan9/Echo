@@ -13,8 +13,8 @@ public class OrenNayar : BxDF
 {
 	public OrenNayar() : base
 	(
-		FunctionType.reflective |
-		FunctionType.diffuse
+		FunctionType.Reflective |
+		FunctionType.Diffuse
 	) { }
 
 	public void Reset(in RGB128 newReflectance, float newSigma)

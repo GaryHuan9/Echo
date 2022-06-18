@@ -10,6 +10,24 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Evaluation.Materials;
 
 /// <summary>
+/// An interface that should be added to any <see cref="Material"/> that can directly create emission.
+/// </summary>
+public interface IEmissive
+{
+	/// <summary>
+	/// Returns the approximated emitted power of this <see cref="IEmissive"/> per unit area.
+	/// If this property returns a non-positive value, this entire interface can be ignored.
+	/// </summary>
+	public float Power { get; }
+
+	/// <summary>
+	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
+	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
+	/// </summary>
+	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing);
+}
+
+/// <summary>
 /// A <see cref="Material"/> that is emissive, meaning that any surface it is applied to will contribute photons to the scene.
 /// The tint is determined by the total average of <see cref="Material.Albedo"/>; currently textured area light is not supported.
 /// </summary>
@@ -55,22 +73,4 @@ public class Emissive : Material, IEmissive
 
 	/// <inheritdoc/>
 	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
-}
-
-/// <summary>
-/// An interface that should be added to any <see cref="Material"/> that can directly create emission.
-/// </summary>
-public interface IEmissive
-{
-	/// <summary>
-	/// Returns the approximated emitted power of this <see cref="IEmissive"/> per unit area.
-	/// If this property returns a non-positive value, this entire interface can be ignored.
-	/// </summary>
-	public float Power { get; }
-
-	/// <summary>
-	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
-	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
-	/// </summary>
-	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing);
 }

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
-using System.Runtime.CompilerServices;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Common;
@@ -22,33 +21,44 @@ namespace Echo.UserInterface.Core.Areas;
 
 using static SDL;
 
-public class TilesUI : AreaUI
+public class TilesUI : PlaneUI
 {
 	public TilesUI() : base("Tiles") { }
 
+	public override void Initialize()
+	{
+		base.Initialize();
+		operationUI = Root.Find<OperationUI>();
+	}
+
+	OperationUI operationUI;
+	Procedure[] procedures;
+
 	IntPtr texture;
 	Int2 textureSize;
-
-	Procedure[] procedures;
+	Float2 textureExtend;
+	TextureGrid compareTexture;
 
 	EvaluationOperation lastOperation;
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
 
-	float displayScale;
-	Float2 displayCenter;
+	const string TextureFilePath = "render.png";
+
+	protected override bool HasMenuBar => true;
 
 	protected override void Update(in Moment moment)
 	{
-		if (Device.Instance?.LatestOperation is not EvaluationOperation { destination: { } } operation) return;
+		if (operationUI.SelectedOperation is not EvaluationOperation { destination: { } layer } operation) return;
 
 		//Check if operation or buffer changed
-		Int2 layerSize = ((TextureGrid)operation.destination).size;
+		Int2 layerSize = ((TextureGrid)layer).size;
 
 		if (layerSize != textureSize)
 		{
-			if (texture != IntPtr.Zero) Root.Backend.DestroyTexture(ref texture);
-			texture = Root.Backend.CreateTexture(textureSize = layerSize, true);
+			textureSize = layerSize;
+			Root.Backend.DestroyTexture(ref texture);
+			texture = Root.Backend.CreateTexture(layerSize, true);
 		}
 
 		if (operation != lastOperation)
@@ -66,8 +76,21 @@ public class TilesUI : AreaUI
 		}
 		while (tile != null);
 
-		//Draw everything
-		Draw(operation);
+		//Draw all
+		DrawMenuBar(layer);
+		base.Update(moment);
+	}
+
+	protected override void Draw(ImDrawListPtr drawList, in Bounds region)
+	{
+		FindContentBounds(region, out Bounds content);
+
+		uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
+		drawList.AddRectFilled(content.MinVector2, content.MaxVector2, 0xFF000000u);
+		drawList.AddRect(content.MinVector2, content.MaxVector2, borderColor);
+		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
+
+		DrawCurrentTiles(lastOperation, drawList, content);
 	}
 
 	protected override void Dispose(bool disposing)
@@ -84,11 +107,12 @@ public class TilesUI : AreaUI
 
 		//Clear texture
 		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
+		SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
 
 		unsafe
 		{
-			if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Fill(0xFF1F1511u);
-			else throw new InvalidOperationException("Fill assumption with contiguous memory from SDL2 backend is violated!");
+			if (pitch == sizeof(uint) * textureSize.X) new Span<uint>((uint*)pointer, textureSize.Product).Clear();
+			else throw new InvalidOperationException("Fill assumption of contiguous memory from SDL2 is violated!");
 		}
 
 		SDL_UnlockTexture(texture);
@@ -104,6 +128,7 @@ public class TilesUI : AreaUI
 
 		//Find the first available tile
 		int count = indexQueue.Count;
+
 		for (int i = 0; i < count; i++)
 		{
 			uint index = indexQueue.Dequeue();
@@ -127,6 +152,7 @@ public class TilesUI : AreaUI
 		Int2 max = tile.Max;
 
 		int invertY = textureSize.Y - min.Y - tileSize.Y;
+		Float2 textureSizeR = 1f / textureSize;
 
 		SDL_Rect rect = new SDL_Rect { x = min.X, y = invertY, w = tileSize.X, h = tileSize.Y };
 		SDL_LockTexture(texture, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
@@ -139,7 +165,17 @@ public class TilesUI : AreaUI
 		{
 			for (int x = min.X; x < max.X; x++)
 			{
-				Float4 color = tile[new Int2(x, y)];
+				Int2 position = new Int2(x, y);
+				Float4 color = tile[position];
+
+				if (compareTexture != null)
+				{
+					Float2 uv = (position + Float2.Half) * textureSizeR;
+					Float4 reference = compareTexture[uv];
+					color = (color - reference).Absoluted;
+					color += Float4.Ana; //Force alpha to be 1
+				}
+
 				color = ApproximateSqrt(color.Max(Float4.Zero));
 				color = color.Min(Float4.One) * byte.MaxValue;
 
@@ -164,85 +200,77 @@ public class TilesUI : AreaUI
 		SDL_UnlockTexture(texture);
 	}
 
-	void Draw(EvaluationOperation operation)
+	void DrawMenuBar(IEvaluationLayer layer)
 	{
-		IEvaluationLayer layer = operation.destination;
-
-		if (ImGui.Button("Save Buffer"))
+		if (ImGui.BeginMenuBar())
 		{
-			ActionQueue.Enqueue(Serialize, "Serialize Evaluation Layer");
-			void Serialize() => ((TextureGrid)layer).Save("render.png");
+			if (ImGui.BeginMenu("File"))
+			{
+				if (ImGui.MenuItem("Save to Disk"))
+				{
+					ActionQueue.Enqueue("Serialize Evaluation Layer", Serialize);
+					void Serialize() => ((TextureGrid)layer).Save(TextureFilePath);
+				}
+
+				if (ImGui.MenuItem("Show Directory"))
+				{
+					string path = Environment.CurrentDirectory;
+
+					if (!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
+					Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+				}
+
+				bool compare = compareTexture != null;
+
+				if (ImGui.MenuItem(compare ? "End Comparison" : "Compare with File"))
+				{
+					if (!compare)
+					{
+						if (File.Exists(TextureFilePath)) compareTexture = ((TextureGrid)layer).Load(TextureFilePath);
+						else LogList.AddError($"Unable to find texture file at {Path.GetFullPath(TextureFilePath)}.");
+					}
+					else compareTexture = null;
+
+					RestartTextureUpdate();
+				}
+
+				ImGui.EndMenu();
+			}
+
+			if (ImGui.BeginMenu("View"))
+			{
+				if (ImGui.MenuItem("Recenter")) Recenter();
+				if (ImGui.MenuItem("Refresh")) RestartTextureUpdate();
+
+				ImGui.EndMenu();
+			}
+
+			ImGui.EndMenuBar();
 		}
 
-		ImGui.SameLine();
-		if (ImGui.Button("Recenter View"))
-		{
-			displayScale = 0f;
-			displayCenter = Float2.Zero;
-		}
-
-		ImGui.SameLine();
-		if (ImGui.Button("Refresh Tiles")) RestartTextureUpdate();
-
-		FindBounds(out Bounds region, out Bounds content);
-		ImGui.SameLine();
-		DrawMousePixelInformation(layer, region, content);
-
-		var drawList = ImGui.GetWindowDrawList();
-
-		drawList.PushClipRect(region.MinVector2, region.MaxVector2);
-		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
-
-		DrawCurrentTiles(operation, drawList, content);
-
-		drawList.PopClipRect();
-		ProcessMouseInput(region);
+		DrawMousePixelInformation(layer);
 	}
 
-	void FindBounds(out Bounds region, out Bounds content)
+	/// <summary>
+	/// Finds the <see cref="PlaneUI.Bounds"/> for the display content.
+	/// </summary>
+	void FindContentBounds(in Bounds region, out Bounds content)
 	{
-		//Find bounds for all available space
-		Float2 min = ImGui.GetCursorScreenPos().AsFloat2();
-		Float2 max = min + ImGui.GetContentRegionAvail().AsFloat2();
-		region = new Bounds((max + min) / 2f, (max - min) / 2f);
-
-		//Find display content bounds
 		float aspect = (float)textureSize.X / textureSize.Y;
 		float regionAspect = region.extend.X / region.extend.Y;
-		Float2 extend;
 
 		if (aspect > regionAspect)
 		{
 			float width = region.extend.X;
-			extend = new Float2(width, width / aspect);
+			textureExtend = new Float2(width, width / aspect);
 		}
 		else
 		{
 			float height = region.extend.Y;
-			extend = new Float2(height * aspect, height);
+			textureExtend = new Float2(height * aspect, height);
 		}
 
-		content = new Bounds(region.center + displayCenter, extend * MathF.Exp(displayScale));
-	}
-
-	void DrawMousePixelInformation(IEvaluationLayer layer, in Bounds region, in Bounds content)
-	{
-		if (!TryGetMousePixelPosition(layer, region, content, out Int2 position))
-		{
-			ImGui.TextUnformatted("Mouse Content Unavailable");
-			return;
-		}
-
-		Int2 tilePosition = layer.GetTilePosition(position);
-		IEvaluationReadTile tile = layer.RequestTile(tilePosition);
-
-		if (tile == null)
-		{
-			ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition}");
-			return;
-		}
-
-		ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {tile[position]:N4}");
+		content = new Bounds(region.center + PlaneCenter, textureExtend * PlaneScale);
 	}
 
 	void DrawCurrentTiles(EvaluationOperation operation, ImDrawListPtr drawList, in Bounds content)
@@ -253,8 +281,8 @@ public class TilesUI : AreaUI
 		Float2 invertMin = new Float2(content.min.X, content.max.Y);
 		Float2 invertMax = new Float2(content.max.X, content.min.Y);
 
-		uint progressColor = GetColorFromStyle(ImGuiCol.FrameBg);
-		uint borderColor = GetColorFromStyle(ImGuiCol.CheckMark);
+		uint fillColor = ImGuiCustom.GetColorInteger(ImGuiCol.MenuBarBg);
+		uint borderColor = ImGuiCustom.GetColorInteger();
 
 		foreach (ref readonly Procedure procedure in GatherValidProcedures(operation))
 		{
@@ -266,9 +294,40 @@ public class TilesUI : AreaUI
 
 			float progress = (float)procedure.Progress;
 			Float2 height = new(max.X, Scalars.Lerp(min.Y, max.Y, progress));
-			drawList.AddRectFilled(min.AsVector2(), height.AsVector2(), progressColor);
+			drawList.AddRectFilled(min.AsVector2(), height.AsVector2(), fillColor);
 			drawList.AddRect(min.AsVector2(), max.AsVector2(), borderColor);
 		}
+	}
+
+	void DrawMousePixelInformation(IEvaluationLayer layer)
+	{
+		Float2 cursorPosition = CursorPosition ?? Float2.NegativeInfinity;
+		Float2 uv = cursorPosition / textureExtend;
+		uv = new Float2(-uv.X, uv.Y) / 2f + Float2.Half;
+
+		if (!(Float2.Zero <= uv) || !(uv < Float2.One))
+		{
+			ImGui.NewLine();
+			return;
+		}
+
+		Int2 position = (Int2)(uv * textureSize);
+		Int2 tilePosition = layer.GetTilePosition(position);
+		IEvaluationReadTile tile = layer.RequestTile(tilePosition);
+
+		if (tile != null)
+		{
+			Float4 color = tile[position];
+
+			if (compareTexture != null)
+			{
+				uv = (position + Float2.Half) / textureSize;
+				color = (color - compareTexture[uv]).Absoluted;
+			}
+
+			ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {color:N4}");
+		}
+		else ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition}");
 	}
 
 	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)
@@ -288,75 +347,7 @@ public class TilesUI : AreaUI
 		return result.Filled;
 	}
 
-	void ProcessMouseInput(in Bounds region)
-	{
-		//Detect for interaction
-		ImGui.SetCursorScreenPos(region.MinVector2);
-		ImGui.PushAllowKeyboardFocus(false);
-		ImGui.InvisibleButton("Display", region.extend.AsVector2() * 2f);
-		ImGui.PopAllowKeyboardFocus();
-
-		if (!ImGui.IsItemActive() && !ImGui.IsItemHovered()) return;
-
-		var io = ImGui.GetIO();
-		float zoom = io.MouseWheel * 0.1f;
-
-		//Move if the left mouse button is held 
-		if (io.MouseDown[0]) displayCenter += io.MouseDelta.AsFloat2();
-		if (zoom == 0) return;
-
-		//Math to zoom towards cursor
-		Float2 offset = region.center - io.MousePos.AsFloat2();
-		Float2 point = (offset + displayCenter) / MathF.Exp(displayScale);
-		displayCenter = point * MathF.Exp(displayScale += zoom) - offset;
-	}
-
 	void ReleaseUnmanagedResources() => Root.Backend.DestroyTexture(ref texture);
 
 	~TilesUI() => Dispose(false);
-
-	static uint GetColorFromStyle(ImGuiCol styleColor)
-	{
-		var style = ImGui.GetStyle();
-
-		Vector4 c = style.Colors[(int)styleColor];
-		var color = new Color32(c.X, c.Y, c.Z, c.W);
-		return Unsafe.As<Color32, uint>(ref color);
-	}
-
-	static bool TryGetMousePixelPosition(IEvaluationLayer layer, in Bounds region, in Bounds content, out Int2 position)
-	{
-		position = default;
-		if (!ImGui.IsMouseHoveringRect(region.MinVector2, region.MaxVector2, false)) return false;
-
-		Float2 mouse = ImGui.GetMousePos().AsFloat2();
-		Float2 percent = Float2.InverseLerp(content.min, content.max, mouse);
-		if (!(Float2.Zero <= percent) || !(percent <= Float2.One)) return false;
-
-		position = (Int2)(((TextureGrid)layer).size * new Float2(percent.X, 1f - percent.Y));
-		return true;
-	}
-
-	readonly struct Bounds
-	{
-		public Bounds(Float2 center, Float2 extend)
-		{
-			Assert.IsTrue(extend >= Float2.Zero);
-
-			this.center = center;
-			this.extend = extend;
-
-			min = center - extend;
-			max = center + extend;
-		}
-
-		public readonly Float2 center;
-		public readonly Float2 extend;
-
-		public readonly Float2 min;
-		public readonly Float2 max;
-
-		public Vector2 MinVector2 => min.AsVector2();
-		public Vector2 MaxVector2 => max.AsVector2();
-	}
 }

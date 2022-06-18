@@ -140,6 +140,7 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	/// barycentric coordinate of the intersection, otherwise, <see cref="float.PositiveInfinity"/> is returned.
 	/// The famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
 	/// </summary>
+	[SkipLocalsInit]
 	public float Intersect(in Ray ray, out Float2 uv)
 	{
 		const float Infinity = float.PositiveInfinity;

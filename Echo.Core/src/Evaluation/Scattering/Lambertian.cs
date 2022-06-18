@@ -13,8 +13,8 @@ public class LambertianReflection : BxDF
 {
 	public LambertianReflection() : base
 	(
-		FunctionType.reflective |
-		FunctionType.diffuse
+		FunctionType.Reflective |
+		FunctionType.Diffuse
 	) { }
 
 	public void Reset(in RGB128 newReflectance) => reflectance = newReflectance;
@@ -34,8 +34,8 @@ public class LambertianTransmission : BxDF
 {
 	public LambertianTransmission() : base
 	(
-		FunctionType.transmissive |
-		FunctionType.diffuse
+		FunctionType.Transmissive |
+		FunctionType.Diffuse
 	) { }
 
 	public void Reset(in RGB128 newTransmittance) => transmittance = newTransmittance;
