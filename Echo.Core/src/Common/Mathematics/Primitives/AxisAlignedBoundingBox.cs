@@ -9,7 +9,7 @@ namespace Echo.Core.Common.Mathematics.Primitives;
 /// <summary>
 /// A 3D box that is aligned to the coordinate axes, usually used to bound other objects.
 /// </summary>
-public readonly struct AxisAlignedBoundingBox
+public readonly struct AxisAlignedBoundingBox : IFormattable
 {
 	public AxisAlignedBoundingBox(in Float3 min, in Float3 max)
 	{
@@ -142,5 +142,7 @@ public readonly struct AxisAlignedBoundingBox
 	}
 
 	public override int GetHashCode() => unchecked((min.GetHashCode() * 397) ^ max.GetHashCode());
-	public override string ToString() => $"{nameof(Center)}: {Center}, {nameof(Extend)}: {Extend}";
+
+	public override string ToString() => ToString(default);
+	public string ToString(string format, IFormatProvider provider = null) => $"{Center.ToString(format, provider)} ± {Extend.ToString(format, provider)}";
 }
