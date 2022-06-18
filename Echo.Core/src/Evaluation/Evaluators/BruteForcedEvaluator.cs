@@ -1,5 +1,4 @@
-﻿using System.Reflection.PortableExecutable;
-using Echo.Core.Common.Mathematics.Primitives;
+﻿using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Textures.Colors;
@@ -7,65 +6,66 @@ using Echo.Core.Scenic.Preparation;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Evaluation;
-using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Common.Mathematics;
-using Echo.Core.Scenic.Lights;
-using System;
-using Echo.Core.Evaluation.Distributions;
-
-
 
 namespace Echo.Core.Evaluation.Evaluators;
 
-// before optimization: time of all workers: ~30sec
-
 public record BruteForcedEvaluator : Evaluator
 {
-
-	public static readonly int bounceLimit = 32;
+	/// <summary>
+	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
+	/// If such occurrence appears, the sample becomes biased and this property should be increased.
+	/// </summary>
+	public int BounceLimit { get; init; } = 128;
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
-		allocator.Restart();
-		return Evaluate(scene, distribution, allocator, bounceLimit, new TraceQuery(ray));
+		int depth = BounceLimit;
+		var query = new TraceQuery(ray);
+
+		return Evaluate(scene, ref query, distribution, allocator, ref depth);
 	}
 
-	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "force");
 
-	static Float4 Evaluate(PreparedScene scene, ContinuousDistribution distribution, Allocator allocator, int depth, TraceQuery prevQuery)
+	static Float4 Evaluate(PreparedScene scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, ref int depth)
 	{
-		if (depth <= 0) return RGB128.Black;
-		//allocator.Restart();
+		if (--depth <= 0) return RGB128.Black;
 
-		while (scene.Trace(ref prevQuery))
+		allocator.Restart();
+
+		while (scene.Trace(ref query))
 		{
-			Touch touch = scene.Interact(prevQuery);
-
+			Touch touch = scene.Interact(query);
 			Material material = touch.shade.material;
 			material.Scatter(ref touch, allocator);
-			if (touch.bsdf == null)
+
+			if (touch.bsdf != null)
 			{
-				prevQuery = prevQuery.SpawnTrace();
-				continue;
+				var emission = RGB128.Black;
+
+				if (material is IEmissive emissive) emission += emissive.Emit(touch.point, touch.outgoing);
+
+				var scatterSample = distribution.Next2D();
+				Probable<RGB128> sample = touch.bsdf.Sample
+				(
+					touch.outgoing, scatterSample,
+					out Float3 incident, out _
+				);
+
+				if (sample.NotPossible | sample.content.IsZero) return emission;
+
+				RGB128 scatter = sample.content / sample.pdf;
+				scatter *= touch.NormalDot(incident);
+				query = query.SpawnTrace(incident);
+
+				return scatter * Evaluate(scene, ref query, distribution, allocator, ref depth) + emission;
 			}
 
-			if (material is IEmissive)
-			{
-				return ((IEmissive)material).Emit(touch.point, touch.outgoing);
-			}
-			Float3 incidentWorld = Float3.Zero;
-			Probable<RGB128> sample = touch.bsdf.Sample(touch.outgoing, distribution.Next2D(), out incidentWorld, out _);
-
-			if (sample.content.IsZero || sample.pdf == 0f) return Float4.Zero;
-			RGB128 color = sample.content / sample.pdf;
-
-			TraceQuery newTraceQuery = prevQuery.SpawnTrace(incidentWorld);
-			return (color * Evaluate(scene, distribution, allocator, depth - 1, newTraceQuery)) * touch.NormalDot(incidentWorld);
+			query = query.SpawnTrace();
 		}
 
-		return scene.lights.EvaluateAmbient(prevQuery.ray.direction);
-
+		return scene.lights.EvaluateAmbient(query.ray.direction);
 	}
 
 }

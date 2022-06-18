@@ -7,7 +7,6 @@ using Echo.Core.Evaluation.Distributions.Continuous;
 using CodeHelpers.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Textures.Evaluation;
-using System.Collections.Generic;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
@@ -19,14 +18,12 @@ public record AlbedoEvaluator : Evaluator
 	{
 		var query = new TraceQuery(ray);
 
-		List<RGBA128> colors = new List<RGBA128>();
+		allocator.Restart();
 
 		//Trace for intersection
 		while (scene.Trace(ref query))
 		{
 			Touch touch = scene.Interact(query);
-
-			allocator.Restart();
 
 			Material material = touch.shade.material;
 			material.Scatter(ref touch, allocator);
