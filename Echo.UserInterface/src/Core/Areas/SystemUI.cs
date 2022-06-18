@@ -17,220 +17,238 @@ namespace Echo.UserInterface.Core.Areas;
 
 public class SystemUI : AreaUI
 {
-    public SystemUI() : base("System") { }
+	public SystemUI() : base("System") { }
 
-    public override void Initialize()
-    {
-        base.Initialize();
+	public override void Initialize()
+	{
+		base.Initialize();
 
-        if (Environment.GetCommandLineArgs().Contains("-start", StringComparer.OrdinalIgnoreCase))
-        {
-            device = Device.Create();
-            DispatchDevice(device);
-        }
+		if (Environment.GetCommandLineArgs().Contains("-start", StringComparer.OrdinalIgnoreCase))
+		{
+			CreateDevice();
+			DispatchDevice(device);
+		}
 
-        AssignUpdateFrequency();
-    }
+		AssignUpdateFrequency();
+	}
 
-    Device device;
+	Device device;
 
-    string frameTime;
-    string frameRate;
-    TimeSpan lastUpdateTime;
-    int updateFrequency = 100;
+	string frameTime;
+	string frameRate;
+	TimeSpan lastUpdateTime;
+	int updateFrequency = 100;
 
-    bool HasDevice => device is { Disposed: false };
+	bool HasDevice => device is { Disposed: false };
 
-    protected override void Update(in Moment moment)
-    {
-        ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-        if (ImGui.CollapsingHeader("General")) DrawGeneral(moment);
+	protected override void Update(in Moment moment)
+	{
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		if (ImGui.CollapsingHeader("General")) DrawGeneral(moment);
 
-        ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-        if (ImGui.CollapsingHeader("Garbage Collector")) DrawGarbageCollector();
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		if (ImGui.CollapsingHeader("Garbage Collector")) DrawGarbageCollector();
 
-        ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-        if (ImGui.CollapsingHeader("Device and Workers"))
-        {
-            if (!HasDevice)
-            {
-                if (ImGui.Button("Create and Dispatch"))
-                {
-                    device = Device.Create();
-                    DispatchDevice(device);
-                }
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		if (ImGui.CollapsingHeader("Device and Workers"))
+		{
+			if (!HasDevice)
+			{
+				if (ImGui.Button("Create and Dispatch"))
+				{
+					CreateDevice();
+					DispatchDevice(device);
+				}
 
-                ImGui.SameLine();
-                if (ImGui.Button("Create")) device = Device.Create();
-                ImGui.TextWrapped("Create a compute device to begin!");
-            }
-            else DrawDevice();
+				ImGui.SameLine();
+				if (ImGui.Button("Create")) CreateDevice();
+				ImGui.TextWrapped("Create a compute device to begin!");
+			}
+			else DrawDevice();
 
-            if (HasDevice) DrawWorkers();
-        }
-    }
+			if (HasDevice) DrawWorkers();
+		}
+	}
 
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-        if (disposing) device?.Dispose();
-    }
+	protected override void Dispose(bool disposing)
+	{
+		base.Dispose(disposing);
+		if (disposing) device?.Dispose();
+	}
 
-    void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
+	void CreateDevice()
+	{
+		device = Device.Create();
+		LogList.Add("Created CPU compute device.");
+	}
 
-    void DrawGeneral(in Moment moment)
-    {
-        if (ImGuiCustom.BeginProperties("Main"))
-        {
-            ImGuiCustom.Property("Operating System", Environment.OSVersion.VersionString);
-            ImGuiCustom.Property("Debugger", Debugger.IsAttached ? "Present" : "Not Attached");
-            ImGuiCustom.Property("Compiler Mode", GetCompilerMode());
+	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
 
-            ImGui.NewLine();
+	void DrawGeneral(in Moment moment)
+	{
+		if (ImGuiCustom.BeginProperties("Main"))
+		{
+			ImGuiCustom.Property("Operating System", Environment.OSVersion.VersionString);
+			ImGuiCustom.Property("Debugger", Debugger.IsAttached ? "Present" : "Not Attached");
+			ImGuiCustom.Property("Compiler Mode", GetCompilerMode());
 
-            if (moment.elapsed - lastUpdateTime > TimeSpan.FromSeconds(0.5f))
-            {
-                float rate = 1f / (float)moment.delta.TotalSeconds;
-                frameTime = moment.delta.ToString("s\\.ffff");
-                frameRate = rate.ToStringDefault();
-                lastUpdateTime = moment.elapsed;
-            }
+			ImGui.NewLine();
 
-            ImGuiCustom.Property("Frame Time", frameTime);
-            ImGuiCustom.Property("Frame Rate", frameRate);
+			if (moment.elapsed - lastUpdateTime > TimeSpan.FromSeconds(0.5f))
+			{
+				float rate = 1f / (float)moment.delta.TotalSeconds;
+				frameTime = moment.delta.ToString("s\\.ffff");
+				frameRate = rate.ToStringDefault();
+				lastUpdateTime = moment.elapsed;
+			}
 
-            ImGuiCustom.EndProperties();
-        }
+			ImGuiCustom.Property("Frame Time", frameTime);
+			ImGuiCustom.Property("Frame Rate", frameRate);
 
-        int oldUpdateFrequency = updateFrequency;
-        ImGui.SliderInt("Refresh Frequency", ref updateFrequency, 1, 120);
-        if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
-    }
+			ImGuiCustom.EndProperties();
+		}
 
-    void DrawGarbageCollector()
-    {
-        var info = GC.GetGCMemoryInfo();
+		int oldUpdateFrequency = updateFrequency;
+		ImGui.SliderInt("Refresh Frequency", ref updateFrequency, 1, 120);
+		if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
+	}
 
-        if (ImGui.Button("Collect All Generations")) GC.Collect();
+	void DrawGarbageCollector()
+	{
+		var info = GC.GetGCMemoryInfo();
 
-        //Main table
-        if (ImGuiCustom.BeginProperties("Main"))
-        {
-            ImGuiCustom.Property("GC Compacted", info.Compacted.ToString());
-            ImGuiCustom.Property("GC Concurrent", info.Concurrent.ToString());
-            ImGuiCustom.Property("GC Generation", info.Generation.ToString());
+		if (ImGui.Button("Collect All Generations"))
+		{
+			GC.Collect();
+			LogList.Add("Triggered garbage collection on all generations.");
+		}
 
-            ImGuiCustom.Property("Mapped Memory", ((ulong)Environment.WorkingSet).ToStringData());
-            ImGuiCustom.Property("Heap Size", ((ulong)info.HeapSizeBytes).ToStringData());
-            ImGuiCustom.Property("Available Memory", ((ulong)info.TotalAvailableMemoryBytes).ToStringData());
-            ImGuiCustom.Property("Pinned Object Count", info.PinnedObjectsCount.ToString());
-            ImGuiCustom.Property("Promoted Memory", ((ulong)info.PromotedBytes).ToStringData());
-            ImGuiCustom.Property("GC Block Percentage", info.PauseTimePercentage.ToStringPercentage());
-            ImGuiCustom.Property("GC Fragmentation", ((ulong)info.FragmentedBytes).ToStringData());
+		//Main table
+		if (ImGuiCustom.BeginProperties("Main"))
+		{
+			ImGuiCustom.Property("GC Compacted", info.Compacted.ToString());
+			ImGuiCustom.Property("GC Concurrent", info.Concurrent.ToString());
+			ImGuiCustom.Property("GC Generation", info.Generation.ToString());
 
-            ImGuiCustom.EndProperties();
-        }
+			ImGuiCustom.Property("Mapped Memory", ((ulong)Environment.WorkingSet).ToStringData());
+			ImGuiCustom.Property("Heap Size", ((ulong)info.HeapSizeBytes).ToStringData());
+			ImGuiCustom.Property("Available Memory", ((ulong)info.TotalAvailableMemoryBytes).ToStringData());
+			ImGuiCustom.Property("Pinned Object Count", info.PinnedObjectsCount.ToString());
+			ImGuiCustom.Property("Promoted Memory", ((ulong)info.PromotedBytes).ToStringData());
+			ImGuiCustom.Property("GC Block Percentage", info.PauseTimePercentage.ToStringPercentage());
+			ImGuiCustom.Property("GC Fragmentation", ((ulong)info.FragmentedBytes).ToStringData());
 
-        //Generations table
-        if (ImGui.BeginTable("Generations", 5, ImGuiCustom.DefaultTableFlags))
-        {
-            var generations = info.GenerationInfo;
+			ImGuiCustom.EndProperties();
+		}
 
-            ImGui.TableSetupColumn("Generation");
-            ImGui.TableSetupColumn("Size Before");
-            ImGui.TableSetupColumn("Size After");
-            ImGui.TableSetupColumn("Frag. Before");
-            ImGui.TableSetupColumn("Frag. After");
-            ImGui.TableHeadersRow();
+		//Generations table
+		if (ImGui.BeginTable("Generations", 5, ImGuiCustom.DefaultTableFlags))
+		{
+			var generations = info.GenerationInfo;
 
-            for (int i = 0; i < generations.Length; i++)
-            {
-                ref readonly GCGenerationInfo generation = ref generations[i];
+			ImGui.TableSetupColumn("Generation");
+			ImGui.TableSetupColumn("Size Before");
+			ImGui.TableSetupColumn("Size After");
+			ImGui.TableSetupColumn("Frag. Before");
+			ImGui.TableSetupColumn("Frag. After");
+			ImGui.TableHeadersRow();
 
-                ImGuiCustom.TableItem((i + 1).ToString());
-                ImGuiCustom.TableItem(((ulong)generation.SizeBeforeBytes).ToStringData());
-                ImGuiCustom.TableItem(((ulong)generation.SizeAfterBytes).ToStringData());
-                ImGuiCustom.TableItem(((ulong)generation.FragmentationBeforeBytes).ToStringData());
-                ImGuiCustom.TableItem(((ulong)generation.FragmentationAfterBytes).ToStringData());
-            }
+			for (int i = 0; i < generations.Length; i++)
+			{
+				ref readonly GCGenerationInfo generation = ref generations[i];
 
-            ImGui.EndTable();
-        }
-    }
+				ImGuiCustom.TableItem((i + 1).ToString());
+				ImGuiCustom.TableItem(((ulong)generation.SizeBeforeBytes).ToStringData());
+				ImGuiCustom.TableItem(((ulong)generation.SizeAfterBytes).ToStringData());
+				ImGuiCustom.TableItem(((ulong)generation.FragmentationBeforeBytes).ToStringData());
+				ImGuiCustom.TableItem(((ulong)generation.FragmentationAfterBytes).ToStringData());
+			}
 
-    void DrawDevice()
-    {
-        //Buttons
-        bool idle = device.IsIdle;
-        ImGui.BeginDisabled(!idle);
+			ImGui.EndTable();
+		}
+	}
 
-        if (ImGui.Button("Dispatch")) DispatchDevice(device);
+	void DrawDevice()
+	{
+		//Buttons
+		bool idle = device.IsIdle;
+		ImGui.BeginDisabled(!idle);
 
-        ImGui.EndDisabled();
-        ImGui.BeginDisabled(idle);
+		if (ImGui.Button("Dispatch")) DispatchDevice(device);
 
-        ImGui.SameLine();
-        if (ImGui.Button("Pause")) device.Pause();
+		ImGui.EndDisabled();
+		ImGui.BeginDisabled(idle);
 
-        ImGui.SameLine();
-        if (ImGui.Button("Resume")) device.Resume();
+		ImGui.SameLine();
+		if (ImGui.Button("Pause"))
+		{
+			device.Pause();
+			LogList.Add("Pausing compute device.");
+		}
 
-        ImGui.EndDisabled();
-        ImGui.SameLine();
+		ImGui.SameLine();
+		if (ImGui.Button("Resume"))
+		{
+			device.Resume();
+			LogList.Add("Resuming compute device.");
+		}
 
-        if (ImGui.Button("Dispose"))
-        {
-            DisposeDevice(device);
-            device = null;
-            return;
-        }
+		ImGui.EndDisabled();
+		ImGui.SameLine();
 
-        //Status
-        if (ImGuiCustom.BeginProperties("Main"))
-        {
-            ImGuiCustom.Property("State", device.IsIdle ? "Idle" : "Running");
-            ImGuiCustom.Property("Population", device.Population.ToStringDefault());
+		if (ImGui.Button("Dispose"))
+		{
+			DisposeDevice(device);
+			device = null;
+			return;
+		}
 
-            var operations = device.PastOperations;
+		//Status
+		if (ImGuiCustom.BeginProperties("Main"))
+		{
+			ImGuiCustom.Property("State", device.IsIdle ? "Idle" : "Running");
+			ImGuiCustom.Property("Population", device.Population.ToStringDefault());
 
-            if (operations.Length > 0)
-            {
-                ImGuiCustom.Property("Latest Dispatch", operations[^1].creationTime.ToStringDefault());
-                ImGuiCustom.Property("Past Operation Count", operations.Length.ToStringDefault());
-            }
-            else
-            {
-                ImGuiCustom.Property("Latest Dispatch", "None");
-                ImGuiCustom.Property("Past Operation Count", "0");
-            }
+			var operations = device.PastOperations;
 
-            ImGuiCustom.EndProperties();
-        }
-    }
+			if (operations.Length > 0)
+			{
+				ImGuiCustom.Property("Latest Dispatch", operations[^1].creationTime.ToStringDefault());
+				ImGuiCustom.Property("Past Operation Count", operations.Length.ToStringDefault());
+			}
+			else
+			{
+				ImGuiCustom.Property("Latest Dispatch", "None");
+				ImGuiCustom.Property("Past Operation Count", "0");
+			}
 
-    void DrawWorkers()
-    {
-        //Worker table
-        if (ImGui.BeginTable("State", 3, ImGuiCustom.DefaultTableFlags))
-        {
-            ImGui.TableSetupColumn("Index");
-            ImGui.TableSetupColumn("State");
-            ImGui.TableSetupColumn("Guid");
-            ImGui.TableHeadersRow();
+			ImGuiCustom.EndProperties();
+		}
+	}
 
-            foreach (IWorker worker in device.Workers)
-            {
-                ImGuiCustom.TableItem($"0x{worker.Index:X4}");
-                ImGuiCustom.TableItem(worker.State.ToDisplayString());
-                ImGuiCustom.TableItem(worker.Guid.ToStringShort());
-            }
+	void DrawWorkers()
+	{
+		//Worker table
+		if (ImGui.BeginTable("State", 3, ImGuiCustom.DefaultTableFlags))
+		{
+			ImGui.TableSetupColumn("Index");
+			ImGui.TableSetupColumn("State");
+			ImGui.TableSetupColumn("Guid");
+			ImGui.TableHeadersRow();
 
-            ImGui.EndTable();
-        }
-    }
+			foreach (IWorker worker in device.Workers)
+			{
+				ImGuiCustom.TableItem($"0x{worker.Index:X4}");
+				ImGuiCustom.TableItem(worker.State.ToDisplayString());
+				ImGuiCustom.TableItem(worker.Guid.ToStringShort());
+			}
 
-    static string GetCompilerMode()
-    {
+			ImGui.EndTable();
+		}
+	}
+
+	static string GetCompilerMode()
+	{
 #if DEBUG
         return "DEBUG";
 #elif RELEASE
@@ -238,38 +256,32 @@ public class SystemUI : AreaUI
 #else
 		return "Unknown";
 #endif
-    }
+	}
 
-    static void DispatchDevice(Device device)
-    {
-        ActionQueue.Enqueue(Dispatch, "Device Dispatch");
+	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
+	{
+		var scene = new SingleBunny();
 
-        void Dispatch()
-        {
-            //var scene = new SingleBunny();
-            var scene = new CornellBox();
+		var prepareProfile = new ScenePrepareProfile();
 
-            var prepareProfile = new ScenePrepareProfile();
+		var evaluationProfile = new EvaluationProfile
+		{
+			Scene = new PreparedScene(scene, prepareProfile),
+			Evaluator = new PathTracedEvaluator(),
+			Distribution = new StratifiedDistribution { Extend = 16 },
+			Buffer = new RenderBuffer(new Int2(960, 540)),
+			Pattern = new SpiralPattern(),
+			MinEpoch = 1,
+			MaxEpoch = 4
+		};
 
-            var evaluationProfile = new EvaluationProfile
-            {
-                Scene = new PreparedScene(scene, prepareProfile),
-                Evaluator = new PathTracedEvaluator(),
-                Distribution = new StratifiedDistribution { Extend = 16 },
-                Buffer = new RenderBuffer(new Int2(960, 540)),
-                Pattern = new SpiralPattern(),
-                MinEpoch = 1,
-                MaxEpoch = 20
-            };
+		var operation = new EvaluationOperation.Factory
+		{
+			NextProfile = evaluationProfile
+		};
 
-            var operation = new EvaluationOperation.Factory
-            {
-                NextProfile = evaluationProfile
-            };
+		device.Dispatch(operation);
+	});
 
-            device.Dispatch(operation);
-        }
-    }
-
-    static void DisposeDevice(Device device) => ActionQueue.Enqueue(device.Dispose, "Device Dispose");
+	static void DisposeDevice(Device device) => ActionQueue.Enqueue("Device Dispose", device.Dispose);
 }
