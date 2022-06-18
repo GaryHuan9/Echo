@@ -9,7 +9,7 @@ namespace Echo.Core.Common.Mathematics.Primitives;
 /// Tight fitting algorithm: https://ep.liu.se/ecp/034/009/ecp083409.pdf <br/>
 /// Exact Solver Algorithm: https://youtu.be/HojzdCICjmQ?t=575
 /// </summary>
-public readonly struct BoundingSphere
+public readonly struct BoundingSphere : IFormattable
 {
 	public BoundingSphere(ReadOnlySpan<Float3> points)
 	{
@@ -37,11 +37,6 @@ public readonly struct BoundingSphere
 		this.radius = radius;
 	}
 
-	/// <summary>
-	///     Returns whether <paramref name="point" /> is inside this <see cref="BoundingSphere" />.
-	/// </summary>
-	public bool Contains(in Float3 point) => Contains(point, in center, radius);
-
 	public readonly Float3 center;
 	public readonly float radius;
 
@@ -49,6 +44,14 @@ public readonly struct BoundingSphere
 	static readonly Float3[] normals = { Float3.Right, Float3.Up, Float3.Forward };
 
 	static int ExtremalCount => normals.Length * 2;
+
+	/// <summary>
+	///     Returns whether <paramref name="point" /> is inside this <see cref="BoundingSphere" />.
+	/// </summary>
+	public bool Contains(in Float3 point) => Contains(point, in center, radius);
+
+	public override string ToString() => ToString(default);
+	public string ToString(string format, IFormatProvider provider = null) => $"{center.ToString(format, provider)} ± {radius.ToString(format, provider)}";
 
 	// Finds extremes from given point using the normals and fills it into extremes span
 	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)

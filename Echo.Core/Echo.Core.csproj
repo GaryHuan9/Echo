@@ -34,10 +34,6 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <TargetPath>%(Filename)%(Extension)</TargetPath>
         </ContentWithTargetPath>
-        <ContentWithTargetPath Include="ext/imgui.ini">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <TargetPath>%(Filename)%(Extension)</TargetPath>
-        </ContentWithTargetPath>
     </ItemGroup>
 
     <ItemGroup>
