@@ -250,54 +250,30 @@ public class SystemUI : AreaUI
 	static string GetCompilerMode()
 	{
 #if DEBUG
-        return "DEBUG";
+		return "DEBUG";
 #elif RELEASE
 		return "RELEASE";
 #else
-        return "Unknown";
+		return "Unknown";
 #endif
 	}
 
 	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 	{
 		var scene = new SingleBunny();
+		//var scene = new CornellBox();
 
-<<<<<<< HEAD
-		void Dispatch()
-		{
-			var scene = new SingleBunny();
-			//var scene = new CornellBox();
-
-			var prepareProfile = new ScenePrepareProfile();
-
-			var evaluationProfile = new EvaluationProfile
-			{
-				Scene = new PreparedScene(scene, prepareProfile),
-				Evaluator = new BruteForcedEvaluator(),
-				Distribution = new StratifiedDistribution { Extend = 16 },
-				Buffer = new RenderBuffer(new Int2(640, 480)),
-				Pattern = new SpiralPattern(),
-				MinEpoch = 1,
-				MaxEpoch = 20
-			};
-
-			var operation = new EvaluationOperation.Factory
-			{
-				NextProfile = evaluationProfile
-			};
-=======
 		var prepareProfile = new ScenePrepareProfile();
->>>>>>> origin/main
 
 		var evaluationProfile = new EvaluationProfile
 		{
 			Scene = new PreparedScene(scene, prepareProfile),
-			Evaluator = new PathTracedEvaluator(),
+			Evaluator = new BruteForcedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
-			Buffer = new RenderBuffer(new Int2(960, 540)),
+			Buffer = new RenderBuffer(new Int2(640, 480)),
 			Pattern = new SpiralPattern(),
 			MinEpoch = 1,
-			MaxEpoch = 4
+			MaxEpoch = 20
 		};
 
 		var operation = new EvaluationOperation.Factory
@@ -306,5 +282,6 @@ public class SystemUI : AreaUI
 		};
 
 		device.Dispatch(operation);
+
 	});
 }
