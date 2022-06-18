@@ -9,38 +9,38 @@ public enum FunctionType
 	/// <summary>
 	/// Light bounces off of the interacting surface
 	/// </summary>
-	reflective = 1 << 0,
+	Reflective = 1 << 0,
 
 	/// <summary>
 	/// Light goes through the interacting surface
 	/// </summary>
-	transmissive = 1 << 1,
+	Transmissive = 1 << 1,
 
 	//A function can either be diffuse, glossy, or specular
 	/// <summary>
 	/// Light is randomly scattered from the surface
 	/// </summary>
-	diffuse = 1 << 2,
+	Diffuse = 1 << 2,
 
 	/// <summary>
 	/// Light is clustered towards one direction
 	/// </summary>
-	glossy = 1 << 3,
+	Glossy = 1 << 3,
 
 	/// <summary>
 	/// Light only bounces in one direction
 	/// </summary>
-	specular = 1 << 4,
+	Specular = 1 << 4,
 
 	/// <summary>
 	/// All of the types
 	/// </summary>
-	all = reflective | transmissive | diffuse | glossy | specular,
+	All = Reflective | Transmissive | Diffuse | Glossy | Specular,
 
 	/// <summary>
 	/// None of the types
 	/// </summary>
-	none = 0
+	None = 0
 }
 
 public static class FunctionTypeExtensions

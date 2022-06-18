@@ -25,7 +25,7 @@ public class SystemUI : AreaUI
 
 		if (Environment.GetCommandLineArgs().Contains("-start", StringComparer.OrdinalIgnoreCase))
 		{
-			device = Device.Create();
+			CreateDevice();
 			DispatchDevice(device);
 		}
 
@@ -56,12 +56,12 @@ public class SystemUI : AreaUI
 			{
 				if (ImGui.Button("Create and Dispatch"))
 				{
-					device = Device.Create();
+					CreateDevice();
 					DispatchDevice(device);
 				}
 
 				ImGui.SameLine();
-				if (ImGui.Button("Create")) device = Device.Create();
+				if (ImGui.Button("Create")) CreateDevice();
 				ImGui.TextWrapped("Create a compute device to begin!");
 			}
 			else DrawDevice();
@@ -74,6 +74,12 @@ public class SystemUI : AreaUI
 	{
 		base.Dispose(disposing);
 		if (disposing) device?.Dispose();
+	}
+
+	void CreateDevice()
+	{
+		device = Device.Create();
+		LogList.Add("Created CPU compute device.");
 	}
 
 	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
@@ -111,7 +117,11 @@ public class SystemUI : AreaUI
 	{
 		var info = GC.GetGCMemoryInfo();
 
-		if (ImGui.Button("Collect All Generations")) GC.Collect();
+		if (ImGui.Button("Collect All Generations"))
+		{
+			GC.Collect();
+			LogList.Add("Triggered garbage collection on all generations.");
+		}
 
 		//Main table
 		if (ImGuiCustom.BeginProperties("Main"))
@@ -170,17 +180,25 @@ public class SystemUI : AreaUI
 		ImGui.BeginDisabled(idle);
 
 		ImGui.SameLine();
-		if (ImGui.Button("Pause")) device.Pause();
+		if (ImGui.Button("Pause"))
+		{
+			device.Pause();
+			LogList.Add("Pausing compute device.");
+		}
 
 		ImGui.SameLine();
-		if (ImGui.Button("Resume")) device.Resume();
+		if (ImGui.Button("Resume"))
+		{
+			device.Resume();
+			LogList.Add("Resuming compute device.");
+		}
 
 		ImGui.EndDisabled();
 		ImGui.SameLine();
 
 		if (ImGui.Button("Dispose"))
 		{
-			DisposeDevice(device);
+			ActionQueue.Enqueue("Device Dispose", device.Dispose);
 			device = null;
 			return;
 		}
@@ -232,7 +250,7 @@ public class SystemUI : AreaUI
 	static string GetCompilerMode()
 	{
 #if DEBUG
-		return "DEBUG";
+        return "DEBUG";
 #elif RELEASE
 		return "RELEASE";
 #else
@@ -240,10 +258,11 @@ public class SystemUI : AreaUI
 #endif
 	}
 
-	static void DispatchDevice(Device device)
+	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 	{
-		ActionQueue.Enqueue(Dispatch, "Device Dispatch");
+		var scene = new SingleBunny();
 
+<<<<<<< HEAD
 		void Dispatch()
 		{
 			var scene = new SingleBunny();
@@ -266,10 +285,26 @@ public class SystemUI : AreaUI
 			{
 				NextProfile = evaluationProfile
 			};
+=======
+		var prepareProfile = new ScenePrepareProfile();
+>>>>>>> origin/main
 
-			device.Dispatch(operation);
-		}
-	}
+		var evaluationProfile = new EvaluationProfile
+		{
+			Scene = new PreparedScene(scene, prepareProfile),
+			Evaluator = new PathTracedEvaluator(),
+			Distribution = new StratifiedDistribution { Extend = 16 },
+			Buffer = new RenderBuffer(new Int2(960, 540)),
+			Pattern = new SpiralPattern(),
+			MinEpoch = 1,
+			MaxEpoch = 4
+		};
 
-	static void DisposeDevice(Device device) => ActionQueue.Enqueue(device.Dispose, "Device Dispose");
+		var operation = new EvaluationOperation.Factory
+		{
+			NextProfile = evaluationProfile
+		};
+
+		device.Dispatch(operation);
+	});
 }

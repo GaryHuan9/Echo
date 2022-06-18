@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics.Primitives;
 
@@ -25,10 +26,31 @@ public struct Accumulator
 	public readonly Float4 Variance => count < 3 ? squared.Result : squared.Result / (count - 1);
 
 	/// <summary>
-	/// The remaining noise of the samples, which is their <see cref="Variance"/>
-	/// divided by the square root of their population (the number of samples).
+	/// The remaining noise of the samples, which is the square root of their <see cref="Variance"/>
+	/// divided by their population (the number of samples) divided by their <see cref="Value"/>.
 	/// </summary>
-	public readonly Float4 Noise => squared.Result * MathF.ReciprocalSqrtEstimate(Math.Max(1, count * count * count));
+	public readonly Float4 Noise
+	{
+		get
+		{
+			if (count < 2) return Float4.Zero;
+
+			//Some algebra allows us to simply the equation:
+			//Sqrt(Variance) / (count - 1) / Value = 1 / Sqrt((count - 1)^3 * Value^2 / squared.Result)
+			//Then at the end we can use a binary mask to remove the degenerate case when Value is zero
+
+			uint oneLess = count - 1;
+			oneLess *= oneLess * oneLess;
+
+			Vector128<float> numerator = (Value * Value * oneLess).v;
+			Vector128<float> denominator = Sse.Reciprocal(squared.Result.v);
+
+			Vector128<float> notZero = Sse.CompareNotEqual(numerator, Vector128<float>.Zero);
+			Vector128<float> result = Sse.ReciprocalSqrt(Sse.Multiply(numerator, denominator));
+
+			return new Float4(Sse.And(notZero, result));
+		}
+	}
 
 	/// <summary>
 	/// Adds a <paramref name="sample"/> to this <see cref="Accumulator"/>.

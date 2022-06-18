@@ -38,7 +38,7 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// The size of this <see cref="TextureGrid{T}"/> (exclusive),
+	/// The size of this <see cref="TextureGrid"/> (exclusive),
 	/// </summary>
 	public readonly Int2 size;
 
@@ -48,19 +48,19 @@ public abstract class TextureGrid : Texture
 	public readonly Float2 sizeR;
 
 	/// <summary>
-	/// The <see cref="size"/> of this <see cref="TextureGrid{T}"/> minus <see cref="Int2.One"/>.
+	/// The <see cref="size"/> of this <see cref="TextureGrid"/> minus <see cref="Int2.One"/>.
 	/// </summary>
 	public readonly Int2 oneLess;
 
 	/// <summary>
-	/// The aspect ratios of this <see cref="TextureGrid{T}"/>,
+	/// The aspect ratios of this <see cref="TextureGrid"/>,
 	/// the <see cref="Float2.X"/> component equals to width over height, and
 	/// the <see cref="Float2.Y"/> component equals to height over width.
 	/// </summary>
 	public readonly Float2 aspects;
 
 	/// <summary>
-	/// If the <see cref="size"/> of this <see cref="TextureGrid{T}"/> is a power of two on any axis, then the
+	/// If the <see cref="size"/> of this <see cref="TextureGrid"/> is a power of two on any axis, then the
 	/// respective component of this field will be that power, otherwise the component will be a negative number.
 	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where N is a positive number.
 	/// </summary>
@@ -70,7 +70,7 @@ public abstract class TextureGrid : Texture
 	NotNull<object> _filter;
 
 	/// <summary>
-	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid{T}"/> to convert uv texture coordinates.
+	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid"/> to convert uv texture coordinates.
 	/// </summary>
 	public IWrapper Wrapper
 	{
@@ -79,7 +79,7 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid{T}"/> to retrieve pixels as <see cref="RGBA128"/>.
+	/// The <see cref="IFilter"/> used on this <see cref="TextureGrid"/> to retrieve pixels as <see cref="RGBA128"/>.
 	/// </summary>
 	public IFilter Filter
 	{
@@ -125,30 +125,43 @@ public abstract class TextureGrid : Texture
 	/// <summary>
 	/// Performs a <see cref="Save"/> operation asynchronously.
 	/// </summary>
+	/// <see cref="Save"/>
 	public Task SaveAsync(string path, Serializer serializer = null) => Task.Run(() => Save(path, serializer));
 
 	/// <summary>
-	/// Saves this <see cref="TextureGrid{T}"/> to <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
-	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
+	/// Saves this <see cref="TextureGrid"/> to a file.
 	/// </summary>
+	/// <param name="path">The destination <see cref="string"/> path to use.</param>
+	/// <param name="serializer">The <see cref="Serializer"/> to use. An automatic attempt will be made to
+	/// find the best <see cref="Serializer"/> from <paramref name="path"/> if this value is null.</param>
 	public abstract void Save(string path, Serializer serializer = null);
+
+	/// <summary>
+	/// Loads a <see cref="TextureGrid"/> from a file.
+	/// </summary>
+	/// <param name="path">The source <see cref="string"/> path to load from.</param>
+	/// <param name="serializer">The <see cref="Serializer"/> to use. An automatic attempt will be made to
+	/// find the best <see cref="Serializer"/> from <paramref name="path"/> if this value is null.</param>
+	/// <remarks>This method is identical to <see cref="Load{T}"/>, with the only difference being that this will
+	/// create an <see cref="ArrayGrid{T}"/> of the same generic type as this <see cref="TextureGrid"/>.</remarks>
+	public abstract TextureGrid Load(string path, Serializer serializer = null);
 
 	/// <summary>
 	/// Converts a texture coordinate to an integral pixel position.
 	/// </summary>
 	/// <param name="uv">The texture coordinate to convert.</param>
-	/// <remarks>This operation is not bounded by this <see cref="TextureGrid{T}"/>'s <see cref="size"/>.</remarks>
+	/// <remarks>This operation is not bounded by this <see cref="TextureGrid"/>'s <see cref="size"/>.</remarks>
 	public Int2 ToPosition(Float2 uv) => (uv * size).Floored;
 
 	/// <summary>
 	/// Converts an integral pixel position to a texture coordinate.
 	/// </summary>
 	/// <param name="position">The integral pixel position to convert.</param>
-	/// <remarks>This operation is not bounded by this <see cref="TextureGrid{T}"/>'s <see cref="size"/>.</remarks>
+	/// <remarks>This operation is not bounded by this <see cref="TextureGrid"/>'s <see cref="size"/>.</remarks>
 	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
 
 	/// <summary>
-	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid{T}"/>.
+	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid"/>.
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
 	[Conditional(Assert.DebugSymbol)]
@@ -157,13 +170,16 @@ public abstract class TextureGrid : Texture
 	/// <summary>
 	/// Performs a <see cref="Load{T}"/> operation asynchronously.
 	/// </summary>
+	/// <see cref="Load{T}"/>
 	public static Task<ArrayGrid<T>> LoadAsync<T>(string path, Serializer serializer = null)
 		where T : unmanaged, IColor<T> => Task.Run(() => Load<T>(path, serializer));
 
 	/// <summary>
-	/// Loads a <see cref="ArrayGrid{T}"/> from <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
-	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
+	/// Loads a <see cref="ArrayGrid{T}"/> from a file.
 	/// </summary>
+	/// <param name="path">The source <see cref="string"/> path to load from.</param>
+	/// <param name="serializer">The <see cref="Serializer"/> to use. An automatic attempt will be made to
+	/// find the best <see cref="Serializer"/> from <paramref name="path"/> if this value is null.</param>
 	public static ArrayGrid<T> Load<T>(string path, Serializer serializer = null) where T : unmanaged, IColor<T>
 	{
 		serializer ??= Serializer.Find(path);
@@ -212,11 +228,7 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 	/// be between <see cref="Int2.Zero"/> (inclusive) and <see cref="TextureGrid.size"/> (exclusive).</param>
 	public abstract T this[Int2 position] { get; }
 
-	/// <summary>
-	/// Saves this <see cref="TextureGrid{T}"/> to <paramref name="path"/> using <paramref name="serializer"/>. An automatic attempt
-	/// will be made to find the best <see cref="Serializer"/> from <paramref name="path"/> if <paramref name="serializer"/> is null.
-	/// </summary>
-	public override void Save(string path, Serializer serializer = null)
+	public sealed override void Save(string path, Serializer serializer = null)
 	{
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "cannot be found");
@@ -224,6 +236,8 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 		using Stream stream = File.Open(AssetsUtility.GetAssetPath(path), FileMode.Create);
 		serializer.Serialize(this, stream);
 	}
+
+	public sealed override TextureGrid Load(string path, Serializer serializer = null) => Load<T>(path, serializer);
 
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{

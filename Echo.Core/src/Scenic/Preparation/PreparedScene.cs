@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Preparation;
@@ -60,12 +59,6 @@ public class PreparedScene
 	public readonly Lights lights;
 	public readonly Info info;
 
-	long _traceCount;
-	long _occludeCount;
-
-	public long TraceCount => Interlocked.Read(ref _traceCount);
-	public long OccludeCount => Interlocked.Read(ref _occludeCount);
-
 	readonly PreparedInstanceRoot rootInstance;
 
 	/// <summary>
@@ -77,7 +70,6 @@ public class PreparedScene
 		float original = query.distance;
 
 		rootInstance.TraceRoot(ref query);
-		Interlocked.Increment(ref _traceCount);
 		return query.distance < original;
 	}
 
@@ -87,7 +79,6 @@ public class PreparedScene
 	public bool Occlude(ref OccludeQuery query)
 	{
 		if (!FastMath.Positive(query.travel)) return false;
-		Interlocked.Increment(ref _occludeCount);
 		return rootInstance.OccludeRoot(ref query);
 	}
 
@@ -100,19 +91,19 @@ public class PreparedScene
 	/// <summary>
 	/// Picks an <see cref="ILight"/> in this <see cref="PreparedScene"/>.
 	/// </summary>
-	/// <param name="samples">The <see cref="ReadOnlySpan{T}"/> of <see cref="Sample1D"/> values used for sampling.</param>
+	/// <param name="sample">The <see cref="Sample1D"/> value used to pick the result.</param>
 	/// <param name="allocator">The <see cref="Allocator"/> used to allocate a <see cref="GeometryLight"/> if needed.</param>
 	/// <returns>The <see cref="Probable{T}"/> light picked.</returns>
-	public Probable<ILight> PickLight(ReadOnlySpan<Sample1D> samples, Allocator allocator)
+	public Probable<ILight> PickLight(Sample1D sample, Allocator allocator)
 	{
-		Probable<LightSource> primary = lights.PickLightSource(samples[0]);
+		Probable<LightSource> primary = lights.PickLightSource(ref sample);
 		if (primary.content != null) return (primary.content, primary.pdf);
 
 		//Choose emissive geometry as light
-		var light = allocator.New<GeometryLight>();
-
-		Probable<GeometryToken> token = rootInstance.Find(samples[1..], out var instance);
+		Probable<GeometryToken> token = rootInstance.Pick(sample, out var instance);
 		MaterialIndex index = instance.pack.GetMaterialIndex(token.content.Geometry);
+
+		var light = allocator.New<GeometryLight>();
 
 		Material material = instance.GetMaterial(index);
 		light.Reset(this, token, (IEmissive)material);
@@ -153,16 +144,10 @@ public class PreparedScene
 	/// <summary>
 	/// Returns the approximated cost of computing a <see cref="TraceQuery"/> with <see cref="Trace"/>.
 	/// </summary>
-	public int TraceCost(in Ray ray)
+	public uint TraceCost(in Ray ray)
 	{
 		float distance = float.PositiveInfinity;
 		return rootInstance.TraceCost(ray, ref distance);
-	}
-
-	public void ResetIntersectionCount()
-	{
-		Interlocked.Exchange(ref _traceCount, 0);
-		Interlocked.Exchange(ref _occludeCount, 0);
 	}
 
 	public record Info
@@ -174,6 +159,8 @@ public class PreparedScene
 			depth = preparer.depth;
 			instancedCounts = preparer.instancedCounts;
 			uniqueCounts = preparer.uniqueCounts;
+			materialCount = preparer.MaterialCount;
+			entityPackCount = preparer.EntityPackCount;
 		}
 
 		public readonly AxisAlignedBoundingBox aabb;
@@ -182,6 +169,8 @@ public class PreparedScene
 		public readonly int depth;
 		public readonly GeometryCounts instancedCounts;
 		public readonly GeometryCounts uniqueCounts;
+		public readonly int materialCount;
+		public readonly int entityPackCount;
 	}
 
 	public class Lights
@@ -189,9 +178,9 @@ public class PreparedScene
 		public Lights(PreparedScene scene, IReadOnlyCollection<LightSource> all)
 		{
 			int length = all.Count;
-			float geometryPower = scene.rootInstance.Power;
+			GeometryPower = scene.rootInstance.Power;
 
-			if (length == 0 && !FastMath.Positive(geometryPower))
+			if (length == 0 && !FastMath.Positive(GeometryPower))
 			{
 				//Degenerate case with literally zero light contributor; our output image will literally be
 				//completely black, but we add in a light so no exception is thrown when we look for lights.
@@ -223,7 +212,7 @@ public class PreparedScene
 			}
 
 			_ambient = ambientList.ToArray();
-			powerValues[length] = geometryPower;
+			powerValues[length] = GeometryPower;
 
 			distribution = new DiscreteDistribution1D(powerValues);
 		}
@@ -244,16 +233,29 @@ public class PreparedScene
 		public ReadOnlySpan<AmbientLight> Ambient => _ambient;
 
 		/// <summary>
+		/// The approximated total power of all the lights. 
+		/// </summary>
+		public float TotalPower => distribution.sum;
+
+		/// <summary>
+		/// The approximated total power of all emissive geometries.
+		/// </summary>
+		public float GeometryPower { get; }
+
+		/// <summary>
 		/// Picks a <see cref="LightSource"/> based on <paramref name="sample"/>.
 		/// </summary>
 		/// <param name="sample">The <see cref="Sample1D"/> used to select our <see cref="LightSource"/>.</param>
 		/// <returns>The <see cref="Probable{T}"/> light picked, or null if <see cref="GeometryLight"/> was picked.</returns>
-		/// <remarks>Even if a <see cref="GeometryLight"/> was picked and <see cref="Probable{T}.content"/> is null,
-		/// <see cref="Probable{T}.pdf"/> will still contain the probability density function (pdf) value as per usual.</remarks>
-		public Probable<LightSource> PickLightSource(Sample1D sample)
+		/// <remarks>If a <see cref="GeometryLight"/> was picked, meaning that <see cref="Probable{T}.content"/> is null,
+		/// <see cref="Probable{T}.pdf"/> will still contain the probability density function (pdf) value as per usual,
+		/// and <paramref name="sample"/> will be readjusted to be uniform again through <see cref="Sample1D.Stretch"/>.</remarks>
+		public Probable<LightSource> PickLightSource(ref Sample1D sample)
 		{
-			Probable<int> index = distribution.Pick(sample);
-			return (index < _all.Length ? _all[index] : null, index.pdf);
+			(int index, float pdf) = distribution.Pick(sample);
+			if (index < _all.Length) return (_all[index], pdf);
+			sample = sample.Stretch(1f - pdf, 1f);
+			return (null, pdf);
 		}
 
 		/// <summary>

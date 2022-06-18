@@ -12,11 +12,13 @@ public abstract class AreaUI : IDisposable
 
 	public EchoUI Root { get; init; }
 
+	protected virtual bool HasMenuBar => false;
+
 	public virtual void Initialize() { }
 
 	public virtual void NewFrame(in Moment moment)
 	{
-		if (ImGui.Begin(name)) Update(moment);
+		if (ImGui.Begin(name, HasMenuBar ? ImGuiWindowFlags.MenuBar : ImGuiWindowFlags.None)) Update(moment);
 		ImGui.End();
 	}
 

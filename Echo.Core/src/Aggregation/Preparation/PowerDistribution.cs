@@ -51,17 +51,19 @@ public class PowerDistribution
 	/// <summary>
 	/// Picks a light from this <see cref="PowerDistribution"/>.
 	/// </summary>
-	/// <param name="sample">The <see cref="Sample1D"/> used to pick the result</param>
-	/// <returns>The <see cref="Probable{T}"/> token representing the light.</returns>
-	public Probable<NodeToken> Pick(Sample1D sample)
+	/// <param name="sample">The <see cref="Sample1D"/> used to pick the result; it will be stretched to a new
+	/// uniform and unbiased <see cref="Sample1D"/> after being used by this method.</param>
+	/// <returns>The <see cref="Probable{T}"/> of type <see cref="NodeToken"/> representing the light.</returns>
+	public Probable<NodeToken> Pick(ref Sample1D sample)
 	{
 		//Sample from distribution and do binary search
-		Probable<int> index = distribution.Pick(sample);
-		int segment = starts.AsSpan().BinarySearch(index.content);
+		(int index, float pdf) = distribution.Pick(sample, out float lower, out float upper);
+		int segment = starts.AsSpan().BinarySearch(index);
+		sample = sample.Stretch(lower, upper);
 
 		//Find token from index
 		if (segment < 0) segment = ~segment - 1;
 		ReadOnlyView<NodeToken> partition = partitions[segment];
-		return (partition[index - starts[segment]], index.pdf);
+		return (partition[index - starts[segment]], pdf);
 	}
 }
