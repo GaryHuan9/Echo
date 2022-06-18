@@ -1,51 +1,71 @@
-﻿// using CodeHelpers.Packed;
-// using Echo.Common.Mathematics;
-// using Echo.Common.Mathematics.Primitives;
-// using Echo.Common.Memory;
-// using Echo.Core.Aggregation.Primitives;
-// using Echo.Core.Evaluation.Materials;
-// using Echo.Core.Evaluation.Scattering;
-// using Echo.Core.Textures.Colors;
-//
-// namespace Echo.Core.Evaluation.Evaluators;
-//
-// public class BruteForcedEvaluator : PathTracedEvaluator //Interesting inheritance, we will probably remove this later
-// {
-// 	public override RGB128 Evaluate(in Ray ray, RenderProfile profile, Arena arena)
-// 	{
-// 		var scene = profile.Scene;
-//
-// 		var energy = RGB128.White;
-// 		var radiant = RGB128.Black;
-//
-// 		var query = new TraceQuery(ray);
-//
-// 		for (int bounce = 0; bounce < BounceLimit; bounce++)
-// 		{
-// 			if (!profile.Scene.Trace(ref query)) break;
-// 			using var _ = arena.allocator.Begin();
-//
-// 			Touch touch = profile.Scene.Interact(query);
-// 			touch.shade.material.Scatter(ref touch, arena.allocator);
-//
-// 			if (touch.bsdf == null)
-// 			{
-// 				query = query.SpawnTrace();
-// 				continue;
-// 			}
-//
-// 			(RGB128 scatter, float pdf) = touch.bsdf.Sample(touch.outgoing, arena.Distribution.Next2D(), out Float3 incident, out BxDF function);
-// 			if (touch.shade.material is IEmissive emissive && FastMath.Positive(emissive.Power)) radiant += energy * emissive.Emit(touch.point, touch.outgoing);
-//
-// 			if (!FastMath.Positive(pdf) | scatter.IsZero) energy = RGB128.Black;
-// 			else energy *= touch.NormalDot(incident) / pdf * scatter;
-//
-// 			if (energy.IsZero) break;
-// 			query = query.SpawnTrace(incident);
-// 		}
-//
-// 		if (!energy.IsZero) radiant += energy * scene.lights.EvaluateAmbient(query.ray.direction);
-//
-// 		return radiant;
-// 	}
-// }
+﻿using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Memory;
+using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Textures.Colors;
+using Echo.Core.Scenic.Preparation;
+using Echo.Core.Evaluation.Distributions.Continuous;
+using CodeHelpers.Packed;
+using Echo.Core.Textures.Evaluation;
+using Echo.Core.Evaluation.Materials;
+
+namespace Echo.Core.Evaluation.Evaluators;
+
+public record BruteForcedEvaluator : Evaluator
+{
+	/// <summary>
+	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
+	/// If such occurrence appears, the sample becomes biased and this property should be increased.
+	/// </summary>
+	public int BounceLimit { get; init; } = 128;
+
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	{
+		int depth = BounceLimit;
+		var query = new TraceQuery(ray);
+
+		return Evaluate(scene, ref query, distribution, allocator, ref depth);
+	}
+
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "force");
+
+	static Float4 Evaluate(PreparedScene scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, ref int depth)
+	{
+		if (--depth <= 0) return RGB128.Black;
+
+		allocator.Restart();
+
+		while (scene.Trace(ref query))
+		{
+			Touch touch = scene.Interact(query);
+			Material material = touch.shade.material;
+			material.Scatter(ref touch, allocator);
+
+			if (touch.bsdf != null)
+			{
+				var emission = RGB128.Black;
+
+				if (material is IEmissive emissive) emission += emissive.Emit(touch.point, touch.outgoing);
+
+				var scatterSample = distribution.Next2D();
+				Probable<RGB128> sample = touch.bsdf.Sample
+				(
+					touch.outgoing, scatterSample,
+					out Float3 incident, out _
+				);
+
+				if (sample.NotPossible | sample.content.IsZero) return emission;
+
+				RGB128 scatter = sample.content / sample.pdf;
+				scatter *= touch.NormalDot(incident);
+				query = query.SpawnTrace(incident);
+
+				return scatter * Evaluate(scene, ref query, distribution, allocator, ref depth) + emission;
+			}
+
+			query = query.SpawnTrace();
+		}
+
+		return scene.lights.EvaluateAmbient(query.ray.direction);
+	}
+
+}
