@@ -12,26 +12,26 @@ namespace Echo.Core.Evaluation.Evaluators;
 
 public record AggregatorQualityEvaluator : Evaluator
 {
-    long totalCost;
-    long totalSample;
+	long totalCost;
+	long totalSample;
 
-    public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
-    {
-        int cost = scene.TraceCost(ray);
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	{
+		uint cost = scene.TraceCost(ray);
 
-        long currentCost = Interlocked.Add(ref totalCost, cost);
-        long currentSample = Interlocked.Increment(ref totalSample);
+		long currentCost = Interlocked.Add(ref totalCost, cost);
+		long currentSample = Interlocked.Increment(ref totalSample);
 
-        return new RGB128(cost, currentCost, currentSample);
-    }
+		return new RGB128(cost, currentCost, currentSample);
+	}
 
-    // protected override ContinuousDistribution CreateDistribution(Echo.Core.Evaluation.Engines.RenderProfile profile)
-    // {
-    //     Interlocked.Exchange(ref totalCost, 0);
-    //     Interlocked.Exchange(ref totalSample, 0);
+	// protected override ContinuousDistribution CreateDistribution(Echo.Core.Evaluation.Engines.RenderProfile profile)
+	// {
+	//     Interlocked.Exchange(ref totalCost, 0);
+	//     Interlocked.Exchange(ref totalSample, 0);
 
-    //     return base.CreateDistribution(profile);
-    // }
+	//     return base.CreateDistribution(profile);
+	// }
 
-    public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "aggregator_quality");
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "aggregator_quality");
 }
