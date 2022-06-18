@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Preparation;
@@ -60,12 +59,6 @@ public class PreparedScene
 	public readonly Lights lights;
 	public readonly Info info;
 
-	long _traceCount;
-	long _occludeCount;
-
-	public long TraceCount => Interlocked.Read(ref _traceCount);
-	public long OccludeCount => Interlocked.Read(ref _occludeCount);
-
 	readonly PreparedInstanceRoot rootInstance;
 
 	/// <summary>
@@ -77,7 +70,6 @@ public class PreparedScene
 		float original = query.distance;
 
 		rootInstance.TraceRoot(ref query);
-		Interlocked.Increment(ref _traceCount);
 		return query.distance < original;
 	}
 
@@ -87,7 +79,6 @@ public class PreparedScene
 	public bool Occlude(ref OccludeQuery query)
 	{
 		if (!FastMath.Positive(query.travel)) return false;
-		Interlocked.Increment(ref _occludeCount);
 		return rootInstance.OccludeRoot(ref query);
 	}
 
@@ -153,16 +144,10 @@ public class PreparedScene
 	/// <summary>
 	/// Returns the approximated cost of computing a <see cref="TraceQuery"/> with <see cref="Trace"/>.
 	/// </summary>
-	public int TraceCost(in Ray ray)
+	public uint TraceCost(in Ray ray)
 	{
 		float distance = float.PositiveInfinity;
 		return rootInstance.TraceCost(ray, ref distance);
-	}
-
-	public void ResetIntersectionCount()
-	{
-		Interlocked.Exchange(ref _traceCount, 0);
-		Interlocked.Exchange(ref _occludeCount, 0);
 	}
 
 	public record Info

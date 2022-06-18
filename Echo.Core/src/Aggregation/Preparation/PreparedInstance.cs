@@ -149,7 +149,7 @@ public class PreparedInstance
 	/// <summary>
 	/// Returns the cost of tracing a <see cref="TraceQuery"/>.
 	/// </summary>
-	public int TraceCost(Ray ray, ref float distance)
+	public uint TraceCost(Ray ray, ref float distance)
 	{
 		//Forward transform distance to local-space
 		distance *= forwardScale;
@@ -157,7 +157,7 @@ public class PreparedInstance
 		//Gets intersection cost, calculation done in local-space
 		TransformForward(ref ray);
 
-		int cost = pack.aggregator.TraceCost(ray, ref distance);
+		uint cost = pack.aggregator.TraceCost(ray, ref distance);
 
 		//Restore distance back to parent-space
 		distance *= inverseScale;

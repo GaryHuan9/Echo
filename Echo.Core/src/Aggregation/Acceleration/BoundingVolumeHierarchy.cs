@@ -52,7 +52,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		return hit <= query.travel && OccludeImpl(ref query);
 	}
 
-	public override int TraceCost(in Ray ray, ref float distance)
+	public override uint TraceCost(in Ray ray, ref float distance)
 	{
 		ref readonly Node root = ref nodes[0];
 		float hit = root.aabb.Intersect(ray);
@@ -216,7 +216,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		return false;
 	}
 
-	int GetTraceCost(in NodeToken token, in Ray ray, ref float distance)
+	uint GetTraceCost(in NodeToken token, in Ray ray, ref float distance)
 	{
 		if (token.IsGeometry)
 		{
@@ -232,7 +232,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		float hit0 = child0.aabb.Intersect(ray);
 		float hit1 = child1.aabb.Intersect(ray);
 
-		int cost = 2;
+		uint cost = 2;
 
 		//Orderly intersects the two children so that there is a higher chance of intersection on the first child
 		if (hit0 < hit1)
