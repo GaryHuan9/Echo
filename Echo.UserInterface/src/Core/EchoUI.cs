@@ -7,7 +7,6 @@ using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Textures.Colors;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Areas;
-using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core;

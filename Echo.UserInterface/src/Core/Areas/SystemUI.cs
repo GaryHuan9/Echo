@@ -198,7 +198,7 @@ public class SystemUI : AreaUI
 
 		if (ImGui.Button("Dispose"))
 		{
-			DisposeDevice(device);
+			ActionQueue.Enqueue("Device Dispose", device.Dispose);
 			device = null;
 			return;
 		}
@@ -282,6 +282,4 @@ public class SystemUI : AreaUI
 
 		device.Dispatch(operation);
 	});
-
-	static void DisposeDevice(Device device) => ActionQueue.Enqueue("Device Dispose", device.Dispose);
 }

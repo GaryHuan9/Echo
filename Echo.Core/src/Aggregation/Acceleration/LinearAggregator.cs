@@ -73,9 +73,9 @@ public class LinearAggregator : Aggregator
 		return false;
 	}
 
-	public override int TraceCost(in Ray ray, ref float distance)
+	public override uint TraceCost(in Ray ray, ref float distance)
 	{
-		int cost = nodes.Length * Width;
+		uint cost = (uint)nodes.Length * Width;
 
 		foreach (ref readonly Node node in nodes.AsSpan())
 		{

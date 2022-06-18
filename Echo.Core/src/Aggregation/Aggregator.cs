@@ -72,7 +72,7 @@ public abstract class Aggregator
 	/// Calculates and returns the number of approximated intersection tests performed before a result is determined.
 	/// NOTE: the returned value is the cost for a full <see cref="TraceQuery"/>, not an <see cref="OccludeQuery"/>.
 	/// </summary>
-	public abstract int TraceCost(in Ray ray, ref float distance);
+	public abstract uint TraceCost(in Ray ray, ref float distance);
 
 	/// <summary>
 	/// Fills a <see cref="SpanFill{T}"/> with the <see cref="AxisAlignedBoundingBox"/> in this <see cref="Aggregator"/>.
@@ -92,7 +92,7 @@ public abstract class Aggregator
 		if (aabbs.Length != tokens.Length) throw ExceptionHelper.Invalid(nameof(aabbs), $"does not have a matching length with {nameof(tokens)}");
 		if (lengthValidator?.Invoke(tokens.Length) == false) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "has invalid length");
 
-#if DEBUG
+#if !RELEASE
 		foreach (ref readonly NodeToken token in tokens) Assert.IsTrue(token.IsGeometry);
 		foreach (ref readonly var aabb in aabbs) Assert.IsFalse(aabb.min.EqualsExact(aabb.max));
 #endif
