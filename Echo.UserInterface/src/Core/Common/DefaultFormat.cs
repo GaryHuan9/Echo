@@ -5,14 +5,17 @@ using CodeHelpers.Mathematics;
 
 namespace Echo.UserInterface.Core.Common;
 
-public static class DefaultFormattingExtensions
+public static class DefaultFormat
 {
-	public static string ToStringDefault(this float value) => value.ToString("N2");
-	public static string ToStringDefault(this double value) => value.ToString("N3");
-	public static string ToStringDefault(this int value) => value.ToString("N0");
-	public static string ToStringDefault(this long value) => value.ToString("N0");
-	public static string ToStringDefault(this uint value) => value.ToString("N0");
-	public static string ToStringDefault(this ulong value) => value.ToString("N0");
+	public const string Floating = "N2";
+	public const string Integer = "N0";
+
+	public static string ToStringDefault(this float value) => value.ToString(Floating);
+	public static string ToStringDefault(this double value) => value.ToString(Floating);
+	public static string ToStringDefault(this int value) => value.ToString(Integer);
+	public static string ToStringDefault(this long value) => value.ToString(Integer);
+	public static string ToStringDefault(this uint value) => value.ToString(Integer);
+	public static string ToStringDefault(this ulong value) => value.ToString(Integer);
 
 	public static string ToStringDefault(this TimeSpan value) => value.ToString(@"hh\:mm\:ss\.ff");
 	public static string ToStringDefault(this DateTime value) => value.ToString("HH:mm:ss");

@@ -174,6 +174,8 @@ public class PreparedScene
 			depth = preparer.depth;
 			instancedCounts = preparer.instancedCounts;
 			uniqueCounts = preparer.uniqueCounts;
+			materialCount = preparer.MaterialCount;
+			entityPackCount = preparer.EntityPackCount;
 		}
 
 		public readonly AxisAlignedBoundingBox aabb;
@@ -182,6 +184,8 @@ public class PreparedScene
 		public readonly int depth;
 		public readonly GeometryCounts instancedCounts;
 		public readonly GeometryCounts uniqueCounts;
+		public readonly int materialCount;
+		public readonly int entityPackCount;
 	}
 
 	public class Lights
@@ -189,9 +193,9 @@ public class PreparedScene
 		public Lights(PreparedScene scene, IReadOnlyCollection<LightSource> all)
 		{
 			int length = all.Count;
-			float geometryPower = scene.rootInstance.Power;
+			GeometryPower = scene.rootInstance.Power;
 
-			if (length == 0 && !FastMath.Positive(geometryPower))
+			if (length == 0 && !FastMath.Positive(GeometryPower))
 			{
 				//Degenerate case with literally zero light contributor; our output image will literally be
 				//completely black, but we add in a light so no exception is thrown when we look for lights.
@@ -223,7 +227,7 @@ public class PreparedScene
 			}
 
 			_ambient = ambientList.ToArray();
-			powerValues[length] = geometryPower;
+			powerValues[length] = GeometryPower;
 
 			distribution = new DiscreteDistribution1D(powerValues);
 		}
@@ -242,6 +246,16 @@ public class PreparedScene
 		/// Accesses all of the <see cref="AmbientLight"/> present in a <see cref="PreparedScene"/>.
 		/// </summary>
 		public ReadOnlySpan<AmbientLight> Ambient => _ambient;
+
+		/// <summary>
+		/// The approximated total power of all the lights. 
+		/// </summary>
+		public float TotalPower => distribution.sum;
+
+		/// <summary>
+		/// The approximated total power of all emissive geometries.
+		/// </summary>
+		public float GeometryPower { get; }
 
 		/// <summary>
 		/// Picks a <see cref="LightSource"/> based on <paramref name="sample"/>.
