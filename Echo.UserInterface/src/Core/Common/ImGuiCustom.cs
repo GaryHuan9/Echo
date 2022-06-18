@@ -11,6 +11,9 @@ public static class ImGuiCustom
 													 ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Reorderable |
 													 ImGuiTableFlags.BordersOuter;
 
+	const ImGuiTableFlags PropertiesTableFlags = ImGuiTableFlags.BordersOuter | ImGuiTableFlags.NoSavedSettings |
+												 ImGuiTableFlags.Resizable | ImGuiTableFlags.NoBordersInBodyUntilResize;
+
 	public static void TableItem(string value, bool wrap = false)
 	{
 		ImGui.TableNextColumn();
@@ -18,8 +21,15 @@ public static class ImGuiCustom
 		else ImGui.TextUnformatted(value);
 	}
 
-	public static bool BeginProperties(string name) => ImGui.BeginTable(name, 2, ImGuiTableFlags.BordersOuter | ImGuiTableFlags.NoSavedSettings |
-																				 ImGuiTableFlags.Resizable | ImGuiTableFlags.NoBordersInBodyUntilResize);
+	public static bool BeginProperties(string name)
+	{
+		if (!ImGui.BeginTable(name, 2, PropertiesTableFlags)) return false;
+
+		ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.None, 2f);
+		ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None, 3f);
+
+		return true;
+	}
 
 	public static void Property(string label, string value)
 	{
