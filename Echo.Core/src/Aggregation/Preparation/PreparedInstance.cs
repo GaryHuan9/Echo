@@ -117,11 +117,13 @@ public class PreparedInstance
 	public Material GetMaterial(MaterialIndex index) => swatch[index];
 
 	/// <summary>
-	/// If <see cref="Power"/> is not positive, the behavior of this method is undefined. Otherwise, finds an emissive geometry based on <paramref name="samples"/>
-	/// and returns a <see cref="GeometryToken"/> that represents the geometry. The <see cref="PreparedInstance"/> that immediately holds this geometry, and the
-	/// probability density function value are calculated and exported to <paramref name="instance"/> and <paramref name="pdf"/> respectively.
+	/// Picks an emissive geometry from this <see cref="PreparedInstance"/>.
 	/// </summary>
-	public Probable<GeometryToken> Find(ReadOnlySpan<Sample1D> samples, out PreparedInstance instance)
+	/// <param name="sample">The <see cref="Sample1D"/> value used to select the target emissive geometry.</param>
+	/// <param name="instance">Outputs the <see cref="PreparedInstance"/> that immediately holds this geometry.</param>
+	/// <returns>The picked <see cref="Probable{T}"/> of type <see cref="GeometryToken"/> that represents our emissive geometry.</returns>
+	/// <remarks>If <see cref="Power"/> is not positive, the behavior of this method is undefined.</remarks>
+	public Probable<GeometryToken> Pick(Sample1D sample, out PreparedInstance instance)
 	{
 		Assert.IsTrue(FastMath.Positive(Power));
 		var geometryToken = new GeometryToken();
@@ -129,33 +131,25 @@ public class PreparedInstance
 		instance = this;
 		float pdf = 1f;
 
-		foreach (Sample1D sample in samples)
+		do
 		{
-			pdf *= FindSingle(sample, ref instance, ref geometryToken);
-			if (geometryToken.Geometry != default) return (geometryToken, pdf);
+			// ReSharper disable once LocalVariableHidesMember
+			(NodeToken token, float tokenPdf) = instance.powerDistribution.Pick(ref sample);
 
-			Assert.IsNotNull(instance);
+			if (token.IsTriangle || token.IsSphere) geometryToken.Geometry = token;
+			else geometryToken.Push(instance = instance.pack.GetInstance(token));
 
-			static float FindSingle(Sample1D sample, ref PreparedInstance instance, ref GeometryToken stack)
-			{
-				var found = instance.powerDistribution.Pick(sample);
-				ref readonly NodeToken token = ref found.content;
-
-				if (token.IsTriangle || token.IsSphere) stack.Geometry = token;
-				else stack.Push(instance = instance.pack.GetInstance(token));
-
-				return found.pdf;
-			}
+			pdf *= tokenPdf;
 		}
+		while (geometryToken.Geometry == default);
 
-		//We have exhausted the provided samples
-		throw ExceptionHelper.Invalid(nameof(samples.Length), samples.Length, "does not have enough elements");
+		return (geometryToken, pdf);
 	}
 
 	/// <summary>
 	/// Returns the cost of tracing a <see cref="TraceQuery"/>.
 	/// </summary>
-	public int TraceCost(Ray ray, ref float distance)
+	public uint TraceCost(Ray ray, ref float distance)
 	{
 		//Forward transform distance to local-space
 		distance *= forwardScale;
@@ -163,7 +157,7 @@ public class PreparedInstance
 		//Gets intersection cost, calculation done in local-space
 		TransformForward(ref ray);
 
-		int cost = pack.aggregator.TraceCost(ray, ref distance);
+		uint cost = pack.aggregator.TraceCost(ray, ref distance);
 
 		//Restore distance back to parent-space
 		distance *= inverseScale;
