@@ -15,17 +15,24 @@ public class LogsUI : AreaUI
 		DebugHelper.Logger = LogList.Logger;
 	}
 
+	bool autoScroll = true;
+
 	protected override void Update(in Moment moment)
 	{
+		if (ImGui.Button("Save to Disk")) SaveToFile();
+
+		ImGui.SameLine();
 		if (ImGui.Button("Clear All")) LogList.Clear();
 
 		ImGui.SameLine();
-		if (ImGui.Button("Save to File")) SaveToFile();
+		ImGui.Checkbox("Auto Scroll", ref autoScroll);
 
 		ImGui.Separator();
 		ImGui.BeginChild("History");
 
 		foreach (string log in LogList.Logs) ImGui.TextUnformatted(log);
+
+		if (autoScroll && ImGui.GetScrollY() >= ImGui.GetScrollMaxY()) ImGui.SetScrollHereY(1f);
 
 		ImGui.EndChild();
 	}
