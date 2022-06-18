@@ -45,6 +45,8 @@ public class TilesUI : PlaneUI
 
 	const string TextureFilePath = "render.png";
 
+	protected override bool HasMenuBar => true;
+
 	protected override void Update(in Moment moment)
 	{
 		if (operationUI.SelectedOperation is not EvaluationOperation { destination: { } layer } operation) return;
@@ -75,7 +77,7 @@ public class TilesUI : PlaneUI
 		while (tile != null);
 
 		//Draw all
-		DrawHeader(layer);
+		DrawMenuBar(layer);
 		base.Update(moment);
 	}
 
@@ -198,47 +200,55 @@ public class TilesUI : PlaneUI
 		SDL_UnlockTexture(texture);
 	}
 
-	void DrawHeader(IEvaluationLayer layer)
+	void DrawMenuBar(IEvaluationLayer layer)
 	{
-		//Buttons and info label
-		if (ImGui.Button("Save to File"))
+		if (ImGui.BeginMenuBar())
 		{
-			ActionQueue.Enqueue("Serialize Evaluation Layer", Serialize);
-			void Serialize() => ((TextureGrid)layer).Save(TextureFilePath);
-		}
-
-		ImGui.SameLine();
-		if (ImGui.Button("Show Working Directory"))
-		{
-			string path = Environment.CurrentDirectory;
-
-			if (!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
-			Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
-		}
-
-		ImGui.SameLine();
-		if (ImGui.Button("Recenter View")) Recenter();
-
-		ImGui.SameLine();
-		if (ImGui.Button("Refresh Tiles")) RestartTextureUpdate();
-
-		ImGui.SameLine();
-		DrawMousePixelInformation(layer);
-
-		//Compare mode
-		bool compare = compareTexture != null;
-
-		if (ImGui.Checkbox("Compare with File", ref compare))
-		{
-			if (compare)
+			if (ImGui.BeginMenu("File"))
 			{
-				if (File.Exists(TextureFilePath)) compareTexture = ((TextureGrid)layer).Load(TextureFilePath);
-				else LogList.AddError($"Unable to find texture file at {Path.GetFullPath(TextureFilePath)}.");
-			}
-			else compareTexture = null;
+				if (ImGui.MenuItem("Save to Disk"))
+				{
+					ActionQueue.Enqueue("Serialize Evaluation Layer", Serialize);
+					void Serialize() => ((TextureGrid)layer).Save(TextureFilePath);
+				}
 
-			RestartTextureUpdate();
+				if (ImGui.MenuItem("Show Directory"))
+				{
+					string path = Environment.CurrentDirectory;
+
+					if (!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
+					Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+				}
+
+				bool compare = compareTexture != null;
+
+				if (ImGui.MenuItem(compare ? "End Comparison" : "Compare with File"))
+				{
+					if (!compare)
+					{
+						if (File.Exists(TextureFilePath)) compareTexture = ((TextureGrid)layer).Load(TextureFilePath);
+						else LogList.AddError($"Unable to find texture file at {Path.GetFullPath(TextureFilePath)}.");
+					}
+					else compareTexture = null;
+
+					RestartTextureUpdate();
+				}
+
+				ImGui.EndMenu();
+			}
+
+			if (ImGui.BeginMenu("View"))
+			{
+				if (ImGui.MenuItem("Recenter")) Recenter();
+				if (ImGui.MenuItem("Refresh")) RestartTextureUpdate();
+
+				ImGui.EndMenu();
+			}
+
+			ImGui.EndMenuBar();
 		}
+
+		DrawMousePixelInformation(layer);
 	}
 
 	/// <summary>
@@ -292,25 +302,32 @@ public class TilesUI : PlaneUI
 	void DrawMousePixelInformation(IEvaluationLayer layer)
 	{
 		Float2 cursorPosition = CursorPosition ?? Float2.NegativeInfinity;
-		Float2 uv = (cursorPosition + Float2.One) / textureExtend / 2f;
-		uv = new Float2(-uv.X, uv.Y) + Float2.Half;
+		Float2 uv = cursorPosition / textureExtend;
+		uv = new Float2(-uv.X, uv.Y) / 2f + Float2.Half;
 
-		if (Float2.Zero <= uv && uv < Float2.One)
+		if (!(Float2.Zero <= uv) || !(uv < Float2.One))
 		{
-			Int2 position = (Int2)(uv * textureSize);
-			Int2 tilePosition = layer.GetTilePosition(position);
-			IEvaluationReadTile tile = layer.RequestTile(tilePosition);
-
-			if (tile != null)
-			{
-				Float4 color = tile[position];
-
-				if (compareTexture != null) color = (color - compareTexture[uv]).Absoluted;
-				ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {color:N4}");
-			}
-			else ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition}");
+			ImGui.NewLine();
+			return;
 		}
-		else ImGui.TextUnformatted("Mouse Content Unavailable");
+
+		Int2 position = (Int2)(uv * textureSize);
+		Int2 tilePosition = layer.GetTilePosition(position);
+		IEvaluationReadTile tile = layer.RequestTile(tilePosition);
+
+		if (tile != null)
+		{
+			Float4 color = tile[position];
+
+			if (compareTexture != null)
+			{
+				uv = (position + Float2.Half) / textureSize;
+				color = (color - compareTexture[uv]).Absoluted;
+			}
+
+			ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {color:N4}");
+		}
+		else ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition}");
 	}
 
 	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)
