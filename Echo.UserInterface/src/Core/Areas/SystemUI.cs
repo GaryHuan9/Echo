@@ -254,9 +254,9 @@ public class SystemUI : AreaUI
 			var evaluationProfile = new EvaluationProfile
 			{
 				Scene = new PreparedScene(scene, prepareProfile),
-				Evaluator = new PathTracedEvaluator(),
+				Evaluator = new BruteForcedEvaluator(),
 				Distribution = new StratifiedDistribution { Extend = 16 },
-				Buffer = new RenderBuffer(new Int2(512, 512)),
+				Buffer = new RenderBuffer(new Int2(640, 480)),
 				Pattern = new SpiralPattern(),
 				MinEpoch = 1,
 				MaxEpoch = 20
