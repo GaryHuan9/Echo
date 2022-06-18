@@ -11,7 +11,6 @@ using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
 using Echo.Core.Textures.Grid;
-using System;
 
 namespace Echo.Core.Scenic.Examples;
 
