@@ -12,27 +12,27 @@ namespace Echo.Core.Evaluation.Evaluators;
 
 public record AlbedoEvaluator : Evaluator
 {
-    public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "albedo");
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "albedo");
 
-    public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
-    {
-        var query = new TraceQuery(ray);
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	{
+		var query = new TraceQuery(ray);
 
-        //Trace for intersection
-        while (scene.Trace(ref query))
-        {
-            Touch touch = scene.Interact(query);
+		allocator.Restart();
 
-            allocator.Restart();
+		//Trace for intersection
+		while (scene.Trace(ref query))
+		{
+			Touch touch = scene.Interact(query);
 
-            Material material = touch.shade.material;
-            material.Scatter(ref touch, allocator);
+			Material material = touch.shade.material;
+			material.Scatter(ref touch, allocator);
 
-            if (touch.bsdf == null) query = query.SpawnTrace();
-            else return (RGB128)material.SampleAlbedo(touch);
-        }
+			if (touch.bsdf == null) query = query.SpawnTrace();
+			else return (RGB128)material.SampleAlbedo(touch);
+		}
 
-        //Sample ambient
-        return scene.lights.EvaluateAmbient(query.ray.direction);
-    }
+		//Sample ambient
+		return scene.lights.EvaluateAmbient(query.ray.direction);
+	}
 }
