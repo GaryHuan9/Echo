@@ -9,7 +9,7 @@ public static class ImGuiCustom
 {
 	public const ImGuiTableFlags DefaultTableFlags = ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
 													 ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Reorderable |
-													 ImGuiTableFlags.Borders;
+													 ImGuiTableFlags.BordersOuter;
 
 	public static void TableItem(string value, bool wrap = false)
 	{

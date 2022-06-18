@@ -83,8 +83,9 @@ public class TilesUI : PlaneUI
 	{
 		FindContentBounds(region, out Bounds content);
 
-		uint color = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
-		drawList.AddRect(content.MinVector2, content.MaxVector2, color);
+		uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
+		drawList.AddRectFilled(content.MinVector2, content.MaxVector2, 0xFF000000u);
+		drawList.AddRect(content.MinVector2, content.MaxVector2, borderColor);
 		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
 
 		DrawCurrentTiles(lastOperation, drawList, content);
@@ -270,7 +271,7 @@ public class TilesUI : PlaneUI
 		Float2 invertMin = new Float2(content.min.X, content.max.Y);
 		Float2 invertMax = new Float2(content.max.X, content.min.Y);
 
-		uint fillColor = ImGuiCustom.GetColorInteger(ImGuiCol.FrameBg);
+		uint fillColor = ImGuiCustom.GetColorInteger(ImGuiCol.MenuBarBg);
 		uint borderColor = ImGuiCustom.GetColorInteger();
 
 		foreach (ref readonly Procedure procedure in GatherValidProcedures(operation))

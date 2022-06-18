@@ -121,79 +121,79 @@ public sealed class EchoUI : IApplication
 		//#28609C              (Gamma Hex)
 
 		var colors = style.Colors;
-		const float Alpha = 0.32f;
 
-		RGB128 color = SystemPrng.Shared.Next1(9) switch
+		RGB128 color = SystemPrng.Shared.Next1(16) switch
 		{
 			0 or 1 => new RGB128(0.1581f, 0.6112f, 0.3763f), //Green
-			2 => (RGB128)RGBA128.Parse("0xDD444C"),          //REDO
+			2 or 3 => (RGB128)RGBA128.Parse("#FA983A"),      //Orange
+			4 => (RGB128)RGBA128.Parse("#DD444C"),           //REDO
 			_ => new RGB128(0.1581f, 0.3763f, 0.6112f)       //Signature
 		};
 
-		var dark0 = ToVector4(color * 0.33f);
-		var dark1 = ToVector4(color * 0.41f);
-		var dark2 = ToVector4(color * 0.52f);
+		const float Alpha0 = 0.33f;
+		const float Alpha1 = 0.61f;
 
-		var main0 = ToVector4(color * 1.0f);
-		var main1 = ToVector4(color * 1.2f);
+		var main = ToVector4(color * 1.0f);
+		var white1 = ToVector4(RGBA128.Parse("#FAFBFF"));
+		var white0 = Vector4.Lerp(main, white1, Alpha1);
+		var background0 = ToVector4(RGBA128.Parse("#141517"));
+		var background1 = ToVector4(RGBA128.Parse("#23272E"));
+		var contrast = ToVector4(RGBA128.Parse("#373B3F"));
 
-		var white = new Vector4(0.94f, 0.96f, 0.99f, 1.00f);
-		var black = new Vector4(0.04f, 0.04f, 0.05f, 1.00f);
-		var gray = new Vector4(0.51f, 0.54f, 0.60f, Alpha);
-
-		colors[(int)ImGuiCol.Text] = white;
-		colors[(int)ImGuiCol.TextDisabled] = white with { W = Alpha };
-		colors[(int)ImGuiCol.WindowBg] = black;
-		colors[(int)ImGuiCol.PopupBg] = black;
-		colors[(int)ImGuiCol.Border] = gray;
-		colors[(int)ImGuiCol.FrameBg] = dark0;
-		colors[(int)ImGuiCol.FrameBgHovered] = dark1;
-		colors[(int)ImGuiCol.FrameBgActive] = dark2;
-		colors[(int)ImGuiCol.TitleBg] = dark0;
-		colors[(int)ImGuiCol.TitleBgActive] = dark2;
-		colors[(int)ImGuiCol.TitleBgCollapsed] = black;
-		colors[(int)ImGuiCol.MenuBarBg] = gray;
+		colors[(int)ImGuiCol.Text] = white1;
+		colors[(int)ImGuiCol.TextDisabled] = white0;
+		colors[(int)ImGuiCol.WindowBg] = background0;
+		colors[(int)ImGuiCol.PopupBg] = background0;
+		colors[(int)ImGuiCol.Border] = main with { W = Alpha1 };
+		colors[(int)ImGuiCol.FrameBg] = Vector4.Zero;
+		colors[(int)ImGuiCol.FrameBgHovered] = contrast;
+		colors[(int)ImGuiCol.FrameBgActive] = main;
+		colors[(int)ImGuiCol.TitleBg] = background0;
+		colors[(int)ImGuiCol.TitleBgActive] = contrast;
+		colors[(int)ImGuiCol.TitleBgCollapsed] = background0;
+		colors[(int)ImGuiCol.MenuBarBg] = background1;
 		colors[(int)ImGuiCol.ScrollbarBg] = Vector4.Zero;
-		colors[(int)ImGuiCol.ScrollbarGrab] = dark0;
-		colors[(int)ImGuiCol.ScrollbarGrabHovered] = dark1;
-		colors[(int)ImGuiCol.ScrollbarGrabActive] = dark2;
-		colors[(int)ImGuiCol.CheckMark] = main0;
-		colors[(int)ImGuiCol.SliderGrab] = main0;
-		colors[(int)ImGuiCol.SliderGrabActive] = main1;
-		colors[(int)ImGuiCol.Button] = dark0;
-		colors[(int)ImGuiCol.ButtonHovered] = dark1;
-		colors[(int)ImGuiCol.ButtonActive] = dark2;
-		colors[(int)ImGuiCol.Header] = dark0;
-		colors[(int)ImGuiCol.HeaderHovered] = dark1;
-		colors[(int)ImGuiCol.HeaderActive] = dark2;
-		colors[(int)ImGuiCol.Separator] = dark0;
-		colors[(int)ImGuiCol.SeparatorHovered] = dark1;
-		colors[(int)ImGuiCol.SeparatorActive] = dark2;
-		colors[(int)ImGuiCol.ResizeGrip] = dark0;
-		colors[(int)ImGuiCol.ResizeGripHovered] = dark1;
-		colors[(int)ImGuiCol.ResizeGripActive] = dark2;
-		colors[(int)ImGuiCol.Tab] = dark0;
-		colors[(int)ImGuiCol.TabHovered] = dark2;
-		colors[(int)ImGuiCol.TabActive] = dark1;
-		colors[(int)ImGuiCol.TabUnfocused] = dark0;
-		colors[(int)ImGuiCol.TabUnfocusedActive] = dark1;
-		colors[(int)ImGuiCol.DockingPreview] = dark2;
-		colors[(int)ImGuiCol.DockingEmptyBg] = black;
-		colors[(int)ImGuiCol.PlotLines] = main0;
-		colors[(int)ImGuiCol.PlotLinesHovered] = main1;
-		colors[(int)ImGuiCol.PlotHistogram] = main0;
-		colors[(int)ImGuiCol.PlotHistogramHovered] = main1;
-		colors[(int)ImGuiCol.TableHeaderBg] = dark0;
-		colors[(int)ImGuiCol.TableBorderStrong] = gray;
-		colors[(int)ImGuiCol.TableBorderLight] = gray;
-		colors[(int)ImGuiCol.TableRowBgAlt] = dark0 with { W = Alpha };
-		colors[(int)ImGuiCol.TextSelectedBg] = white with { W = Alpha };
-		colors[(int)ImGuiCol.DragDropTarget] = white;
-		colors[(int)ImGuiCol.NavHighlight] = white;
-		colors[(int)ImGuiCol.NavWindowingHighlight] = white;
-		colors[(int)ImGuiCol.NavWindowingDimBg] = white with { W = Alpha };
-		colors[(int)ImGuiCol.ModalWindowDimBg] = white with { W = Alpha };
-
-		static Vector4 ToVector4(in RGB128 color) => ((Float4)(RGBA128)color).v.AsVector4();
+		colors[(int)ImGuiCol.ScrollbarGrab] = background1;
+		colors[(int)ImGuiCol.ScrollbarGrabHovered] = contrast;
+		colors[(int)ImGuiCol.ScrollbarGrabActive] = main;
+		colors[(int)ImGuiCol.CheckMark] = main;
+		colors[(int)ImGuiCol.SliderGrab] = main;
+		colors[(int)ImGuiCol.SliderGrabActive] = white0;
+		colors[(int)ImGuiCol.Button] = Vector4.Zero;
+		colors[(int)ImGuiCol.ButtonHovered] = contrast;
+		colors[(int)ImGuiCol.ButtonActive] = main;
+		colors[(int)ImGuiCol.Header] = Vector4.Zero;
+		colors[(int)ImGuiCol.HeaderHovered] = contrast;
+		colors[(int)ImGuiCol.HeaderActive] = main;
+		colors[(int)ImGuiCol.Separator] = background1;
+		colors[(int)ImGuiCol.SeparatorHovered] = contrast;
+		colors[(int)ImGuiCol.SeparatorActive] = main;
+		colors[(int)ImGuiCol.ResizeGrip] = Vector4.Zero;
+		colors[(int)ImGuiCol.ResizeGripHovered] = Vector4.Zero;
+		colors[(int)ImGuiCol.ResizeGripActive] = Vector4.Zero;
+		colors[(int)ImGuiCol.Tab] = background0;
+		colors[(int)ImGuiCol.TabHovered] = main;
+		colors[(int)ImGuiCol.TabActive] = main;
+		colors[(int)ImGuiCol.TabUnfocused] = background0;
+		colors[(int)ImGuiCol.TabUnfocusedActive] = contrast;
+		colors[(int)ImGuiCol.DockingPreview] = contrast;
+		colors[(int)ImGuiCol.DockingEmptyBg] = background0;
+		colors[(int)ImGuiCol.PlotLines] = main;
+		colors[(int)ImGuiCol.PlotLinesHovered] = white0;
+		colors[(int)ImGuiCol.PlotHistogram] = main;
+		colors[(int)ImGuiCol.PlotHistogramHovered] = white0;
+		colors[(int)ImGuiCol.TableHeaderBg] = background1;
+		colors[(int)ImGuiCol.TableBorderStrong] = main with { W = Alpha1 };
+		colors[(int)ImGuiCol.TableBorderLight] = main with { W = Alpha1 };
+		colors[(int)ImGuiCol.TableRowBgAlt] = background1 with { W = Alpha0 };
+		colors[(int)ImGuiCol.TextSelectedBg] = white1 with { W = Alpha0 };
+		colors[(int)ImGuiCol.DragDropTarget] = white1 with { W = Alpha1 };
+		colors[(int)ImGuiCol.NavHighlight] = white1 with { W = Alpha1 };
+		colors[(int)ImGuiCol.NavWindowingHighlight] = white1 with { W = Alpha1 };
+		colors[(int)ImGuiCol.NavWindowingDimBg] = white1 with { W = Alpha0 };
+		colors[(int)ImGuiCol.ModalWindowDimBg] = white1 with { W = Alpha0 };
 	}
+
+	static Vector4 ToVector4(in RGB128 color) => ToVector4((RGBA128)color);
+	static Vector4 ToVector4(in RGBA128 color) => ((Float4)color).v.AsVector4();
 }
