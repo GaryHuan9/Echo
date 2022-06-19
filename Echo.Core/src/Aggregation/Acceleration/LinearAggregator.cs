@@ -16,7 +16,7 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// </summary>
 public class LinearAggregator : Aggregator
 {
-	public LinearAggregator(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
+	public LinearAggregator(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens);
 
@@ -25,9 +25,8 @@ public class LinearAggregator : Aggregator
 
 		for (int i = 0; i < nodes.Length; i++)
 		{
-			int index = i * Width;
-
-			nodes[i] = new Node(span[index..], tokens[index..]);
+			int offset = i * Width;
+			nodes[i] = new Node(span[offset..], tokens[offset..]);
 		}
 
 		totalCount = span.Length;
@@ -50,7 +49,7 @@ public class LinearAggregator : Aggregator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections[i] >= query.distance) continue;
-				ref readonly NodeToken token = ref node.token4[i];
+				ref readonly EntityToken token = ref node.token4[i];
 				pack.Trace(ref query, token);
 			}
 		}
@@ -65,7 +64,7 @@ public class LinearAggregator : Aggregator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections[i] >= query.travel) continue;
-				ref readonly NodeToken token = ref node.token4[i];
+				ref readonly EntityToken token = ref node.token4[i];
 				if (pack.Occlude(ref query, token)) return true;
 			}
 		}
@@ -84,7 +83,7 @@ public class LinearAggregator : Aggregator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections[i] >= distance) continue;
-				ref readonly NodeToken token = ref node.token4[i];
+				ref readonly EntityToken token = ref node.token4[i];
 				cost += pack.GetTraceCost(ray, ref distance, token);
 			}
 		}
@@ -108,7 +107,7 @@ public class LinearAggregator : Aggregator
 			for (int j = 0; j < Width; j++)
 			{
 				if (fill.Count == totalCount) return;
-				fill.Add(nodes[i].aabb4[i]);
+				fill.Add(nodes[i].aabb4[j]);
 			}
 
 			return;
@@ -174,13 +173,13 @@ public class LinearAggregator : Aggregator
 
 	readonly struct Node
 	{
-		public Node(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens)
+		public Node(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens)
 		{
 			aabb4 = new AxisAlignedBoundingBox4(aabbs);
-			token4 = new NodeToken4(tokens);
+			token4 = new EntityToken4(tokens);
 		}
 
 		public readonly AxisAlignedBoundingBox4 aabb4;
-		public readonly NodeToken4 token4;
+		public readonly EntityToken4 token4;
 	}
 }

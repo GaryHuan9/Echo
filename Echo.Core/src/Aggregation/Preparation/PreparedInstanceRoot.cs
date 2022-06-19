@@ -14,7 +14,7 @@ namespace Echo.Core.Aggregation.Preparation;
 /// </summary>
 public class PreparedInstanceRoot : PreparedInstance
 {
-	public PreparedInstanceRoot(ScenePreparer preparer, Scene scene) : base(preparer, scene, null, NodeToken.Empty) { }
+	public PreparedInstanceRoot(ScenePreparer preparer, Scene scene) : base(preparer, scene, null, EntityToken.Empty) { }
 
 	/// <summary>
 	/// Calculates and outputs the <see cref="AxisAlignedBoundingBox"/> and <see cref="BoundingSphere"/> of
@@ -66,7 +66,7 @@ public class PreparedInstanceRoot : PreparedInstance
 		var transform = Float4x4.identity;
 
 		//Traverse down the instancing path
-		foreach (ref readonly NodeToken nodeToken in query.token.Instances)
+		foreach (ref readonly EntityToken nodeToken in query.token.Instances)
 		{
 			//Because we traverse in reverse, we must also multiply the transform in reverse
 			transform = instance.inverseTransform * transform;

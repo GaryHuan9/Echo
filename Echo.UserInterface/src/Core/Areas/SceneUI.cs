@@ -49,19 +49,19 @@ public class SceneUI : AreaUI
 		{
 			ImGui.TableSetupColumn("Geometry Kind");
 			ImGui.TableSetupColumn("Triangle");
-			ImGui.TableSetupColumn("Sphere");
 			ImGui.TableSetupColumn("Instance");
+			ImGui.TableSetupColumn("Sphere");
 			ImGui.TableHeadersRow();
 
 			ImGuiCustom.TableItem("Unique");
 			ImGuiCustom.TableItem(info.uniqueCounts.triangle.ToStringDefault());
-			ImGuiCustom.TableItem(info.uniqueCounts.sphere.ToStringDefault());
 			ImGuiCustom.TableItem(info.uniqueCounts.instance.ToStringDefault());
+			ImGuiCustom.TableItem(info.uniqueCounts.sphere.ToStringDefault());
 
 			ImGuiCustom.TableItem("Instanced");
 			ImGuiCustom.TableItem(info.instancedCounts.triangle.ToStringDefault());
-			ImGuiCustom.TableItem(info.instancedCounts.sphere.ToStringDefault());
 			ImGuiCustom.TableItem(info.instancedCounts.instance.ToStringDefault());
+			ImGuiCustom.TableItem(info.instancedCounts.sphere.ToStringDefault());
 
 			ImGui.EndTable();
 		}

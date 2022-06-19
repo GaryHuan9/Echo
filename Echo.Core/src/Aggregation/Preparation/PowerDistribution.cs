@@ -9,16 +9,16 @@ using Echo.Core.Evaluation.Distributions.Discrete;
 namespace Echo.Core.Aggregation.Preparation;
 
 /// <summary>
-/// A distribution of <see cref="NodeToken"/>s created from emissive power value of the objects they represent.
+/// A distribution of <see cref="EntityToken"/>s created from emissive power value of the objects they represent.
 /// </summary>
 public class PowerDistribution
 {
-	public PowerDistribution(ReadOnlySpan<float> powerValues, ReadOnlySpan<int> segments, NodeTokenArray tokenArray)
+	public PowerDistribution(ReadOnlySpan<float> powerValues, ReadOnlySpan<int> segments, EntityTokenArray tokenArray)
 	{
 		int partitionLength = segments.Length;
 
 		distribution = new DiscreteDistribution1D(powerValues);
-		partitions = new ReadOnlyView<NodeToken>[partitionLength];
+		partitions = new ReadOnlyView<EntityToken>[partitionLength];
 		starts = new int[partitionLength];
 
 		//Calculate partition starts using rolling sum
@@ -40,7 +40,7 @@ public class PowerDistribution
 	}
 
 	readonly DiscreteDistribution1D distribution;
-	readonly ReadOnlyView<NodeToken>[] partitions;
+	readonly ReadOnlyView<EntityToken>[] partitions;
 	readonly int[] starts;
 
 	/// <summary>
@@ -53,8 +53,8 @@ public class PowerDistribution
 	/// </summary>
 	/// <param name="sample">The <see cref="Sample1D"/> used to pick the result; it will be stretched to a new
 	/// uniform and unbiased <see cref="Sample1D"/> after being used by this method.</param>
-	/// <returns>The <see cref="Probable{T}"/> of type <see cref="NodeToken"/> representing the light.</returns>
-	public Probable<NodeToken> Pick(ref Sample1D sample)
+	/// <returns>The <see cref="Probable{T}"/> of type <see cref="EntityToken"/> representing the light.</returns>
+	public Probable<EntityToken> Pick(ref Sample1D sample)
 	{
 		//Sample from distribution and do binary search
 		(int index, float pdf) = distribution.Pick(sample, out float lower, out float upper);
@@ -63,7 +63,7 @@ public class PowerDistribution
 
 		//Find token from index
 		if (segment < 0) segment = ~segment - 1;
-		ReadOnlyView<NodeToken> partition = partitions[segment];
+		ReadOnlyView<EntityToken> partition = partitions[segment];
 		return (partition[index - starts[segment]], pdf);
 	}
 }

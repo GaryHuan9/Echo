@@ -20,7 +20,7 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// </summary>
 public class QuadBoundingVolumeHierarchy : Aggregator
 {
-	public QuadBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens) : base(pack)
+	public QuadBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(pack)
 	{
 		Validate(aabbs, tokens, length => length > 1);
 		int[] indices = CreateIndices(aabbs.Length);
@@ -51,13 +51,13 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	/// <summary>
 	/// Returns the root <see cref="AxisAlignedBoundingBox"/> that encapsulates the entire hierarchy.
 	/// </summary>
-	AxisAlignedBoundingBox RootAABB => nodes[NodeToken.Root.NodeValue].aabb4.Encapsulated;
+	AxisAlignedBoundingBox RootAABB => nodes[RootToken.Index].aabb4.Encapsulated;
+
+	static EntityToken RootToken => NewNodeToken(0);
 
 	public override void Trace(ref TraceQuery query) => TraceImpl(ref query);
-
 	public override bool Occlude(ref OccludeQuery query) => OccludeImpl(ref query);
-
-	public override uint TraceCost(in Ray ray, ref float distance) => GetTraceCost(NodeToken.Root, ray, ref distance);
+	public override uint TraceCost(in Ray ray, ref float distance) => GetTraceCost(RootToken, ray, ref distance);
 
 	public override unsafe int GetHashCode()
 	{
@@ -67,8 +67,8 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	public override unsafe void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
 	{
 		int length = 1 << (int)depth;
-		fill.ThrowIfNotEmpty();
 		fill.ThrowIfTooSmall(length);
+		fill.ThrowIfNotEmpty();
 
 		//Output is too small
 		if (length < Width)
@@ -81,26 +81,26 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		//Thus, we must carefully reduce the value of depth to make sure that we never exceed the span size
 		uint iteration = depth / 2 - 1;
 
-		NodeToken* stack0 = stackalloc NodeToken[length];
-		NodeToken* stack1 = stackalloc NodeToken[length];
+		EntityToken* stack0 = stackalloc EntityToken[length];
+		EntityToken* stack1 = stackalloc EntityToken[length];
 
-		NodeToken* next0 = stack0;
-		NodeToken* next1 = stack1;
+		EntityToken* next0 = stack0;
+		EntityToken* next1 = stack1;
 
-		*next0++ = NodeToken.Root;
+		*next0++ = RootToken;
 
 		for (int i = 0; i < iteration; i++)
 		{
 			while (next0 != stack0)
 			{
-				ref readonly Node node = ref nodes[(--next0)->NodeValue];
+				ref readonly Node node = ref nodes[(--next0)->Index];
 
 				for (int j = 0; j < Width; j++)
 				{
-					ref readonly NodeToken child = ref node.token4[j];
+					ref readonly EntityToken child = ref node.token4[j];
 
 					if (child.IsEmpty) continue;
-					if (child.IsNode) *next1++ = child;
+					if (child.Type == TokenType.Node) *next1++ = child;
 					else fill.Add(node.aabb4[j]);
 				}
 			}
@@ -113,11 +113,11 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		//Export results
 		while (next0 != stack0)
 		{
-			ref readonly Node node = ref nodes[(--next0)->NodeValue];
+			ref readonly Node node = ref nodes[(--next0)->Index];
 
 			for (int i = 0; i < Width; i++)
 			{
-				ref readonly NodeToken child = ref node.token4[i];
+				ref readonly EntityToken child = ref node.token4[i];
 				if (!child.IsEmpty) fill.Add(node.aabb4[i]);
 			}
 		}
@@ -127,11 +127,11 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	[MethodImpl(ImplementationOptions)]
 	unsafe void TraceImpl(ref TraceQuery query)
 	{
-		var stack = stackalloc NodeToken[stackSize];
+		var stack = stackalloc EntityToken[stackSize];
 		float* hits = stackalloc float[stackSize];
 
-		NodeToken* next = stack;
-		*next++ = NodeToken.Root;
+		EntityToken* next = stack;
+		*next++ = NewNodeToken(0);
 		*hits++ = 0f;
 
 		bool* orders = stackalloc bool[Width]
@@ -146,7 +146,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 		do
 		{
-			uint index = (--next)->NodeValue;
+			uint index = (--next)->Index;
 
 			if (*--hits >= query.distance) continue;
 
@@ -203,15 +203,15 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static void Push(in Float4 intersections, in NodeToken4 token4, PreparedPack pack,
-							 int offset, ref NodeToken* next, ref float* hits, ref TraceQuery query)
+			static void Push(in Float4 intersections, in EntityToken4 token4, PreparedPack pack,
+							 int offset, ref EntityToken* next, ref float* hits, ref TraceQuery query)
 			{
 				float hit = intersections[offset];
 				if (hit >= query.distance) return;
 
-				ref readonly NodeToken token = ref token4[offset];
+				ref readonly EntityToken token = ref token4[offset];
 
-				if (token.IsNode)
+				if (!token.Type.IsGeometry())
 				{
 					//Child is node/branch
 					*next++ = token;
@@ -227,10 +227,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	[MethodImpl(ImplementationOptions)]
 	unsafe bool OccludeImpl(ref OccludeQuery query)
 	{
-		NodeToken* stack = stackalloc NodeToken[stackSize];
+		EntityToken* stack = stackalloc EntityToken[stackSize];
 
-		NodeToken* next = stack;
-		*next++ = NodeToken.Root;
+		EntityToken* next = stack;
+		*next++ = NewNodeToken(0);
 
 		bool* orders = stackalloc bool[Width]
 		{
@@ -244,7 +244,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 		do
 		{
-			uint index = (--next)->NodeValue;
+			uint index = (--next)->Index;
 			ref readonly Node node = ref Unsafe.Add(ref origin, index);
 			Float4 intersections = node.aabb4.Intersect(query.ray);
 
@@ -298,15 +298,15 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static bool Push(in Float4 intersections, in NodeToken4 token4, PreparedPack pack,
-							 int offset, ref NodeToken* next, ref OccludeQuery query)
+			static bool Push(in Float4 intersections, in EntityToken4 token4, PreparedPack pack,
+							 int offset, ref EntityToken* next, ref OccludeQuery query)
 			{
 				float hit = intersections[offset];
 				if (hit >= query.travel) return false;
 
-				ref readonly NodeToken token = ref token4[offset];
+				ref readonly EntityToken token = ref token4[offset];
 
-				if (token.IsGeometry) return pack.Occlude(ref query, token); //Child is leaf
+				if (token.Type.IsGeometry()) return pack.Occlude(ref query, token); //Child is leaf
 
 				//Child is branch
 				*next++ = token;
@@ -318,12 +318,12 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		return false;
 	}
 
-	uint GetTraceCost(in NodeToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
+	uint GetTraceCost(in EntityToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 	{
 		if (token.IsEmpty || intersection >= distance) return 0;
-		if (token.IsGeometry) return pack.GetTraceCost(ray, ref distance, token);
+		if (token.Type.IsGeometry()) return pack.GetTraceCost(ray, ref distance, token);
 
-		ref readonly Node node = ref nodes[token.NodeValue];
+		ref readonly Node node = ref nodes[token.Index];
 		Float4 intersections = node.aabb4.Intersect(ray);
 
 		Span<bool> orders = stackalloc bool[Width]
@@ -349,7 +349,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 		return cost;
 
-		void RecursiveTraceCost(bool order, int offset, in NodeToken4 child4, in Ray ray, ref float distance)
+		void RecursiveTraceCost(bool order, int offset, in EntityToken4 child4, in Ray ray, ref float distance)
 		{
 			if (order)
 			{
@@ -364,28 +364,28 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		}
 	}
 
-	Node CreateNode(BuildNode buildNode, ReadOnlySpan<NodeToken> tokens, ref uint nodeIndex, out int depth)
+	Node CreateNode(BuildNode buildNode, ReadOnlySpan<EntityToken> tokens, ref uint nodeIndex, out int depth)
 	{
 		Assert.IsNotNull(buildNode.child);
 		BuildNode current = buildNode.child;
 
-		Span<NodeToken> token4 = stackalloc NodeToken[Width];
+		Span<EntityToken> token4 = stackalloc EntityToken[Width];
 
 		depth = 0;
 
 		for (int i = 0; i < Width; i++)
 		{
-			NodeToken nodeToken;
+			EntityToken entityToken;
 			int nodeDepth;
 
 			if (current.IsEmpty)
 			{
-				nodeToken = NodeToken.Empty;
+				entityToken = EntityToken.Empty;
 				nodeDepth = 0;
 			}
 			else if (current.IsLeaf)
 			{
-				nodeToken = tokens[current.source.index];
+				entityToken = tokens[current.source.index];
 				nodeDepth = 1;
 			}
 			else
@@ -394,10 +394,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 				ref Node node = ref nodes[index];
 
 				node = CreateNode(current, tokens, ref nodeIndex, out nodeDepth);
-				nodeToken = NodeToken.CreateNode(index);
+				entityToken = NewNodeToken(index);
 			}
 
-			token4[i] = nodeToken;
+			token4[i] = entityToken;
 			depth = Math.Max(depth, nodeDepth);
 
 			current = current.sibling;
@@ -407,80 +407,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		return new Node(buildNode, token4);
 	}
 
-	[MethodImpl(ImplementationOptions)]
-	static unsafe void WriteOffsets(in Node node, bool* orders, byte* offsets)
-	{
-		if (orders[node.axisMajor])
-		{
-			if (orders[node.axisMinor1])
-			{
-				offsets[0] = 3;
-				offsets[1] = 2;
-			}
-			else
-			{
-				offsets[0] = 2;
-				offsets[1] = 3;
-			}
-
-			if (orders[node.axisMinor0])
-			{
-				offsets[2] = 1;
-				offsets[3] = 0;
-			}
-			else
-			{
-				offsets[2] = 0;
-				offsets[3] = 1;
-			}
-		}
-		else
-		{
-			if (orders[node.axisMinor0])
-			{
-				offsets[0] = 1;
-				offsets[1] = 0;
-			}
-			else
-			{
-				offsets[0] = 0;
-				offsets[1] = 1;
-			}
-
-			if (orders[node.axisMinor1])
-			{
-				offsets[2] = 3;
-				offsets[3] = 2;
-			}
-			else
-			{
-				offsets[2] = 2;
-				offsets[3] = 3;
-			}
-		}
-
-		// int order0 = orders[node.axisMinor0];
-		// int order1 = orders[node.axisMinor1];
-		//
-		// long* lut0 = stackalloc[] { 0x100000000, 0x000000001 };
-		// long* lut1 = stackalloc[] { 0x300000002, 0x200000003 };
-		//
-		// if (orders[node.axisMajor] == 1)
-		// {
-		// 	offsets[0] = lut1[order1];
-		// 	offsets[1] = lut0[order0];
-		// }
-		// else
-		// {
-		// 	offsets[0] = lut0[order0];
-		// 	offsets[1] = lut1[order1];
-		// }
-	}
-
 	[StructLayout(LayoutKind.Explicit, Size = 128)] //Pad to 128 bytes for cache line
 	readonly struct Node
 	{
-		public Node(BuildNode node, ReadOnlySpan<NodeToken> token4)
+		public Node(BuildNode node, ReadOnlySpan<EntityToken> token4)
 		{
 			Assert.IsNotNull(node.child);
 			BuildNode child = node.child;
@@ -496,7 +426,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			axisMinor0 = node.axisMinor0;
 			axisMinor1 = node.axisMinor1;
 
-			this.token4 = new NodeToken4(token4);
+			this.token4 = new EntityToken4(token4);
 
 			static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
 			{
@@ -510,11 +440,11 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 
 #if !RELEASE
 		/// <summary>
-		/// Static check to ensure our currently layout is correctly updated if <see cref="NodeToken4"/> size is changed.
+		/// Static check to ensure our currently layout is correctly updated if <see cref="EntityToken4"/> size is changed.
 		/// </summary>
 		static unsafe Node()
 		{
-			if (sizeof(NodeToken4) is Width * NodeToken.Size and 16) return;
+			if (sizeof(EntityToken4) is Width * EntityToken.Size and 16) return;
 			throw new Exception($"Invalid layout or size for {nameof(Node)}!");
 		}
 #endif
@@ -540,10 +470,10 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		[FieldOffset(104)] public readonly int axisMinor1;
 
 		/// <summary>
-		/// The <see cref="NodeToken"/> representing the four branches off from this <see cref="Node"/>,
+		/// The <see cref="EntityToken"/> representing the four branches off from this <see cref="Node"/>,
 		/// which is either a leaf geometry object or another <see cref="Node"/> child branch.
 		/// </summary>
-		[FieldOffset(108)] public readonly NodeToken4 token4;
+		[FieldOffset(108)] public readonly EntityToken4 token4;
 	}
 
 	class BuildNode

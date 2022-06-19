@@ -45,9 +45,9 @@ public class ScenePreparer
 
 	/// <summary>
 	/// Retrieves the <see cref="PreparedPack"/> for <paramref name="pack"/> and outputs its corresponding
-	/// <see cref="SwatchExtractor"/> and <see cref="NodeTokenArray"/> that were used during the construction.
+	/// <see cref="SwatchExtractor"/> and <see cref="EntityTokenArray"/> that were used during the construction.
 	/// </summary>
-	public PreparedPack GetPreparedPack(EntityPack pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray)
+	public PreparedPack GetPreparedPack(EntityPack pack, out SwatchExtractor extractor, out EntityTokenArray tokenArray)
 	{
 		Node node = entityPacks.TryGetValue(pack);
 
@@ -136,7 +136,7 @@ public class ScenePreparer
 
 		public PreparedPack PreparedPack { get; private set; }
 		public SwatchExtractor Extractor { get; private set; }
-		public NodeTokenArray TokenArray { get; private set; }
+		public EntityTokenArray TokenArray { get; private set; }
 
 		public GeometryCounts InstancedCounts { get; private set; }
 		public GeometryCounts UniqueCounts { get; private set; }
@@ -185,7 +185,7 @@ public class ScenePreparer
 		public void CreatePack(ScenePreparer preparer)
 		{
 			//Create pack and assign it
-			PreparedPack = PreparedPack.Create(preparer, entityPack, out SwatchExtractor extractor, out NodeTokenArray tokens);
+			PreparedPack = PreparedPack.Create(preparer, entityPack, out SwatchExtractor extractor, out EntityTokenArray tokens);
 
 			Extractor = extractor;
 			TokenArray = tokens;
