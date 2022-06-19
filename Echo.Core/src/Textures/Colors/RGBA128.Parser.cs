@@ -59,11 +59,11 @@ partial struct RGBA128
 
 		public bool Execute(out RGBA128 result) => type switch
 		{
-			Type.hex => ParseHex(out result),
-			Type.rgb => ParseRGB(out result),
-			Type.hdr => ParseHDR(out result),
+			Type.hex   => ParseHex(out result),
+			Type.rgb   => ParseRGB(out result),
+			Type.hdr   => ParseHDR(out result),
 			Type.error => YieldError(out result),
-			_ => throw ExceptionHelper.Invalid(nameof(type), type, InvalidType.unexpected)
+			_          => throw ExceptionHelper.Invalid(nameof(type), type, InvalidType.unexpected)
 		};
 
 		bool ParseHex(out RGBA128 result)
@@ -262,7 +262,7 @@ partial struct RGBA128
 				>= '0' and <= '9' => digit - '0',
 				>= 'A' and <= 'F' => digit - 'A' + 10,
 				>= 'a' and <= 'f' => digit - 'a' + 10,
-				_ => -1
+				_                 => -1
 			};
 
 			if (value >= 0) return true;
@@ -273,7 +273,7 @@ partial struct RGBA128
 
 		static bool YieldError(out RGBA128 result)
 		{
-			result = Black;
+			result = Zero;
 			return false;
 		}
 
