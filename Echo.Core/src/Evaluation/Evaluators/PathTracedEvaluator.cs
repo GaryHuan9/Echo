@@ -95,7 +95,7 @@ public record PathTracedEvaluator : Evaluator
 					if (!path.Continue(bounce, Survivability, survivalSample)) break;
 
 					//Cache GeometryToken from GeometryLight to potentially add emission after advancing
-					GeometryToken token;
+					TokenHierarchy token;
 					bool hasToken;
 
 					if (area is not GeometryLight geometry)

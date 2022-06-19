@@ -100,8 +100,8 @@ public class PreparedScene
 		if (primary.content != null) return (primary.content, primary.pdf);
 
 		//Choose emissive geometry as light
-		Probable<GeometryToken> token = rootInstance.Pick(sample, out var instance);
-		MaterialIndex index = instance.pack.GetMaterialIndex(token.content.Geometry);
+		Probable<TokenHierarchy> token = rootInstance.Pick(sample, out var instance);
+		MaterialIndex index = instance.pack.GetMaterialIndex(token.content.TopToken);
 
 		var light = allocator.New<GeometryLight>();
 
@@ -113,13 +113,13 @@ public class PreparedScene
 	/// <summary>
 	/// Samples a <see cref="GeometryPoint"/> on an object in this <see cref="PreparedScene"/>.
 	/// </summary>
-	/// <param name="token">The <see cref="GeometryToken"/> that represents the object to be sampled.</param>
+	/// <param name="token">The <see cref="TokenHierarchy"/> that represents the object to be sampled.</param>
 	/// <param name="origin">The world-space point of whose perspective the result should be sampled through.</param>
 	/// <param name="sample">The <see cref="Sample2D"/> used the sample the result.</param>
 	/// <returns>The <see cref="Probable{T}"/> world-space point that was sampled.</returns>
-	public Probable<GeometryPoint> Sample(in GeometryToken token, in Float3 origin, Sample2D sample)
+	public Probable<GeometryPoint> Sample(in TokenHierarchy token, in Float3 origin, Sample2D sample)
 	{
-		if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.Geometry, origin, sample);
+		if (token.InstanceCount == 0) return rootInstance.pack.Sample(token.TopToken, origin, sample);
 
 		//TODO: support the entire hierarchy
 		throw new NotImplementedException();
@@ -128,14 +128,14 @@ public class PreparedScene
 	/// <summary>
 	/// Calculates the pdf of selecting <see cref="incident"/> on an object with <see cref="Sample"/>.
 	/// </summary>
-	/// <param name="token">The <see cref="GeometryToken"/> that represents the object.</param>
+	/// <param name="token">The <see cref="TokenHierarchy"/> that represents the object.</param>
 	/// <param name="origin">The world-space point of whose perspective the pdf should be calculated through.</param>
 	/// <param name="incident">The selected world-space unit direction that points from <paramref name="origin"/> to the object.</param>
 	/// <returns>The probability density function (pdf) value over solid angles of this selection.</returns>
 	/// <seealso cref="Sample"/>
-	public float ProbabilityDensity(in GeometryToken token, in Float3 origin, in Float3 incident)
+	public float ProbabilityDensity(in TokenHierarchy token, in Float3 origin, in Float3 incident)
 	{
-		if (token.InstanceCount == 0) return rootInstance.pack.ProbabilityDensity(token.Geometry, origin, incident);
+		if (token.InstanceCount == 0) return rootInstance.pack.ProbabilityDensity(token.TopToken, origin, incident);
 
 		//TODO: support the entire hierarchy
 		throw new NotImplementedException();

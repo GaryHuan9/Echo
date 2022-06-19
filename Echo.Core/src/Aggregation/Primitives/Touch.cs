@@ -37,9 +37,9 @@ public struct Touch
 	}
 
 	/// <summary>
-	/// The <see cref="GeometryToken"/> that represents the geometry that we are interacting with.
+	/// The <see cref="TokenHierarchy"/> that represents the geometry that we are interacting with.
 	/// </summary>
-	public readonly GeometryToken token;
+	public readonly TokenHierarchy token;
 
 	/// <summary>
 	/// World-space outgoing direction of this <see cref="Touch"/>.

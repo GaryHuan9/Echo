@@ -2,33 +2,33 @@
 
 public readonly struct GeometryCounts
 {
-	public GeometryCounts(in ulong triangle, in ulong sphere, in ulong instance)
+	public GeometryCounts(in ulong triangle, in ulong instance, in ulong sphere)
 	{
 		this.triangle = triangle;
-		this.sphere = sphere;
 		this.instance = instance;
+		this.sphere = sphere;
 	}
 
-	public GeometryCounts(int triangle, int sphere, int instance) : this
+	public GeometryCounts(int triangle, int instance, int sphere) : this
 	(
 		checked((ulong)triangle),
-		checked((ulong)sphere),
-		checked((ulong)instance)
+		checked((ulong)instance),
+		checked((ulong)sphere)
 	) { }
 
 	public readonly ulong triangle;
-	public readonly ulong sphere;
 	public readonly ulong instance;
+	public readonly ulong sphere;
 
-	public ulong Total => triangle + sphere + instance;
+	public ulong Total => triangle + instance + sphere;
 
 	public static GeometryCounts operator +(in GeometryCounts first, in GeometryCounts second) =>
 		new(first.triangle + second.triangle,
-			first.sphere + second.sphere,
-			first.instance + second.instance);
+			first.instance + second.instance,
+			first.sphere + second.sphere);
 
 	public static GeometryCounts operator *(in GeometryCounts counts, uint value) =>
 		new(counts.triangle * value,
-			counts.sphere * value,
-			counts.instance * value);
+			counts.instance * value,
+			counts.sphere * value);
 }

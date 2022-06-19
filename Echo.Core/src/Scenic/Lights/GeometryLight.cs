@@ -17,7 +17,7 @@ namespace Echo.Core.Scenic.Lights;
 /// </summary>
 public class GeometryLight : IAreaLight
 {
-	public void Reset(PreparedScene newScene, in GeometryToken newToken, IEmissive newEmissive)
+	public void Reset(PreparedScene newScene, in TokenHierarchy newToken, IEmissive newEmissive)
 	{
 		scene = newScene;
 		token = newToken;
@@ -27,7 +27,7 @@ public class GeometryLight : IAreaLight
 	}
 
 	PreparedScene scene;
-	GeometryToken token;
+	TokenHierarchy token;
 
 	/// <summary>
 	/// The current <see cref="IEmissive"/> material that is assigned to this <see cref="GeometryLight"/>.
@@ -35,9 +35,9 @@ public class GeometryLight : IAreaLight
 	public IEmissive Emissive { get; private set; }
 
 	/// <summary>
-	/// Accesses the <see cref="GeometryToken"/> that this <see cref="GeometryLight"/> currently represents.
+	/// Accesses the <see cref="TokenHierarchy"/> that this <see cref="GeometryLight"/> currently represents.
 	/// </summary>
-	public ref readonly GeometryToken Token
+	public ref readonly TokenHierarchy Token
 	{
 		get
 		{

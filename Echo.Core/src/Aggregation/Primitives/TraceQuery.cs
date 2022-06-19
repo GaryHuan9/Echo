@@ -16,7 +16,7 @@ namespace Echo.Core.Aggregation.Primitives;
 /// </summary>
 public struct TraceQuery
 {
-	public TraceQuery(in Ray ray, float distance = float.PositiveInfinity, in GeometryToken ignore = default)
+	public TraceQuery(in Ray ray, float distance = float.PositiveInfinity, in TokenHierarchy ignore = default)
 	{
 		this.ray = ray;
 		this.ignore = ignore;
@@ -38,24 +38,24 @@ public struct TraceQuery
 	public Ray ray;
 
 	/// <summary>
-	/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore.
-	/// This should mainly be assigned to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to
+	/// The <see cref="TokenHierarchy"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore.
+	/// This should mainly be assigned to the <see cref="TokenHierarchy"/> of the previous <see cref="TraceQuery"/> to
 	/// avoid self intersections. Note that if the geometry is a <see cref="PreparedSphere"/>, then it will only be
 	/// ignored if its farthest distance is shorter than <see cref="PreparedSphere.DistanceThreshold"/>.
 	/// </summary>
-	public readonly GeometryToken ignore;
+	public readonly TokenHierarchy ignore;
 
 	/// <summary>
 	/// Used during intersection test; undefined after the test is concluded (do not use upon completion).
 	/// Records the intermediate instancing layers as the query travels through the scene and geometries.
 	/// </summary>
-	public GeometryToken current;
+	public TokenHierarchy current;
 
 	/// <summary>
-	/// After tracing completes, this field will be assigned the <see cref="GeometryToken"/>
+	/// After tracing completes, this field will be assigned the <see cref="TokenHierarchy"/>
 	/// of the intersected surface. NOTE: if no intersection occurs, this field is undefined.
 	/// </summary>
-	public GeometryToken token;
+	public TokenHierarchy token;
 
 	/// <summary>
 	/// After tracing completes, this field will be assigned the distance of the intersection to the <see cref="ray"/> origin.

@@ -10,7 +10,7 @@ namespace Echo.Core.Aggregation.Primitives;
 /// </summary>
 public struct OccludeQuery
 {
-	public OccludeQuery(in Ray ray, float travel = float.PositiveInfinity, in GeometryToken ignore = default)
+	public OccludeQuery(in Ray ray, float travel = float.PositiveInfinity, in TokenHierarchy ignore = default)
 	{
 		this.ray = ray;
 		this.ignore = ignore;
@@ -25,18 +25,18 @@ public struct OccludeQuery
 	public Ray ray;
 
 	/// <summary>
-	/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="OccludeQuery"/> should ignore.
-	/// This should mainly be assigned to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to
+	/// The <see cref="TokenHierarchy"/> that represents a geometry that this <see cref="OccludeQuery"/> should ignore.
+	/// This should mainly be assigned to the <see cref="TokenHierarchy"/> of the previous <see cref="TraceQuery"/> to
 	/// avoid self intersections. Note that if the geometry is a <see cref="PreparedSphere"/>, then it will only be
 	/// ignored if its farthest distance is shorter than <see cref="PreparedSphere.DistanceThreshold"/>.
 	/// </summary>
-	public readonly GeometryToken ignore;
+	public readonly TokenHierarchy ignore;
 
 	/// <summary>
 	/// Used during intersection test; undefined after the test is concluded (do not use upon completion).
 	/// Records the intermediate instancing layers as the query travels through the scene and geometries.
 	/// </summary>
-	public GeometryToken current;
+	public TokenHierarchy current;
 
 	/// <summary>
 	/// Only occluding geometries that is within <see cref="travel"/> is considered. Note that

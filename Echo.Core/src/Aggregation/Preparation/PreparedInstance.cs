@@ -1,5 +1,4 @@
 ﻿using System;
-using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
@@ -19,7 +18,7 @@ public class PreparedInstance
 	/// <summary>
 	/// Creates a regular <see cref="PreparedInstance"/>.
 	/// </summary>
-	public PreparedInstance(ScenePreparer preparer, PackInstance instance, NodeToken token) : this(preparer, instance.EntityPack, instance.Swatch, token)
+	public PreparedInstance(ScenePreparer preparer, PackInstance instance, EntityToken token) : this(preparer, instance.EntityPack, instance.Swatch, token)
 	{
 		inverseTransform = instance.LocalToWorld;
 		forwardTransform = instance.WorldToLocal;
@@ -32,11 +31,11 @@ public class PreparedInstance
 		if ((Float3)inverseScale != scale) throw new Exception($"{nameof(PackInstance)} does not support none uniform scaling! '{scale}'");
 	}
 
-	protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, NodeToken token)
+	protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, EntityToken token)
 	{
 		this.token = token;
 
-		this.pack = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out NodeTokenArray tokenArray);
+		this.pack = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out EntityTokenArray tokenArray);
 		this.swatch = extractor.Prepare(swatch);
 
 		powerDistribution = CreatePowerDistribution(this.pack, this.swatch, tokenArray);
@@ -49,7 +48,7 @@ public class PreparedInstance
 	/// </summary>
 	public AxisAlignedBoundingBox AABB => pack.aggregator.GetTransformedAABB(inverseTransform);
 
-	public readonly NodeToken token;
+	public readonly EntityToken token;
 	public readonly PreparedPack pack;
 
 	public readonly Float4x4 forwardTransform = Float4x4.identity; //The parent to local transform
@@ -121,12 +120,12 @@ public class PreparedInstance
 	/// </summary>
 	/// <param name="sample">The <see cref="Sample1D"/> value used to select the target emissive geometry.</param>
 	/// <param name="instance">Outputs the <see cref="PreparedInstance"/> that immediately holds this geometry.</param>
-	/// <returns>The picked <see cref="Probable{T}"/> of type <see cref="GeometryToken"/> that represents our emissive geometry.</returns>
+	/// <returns>The picked <see cref="Probable{T}"/> of type <see cref="TokenHierarchy"/> that represents our emissive geometry.</returns>
 	/// <remarks>If <see cref="Power"/> is not positive, the behavior of this method is undefined.</remarks>
-	public Probable<GeometryToken> Pick(Sample1D sample, out PreparedInstance instance)
+	public Probable<TokenHierarchy> Pick(Sample1D sample, out PreparedInstance instance)
 	{
 		Assert.IsTrue(FastMath.Positive(Power));
-		var geometryToken = new GeometryToken();
+		var geometryToken = new TokenHierarchy();
 
 		instance = this;
 		float pdf = 1f;
@@ -134,14 +133,16 @@ public class PreparedInstance
 		do
 		{
 			// ReSharper disable once LocalVariableHidesMember
-			(NodeToken token, float tokenPdf) = instance.powerDistribution.Pick(ref sample);
+			(EntityToken token, float tokenPdf) = instance.powerDistribution.Pick(ref sample);
 
-			if (token.IsTriangle || token.IsSphere) geometryToken.Geometry = token;
+			Assert.IsTrue(token.Type.IsGeometry());
+
+			if (token.Type.IsRawGeometry()) geometryToken.TopToken = token;
 			else geometryToken.Push(instance = instance.pack.GetInstance(token));
 
 			pdf *= tokenPdf;
 		}
-		while (geometryToken.Geometry == default);
+		while (geometryToken.TopToken == default);
 
 		return (geometryToken, pdf);
 	}
@@ -179,7 +180,7 @@ public class PreparedInstance
 	/// Creates and returns a new <see cref="powerDistribution"/> for some emissive
 	/// objects indicated by the parameter. If no object is emissive, null is returned.
 	/// </summary>
-	static PowerDistribution CreatePowerDistribution(PreparedPack pack, PreparedSwatch swatch, NodeTokenArray tokenArray)
+	static PowerDistribution CreatePowerDistribution(PreparedPack pack, PreparedSwatch swatch, EntityTokenArray tokenArray)
 	{
 		int powerLength = 0;
 		int segmentLength = 0;
@@ -198,7 +199,7 @@ public class PreparedInstance
 		segmentLength += materials.Length;
 
 		//Iterate through instances to see if any is emissive
-		foreach (NodeToken token in instances)
+		foreach (EntityToken token in instances)
 		{
 			PreparedInstance instance = pack.GetInstance(token);
 			if (!FastMath.Positive(instance.Power)) continue;
@@ -226,7 +227,7 @@ public class PreparedInstance
 			float power = ((IEmissive)swatch[index]).Power;
 			Assert.IsTrue(FastMath.Positive(power));
 
-			foreach (NodeToken token in tokenArray[index]) powerFill.Add(pack.GetArea(token) * power);
+			foreach (EntityToken token in tokenArray[index]) powerFill.Add(pack.GetArea(token) * power);
 
 			segmentFill.Add(index);
 		}
@@ -234,7 +235,7 @@ public class PreparedInstance
 		//Fill in the power values for instances if any is emissive
 		if (!segmentFill.IsFull)
 		{
-			foreach (NodeToken token in instances) powerFill.Add(pack.GetInstance(token).Power);
+			foreach (EntityToken token in instances) powerFill.Add(pack.GetInstance(token).Power);
 
 			segmentFill.Add(tokenArray.FinalPartition);
 		}
@@ -245,6 +246,6 @@ public class PreparedInstance
 
 		return new PowerDistribution(powerValues, segments, tokenArray);
 
-		ReadOnlyView<NodeToken> GetInstancesToken() => pack.counts.instance > 0 ? tokenArray[tokenArray.FinalPartition] : ReadOnlyView<NodeToken>.Empty;
+		ReadOnlyView<EntityToken> GetInstancesToken() => pack.counts.instance > 0 ? tokenArray[tokenArray.FinalPartition] : ReadOnlyView<EntityToken>.Empty;
 	}
 }

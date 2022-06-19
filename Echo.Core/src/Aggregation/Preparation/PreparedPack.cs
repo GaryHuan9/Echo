@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
@@ -21,87 +20,106 @@ namespace Echo.Core.Aggregation.Preparation;
 
 public class PreparedPack
 {
-	PreparedPack(AggregatorProfile profile, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<NodeToken> tokens,
-				 PreparedTriangle[] triangles, PreparedSphere[] spheres, PreparedInstance[] instances)
+	PreparedPack(AggregatorProfile profile, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens,
+				 PreparedTriangle[] triangles, PreparedInstance[] instances, PreparedSphere[] spheres)
 	{
-		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
+		counts = new GeometryCounts(triangles.Length, instances.Length, spheres.Length);
 		aggregator = profile.CreateAggregator(this, aabbs, tokens);
 
 		this.triangles = triangles;
-		this.spheres = spheres;
 		this.instances = instances;
+		this.spheres = spheres;
 	}
 
 	public readonly Aggregator aggregator;
 	public readonly GeometryCounts counts;
 
 	readonly PreparedTriangle[] triangles;
-	readonly PreparedSphere[] spheres;
 	readonly PreparedInstance[] instances;
+	readonly PreparedSphere[] spheres;
 
 	/// <summary>
 	/// Calculates the intersection between <paramref name="query"/> and the object represented by <paramref name="token"/>.
 	/// The intersection is only recorded if it occurs before the original <paramref name="query.distance"/>.
 	/// </summary>
-	public void Trace(ref TraceQuery query, in NodeToken token)
+	public void Trace(ref TraceQuery query, in EntityToken token)
 	{
-		Assert.IsTrue(token.IsGeometry);
-		query.current.Geometry = token;
+		Assert.IsTrue(token.Type.IsGeometry());
 
-		if (token.IsTriangle)
+		switch (token.Type)
 		{
-			if (query.ignore == query.current) return;
+			case TokenType.Triangle:
+			{
+				query.current.TopToken = token;
+				if (query.ignore == query.current) return;
 
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			float distance = triangle.Intersect(query.ray, out Float2 uv);
+				ref readonly PreparedTriangle triangle = ref triangles[token.Index];
+				float distance = triangle.Intersect(query.ray, out Float2 uv);
 
-			if (distance >= query.distance) return;
+				if (distance >= query.distance) return;
 
-			query.token = query.current;
-			query.distance = distance;
-			query.uv = uv;
+				query.token = query.current;
+				query.distance = distance;
+				query.uv = uv;
+
+				break;
+			}
+			case TokenType.Instance:
+			{
+				instances[token.Index].Trace(ref query);
+				break;
+			}
+			case TokenType.Sphere:
+			{
+				query.current.TopToken = token;
+				bool findFar = query.ignore == query.current;
+
+				ref readonly PreparedSphere sphere = ref spheres[token.Index];
+				float distance = sphere.Intersect(query.ray, out Float2 uv, findFar);
+
+				if (distance >= query.distance) return;
+
+				query.token = query.current;
+				query.distance = distance;
+				query.uv = uv;
+
+				break;
+			}
+			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
-		else if (token.IsSphere)
-		{
-			bool findFar = query.ignore == query.current;
-
-			ref readonly PreparedSphere sphere = ref spheres[token.SphereValue];
-			float distance = sphere.Intersect(query.ray, out Float2 uv, findFar);
-
-			if (distance >= query.distance) return;
-
-			query.token = query.current;
-			query.distance = distance;
-			query.uv = uv;
-		}
-		else instances[token.InstanceValue].Trace(ref query);
 	}
 
 	/// <summary>
 	/// Calculates and returns whether <paramref name="query"/> is occluded by the object represented by <paramref name="token"/>.
 	/// </summary>
-	public bool Occlude(ref OccludeQuery query, in NodeToken token)
+	public bool Occlude(ref OccludeQuery query, in EntityToken token)
 	{
-		Assert.IsTrue(token.IsGeometry);
-		query.current.Geometry = token;
+		Assert.IsTrue(token.Type.IsGeometry());
 
-		if (token.IsTriangle)
+		switch (token.Type)
 		{
-			if (query.ignore == query.current) return false;
+			case TokenType.Triangle:
+			{
+				query.current.TopToken = token;
+				if (query.ignore == query.current) return false;
 
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			return triangle.Intersect(query.ray, query.travel);
+				ref readonly var triangle = ref triangles[token.Index];
+				return triangle.Intersect(query.ray, query.travel);
+			}
+			case TokenType.Instance:
+			{
+				return instances[token.Index].Occlude(ref query);
+			}
+			case TokenType.Sphere:
+			{
+				query.current.TopToken = token;
+				bool findFar = query.ignore == query.current;
+
+				ref readonly var sphere = ref spheres[token.Index];
+				return sphere.Intersect(query.ray, query.travel, findFar);
+			}
+			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
-
-		if (token.IsSphere)
-		{
-			bool findFar = query.ignore == query.current;
-
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			return sphere.Intersect(query.ray, query.travel, findFar);
-		}
-
-		return instances[token.InstanceValue].Occlude(ref query);
 	}
 
 	/// <summary>
@@ -110,30 +128,37 @@ public class PreparedPack
 	/// </summary>
 	public Touch Interact(in TraceQuery query, PreparedSwatch swatch, in Float4x4 transform)
 	{
-		NodeToken token = query.token.Geometry;
-		Assert.IsTrue(token.IsGeometry);
+		EntityToken token = query.token.TopToken;
+		Assert.IsTrue(token.Type.IsRawGeometry());
 
 		Float3 normal;
 		Float2 texcoord;
 		MaterialIndex materialIndex;
 
-		if (token.IsTriangle)
+		switch (token.Type)
 		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
+			case TokenType.Triangle:
+			{
+				ref readonly var triangle = ref triangles[token.Index];
 
-			normal = triangle.GetNormal(query.uv);
-			texcoord = triangle.GetTexcoord(query.uv);
-			materialIndex = triangle.material;
-		}
-		else if (token.IsSphere)
-		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
+				normal = triangle.GetNormal(query.uv);
+				texcoord = triangle.GetTexcoord(query.uv);
+				materialIndex = triangle.material;
 
-			normal = PreparedSphere.GetNormal(query.uv);
-			texcoord = PreparedSphere.GetTexcoord(query.uv);
-			materialIndex = sphere.material;
+				break;
+			}
+			case TokenType.Sphere:
+			{
+				ref readonly var sphere = ref spheres[token.Index];
+
+				normal = PreparedSphere.GetNormal(query.uv);
+				texcoord = PreparedSphere.GetTexcoord(query.uv);
+				materialIndex = sphere.material;
+
+				break;
+			}
+			default: throw new ArgumentOutOfRangeException(nameof(query));
 		}
-		else throw NotBasePackException();
 
 		normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
 		Material material = swatch[materialIndex];               //Find appropriate mapped material
@@ -146,130 +171,113 @@ public class PreparedPack
 	/// <summary>
 	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> represented by <paramref name="token"/>.
 	/// </summary>
-	public PreparedInstance GetInstance(in NodeToken token) => instances[token.InstanceValue];
+	public PreparedInstance GetInstance(in EntityToken token)
+	{
+		Assert.AreEqual(token.Type, TokenType.Instance);
+		return instances[token.Index];
+	}
 
 	/// <summary>
 	/// Returns the <see cref="MaterialIndex"/> of the geometry represented by <paramref name="token"/>.
 	/// </summary>
-	public MaterialIndex GetMaterialIndex(in NodeToken token)
+	public MaterialIndex GetMaterialIndex(in EntityToken token)
 	{
-		if (token.IsTriangle)
-		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			return triangle.material;
-		}
+		Assert.IsTrue(token.Type.IsRawGeometry());
 
-		if (token.IsSphere)
+		return token.Type switch
 		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			return sphere.material;
-		}
-
-		throw NotBasePackException();
+			TokenType.Triangle => triangles[token.Index].material,
+			TokenType.Sphere   => spheres[token.Index].material,
+			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+		};
 	}
 
 	/// <summary>
 	/// Returns the area of the geometry represented by <paramref name="token"/>.
 	/// </summary>
-	public float GetArea(in NodeToken token)
+	public float GetArea(in EntityToken token)
 	{
-		Assert.IsTrue(token.IsGeometry);
+		Assert.IsTrue(token.Type.IsRawGeometry());
 
-		if (token.IsTriangle)
+		return token.Type switch
 		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			return triangle.Area;
-		}
-
-		if (token.IsSphere)
-		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			return sphere.Area;
-		}
-
-		throw NotBasePackException();
+			TokenType.Triangle => triangles[token.Index].Area,
+			TokenType.Sphere   => spheres[token.Index].Area,
+			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+		};
 	}
 
 	/// <summary>
 	/// Underlying implementation of <see cref="PreparedScene.Sample"/>, functional
 	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
-	public Probable<GeometryPoint> Sample(in NodeToken token, in Float3 origin, Sample2D sample)
+	public Probable<GeometryPoint> Sample(in EntityToken token, in Float3 origin, Sample2D sample)
 	{
-		Assert.IsTrue(token.IsGeometry);
+		Assert.IsTrue(token.Type.IsRawGeometry());
 
-		if (token.IsTriangle)
+		return token.Type switch
 		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			return triangle.Sample(origin, sample);
-		}
-
-		if (token.IsSphere)
-		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			return sphere.Sample(origin, sample);
-		}
-
-		throw NotBasePackException();
+			TokenType.Triangle => triangles[token.Index].Sample(origin, sample),
+			TokenType.Sphere   => spheres[token.Index].Sample(origin, sample),
+			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+		};
 	}
 
 	/// <summary>
 	/// Underlying implementation of <see cref="PreparedScene.ProbabilityDensity"/>, functional
 	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
-	public float ProbabilityDensity(in NodeToken token, in Float3 origin, in Float3 incident)
+	public float ProbabilityDensity(in EntityToken token, in Float3 origin, in Float3 incident)
 	{
-		Assert.IsTrue(token.IsGeometry);
+		Assert.IsTrue(token.Type.IsRawGeometry());
 
-		if (token.IsTriangle)
+		return token.Type switch
 		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			return triangle.ProbabilityDensity(origin, incident);
-		}
-
-		if (token.IsSphere)
-		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			return sphere.ProbabilityDensity(origin, incident);
-		}
-
-		throw NotBasePackException();
+			TokenType.Triangle => triangles[token.Index].ProbabilityDensity(origin, incident),
+			TokenType.Sphere   => spheres[token.Index].ProbabilityDensity(origin, incident),
+			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+		};
 	}
 
 	/// <summary>
 	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
 	/// </summary>
-	public uint GetTraceCost(in Ray ray, ref float distance, in NodeToken token)
+	public uint GetTraceCost(in Ray ray, ref float distance, in EntityToken token)
 	{
-		Assert.IsTrue(token.IsGeometry);
+		Assert.IsTrue(token.Type.IsGeometry());
 
-		if (token.IsTriangle)
+		switch (token.Type)
 		{
-			ref readonly var triangle = ref triangles[token.TriangleValue];
-			distance = Math.Min(distance, triangle.Intersect(ray, out _));
-			return 1;
+			case TokenType.Triangle:
+			{
+				ref readonly PreparedTriangle triangle = ref triangles[token.Index];
+				distance = Math.Min(distance, triangle.Intersect(ray, out _));
+				return 1;
+			}
+			case TokenType.Instance:
+			{
+				return instances[token.Index].TraceCost(ray, ref distance);
+			}
+			case TokenType.Sphere:
+			{
+				ref readonly PreparedSphere sphere = ref spheres[token.Index];
+				distance = Math.Min(distance, sphere.Intersect(ray, out _));
+				return 1;
+			}
+			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
-
-		if (token.IsSphere)
-		{
-			ref readonly var sphere = ref spheres[token.SphereValue];
-			distance = Math.Min(distance, sphere.Intersect(ray, out _));
-			return 1;
-		}
-
-		return instances[token.InstanceValue].TraceCost(ray, ref distance);
 	}
 
 	/// <summary>
 	/// Creates a new <see cref="PreparedPack"/>; outputs the <paramref name="extractor"/> and
 	/// <paramref name="tokens"/> that were used to construct this new <see cref="PreparedPack"/>.
 	/// </summary>
-	public static PreparedPack Create(ScenePreparer preparer, EntityPack pack, out SwatchExtractor extractor, out NodeTokenArray tokens)
+	public static PreparedPack Create(ScenePreparer preparer, EntityPack pack, out SwatchExtractor extractor, out EntityTokenArray tokens)
 	{
 		//Collect objects
 		var trianglesList = new ConcurrentList<PreparedTriangle>();
-		var spheresList = new List<PreparedSphere>();
 		var instancesList = new List<PreparedInstance>();
+		var spheresList = new List<PreparedSphere>();
 
 		extractor = new SwatchExtractor(preparer);
 
@@ -288,7 +296,7 @@ public class PreparedPack
 				}
 				case PackInstance objectInstance:
 				{
-					NodeToken token = NodeToken.CreateInstance((uint)instancesList.Count);
+					var token = new EntityToken(TokenType.Instance, instancesList.Count);
 					var instance = new PreparedInstance(preparer, objectInstance, token);
 					instancesList.Add(instance);
 
@@ -303,8 +311,8 @@ public class PreparedPack
 
 		//Extract prepared data
 		var triangles = new PreparedTriangle[trianglesList.Count];
-		var spheres = new PreparedSphere[spheresList.Count];
 		var instances = new PreparedInstance[instancesList.Count];
+		var spheres = new PreparedSphere[spheresList.Count];
 
 		//Collect tokens
 		tokens = CreateTokenArray(extractor, instances.Length);
@@ -313,13 +321,13 @@ public class PreparedPack
 		var tokenArray = tokens;
 
 		Parallel.For(0, triangles.Length, FillTriangles);
-		Parallel.For(0, spheres.Length, FillSpheres);
 		Parallel.For(0, instances.Length, FillInstances);
+		Parallel.For(0, spheres.Length, FillSpheres);
 
 		Assert.IsTrue(tokens.IsFull);
 
 		//Construct instance
-		return new PreparedPack(preparer.profile.AggregatorProfile, aabbs, tokens, triangles, spheres, instances);
+		return new PreparedPack(preparer.profile.AggregatorProfile, aabbs, tokens, triangles, instances, spheres);
 
 		void FillTriangles(int index)
 		{
@@ -327,29 +335,31 @@ public class PreparedPack
 
 			triangles[index] = triangle;
 
-			var token = NodeToken.CreateTriangle((uint)index);
+			var token = new EntityToken(TokenType.Triangle, index);
 			int at = tokenArray.Add(triangle.material, token);
 
 			aabbs[at] = triangle.AABB;
-		}
-
-		void FillSpheres(int index)
-		{
-			var sphere = spheres[index] = spheresList[index];
-
-			var token = NodeToken.CreateSphere((uint)index);
-			int at = tokenArray.Add(sphere.material, token);
-
-			aabbs[at] = sphere.AABB;
 		}
 
 		void FillInstances(int index)
 		{
 			PreparedInstance instance = instances[index] = instancesList[index];
 			int at = tokenArray.Add(tokenArray.FinalPartition, instance.token);
-			Assert.AreEqual((uint)index, instance.token.InstanceValue);
+
+			Assert.AreEqual(instance.token.Type, TokenType.Instance);
+			Assert.AreEqual((uint)index, instance.token.Index);
 
 			aabbs[at] = instance.AABB;
+		}
+
+		void FillSpheres(int index)
+		{
+			var sphere = spheres[index] = spheresList[index];
+
+			var token = new EntityToken(TokenType.Sphere, index);
+			int at = tokenArray.Add(sphere.material, token);
+
+			aabbs[at] = sphere.AABB;
 		}
 	}
 
@@ -392,7 +402,7 @@ public class PreparedPack
 		return count - 1;
 	}
 
-	static NodeTokenArray CreateTokenArray(SwatchExtractor extractor, int instanceCount)
+	static EntityTokenArray CreateTokenArray(SwatchExtractor extractor, int instanceCount)
 	{
 		bool hasInstance = instanceCount > 0;
 
@@ -404,11 +414,6 @@ public class PreparedPack
 
 		foreach (MaterialIndex index in indices) lengths[index] = extractor.GetRegistrationCount(index);
 
-		return new NodeTokenArray(lengths);
+		return new EntityTokenArray(lengths);
 	}
-
-	/// <summary>
-	/// Handles tokens of <see cref="PreparedInstance"/>, which is invalid since tokens should be resolved to pure geometry.
-	/// </summary>
-	static Exception NotBasePackException([CallerMemberName] string name = default) => new($"{name} should be invoked on the base {nameof(PreparedPack)}, not one with a token that is a {nameof(NodeToken.IsInstance)}!");
 }
