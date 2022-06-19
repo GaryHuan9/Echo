@@ -1,4 +1,5 @@
-﻿using System.Runtime.Intrinsics.X86;
+﻿using System.Runtime.Serialization.Json;
+using System.Runtime.Intrinsics.X86;
 using System;
 using System.Linq;
 using CodeHelpers;
@@ -146,26 +147,16 @@ partial struct RGBA128
 
 		bool ParseRGB(out RGBA128 result)
 		{
-			string parsedContent = content.ToString();
-			parsedContent = new string(
-				(from c in parsedContent where char.IsWhiteSpace(c) || char.IsDigit(c) select c).ToArray());
+			int index = 0;
 
-			string[] strValues = parsedContent.Split(' ');
+			int r = 0, g = 0, b = 0, a = 255;
 
-			int r, g, b, a;
-
-			if (Int32.TryParse(strValues[0], result: out r) &&
-				Int32.TryParse(strValues[1], result: out g) &&
-				Int32.TryParse(strValues[2], result: out b))
+			if (findNextInt(content, ref index, ref r) &&
+				findNextInt(content, ref index, ref g) &&
+				findNextInt(content, ref index, ref b))
 			{
-				if (strValues.Length == 4)
-				{
-					if (!Int32.TryParse(strValues[3], result: out a)) return YieldError(out result);
-				}
-				else
-				{
-					a = 255;
-				}
+				if (findNextInt(content, ref index, ref a)) return YieldError(out result);
+
 
 				if (IsChannelInRange(r) &&
 					IsChannelInRange(g) &&
@@ -175,48 +166,62 @@ partial struct RGBA128
 					result = new RGBA128(r / 255f, g / 255f, b / 255f, a / 255f);
 					return true;
 				}
-				else return YieldError(out result);
 
 			}
-			else return YieldError(out result);
+			return YieldError(out result);
 
 			static bool IsChannelInRange(int channel) => channel > 0 && channel <= 255;
+			static bool findNextInt(ReadOnlySpan<char> src, ref int index, ref int result)
+			{
+				int len = 0;
+
+				while (!char.IsDigit(src[index])) if (src.Length <= index++) return false; // find first digit
+				while (char.IsDigit(src[index + len]) && (index + len) < (src.Length - 1)) len++; // get the length of the number
+
+				if (len == 0) return false;
+
+				ReadOnlySpan<char> num = src.Slice(index, len);
+				result = int.Parse(num);
+				index += len;
+				return true;
+			}
 		}
 
 		bool ParseHDR(out RGBA128 result)
 		{
-			string parsedContent = content.ToString();
-			parsedContent = new string(
-				(from c in parsedContent where char.IsWhiteSpace(c) || char.IsDigit(c) || c.Equals('.') select c).ToArray());
+			int index = 0;
+			float r = 0f, g = 0f, b = 0f, a = 1f;
 
-			string[] strValues = parsedContent.Split(' ');
-
-			float r, g, b, a;
-
-			const float gamma = 2.2f;
-
-			if (float.TryParse(strValues[0], result: out r) &&
-				float.TryParse(strValues[1], result: out g) &&
-				float.TryParse(strValues[2], result: out b))
+			if (findNextFloat(content, ref index, ref r) &&
+				findNextFloat(content, ref index, ref g) &&
+				findNextFloat(content, ref index, ref b))
 			{
-				if (strValues.Length == 4)
-				{
-					if (!float.TryParse(strValues[3], result: out a)) return YieldError(out result);
-					if (a < 0f || a > 1f) return YieldError(out result);
-				}
-				else { a = 1f; }
-				Float3 hdrColor = new Float3(r, g, b);
+				if (findNextFloat(content, ref index, ref a)) return YieldError(out result);
 
-				// reinhard tone mapping
-				Float3 mapped = hdrColor / (hdrColor + Float3.One);
-
-				// gamma correction
-				mapped = Float3.Power(mapped, Float3.One / gamma);
-
-				result = new RGBA128(mapped.X, mapped.Y, mapped.Z, a);
+				result = new RGBA128(r, g, b, a);
 				return true;
 			}
 			return YieldError(out result);
+
+			static bool findNextFloat(ReadOnlySpan<char> src, ref int index, ref float result)
+			{
+				int len = 0;
+
+				while (!char.IsDigit(src[index])) if (src.Length <= index++) return false; // find first digit
+				while ((char.IsDigit(src[index + len]) || src[index + len].Equals('.')) && (index + len) < (src.Length - 1)) len++; // get the length of the number
+
+				if (len == 0) return false;
+
+				ReadOnlySpan<char> num = src.Slice(index, len);
+				float tempRes = 0f;
+				bool parsed = float.TryParse(num, result: out tempRes);
+
+				if (parsed) result = tempRes;
+				else return false;
+				index += len;
+
+				return true;
+			}
 		}
 
 		static bool ConvertRGBA(int r, int g, int b, int a, out RGBA128 result)
