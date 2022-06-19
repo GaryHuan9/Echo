@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 
@@ -76,63 +77,63 @@ partial struct RGBA128
 			switch (content.Length)
 			{
 				case 1:
-				{
-					if (ConvertHex(content[0], out int value))
 					{
-						r = g = b = CombineHex(value, value);
-						break;
-					}
+						if (ConvertHex(content[0], out int value))
+						{
+							r = g = b = CombineHex(value, value);
+							break;
+						}
 
-					goto default;
-				}
+						goto default;
+					}
 				case 3:
-				{
-					if (ConvertHex(content[0], out r) &&
-						ConvertHex(content[1], out g) &&
-						ConvertHex(content[2], out b))
 					{
-						r = CombineHex(r, r);
-						g = CombineHex(g, g);
-						b = CombineHex(b, b);
-						break;
-					}
+						if (ConvertHex(content[0], out r) &&
+							ConvertHex(content[1], out g) &&
+							ConvertHex(content[2], out b))
+						{
+							r = CombineHex(r, r);
+							g = CombineHex(g, g);
+							b = CombineHex(b, b);
+							break;
+						}
 
-					goto default;
-				}
+						goto default;
+					}
 				case 4:
-				{
-					if (ConvertHex(content[3], out a))
 					{
-						a = CombineHex(a, a);
-						goto case 3;
-					}
+						if (ConvertHex(content[3], out a))
+						{
+							a = CombineHex(a, a);
+							goto case 3;
+						}
 
-					goto default;
-				}
+						goto default;
+					}
 				case 6:
-				{
-					if (ConvertHex(content[0], out int r0) && ConvertHex(content[1], out int r1) &&
-						ConvertHex(content[2], out int g0) && ConvertHex(content[3], out int g1) &&
-						ConvertHex(content[4], out int b0) && ConvertHex(content[5], out int b1))
 					{
-						r = CombineHex(r0, r1);
-						g = CombineHex(g0, g1);
-						b = CombineHex(b0, b1);
-						break;
-					}
+						if (ConvertHex(content[0], out int r0) && ConvertHex(content[1], out int r1) &&
+							ConvertHex(content[2], out int g0) && ConvertHex(content[3], out int g1) &&
+							ConvertHex(content[4], out int b0) && ConvertHex(content[5], out int b1))
+						{
+							r = CombineHex(r0, r1);
+							g = CombineHex(g0, g1);
+							b = CombineHex(b0, b1);
+							break;
+						}
 
-					goto default;
-				}
+						goto default;
+					}
 				case 8:
-				{
-					if (ConvertHex(content[6], out int a0) && ConvertHex(content[7], out int a1))
 					{
-						a = CombineHex(a0, a1);
-						goto case 6;
-					}
+						if (ConvertHex(content[6], out int a0) && ConvertHex(content[7], out int a1))
+						{
+							a = CombineHex(a0, a1);
+							goto case 6;
+						}
 
-					goto default;
-				}
+						goto default;
+					}
 				default: return YieldError(out result);
 			}
 
@@ -141,7 +142,44 @@ partial struct RGBA128
 			static int CombineHex(int hex0, int hex1) => hex0 * 16 + hex1;
 		}
 
-		bool ParseRGB(out RGBA128 result) => throw new NotImplementedException();
+		bool ParseRGB(out RGBA128 result)
+		{
+			string parsedContent = content.ToString();
+			parsedContent = new string(
+				(from c in parsedContent where char.IsWhiteSpace(c) || char.IsDigit(c) select c).ToArray());
+
+			string[] strValues = parsedContent.Split(' ');
+
+			int r, g, b, a;
+
+			if (Int32.TryParse(strValues[0], result: out r) &&
+				Int32.TryParse(strValues[1], result: out g) &&
+				Int32.TryParse(strValues[2], result: out b))
+			{
+				if (strValues.Length == 4)
+				{
+					if (!Int32.TryParse(strValues[3], result: out a)) return YieldError(out result);
+				}
+				else
+				{
+					a = 255;
+				}
+
+				if (IsChannelInRange(r) &&
+					IsChannelInRange(g) &&
+					IsChannelInRange(b) &&
+					IsChannelInRange(a))
+				{
+					result = new RGBA128(r / 255f, g / 255f, b / 255f, a / 255f);
+					return true;
+				}
+				else return YieldError(out result);
+
+			}
+			else return YieldError(out result);
+
+			static bool IsChannelInRange(int channel) => channel > 0 && channel <= 255;
+		}
 
 		bool ParseHDR(out RGBA128 result) => throw new NotImplementedException();
 
