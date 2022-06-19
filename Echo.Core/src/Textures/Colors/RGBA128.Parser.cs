@@ -14,11 +14,11 @@ partial struct RGBA128
 
 			if (RemovePrefix(ref span, "0x"))
 			{
-				type = Type.hex;
+				type = Type.Hex;
 			}
 			else if (RemovePrefix(ref span, "#"))
 			{
-				type = Type.hex;
+				type = Type.Hex;
 				RemovePrefix(ref span, "#");
 			}
 			else
@@ -26,11 +26,11 @@ partial struct RGBA128
 				if (!RemovePrefix(ref span, "rgb"))
 				{
 					RemovePrefix(ref span, "hdr");
-					type = Type.hdr;
+					type = Type.HDR;
 				}
-				else type = Type.rgb;
+				else type = Type.RGB;
 
-				if (!RemoveParenthesis(ref span)) type = Type.error;
+				if (!RemoveParenthesis(ref span)) type = Type.Error;
 			}
 
 			content = span;
@@ -59,10 +59,10 @@ partial struct RGBA128
 
 		public bool Execute(out RGBA128 result) => type switch
 		{
-			Type.hex   => ParseHex(out result),
-			Type.rgb   => ParseRGB(out result),
-			Type.hdr   => ParseHDR(out result),
-			Type.error => YieldError(out result),
+			Type.Hex   => ParseHex(out result),
+			Type.RGB   => ParseRGB(out result),
+			Type.HDR   => ParseHDR(out result),
+			Type.Error => YieldError(out result),
 			_          => throw ExceptionHelper.Invalid(nameof(type), type, InvalidType.unexpected)
 		};
 
@@ -76,63 +76,63 @@ partial struct RGBA128
 			switch (content.Length)
 			{
 				case 1:
+				{
+					if (ConvertHex(content[0], out int value))
 					{
-						if (ConvertHex(content[0], out int value))
-						{
-							r = g = b = CombineHex(value, value);
-							break;
-						}
-
-						goto default;
+						r = g = b = CombineHex(value, value);
+						break;
 					}
+
+					goto default;
+				}
 				case 3:
+				{
+					if (ConvertHex(content[0], out r) &&
+						ConvertHex(content[1], out g) &&
+						ConvertHex(content[2], out b))
 					{
-						if (ConvertHex(content[0], out r) &&
-							ConvertHex(content[1], out g) &&
-							ConvertHex(content[2], out b))
-						{
-							r = CombineHex(r, r);
-							g = CombineHex(g, g);
-							b = CombineHex(b, b);
-							break;
-						}
-
-						goto default;
+						r = CombineHex(r, r);
+						g = CombineHex(g, g);
+						b = CombineHex(b, b);
+						break;
 					}
+
+					goto default;
+				}
 				case 4:
+				{
+					if (ConvertHex(content[3], out a))
 					{
-						if (ConvertHex(content[3], out a))
-						{
-							a = CombineHex(a, a);
-							goto case 3;
-						}
-
-						goto default;
+						a = CombineHex(a, a);
+						goto case 3;
 					}
+
+					goto default;
+				}
 				case 6:
+				{
+					if (ConvertHex(content[0], out int r0) && ConvertHex(content[1], out int r1) &&
+						ConvertHex(content[2], out int g0) && ConvertHex(content[3], out int g1) &&
+						ConvertHex(content[4], out int b0) && ConvertHex(content[5], out int b1))
 					{
-						if (ConvertHex(content[0], out int r0) && ConvertHex(content[1], out int r1) &&
-							ConvertHex(content[2], out int g0) && ConvertHex(content[3], out int g1) &&
-							ConvertHex(content[4], out int b0) && ConvertHex(content[5], out int b1))
-						{
-							r = CombineHex(r0, r1);
-							g = CombineHex(g0, g1);
-							b = CombineHex(b0, b1);
-							break;
-						}
-
-						goto default;
+						r = CombineHex(r0, r1);
+						g = CombineHex(g0, g1);
+						b = CombineHex(b0, b1);
+						break;
 					}
+
+					goto default;
+				}
 				case 8:
+				{
+					if (ConvertHex(content[6], out int a0) && ConvertHex(content[7], out int a1))
 					{
-						if (ConvertHex(content[6], out int a0) && ConvertHex(content[7], out int a1))
-						{
-							a = CombineHex(a0, a1);
-							goto case 6;
-						}
-
-						goto default;
+						a = CombineHex(a0, a1);
+						goto case 6;
 					}
+
+					goto default;
+				}
 				default: return YieldError(out result);
 			}
 
@@ -143,18 +143,17 @@ partial struct RGBA128
 
 		bool ParseRGB(out RGBA128 result)
 		{
-			int index = 0;
+			int head = 0;
 
-			if (FindNextInt(content, ref index, out int r) &&
-				FindNextInt(content, ref index, out int g) &&
-				FindNextInt(content, ref index, out int b))
+			if (FindNextInt(content, ref head, out int r) &&
+				FindNextInt(content, ref head, out int g) &&
+				FindNextInt(content, ref head, out int b))
 			{
-				if (!FindNextInt(content, ref index, out int a, alpha: true)) return YieldError(out result);
-
+				if (!FindNextInt(content, ref head, out int a, alpha: true)) return YieldError(out result);
 
 				return ConvertRGBA(r, g, b, a, out result);
-
 			}
+
 			return YieldError(out result);
 
 			static bool FindNextInt(ReadOnlySpan<char> source, ref int head, out int result, bool alpha = false)
@@ -173,6 +172,7 @@ partial struct RGBA128
 						return false; // find first digit
 					}
 				}
+
 				int tail = head;
 				while (tail < source.Length && char.IsDigit(source[tail])) tail++; // get the length of the number
 
@@ -192,45 +192,47 @@ partial struct RGBA128
 		{
 			int index = 0;
 
-			if (findNextFloat(content, ref index, out float r) &&
-				findNextFloat(content, ref index, out float g) &&
-				findNextFloat(content, ref index, out float b))
+			if (FindNextFloat(content, ref index, out float r) &&
+				FindNextFloat(content, ref index, out float g) &&
+				FindNextFloat(content, ref index, out float b))
 			{
-				if (!findNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
+				if (!FindNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
 
 				result = new RGBA128(r, g, b, a);
 				return true;
 			}
+
 			return YieldError(out result);
 
-			static bool findNextFloat(ReadOnlySpan<char> source, ref int head, out float result, bool alpha = false)
+			static bool FindNextFloat(ReadOnlySpan<char> source, ref int head, out float result, bool alpha = false)
 			{
 				if (alpha)
 				{
 					result = 1f;
 					if (head >= source.Length) return true; // no alpha is given so set alpha to 1f and return
 				}
+
 				while (!char.IsDigit(source[head]))
 				{
 					if (source.Length <= head++)
 					{
-						result = 0;
+						result = 0f;
 						return false; // find first digit
 					}
 				}
+
 				int tail = head;
 				while (tail < source.Length && (char.IsDigit(source[tail]) || source[tail].Equals('.'))) tail++; // get the length of the number
 
 				if (tail == head)
 				{
-					result = 0;
+					result = 0f;
 					return false;
 				}
 
 				bool parsed = float.TryParse(source[head..tail], out result);
 				head = tail;
 				return parsed;
-
 			}
 		}
 
@@ -284,10 +286,10 @@ partial struct RGBA128
 
 		enum Type : byte
 		{
-			hex,
-			rgb,
-			hdr,
-			error
+			Hex,
+			RGB,
+			HDR,
+			Error
 		}
 	}
 }
