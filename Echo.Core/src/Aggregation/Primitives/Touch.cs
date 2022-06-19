@@ -1,6 +1,5 @@
 ﻿using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Scenic.Preparation;

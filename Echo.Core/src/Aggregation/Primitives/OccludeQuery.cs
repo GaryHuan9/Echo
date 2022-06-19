@@ -1,5 +1,4 @@
-﻿using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Scenic.Geometries;
+﻿using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Primitives;
@@ -15,7 +14,7 @@ public struct OccludeQuery
 		this.ray = ray;
 		this.ignore = ignore;
 		this.travel = travel;
-		current = default;
+		current = new TokenHierarchy();
 	}
 
 	/// <summary>

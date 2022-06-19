@@ -1,8 +1,9 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Common.Mathematics;
 
-namespace Echo.Core.Common.Mathematics.Primitives;
+namespace Echo.Core.Aggregation.Bounds;
 
 /// <summary>
 /// A Sphere which is usually used for containing a bunch of points <br/>

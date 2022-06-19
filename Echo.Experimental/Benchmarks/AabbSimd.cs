@@ -3,6 +3,8 @@ using BenchmarkDotNet.Attributes;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Acceleration;
+using Echo.Core.Aggregation.Bounds;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
 

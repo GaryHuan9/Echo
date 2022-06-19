@@ -1,11 +1,10 @@
-﻿using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Common.Memory;
+﻿using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Textures.Colors;
-using Echo.Core.Scenic.Preparation;
+using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions.Continuous;
-using CodeHelpers.Packed;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;

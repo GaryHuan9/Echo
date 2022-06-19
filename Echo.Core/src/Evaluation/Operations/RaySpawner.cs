@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Operations;

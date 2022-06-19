@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Preparation;
 
@@ -22,7 +21,7 @@ public struct TraceQuery
 		this.ignore = ignore;
 		this.distance = distance;
 
-		current = default;
+		current = new TokenHierarchy();
 		Unsafe.SkipInit(out token);
 		Unsafe.SkipInit(out uv);
 

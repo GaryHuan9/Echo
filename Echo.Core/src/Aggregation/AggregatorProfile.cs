@@ -1,10 +1,10 @@
 using System;
 using CodeHelpers;
 using Echo.Core.Aggregation.Acceleration;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Scenic.Instancing;
 

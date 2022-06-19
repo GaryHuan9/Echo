@@ -2,10 +2,10 @@
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
-using Echo.Core.Common.Mathematics.Primitives;
 
-namespace Echo.Core.Aggregation.Acceleration;
+namespace Echo.Core.Aggregation.Bounds;
 
 /// <summary>
 /// Stores four <see cref="AxisAlignedBoundingBox"/> in six four-wide SIMD vectors.

@@ -1,7 +1,7 @@
 ﻿using System;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Operations;
 

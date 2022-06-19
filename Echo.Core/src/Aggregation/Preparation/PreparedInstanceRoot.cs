@@ -1,8 +1,8 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Scenic;
 using Echo.Core.Scenic.Preparation;
@@ -42,7 +42,7 @@ public class PreparedInstanceRoot : PreparedInstance
 	/// </summary>
 	public void TraceRoot(ref TraceQuery query)
 	{
-		Assert.AreEqual(query.current, default);
+		Assert.AreEqual(query.current, new TokenHierarchy());
 		pack.aggregator.Trace(ref query);
 	}
 
@@ -51,7 +51,7 @@ public class PreparedInstanceRoot : PreparedInstance
 	/// </summary>
 	public bool OccludeRoot(ref OccludeQuery query)
 	{
-		Assert.AreEqual(query.current, default);
+		Assert.AreEqual(query.current, new TokenHierarchy());
 		return pack.aggregator.Occlude(ref query);
 	}
 
