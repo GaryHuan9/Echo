@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;

@@ -16,6 +16,13 @@ namespace Echo.Core.Aggregation.Primitives;
 /// <remarks>A fully and correctly constructed <see cref="TokenHierarchy"/> transcends <see cref="EntityPack"/> and <see cref="PackInstance"/>.</remarks>
 public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 {
+	public TokenHierarchy()
+	{
+		instancesHash = 0;
+		InstanceCount = 0;
+		_topToken = EntityToken.Empty;
+	}
+
 	/// <summary>
 	/// A combined hash value of <see cref="Instances"/> for fast value comparison.
 	/// </summary>
@@ -46,8 +53,8 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 		readonly get => _topToken;
 		set
 		{
-			Assert.AreNotEqual(_topToken.Type, TokenType.Instance);
-			Assert.AreNotEqual(_topToken.Type, TokenType.Node);
+			Assert.AreNotEqual(value.Type, TokenType.Instance);
+			Assert.AreNotEqual(value.Type, TokenType.Node);
 			_topToken = value;
 		}
 	}
@@ -91,6 +98,7 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	/// </summary>
 	public void Push(PreparedInstance instance)
 	{
+		Assert.AreEqual(instance.token.Type, TokenType.Instance);
 		Assert.IsTrue(InstanceCount < EntityPack.MaxLayer);
 
 		int layer = InstanceCount++;

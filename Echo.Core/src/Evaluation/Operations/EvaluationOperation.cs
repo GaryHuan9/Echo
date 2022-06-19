@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Compute;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;

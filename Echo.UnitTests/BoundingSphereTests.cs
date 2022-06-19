@@ -1,6 +1,6 @@
 ﻿using System;
 using CodeHelpers.Packed;
-using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Common.Mathematics.Randomization;
 using NUnit.Framework;
 

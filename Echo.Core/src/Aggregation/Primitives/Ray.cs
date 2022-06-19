@@ -1,7 +1,7 @@
 ﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 
-namespace Echo.Core.Common.Mathematics.Primitives;
+namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
 /// An <see cref="origin"/> and a <see cref="direction"/> that represents a geometric ray together.

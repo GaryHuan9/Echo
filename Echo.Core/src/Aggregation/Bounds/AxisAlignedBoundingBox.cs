@@ -3,8 +3,9 @@ using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Primitives;
 
-namespace Echo.Core.Common.Mathematics.Primitives;
+namespace Echo.Core.Aggregation.Bounds;
 
 /// <summary>
 /// A 3D box that is aligned to the coordinate axes, usually used to bound other objects.

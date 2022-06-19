@@ -2,10 +2,10 @@
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;

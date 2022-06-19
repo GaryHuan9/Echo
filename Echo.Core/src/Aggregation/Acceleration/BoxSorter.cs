@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
-using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Aggregation.Bounds;
 
 namespace Echo.Core.Aggregation.Acceleration;
 

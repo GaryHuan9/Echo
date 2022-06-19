@@ -1,9 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
-using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
 
-namespace Echo.Core.Aggregation.Acceleration;
+namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
 /// A pack of four <see cref="EntityToken"/>.
