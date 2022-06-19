@@ -149,7 +149,7 @@ partial struct RGBA128
 				FindNextInt(content, ref index, out int g) &&
 				FindNextInt(content, ref index, out int b))
 			{
-				if (FindNextInt(content, ref index, out int a, alpha: true)) return YieldError(out result);
+				if (!FindNextInt(content, ref index, out int a, alpha: true)) return YieldError(out result);
 
 
 				return ConvertRGBA(r, g, b, a, out result);
@@ -162,7 +162,9 @@ partial struct RGBA128
 				if (alpha)
 				{
 					result = 255;
+					if (head >= source.Length) return true; // no alpha is given so set alpha to 255 and return
 				}
+
 				while (!char.IsDigit(source[head]))
 				{
 					if (source.Length <= head++)
@@ -172,7 +174,7 @@ partial struct RGBA128
 					}
 				}
 				int tail = head;
-				while (tail < (source.Length - 1) && char.IsDigit(source[tail])) tail++; // get the length of the number
+				while (tail < source.Length && char.IsDigit(source[tail])) tail++; // get the length of the number
 
 				if (tail == head)
 				{
@@ -180,8 +182,9 @@ partial struct RGBA128
 					return false;
 				}
 
+				bool parsed = int.TryParse(source[head..tail], out result);
 				head = tail;
-				return int.TryParse(source[head..tail], out result);
+				return parsed;
 			}
 		}
 
@@ -193,7 +196,7 @@ partial struct RGBA128
 				findNextFloat(content, ref index, out float g) &&
 				findNextFloat(content, ref index, out float b))
 			{
-				if (findNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
+				if (!findNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
 
 				result = new RGBA128(r, g, b, a);
 				return true;
@@ -205,7 +208,7 @@ partial struct RGBA128
 				if (alpha)
 				{
 					result = 1f;
-					return true;
+					if (head >= source.Length) return true; // no alpha is given so set alpha to 1f and return
 				}
 				while (!char.IsDigit(source[head]))
 				{
@@ -216,7 +219,7 @@ partial struct RGBA128
 					}
 				}
 				int tail = head;
-				while ((char.IsDigit(source[tail]) || source[tail].Equals('.')) && tail < (source.Length - 1)) tail++; // get the length of the number
+				while (tail < source.Length && (char.IsDigit(source[tail]) || source[tail].Equals('.'))) tail++; // get the length of the number
 
 				if (tail == head)
 				{
@@ -224,8 +227,10 @@ partial struct RGBA128
 					return false;
 				}
 
+				bool parsed = float.TryParse(source[head..tail], out result);
 				head = tail;
-				return float.TryParse(source[head..tail], out result);
+				return parsed;
+
 			}
 		}
 
