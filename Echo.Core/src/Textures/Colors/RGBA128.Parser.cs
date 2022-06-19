@@ -152,14 +152,7 @@ partial struct RGBA128
 				if (FindNextInt(content, ref index, out int a, alpha: true)) return YieldError(out result);
 
 
-				if (IsChannelInRange(r) &&
-					IsChannelInRange(g) &&
-					IsChannelInRange(b) &&
-					IsChannelInRange(a))
-				{
-					result = new RGBA128(r / 255f, g / 255f, b / 255f, a / 255f);
-					return true;
-				}
+				return ConvertRGBA(r, g, b, a, out result);
 
 			}
 			return YieldError(out result);
