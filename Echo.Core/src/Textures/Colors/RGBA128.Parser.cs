@@ -1,7 +1,9 @@
-﻿using System;
+﻿using System.Runtime.Intrinsics.X86;
+using System;
 using System.Linq;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Packed;
 
 namespace Echo.Core.Textures.Colors;
 
@@ -181,7 +183,41 @@ partial struct RGBA128
 			static bool IsChannelInRange(int channel) => channel > 0 && channel <= 255;
 		}
 
-		bool ParseHDR(out RGBA128 result) => throw new NotImplementedException();
+		bool ParseHDR(out RGBA128 result)
+		{
+			string parsedContent = content.ToString();
+			parsedContent = new string(
+				(from c in parsedContent where char.IsWhiteSpace(c) || char.IsDigit(c) || c.Equals('.') select c).ToArray());
+
+			string[] strValues = parsedContent.Split(' ');
+
+			float r, g, b, a;
+
+			const float gamma = 2.2f;
+
+			if (float.TryParse(strValues[0], result: out r) &&
+				float.TryParse(strValues[1], result: out g) &&
+				float.TryParse(strValues[2], result: out b))
+			{
+				if (strValues.Length == 4)
+				{
+					if (!float.TryParse(strValues[3], result: out a)) return YieldError(out result);
+					if (a < 0f || a > 1f) return YieldError(out result);
+				}
+				else { a = 1f; }
+				Float3 hdrColor = new Float3(r, g, b);
+
+				// reinhard tone mapping
+				Float3 mapped = hdrColor / (hdrColor + Float3.One);
+
+				// gamma correction
+				mapped = Float3.Power(mapped, Float3.One / gamma);
+
+				result = new RGBA128(mapped.X, mapped.Y, mapped.Z, a);
+				return true;
+			}
+			return YieldError(out result);
+		}
 
 		static bool ConvertRGBA(int r, int g, int b, int a, out RGBA128 result)
 		{
