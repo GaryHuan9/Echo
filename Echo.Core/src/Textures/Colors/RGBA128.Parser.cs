@@ -1,10 +1,6 @@
-﻿using System.Runtime.Serialization.Json;
-using System.Runtime.Intrinsics.X86;
-using System;
-using System.Linq;
+﻿using System;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
 
 namespace Echo.Core.Textures.Colors;
 
@@ -149,13 +145,11 @@ partial struct RGBA128
 		{
 			int index = 0;
 
-			int r = 0, g = 0, b = 0, a = 255;
-
-			if (findNextInt(content, ref index, ref r) &&
-				findNextInt(content, ref index, ref g) &&
-				findNextInt(content, ref index, ref b))
+			if (FindNextInt(content, ref index, out int r) &&
+				FindNextInt(content, ref index, out int g) &&
+				FindNextInt(content, ref index, out int b))
 			{
-				if (findNextInt(content, ref index, ref a)) return YieldError(out result);
+				if (FindNextInt(content, ref index, out int a, alpha: true)) return YieldError(out result);
 
 
 				if (IsChannelInRange(r) &&
@@ -171,56 +165,72 @@ partial struct RGBA128
 			return YieldError(out result);
 
 			static bool IsChannelInRange(int channel) => channel > 0 && channel <= 255;
-			static bool findNextInt(ReadOnlySpan<char> src, ref int index, ref int result)
+			static bool FindNextInt(ReadOnlySpan<char> source, ref int head, out int result, bool alpha = false)
 			{
-				int len = 0;
+				if (alpha)
+				{
+					result = 255;
+					return true;
+				}
+				while (!char.IsDigit(source[head]))
+					if (source.Length <= head++)
+					{
+						result = 0;
+						return false; // find first digit
+					}
+				int tail = head;
+				while (char.IsDigit(source[tail]) && tail < (source.Length - 1)) tail++; // get the length of the number
 
-				while (!char.IsDigit(src[index])) if (src.Length <= index++) return false; // find first digit
-				while (char.IsDigit(src[index + len]) && (index + len) < (src.Length - 1)) len++; // get the length of the number
+				if (tail == head)
+				{
+					result = 0;
+					return false;
+				}
 
-				if (len == 0) return false;
-
-				ReadOnlySpan<char> num = src.Slice(index, len);
-				result = int.Parse(num);
-				index += len;
-				return true;
+				head = tail;
+				return int.TryParse(source[head..tail], out result);
 			}
 		}
 
 		bool ParseHDR(out RGBA128 result)
 		{
 			int index = 0;
-			float r = 0f, g = 0f, b = 0f, a = 1f;
 
-			if (findNextFloat(content, ref index, ref r) &&
-				findNextFloat(content, ref index, ref g) &&
-				findNextFloat(content, ref index, ref b))
+			if (findNextFloat(content, ref index, out float r) &&
+				findNextFloat(content, ref index, out float g) &&
+				findNextFloat(content, ref index, out float b))
 			{
-				if (findNextFloat(content, ref index, ref a)) return YieldError(out result);
+				if (findNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
 
 				result = new RGBA128(r, g, b, a);
 				return true;
 			}
 			return YieldError(out result);
 
-			static bool findNextFloat(ReadOnlySpan<char> src, ref int index, ref float result)
+			static bool findNextFloat(ReadOnlySpan<char> source, ref int head, out float result, bool alpha = false)
 			{
-				int len = 0;
+				if (alpha)
+				{
+					result = 1f;
+					return true;
+				}
+				while (!char.IsDigit(source[head]))
+					if (source.Length <= head++)
+					{
+						result = 0;
+						return false; // find first digit
+					}
+				int tail = head;
+				while ((char.IsDigit(source[tail]) || source[tail].Equals('.')) && tail < (source.Length - 1)) tail++; // get the length of the number
 
-				while (!char.IsDigit(src[index])) if (src.Length <= index++) return false; // find first digit
-				while ((char.IsDigit(src[index + len]) || src[index + len].Equals('.')) && (index + len) < (src.Length - 1)) len++; // get the length of the number
+				if (tail == head)
+				{
+					result = 0;
+					return false;
+				}
 
-				if (len == 0) return false;
-
-				ReadOnlySpan<char> num = src.Slice(index, len);
-				float tempRes = 0f;
-				bool parsed = float.TryParse(num, result: out tempRes);
-
-				if (parsed) result = tempRes;
-				else return false;
-				index += len;
-
-				return true;
+				head = tail;
+				return float.TryParse(source[head..tail], out result);
 			}
 		}
 
