@@ -157,22 +157,22 @@ partial struct RGBA128
 			}
 			return YieldError(out result);
 
-			static bool IsChannelInRange(int channel) => channel > 0 && channel <= 255;
 			static bool FindNextInt(ReadOnlySpan<char> source, ref int head, out int result, bool alpha = false)
 			{
 				if (alpha)
 				{
 					result = 255;
-					return true;
 				}
 				while (!char.IsDigit(source[head]))
+				{
 					if (source.Length <= head++)
 					{
 						result = 0;
 						return false; // find first digit
 					}
+				}
 				int tail = head;
-				while (char.IsDigit(source[tail]) && tail < (source.Length - 1)) tail++; // get the length of the number
+				while (tail < (source.Length - 1) && char.IsDigit(source[tail])) tail++; // get the length of the number
 
 				if (tail == head)
 				{
@@ -208,11 +208,13 @@ partial struct RGBA128
 					return true;
 				}
 				while (!char.IsDigit(source[head]))
+				{
 					if (source.Length <= head++)
 					{
 						result = 0;
 						return false; // find first digit
 					}
+				}
 				int tail = head;
 				while ((char.IsDigit(source[tail]) || source[tail].Equals('.')) && tail < (source.Length - 1)) tail++; // get the length of the number
 
