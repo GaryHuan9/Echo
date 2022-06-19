@@ -77,7 +77,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	public static RGBA128 Parse(ReadOnlySpan<char> span)
 	{
 		if (TryParse(span, out RGBA128 result)) return result;
-		throw new Exception($"Cannot parse {span.ToString()}!");
+		throw new FormatException($"Cannot parse {span}!");
 	}
 
 	/// <summary>
