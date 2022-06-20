@@ -13,7 +13,7 @@ using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic;
-using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Instancing;
 using Echo.Core.Scenic.Preparation;
 

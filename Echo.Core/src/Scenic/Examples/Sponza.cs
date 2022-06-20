@@ -1,6 +1,6 @@
 ﻿using CodeHelpers.Packed;
 using Echo.Core.InOut;
-using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;

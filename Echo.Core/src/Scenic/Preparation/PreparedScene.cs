@@ -12,7 +12,7 @@ using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Discrete;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures.Colors;
 

@@ -1,4 +1,4 @@
-﻿using Echo.Core.Scenic.Geometries;
+﻿using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Primitives;
