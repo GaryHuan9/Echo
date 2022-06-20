@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Geometric;
 
 namespace Echo.Core.Aggregation.Primitives;
 

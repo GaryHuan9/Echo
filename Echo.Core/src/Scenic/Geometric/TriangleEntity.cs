@@ -12,7 +12,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Scenic.Preparation;
 
-namespace Echo.Core.Scenic.Geometries;
+namespace Echo.Core.Scenic.Geometric;
 
 public class TriangleEntity : GeometryEntity
 {

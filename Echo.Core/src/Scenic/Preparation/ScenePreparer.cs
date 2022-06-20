@@ -5,7 +5,7 @@ using CodeHelpers.Collections;
 using CodeHelpers.Pooling;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Instancing;
 
 namespace Echo.Core.Scenic.Preparation;

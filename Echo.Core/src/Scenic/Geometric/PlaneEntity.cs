@@ -3,7 +3,7 @@ using System.Linq;
 using CodeHelpers.Packed;
 using Echo.Core.Scenic.Preparation;
 
-namespace Echo.Core.Scenic.Geometries;
+namespace Echo.Core.Scenic.Geometric;
 
 public class PlaneEntity : GeometryEntity
 {

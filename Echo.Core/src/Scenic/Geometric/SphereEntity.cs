@@ -11,7 +11,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Scenic.Preparation;
 
-namespace Echo.Core.Scenic.Geometries;
+namespace Echo.Core.Scenic.Geometric;
 
 public class SphereEntity : GeometryEntity
 {
@@ -230,8 +230,8 @@ public readonly struct PreparedSphere
 
 		return new Float2
 		(
-			FastMath.FMA(MathF.Atan2(sinT, cosT), 1f / Scalars.Tau, 0.5f),
-			FastMath.FMA(MathF.Asin(FastMath.Clamp11(sinP)), 1f / Scalars.Pi, 0.5f)
+			FastMath.FMA(MathF.Atan2(sinT, cosT), Scalars.TauR, 0.5f),
+			FastMath.FMA(MathF.Asin(FastMath.Clamp11(sinP)), Scalars.PiR, 0.5f)
 		);
 	}
 
@@ -255,5 +255,5 @@ public readonly struct PreparedSphere
 		cosT = FastMath.Identity(sinT) * sign;
 	}
 
-	static float ProbabilityDensityCone(float cosMaxT) => 1f / Scalars.Tau / (1f - cosMaxT);
+	static float ProbabilityDensityCone(float cosMaxT) => Scalars.TauR / (1f - cosMaxT);
 }

@@ -10,7 +10,7 @@ using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.InOut;
 using Echo.Core.Scenic;
-using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures;
 
