@@ -57,7 +57,12 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 	public Float3 Extend => (max - min) / 2f;
 
 	/// <summary>
-	/// Returns half of the surface area of this <see cref="AxisAlignedBoundingBox"/>.
+	/// The full surface area of this <see cref="AxisAlignedBoundingBox"/>.
+	/// </summary>
+	public float Area => HalfArea * 2f;
+
+	/// <summary>
+	/// Half of <see cref="Area"/>.
 	/// </summary>
 	public float HalfArea
 	{
