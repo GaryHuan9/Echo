@@ -35,6 +35,48 @@ public class RGBA128ParserTests
 		ParseFail($"{prefix}{{0}}", candidates);
 	}
 
+	[Test]
+	public void ParseRGBPass()
+	{
+		string[] candidates = { "10, 25, 10", "255, 255, 255", "255, 255, 255, 25", "0, 0, 0, 0" };
+
+		Color32[] expects =
+		{
+			new(10, 25, 10, 255), new(255, 255, 255, 255), new(255, 255, 255, 25), new(0, 0, 0, 0)
+		};
+		
+		ParsePass($"rgb({{0}})", candidates, from expect in expects
+											 select  (RGBA128)(Float4)expect);
+	}
+
+	[Test]
+	public void ParseRGBFail()
+	{
+		string[] candidates = { "10,", ",", ",,,", "1000, 10, 10", "10, 10, 10, 10000", ",10" };
+		ParseFail($"rgb({{0}})", candidates);
+	}
+
+	[Test]
+	public void ParseHDRPass()
+	{
+		string[] candidates = { "1, 1, 1, 1", "10, 1, 0.1", "0.10, 0.001, 0.102", "0, 1, 10, 100" };
+
+		RGBA128[] expects =
+		{
+			new(1, 1, 1, 1), new(10, 1, 0.1f), new(0.10f, 0.001f, 0.102f), new(0, 1, 10, 100)
+		};
+		
+		ParsePass($"hdr({{0}})", candidates, from expect in expects
+											 select expect);
+	}
+	
+	[Test]
+	public void ParseHDRFail()
+	{
+		string[] candidates = { "", ",,,", ". . .", "1, 5,", "1.5.1" };
+		ParseFail($"hdr({{0}})", candidates);
+	}
+
 	static void ParsePass(string format, IEnumerable<string> contents, IEnumerable<RGBA128> expects)
 	{
 		foreach ((string content, RGBA128 expect) in contents.Zip(expects))
