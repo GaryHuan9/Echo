@@ -143,18 +143,25 @@ partial struct RGBA128
 
 		bool ParseRGB(out RGBA128 result)
 		{
-			int head = 0;
-
-			if (FindNextInt(content, ref head, out int r) &&
-				FindNextInt(content, ref head, out int g) &&
-				FindNextInt(content, ref head, out int b))
+			try
 			{
-				if (!FindNextInt(content, ref head, out int a, alpha: true)) return YieldError(out result);
+				int head = 0;
 
-				return ConvertRGBA(r, g, b, a, out result);
+				if (FindNextInt(content, ref head, out int r) &&
+					FindNextInt(content, ref head, out int g) &&
+					FindNextInt(content, ref head, out int b))
+				{
+					if (!FindNextInt(content, ref head, out int a, alpha: true)) return YieldError(out result);
+
+					return ConvertRGBA(r, g, b, a, out result);
+				}
+
+				return YieldError(out result);
 			}
-
-			return YieldError(out result);
+			catch
+			{
+				return YieldError(out result);
+			}
 
 			static bool FindNextInt(ReadOnlySpan<char> source, ref int head, out int result, bool alpha = false)
 			{
@@ -190,19 +197,27 @@ partial struct RGBA128
 
 		bool ParseHDR(out RGBA128 result)
 		{
-			int index = 0;
-
-			if (FindNextFloat(content, ref index, out float r) &&
-				FindNextFloat(content, ref index, out float g) &&
-				FindNextFloat(content, ref index, out float b))
+			try
 			{
-				if (!FindNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
+				int index = 0;
 
-				result = new RGBA128(r, g, b, a);
-				return true;
+				if (FindNextFloat(content, ref index, out float r) &&
+					FindNextFloat(content, ref index, out float g) &&
+					FindNextFloat(content, ref index, out float b))
+				{
+					if (!FindNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
+
+					result = new RGBA128(r, g, b, a);
+					return true;
+				}
+
+				return YieldError(out result);
+
 			}
-
-			return YieldError(out result);
+			catch
+			{
+				return YieldError(out result);
+			}
 
 			static bool FindNextFloat(ReadOnlySpan<char> source, ref int head, out float result, bool alpha = false)
 			{
