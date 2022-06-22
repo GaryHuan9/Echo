@@ -1,21 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
-using CodeHelpers.Pooling;
+using Echo.Core.Scenic.Instancing;
 
 namespace Echo.Core.Scenic;
 
 public class Entity
 {
-	public Entity() => children = new Children(this);
+	readonly List<Entity> children = new();
+	bool transformDirty;
+
+	/// <summary>
+	/// The <see cref="Entity"/> that is containing this <see cref="Entity"/>.
+	/// </summary>
+	public Entity Parent { get; private set; }
 
 	Float3 _position;
 	Float3 _rotation;
-	Float3 _scale = Float3.One;
+	float _scale = 1f;
 
+	/// <summary>
+	/// The position of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
+	/// </summary>
 	public virtual Float3 Position
 	{
 		get => _position;
@@ -23,12 +30,13 @@ public class Entity
 		{
 			if (_position == value) return;
 			_position = value;
-
-			RecalculateTransformations();
-			OnTransformationChangedMethods?.Invoke();
+			DirtyTransform();
 		}
 	}
 
+	/// <summary>
+	/// The rotation (in euler angles) of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
+	/// </summary>
 	public virtual Float3 Rotation
 	{
 		get => _rotation;
@@ -36,128 +44,116 @@ public class Entity
 		{
 			if (_rotation == value) return;
 			_rotation = value;
-
-			RecalculateTransformations();
-			OnTransformationChangedMethods?.Invoke();
+			DirtyTransform();
 		}
 	}
 
-	public virtual Float3 Scale
+	/// <summary>
+	/// The scale of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
+	/// </summary>
+	/// <remarks>This must be a positive value.</remarks>
+	public virtual float Scale
 	{
 		get => _scale;
 		set
 		{
-			if (_scale == value) return;
-			_scale = value;
+			if (value <= 0f) throw new ArgumentOutOfRangeException(nameof(value));
+			if (_scale.AlmostEquals(value)) return;
 
-			RecalculateTransformations();
-			OnTransformationChangedMethods?.Invoke();
+			_scale = value;
+			DirtyTransform();
 		}
 	}
 
-	public Float4x4 LocalToWorld { get; private set; } = Float4x4.identity;
-	public Float4x4 WorldToLocal { get; private set; } = Float4x4.identity;
+	Float4x4 _forwardTransform;
+	Float4x4 _inverseTransform;
 
-	public event Action OnTransformationChangedMethods;
+	/// <summary>
+	/// The <see cref="Float4x4"/> transform of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// </summary>
+	public Float4x4 ForwardTransform
+	{
+		get
+		{
+			RecalculateTransform();
+			return _forwardTransform;
+		}
+	}
 
-	public virtual string Name => GetType().Name;
+	/// <summary>
+	/// The <see cref="Float4x4"/> transform of the <see cref="EntityPack"/> that contains
+	/// this <see cref="EntityPack"/> relative to the transform of this <see cref="EntityPack"/>.
+	/// </summary>
+	public Float4x4 InverseTransform
+	{
+		get
+		{
+			RecalculateTransform();
+			return _inverseTransform;
+		}
+	}
 
-	//TODO: Currently child/parent relationship does not affect transformation
-	public readonly Children children;
+	/// <summary>
+	/// Adds an <see cref="Entity"/> as a child.
+	/// </summary>
+	/// <param name="child">The <see cref="Entity"/> to add.</param>
+	/// <exception cref="ArgumentException">If <paramref name="child"/> has already been added to a <see cref="Parent"/>.</exception>
+	/// <remarks>Once successfully added, <paramref name="child"/> will inherit the transform of this <see cref="Entity"/>.</remarks>
+	public void Add(Entity child)
+	{
+		if (child.Parent == this) throw new ArgumentException("Cannot add a child to the same parent twice.", nameof(child));
+		if (child.Parent != null) throw new ArgumentException("Cannot move a child to a different parent.", nameof(child));
 
-	public Entity Parent { get; private set; }
-	public int ParentIndex { get; private set; }
+		Add(child);
+		child.Parent = this;
+		child.DirtyTransform();
+	}
 
-	public IEnumerable<Entity> LoopChildren(bool all)
+	/// <summary>
+	/// Enumerates through all of the children of this <see cref="Entity"/>.
+	/// </summary>
+	/// <param name="recursive">Whether the children include the children of children and so on.</param>
+	/// <returns>An <see cref="IEnumerable{T}"/> that enables this enumeration.</returns>
+	public IEnumerable<Entity> LoopChildren(bool recursive = false)
 	{
 		if (children.Count == 0) yield break;
 
-		Queue<Entity> frontier = CollectionPooler<Entity>.queue.GetObject();
-		for (int i = 0; i < children.Count; i++) frontier.Enqueue(children[i]);
-
-		while (frontier.Count > 0)
+		foreach (Entity directChild in children)
 		{
-			Entity child = frontier.Dequeue();
+			yield return directChild;
+			if (!recursive) continue;
 
-			yield return child;
-			if (!all) continue;
-
-			for (int i = 0; i < child.children.Count; i++) frontier.Enqueue(child.children[i]);
+			foreach (Entity child in directChild.children) yield return child;
 		}
-
-		CollectionPooler<Entity>.queue.ReleaseObject(frontier);
 	}
 
-	void RecalculateTransformations()
+	void RecalculateTransform()
 	{
-		LocalToWorld = Float4x4.Transformation(Position, Rotation, Scale);
-		WorldToLocal = LocalToWorld.Inversed;
+		if (!transformDirty) return;
+
+		Float4x4 transform = Float4x4.Transformation(Position, Rotation, (Float3)Scale);
+
+		if (Parent == null)
+		{
+			_forwardTransform = transform;
+			_inverseTransform = transform.Inversed;
+		}
+		else
+		{
+			Parent.RecalculateTransform();
+
+			_forwardTransform = Parent.ForwardTransform * transform;
+			_inverseTransform = Parent.InverseTransform * transform.Inversed;
+		}
+
+		transformDirty = false;
 	}
 
-	public class Children
+	void DirtyTransform()
 	{
-		public Children(Entity source) => this.source = source;
+		if (transformDirty) return;
+		transformDirty = true;
 
-		readonly Entity source;
-		readonly List<Entity> children = new();
-
-		public int Count => children.Count;
-
-		public Entity this[int index]
-		{
-			get => children[index];
-			set
-			{
-				Entity child = children[index];
-				if (child == value) return;
-
-				DisconnectChild(child);
-
-				if (value == null)
-				{
-					children.RemoveAt(child.ParentIndex);
-					return;
-				}
-
-				children[index] = value;
-				ConnectChild(value, index);
-			}
-		}
-
-		public void Add(Entity child)
-		{
-			if (child == null) throw ExceptionHelper.Invalid(nameof(child), InvalidType.isNull);
-			if (children.Contains(child)) throw ExceptionHelper.Invalid(nameof(child), child, "already present!");
-
-			children.Add(child);
-			ConnectChild(child, children.Count - 1);
-		}
-
-		public void RemoveAt(int index)
-		{
-			Entity child = children[index];
-			children.RemoveAt(index);
-
-			DisconnectChild(child);
-		}
-
-		public T FindFirst<T>() where T : Entity => (T)children.FirstOrDefault(target => target is T);
-
-		void ConnectChild(Entity child, int index)
-		{
-			child.ParentIndex = index;
-			child.Parent = source;
-
-			child.RecalculateTransformations();
-		}
-
-		static void DisconnectChild(Entity child)
-		{
-			child.ParentIndex = 0;
-			child.Parent = null;
-
-			child.RecalculateTransformations();
-		}
+		foreach (Entity child in children) child.DirtyTransform();
 	}
-
 }

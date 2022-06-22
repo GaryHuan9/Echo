@@ -23,11 +23,11 @@ public class EntityPack : Entity
 		}
 	}
 
-	public override Float3 Scale
+	public override float Scale
 	{
 		set
 		{
-			if (value.EqualsExact(Scale)) return;
+			if (value.Equals(Scale)) return;
 			ThrowModifyTransformException();
 		}
 	}

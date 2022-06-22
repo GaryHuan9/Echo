@@ -1,4 +1,5 @@
-﻿using Echo.Core.Evaluation.Materials;
+﻿using CodeHelpers.Diagnostics;
+using Echo.Core.Evaluation.Materials;
 
 namespace Echo.Core.Scenic.Preparation;
 
@@ -11,13 +12,17 @@ public readonly struct MaterialIndex
 	/// Constructs a new <see cref="MaterialIndex"/> from the current total
 	/// number of <see cref="Material"/> in this <see cref="SwatchExtractor"/>.
 	/// </summary>
-	public MaterialIndex(int count) => data = count;
+	public MaterialIndex(int count)
+	{
+		Assert.IsTrue(count >= 0);
+		data = (uint)count;
+	}
 
-	readonly int data;
+	readonly uint data;
 
 	/// <summary>
 	/// Retrieves the <see cref="uint"/> value of this <see cref="MaterialIndex"/>. It is guaranteed
 	/// that this value starts at zero is consecutive within a single <see cref="SwatchExtractor"/>.
 	/// </summary>
-	public static implicit operator int(MaterialIndex index) => index.data;
+	public static implicit operator int(MaterialIndex index) => (int)index.data;
 }

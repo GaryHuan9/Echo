@@ -21,15 +21,13 @@ public class PreparedInstance
 	/// </summary>
 	public PreparedInstance(ScenePreparer preparer, PackInstance instance, EntityToken token) : this(preparer, instance.EntityPack, instance.Swatch, token)
 	{
-		inverseTransform = instance.LocalToWorld;
-		forwardTransform = instance.WorldToLocal;
+		forwardTransform = instance.ForwardTransform;
+		inverseTransform = instance.InverseTransform;
 
-		Float3 scale = instance.Scale;
+		float scale = new Float3(forwardTransform.f00, forwardTransform.f01, forwardTransform.f02).Magnitude;
 
-		inverseScale = scale.Average;
-		forwardScale = 1f / inverseScale;
-
-		if ((Float3)inverseScale != scale) throw new Exception($"{nameof(PackInstance)} does not support none uniform scaling! '{scale}'");
+		inverseScale = scale;
+		forwardScale = 1f / scale;
 	}
 
 	protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, EntityToken token)

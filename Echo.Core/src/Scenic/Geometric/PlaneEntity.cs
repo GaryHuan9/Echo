@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometric;
 
-public class PlaneEntity : GeometryEntity
+public class PlaneEntity : GeometricEntity, IGeometricEntity<PreparedTriangle>
 {
 	public Float2 Size { get; set; } = Float2.One;
 
@@ -14,32 +14,20 @@ public class PlaneEntity : GeometryEntity
 	public Float2 Texcoord10 { get; set; } = Float2.Up;
 	public Float2 Texcoord11 { get; set; } = Float2.One;
 
-	// public void SetNormal(Float3 normal)
-	// {
-	// 	Float3 one = Float3.up;
-	// 	Float3 two = normal.Normalized;
-	//
-	// 	Float3 cross = one.Cross(two);
-	// 	float dot = one.Dot(two) + 1f;
-	//
-	// 	Float4 quaternion = new Float4(cross.x, cross.y, cross.z, dot);
-	// 	Float4x4 rotation = Float4x4.Rotation(quaternion);
-	// }
+	uint IGeometricEntity<PreparedTriangle>.Count => 2;
 
-	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
+	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		Float2 extend = Size / 2f;
-
-		Float3 point00 = LocalToWorld.MultiplyPoint(new Float3(-extend.X, 0f, -extend.Y));
-		Float3 point01 = LocalToWorld.MultiplyPoint(new Float3(-extend.X, 0f, extend.Y));
-		Float3 point10 = LocalToWorld.MultiplyPoint(new Float3(extend.X, 0f, -extend.Y));
-		Float3 point11 = LocalToWorld.MultiplyPoint(new Float3(extend.X, 0f, extend.Y));
-
+		Float4x4 transform = ForwardTransform;
 		MaterialIndex material = extractor.Register(Material, 2);
+
+		Float3 point00 = transform.MultiplyPoint(new Float3(-extend.X, 0f, -extend.Y));
+		Float3 point01 = transform.MultiplyPoint(new Float3(-extend.X, 0f, extend.Y));
+		Float3 point10 = transform.MultiplyPoint(new Float3(extend.X, 0f, -extend.Y));
+		Float3 point11 = transform.MultiplyPoint(new Float3(extend.X, 0f, extend.Y));
 
 		yield return new PreparedTriangle(point00, point11, point10, Texcoord00, Texcoord11, Texcoord10, material);
 		yield return new PreparedTriangle(point00, point01, point11, Texcoord00, Texcoord01, Texcoord11, material);
 	}
-
-	public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 }
