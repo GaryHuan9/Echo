@@ -36,7 +36,7 @@ public class AmbientLight : AreaLightSource
 		}
 	}
 
-	public override Float3 Scale
+	public override float Scale
 	{
 		set
 		{

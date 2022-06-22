@@ -24,7 +24,7 @@ public class Aggregators
 
 		//This is some really temporary benchmarking code
 		Mesh mesh = new("ext/Scenes/Assets/Models/BlenderBMW/BlenderBMW.obj");
-		scene.children.Add(new MeshEntity { Mesh = mesh, Material = new Matte() });
+		scene.Add(new MeshEntity { Mesh = mesh, Material = new Matte() });
 
 		const int Length = 65536;
 
@@ -63,7 +63,7 @@ public class Aggregators
 
 		if (false)
 		{
-			scene.children.Add(new PlaneEntity { Material = new Matte { Albedo = Texture.white }, Size = new Float2(32f, 24f) });
+			scene.Add(new PlaneEntity { Material = new Matte { Albedo = Texture.white }, Size = new Float2(32f, 24f) });
 
 			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivRegular"));
 			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivQuad"));

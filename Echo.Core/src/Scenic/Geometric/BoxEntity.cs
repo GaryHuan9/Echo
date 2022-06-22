@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometric;
 
-public class BoxEntity : GeometryEntity
+public class BoxEntity : GeometricEntity, IGeometricEntity<PreparedTriangle>
 {
 	public Float3 Size { get; set; } = Float3.One;
 
@@ -14,9 +14,12 @@ public class BoxEntity : GeometryEntity
 	public Float2 Texcoord10 { get; set; } = Float2.Up;
 	public Float2 Texcoord11 { get; set; } = Float2.One;
 
-	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
+	uint IGeometricEntity<PreparedTriangle>.Count => 12;
+
+	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		Float3 extend = Size / 2f;
+		Float4x4 transform = ForwardTransform;
 		MaterialIndex material = extractor.Register(Material, 12);
 
 		Float3 nnn = GetVertex(-1, -1, -1);
@@ -50,8 +53,6 @@ public class BoxEntity : GeometryEntity
 		yield return new PreparedTriangle(nnn, ppn, pnn, Texcoord00, Texcoord11, Texcoord10, material);
 		yield return new PreparedTriangle(nnn, npn, ppn, Texcoord00, Texcoord01, Texcoord11, material);
 
-		Float3 GetVertex(int x, int y, int z) => LocalToWorld.MultiplyPoint(new Float3(x, y, z) * extend);
+		Float3 GetVertex(int x, int y, int z) => transform.MultiplyPoint(new Float3(x, y, z) * extend);
 	}
-
-	public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 }
