@@ -6,12 +6,12 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometric;
 
-public class MeshEntity : GeometricEntity, IGeometricEntity<PreparedTriangle>
+public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
 	public Mesh Mesh { get; set; }
 	public MaterialLibrary MaterialLibrary { get; set; }
 	
-	uint IGeometricEntity<PreparedTriangle>.Count => (uint)Mesh.TriangleCount;
+	uint IGeometrySource<PreparedTriangle>.Count => (uint)Mesh.TriangleCount;
 
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{

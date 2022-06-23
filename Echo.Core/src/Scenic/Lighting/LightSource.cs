@@ -6,7 +6,7 @@ using Echo.Core.Scenic.Instancing;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 
-namespace Echo.Core.Scenic.Lights;
+namespace Echo.Core.Scenic.Lighting;
 
 /// <summary>
 /// An <see cref="ILight"/> <see cref="Entity"/> explicitly contained in the <see cref="Scene"/>.

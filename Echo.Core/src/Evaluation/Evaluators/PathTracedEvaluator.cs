@@ -8,7 +8,7 @@ using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Scattering;
-using Echo.Core.Scenic.Lights;
+using Echo.Core.Scenic.Lighting;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;

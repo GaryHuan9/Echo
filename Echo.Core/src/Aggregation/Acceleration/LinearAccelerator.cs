@@ -14,9 +14,9 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// A simple linear aggregator. Utilities four-wide SIMD parallelization.
 /// Optimal for small numbers of geometries and tokens, but works with any.
 /// </summary>
-public class LinearAggregator : Aggregator
+public class LinearAccelerator : Accelerator
 {
-	public LinearAggregator(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(pack)
+	public LinearAccelerator(GeometryCollection geometries, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(geometries)
 	{
 		Validate(aabbs, tokens);
 
@@ -50,7 +50,7 @@ public class LinearAggregator : Aggregator
 			{
 				if (intersections[i] >= query.distance) continue;
 				ref readonly EntityToken token = ref node.token4[i];
-				pack.Trace(ref query, token);
+				geometries.Trace(ref query, token);
 			}
 		}
 	}
@@ -65,7 +65,7 @@ public class LinearAggregator : Aggregator
 			{
 				if (intersections[i] >= query.travel) continue;
 				ref readonly EntityToken token = ref node.token4[i];
-				if (pack.Occlude(ref query, token)) return true;
+				if (geometries.Occlude(ref query, token)) return true;
 			}
 		}
 
@@ -84,7 +84,7 @@ public class LinearAggregator : Aggregator
 			{
 				if (intersections[i] >= distance) continue;
 				ref readonly EntityToken token = ref node.token4[i];
-				cost += pack.GetTraceCost(ray, ref distance, token);
+				cost += geometries.GetTraceCost(ray, ref distance, token);
 			}
 		}
 
@@ -96,7 +96,7 @@ public class LinearAggregator : Aggregator
 		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, totalCount);
 	}
 
-	public override void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
+	public override void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
 	{
 		fill.ThrowIfNotEmpty();
 

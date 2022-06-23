@@ -8,7 +8,7 @@ using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 
-namespace Echo.Core.Scenic.Lights;
+namespace Echo.Core.Scenic.Lighting;
 
 /// <summary>
 /// An <see cref="IAreaLight"/> that can contain an emissive geometry. Note that this light cannot be contained in a specific scene,

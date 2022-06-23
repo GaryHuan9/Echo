@@ -1,5 +1,7 @@
 ﻿using CodeHelpers;
 using Echo.Core.Aggregation;
+using Echo.Core.Aggregation.Acceleration;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common;
 
 namespace Echo.Core.Scenic.Preparation;
@@ -7,14 +9,14 @@ namespace Echo.Core.Scenic.Preparation;
 public record ScenePrepareProfile : IProfile
 {
 	/// <summary>
-	/// The <see cref="Aggregation.AggregatorProfile"/> used for this <see cref="ScenePrepareProfile"/>.
-	/// This determines the kind of <see cref="Aggregator"/> to build. Must not be null.
+	/// The <see cref="Aggregation.Preparation.AggregatorProfile"/> used for this <see cref="ScenePrepareProfile"/>.
+	/// This determines the kind of <see cref="Accelerator"/> to build. Must not be null.
 	/// </summary>
 	public AggregatorProfile AggregatorProfile { get; init; } = new();
 
 	/// <summary>
 	/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
-	/// Fragmentation can cause the construction of better <see cref="Aggregator"/>, however it can also backfire.
+	/// Fragmentation can cause the construction of better <see cref="Accelerator"/>, however it can also backfire.
 	/// </summary>
 	public float FragmentationThreshold { get; init; } = 5.8f;
 

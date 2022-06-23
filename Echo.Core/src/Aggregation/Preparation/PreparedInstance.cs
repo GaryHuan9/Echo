@@ -24,7 +24,7 @@ public class PreparedInstance
 		forwardTransform = instance.ForwardTransform;
 		inverseTransform = instance.InverseTransform;
 
-		float scale = new Float3(forwardTransform.f00, forwardTransform.f01, forwardTransform.f02).Magnitude;
+		float scale = instance.ContainedScale;
 
 		inverseScale = scale;
 		forwardScale = 1f / scale;
@@ -45,7 +45,7 @@ public class PreparedInstance
 	/// This <see cref="AxisAlignedBoundingBox"/> does not necessary enclose the root, only the enclosure of the content is guaranteed.
 	/// NOTE: This property could be slow, so if performance issues arise try to memoize the result.
 	/// </summary>
-	public AxisAlignedBoundingBox AABB => pack.aggregator.GetTransformedAABB(inverseTransform);
+	public AxisAlignedBoundingBox AABB => pack.accelerator.GetTransformedBounds(inverseTransform);
 
 	public readonly EntityToken token;
 	public readonly PreparedPack pack;
@@ -78,7 +78,7 @@ public class PreparedInstance
 		query.current.Push(this);
 
 		//Gets intersection from aggregator in local-space
-		pack.aggregator.Trace(ref query);
+		pack.accelerator.Trace(ref query);
 
 		//Convert back to parent-space
 		query.distance *= inverseScale;
@@ -99,7 +99,7 @@ public class PreparedInstance
 		query.current.Push(this);
 
 		//Gets intersection from aggregator in local-space
-		if (pack.aggregator.Occlude(ref query)) return true;
+		if (pack.accelerator.Occlude(ref query)) return true;
 
 		//Convert back to parent-space
 		query.travel *= inverseScale;
@@ -157,7 +157,7 @@ public class PreparedInstance
 		//Gets intersection cost, calculation done in local-space
 		TransformForward(ref ray);
 
-		uint cost = pack.aggregator.TraceCost(ray, ref distance);
+		uint cost = pack.accelerator.TraceCost(ray, ref distance);
 
 		//Restore distance back to parent-space
 		distance *= inverseScale;
