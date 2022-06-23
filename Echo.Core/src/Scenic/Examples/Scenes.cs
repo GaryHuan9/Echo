@@ -6,7 +6,7 @@ using Echo.Core.Evaluation.Materials;
 using Echo.Core.InOut;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Instancing;
-using Echo.Core.Scenic.Lights;
+using Echo.Core.Scenic.Lighting;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;

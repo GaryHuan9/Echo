@@ -27,7 +27,7 @@ public class PreparedInstanceRoot : PreparedInstance
 		using var _0 = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
 		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
-		pack.aggregator.FillAABB(FetchDepth, ref fill);
+		pack.accelerator.FillBounds(FetchDepth, ref fill);
 		aabbs = aabbs[..fill.Count];
 
 		using var _1 = Pool<Float3>.Fetch(aabbs.Length * 8, out View<Float3> points);
@@ -43,7 +43,7 @@ public class PreparedInstanceRoot : PreparedInstance
 	public void TraceRoot(ref TraceQuery query)
 	{
 		Assert.AreEqual(query.current, new TokenHierarchy());
-		pack.aggregator.Trace(ref query);
+		pack.accelerator.Trace(ref query);
 	}
 
 	/// <summary>
@@ -52,7 +52,7 @@ public class PreparedInstanceRoot : PreparedInstance
 	public bool OccludeRoot(ref OccludeQuery query)
 	{
 		Assert.AreEqual(query.current, new TokenHierarchy());
-		return pack.aggregator.Occlude(ref query);
+		return pack.accelerator.Occlude(ref query);
 	}
 
 	/// <summary>

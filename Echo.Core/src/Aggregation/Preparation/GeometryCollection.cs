@@ -14,52 +14,20 @@ namespace Echo.Core.Aggregation.Preparation;
 
 public class GeometryCollection
 {
-	public GeometryCollection(AggregatorProfile profile, PreparedTriangle[] triangles, PreparedInstance[] instances, PreparedSphere[] spheres)
+	public GeometryCollection(PreparedTriangle[] triangles, PreparedInstance[] instances, PreparedSphere[] spheres)
 	{
-		counts = new GeometryCounts(triangles.Length, instances.Length, spheres.Length);
-
-		int length = (int)counts.Total;
-		var aabbs = GC.AllocateUninitializedArray<AxisAlignedBoundingBox>(length);
-		var tokens = GC.AllocateUninitializedArray<EntityToken>(length);
-
-		for (int i = 0; i < triangles.Length; i++)
-		{
-			aabbs[i] = triangles[i].AABB;
-			tokens[i] = new EntityToken(TokenType.Triangle, i);
-		}
-
-		int offset = triangles.Length;
-
-		for (int i = 0; i < instances.Length; i++)
-		{
-			aabbs[offset + i] = instances[i].AABB;
-			tokens[offset + i] = new EntityToken(TokenType.Instance, i);
-		}
-
-		offset += instances.Length;
-
-		for (int i = 0; i < spheres.Length; i++)
-		{
-			aabbs[offset + i] = spheres[i].AABB;
-			tokens[offset + i] = new EntityToken(TokenType.Sphere, i);
-		}
-
-		offset += spheres.Length;
-		Assert.AreEqual(offset, length);
-
-		aggregator = profile.CreateAggregator(this, aabbs, tokens);
+		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
 		this.triangles = triangles;
 		this.instances = instances;
 		this.spheres = spheres;
 	}
 
-	public readonly Aggregator aggregator;
 	public readonly GeometryCounts counts;
 
 	readonly PreparedTriangle[] triangles;
-	readonly PreparedInstance[] instances;
 	readonly PreparedSphere[] spheres;
+	readonly PreparedInstance[] instances;
 
 	/// <summary>
 	/// Calculates the intersection between <paramref name="query"/> and the object represented by <paramref name="token"/>.
@@ -87,11 +55,6 @@ public class GeometryCollection
 
 				break;
 			}
-			case TokenType.Instance:
-			{
-				instances[token.Index].Trace(ref query);
-				break;
-			}
 			case TokenType.Sphere:
 			{
 				query.current.TopToken = token;
@@ -106,6 +69,11 @@ public class GeometryCollection
 				query.distance = distance;
 				query.uv = uv;
 
+				break;
+			}
+			case TokenType.Instance:
+			{
+				instances[token.Index].Trace(ref query);
 				break;
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(token));
@@ -129,10 +97,6 @@ public class GeometryCollection
 				ref readonly var triangle = ref triangles[token.Index];
 				return triangle.Intersect(query.ray, query.travel);
 			}
-			case TokenType.Instance:
-			{
-				return instances[token.Index].Occlude(ref query);
-			}
 			case TokenType.Sphere:
 			{
 				query.current.TopToken = token;
@@ -140,6 +104,39 @@ public class GeometryCollection
 
 				ref readonly var sphere = ref spheres[token.Index];
 				return sphere.Intersect(query.ray, query.travel, findFar);
+			}
+			case TokenType.Instance:
+			{
+				return instances[token.Index].Occlude(ref query);
+			}
+			default: throw new ArgumentOutOfRangeException(nameof(token));
+		}
+	}
+
+	/// <summary>
+	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
+	/// </summary>
+	public uint GetTraceCost(in Ray ray, ref float distance, in EntityToken token)
+	{
+		Assert.IsTrue(token.Type.IsGeometry());
+
+		switch (token.Type)
+		{
+			case TokenType.Triangle:
+			{
+				ref readonly PreparedTriangle triangle = ref triangles[token.Index];
+				distance = Math.Min(distance, triangle.Intersect(ray, out _));
+				return 1;
+			}
+			case TokenType.Sphere:
+			{
+				ref readonly PreparedSphere sphere = ref spheres[token.Index];
+				distance = Math.Min(distance, sphere.Intersect(ray, out _));
+				return 1;
+			}
+			case TokenType.Instance:
+			{
+				return instances[token.Index].TraceCost(ray, ref distance);
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
@@ -260,34 +257,5 @@ public class GeometryCollection
 			TokenType.Sphere   => spheres[token.Index].ProbabilityDensity(origin, incident),
 			_                  => throw new ArgumentOutOfRangeException(nameof(token))
 		};
-	}
-
-	/// <summary>
-	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
-	/// </summary>
-	public uint GetTraceCost(in Ray ray, ref float distance, in EntityToken token)
-	{
-		Assert.IsTrue(token.Type.IsGeometry());
-
-		switch (token.Type)
-		{
-			case TokenType.Triangle:
-			{
-				ref readonly PreparedTriangle triangle = ref triangles[token.Index];
-				distance = Math.Min(distance, triangle.Intersect(ray, out _));
-				return 1;
-			}
-			case TokenType.Instance:
-			{
-				return instances[token.Index].TraceCost(ray, ref distance);
-			}
-			case TokenType.Sphere:
-			{
-				ref readonly PreparedSphere sphere = ref spheres[token.Index];
-				distance = Math.Min(distance, sphere.Intersect(ray, out _));
-				return 1;
-			}
-			default: throw new ArgumentOutOfRangeException(nameof(token));
-		}
 	}
 }

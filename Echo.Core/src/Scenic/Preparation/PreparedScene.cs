@@ -13,7 +13,7 @@ using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Discrete;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Lights;
+using Echo.Core.Scenic.Lighting;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Preparation;

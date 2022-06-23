@@ -5,7 +5,7 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometric;
 
-public class BoxEntity : GeometricEntity, IGeometricEntity<PreparedTriangle>
+public class BoxEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
 	public Float3 Size { get; set; } = Float3.One;
 
@@ -14,7 +14,7 @@ public class BoxEntity : GeometricEntity, IGeometricEntity<PreparedTriangle>
 	public Float2 Texcoord10 { get; set; } = Float2.Up;
 	public Float2 Texcoord11 { get; set; } = Float2.One;
 
-	uint IGeometricEntity<PreparedTriangle>.Count => 12;
+	uint IGeometrySource<PreparedTriangle>.Count => 12;
 
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{

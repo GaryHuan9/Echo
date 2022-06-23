@@ -9,7 +9,7 @@ using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
 
-namespace Echo.Core.Scenic.Lights;
+namespace Echo.Core.Scenic.Lighting;
 
 /// <summary>
 /// An infinitely large directional light that surrounds the entire scene.

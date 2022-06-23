@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Preparation;
@@ -13,7 +14,7 @@ namespace Echo.Core.Aggregation.Primitives;
 public enum TokenType : uint
 {
 	/// <summary>
-	/// Represents a node inside an <see cref="Aggregator"/>.
+	/// Represents a node inside an <see cref="Accelerator"/>.
 	/// </summary>
 	Node,
 

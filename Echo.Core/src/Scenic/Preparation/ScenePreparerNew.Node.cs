@@ -119,11 +119,11 @@ partial class ScenePreparerNew
 			}
 		}
 
-		static void FillFromSources<T>(SwatchExtractor swatchExtractor, T[] destination, ReadOnlySpan<IGeometricEntity<T>> sources)
+		static void FillFromSources<T>(SwatchExtractor swatchExtractor, T[] destination, ReadOnlySpan<IGeometrySource<T>> sources)
 		{
 			var fill = destination.AsFill();
 
-			foreach (IGeometricEntity<T> source in sources)
+			foreach (IGeometrySource<T> source in sources)
 			{
 				int start = fill.Count;
 
@@ -132,7 +132,7 @@ partial class ScenePreparerNew
 				int count = fill.Count - start;
 				if (count == source.Count) continue;
 
-				throw new Exception($"{nameof(IGeometricEntity<T>.Count)} mismatch on {source}.");
+				throw new Exception($"{nameof(IGeometrySource<T>.Count)} mismatch on {source}.");
 			}
 
 			Assert.IsTrue(fill.IsFull);
@@ -142,8 +142,8 @@ partial class ScenePreparerNew
 		{
 			public GeometrySources(EntityPack source)
 			{
-				var triangleList = new List<IGeometricEntity<PreparedTriangle>>();
-				var sphereList = new List<IGeometricEntity<PreparedSphere>>();
+				var triangleList = new List<IGeometrySource<PreparedTriangle>>();
+				var sphereList = new List<IGeometrySource<PreparedSphere>>();
 				var instanceList = new List<PackInstance>();
 
 				ulong triangleCount = 0;
@@ -152,13 +152,13 @@ partial class ScenePreparerNew
 
 				foreach (Entity entity in source.LoopChildren(true))
 				{
-					if (entity is IGeometricEntity<PreparedTriangle> triangle)
+					if (entity is IGeometrySource<PreparedTriangle> triangle)
 					{
 						triangleList.Add(triangle);
 						triangleCount += triangle.Count;
 					}
 
-					if (entity is IGeometricEntity<PreparedSphere> sphere)
+					if (entity is IGeometrySource<PreparedSphere> sphere)
 					{
 						sphereList.Add(sphere);
 						sphereCount += sphere.Count;
@@ -177,8 +177,8 @@ partial class ScenePreparerNew
 				counts = new GeometryCounts(triangleCount, sphereCount, instanceCount);
 			}
 
-			public readonly ReadOnlySpan<IGeometricEntity<PreparedTriangle>> triangles;
-			public readonly ReadOnlySpan<IGeometricEntity<PreparedSphere>> spheres;
+			public readonly ReadOnlySpan<IGeometrySource<PreparedTriangle>> triangles;
+			public readonly ReadOnlySpan<IGeometrySource<PreparedSphere>> spheres;
 			public readonly ReadOnlySpan<PackInstance> instances;
 			public readonly GeometryCounts counts;
 		}

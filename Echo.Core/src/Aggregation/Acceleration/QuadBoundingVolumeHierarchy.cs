@@ -18,9 +18,9 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
 /// ref: https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf
 /// </summary>
-public class QuadBoundingVolumeHierarchy : Aggregator
+public class QuadBoundingVolumeHierarchy : Accelerator
 {
-	public QuadBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(pack)
+	public QuadBoundingVolumeHierarchy(GeometryCollection geometries, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(geometries)
 	{
 		Validate(aabbs, tokens, length => length > 1);
 		int[] indices = CreateIndices(aabbs.Length);
@@ -64,7 +64,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, stackSize);
 	}
 
-	public override unsafe void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
+	public override unsafe void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
 	{
 		int length = 1 << (int)depth;
 		fill.ThrowIfTooSmall(length);
@@ -157,53 +157,53 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			{
 				if (orders[node.axisMinor1])
 				{
-					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 3, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 2, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 2, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 3, ref next, ref hits, ref query);
 				}
 
 				if (orders[node.axisMinor0])
 				{
-					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 1, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 0, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 0, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 1, ref next, ref hits, ref query);
 				}
 			}
 			else
 			{
 				if (orders[node.axisMinor0])
 				{
-					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 1, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 0, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, pack, 0, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 1, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 0, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 1, ref next, ref hits, ref query);
 				}
 
 				if (orders[node.axisMinor1])
 				{
-					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 3, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 2, ref next, ref hits, ref query);
 				}
 				else
 				{
-					Push(intersections, node.token4, pack, 2, ref next, ref hits, ref query);
-					Push(intersections, node.token4, pack, 3, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 2, ref next, ref hits, ref query);
+					Push(intersections, node.token4, geometries, 3, ref next, ref hits, ref query);
 				}
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static void Push(in Float4 intersections, in EntityToken4 token4, PreparedPack pack,
+			static void Push(in Float4 intersections, in EntityToken4 token4, GeometryCollection geometries,
 							 int offset, ref EntityToken* next, ref float* hits, ref TraceQuery query)
 			{
 				float hit = intersections[offset];
@@ -217,7 +217,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 					*next++ = token;
 					*hits++ = hit;
 				}
-				else pack.Trace(ref query, token); //Child is geometry/leaf
+				else geometries.Trace(ref query, token); //Child is geometry/leaf
 			}
 		}
 		while (next != stack);
@@ -252,61 +252,62 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 			{
 				if (orders[node.axisMinor1])
 				{
-					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 3, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 2, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 2, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 3, ref next, ref query)) return true;
 				}
 
 				if (orders[node.axisMinor0])
 				{
-					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 1, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 0, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 0, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 1, ref next, ref query)) return true;
 				}
 			}
 			else
 			{
 				if (orders[node.axisMinor0])
 				{
-					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 1, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 0, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, pack, 0, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 1, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 0, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 1, ref next, ref query)) return true;
 				}
 
 				if (orders[node.axisMinor1])
 				{
-					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 3, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 2, ref next, ref query)) return true;
 				}
 				else
 				{
-					if (Push(intersections, node.token4, pack, 2, ref next, ref query)) return true;
-					if (Push(intersections, node.token4, pack, 3, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 2, ref next, ref query)) return true;
+					if (Push(intersections, node.token4, geometries, 3, ref next, ref query)) return true;
 				}
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static bool Push(in Float4 intersections, in EntityToken4 token4, PreparedPack pack,
-							 int offset, ref EntityToken* next, ref OccludeQuery query)
+			static bool Push(in Float4 intersections, in EntityToken4 token4,
+							 GeometryCollection geometries, int offset,
+							 ref EntityToken* next, ref OccludeQuery query)
 			{
 				float hit = intersections[offset];
 				if (hit >= query.travel) return false;
 
 				ref readonly EntityToken token = ref token4[offset];
 
-				if (token.Type.IsGeometry()) return pack.Occlude(ref query, token); //Child is leaf
+				if (token.Type.IsGeometry()) return geometries.Occlude(ref query, token); //Child is leaf
 
 				//Child is branch
 				*next++ = token;
@@ -321,7 +322,7 @@ public class QuadBoundingVolumeHierarchy : Aggregator
 	uint GetTraceCost(in EntityToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 	{
 		if (token.IsEmpty || intersection >= distance) return 0;
-		if (token.Type.IsGeometry()) return pack.GetTraceCost(ray, ref distance, token);
+		if (token.Type.IsGeometry()) return geometries.GetTraceCost(ray, ref distance, token);
 
 		ref readonly Node node = ref nodes[token.Index];
 		Float4 intersections = node.aabb4.Intersect(ray);

@@ -2,23 +2,22 @@ using System;
 using CodeHelpers;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Bounds;
-using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
 using Echo.Core.Common.Memory;
 using Echo.Core.Scenic.Instancing;
 
-namespace Echo.Core.Aggregation;
+namespace Echo.Core.Aggregation.Preparation;
 
 public record AggregatorProfile : IProfile
 {
 	/// <summary>
-	/// Explicitly indicate the type of <see cref="Aggregator"/> to use. This can be left as null for automatic selection.
+	/// Explicitly indicate the type of <see cref="Accelerator"/> to use. This can be left as null for automatic selection.
 	/// </summary>
 	public Type AggregatorType { get; init; }
 
 	/// <summary>
-	/// If this is true, <see cref="LinearAggregator"/> can be used for <see cref="PreparedPack"/> that contains <see cref="PackInstance"/>.
+	/// If this is true, <see cref="LinearAccelerator"/> can be used for <see cref="PreparedPack"/> that contains <see cref="PackInstance"/>.
 	/// NOTE: normally this should be false because we should avoid actually intersecting with an <see cref="PackInstance"/> as much as possible.
 	/// </summary>
 	public bool LinearForInstances { get; init; } = false;
@@ -30,10 +29,10 @@ public record AggregatorProfile : IProfile
 	/// <inheritdoc/>
 	public void Validate()
 	{
-		if (AggregatorType?.IsSubclassOf(typeof(Aggregator)) == false) throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, $"is not of type {nameof(Aggregator)}");
+		if (AggregatorType?.IsSubclassOf(typeof(Accelerator)) == false) throw ExceptionHelper.Invalid(nameof(AggregatorType), AggregatorType, $"is not of type {nameof(Accelerator)}");
 	}
 
-	public Aggregator CreateAggregator(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens)
+	public Accelerator CreateAggregator(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens)
 	{
 		if (AggregatorType != null) return CreateExplicit(AggregatorType, pack, aabbs, tokens);
 
@@ -50,12 +49,12 @@ public record AggregatorProfile : IProfile
 		}
 
 		//Base case defaults to linear aggregator
-		return new LinearAggregator(pack, aabbs, tokens);
+		return new LinearAccelerator(pack, aabbs, tokens);
 	}
 
-	static Aggregator CreateExplicit(Type type, PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens)
+	static Accelerator CreateExplicit(Type type, PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens)
 	{
-		if (type == typeof(LinearAggregator)) return new LinearAggregator(pack, aabbs, tokens);
+		if (type == typeof(LinearAccelerator)) return new LinearAccelerator(pack, aabbs, tokens);
 		if (type == typeof(BoundingVolumeHierarchy)) return new BoundingVolumeHierarchy(pack, aabbs, tokens);
 		if (type == typeof(QuadBoundingVolumeHierarchy)) return new QuadBoundingVolumeHierarchy(pack, aabbs, tokens);
 

@@ -4,6 +4,7 @@ using BenchmarkDotNet.Attributes;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation;
 using Echo.Core.Aggregation.Acceleration;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;

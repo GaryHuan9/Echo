@@ -5,7 +5,7 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
 
-namespace Echo.Core.Aggregation.Acceleration;
+namespace Echo.Core.Aggregation.Selection;
 
 public class LightBoundingVolumeHierarchy
 {

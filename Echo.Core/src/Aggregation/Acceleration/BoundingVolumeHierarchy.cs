@@ -15,9 +15,9 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// Works best with medium-level quantities of geometries and tokens.
 /// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
 /// </summary>
-public class BoundingVolumeHierarchy : Aggregator
+public class BoundingVolumeHierarchy : Accelerator
 {
-	public BoundingVolumeHierarchy(PreparedPack pack, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(pack)
+	public BoundingVolumeHierarchy(GeometryCollection geometries, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(geometries)
 	{
 		Validate(aabbs, tokens, length => length > 1);
 		int[] indices = CreateIndices(aabbs.Length);
@@ -66,7 +66,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, maxDepth);
 	}
 
-	public override unsafe void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
+	public override unsafe void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
 	{
 		int length = 1 << (int)depth;
 		fill.ThrowIfNotEmpty();
@@ -158,7 +158,7 @@ public class BoundingVolumeHierarchy : Aggregator
 					*next++ = token;
 					*hits++ = hit;
 				}
-				else pack.Trace(ref refQuery, token);
+				else geometries.Trace(ref refQuery, token);
 			}
 		}
 		while (next != stack);
@@ -209,7 +209,7 @@ public class BoundingVolumeHierarchy : Aggregator
 				}
 
 				//Evaluate leaf
-				return pack.Occlude(ref refQuery, token);
+				return geometries.Occlude(ref refQuery, token);
 			}
 		}
 		while (next != stack);
@@ -222,7 +222,7 @@ public class BoundingVolumeHierarchy : Aggregator
 		if (token.Type.IsGeometry())
 		{
 			//Calculate the intersection cost on the leaf
-			return pack.GetTraceCost(ray, ref distance, token);
+			return geometries.GetTraceCost(ray, ref distance, token);
 		}
 
 		Assert.AreEqual(token.Type, TokenType.Node);

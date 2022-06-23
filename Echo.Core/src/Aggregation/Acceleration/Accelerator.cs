@@ -10,34 +10,35 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
 
-namespace Echo.Core.Aggregation;
+namespace Echo.Core.Aggregation.Acceleration;
 
 /// <summary>
-/// An aggregate of geometries and instances that is able to calculate intersections and handle queries in various ways.
+/// An aggregate of geometries that is able to efficiently calculate intersections and handle various queries.
 /// </summary>
-public abstract class Aggregator
+public abstract class Accelerator
 {
-	protected Aggregator(PreparedPack pack) => this.pack = pack;
+	protected Accelerator(GeometryCollection geometries) => this.geometries = geometries;
 
-	protected readonly PreparedPack pack;
+	protected readonly GeometryCollection geometries;
 
 	protected const MethodImplOptions ImplementationOptions = MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining;
 
 	/// <summary>
-	/// Calculates and returns the <see cref="AxisAlignedBoundingBox"/> of this <see cref="Aggregator"/> as if it was transformed
-	/// by <paramref name="inverseTransform"/>. Note that this transformation is usually performed inversely, thus the name.
+	/// Calculates a <see cref="AxisAlignedBoundingBox"/> that bounds this <see cref="Accelerator"/> while transformed.
 	/// </summary>
-	public AxisAlignedBoundingBox GetTransformedAABB(in Float4x4 inverseTransform)
+	/// <param name="transform">The <see cref="Float4x4"/> used to transform this <see cref="Accelerator"/>.</param>
+	/// <remarks>This transformation is usually performed inversely.</remarks>
+	public AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform)
 	{
 		const int FetchDepth = 6; //How deep do we go into this aggregator to get the AABB of the nodes
 		using var _ = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
 		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
-		pack.aggregator.FillAABB(FetchDepth, ref fill);
+		FillBounds(FetchDepth, ref fill);
 		aabbs = aabbs[..fill.Count];
 		Assert.IsFalse(aabbs.IsEmpty);
 
-		Float4x4 absoluteTransform = inverseTransform.Absoluted;
+		Float4x4 absolute = transform.Absoluted;
 
 		Float3 min = Float3.PositiveInfinity;
 		Float3 max = Float3.NegativeInfinity;
@@ -45,8 +46,8 @@ public abstract class Aggregator
 		//Potentially find a smaller AABB by encapsulating transformed children nodes instead of the full aggregator
 		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
 		{
-			Float3 center = inverseTransform.MultiplyPoint(aabb.Center);
-			Float3 extend = absoluteTransform.MultiplyDirection(aabb.Extend);
+			Float3 center = transform.MultiplyPoint(aabb.Center);
+			Float3 extend = absolute.MultiplyDirection(aabb.Extend);
 
 			min = min.Min(center - extend);
 			max = max.Max(center + extend);
@@ -56,14 +57,14 @@ public abstract class Aggregator
 	}
 
 	/// <summary>
-	/// Traverses and finds the closest intersection of <paramref name="query"/> with this <see cref="Aggregator"/>.
+	/// Traverses and finds the closest intersection of <paramref name="query"/> with this <see cref="Accelerator"/>.
 	/// The intersection is recorded in <paramref name="query"/>, and only intersections that are closer than the
 	/// initial <paramref name="query.distance"/> value are tested.
 	/// </summary>
 	public abstract void Trace(ref TraceQuery query);
 
 	/// <summary>
-	/// Traverses this <see cref="Aggregator"/> and returns whether <paramref name="query"/> is occluded by anything.
+	/// Traverses this <see cref="Accelerator"/> and returns whether <paramref name="query"/> is occluded by anything.
 	/// NOTE: this operation will terminate at any occlusion, so it will be more performant than <see cref="Trace"/>.
 	/// </summary>
 	public abstract bool Occlude(ref OccludeQuery query);
@@ -75,17 +76,17 @@ public abstract class Aggregator
 	public abstract uint TraceCost(in Ray ray, ref float distance);
 
 	/// <summary>
-	/// Fills a <see cref="SpanFill{T}"/> with the <see cref="AxisAlignedBoundingBox"/> in this <see cref="Aggregator"/>.
+	/// Fills a <see cref="SpanFill{T}"/> with the <see cref="AxisAlignedBoundingBox"/> in this <see cref="Accelerator"/>.
 	/// </summary>
 	/// <param name="depth">How deep to gather all of the <see cref="AxisAlignedBoundingBox"/>s (with the root node at 1).</param>
 	/// <param name="fill">The destination <see cref="SpanFill{T}"/>; it should not be smaller than 2^<paramref name="depth"/>.</param>
-	/// <remarks>It is guaranteed that the entirety of this <see cref="Aggregator"/> will be
+	/// <remarks>It is guaranteed that the entirety of this <see cref="Accelerator"/> will be
 	/// enclosed by all the <see cref="AxisAlignedBoundingBox"/>s that are filled.</remarks>
-	public abstract void FillAABB(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill);
+	public abstract void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill);
 
 	/// <summary>
 	/// Validates that <paramref name="aabbs"/> and <paramref name="tokens"/>
-	/// are allowed to be used to construct this <see cref="Aggregator"/>.
+	/// are allowed to be used to construct this <see cref="Accelerator"/>.
 	/// </summary>
 	protected static void Validate(ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens, Func<int, bool> lengthValidator = null)
 	{

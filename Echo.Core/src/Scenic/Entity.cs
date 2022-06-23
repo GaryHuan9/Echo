@@ -94,6 +94,16 @@ public class Entity
 	}
 
 	/// <summary>
+	/// The <see cref="Position"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// </summary>
+	public Float3 ContainedPosition => ForwardTransform.GetColumn(3).XYZ;
+
+	/// <summary>
+	/// The <see cref="Scale"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// </summary>
+	public float ContainedScale => ForwardTransform.GetRow(0).XYZ_.Magnitude;
+
+	/// <summary>
 	/// Adds an <see cref="Entity"/> as a child.
 	/// </summary>
 	/// <param name="child">The <see cref="Entity"/> to add.</param>

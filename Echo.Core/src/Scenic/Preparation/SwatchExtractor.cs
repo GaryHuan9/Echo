@@ -90,6 +90,8 @@ public class SwatchExtractor
 	/// </summary>
 	public int GetRegistrationCount(MaterialIndex index) => materialList[index].Count;
 
+	public bool IsEmissive(MaterialIndex index) => materialList[index].material is IEmissive;
+
 	/// <summary>
 	/// Prepares <paramref name="swatch"/> into a <see cref="PreparedSwatch"/>. Note that once
 	/// this method is invoked, invocations to the registration methods is no longer supported.
