@@ -17,20 +17,27 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// </summary>
 public class BoundingVolumeHierarchy : Accelerator
 {
-	public BoundingVolumeHierarchy(GeometryCollection geometries, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(geometries)
+	public BoundingVolumeHierarchy(GeometryCollection geometries, HierarchyBuilder.Node root) : base(geometries)
 	{
-		Validate(aabbs, tokens, length => length > 1);
-		int[] indices = CreateIndices(aabbs.Length);
-
-		BranchBuilder builder = new BranchBuilder(aabbs);
-		BranchBuilder.Node root = builder.Build(indices);
+		nodes = new Node[root.nodeCount];
+		maxDepth = (int)root.nodeDepth;
 
 		uint nodeIndex = 1;
+		nodes[0] = CreateNode(root);
 
-		nodes = new Node[indices.Length * 2 - 1];
-		nodes[0] = CreateNode(root, tokens, ref nodeIndex, out maxDepth);
+		Node CreateNode(HierarchyBuilder.Node node)
+		{
+			if (node.IsLeaf) return new Node(node.aabb, node.Token);
 
-		Assert.AreEqual((long)nodeIndex, nodes.Length);
+			uint child0 = nodeIndex;
+			uint child1 = child0 + 1;
+			nodeIndex += 2;
+
+			nodes[child0] = CreateNode(node.Child0);
+			nodes[child1] = CreateNode(node.Child1);
+
+			return new Node(node.aabb, NewNodeToken(child0));
+		}
 	}
 
 	readonly Node[] nodes;
@@ -84,12 +91,12 @@ public class BoundingVolumeHierarchy : Accelerator
 		{
 			while (next0 != stack0)
 			{
-				uint index = (--next0)->Index;
+				int index = (--next0)->Index;
 				ref readonly Node node = ref nodes[index];
 
 				if (node.token.Type == TokenType.Node)
 				{
-					uint nextIndex = node.token.Index + 1;
+					int nextIndex = node.token.Index + 1;
 
 					*next1++ = node.token;
 					*next1++ = NewNodeToken(nextIndex);
@@ -124,7 +131,7 @@ public class BoundingVolumeHierarchy : Accelerator
 
 		do
 		{
-			uint index = (--next)->Index;
+			int index = (--next)->Index;
 			if (*--hits >= query.distance) continue;
 
 			ref readonly Node child0 = ref nodes[index];
@@ -174,7 +181,7 @@ public class BoundingVolumeHierarchy : Accelerator
 
 		do
 		{
-			uint index = (--next)->Index;
+			int index = (--next)->Index;
 
 			ref readonly Node child0 = ref nodes[index];
 			ref readonly Node child1 = ref nodes[index + 1];
@@ -247,25 +254,6 @@ public class BoundingVolumeHierarchy : Accelerator
 		}
 
 		return cost;
-	}
-
-	Node CreateNode(BranchBuilder.Node node, ReadOnlySpan<EntityToken> tokens, ref uint nodeIndex, out int depth)
-	{
-		if (node.IsLeaf)
-		{
-			depth = 1;
-			return new Node(node.aabb, tokens[node.index]);
-		}
-
-		uint child0 = nodeIndex;
-		uint child1 = child0 + 1;
-		nodeIndex += 2;
-
-		nodes[child0] = CreateNode(node.child0, tokens, ref nodeIndex, out int depth0);
-		nodes[child1] = CreateNode(node.child1, tokens, ref nodeIndex, out int depth1);
-
-		depth = Math.Max(depth0, depth1) + 1;
-		return new Node(node.aabb, NewNodeToken(child0));
 	}
 
 	[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)

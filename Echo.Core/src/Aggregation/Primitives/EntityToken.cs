@@ -71,12 +71,12 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 	/// is between 0 (inclusive) and <see cref="IndexCount"/> (exclusive).
 	/// The behavior of this property is undefined if <see cref="IsEmpty"/> is true.
 	/// </summary>
-	public uint Index
+	public int Index
 	{
 		get
 		{
 			Assert.AreNotEqual(data, EmptyTokenValue);
-			return data & IndexMask;
+			return (int)(data & IndexMask);
 		}
 	}
 

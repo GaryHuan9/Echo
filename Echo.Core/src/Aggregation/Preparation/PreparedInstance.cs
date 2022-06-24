@@ -2,6 +2,7 @@
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
@@ -14,59 +15,33 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
 
-public class PreparedInstance
+public readonly struct PreparedInstance
 {
-	/// <summary>
-	/// Creates a regular <see cref="PreparedInstance"/>.
-	/// </summary>
-	public PreparedInstance(ScenePreparer preparer, PackInstance instance, EntityToken token) : this(preparer, instance.EntityPack, instance.Swatch, token)
+	public PreparedInstance(PreparedPack pack, PreparedSwatch swatch, in Float4x4 offset)
 	{
-		forwardTransform = instance.ForwardTransform;
-		inverseTransform = instance.InverseTransform;
+		this.pack = pack;
+		this.swatch = swatch;
 
-		float scale = instance.ContainedScale;
+		inverseTransform = offset;
+		forwardTransform = offset.Inversed;
 
-		inverseScale = scale;
-		forwardScale = 1f / scale;
+		inverseScale = offset.GetRow(0).XYZ_.Magnitude;
+		forwardScale = 1f / inverseScale;
 	}
 
-	protected PreparedInstance(ScenePreparer preparer, EntityPack pack, MaterialSwatch swatch, EntityToken token)
-	{
-		this.token = token;
-
-		this.pack = preparer.GetPreparedPack(pack, out SwatchExtractor extractor, out EntityTokenArray tokenArray);
-		this.swatch = extractor.Prepare(swatch);
-
-		powerDistribution = CreatePowerDistribution(this.pack, this.swatch, tokenArray);
-	}
-
-	/// <summary>
-	/// Computes the <see cref="AxisAlignedBoundingBox"/> of all contents inside this instance based on its parent's coordinate system.
-	/// This <see cref="AxisAlignedBoundingBox"/> does not necessary enclose the root, only the enclosure of the content is guaranteed.
-	/// NOTE: This property could be slow, so if performance issues arise try to memoize the result.
-	/// </summary>
-	public AxisAlignedBoundingBox AABB => pack.accelerator.GetTransformedBounds(inverseTransform);
-
-	public readonly EntityToken token;
 	public readonly PreparedPack pack;
+	public readonly PreparedSwatch swatch;
 
-	public readonly Float4x4 forwardTransform = Float4x4.identity; //The parent to local transform
-	public readonly Float4x4 inverseTransform = Float4x4.identity; //The local to parent transform
-
-	protected readonly PreparedSwatch swatch;
+	public readonly Float4x4 forwardTransform; //The parent to local transform
+	public readonly Float4x4 inverseTransform; //The local to parent transform
 
 	readonly float forwardScale = 1f; //The parent to local scale multiplier
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
 
-	readonly PowerDistribution powerDistribution;
+	public AxisAlignedBoundingBox AABB => pack.accelerator.GetTransformedBounds(inverseTransform);
 
 	/// <summary>
-	/// Returns the total emissive power of this <see cref="PreparedInstance"/>.
-	/// </summary>
-	public float Power => powerDistribution?.Total * inverseScale * inverseScale ?? 0f;
-
-	/// <summary>
-	/// Processes <paramref name="query"/>.
+	/// Processes a <see cref="TraceQuery"/> through the underlying <see cref="Accelerator"/>.
 	/// </summary>
 	public void Trace(ref TraceQuery query)
 	{
@@ -75,19 +50,17 @@ public class PreparedInstance
 		//Convert from parent-space to local-space
 		TransformForward(ref query.ray);
 		query.distance *= forwardScale;
-		query.current.Push(this);
 
-		//Gets intersection from aggregator in local-space
+		//Gets intersection from accelerator in local-space
 		pack.accelerator.Trace(ref query);
 
 		//Convert back to parent-space
 		query.distance *= inverseScale;
 		query.ray = oldRay;
-		query.current.Pop();
 	}
 
 	/// <summary>
-	/// Processes <paramref name="query"/> and returns the result.
+	/// Processes a <see cref="OccludeQuery"/> through the underlying <see cref="Accelerator"/>.
 	/// </summary>
 	public bool Occlude(ref OccludeQuery query)
 	{
@@ -96,17 +69,33 @@ public class PreparedInstance
 		//Convert from parent-space to local-space
 		TransformForward(ref query.ray);
 		query.travel *= forwardScale;
-		query.current.Push(this);
 
-		//Gets intersection from aggregator in local-space
+		//Gets intersection from accelerator in local-space
 		if (pack.accelerator.Occlude(ref query)) return true;
 
 		//Convert back to parent-space
 		query.travel *= inverseScale;
 		query.ray = oldRay;
-		query.current.Pop();
 
 		return false;
+	}
+
+	/// <summary>
+	/// Returns the cost of tracing a <see cref="TraceQuery"/>.
+	/// </summary>
+	public uint TraceCost(Ray ray, ref float distance)
+	{
+		//Forward transform distance to local-space
+		distance *= forwardScale;
+
+		//Gets intersection cost, calculation done in local-space
+		TransformForward(ref ray);
+
+		uint cost = pack.accelerator.TraceCost(ray, ref distance);
+
+		//Restore distance back to parent-space
+		distance *= inverseScale;
+		return cost;
 	}
 
 	/// <summary>
@@ -144,24 +133,6 @@ public class PreparedInstance
 		while (geometryToken.TopToken == default);
 
 		return (geometryToken, pdf);
-	}
-
-	/// <summary>
-	/// Returns the cost of tracing a <see cref="TraceQuery"/>.
-	/// </summary>
-	public uint TraceCost(Ray ray, ref float distance)
-	{
-		//Forward transform distance to local-space
-		distance *= forwardScale;
-
-		//Gets intersection cost, calculation done in local-space
-		TransformForward(ref ray);
-
-		uint cost = pack.accelerator.TraceCost(ray, ref distance);
-
-		//Restore distance back to parent-space
-		distance *= inverseScale;
-		return cost;
 	}
 
 	/// <summary>

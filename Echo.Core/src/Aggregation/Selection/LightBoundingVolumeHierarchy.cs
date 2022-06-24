@@ -3,7 +3,9 @@ using System.Linq;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
+using Echo.Core.Evaluation.Distributions;
 
 namespace Echo.Core.Aggregation.Selection;
 
@@ -17,6 +19,8 @@ public class LightBoundingVolumeHierarchy
 
 	readonly PreparedPack pack;
 	readonly Node root;
+
+	public Probable<EntityToken> Sample(in GeometryPoint point, Sample1D sample) => Sample(point, sample, root, 1f);
 
 	static Node Build(Span<int> indices, ReadOnlyView<LightBounds> lights, ReadOnlySpan<EntityToken> tokens)
 	{
@@ -72,6 +76,24 @@ public class LightBoundingVolumeHierarchy
 			Build(indices[minIndex..], lights, tokens),
 			Build(indices[..minIndex], lights, tokens)
 		);
+	}
+
+	static Probable<EntityToken> Sample(in GeometryPoint point, Sample1D sample, Node node, float pdf)
+	{
+		if (node.child0 == null) return new Probable<EntityToken>(node.token, pdf);
+
+		float importance0 = node.child0.bounds.Importance(point);
+		float importance1 = node.child1.bounds.Importance(point);
+		float split = importance0 / (importance0 + importance1);
+
+		if (sample < split)
+		{
+			sample = sample.Stretch(0f, split);
+			return Sample(point, sample, node.child0, pdf * split);
+		}
+
+		sample = sample.Stretch(split, 1f);
+		return Sample(point, sample, node.child1, pdf * (1f - split));
 	}
 
 	class Node

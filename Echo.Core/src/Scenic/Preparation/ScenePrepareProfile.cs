@@ -9,10 +9,10 @@ namespace Echo.Core.Scenic.Preparation;
 public record ScenePrepareProfile : IProfile
 {
 	/// <summary>
-	/// The <see cref="Aggregation.Preparation.AggregatorProfile"/> used for this <see cref="ScenePrepareProfile"/>.
+	/// The <see cref="AcceleratorProfile"/> used for this <see cref="ScenePrepareProfile"/>.
 	/// This determines the kind of <see cref="Accelerator"/> to build. Must not be null.
 	/// </summary>
-	public AggregatorProfile AggregatorProfile { get; init; } = new();
+	public AcceleratorProfile AcceleratorProfile { get; init; } = new();
 
 	/// <summary>
 	/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
@@ -29,7 +29,7 @@ public record ScenePrepareProfile : IProfile
 	/// <inheritdoc/>
 	public void Validate()
 	{
-		if (AggregatorProfile == null) throw ExceptionHelper.Invalid(nameof(AggregatorProfile), InvalidType.isNull);
+		if (AcceleratorProfile == null) throw ExceptionHelper.Invalid(nameof(AcceleratorProfile), InvalidType.isNull);
 		if (FragmentationThreshold < 1f) throw ExceptionHelper.Invalid(nameof(FragmentationThreshold), InvalidType.outOfBounds);
 		if (FragmentationMaxIteration < 0) throw ExceptionHelper.Invalid(nameof(FragmentationMaxIteration), InvalidType.outOfBounds);
 	}

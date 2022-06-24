@@ -2,7 +2,7 @@
 
 public interface ILightSource { }
 
-public interface ILightSource<out T>
+public interface ILightSource<out T> : ILightSource
 {
 	T Extract();
 }

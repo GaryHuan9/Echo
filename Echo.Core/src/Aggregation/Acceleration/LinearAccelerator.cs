@@ -11,25 +11,17 @@ using Echo.Core.Common.Memory;
 namespace Echo.Core.Aggregation.Acceleration;
 
 /// <summary>
-/// A simple linear aggregator. Utilities four-wide SIMD parallelization.
-/// Optimal for small numbers of geometries and tokens, but works with any.
+/// A simple linear accelerator. Utilities four-wide SIMD parallelization.
+/// Optimal for small numbers of geometries, but works with any length (including zero).
 /// </summary>
 public class LinearAccelerator : Accelerator
 {
-	public LinearAccelerator(GeometryCollection geometries, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(geometries)
+	public LinearAccelerator(GeometryCollection geometries, ReadOnlyView<Tokenized<AxisAlignedBoundingBox>> boundsView) : base(geometries)
 	{
-		Validate(aabbs, tokens);
+		totalCount = boundsView.Length;
+		nodes = new Node[totalCount.CeiledDivide(Width)];
 
-		ReadOnlySpan<AxisAlignedBoundingBox> span = aabbs;
-		nodes = new Node[span.Length.CeiledDivide(Width)];
-
-		for (int i = 0; i < nodes.Length; i++)
-		{
-			int offset = i * Width;
-			nodes[i] = new Node(span[offset..], tokens[offset..]);
-		}
-
-		totalCount = span.Length;
+		for (int i = 0; i < nodes.Length; i++) nodes[i] = new Node(boundsView[(i * Width)..]);
 	}
 
 	readonly Node[] nodes;
@@ -173,10 +165,25 @@ public class LinearAccelerator : Accelerator
 
 	readonly struct Node
 	{
-		public Node(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens)
+		public Node(ReadOnlySpan<Tokenized<AxisAlignedBoundingBox>> boundsSpan)
 		{
-			aabb4 = new AxisAlignedBoundingBox4(aabbs);
-			token4 = new EntityToken4(tokens);
+			int length = boundsSpan.Length;
+
+			aabb4 = new AxisAlignedBoundingBox4
+			(
+				length > 0 ? boundsSpan[0].content : AxisAlignedBoundingBox.none,
+				length > 1 ? boundsSpan[1].content : AxisAlignedBoundingBox.none,
+				length > 2 ? boundsSpan[2].content : AxisAlignedBoundingBox.none,
+				length > 3 ? boundsSpan[3].content : AxisAlignedBoundingBox.none
+			);
+
+			token4 = new EntityToken4
+			(
+				length > 0 ? boundsSpan[0].token : EntityToken.Empty,
+				length > 1 ? boundsSpan[1].token : EntityToken.Empty,
+				length > 2 ? boundsSpan[2].token : EntityToken.Empty,
+				length > 3 ? boundsSpan[3].token : EntityToken.Empty
+			);
 		}
 
 		public readonly AxisAlignedBoundingBox4 aabb4;

@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Immutable;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometric;
@@ -12,22 +14,79 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
 
-public class GeometryCollection
+public sealed class GeometryCollection
 {
-	public GeometryCollection(PreparedTriangle[] triangles, PreparedInstance[] instances, PreparedSphere[] spheres)
+	public GeometryCollection(SwatchExtractor swatchExtractor, ReadOnlyView<IGeometrySource> geometrySources, ImmutableArray<PreparedInstance> instances)
 	{
+		triangles = Extract<PreparedTriangle>();
+		spheres = Extract<PreparedSphere>();
+		this.instances = instances;
+
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
-		this.triangles = triangles;
-		this.instances = instances;
-		this.spheres = spheres;
+		ImmutableArray<T> Extract<T>()
+		{
+			int length = 0;
+
+			foreach (IGeometrySource source in geometrySources)
+			{
+				if (source is not IGeometrySource<T> match) continue;
+				length += (int)match.Count;
+			}
+
+			var builder = ImmutableArray.CreateBuilder<T>(length);
+
+			foreach (IGeometrySource source in geometrySources)
+			{
+				if (source is not IGeometrySource<T> match) continue;
+
+				int expected = builder.Count + (int)match.Count;
+				builder.AddRange(match.Extract(swatchExtractor));
+
+				if (expected != builder.Count) throw new Exception($"{nameof(IGeometrySource<T>.Count)} mismatch on {source}.");
+			}
+
+			return builder.MoveToImmutable();
+		}
 	}
+
+	public readonly ImmutableArray<PreparedTriangle> triangles;
+	public readonly ImmutableArray<PreparedSphere> spheres;
+	public readonly ImmutableArray<PreparedInstance> instances;
 
 	public readonly GeometryCounts counts;
 
-	readonly PreparedTriangle[] triangles;
-	readonly PreparedSphere[] spheres;
-	readonly PreparedInstance[] instances;
+	public Tokenized<AxisAlignedBoundingBox>[] CreateBoundsArray()
+	{
+		var result = new Tokenized<AxisAlignedBoundingBox>[counts.Total];
+		var fill = result.AsFill();
+
+		for (int i = 0; i < triangles.Length; i++)
+		{
+			var token = new EntityToken(TokenType.Triangle, i);
+			AxisAlignedBoundingBox bounds = triangles[i].AABB;
+
+			fill.Add((token, bounds));
+		}
+
+		for (int i = 0; i < spheres.Length; i++)
+		{
+			var token = new EntityToken(TokenType.Sphere, i);
+			AxisAlignedBoundingBox bounds = spheres[i].AABB;
+
+			fill.Add((token, bounds));
+		}
+
+		for (int i = 0; i < instances.Length; i++)
+		{
+			var token = new EntityToken(TokenType.Instance, i);
+			AxisAlignedBoundingBox bounds = instances[i].AABB;
+
+			fill.Add((token, bounds));
+		}
+
+		return result;
+	}
 
 	/// <summary>
 	/// Calculates the intersection between <paramref name="query"/> and the object represented by <paramref name="token"/>.
@@ -44,7 +103,7 @@ public class GeometryCollection
 				query.current.TopToken = token;
 				if (query.ignore == query.current) return;
 
-				ref readonly PreparedTriangle triangle = ref triangles[token.Index];
+				ref readonly var triangle = ref triangles.ItemRef(token.Index);
 				float distance = triangle.Intersect(query.ray, out Float2 uv);
 
 				if (distance >= query.distance) return;
@@ -60,7 +119,7 @@ public class GeometryCollection
 				query.current.TopToken = token;
 				bool findFar = query.ignore == query.current;
 
-				ref readonly PreparedSphere sphere = ref spheres[token.Index];
+				ref readonly PreparedSphere sphere = ref spheres.ItemRef(token.Index);
 				float distance = sphere.Intersect(query.ray, out Float2 uv, findFar);
 
 				if (distance >= query.distance) return;
@@ -73,7 +132,11 @@ public class GeometryCollection
 			}
 			case TokenType.Instance:
 			{
+				query.current.Push(token);
 				instances[token.Index].Trace(ref query);
+
+				EntityToken popped = query.current.Pop();
+				Assert.AreEqual(popped, token);
 				break;
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(token));
@@ -94,20 +157,23 @@ public class GeometryCollection
 				query.current.TopToken = token;
 				if (query.ignore == query.current) return false;
 
-				ref readonly var triangle = ref triangles[token.Index];
-				return triangle.Intersect(query.ray, query.travel);
+				return triangles[token.Index].Intersect(query.ray, query.travel);
 			}
 			case TokenType.Sphere:
 			{
 				query.current.TopToken = token;
 				bool findFar = query.ignore == query.current;
 
-				ref readonly var sphere = ref spheres[token.Index];
-				return sphere.Intersect(query.ray, query.travel, findFar);
+				return spheres[token.Index].Intersect(query.ray, query.travel, findFar);
 			}
 			case TokenType.Instance:
 			{
-				return instances[token.Index].Occlude(ref query);
+				query.current.Push(token);
+				if (instances[token.Index].Occlude(ref query)) return true;
+
+				EntityToken popped = query.current.Pop();
+				Assert.AreEqual(popped, token);
+				return false;
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
@@ -124,14 +190,12 @@ public class GeometryCollection
 		{
 			case TokenType.Triangle:
 			{
-				ref readonly PreparedTriangle triangle = ref triangles[token.Index];
-				distance = Math.Min(distance, triangle.Intersect(ray, out _));
+				distance = Math.Min(distance, triangles[token.Index].Intersect(ray, out _));
 				return 1;
 			}
 			case TokenType.Sphere:
 			{
-				ref readonly PreparedSphere sphere = ref spheres[token.Index];
-				distance = Math.Min(distance, sphere.Intersect(ray, out _));
+				distance = Math.Min(distance, spheres[token.Index].Intersect(ray, out _));
 				return 1;
 			}
 			case TokenType.Instance:
@@ -159,21 +223,21 @@ public class GeometryCollection
 		{
 			case TokenType.Triangle:
 			{
-				ref readonly var triangle = ref triangles[token.Index];
+				ref readonly PreparedTriangle triangle = ref triangles.ItemRef(token.Index);
 
 				normal = triangle.GetNormal(query.uv);
 				texcoord = triangle.GetTexcoord(query.uv);
-				materialIndex = triangle.material;
+				materialIndex = triangle.Material;
 
 				break;
 			}
 			case TokenType.Sphere:
 			{
-				ref readonly var sphere = ref spheres[token.Index];
+				ref readonly PreparedSphere sphere = ref spheres.ItemRef(token.Index);
 
 				normal = PreparedSphere.GetNormal(query.uv);
 				texcoord = PreparedSphere.GetTexcoord(query.uv);
-				materialIndex = sphere.material;
+				materialIndex = sphere.Material;
 
 				break;
 			}
@@ -206,8 +270,8 @@ public class GeometryCollection
 
 		return token.Type switch
 		{
-			TokenType.Triangle => triangles[token.Index].material,
-			TokenType.Sphere   => spheres[token.Index].material,
+			TokenType.Triangle => triangles[token.Index].Material,
+			TokenType.Sphere   => spheres[token.Index].Material,
 			_                  => throw new ArgumentOutOfRangeException(nameof(token))
 		};
 	}

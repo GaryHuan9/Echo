@@ -94,29 +94,33 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	readonly ref EntityToken this[int index] => ref Unsafe.Add(ref Origin, index);
 
 	/// <summary>
-	/// Pushes a new <paramref name="instance"/> onto this <see cref="TokenHierarchy"/> as a new layer.
+	/// Pushes an <see cref="EntityToken"/> that represents an <see cref="PreparedInstance"/> onto this <see cref="TokenHierarchy"/> as a new layer.
 	/// </summary>
-	public void Push(PreparedInstance instance)
+	/// <remarks>The input <see cref="EntityToken"/> to be pushed must have a <see cref="EntityToken.Type"/>
+	/// of <see cref="TokenType.Instance"/>, otherwise the behavior of this method is unknown.</remarks>
+	public void Push(EntityToken token)
 	{
-		Assert.AreEqual(instance.token.Type, TokenType.Instance);
+		Assert.AreEqual(token.Type, TokenType.Instance);
 		Assert.IsTrue(InstanceCount < EntityPack.MaxLayer);
 
 		int layer = InstanceCount++;
-		this[layer] = instance.token;
-		instancesHash ^= Hash(instance.token, layer);
+		this[layer] = token;
+		instancesHash ^= Hash(token, layer);
 	}
 
 	/// <summary>
-	/// Pops a <see cref="PreparedInstance"/> from the top of this <see cref="TokenHierarchy"/>.
+	/// Pops a <see cref="PreparedInstance"/> (represented by an <see cref="EntityToken"/>) from the top of this <see cref="TokenHierarchy"/>.
 	/// </summary>
-	public void Pop()
+	/// <returns>The <see cref="EntityToken"/> that was popped.</returns>
+	public EntityToken Pop()
 	{
 		Assert.IsTrue(InstanceCount > 0);
 
 		int layer = --InstanceCount;
 
-		ref readonly var token = ref this[layer];
+		EntityToken token = this[layer];
 		instancesHash ^= Hash(token, layer);
+		return token;
 	}
 
 	/// <summary>

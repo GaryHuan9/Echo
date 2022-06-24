@@ -30,7 +30,7 @@ public abstract class Accelerator
 	/// <remarks>This transformation is usually performed inversely.</remarks>
 	public AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform)
 	{
-		const int FetchDepth = 6; //How deep do we go into this aggregator to get the AABB of the nodes
+		const int FetchDepth = 6; //How deep do we go to get the box bounds of the nodes
 		using var _ = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
 		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
@@ -43,7 +43,7 @@ public abstract class Accelerator
 		Float3 min = Float3.PositiveInfinity;
 		Float3 max = Float3.NegativeInfinity;
 
-		//Potentially find a smaller AABB by encapsulating transformed children nodes instead of the full aggregator
+		//Potentially find a smaller bounds by encapsulating transformed children nodes instead of the full tree
 		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
 		{
 			Float3 center = transform.MultiplyPoint(aabb.Center);
@@ -84,25 +84,8 @@ public abstract class Accelerator
 	/// enclosed by all the <see cref="AxisAlignedBoundingBox"/>s that are filled.</remarks>
 	public abstract void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill);
 
-	/// <summary>
-	/// Validates that <paramref name="aabbs"/> and <paramref name="tokens"/>
-	/// are allowed to be used to construct this <see cref="Accelerator"/>.
-	/// </summary>
-	protected static void Validate(ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens, Func<int, bool> lengthValidator = null)
-	{
-		if (aabbs.Length != tokens.Length) throw ExceptionHelper.Invalid(nameof(aabbs), $"does not have a matching length with {nameof(tokens)}");
-		if (lengthValidator?.Invoke(tokens.Length) == false) throw ExceptionHelper.Invalid(nameof(tokens.Length), tokens.Length, "has invalid length");
-
-#if !RELEASE
-		foreach (ref readonly var token in tokens) Assert.IsTrue(token.Type.IsGeometry());
-		foreach (ref readonly var aabb in aabbs) Assert.IsFalse(aabb.min.EqualsExact(aabb.max));
-#endif
-	}
-
-	/// <summary>
-	/// Creates and returns an array of index indices from zero (inclusive) to <paramref name="max"/> (exclusive).
-	/// </summary>
-	protected static int[] CreateIndices(int max) => Enumerable.Range(0, max).ToArray();
+	/// <inheritdoc cref="NewNodeToken(uint)"/>
+	protected static EntityToken NewNodeToken(int index) => new(TokenType.Node, index);
 
 	/// <summary>
 	/// Creates a new <see cref="EntityToken"/> that is of type <see cref="TokenType.Node"/>.

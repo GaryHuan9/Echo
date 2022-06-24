@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using CodeHelpers.Collections;
@@ -20,88 +21,10 @@ namespace Echo.Core.Aggregation.Preparation;
 
 public class PreparedPack
 {
-	public PreparedPack(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources, ReadOnlySpan<ILightSource> lightSources)
+	public PreparedPack(ReadOnlyView<IGeometrySource> geometrySources, ReadOnlySpan<ILightSource> lightSources,
+						ImmutableArray<PreparedInstance> instances, SwatchExtractor swatchExtractor)
 	{
-		var triangles = ExtractGeometries(geometrySources, swatchExtractor, out ReadOnlySpan<PreparedTriangle> emissiveTriangles);
-		var spheres = ExtractGeometries(geometrySources, swatchExtractor, out ReadOnlySpan<PreparedSphere> emissiveSpheres);
-
-		int length = (int)counts.Total;
-		var aabbs = GC.AllocateUninitializedArray<AxisAlignedBoundingBox>(length);
-		var tokens = GC.AllocateUninitializedArray<EntityToken>(length);
-
-		for (int i = 0; i < triangles.Length; i++)
-		{
-			aabbs[i] = triangles[i].AABB;
-			tokens[i] = new EntityToken(TokenType.Triangle, i);
-		}
-
-		int offset = triangles.Length;
-
-		for (int i = 0; i < instances.Length; i++)
-		{
-			aabbs[offset + i] = instances[i].AABB;
-			tokens[offset + i] = new EntityToken(TokenType.Instance, i);
-		}
-
-		offset += instances.Length;
-
-		for (int i = 0; i < spheres.Length; i++)
-		{
-			aabbs[offset + i] = spheres[i].AABB;
-			tokens[offset + i] = new EntityToken(TokenType.Sphere, i);
-		}
-
-		offset += spheres.Length;
-		Assert.AreEqual(offset, length);
-
-		accelerator = profile.CreateAggregator(this, aabbs, tokens);
-
-		static T[] ExtractGeometries<T>(ReadOnlySpan<IGeometrySource> sources, SwatchExtractor extractor,
-										out ReadOnlySpan<T> emissive) where T : IPreparedGeometry
-		{
-			int length = 0;
-
-			foreach (IGeometrySource source in sources)
-			{
-				if (source is not IGeometrySource<T> match) continue;
-				length += (int)match.Count;
-			}
-
-			if (length == 0)
-			{
-				emissive = ReadOnlySpan<T>.Empty;
-				return null;
-			}
-
-			T[] array = GC.AllocateUninitializedArray<T>(length);
-
-			int start = 0;
-			int end = length - 1;
-
-			foreach (IGeometrySource source in sources)
-			{
-				if (source is not IGeometrySource<T> match) continue;
-
-				int gap = end - start;
-
-				foreach (T value in match.Extract(extractor))
-				{
-					bool back = extractor.IsEmissive(value.Material);
-
-					if (back) array[--end] = value;
-					else array[++start] = value;
-
-					if (start > end) break;
-				}
-
-				if (gap - match.Count == end - start) continue;
-				throw new Exception($"{nameof(IGeometrySource<T>.Count)} mismatch on {source}.");
-			}
-
-			Assert.AreEqual(start, end + 1);
-			emissive = array.AsSpan(start);
-			return array;
-		}
+		geometries = new GeometryCollection(swatchExtractor, geometrySources, instances);
 	}
 
 	public readonly Accelerator accelerator;
@@ -169,7 +92,7 @@ public class PreparedPack
 		Assert.IsTrue(tokens.IsFull);
 
 		//Construct instance
-		return new PreparedPack(preparer.profile.AggregatorProfile, aabbs, tokens, triangles, instances, spheres);
+		return new PreparedPack(preparer.profile.AcceleratorProfile, aabbs, tokens, triangles, instances, spheres);
 
 		void FillTriangles(int index)
 		{
