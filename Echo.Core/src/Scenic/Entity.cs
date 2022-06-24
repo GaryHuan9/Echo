@@ -69,7 +69,8 @@ public class Entity
 	Float4x4 _inverseTransform;
 
 	/// <summary>
-	/// The <see cref="Float4x4"/> transform of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// A <see cref="Float4x4"/> that transforms from the space of the <see cref="EntityPack"/>
+	/// that contains this <see cref="Entity"/> to the space of this <see cref="Entity"/>.
 	/// </summary>
 	public Float4x4 ForwardTransform
 	{
@@ -81,8 +82,8 @@ public class Entity
 	}
 
 	/// <summary>
-	/// The <see cref="Float4x4"/> transform of the <see cref="EntityPack"/> that contains
-	/// this <see cref="EntityPack"/> relative to the transform of this <see cref="EntityPack"/>.
+	/// A <see cref="Float4x4"/> that transforms from the space of this <see cref="Entity"/>
+	/// to the space of the <see cref="EntityPack"/> that contains this <see cref="Entity"/>.
 	/// </summary>
 	public Float4x4 InverseTransform
 	{
@@ -96,12 +97,12 @@ public class Entity
 	/// <summary>
 	/// The <see cref="Position"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
 	/// </summary>
-	public Float3 ContainedPosition => ForwardTransform.GetColumn(3).XYZ;
+	public Float3 ContainedPosition => InverseTransform.GetColumn(3).XYZ;
 
 	/// <summary>
 	/// The <see cref="Scale"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
 	/// </summary>
-	public float ContainedScale => ForwardTransform.GetRow(0).XYZ_.Magnitude;
+	public float ContainedScale => InverseTransform.GetRow(0).XYZ_.Magnitude;
 
 	/// <summary>
 	/// Adds an <see cref="Entity"/> as a child.
@@ -145,15 +146,15 @@ public class Entity
 
 		if (Parent == null)
 		{
-			_forwardTransform = transform;
-			_inverseTransform = transform.Inversed;
+			_forwardTransform = transform.Inversed;
+			_inverseTransform = transform;
 		}
 		else
 		{
 			Parent.RecalculateTransform();
 
-			_forwardTransform = Parent.ForwardTransform * transform;
-			_inverseTransform = Parent.InverseTransform * transform.Inversed;
+			_forwardTransform = Parent.ForwardTransform * transform.Inversed;
+			_inverseTransform = Parent.InverseTransform * transform;
 		}
 
 		transformDirty = false;

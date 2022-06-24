@@ -34,7 +34,7 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 	}
 }
 
-public readonly struct PreparedSphere : IPreparedGeometry
+public readonly struct PreparedSphere
 {
 	public PreparedSphere(in Float3 position, float radius, MaterialIndex material)
 	{

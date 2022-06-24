@@ -28,5 +28,4 @@ public partial class ScenePreparerNew
 		nodes.Add(pack, node);
 		return node;
 	}
-
 }

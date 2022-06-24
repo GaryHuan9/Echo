@@ -12,6 +12,8 @@ using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;
 
+using SourceNode = HierarchyBuilder.Node;
+
 /// <summary>
 /// A four-way hierarchical spacial partitioning acceleration structure.
 /// Works best with very large quantities of geometries and tokens.
@@ -20,23 +22,17 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// </summary>
 public class QuadBoundingVolumeHierarchy : Accelerator
 {
-	public QuadBoundingVolumeHierarchy(GeometryCollection geometries, ReadOnlyView<AxisAlignedBoundingBox> aabbs, ReadOnlySpan<EntityToken> tokens) : base(geometries)
+	public QuadBoundingVolumeHierarchy(GeometryCollection geometries, SourceNode root) : base(geometries)
 	{
-		Validate(aabbs, tokens, length => length > 1);
-		int[] indices = CreateIndices(aabbs.Length);
-
-		BranchBuilder builder = new BranchBuilder(aabbs);
-		BranchBuilder.Node root = builder.Build(indices);
-
 		int count = 0;
 		var buildRoot = new BuildNode(root, ref count);
 
 		uint nodeIndex = 1;
 
 		nodes = new Node[count];
-		nodes[0] = CreateNode(buildRoot, tokens, ref nodeIndex, out int maxDepth);
+		nodes[0] = CreateNode(buildRoot, ref nodeIndex, out int maxDepth);
 
-		stackSize = maxDepth * 3 + 1; //NOTE: this equation is not arbitrary!
+		stackSize = maxDepth * 3 + 1; //This equation is not arbitrary!
 		Assert.AreEqual((long)nodeIndex, nodes.Length);
 	}
 
@@ -146,7 +142,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 		do
 		{
-			uint index = (--next)->Index;
+			int index = (--next)->Index;
 
 			if (*--hits >= query.distance) continue;
 
@@ -244,7 +240,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 		do
 		{
-			uint index = (--next)->Index;
+			int index = (--next)->Index;
 			ref readonly Node node = ref Unsafe.Add(ref origin, index);
 			Float4 intersections = node.aabb4.Intersect(query.ray);
 
@@ -365,7 +361,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		}
 	}
 
-	Node CreateNode(BuildNode buildNode, ReadOnlySpan<EntityToken> tokens, ref uint nodeIndex, out int depth)
+	Node CreateNode(BuildNode buildNode, ref uint nodeIndex, out int depth)
 	{
 		Assert.IsNotNull(buildNode.child);
 		BuildNode current = buildNode.child;
@@ -386,7 +382,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			}
 			else if (current.IsLeaf)
 			{
-				entityToken = tokens[current.source.index];
+				entityToken = current.source.Token;
 				nodeDepth = 1;
 			}
 			else
@@ -394,7 +390,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 				uint index = nodeIndex++;
 				ref Node node = ref nodes[index];
 
-				node = CreateNode(current, tokens, ref nodeIndex, out nodeDepth);
+				node = CreateNode(current, ref nodeIndex, out nodeDepth);
 				entityToken = NewNodeToken(index);
 			}
 
@@ -483,14 +479,14 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		/// Collapses <see cref="source"/> from a binary tree to a quad tree.
 		/// This node will be the root node of that newly created quad tree.
 		/// </summary>
-		public BuildNode(BranchBuilder.Node source, ref int count) : this(source, null, ref count) { }
+		public BuildNode(SourceNode source, ref int count) : this(source, null, ref count) { }
 
 		/// <summary>
 		/// Creates a new <see cref="BuildNode"/> from <paramref name="source"/>.
 		/// NOTE: <paramref name="source"/> can be null to indicate an empty node,
 		/// or turn <paramref name="source.IsLeaf"/> on to indicate a leaf node.
 		/// </summary>
-		BuildNode(BranchBuilder.Node source, BuildNode sibling, ref int count)
+		BuildNode(SourceNode source, BuildNode sibling, ref int count)
 		{
 			this.source = source;
 			this.sibling = sibling;
@@ -511,7 +507,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		public bool IsEmpty => source == null;
 		public bool IsLeaf => child == null;
 
-		public readonly BranchBuilder.Node source;
+		public readonly SourceNode source;
 
 		public readonly BuildNode child;   //Linked list to the first child (4)
 		public readonly BuildNode sibling; //Reference to the next sibling node
@@ -531,7 +527,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		/// to the linked list orderly, based on the position of their aabbs along <paramref name="node.axis"/>. The node with the
 		/// smaller position will be placed before the node with the larger position. Returns <paramref name="node.axis"/>.
 		/// </summary>
-		static int AddChildren(BranchBuilder.Node node, ref BuildNode child, ref int count)
+		static int AddChildren(SourceNode node, ref BuildNode child, ref int count)
 		{
 			int axis;
 
@@ -560,11 +556,11 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		/// aabbs along <paramref name="node.axis"/>. The node with the smaller position will be placed in <paramref name="child0"/> and
 		/// the other one will be placed in <paramref name="child1"/>. Returns <paramref name="node.axis"/>.
 		/// </summary>
-		static int GetChildrenSorted(BranchBuilder.Node node, out BranchBuilder.Node child0, out BranchBuilder.Node child1)
+		static int GetChildrenSorted(SourceNode node, out SourceNode child0, out SourceNode child1)
 		{
-			int axis = node.axis;
-			child0 = node.child0;
-			child1 = node.child1;
+			int axis = node.Axis;
+			child0 = node.Child0;
+			child1 = node.Child1;
 
 			//Put child1 as the first child if child0 has a larger position
 			if (child0.aabb.min[axis] > child1.aabb.min[axis]) CodeHelper.Swap(ref child0, ref child1);
@@ -575,6 +571,6 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		/// <summary>
 		/// Adds a new <see cref="BuildNode"/> to the linked list represented by <paramref name="child"/>.
 		/// </summary>
-		static void AddChild(BranchBuilder.Node node, ref BuildNode child, ref int count) => child = new BuildNode(node, child, ref count);
+		static void AddChild(SourceNode node, ref BuildNode child, ref int count) => child = new BuildNode(node, child, ref count);
 	}
 }

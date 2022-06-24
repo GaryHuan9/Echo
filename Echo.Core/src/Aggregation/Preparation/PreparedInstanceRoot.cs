@@ -22,7 +22,7 @@ public class PreparedInstanceRoot : PreparedInstance
 	/// </summary>
 	public void CalculateBounds(out AxisAlignedBoundingBox aabb, out BoundingSphere boundingSphere)
 	{
-		const int FetchDepth = 6; //How deep do we go into our aggregator to get the AABB of the nodes
+		const int FetchDepth = 6; //How deep do we go into our accelerator to get the AABB of the nodes
 
 		using var _0 = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 

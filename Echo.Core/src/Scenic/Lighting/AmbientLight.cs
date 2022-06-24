@@ -40,7 +40,7 @@ public class AmbientLight : AreaLightSource
 	{
 		set
 		{
-			if (value.EqualsExact(Scale)) return;
+			if (value.Equals(Scale)) return;
 			ThrowModifyTransformException();
 		}
 	}
