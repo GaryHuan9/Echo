@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
@@ -50,10 +51,65 @@ public class RGBA128ParserTests
 	}
 
 	[Test]
+	public void ParseRGBPassRandom()
+	{
+		List<string> randomCandidateList = new List<string>();
+		List<Color32> randomCandidateExpectationsList = new List<Color32>();
+		const int randomCandidateAmount = 1_000_000;
+		Random random = new Random();
+
+		for (int i = 0; i < randomCandidateAmount; i++)
+		{
+			StringBuilder sb = new StringBuilder();
+
+			bool hasRandomAlpha = random.Next(0, 100) < 50;
+
+			byte r = (byte)random.Next(0, 0xFF);
+			byte g = (byte)random.Next(0, 0xFF);
+			byte b = (byte)random.Next(0, 0xFF);
+			byte a = (byte)random.Next(0, 0xFF);
+			
+			Color32 color = hasRandomAlpha ? new Color32(r, g, b, a) : new Color32(r, g, b);
+
+			sb.Append($"{color.r}, {color.g}, {color.b}");
+
+			if (hasRandomAlpha)
+				sb.Append($", {color.a}");
+
+			randomCandidateList.Append(sb.ToString());
+			randomCandidateExpectationsList.Append(color);
+			TestContext.WriteLine(sb.ToString());
+		}
+		
+		ParsePass($"rgb({{0}})", randomCandidateList, from expect in randomCandidateExpectationsList
+													  select (RGBA128)(Float4)expect);
+	}
+
+	[Test]
 	public void ParseRGBFail()
 	{
 		string[] candidates = { "10,", ",", ",,,", "1000, 10, 10", "10, 10, 10, 10000", ",10" };
 		ParseFail($"rgb({{0}})", candidates);
+	}
+
+	[Test]
+	public void ParseRGBFailRandom()
+	{
+		List<string> randomCandidateList = new List<string>();
+		const int candidateAmount = 1_000_000;
+		const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		Random random = new Random();
+		
+		for (int i = 0; i < candidateAmount; i++)
+		{
+			int length = random.Next(0, 255);
+			string str = new(Enumerable.Range(1, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
+			randomCandidateList.Append(str);
+			
+			TestContext.WriteLine(str);
+		}
+		
+		ParseFail($"rgb({{0}})", randomCandidateList);
 	}
 
 	[Test]
@@ -69,12 +125,65 @@ public class RGBA128ParserTests
 		ParsePass($"hdr({{0}})", candidates, from expect in expects
 											 select expect);
 	}
+
+	[Test]
+	public void ParseHDRPassRandom()
+	{
+		List<string> randomCandidateList = new List<string>();
+		List<RGBA128> randomCandidateExpectationList = new List<RGBA128>();
+		const int candidateAmount = 1_000_000;
+		Random random = new Random();
+		for (int i = 0; i < candidateAmount; i++)
+		{
+			float r = (float)random.NextDouble() * 100f;
+			float g = (float)random.NextDouble() * 100f;
+			float b = (float)random.NextDouble() * 100f;
+			float a = (float)random.NextDouble() * 100f;
+			bool hasRandomAlpha = random.Next(0, 100) < 50;
+
+			Float4 color = hasRandomAlpha ? new Float4(r, g, b, a) : new Float4(r, g, b, 1f);
+			
+			StringBuilder sb = new StringBuilder();
+			sb.AppendFormat($"{r}, {g}, {b}");
+
+			if (hasRandomAlpha)
+			{
+				sb.AppendFormat($", {a}");
+			}
+
+			randomCandidateList.Append(sb.ToString());
+			randomCandidateExpectationList.Append((RGBA128)color);
+			TestContext.WriteLine(sb.ToString());
+		}
+		ParsePass($"hdr({{0}})", randomCandidateList, from expect in randomCandidateExpectationList
+													  select expect);
+	}
 	
 	[Test]
 	public void ParseHDRFail()
 	{
 		string[] candidates = { "", ",,,", ". . .", "1, 5,", "1.5.1" };
 		ParseFail($"hdr({{0}})", candidates);
+	}
+
+	[Test]
+	public void ParseHDRFailRandom()
+	{
+		List<string> randomCandidateList = new List<string>();
+		const int candidateAmount = 1_000_000;
+		const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		Random random = new Random();
+		
+		for (int i = 0; i < candidateAmount; i++)
+		{
+			int length = random.Next(0, 255);
+			string str = new(Enumerable.Range(1, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
+			randomCandidateList.Append(str);
+			
+			TestContext.WriteLine(str);
+		}
+		
+		ParseFail($"hdr({{0}})", randomCandidateList);
 	}
 
 	static void ParsePass(string format, IEnumerable<string> contents, IEnumerable<RGBA128> expects)
