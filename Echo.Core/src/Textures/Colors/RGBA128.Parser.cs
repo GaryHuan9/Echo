@@ -143,25 +143,18 @@ partial struct RGBA128
 
 		bool ParseRGB(out RGBA128 result)
 		{
-			try
+			int head = 0;
+
+			if (FindNextInt(content, ref head, out int r) &&
+				FindNextInt(content, ref head, out int g) &&
+				FindNextInt(content, ref head, out int b))
 			{
-				int head = 0;
+				if (!FindNextInt(content, ref head, out int a, alpha: true)) return YieldError(out result);
 
-				if (FindNextInt(content, ref head, out int r) &&
-					FindNextInt(content, ref head, out int g) &&
-					FindNextInt(content, ref head, out int b))
-				{
-					if (!FindNextInt(content, ref head, out int a, alpha: true)) return YieldError(out result);
-
-					return ConvertRGBA(r, g, b, a, out result);
-				}
-
-				return YieldError(out result);
+				return ConvertRGBA(r, g, b, a, out result);
 			}
-			catch
-			{
-				return YieldError(out result);
-			}
+
+			return YieldError(out result);
 
 			static bool FindNextInt(ReadOnlySpan<char> source, ref int head, out int result, bool alpha = false)
 			{
@@ -171,7 +164,7 @@ partial struct RGBA128
 					if (head >= source.Length) return true; // no alpha is given so set alpha to 255 and return
 				}
 
-				while (!char.IsDigit(source[head]))
+				while (head < source.Length && !char.IsDigit(source[head]))
 				{
 					if (source.Length <= head++)
 					{
@@ -227,7 +220,7 @@ partial struct RGBA128
 					if (head >= source.Length) return true; // no alpha is given so set alpha to 1f and return
 				}
 
-				while (!char.IsDigit(source[head]))
+				while (head < source.Length && !char.IsDigit(source[head]))
 				{
 					if (source.Length <= head++)
 					{
