@@ -166,6 +166,13 @@ partial struct RGBA128
 
 				while (head < source.Length && !char.IsDigit(source[head]))
 				{
+					char current = source[head];
+					if (!char.IsDigit(current) && current != '.' && current != ',' && !char.IsWhiteSpace(current))
+					{
+						result = 0;
+						return false;
+					}
+
 					if (source.Length <= head++)
 					{
 						result = 0;
@@ -190,27 +197,19 @@ partial struct RGBA128
 
 		bool ParseHDR(out RGBA128 result)
 		{
-			try
+			int index = 0;
+
+			if (FindNextFloat(content, ref index, out float r) &&
+				FindNextFloat(content, ref index, out float g) &&
+				FindNextFloat(content, ref index, out float b))
 			{
-				int index = 0;
+				if (!FindNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
 
-				if (FindNextFloat(content, ref index, out float r) &&
-					FindNextFloat(content, ref index, out float g) &&
-					FindNextFloat(content, ref index, out float b))
-				{
-					if (!FindNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
-
-					result = new RGBA128(r, g, b, a);
-					return true;
-				}
-
-				return YieldError(out result);
-
+				result = new RGBA128(r, g, b, a);
+				return true;
 			}
-			catch
-			{
-				return YieldError(out result);
-			}
+
+			return YieldError(out result);
 
 			static bool FindNextFloat(ReadOnlySpan<char> source, ref int head, out float result, bool alpha = false)
 			{
@@ -222,6 +221,13 @@ partial struct RGBA128
 
 				while (head < source.Length && !char.IsDigit(source[head]))
 				{
+					char current = source[head];
+					if (!char.IsDigit(current) && current != '.' && current != ',' && !char.IsWhiteSpace(current))
+					{
+						result = 0f;
+						return false;
+					}
+
 					if (source.Length <= head++)
 					{
 						result = 0f;
