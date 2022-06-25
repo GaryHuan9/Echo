@@ -13,6 +13,7 @@ namespace Echo.UnitTests;
 public class RGBA128ParserTests
 {
 	static readonly string[] hexPrefixes = { "0x", "0X", "#", "##" };
+	const int CandidateAmount = 100;
 
 	[Test]
 	public void ParseHexPass([ValueSource(nameof(hexPrefixes))] string prefix)
@@ -53,8 +54,6 @@ public class RGBA128ParserTests
 	[Test]
 	public void ParseRGBPassRandom()
 	{
-		const int CandidateAmount = 100;
-		
 		List<string> randomCandidateList = new List<string>();
 		List<Color32> randomCandidateExpectationsList = new List<Color32>();
 		Random random = new Random();
@@ -96,8 +95,6 @@ public class RGBA128ParserTests
 	[Test]
 	public void ParseRGBFailRandom()
 	{
-		const int CandidateAmount = 100;
-		
 		List<string> randomCandidateList = new List<string>();
 		const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		Random random = new Random();
@@ -131,7 +128,6 @@ public class RGBA128ParserTests
 	[Test]
 	public void ParseHDRPassRandom()
 	{
-		const int CandidateAmount = 100;
 		
 		List<string> randomCandidateList = new List<string>();
 		List<RGBA128> randomCandidateExpectationList = new List<RGBA128>();
@@ -173,7 +169,6 @@ public class RGBA128ParserTests
 	public void ParseHDRFailRandom()
 	{
 		List<string> randomCandidateList = new List<string>();
-		const int CandidateAmount = 1_000_000;
 		const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		Random random = new Random();
 		
