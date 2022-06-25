@@ -43,22 +43,23 @@ public class RGBA128ParserTests
 
 		Color32[] expects =
 		{
-			new(10, 25, 10, 255), new(255, 255, 255, 255), new(255, 255, 255, 25), new(0, 0, 0, 0)
+			new(10, 25, 10), new(255, 255, 255), new(255, 255, 255, 25), new(0, 0, 0, 0)
 		};
 		
-		ParsePass($"rgb({{0}})", candidates, from expect in expects
-											 select  (RGBA128)(Float4)expect);
+		ParsePass("rgb({0})", candidates, from expect in expects
+										  select  (RGBA128)(Float4)expect);
 	}
 
 	[Test]
 	public void ParseRGBPassRandom()
 	{
+		const int CandidateAmount = 100;
+		
 		List<string> randomCandidateList = new List<string>();
 		List<Color32> randomCandidateExpectationsList = new List<Color32>();
-		const int randomCandidateAmount = 1_000_000;
 		Random random = new Random();
 
-		for (int i = 0; i < randomCandidateAmount; i++)
+		for (int i = 0; i < CandidateAmount; i++)
 		{
 			StringBuilder sb = new StringBuilder();
 
@@ -76,13 +77,13 @@ public class RGBA128ParserTests
 			if (hasRandomAlpha)
 				sb.Append($", {color.a}");
 
-			randomCandidateList.Append(sb.ToString());
-			randomCandidateExpectationsList.Append(color);
+			randomCandidateList.Add(sb.ToString());
+			randomCandidateExpectationsList.Add(color);
 			TestContext.WriteLine(sb.ToString());
 		}
 		
-		ParsePass($"rgb({{0}})", randomCandidateList, from expect in randomCandidateExpectationsList
-													  select (RGBA128)(Float4)expect);
+		ParsePass("rgb({0})", randomCandidateList, from expect in randomCandidateExpectationsList
+												   select (RGBA128)(Float4)expect);
 	}
 
 	[Test]
@@ -95,21 +96,22 @@ public class RGBA128ParserTests
 	[Test]
 	public void ParseRGBFailRandom()
 	{
+		const int CandidateAmount = 100;
+		
 		List<string> randomCandidateList = new List<string>();
-		const int candidateAmount = 1_000_000;
-		const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		Random random = new Random();
 		
-		for (int i = 0; i < candidateAmount; i++)
+		for (int i = 0; i < CandidateAmount; i++)
 		{
 			int length = random.Next(0, 255);
-			string str = new(Enumerable.Range(1, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
-			randomCandidateList.Append(str);
+			string str = new(Enumerable.Range(1, length).Select(_ => Chars[random.Next(Chars.Length)]).ToArray());
+			randomCandidateList.Add(str);
 			
 			TestContext.WriteLine(str);
 		}
 		
-		ParseFail($"rgb({{0}})", randomCandidateList);
+		ParseFail("rgb({0})", randomCandidateList);
 	}
 
 	[Test]
@@ -119,21 +121,22 @@ public class RGBA128ParserTests
 
 		RGBA128[] expects =
 		{
-			new(1, 1, 1, 1), new(10, 1, 0.1f), new(0.10f, 0.001f, 0.102f), new(0, 1, 10, 100)
+			new(1, 1, 1), new(10, 1, 0.1f), new(0.10f, 0.001f, 0.102f), new(0, 1, 10, 100)
 		};
 		
-		ParsePass($"hdr({{0}})", candidates, from expect in expects
-											 select expect);
+		ParsePass("hdr({0})", candidates, from expect in expects
+										  select expect);
 	}
 
 	[Test]
 	public void ParseHDRPassRandom()
 	{
+		const int CandidateAmount = 100;
+		
 		List<string> randomCandidateList = new List<string>();
 		List<RGBA128> randomCandidateExpectationList = new List<RGBA128>();
-		const int candidateAmount = 1_000_000;
 		Random random = new Random();
-		for (int i = 0; i < candidateAmount; i++)
+		for (int i = 0; i < CandidateAmount; i++)
 		{
 			float r = (float)random.NextDouble() * 100f;
 			float g = (float)random.NextDouble() * 100f;
@@ -151,39 +154,39 @@ public class RGBA128ParserTests
 				sb.AppendFormat($", {a}");
 			}
 
-			randomCandidateList.Append(sb.ToString());
-			randomCandidateExpectationList.Append((RGBA128)color);
+			randomCandidateList.Add(sb.ToString());
+			randomCandidateExpectationList.Add((RGBA128)color);
 			TestContext.WriteLine(sb.ToString());
 		}
-		ParsePass($"hdr({{0}})", randomCandidateList, from expect in randomCandidateExpectationList
-													  select expect);
+		ParsePass("hdr({0})", randomCandidateList, from expect in randomCandidateExpectationList
+												   select expect);
 	}
 	
 	[Test]
 	public void ParseHDRFail()
 	{
 		string[] candidates = { "", ",,,", ". . .", "1, 5,", "1.5.1" };
-		ParseFail($"hdr({{0}})", candidates);
+		ParseFail("hdr({0})", candidates);
 	}
 
 	[Test]
 	public void ParseHDRFailRandom()
 	{
 		List<string> randomCandidateList = new List<string>();
-		const int candidateAmount = 1_000_000;
-		const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+		const int CandidateAmount = 1_000_000;
+		const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		Random random = new Random();
 		
-		for (int i = 0; i < candidateAmount; i++)
+		for (int i = 0; i < CandidateAmount; i++)
 		{
 			int length = random.Next(0, 255);
-			string str = new(Enumerable.Range(1, length).Select(_ => chars[random.Next(chars.Length)]).ToArray());
-			randomCandidateList.Append(str);
+			string str = new(Enumerable.Range(1, length).Select(_ => Chars[random.Next(Chars.Length)]).ToArray());
+			randomCandidateList.Add(str);
 			
 			TestContext.WriteLine(str);
 		}
 		
-		ParseFail($"hdr({{0}})", randomCandidateList);
+		ParseFail("hdr({0})", randomCandidateList);
 	}
 
 	static void ParsePass(string format, IEnumerable<string> contents, IEnumerable<RGBA128> expects)
