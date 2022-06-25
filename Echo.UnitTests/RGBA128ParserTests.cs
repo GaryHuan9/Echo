@@ -65,10 +65,10 @@ public class RGBA128ParserTests
 		{
 			bool hasRandomAlpha = random.Next1(0, 100) < 50;
 
-			byte r = (byte)random.Next1(0, 0xFF);
-			byte g = (byte)random.Next1(0, 0xFF);
-			byte b = (byte)random.Next1(0, 0xFF);
-			byte a = (byte)random.Next1(0, 0xFF);
+			byte r = (byte)random.Next1(0, byte.MaxValue + 1);
+			byte g = (byte)random.Next1(0, byte.MaxValue + 1);
+			byte b = (byte)random.Next1(0, byte.MaxValue + 1);
+			byte a = (byte)random.Next1(0, byte.MaxValue + 1);
 
 			Color32 color = hasRandomAlpha ? new Color32(r, g, b, a) : new Color32(r, g, b);
 
@@ -89,8 +89,13 @@ public class RGBA128ParserTests
 	[Test]
 	public void ParseRGBFail()
 	{
-		string[] candidates = { "10,", ",", ",,,", "1000, 10, 10", "10, 10, 10, 10000", ",10" };
-		ParseFail($"rgb({{0}})", candidates);
+		string[] candidates =
+		{
+			"", "10,", ",10", "10", ",", ",,,", "1000, 10, 10", "10, 10, 10, 10000",
+			"1.2, 3.4, 5.6", "1, 2, 3, 4.5", "-12, 3, 4", "123, 45, 67, 89,"
+		};
+
+		ParseFail("rgb({0})", candidates);
 	}
 
 	[Test]
@@ -114,11 +119,11 @@ public class RGBA128ParserTests
 	[Test]
 	public void ParseHDRPass()
 	{
-		string[] candidates = { "1, 1, 1, 1", "10, 1, 0.1", "0.10, 0.001, 0.102", "0, 1, 10, 100" };
+		string[] candidates = { "1, 1, 1, 1", "1.23, 4.56, 7.8", "10, 1, 0.1", "0.10, 0.001, 0.102", ".10, .001, .102", "0, 1, 10, 100" };
 
 		RGBA128[] expects =
 		{
-			new(1, 1, 1), new(10, 1, 0.1f), new(0.10f, 0.001f, 0.102f), new(0, 1, 10, 100)
+			new(1f, 1f, 1f), new(1.23f, 4.56f, 7.8f), new(10f, 1f, 0.1f), new(0.10f, 0.001f, 0.102f), new(0.10f, 0.001f, 0.102f), new(0f, 1f, 10f, 100f)
 		};
 
 		ParsePass("hdr({0})", candidates, from expect in expects
@@ -136,10 +141,10 @@ public class RGBA128ParserTests
 
 		for (int i = 0; i < CandidateAmount; i++)
 		{
-			float r = random.Next1() * 100f;
-			float g = random.Next1() * 100f;
-			float b = random.Next1() * 100f;
-			float a = random.Next1() * 100f;
+			float r = random.Next1() * 10f;
+			float g = random.Next1() * 10f;
+			float b = random.Next1() * 10f;
+			float a = random.Next1() * 10f;
 			bool hasRandomAlpha = random.Next1() < 0.5f;
 
 			Float4 color = hasRandomAlpha ? new Float4(r, g, b, a) : new Float4(r, g, b, 1f);
@@ -161,7 +166,12 @@ public class RGBA128ParserTests
 	[Test]
 	public void ParseHDRFail()
 	{
-		string[] candidates = { "", ",,,", ". . .", "1, 5,", "1.5.1" };
+		string[] candidates =
+		{
+			"", "10,", ",10", "10", ",", ",,,", ". . .", "1, 5,",
+			"1.5.1", "1000, 10, 10,", "-12, 3, 4", "123, 45, 67, 89,"
+		};
+
 		ParseFail("hdr({0})", candidates);
 	}
 
@@ -173,7 +183,7 @@ public class RGBA128ParserTests
 
 		for (int i = 0; i < CandidateAmount; i++)
 		{
-			int length = random.Next1(0, 255);
+			int length = random.Next1(0, 16);
 			string str = new(Enumerable.Range(1, length).Select(_ => InvalidChars[random.Next1(InvalidChars.Length)]).ToArray());
 			candidates.Add(str);
 
