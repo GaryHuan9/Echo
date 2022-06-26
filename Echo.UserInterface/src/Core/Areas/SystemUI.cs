@@ -267,10 +267,10 @@ public class SystemUI : AreaUI
 		var evaluationProfile = new EvaluationProfile
 		{
 			Scene = new PreparedScene(scene, prepareProfile),
-			Evaluator = new AlbedoEvaluator(),
+			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),
-			Pattern = new HilbertCurvePattern(),
+			Pattern = new SpiralPattern(),
 			MinEpoch = 1,
 			MaxEpoch = 20
 		};
