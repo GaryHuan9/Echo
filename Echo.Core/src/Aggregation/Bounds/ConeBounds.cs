@@ -8,7 +8,7 @@ namespace Echo.Core.Aggregation.Bounds;
 
 public readonly struct ConeBounds
 {
-	public ConeBounds(in Float3 axis, float cosOffset, float cosExtend)
+	public ConeBounds(in Float3 axis, float cosOffset, float cosExtend = 0f /* = cos(pi/2) */)
 	{
 		Assert.AreEqual(axis.SquaredMagnitude, 1f);
 		Assert.IsTrue(cosOffset is >= -1f and <= 1f);
@@ -47,28 +47,28 @@ public readonly struct ConeBounds
 	{
 		float offset0 = MathF.Acos(FastMath.Clamp11(value0.cosOffset));
 		float offset1 = MathF.Acos(FastMath.Clamp11(value1.cosOffset));
+		float cosExtend = FastMath.Min(value0.cosExtend, value1.cosExtend);
 
 		Assert.IsTrue(offset0 >= offset1);
 
 		Float3 axis = value0.axis;
-		float offset = offset0;
 		float max = value0.axis.Angle(value1.axis) + offset1;
 
-		if (FastMath.Min(max, Scalars.Pi) > offset)
-		{
-			//Create new cone over the two inputs if the value0 is not large enough already
-			offset = (offset + max) / 2f;
+		//Early exit if the offset of value0 is large enough already and do not need to extended
+		if (FastMath.Min(max, Scalars.Pi) <= offset0) return new ConeBounds(axis, value0.cosOffset, cosExtend);
 
-			if (offset < Scalars.Pi)
-			{
-				//Rotate axis to the middle of the two axes of the two inputs
-				Float3 cross = axis.Cross(value1.axis);
-				float rotation = offset - offset0;
-				axis = new Versor(cross, rotation) * axis;
-			}
-			else offset = Scalars.Pi;
-		}
+		//Create new cone over the two inputs if the value0 is not large enough already
+		float offset = offset0;
+		offset = (offset + max) / 2f;
 
-		return new ConeBounds(axis, MathF.Cos(offset), FastMath.Min(value0.cosExtend, value1.cosExtend));
+		//Clamp and return the maximum cone if offset is pi or larger
+		if (offset >= Scalars.Pi) return new ConeBounds(Float3.Up, -1f, cosExtend);
+
+		//Rotate axis to the middle of the two axes of the two inputs
+		Float3 cross = axis.Cross(value1.axis);
+		float rotation = offset - offset0;
+		axis = new Versor(cross, rotation) * axis;
+
+		return new ConeBounds(axis, MathF.Cos(offset), cosExtend);
 	}
 }

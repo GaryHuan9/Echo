@@ -17,9 +17,9 @@ using Echo.Core.Textures;
 
 namespace Echo.Experimental.Benchmarks;
 
-public class Aggregators
+public class Accelerators
 {
-	public Aggregators()
+	public Accelerators()
 	{
 		Scene scene = new Scene();
 
@@ -58,16 +58,16 @@ public class Aggregators
 			occludeQueries[i] = new OccludeQuery(ray);
 		}
 
-		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"));
-		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorProfile { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad"));
+		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"));
+		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad"));
 		// Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(LinearAggregator) } }), "Linear"));
 
 		if (false)
 		{
 			scene.Add(new PlaneEntity { Material = new Matte { Albedo = Texture.white }, Size = new Float2(32f, 24f) });
 
-			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorProfile { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivRegular"));
-			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorProfile { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivQuad"));
+			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivRegular"));
+			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivQuad"));
 		}
 	}
 

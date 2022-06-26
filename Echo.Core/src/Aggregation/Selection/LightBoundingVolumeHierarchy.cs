@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using Echo.Core.Aggregation.Bounds;
-using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
@@ -9,16 +8,16 @@ using Echo.Core.Evaluation.Distributions;
 
 namespace Echo.Core.Aggregation.Selection;
 
-public class LightBoundingVolumeHierarchy
+public class LightBoundingVolumeHierarchy : LightPicker
 {
-	public LightBoundingVolumeHierarchy(PreparedPack pack, ReadOnlyView<LightBounds> lights, ReadOnlySpan<EntityToken> tokens)
-	{
-		this.pack = pack;
+	public LightBoundingVolumeHierarchy(ReadOnlyView<LightBounds> lights, ReadOnlySpan<EntityToken> tokens) => 
 		root = Build(Enumerable.Range(0, lights.Length).ToArray(), lights, tokens);
-	}
 
-	readonly PreparedPack pack;
 	readonly Node root;
+
+	public override Probable<EntityToken> Pick(Sample1D sample) => throw new NotImplementedException();
+
+	public override float ProbabilityDensity(EntityToken token) => throw new NotImplementedException();
 
 	public Probable<EntityToken> Sample(in GeometryPoint point, Sample1D sample) => Sample(point, sample, root, 1f);
 

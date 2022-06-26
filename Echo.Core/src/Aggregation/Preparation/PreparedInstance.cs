@@ -1,5 +1,4 @@
-﻿using System;
-using CodeHelpers.Diagnostics;
+﻿using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Acceleration;
@@ -10,22 +9,21 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Instancing;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
 
 public readonly struct PreparedInstance
 {
-	public PreparedInstance(PreparedPack pack, PreparedSwatch swatch, in Float4x4 offset)
+	public PreparedInstance(PreparedPack pack, PreparedSwatch swatch, in Float4x4 inverseTransform)
 	{
 		this.pack = pack;
 		this.swatch = swatch;
 
-		inverseTransform = offset;
-		forwardTransform = offset.Inversed;
+		this.inverseTransform = inverseTransform;
+		forwardTransform = inverseTransform.Inversed;
 
-		inverseScale = offset.GetRow(0).XYZ_.Magnitude;
+		inverseScale = inverseTransform.GetRow(0).XYZ_.Magnitude;
 		forwardScale = 1f / inverseScale;
 	}
 

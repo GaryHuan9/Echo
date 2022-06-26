@@ -22,15 +22,15 @@ public class BoundingVolumeHierarchy : Accelerator
 		nodes = new Node[root.nodeCount];
 		maxDepth = (int)root.nodeDepth;
 
-		uint nodeIndex = 1;
+		int nodeIndex = 1;
 		nodes[0] = CreateNode(root);
 
 		Node CreateNode(HierarchyBuilder.Node node)
 		{
 			if (node.IsLeaf) return new Node(node.aabb, node.Token);
 
-			uint child0 = nodeIndex;
-			uint child1 = child0 + 1;
+			int child0 = nodeIndex;
+			int child1 = child0 + 1;
 			nodeIndex += 2;
 
 			nodes[child0] = CreateNode(node.Child0);
