@@ -112,6 +112,7 @@ public class Entity
 	/// <remarks>Once successfully added, <paramref name="child"/> will inherit the transform of this <see cref="Entity"/>.</remarks>
 	public void Add(Entity child)
 	{
+		if (child is EntityPack) throw new ArgumentException($"Cannot added an {nameof(EntityPack)} as a child.", nameof(child));
 		if (child.Parent == this) throw new ArgumentException("Cannot add a child to the same parent twice.", nameof(child));
 		if (child.Parent != null) throw new ArgumentException("Cannot move a child to a different parent.", nameof(child));
 

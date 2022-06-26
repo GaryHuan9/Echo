@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
@@ -52,10 +53,14 @@ public readonly struct PreparedPointLight
 	{
 		this.intensity = intensity;
 		this.position = position;
+		energy = 2f * Scalars.Tau * intensity.Luminance;
 	}
 
 	readonly RGB128 intensity;
 	readonly Float3 position;
+	readonly float energy;
+
+	public LightBounds LightBounds => new LightBounds(new AxisAlignedBoundingBox(position, position), new ConeBounds(Float3.Up, -1f), energy);
 
 	[SkipLocalsInit]
 	public Probable<RGB128> Sample(in GeometryPoint point, out Float3 incident, out float travel)

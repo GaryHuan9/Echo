@@ -10,7 +10,6 @@ using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Aggregation.Selection;
-using Echo.Core.Common.Memory;
 using Echo.Core.Scenic;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Instancing;
@@ -21,10 +20,14 @@ namespace Echo.Core.Aggregation.Preparation;
 
 public class PreparedPack
 {
-	public PreparedPack(ReadOnlyView<IGeometrySource> geometrySources, ReadOnlySpan<ILightSource> lightSources,
-						ImmutableArray<PreparedInstance> instances, SwatchExtractor swatchExtractor)
+	public PreparedPack(ReadOnlySpan<IGeometrySource> geometrySources, ReadOnlySpan<ILightSource> lightSources,
+						ImmutableArray<PreparedInstance> instances, in AcceleratorCreator acceleratorCreator,
+						SwatchExtractor swatchExtractor)
 	{
 		geometries = new GeometryCollection(swatchExtractor, geometrySources, instances);
+		lights = new LightCollection(lightSources, geometries);
+		accelerator = acceleratorCreator.Create(geometries);
+		lightPicker = LightPicker.Create(lights, geometries);
 	}
 
 	public readonly Accelerator accelerator;

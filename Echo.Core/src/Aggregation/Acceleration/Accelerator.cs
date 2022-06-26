@@ -84,15 +84,12 @@ public abstract class Accelerator
 	/// enclosed by all the <see cref="AxisAlignedBoundingBox"/>s that are filled.</remarks>
 	public abstract void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill);
 
-	/// <inheritdoc cref="NewNodeToken(uint)"/>
-	protected static EntityToken NewNodeToken(int index) => new(TokenType.Node, index);
-
 	/// <summary>
 	/// Creates a new <see cref="EntityToken"/> that is of type <see cref="TokenType.Node"/>.
 	/// </summary>
-	/// <param name="index">The <see cref="uint"/> index of the new <see cref="EntityToken"/>.</param>
+	/// <param name="index">The <see cref="int"/> index of the new <see cref="EntityToken"/>.</param>
 	/// <returns>The newly created <see cref="EntityToken"/>.</returns>
-	protected static EntityToken NewNodeToken(uint index) => new(TokenType.Node, index);
+	protected static EntityToken NewNodeToken(int index) => new(TokenType.Node, index);
 
 	/// <summary>
 	/// Swaps two <typeparamref name="T"/> pointers.

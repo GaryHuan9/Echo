@@ -361,7 +361,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		}
 	}
 
-	Node CreateNode(BuildNode buildNode, ref uint nodeIndex, out int depth)
+	Node CreateNode(BuildNode buildNode, ref int nodeIndex, out int depth)
 	{
 		Assert.IsNotNull(buildNode.child);
 		BuildNode current = buildNode.child;
@@ -387,7 +387,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			}
 			else
 			{
-				uint index = nodeIndex++;
+				int index = nodeIndex++;
 				ref Node node = ref nodes[index];
 
 				node = CreateNode(current, ref nodeIndex, out nodeDepth);

@@ -16,15 +16,15 @@ namespace Echo.Core.Aggregation.Preparation;
 
 public sealed class GeometryCollection
 {
-	public GeometryCollection(SwatchExtractor swatchExtractor, ReadOnlyView<IGeometrySource> geometrySources, ImmutableArray<PreparedInstance> instances)
+	public GeometryCollection(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources, ImmutableArray<PreparedInstance> instances)
 	{
-		triangles = Extract<PreparedTriangle>();
-		spheres = Extract<PreparedSphere>();
+		triangles = Extract<PreparedTriangle>(swatchExtractor, geometrySources);
+		spheres = Extract<PreparedSphere>(swatchExtractor, geometrySources);
 		this.instances = instances;
 
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
-		ImmutableArray<T> Extract<T>()
+		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources)
 		{
 			int length = 0;
 
@@ -56,7 +56,7 @@ public sealed class GeometryCollection
 
 	public readonly GeometryCounts counts;
 
-	public Tokenized<AxisAlignedBoundingBox>[] CreateBoundsArray()
+	public View<Tokenized<AxisAlignedBoundingBox>> CreateBoundsView()
 	{
 		var result = new Tokenized<AxisAlignedBoundingBox>[counts.Total];
 		var fill = result.AsFill();

@@ -2,7 +2,6 @@
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Primitives;
 
@@ -24,14 +23,19 @@ public enum TokenType : uint
 	Triangle,
 
 	/// <summary>
+	/// Represents a <see cref="PreparedSphere"/>.
+	/// </summary>
+	Sphere,
+
+	/// <summary>
 	/// Represents a <see cref="PreparedInstance"/>.
 	/// </summary>
 	Instance,
 
 	/// <summary>
-	/// Represents a <see cref="PreparedSphere"/>.
+	/// Represents any kind of a non-infinite light, excluding emissive geometries.
 	/// </summary>
-	Sphere
+	Light
 }
 
 public static class TokenTypeExtensions
@@ -41,7 +45,7 @@ public static class TokenTypeExtensions
 	/// <summary>
 	/// Returns whether a <see cref="TokenType"/> is of type <see cref="TokenType.Triangle"/>, <see cref="TokenType.Instance"/>, or <see cref="TokenType.Sphere"/>.
 	/// </summary>
-	public static bool IsGeometry(this TokenType type) => AreEqual(type, TokenType.Triangle, TokenType.Instance, TokenType.Sphere);
+	public static bool IsGeometry(this TokenType type) => AreEqual(type, TokenType.Triangle, TokenType.Sphere, TokenType.Instance);
 
 	/// <summary>
 	/// Returns whether a <see cref="TokenType"/> is of type <see cref="TokenType.Triangle"/> or <see cref="TokenType.Sphere"/>.
