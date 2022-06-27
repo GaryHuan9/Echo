@@ -27,7 +27,7 @@ public class PreparedPack
 		geometries = new GeometryCollection(swatchExtractor, geometrySources, instances);
 		lights = new LightCollection(lightSources, geometries);
 		accelerator = acceleratorCreator.Create(geometries);
-		lightPicker = LightPicker.Create(lights, geometries);
+		lightPicker = LightPicker.Create(lights, swatchExtractor.PrepareEmissive());
 	}
 
 	public readonly Accelerator accelerator;
@@ -40,7 +40,7 @@ public class PreparedPack
 	/// Creates a new <see cref="PreparedPack"/>; outputs the <paramref name="extractor"/> and
 	/// <paramref name="tokens"/> that were used to construct this new <see cref="PreparedPack"/>.
 	/// </summary>
-	public static PreparedPack Create(ScenePreparer preparer, EntityPack pack, out SwatchExtractor extractor, out EntityTokenArray tokens)
+	public static PreparedPack Create(ScenePreparerOld preparer, EntityPack pack, out SwatchExtractor extractor, out EntityTokenArray tokens)
 	{
 		//Collect objects
 		var trianglesList = new ConcurrentList<PreparedTriangle>();

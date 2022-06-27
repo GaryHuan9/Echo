@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
@@ -11,7 +9,7 @@ using Echo.Core.Scenic.Instancing;
 namespace Echo.Core.Scenic.Preparation;
 
 /// <summary>
-/// A class that is used to extract swatches from <see cref="Material"/> on <see cref="GeometryEntity"/>
+/// A class that is used to extract swatches from <see cref="Material"/> on <see cref="IGeometrySource"/>
 /// and convert instanced <see cref="MaterialSwatch"/> into <see cref="PreparedSwatch"/> efficiently.
 /// </summary>
 public class SwatchExtractor
@@ -34,22 +32,6 @@ public class SwatchExtractor
 	/// An empty <see cref="MaterialSwatch"/> used to replace null ones.
 	/// </summary>
 	static readonly MaterialSwatch emptySwatch = new();
-
-	MaterialIndex[] _indices = Array.Empty<MaterialIndex>();
-
-	/// <summary>
-	/// Returns the <see cref="MaterialIndex"/> of all of the registered <see cref="Material"/> in this <see cref="SwatchExtractor"/>.
-	/// </summary>
-	public ReadOnlySpan<MaterialIndex> Indices
-	{
-		get
-		{
-			if (_indices.Length == materialList.Count) return _indices;
-			_indices = materialList.Select(data => data.index).ToArray();
-
-			return _indices;
-		}
-	}
 
 	/// <summary>
 	/// Registers <paramref name="material"/> into this <see cref="SwatchExtractor"/> and returns a <see cref="MaterialIndex"/> which
@@ -82,15 +64,9 @@ public class SwatchExtractor
 	public void Register(MaterialIndex index, int count = 1)
 	{
 		Assert.IsTrue(count > 0);
+		seal.AssertNotApplied();
 		materialList[index].Register(count);
 	}
-
-	/// <summary>
-	/// Returns the number of registered users for the <see cref="Material"/> represented by <paramref name="index"/>.
-	/// </summary>
-	public int GetRegistrationCount(MaterialIndex index) => materialList[index].Count;
-
-	public bool IsEmissive(MaterialIndex index) => materialList[index].material is IEmissive;
 
 	/// <summary>
 	/// Prepares <paramref name="swatch"/> into a <see cref="PreparedSwatch"/>. Note that once
@@ -110,25 +86,54 @@ public class SwatchExtractor
 		if (cachedSwatches.TryGetValue(swatch, out PreparedSwatch prepared)) return prepared;
 
 		//Create and cache if none found
-		prepared = new PreparedSwatch(CreateMaterials(swatch), Indices);
+		prepared = new PreparedSwatch(CreateMaterials());
 		cachedSwatches.Add(swatch, prepared);
 		return prepared;
+
+		Material[] CreateMaterials()
+		{
+			int count = materialList.Count;
+			var result = new Material[count];
+
+			for (int i = 0; i < count; i++)
+			{
+				Material material = materialList[i].material;
+				Material mapped = swatch[material] ?? material;
+
+				preparer.Prepare(mapped);
+				result[i] = mapped;
+			}
+
+			return result;
+		}
 	}
 
-	Material[] CreateMaterials(MaterialSwatch swatch)
+	public PreparedSwatch PrepareEmissive()
 	{
-		Material[] result = new Material[materialList.Count];
+		seal.TryApply();
 
-		for (int i = 0; i < result.Length; i++)
+		int count = materialList.Count;
+		var result = new Material[count];
+
+		for (int i = 0; i < count; i++)
 		{
 			Material material = materialList[i].material;
-			Material mapped = swatch[material] ?? material;
+			if (material is not IEmissive) continue;
 
-			preparer.PrepareMaterial(mapped);
-			result[i] = mapped;
+			preparer.Prepare(material);
+			result[i] = material;
 		}
 
-		return result;
+		return new PreparedSwatch(result);
+	}
+
+	/// <summary>
+	/// Returns the number of registered users for the <see cref="Material"/> represented by <paramref name="index"/>.
+	/// </summary>
+	public int GetRegistrationCount(MaterialIndex index)
+	{
+		seal.TryApply();
+		return materialList[index].Count;
 	}
 
 	/// <summary>

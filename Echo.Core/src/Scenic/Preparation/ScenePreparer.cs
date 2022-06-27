@@ -1,206 +1,119 @@
 ﻿using System;
 using System.Collections.Generic;
 using CodeHelpers;
-using CodeHelpers.Collections;
-using CodeHelpers.Pooling;
+using CodeHelpers.Diagnostics;
+using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Instancing;
 
 namespace Echo.Core.Scenic.Preparation;
 
-public class ScenePreparer
+public sealed partial record ScenePreparer
 {
-	public ScenePreparer(Scene scene, ScenePrepareProfile profile)
-	{
-		this.profile = profile;
-		root = CreateNode(scene, null);
+	public ScenePreparer(Scene scene) => this.scene = scene;
 
-		depth = Prepare() + 1;
-		instancedCounts = root.InstancedCounts;
-		uniqueCounts = root.UniqueCounts;
+	ScenePreparer(ScenePreparer source)
+	{
+		scene = source.scene;
+		AcceleratorCreator = source.AcceleratorCreator;
+		FragmentationThreshold = source.FragmentationThreshold;
+		FragmentationMaxIteration = source.FragmentationMaxIteration;
 	}
 
-	public readonly ScenePrepareProfile profile;
+	readonly Scene scene;
 
-	public readonly int depth;
-	public readonly GeometryCounts instancedCounts;
-	public readonly GeometryCounts uniqueCounts;
-
-	readonly Node root;
-
-	readonly Dictionary<EntityPack, Node> entityPacks = new();
+	readonly Dictionary<EntityPack, Node> nodes = new();
 	readonly HashSet<Material> preparedMaterials = new();
 
 	/// <summary>
-	/// The total number of prepared <see cref="Material"/>.
+	/// The <see cref="AcceleratorCreator"/> used for this <see cref="ScenePreparer"/>.
 	/// </summary>
-	public int MaterialCount => preparedMaterials.Count;
+	public AcceleratorCreator AcceleratorCreator { get; init; }
+
+	readonly float _fragmentationThreshold = 5.8f;
+	readonly int _fragmentationMaxIteration = 3;
 
 	/// <summary>
-	/// The total number of unique <see cref="EntityPack"/>.
+	/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
+	/// Fragmentation can cause the construction of better <see cref="Accelerator"/>, however it can also backfire.
 	/// </summary>
-	public int EntityPackCount => entityPacks.Count;
-
-	/// <summary>
-	/// Retrieves the <see cref="PreparedPack"/> for <paramref name="pack"/> and outputs its corresponding
-	/// <see cref="SwatchExtractor"/> and <see cref="EntityTokenArray"/> that were used during the construction.
-	/// </summary>
-	public PreparedPack GetPreparedPack(EntityPack pack, out SwatchExtractor extractor, out EntityTokenArray tokenArray)
+	public float FragmentationThreshold
 	{
-		Node node = entityPacks.TryGetValue(pack);
-
-		if (node == null) throw ExceptionHelper.Invalid(nameof(pack), pack, "is not linked in the input scene in any way");
-		if (node.PreparedPack == null) throw new Exception("Pack not prepared! Are you sure the preparing order is correct?");
-
-		extractor = node.Extractor;
-		tokenArray = node.TokenArray;
-
-		return node.PreparedPack;
+		get => _fragmentationThreshold;
+		init
+		{
+			if (_fragmentationThreshold >= 1f) _fragmentationThreshold = value;
+			else throw ExceptionHelper.Invalid(nameof(value), value, InvalidType.outOfBounds);
+		}
 	}
 
 	/// <summary>
-	/// If needed, prepares <paramref name="material"/> to be ready for rendering along with <see cref="Scene"/>.
+	/// The maximum number of fragmentation that can happen to one source triangle.
+	/// Note that we can completely disable fragmentation by setting this value to 0.
 	/// </summary>
-	public void PrepareMaterial(Material material)
+	public int FragmentationMaxIteration
+	{
+		get => _fragmentationMaxIteration;
+		init
+		{
+			if (_fragmentationMaxIteration >= 0) _fragmentationMaxIteration = value;
+			else throw ExceptionHelper.Invalid(nameof(value), value, InvalidType.outOfBounds);
+		}
+	}
+
+	public PreparedSceneNew Prepare()
+	{
+		Node root = CreateOrGetNode(scene);
+		CreateChildren(root, EntityPack.MaxLayer);
+
+		var visited = new HashSet<Node>();
+
+		foreach (EntityPack pack in root.InstancingPacks)
+		{
+			Node child = nodes[pack];
+			if (visited.Add(child)) CreatePrepared(child);
+		}
+
+		return root.CreatePreparedScene(this);
+
+		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
+		void CreateChildren(Node node, int budget)
+		{
+			if (budget < 0) throw new Exception("Maximum instancing layer exceeded!");
+
+			foreach (EntityPack pack in node.InstancingPacks)
+			{
+				Node child = CreateOrGetNode(pack);
+				CreateChildren(child, budget - 1);
+				node.AddChild(child);
+			}
+		}
+
+		void CreatePrepared(Node node)
+		{
+			foreach (EntityPack pack in node.InstancingPacks)
+			{
+				Node child = nodes[pack];
+				if (visited.Add(child)) CreatePrepared(child);
+			}
+
+			Assert.IsFalse(visited.Contains(node));
+			node.CreatePreparedPack(this);
+		}
+	}
+
+	public void Prepare(Material material)
 	{
 		if (preparedMaterials.Add(material)) material.Prepare();
 	}
 
-	/// <summary>
-	/// Prepares the entire scene.
-	/// </summary>
-	int Prepare()
+	Node CreateOrGetNode(EntityPack pack)
 	{
-		int builtDepth = PrepareOne(this, root) - 1;
-		if (builtDepth > EntityPack.MaxLayer) throw new Exception($"Invalid scene! Instancing layer exceeding {nameof(EntityPack.MaxLayer)}!");
+		if (nodes.TryGetValue(pack, out Node node)) return node;
 
-		return builtDepth;
-
-		static int PrepareOne(ScenePreparer preparer, Node node)
-		{
-			int maxDepth = 0;
-
-			//NOTE: we prepare the children first before we prepare this current
-			//node to make sure that all children are prepared before the parent
-
-			foreach (Node child in node)
-			{
-				int depth = PrepareOne(preparer, child);
-				maxDepth = Math.Max(maxDepth, depth);
-			}
-
-			node.CreatePack(preparer);
-			return maxDepth + 1;
-		}
-	}
-
-	Node CreateNode(EntityPack pack, Node parent)
-	{
-		if (entityPacks.TryGetValue(pack, out Node node))
-		{
-			node.AddParent(parent);
-			return node;
-		}
-
-		node = new Node(pack, parent);
-		entityPacks.Add(pack, node);
-
-		foreach (Entity child in pack.LoopChildren(true))
-		{
-			if (child is EntityPack) throw new Exception($"Cannot directly assign {child} as a child!");
-			if (child is not PackInstance instance || instance.EntityPack == null) continue;
-
-			Node childNode = CreateNode(instance.EntityPack, node);
-
-			if (!node.AddChild(childNode)) continue; //If we did not add, then the node already existed
-			if (node.HasParent(childNode)) throw new Exception($"Recursive {nameof(EntityPack)} instancing!");
-		}
-
+		node = new Node(pack);
+		nodes.Add(pack, node);
 		return node;
-	}
-
-	public class Node
-	{
-		public Node(EntityPack entityPack, Node parent)
-		{
-			this.entityPack = entityPack;
-			if (parent != null) parents.Add(parent);
-		}
-
-		readonly EntityPack entityPack;
-
-		readonly HashSet<Node> parents = new();
-		readonly Dictionary<Node, uint> children = new(); //Maps child to the number of duplicated instances
-
-		public PreparedPack PreparedPack { get; private set; }
-		public SwatchExtractor Extractor { get; private set; }
-		public EntityTokenArray TokenArray { get; private set; }
-
-		public GeometryCounts InstancedCounts { get; private set; }
-		public GeometryCounts UniqueCounts { get; private set; }
-
-		/// <summary>
-		/// Tries to add <paramref name="child"/>, returns true if the child has not been added before.
-		/// </summary>
-		public bool AddChild(Node child)
-		{
-			uint count = children.TryGetValue(child);
-			children[child] = count + 1;
-
-			return count == 0; //TryGetValue defaults to zero if does not exist
-		}
-
-		/// <summary>
-		/// Tries to add <paramref name="parent"/>, returns true if the parent has not been added before.
-		/// </summary>
-		public bool AddParent(Node parent) => parents.Add(parent);
-
-		/// <summary>
-		/// Expensive method, searches the entire parent inheritance tree for <paramref name="node"/>.
-		/// Returns true if <paramref name="node"/> is either a direct or indirect parent of this node.
-		/// NOTE: This also returns true if <paramref name="node"/> is exactly just this node.
-		/// </summary>
-		public bool HasParent(Node node)
-		{
-			if (node == this) return true;
-
-			using var searched = CollectionPooler<Node>.hashSet.Fetch();
-
-			return Search(this);
-
-			bool Search(Node current)
-			{
-				foreach (Node parent in current.parents)
-				{
-					if (!searched.Target.Add(parent)) continue;
-					if (parent == node || Search(parent)) return true;
-				}
-
-				return false;
-			}
-		}
-
-		public void CreatePack(ScenePreparer preparer)
-		{
-			//Create pack and assign it
-			PreparedPack = PreparedPack.Create(preparer, entityPack, out SwatchExtractor extractor, out EntityTokenArray tokens);
-
-			Extractor = extractor;
-			TokenArray = tokens;
-
-			//Accumulate counts
-			foreach ((Node child, uint number) in children)
-			{
-				InstancedCounts += child.InstancedCounts * number;
-				UniqueCounts += child.UniqueCounts;
-			}
-
-			InstancedCounts += PreparedPack.counts;
-			UniqueCounts += PreparedPack.counts;
-		}
-
-		public Dictionary<Node, uint>.KeyCollection.Enumerator GetEnumerator() => children.Keys.GetEnumerator();
 	}
 }

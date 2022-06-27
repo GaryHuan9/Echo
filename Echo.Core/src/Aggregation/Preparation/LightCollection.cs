@@ -2,8 +2,13 @@
 using System.Collections.Immutable;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Evaluation.Materials;
+using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Lighting;
+using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
 
@@ -39,44 +44,63 @@ public class LightCollection
 
 	readonly GeometryCollection geometries;
 
-	public View<Tokenized<LightBounds>> CreateBoundsView()
+	public View<Tokenized<LightBounds>> CreateBoundsView(PreparedSwatch emissiveSwatch)
 	{
-		Tokenized<LightBounds>[] result;
+		var list = new SmallList<Tokenized<LightBounds>>();
+
+		list.Expand(points.Length);
 
 		for (int i = 0; i < points.Length; i++)
 		{
 			var token = new EntityToken(LightType.Point, i);
-			AxisAlignedBoundingBox bounds = points[i].AABB;
+			LightBounds bounds = points[i].LightBounds;
 
-			fill.Add((token, bounds));
+			list.Add((token, bounds));
 		}
-		
-		var fill = result.AsFill();
 
-		for (int i = 0; i < triangles.Length; i++)
+		AddEmissive(TokenType.Triangle, geometries.triangles);
+		AddEmissive(TokenType.Sphere, geometries.spheres);
+		AddEmissive(TokenType.Instance, geometries.instances);
+
+		return list;
+
+		void AddEmissive<T>(TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
 		{
-			var token = new EntityToken(TokenType.Triangle, i);
-			AxisAlignedBoundingBox bounds = triangles[i].AABB;
+			for (int i = 0; i < array.Length; i++)
+			{
+				ref readonly T geometry = ref array.ItemRef(i);
+				float power = geometry.GetPower(emissiveSwatch);
 
-			fill.Add((token, bounds));
+				if (!FastMath.Positive(power)) continue;
+
+				list.Add
+				((
+					new EntityToken(type, i),
+					new LightBounds(geometry.AABB, geometry.ConeBounds, power)
+				));
+			}
 		}
+	}
 
-		for (int i = 0; i < spheres.Length; i++)
+	struct SmallList<T>
+	{
+		public SmallList()
 		{
-			var token = new EntityToken(TokenType.Sphere, i);
-			AxisAlignedBoundingBox bounds = spheres[i].AABB;
-
-			fill.Add((token, bounds));
+			array = Array.Empty<T>();
+			length = 0;
 		}
 
-		for (int i = 0; i < instances.Length; i++)
+		T[] array;
+		int length;
+
+		public void Add(in T item)
 		{
-			var token = new EntityToken(TokenType.Instance, i);
-			AxisAlignedBoundingBox bounds = instances[i].AABB;
-
-			fill.Add((token, bounds));
+			if (array.Length <= length) Expand(1);
+			array[length++] = item;
 		}
 
-		return result;
+		public void Expand(int count) => Utility.EnsureCapacity(ref array, length + count, true);
+
+		public static implicit operator View<T>(SmallList<T> list) => list.array.AsView(0, list.length);
 	}
 }

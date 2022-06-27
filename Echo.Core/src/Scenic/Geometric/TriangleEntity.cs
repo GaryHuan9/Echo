@@ -32,7 +32,7 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 		MaterialIndex material = extractor.Register(Material);
 		Float4x4 transform = ForwardTransform;
 
-		Float3 normal = Float3.Cross(Vertex1 - Vertex0, Vertex2 - Vertex0);
+		Float3 normal = Float3.Cross(Vertex1 - Vertex0, Vertex2 - Vertex0).Normalized;
 		Float3 normal0 = Normal0?.Normalized ?? normal;
 		Float3 normal1 = Normal1?.Normalized ?? normal;
 		Float3 normal2 = Normal2?.Normalized ?? normal;
@@ -46,7 +46,7 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	}
 }
 
-public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWISE
+public readonly struct PreparedTriangle : IPreparedPureGeometry //Winding order for triangles is CLOCKWISE
 {
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, MaterialIndex materialIndex) : this
 	(
@@ -129,6 +129,8 @@ public readonly struct PreparedTriangle //Winding order for triangles is CLOCKWI
 	/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedTriangle"/>.
 	/// </summary>
 	public AxisAlignedBoundingBox AABB => new(stackalloc[] { vertex0, Vertex1, Vertex2 });
+
+	public ConeBounds ConeBounds => ConeBounds.CreateDirection(Float3.Cross(edge1, edge2).Normalized);
 
 	/// <summary>
 	/// The area of this <see cref="PreparedTriangle"/>.

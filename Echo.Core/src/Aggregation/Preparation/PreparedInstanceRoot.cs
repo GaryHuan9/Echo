@@ -1,5 +1,4 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
@@ -14,7 +13,7 @@ namespace Echo.Core.Aggregation.Preparation;
 /// </summary>
 public class PreparedInstanceRoot : PreparedInstance
 {
-	public PreparedInstanceRoot(ScenePreparer preparer, Scene scene) : base(preparer, scene, null, EntityToken.Empty) { }
+	public PreparedInstanceRoot(ScenePreparerOld preparer, Scene scene) : base(preparer, scene, null, EntityToken.Empty) { }
 
 	/// <summary>
 	/// Calculates and outputs the <see cref="AxisAlignedBoundingBox"/> and <see cref="BoundingSphere"/> of
@@ -35,24 +34,6 @@ public class PreparedInstanceRoot : PreparedInstance
 
 		aabb = new AxisAlignedBoundingBox(aabbs);
 		boundingSphere = new BoundingSphere(points);
-	}
-
-	/// <summary>
-	/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root.
-	/// </summary>
-	public void TraceRoot(ref TraceQuery query)
-	{
-		Assert.AreEqual(query.current, new TokenHierarchy());
-		pack.accelerator.Trace(ref query);
-	}
-
-	/// <summary>
-	/// Processes <paramref name="query"/> as a <see cref="PreparedInstance"/> root and returns the result.
-	/// </summary>
-	public bool OccludeRoot(ref OccludeQuery query)
-	{
-		Assert.AreEqual(query.current, new TokenHierarchy());
-		return pack.accelerator.Occlude(ref query);
 	}
 
 	/// <summary>
