@@ -49,7 +49,7 @@ public class PreparedScene
 			if (child.Scale.MinComponent <= 0f) throw new Exception($"Cannot have non-positive scales! '{child.Scale}'");
 		}
 
-		var preparer = new ScenePreparer(scene, profile);
+		var preparer = new ScenePreparerOld(scene, profile);
 		rootInstance = new PreparedInstanceRoot(preparer, scene);
 
 		info = new Info(this, preparer);
@@ -153,7 +153,7 @@ public class PreparedScene
 
 	public record Info
 	{
-		public Info(PreparedScene scene, ScenePreparer preparer)
+		public Info(PreparedScene scene, ScenePreparerOld preparer)
 		{
 			scene.rootInstance.CalculateBounds(out aabb, out boundingSphere);
 

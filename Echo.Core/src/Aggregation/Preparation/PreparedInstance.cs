@@ -9,11 +9,12 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
 
-public readonly struct PreparedInstance
+public readonly struct PreparedInstance : IPreparedGeometry
 {
 	public PreparedInstance(PreparedPack pack, PreparedSwatch swatch, in Float4x4 inverseTransform)
 	{
@@ -37,6 +38,8 @@ public readonly struct PreparedInstance
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
 
 	public AxisAlignedBoundingBox AABB => pack.accelerator.GetTransformedBounds(inverseTransform);
+
+	public ConeBounds ConeBounds => pack.lightPicker.GetTransformedBounds(inverseTransform);
 
 	/// <summary>
 	/// Processes a <see cref="TraceQuery"/> through the underlying <see cref="Accelerator"/>.
@@ -95,6 +98,8 @@ public readonly struct PreparedInstance
 		distance *= inverseScale;
 		return cost;
 	}
+
+	float IPreparedGeometry.GetPower(PreparedSwatch _) => pack.lightPicker.Power * inverseScale * inverseScale;
 
 	/// <summary>
 	/// Returns the <see cref="Material"/> represented by <paramref name="index"/> in this <see cref="PreparedInstance"/>.

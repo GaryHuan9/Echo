@@ -27,7 +27,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		int count = 0;
 		var buildRoot = new BuildNode(root, ref count);
 
-		uint nodeIndex = 1;
+		int nodeIndex = 1;
 
 		nodes = new Node[count];
 		nodes[0] = CreateNode(buildRoot, ref nodeIndex, out int maxDepth);

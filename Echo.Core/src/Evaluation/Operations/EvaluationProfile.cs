@@ -10,7 +10,7 @@ namespace Echo.Core.Evaluation.Operations;
 /// <summary>
 /// An immutable profile to configure and define an <see cref="EvaluationOperation"/>.
 /// </summary>
-public record EvaluationProfile : IProfile
+public record EvaluationProfile
 {
 	/// <summary>
 	/// The <see cref="PreparedScene"/> to evaluate.
@@ -54,7 +54,9 @@ public record EvaluationProfile : IProfile
 	/// </summary>
 	public ITilePattern Pattern { get; init; } = new ScrambledPattern();
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// To be invoked to authenticate the validity of this <see cref="EvaluationProfile"/>.
+	/// </summary>
 	public void Validate()
 	{
 		if (Scene == null) throw ExceptionHelper.Invalid(nameof(Scene), InvalidType.isNull);

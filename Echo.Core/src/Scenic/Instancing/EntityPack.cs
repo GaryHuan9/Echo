@@ -34,7 +34,7 @@ public class EntityPack : Entity
 
 	/// <summary>
 	/// The maximum number of instanced layers allowed (excluding the root).
-	/// Can be increased if needed at a performance and memory penalty.
+	/// Can be increased if needed at a performance and stack memory penalty.
 	/// </summary>
 	public const int MaxLayer = 5;
 

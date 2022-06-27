@@ -2,20 +2,14 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using CodeHelpers;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
-using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Instancing;
 using Echo.Core.Scenic.Lighting;
 
 namespace Echo.Core.Scenic.Preparation;
 
-partial record ScenePreparerNew
+partial record ScenePreparer
 {
 	class Node
 	{
@@ -66,7 +60,7 @@ partial record ScenePreparerNew
 			node.ancestors.UnionWith(ancestors);
 		}
 
-		public void CreatePreparedPack(ScenePreparerNew preparer)
+		public void CreatePreparedPack(ScenePreparer preparer)
 		{
 			swatchExtractor = new SwatchExtractor(preparer);
 
@@ -77,22 +71,17 @@ partial record ScenePreparerNew
 			);
 		}
 
-		public PreparedSceneNew CreatePreparedScene(ScenePreparerNew preparer)
-		{
-			var localSwatchExtractor = new SwatchExtractor(preparer);
+		public PreparedSceneNew CreatePreparedScene(ScenePreparer preparer) => new
+		(
+			CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
+			CreatePreparedInstances(preparer), preparer.AcceleratorCreator, new SwatchExtractor(preparer)
+		);
 
-			return new PreparedSceneNew
-			(
-				CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
-				CreatePreparedInstances(preparer), preparer.AcceleratorCreator, localSwatchExtractor
-			);
-		}
-
-		ImmutableArray<PreparedInstance> CreatePreparedInstances(ScenePreparerNew preparer)
+		ImmutableArray<PreparedInstance> CreatePreparedInstances(ScenePreparer preparer)
 		{
 			var builder = ImmutableArray.CreateBuilder<PreparedInstance>();
 
-			foreach ((_, (Node node, List<PackInstance> instances)) in children)
+			foreach ((Node node, List<PackInstance> instances) in children.Values)
 			{
 				if (node == null) throw new InvalidOperationException($"Missing child for {nameof(EntityPack)}.");
 				foreach (PackInstance instance in instances) builder.Add(CreatePreparedInstance(preparer, instance));
@@ -101,7 +90,7 @@ partial record ScenePreparerNew
 			return builder.ToImmutable();
 		}
 
-		static PreparedInstance CreatePreparedInstance(ScenePreparerNew preparer, PackInstance source)
+		static PreparedInstance CreatePreparedInstance(ScenePreparer preparer, PackInstance source)
 		{
 			Node node = preparer.CreateOrGetNode(source.EntityPack);
 

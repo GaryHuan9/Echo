@@ -60,7 +60,11 @@ public readonly struct PreparedPointLight
 	readonly Float3 position;
 	readonly float energy;
 
-	public LightBounds LightBounds => new LightBounds(new AxisAlignedBoundingBox(position, position), new ConeBounds(Float3.Up, -1f), energy);
+	public AxisAlignedBoundingBox BoxBounds => new(position, position);
+
+	public ConeBounds ConeBounds => ConeBounds.CreateFullSphere();
+
+	public LightBounds LightBounds => new(BoxBounds, ConeBounds, energy);
 
 	[SkipLocalsInit]
 	public Probable<RGB128> Sample(in GeometryPoint point, out Float3 incident, out float travel)

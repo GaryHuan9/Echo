@@ -34,7 +34,7 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 	}
 }
 
-public readonly struct PreparedSphere
+public readonly struct PreparedSphere : IPreparedPureGeometry
 {
 	public PreparedSphere(in Float3 position, float radius, MaterialIndex material)
 	{
@@ -47,13 +47,15 @@ public readonly struct PreparedSphere
 
 	public readonly Float3 position;
 	public readonly float radius;
-	
+
 	public MaterialIndex Material { get; }
 
 	/// <summary>
 	/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedSphere"/>.
 	/// </summary>
 	public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
+
+	public ConeBounds ConeBounds => ConeBounds.CreateFullSphere();
 
 	/// <summary>
 	/// The area of this <see cref="PreparedSphere"/>.
