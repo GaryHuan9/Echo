@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using CodeHelpers.Packed;
 
@@ -10,22 +9,18 @@ public class HilbertCurvePattern : ITilePattern
 {
 	public Int2[] CreateSequence(Int2 size)
 	{
-		Int2[] result;
-		if (size.X > size.Y)
-			result = Hilbert2D(Int2.Zero, new Int2(size.X, 0), new Int2(0, size.Y)).ToArray();
-		else
-			result = Hilbert2D(Int2.Zero, new Int2(0, size.X), new Int2(size.Y, 0)).ToArray();
-		return (from position in result
-				where Int2.Zero <= position && position < size
-				select position).ToArray();
+		var result = size.X > size.Y ?
+			Hilbert2D(Int2.Zero, new Int2(size.X, 0), new Int2(0, size.Y)).ToArray() :
+			Hilbert2D(Int2.Zero, new Int2(0, size.Y), new Int2(size.X, 0)).ToArray();
+		return result;
 	}
 
 	IEnumerable<Int2> Hilbert2D(Int2 position, Int2 rectA, Int2 rectB)
 	{
 		Int2 size = new Int2(Math.Abs(rectA.X + rectA.Y), Math.Abs(rectB.X + rectB.Y));
 
-		Int2 da = new Int2(sign(rectA.X), sign(rectA.Y)); // unit major direction
-		Int2 db = new Int2(sign(rectB.X), sign(rectB.Y)); // unit orthogonal direction
+		Int2 da = new Int2(Math.Sign(rectA.X), Math.Sign(rectA.Y)); // unit major direction
+		Int2 db = new Int2(Math.Sign(rectB.X), Math.Sign(rectB.Y)); // unit orthogonal direction
 
 		if (size.X < 1 || size.Y < 1) throw new Exception("size is less than 1!");
 
@@ -34,7 +29,9 @@ public class HilbertCurvePattern : ITilePattern
 			// trivial row fill
 			for (int i = 0; i < size.X; i++)
 			{
-				yield return new Int2(position.X + da.X, position.Y + da.Y);
+				//yield return new Int2(position.X + da.X, position.Y + da.Y);
+				yield return position;
+				position += da;
 			}
 		}
 		else if (size.X == 1)
@@ -42,7 +39,9 @@ public class HilbertCurvePattern : ITilePattern
 			// trivial column fill
 			for (int i = 0; i < size.Y; i++)
 			{
-				yield return new Int2(position.X + db.X, position.Y + db.Y);
+				//yield return new Int2(position.X + db.X, position.Y + db.Y);
+				yield return position;
+				position += db;
 			}
 		}
 		else
@@ -82,6 +81,4 @@ public class HilbertCurvePattern : ITilePattern
 			}
 		}
 	}
-
-	int sign(int x) => x < 0 ? -1 : (x > 0 ? 1 : 0);
 }
