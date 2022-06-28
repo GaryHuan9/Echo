@@ -8,6 +8,28 @@ partial struct RGBA128
 {
 	readonly ref struct Parser
 	{
+		/// <summary>
+		/// Parses the given color in <paramref name="span"/> and returns the corresponding RGBA128. The only required color channels are:
+		/// red, green and blue. The alpha channel is optional (default is always 100%)
+		/// Available color formats are:
+		/// <list type="table">
+		///	<item>
+		/// <term>hex: </term>
+		/// <description>color given as 4 byte rgba number. Prefixes are <c>0x</c> and <c>#</c>. Example: <code>0x256794FF</code></description>
+		/// </item>
+		/// <item>
+		/// <term>rgb: </term>
+		/// <description>color given as numbers from 0 to 255 for each channel.
+		/// Example: <code>rgb(168, 72, 25)</code></description>
+		/// </item>
+		/// <item>
+		///	<term>hdr: </term>
+		/// <description> color given in hdr color space, ranging from 0.0 to Infinity. Negative numbers are not allowed!
+		/// Example: <code>hdr(1.25, 0.68, 0.25)</code></description>
+		/// </item>
+		/// </list>
+		/// </summary>
+		/// <param name="span">string containing the color</param>
 		public Parser(ReadOnlySpan<char> span)
 		{
 			span = span.Trim();
@@ -237,7 +259,7 @@ partial struct RGBA128
 					if (head >= source.Length) return true; // no alpha is given so set alpha to 1f and return
 				}
 
-				while (head < source.Length && !char.IsDigit(source[head]))
+				while (head < source.Length && !char.IsDigit(source[head]) && source[head] != '.')
 				{
 					char current = source[head];
 					if (!char.IsDigit(current) && current != '.' && current != ',' && !char.IsWhiteSpace(current))
