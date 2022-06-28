@@ -64,26 +64,19 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// </summary>
 	public T As<T>() where T : unmanaged, IColor<T> => default(T)!.FromRGBA128(this);
 
-	/// <summary>
-	/// Parses the input <paramref name="span"/> as a <typeparamref name="T"/> and returns the
-	/// result. An exception is thrown if the <paramref name="span"/> format is invalid.
-	/// </summary>
+	/// <inheritdoc cref="Parse(ReadOnlySpan{char})"/>
 	public static T Parse<T>(ReadOnlySpan<char> span) where T : unmanaged, IColor<T> => Parse(span).As<T>();
 
-	/// <summary>
-	/// Parses the input <paramref name="span"/> as a <see cref="RGBA128"/> and returns the
-	/// result. An exception is thrown if the <paramref name="span"/> format is invalid.
-	/// </summary>
+	/// <inheritdoc cref="Parser(ReadOnlySpan{char})"/>
+	/// <returns>If the parsing operation was successful, the result is returned.</returns>
+	/// <exception cref="FormatException">Thrown if the format is invalid.</exception>
 	public static RGBA128 Parse(ReadOnlySpan<char> span)
 	{
 		if (TryParse(span, out RGBA128 result)) return result;
-		throw new Exception($"Cannot parse {span.ToString()}!");
+		throw new FormatException($"Cannot parse {span}!");
 	}
 
-	/// <summary>
-	/// Tries to parse the input <paramref name="span"/> as a <typeparamref name="T"/> and outputs
-	/// to <paramref name="result"/>. Returns true if the operation was successful, false otherwise.
-	/// </summary>
+	/// <inheritdoc cref="TryParse(ReadOnlySpan{char}, out RGBA128)"/>
 	public static bool TryParse<T>(ReadOnlySpan<char> span, out T result) where T : unmanaged, IColor<T>
 	{
 		bool successful = TryParse(span, out RGBA128 parsed);
@@ -92,10 +85,8 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 		return successful;
 	}
 
-	/// <summary>
-	/// Tries to parse the input <paramref name="span"/> as a <see cref="RGBA128"/> and outputs
-	/// to <paramref name="result"/>. Returns true if the operation was successful, false otherwise.
-	/// </summary>
+	/// <inheritdoc cref="Parser(ReadOnlySpan{char})"/>
+	/// <returns>Whether the parsing operation was successful.</returns>
 	public static bool TryParse(ReadOnlySpan<char> span, out RGBA128 result) => new Parser(span).Execute(out result);
 
 	public static implicit operator Float4(in RGBA128 value) => value.d;
