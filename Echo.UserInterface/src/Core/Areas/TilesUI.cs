@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
@@ -42,6 +43,8 @@ public class TilesUI : PlaneUI
 	EvaluationOperation lastOperation;
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
+
+	List<Vector2> tilePositions = new List<Vector2>();
 
 	const string TextureFilePath = "render.png";
 
@@ -296,6 +299,15 @@ public class TilesUI : PlaneUI
 			Float2 height = new(max.X, Scalars.Lerp(min.Y, max.Y, progress));
 			drawList.AddRectFilled(min.AsVector2(), height.AsVector2(), fillColor);
 			drawList.AddRect(min.AsVector2(), max.AsVector2(), borderColor);
+
+
+			Vector2 tileMiddle = min.AsVector2() + (max.AsVector2() - min.AsVector2()) * 0.5f;
+			if (!tilePositions.Contains(tileMiddle)) tilePositions.Add(tileMiddle);
+		}
+
+		for (int i = 1; i < tilePositions.Count; i++)
+		{
+			drawList.AddLine(tilePositions[i - 1], tilePositions[i], 0xFF0000FF);
 		}
 	}
 
