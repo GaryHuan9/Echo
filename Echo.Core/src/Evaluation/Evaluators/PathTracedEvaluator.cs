@@ -32,7 +32,7 @@ public record PathTracedEvaluator : Evaluator
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
 
 	[SkipLocalsInit]
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedSceneOld scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		var path = new Path(ray);
 
@@ -145,10 +145,10 @@ public record PathTracedEvaluator : Evaluator
 	/// <param name="light">The <see cref="ILight"/> to sample.</param>
 	/// <param name="touch">The <see cref="Touch"/> to sample from.</param>
 	/// <param name="sample">The <see cref="Sample2D"/> value to use.</param>
-	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
+	/// <param name="scene">The <see cref="PreparedSceneOld"/> that all of this takes place.</param>
 	/// <param name="mis">Whether this method should use multiple importance sampling.</param>
 	/// <returns>The sampled radiant from the <see cref="ILight"/>.</returns>
-	static RGB128 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedScene scene, bool mis)
+	static RGB128 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedSceneOld scene, bool mis)
 	{
 		//Importance sample light
 		(RGB128 radiant, float radiantPdf) = light.Sample(touch.point, sample, out Float3 incident, out float travel);
@@ -181,7 +181,7 @@ public record PathTracedEvaluator : Evaluator
 	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
 
 	/// <summary>
-	/// The path of a photon within a <see cref="PreparedScene"/>. 
+	/// The path of a photon within a <see cref="PreparedSceneOld"/>. 
 	/// </summary>
 	[StructLayout(LayoutKind.Auto)]
 	struct Path
@@ -219,10 +219,10 @@ public record PathTracedEvaluator : Evaluator
 		/// <summary>
 		/// Advance this <see cref="Path"/> to a new vertex.
 		/// </summary>
-		/// <param name="scene">The <see cref="PreparedScene"/> that this <see cref="Path"/> exists in.</param>
+		/// <param name="scene">The <see cref="PreparedSceneOld"/> that this <see cref="Path"/> exists in.</param>
 		/// <param name="allocator">The <see cref="Allocator"/> to use.</param>
-		/// <returns>Whether a new vertex was successfully created or this <see cref="Path"/> escaped the <see cref="PreparedScene"/>.</returns>
-		public bool Advance(PreparedScene scene, Allocator allocator)
+		/// <returns>Whether a new vertex was successfully created or this <see cref="Path"/> escaped the <see cref="PreparedSceneOld"/>.</returns>
+		public bool Advance(PreparedSceneOld scene, Allocator allocator)
 		{
 			allocator.Restart();
 

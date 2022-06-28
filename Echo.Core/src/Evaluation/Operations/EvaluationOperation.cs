@@ -35,7 +35,7 @@ public sealed partial class EvaluationOperation : Operation<EvaluationStatistics
 		(ContinuousDistribution distribution, Allocator allocator) = contexts[worker.Index];
 
 		Evaluator evaluator = profile.Evaluator;
-		PreparedScene scene = profile.Scene;
+		PreparedSceneOld scene = profile.Scene;
 		RenderBuffer buffer = profile.Buffer;
 
 		Int2 tilePosition = tilePositions[(int)procedure.index];

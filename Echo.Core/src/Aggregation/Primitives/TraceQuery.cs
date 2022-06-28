@@ -10,7 +10,7 @@ using Echo.Core.Scenic.Preparation;
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PreparedScene"/>
+/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PreparedSceneOld"/>
 /// exists, and if it does, the exact distance of that intersections and other specific information about it.
 /// </summary>
 public struct TraceQuery

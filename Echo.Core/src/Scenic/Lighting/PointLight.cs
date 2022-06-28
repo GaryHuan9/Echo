@@ -17,7 +17,7 @@ public class PointLight : LightSource, ILightSource<PreparedPointLight>
 
 	public override float Power => _power;
 
-	public override void Prepare(PreparedScene scene)
+	public override void Prepare(PreparedSceneOld scene)
 	{
 		base.Prepare(scene);
 

@@ -266,7 +266,7 @@ public class SystemUI : AreaUI
 
 		var evaluationProfile = new EvaluationProfile
 		{
-			Scene = new PreparedScene(scene, prepareProfile),
+			Scene = new PreparedSceneOld(scene, prepareProfile),
 			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),

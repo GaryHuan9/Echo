@@ -9,7 +9,7 @@ using Echo.Core.Scenic.Preparation;
 namespace Echo.Core.Aggregation.Preparation;
 
 /// <summary>
-/// A <see cref="PreparedInstance"/> only used by <see cref="PreparedScene"/>, which is the root of the entire hierarchy.
+/// A <see cref="PreparedInstance"/> only used by <see cref="PreparedSceneOld"/>, which is the root of the entire hierarchy.
 /// </summary>
 public class PreparedInstanceRoot : PreparedInstance
 {

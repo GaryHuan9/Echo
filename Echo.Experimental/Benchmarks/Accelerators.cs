@@ -58,16 +58,16 @@ public class Accelerators
 			occludeQueries[i] = new OccludeQuery(ray);
 		}
 
-		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"));
-		Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad"));
+		Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"));
+		Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad"));
 		// Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(LinearAggregator) } }), "Linear"));
 
 		if (false)
 		{
 			scene.Add(new PlaneEntity { Material = new Matte { Albedo = Texture.white }, Size = new Float2(32f, 24f) });
 
-			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivRegular"));
-			Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivQuad"));
+			Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivRegular"));
+			Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivQuad"));
 		}
 	}
 
@@ -157,13 +157,13 @@ public class Accelerators
 
 	public readonly struct Pair
 	{
-		public Pair(PreparedScene scene, string name)
+		public Pair(PreparedSceneOld scene, string name)
 		{
 			this.scene = scene;
 			this.name = name;
 		}
 
-		public readonly PreparedScene scene;
+		public readonly PreparedSceneOld scene;
 		public readonly string name;
 
 		public override string ToString() => name;

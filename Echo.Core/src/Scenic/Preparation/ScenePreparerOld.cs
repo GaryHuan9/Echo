@@ -4,6 +4,7 @@ using CodeHelpers;
 using CodeHelpers.Collections;
 using CodeHelpers.Pooling;
 using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Instancing;

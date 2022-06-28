@@ -6,7 +6,6 @@ using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometric;
@@ -99,12 +98,14 @@ public readonly struct PreparedInstance : IPreparedGeometry
 		return cost;
 	}
 
-	float IPreparedGeometry.GetPower(PreparedSwatch _) => pack.lightPicker.Power * inverseScale * inverseScale;
-
 	/// <summary>
-	/// Returns the <see cref="Material"/> represented by <paramref name="index"/> in this <see cref="PreparedInstance"/>.
+	/// Retrieves a <see cref="Material"/> from this <see cref="PreparedInstance"/>.
 	/// </summary>
+	/// <param name="index">The <see cref="MaterialIndex"/> pointing at the target <see cref="Material"/>.</param>
+	/// <returns>The <see cref="Material"/> that was found.</returns>
 	public Material GetMaterial(MaterialIndex index) => swatch[index];
+
+	float IPreparedGeometry.GetPower(PreparedSwatch _) => pack.lightPicker.Power * inverseScale * inverseScale;
 
 	/// <summary>
 	/// Picks an emissive geometry from this <see cref="PreparedInstance"/>.
@@ -147,78 +148,5 @@ public readonly struct PreparedInstance : IPreparedGeometry
 		Float3 direction = forwardTransform.MultiplyDirection(ray.direction);
 
 		ray = new Ray(origin, direction * inverseScale);
-	}
-
-	/// <summary>
-	/// Creates and returns a new <see cref="powerDistribution"/> for some emissive
-	/// objects indicated by the parameter. If no object is emissive, null is returned.
-	/// </summary>
-	static PowerDistribution CreatePowerDistribution(PreparedPack pack, PreparedSwatch swatch, EntityTokenArray tokenArray)
-	{
-		int powerLength = 0;
-		int segmentLength = 0;
-
-		var materials = swatch.EmissiveIndices;
-		var instances = GetInstancesToken();
-
-		//Iterate through materials to find their partition lengths
-		foreach (MaterialIndex index in materials)
-		{
-			var partition = tokenArray[index];
-			Assert.IsFalse(partition.IsEmpty);
-			powerLength += partition.Length;
-		}
-
-		segmentLength += materials.Length;
-
-		//Iterate through instances to see if any is emissive
-		foreach (EntityToken token in instances)
-		{
-			PreparedInstance instance = pack.GetInstance(token);
-			if (!FastMath.Positive(instance.Power)) continue;
-
-			powerLength += instances.Length;
-			++segmentLength;
-
-			break;
-		}
-
-		//Exit if nothing is emissive
-		if (powerLength == 0) return null;
-		Assert.IsTrue(segmentLength > 0);
-
-		//Fetch buffers
-		using var _0 = Pool<float>.Fetch(powerLength, out var powerValues);
-		using var _1 = Pool<int>.Fetch(segmentLength, out var segments);
-
-		SpanFill<float> powerFill = powerValues;
-		SpanFill<int> segmentFill = segments;
-
-		//Fill in the relevant power and segment values for geometries with emissive materials
-		foreach (MaterialIndex index in materials)
-		{
-			float power = ((IEmissive)swatch[index]).Power;
-			Assert.IsTrue(FastMath.Positive(power));
-
-			foreach (EntityToken token in tokenArray[index]) powerFill.Add(pack.GetArea(token) * power);
-
-			segmentFill.Add(index);
-		}
-
-		//Fill in the power values for instances if any is emissive
-		if (!segmentFill.IsFull)
-		{
-			foreach (EntityToken token in instances) powerFill.Add(pack.GetInstance(token).Power);
-
-			segmentFill.Add(tokenArray.FinalPartition);
-		}
-
-		//Create power distribution instance
-		Assert.IsTrue(segmentFill.IsFull);
-		Assert.IsTrue(powerFill.IsFull);
-
-		return new PowerDistribution(powerValues, segments, tokenArray);
-
-		ReadOnlyView<EntityToken> GetInstancesToken() => pack.counts.instance > 0 ? tokenArray[tokenArray.FinalPartition] : ReadOnlyView<EntityToken>.Empty;
 	}
 }

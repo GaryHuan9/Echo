@@ -28,7 +28,7 @@ public abstract class LightSource : Entity, ILight
 	/// Invoked before rendering; after geometry and materials are prepared.
 	/// Can be used to initialize this light to prepare it for rendering.
 	/// </summary>
-	public virtual void Prepare(PreparedScene scene) { }
+	public virtual void Prepare(PreparedSceneOld scene) { }
 
 	/// <inheritdoc/>
 	public abstract Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);

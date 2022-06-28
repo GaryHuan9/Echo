@@ -12,7 +12,7 @@ public record NormalEvaluator : Evaluator
 {
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<Normal96>(buffer, "normal");
 
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedSceneOld scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		var query = new TraceQuery(ray);
 

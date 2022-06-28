@@ -49,7 +49,7 @@ public class AmbientLight : AreaLightSource
 
 	public override float Power => _power;
 
-	public override void Prepare(PreparedScene scene)
+	public override void Prepare(PreparedSceneOld scene)
 	{
 		base.Prepare(scene);
 		Texture.Prepare();
@@ -66,7 +66,7 @@ public class AmbientLight : AreaLightSource
 
 	/// <summary>
 	/// Evaluates this <see cref="AmbientLight"/> at <paramref name="direction"/>
-	/// in world-space, which escaped the <see cref="PreparedScene"/> geometries.
+	/// in world-space, which escaped the <see cref="PreparedSceneOld"/> geometries.
 	/// </summary>
 	public RGB128 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
 

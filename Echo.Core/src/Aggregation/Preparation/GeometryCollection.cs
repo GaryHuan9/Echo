@@ -24,7 +24,7 @@ public sealed class GeometryCollection
 
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
-		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources)
+		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources) where T : IPreparedPureGeometry
 		{
 			int length = 0;
 
@@ -61,38 +61,27 @@ public sealed class GeometryCollection
 		var result = new Tokenized<AxisAlignedBoundingBox>[counts.Total];
 		var fill = result.AsFill();
 
-		for (int i = 0; i < triangles.Length; i++)
-		{
-			var token = new EntityToken(TokenType.Triangle, i);
-			AxisAlignedBoundingBox bounds = triangles[i].AABB;
-
-			fill.Add((token, bounds));
-		}
-
-		for (int i = 0; i < spheres.Length; i++)
-		{
-			var token = new EntityToken(TokenType.Sphere, i);
-			AxisAlignedBoundingBox bounds = spheres[i].AABB;
-
-			fill.Add((token, bounds));
-		}
-
-		for (int i = 0; i < instances.Length; i++)
-		{
-			var token = new EntityToken(TokenType.Instance, i);
-			AxisAlignedBoundingBox bounds = instances[i].AABB;
-
-			fill.Add((token, bounds));
-		}
+		Add(ref fill, TokenType.Triangle, triangles);
+		Add(ref fill, TokenType.Sphere, spheres);
+		Add(ref fill, TokenType.Instance, instances);
 
 		return result;
+
+		void Add<T>(ref SpanFill<Tokenized<AxisAlignedBoundingBox>> fill, TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
+		{
+			for (int i = 0; i < array.Length; i++)
+			{
+				ref readonly T geometry = ref array.ItemRef(i);
+				fill.Add((new EntityToken(type, i), geometry.AABB));
+			}
+		}
 	}
 
 	/// <summary>
 	/// Calculates the intersection between <paramref name="query"/> and the object represented by <paramref name="token"/>.
-	/// The intersection is only recorded if it occurs before the original <paramref name="query.distance"/>.
 	/// </summary>
-	public void Trace(ref TraceQuery query, in EntityToken token)
+	/// <remarks>The intersection is only considered if it occurs before the original <see cref="TraceQuery.distance"/>.</remarks>
+	public void Trace(in EntityToken token, ref TraceQuery query)
 	{
 		Assert.IsTrue(token.Type.IsGeometry());
 
@@ -146,7 +135,8 @@ public sealed class GeometryCollection
 	/// <summary>
 	/// Calculates and returns whether <paramref name="query"/> is occluded by the object represented by <paramref name="token"/>.
 	/// </summary>
-	public bool Occlude(ref OccludeQuery query, in EntityToken token)
+	/// <remarks>The intersection is only considered if it occurs before the original <see cref="OccludeQuery.travel"/>.</remarks>
+	public bool Occlude(in EntityToken token, ref OccludeQuery query)
 	{
 		Assert.IsTrue(token.Type.IsGeometry());
 
@@ -292,7 +282,7 @@ public sealed class GeometryCollection
 	}
 
 	/// <summary>
-	/// Underlying implementation of <see cref="PreparedScene.Sample"/>, functional
+	/// Underlying implementation of <see cref="PreparedSceneOld.Sample"/>, functional
 	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
 	public Probable<GeometryPoint> Sample(in EntityToken token, in Float3 origin, Sample2D sample)
@@ -308,7 +298,7 @@ public sealed class GeometryCollection
 	}
 
 	/// <summary>
-	/// Underlying implementation of <see cref="PreparedScene.ProbabilityDensity"/>, functional
+	/// Underlying implementation of <see cref="PreparedSceneOld.ProbabilityDensity"/>, functional
 	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
 	public float ProbabilityDensity(in EntityToken token, in Float3 origin, in Float3 incident)

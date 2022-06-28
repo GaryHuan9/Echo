@@ -50,7 +50,7 @@ public class EchoTI : RootTI
 
 		var evaluationProfile = new EvaluationProfile
 		{
-			Scene = new PreparedScene(scene, prepareProfile),
+			Scene = new PreparedSceneOld(scene, prepareProfile),
 			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 64 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),
