@@ -12,6 +12,23 @@ public class HilbertCurvePattern : ITilePattern
 		var result = size.X > size.Y ?
 			Hilbert2D(Int2.Zero, new Int2(size.X, 0), new Int2(0, size.Y)).ToArray() :
 			Hilbert2D(Int2.Zero, new Int2(0, size.Y), new Int2(size.X, 0)).ToArray();
+
+		// flip first half of the array to make it start from the middle
+		int halfLength = result.Length / 2;
+		Int2[] tempArr = new Int2[halfLength];
+		for (int i = 0; i < halfLength; i++)
+			tempArr[i] = result[halfLength - i - 1];
+
+		for (int i = 0; i < halfLength; i++)
+			result[i] = tempArr[i];
+
+		for (int i = 1; i < halfLength; i+=2)
+		{
+			Int2 temp = result[i + halfLength];
+			result[i + halfLength] = result[i];
+			result[i] = temp;
+		}
+
 		return result;
 	}
 
