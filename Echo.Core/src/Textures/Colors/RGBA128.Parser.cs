@@ -151,6 +151,12 @@ partial struct RGBA128
 			{
 				if (!FindNextInt(content, ref head, out int a, alpha: true)) return YieldError(out result);
 
+				if (head < content.Length)
+				{
+					YieldError(out result);
+					return false;
+				}
+
 				return ConvertRGBA(r, g, b, a, out result);
 			}
 
@@ -167,7 +173,7 @@ partial struct RGBA128
 				while (head < source.Length && !char.IsDigit(source[head]))
 				{
 					char current = source[head];
-					if (!char.IsDigit(current) && current != '.' && current != ',' && !char.IsWhiteSpace(current))
+					if (!char.IsDigit(current) && current != ',' && !char.IsWhiteSpace(current))
 					{
 						result = 0;
 						return false;
@@ -197,13 +203,25 @@ partial struct RGBA128
 
 		bool ParseHDR(out RGBA128 result)
 		{
-			int index = 0;
+			int head = 0;
 
-			if (FindNextFloat(content, ref index, out float r) &&
-				FindNextFloat(content, ref index, out float g) &&
-				FindNextFloat(content, ref index, out float b))
+			if (content.Length == 0)
 			{
-				if (!FindNextFloat(content, ref index, out float a, alpha: true)) return YieldError(out result);
+				YieldError(out result);
+				return false;
+			}
+
+			if (FindNextFloat(content, ref head, out float r) &&
+				FindNextFloat(content, ref head, out float g) &&
+				FindNextFloat(content, ref head, out float b))
+			{
+				if (!FindNextFloat(content, ref head, out float a, alpha: true)) return YieldError(out result);
+
+				if (head < content.Length)
+				{
+					YieldError(out result);
+					return false;
+				}
 
 				result = new RGBA128(r, g, b, a);
 				return true;
