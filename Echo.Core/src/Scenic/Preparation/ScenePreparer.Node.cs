@@ -71,11 +71,22 @@ partial record ScenePreparer
 			);
 		}
 
-		public PreparedSceneNew CreatePreparedScene(ScenePreparer preparer) => new
-		(
-			CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
-			CreatePreparedInstances(preparer), preparer.AcceleratorCreator, new SwatchExtractor(preparer)
-		);
+		public PreparedScene CreatePreparedScene(ScenePreparer preparer)
+		{
+			var builder = ImmutableArray.CreateBuilder<InfiniteLight>();
+
+			foreach (Entity entity in source.LoopChildren(true))
+			{
+				if (entity is InfiniteLight light) builder.Add(light);
+			}
+
+			return new PreparedScene
+			(
+				CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
+				CreatePreparedInstances(preparer), preparer.AcceleratorCreator,
+				new SwatchExtractor(preparer), builder.ToImmutable()
+			);
+		}
 
 		ImmutableArray<PreparedInstance> CreatePreparedInstances(ScenePreparer preparer)
 		{

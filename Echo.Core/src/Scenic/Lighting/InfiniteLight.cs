@@ -1,4 +1,4 @@
-﻿using Echo.Core.Scenic.Preparation;
+﻿using Echo.Core.Aggregation.Preparation;
 
 namespace Echo.Core.Scenic.Lighting;
 

@@ -42,7 +42,7 @@ public class LinearAccelerator : Accelerator
 			{
 				if (intersections[i] >= query.distance) continue;
 				ref readonly EntityToken token = ref node.token4[i];
-				geometries.Trace(ref query, token);
+				geometries.Trace(token, ref query);
 			}
 		}
 	}
@@ -57,7 +57,7 @@ public class LinearAccelerator : Accelerator
 			{
 				if (intersections[i] >= query.travel) continue;
 				ref readonly EntityToken token = ref node.token4[i];
-				if (geometries.Occlude(ref query, token)) return true;
+				if (geometries.Occlude(token, ref query)) return true;
 			}
 		}
 

@@ -17,7 +17,7 @@ namespace Echo.Core.Scenic.Lighting;
 /// </summary>
 public class GeometryLight : IAreaLight
 {
-	public void Reset(PreparedScene newScene, in TokenHierarchy newToken, IEmissive newEmissive)
+	public void Reset(PreparedSceneOld newScene, in TokenHierarchy newToken, IEmissive newEmissive)
 	{
 		scene = newScene;
 		token = newToken;
@@ -26,7 +26,7 @@ public class GeometryLight : IAreaLight
 		Assert.IsTrue(FastMath.Positive(Emissive.Power));
 	}
 
-	PreparedScene scene;
+	PreparedSceneOld scene;
 	TokenHierarchy token;
 
 	/// <summary>

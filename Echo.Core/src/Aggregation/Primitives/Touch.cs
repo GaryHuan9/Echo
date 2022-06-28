@@ -7,7 +7,7 @@ using Echo.Core.Scenic.Preparation;
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// A mutable struct that describes an interaction with a <see cref="PreparedScene"/> from a concluded <see cref="TraceQuery"/>.
+/// A mutable struct that describes an interaction with a <see cref="PreparedSceneOld"/> from a concluded <see cref="TraceQuery"/>.
 /// </summary>
 public struct Touch
 {

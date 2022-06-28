@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Immutable;
+using CodeHelpers.Diagnostics;
+using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
+using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Lighting;
 using Echo.Core.Scenic.Preparation;
+using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Aggregation.Preparation;
 
@@ -79,6 +84,19 @@ public class LightCollection
 					new LightBounds(geometry.AABB, geometry.ConeBounds, power)
 				));
 			}
+		}
+	}
+
+	/// <inheritdoc cref="IPreparedLight.Sample"/>
+	public Probable<RGB128> Sample(EntityToken token, in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel) { }
+
+	/// <inheritdoc cref="IPreparedAreaLight.ProbabilityDensity"/>
+	public float ProbabilityDensity(EntityToken token, in GeometryPoint point, in Float3 incident)
+	{
+		switch (token.LightType)
+		{
+			case LightType.Point: break;
+			default:              throw new ArgumentOutOfRangeException();
 		}
 	}
 

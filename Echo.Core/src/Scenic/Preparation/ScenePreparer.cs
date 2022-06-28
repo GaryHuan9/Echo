@@ -62,7 +62,7 @@ public sealed partial record ScenePreparer
 		}
 	}
 
-	public PreparedSceneNew Prepare()
+	public PreparedScene Prepare()
 	{
 		Node root = CreateOrGetNode(scene);
 		CreateChildren(root, EntityPack.MaxLayer);

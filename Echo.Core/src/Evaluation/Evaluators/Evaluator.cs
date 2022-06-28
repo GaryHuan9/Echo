@@ -10,7 +10,7 @@ using Echo.Core.Textures.Evaluation;
 namespace Echo.Core.Evaluation.Evaluators;
 
 /// <summary>
-/// An immutable object with the ability to evaluate a <see cref="PreparedScene"/> through <see cref="Ray"/>s.
+/// An immutable object with the ability to evaluate a <see cref="PreparedSceneOld"/> through <see cref="Ray"/>s.
 /// </summary>
 public abstract record Evaluator
 {
@@ -22,14 +22,14 @@ public abstract record Evaluator
 	public abstract IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer);
 
 	/// <summary>
-	/// Evaluates a <see cref="PreparedScene"/> using this <see cref="Evaluator"/>.
+	/// Evaluates a <see cref="PreparedSceneOld"/> using this <see cref="Evaluator"/>.
 	/// </summary>
-	/// <param name="scene">The <see cref="PreparedScene"/> to evaluate.</param>
+	/// <param name="scene">The <see cref="PreparedSceneOld"/> to evaluate.</param>
 	/// <param name="ray">The originating <see cref="Ray"/> where the entire evaluation begins.</param>
 	/// <param name="distribution">Generator to create any <see cref="Sample1D"/> or <see cref="Sample2D"/>.</param>
 	/// <param name="allocator">Memory allocator available to be used by this method.</param>
 	/// <remarks>The implementation do not need to invoke <see cref="Allocator.Release"/> before this method returns.</remarks>
-	public abstract Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator);
+	public abstract Float4 Evaluate(PreparedSceneOld scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator);
 
 	/// <summary>
 	/// Default implementation for <see cref="CreateOrClearLayer"/>.

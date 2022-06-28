@@ -18,7 +18,7 @@ public record BruteForcedEvaluator : Evaluator
 	/// </summary>
 	public int BounceLimit { get; init; } = 128;
 
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedSceneOld scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		int depth = BounceLimit;
 		var query = new TraceQuery(ray);
@@ -28,7 +28,7 @@ public record BruteForcedEvaluator : Evaluator
 
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "force");
 
-	static Float4 Evaluate(PreparedScene scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, ref int depth)
+	static Float4 Evaluate(PreparedSceneOld scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, ref int depth)
 	{
 		if (--depth <= 0) return RGB128.Black;
 

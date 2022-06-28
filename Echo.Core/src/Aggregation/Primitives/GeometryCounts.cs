@@ -1,4 +1,4 @@
-﻿namespace Echo.Core.Scenic.Geometric;
+﻿namespace Echo.Core.Aggregation.Primitives;
 
 public readonly struct GeometryCounts
 {

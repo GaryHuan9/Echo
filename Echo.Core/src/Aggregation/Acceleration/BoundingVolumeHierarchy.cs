@@ -165,7 +165,7 @@ public class BoundingVolumeHierarchy : Accelerator
 					*next++ = token;
 					*hits++ = hit;
 				}
-				else geometries.Trace(ref refQuery, token);
+				else geometries.Trace(token, ref refQuery);
 			}
 		}
 		while (next != stack);
@@ -216,7 +216,7 @@ public class BoundingVolumeHierarchy : Accelerator
 				}
 
 				//Evaluate leaf
-				return geometries.Occlude(ref refQuery, token);
+				return geometries.Occlude(token, ref refQuery);
 			}
 		}
 		while (next != stack);

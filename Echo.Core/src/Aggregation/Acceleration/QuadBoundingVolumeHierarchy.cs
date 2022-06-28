@@ -213,7 +213,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 					*next++ = token;
 					*hits++ = hit;
 				}
-				else geometries.Trace(ref query, token); //Child is geometry/leaf
+				else geometries.Trace(token, ref query); //Child is geometry/leaf
 			}
 		}
 		while (next != stack);
@@ -303,7 +303,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 				ref readonly EntityToken token = ref token4[offset];
 
-				if (token.Type.IsGeometry()) return geometries.Occlude(ref query, token); //Child is leaf
+				if (token.Type.IsGeometry()) return geometries.Occlude(token, ref query); //Child is leaf
 
 				//Child is branch
 				*next++ = token;

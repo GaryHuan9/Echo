@@ -21,9 +21,9 @@ namespace Echo.Core.Scenic.Preparation;
 /// <summary>
 /// A <see cref="Scene"/> prepared ready for fast interactions.
 /// </summary>
-public class PreparedScene
+public class PreparedSceneOld
 {
-	public PreparedScene(Scene scene, ScenePrepareProfile profile)
+	public PreparedSceneOld(Scene scene, ScenePrepareProfile profile)
 	{
 		var lightsList = new List<LightSource>();
 
@@ -85,12 +85,12 @@ public class PreparedScene
 
 	/// <summary>
 	/// Interacts with a concluded <see cref="TraceQuery"/> that was performed
-	/// on this <see cref="PreparedScene"/> by creating a <see cref="Touch"/>.
+	/// on this <see cref="PreparedSceneOld"/> by creating a <see cref="Touch"/>.
 	/// </summary>
 	public Touch Interact(in TraceQuery query) => rootInstance.Interact(query);
 
 	/// <summary>
-	/// Picks an <see cref="ILight"/> in this <see cref="PreparedScene"/>.
+	/// Picks an <see cref="ILight"/> in this <see cref="PreparedSceneOld"/>.
 	/// </summary>
 	/// <param name="sample">The <see cref="Sample1D"/> value used to pick the result.</param>
 	/// <param name="allocator">The <see cref="Allocator"/> used to allocate a <see cref="GeometryLight"/> if needed.</param>
@@ -112,7 +112,7 @@ public class PreparedScene
 	}
 
 	/// <summary>
-	/// Samples a <see cref="GeometryPoint"/> on an object in this <see cref="PreparedScene"/>.
+	/// Samples a <see cref="GeometryPoint"/> on an object in this <see cref="PreparedSceneOld"/>.
 	/// </summary>
 	/// <param name="token">The <see cref="TokenHierarchy"/> that represents the object to be sampled.</param>
 	/// <param name="origin">The world-space point of whose perspective the result should be sampled through.</param>
@@ -153,7 +153,7 @@ public class PreparedScene
 
 	public record Info
 	{
-		public Info(PreparedScene scene, ScenePreparerOld preparer)
+		public Info(PreparedSceneOld scene, ScenePreparerOld preparer)
 		{
 			scene.rootInstance.CalculateBounds(out aabb, out boundingSphere);
 
@@ -176,7 +176,7 @@ public class PreparedScene
 
 	public class Lights
 	{
-		public Lights(PreparedScene scene, IReadOnlyCollection<LightSource> all)
+		public Lights(PreparedSceneOld scene, IReadOnlyCollection<LightSource> all)
 		{
 			int length = all.Count;
 			GeometryPower = scene.rootInstance.Power;
@@ -224,12 +224,12 @@ public class PreparedScene
 		readonly AmbientLight[] _ambient;
 
 		/// <summary>
-		/// Accesses all of the <see cref="LightSource"/> present in a <see cref="PreparedScene"/>, which includes all <see cref="Ambient"/>.
+		/// Accesses all of the <see cref="LightSource"/> present in a <see cref="PreparedSceneOld"/>, which includes all <see cref="Ambient"/>.
 		/// </summary>
 		public ReadOnlySpan<LightSource> All => _all;
 
 		/// <summary>
-		/// Accesses all of the <see cref="AmbientLight"/> present in a <see cref="PreparedScene"/>.
+		/// Accesses all of the <see cref="AmbientLight"/> present in a <see cref="PreparedSceneOld"/>.
 		/// </summary>
 		public ReadOnlySpan<AmbientLight> Ambient => _ambient;
 

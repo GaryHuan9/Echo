@@ -13,9 +13,9 @@ namespace Echo.Core.Evaluation.Operations;
 public record EvaluationProfile
 {
 	/// <summary>
-	/// The <see cref="PreparedScene"/> to evaluate.
+	/// The <see cref="PreparedSceneOld"/> to evaluate.
 	/// </summary>
-	public PreparedScene Scene { get; init; }
+	public PreparedSceneOld Scene { get; init; }
 
 	/// <summary>
 	/// The fundamental evaluation method used.

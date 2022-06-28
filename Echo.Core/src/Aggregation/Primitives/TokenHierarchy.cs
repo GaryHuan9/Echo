@@ -11,7 +11,7 @@ using Echo.Core.Scenic.Preparation;
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// Represents a hierarchy of <see cref="EntityToken"/> that globally points to a unique object in a <see cref="PreparedScene"/>
+/// Represents a hierarchy of <see cref="EntityToken"/> that globally points to a unique object in a <see cref="PreparedSceneOld"/>
 /// </summary>
 /// <remarks>A fully and correctly constructed <see cref="TokenHierarchy"/> transcends <see cref="EntityPack"/> and <see cref="PackInstance"/>.</remarks>
 public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
