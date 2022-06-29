@@ -24,7 +24,7 @@ public interface IEmissive
 	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
 	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
 	/// </summary>
-	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing);
+	public RGB128 Emit(in GeometryPoint origin, in Float3 outgoing);
 }
 
 /// <summary>
@@ -72,5 +72,5 @@ public class Emissive : Material, IEmissive
 	}
 
 	/// <inheritdoc/>
-	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
+	public RGB128 Emit(in GeometryPoint origin, in Float3 outgoing) => emission;
 }

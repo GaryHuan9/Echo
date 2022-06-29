@@ -70,7 +70,7 @@ public class AmbientLight : AreaLightSource
 	/// </summary>
 	public RGB128 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
 
-	public override Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
+	public override Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
 		Probable<RGB128> value = Texture.Sample(sample, out incident);
 
@@ -80,7 +80,7 @@ public class AmbientLight : AreaLightSource
 		return value;
 	}
 
-	public override float ProbabilityDensity(in GeometryPoint point, in Float3 incident)
+	public override float ProbabilityDensity(in GeometryPoint origin, in Float3 incident)
 	{
 		Float3 transformed = worldToLocal * incident;
 		return Texture.ProbabilityDensity(transformed);

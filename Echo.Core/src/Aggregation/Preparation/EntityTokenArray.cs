@@ -85,7 +85,7 @@ public class EntityTokenArray
 	/// Returns the global index of this new <see cref="EntityToken"/> relative to this <see cref="EntityTokenArray"/>.
 	/// This method is thread safe.
 	/// </summary>
-	public int Add(int segment, in EntityToken token)
+	public int Add(int segment, EntityToken token)
 	{
 		int index = Interlocked.Increment(ref heads[segment]) - 1;
 

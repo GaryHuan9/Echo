@@ -21,10 +21,13 @@ public readonly struct View<T>
 		Length = count;
 	}
 
+	readonly T[] array;
+	readonly int start;
+
 	/// <summary>
-	///	Returns an empty <see cref="View{T}"/> object.
+	///	Represents the length of the current view .
 	/// </summary>
-	public static View<T> Empty => default;
+	public int Length { get; }
 
 	/// <summary>
 	/// Returns a reference to the specified element of the View.
@@ -37,12 +40,9 @@ public readonly struct View<T>
 	public bool IsEmpty => Length == 0;
 
 	/// <summary>
-	///	Represents the length of the current view .
+	///	Returns an empty <see cref="View{T}"/> object.
 	/// </summary>
-	public int Length { get; }
-
-	readonly T[] array;
-	readonly int start;
+	public static View<T> Empty => default;
 
 	/// <summary>
 	/// Returns an enumerator for this View.

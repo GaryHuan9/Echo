@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
@@ -22,6 +23,7 @@ public sealed class GeometryCollection
 		spheres = Extract<PreparedSphere>(swatchExtractor, geometrySources);
 		this.instances = instances;
 
+		swatch = swatchExtractor.Prepare();
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
 		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources) where T : IPreparedPureGeometry
@@ -54,7 +56,13 @@ public sealed class GeometryCollection
 	public readonly ImmutableArray<PreparedSphere> spheres;
 	public readonly ImmutableArray<PreparedInstance> instances;
 
+	public readonly PreparedSwatch swatch;
 	public readonly GeometryCounts counts;
+
+	public ImmutableArray<T> GetArray<T>() where T : IPreparedGeometry
+	{
+		if (typeof(T) == typeof(PreparedTriangle)) return Unsafe.As<ImmutableArray<PreparedTriangle>, ImmutableArray<T>>(ref Unsafe.AsRef(in triangles));
+	}
 
 	public View<Tokenized<AxisAlignedBoundingBox>> CreateBoundsView()
 	{
@@ -81,7 +89,7 @@ public sealed class GeometryCollection
 	/// Calculates the intersection between <paramref name="query"/> and the object represented by <paramref name="token"/>.
 	/// </summary>
 	/// <remarks>The intersection is only considered if it occurs before the original <see cref="TraceQuery.distance"/>.</remarks>
-	public void Trace(in EntityToken token, ref TraceQuery query)
+	public void Trace(EntityToken token, ref TraceQuery query)
 	{
 		Assert.IsTrue(token.Type.IsGeometry());
 
@@ -136,7 +144,7 @@ public sealed class GeometryCollection
 	/// Calculates and returns whether <paramref name="query"/> is occluded by the object represented by <paramref name="token"/>.
 	/// </summary>
 	/// <remarks>The intersection is only considered if it occurs before the original <see cref="OccludeQuery.travel"/>.</remarks>
-	public bool Occlude(in EntityToken token, ref OccludeQuery query)
+	public bool Occlude(EntityToken token, ref OccludeQuery query)
 	{
 		Assert.IsTrue(token.Type.IsGeometry());
 
@@ -172,7 +180,7 @@ public sealed class GeometryCollection
 	/// <summary>
 	/// Returns the cost of an intersection calculation between <paramref name="ray"/> and the object represented by <paramref name="token"/>.
 	/// </summary>
-	public uint GetTraceCost(in Ray ray, ref float distance, in EntityToken token)
+	public uint GetTraceCost(in Ray ray, ref float distance, EntityToken token)
 	{
 		Assert.IsTrue(token.Type.IsGeometry());
 
@@ -245,7 +253,7 @@ public sealed class GeometryCollection
 	/// <summary>
 	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> represented by <paramref name="token"/>.
 	/// </summary>
-	public PreparedInstance GetInstance(in EntityToken token)
+	public PreparedInstance GetInstance(EntityToken token)
 	{
 		Assert.AreEqual(token.Type, TokenType.Instance);
 		return instances[token.Index];
@@ -254,7 +262,7 @@ public sealed class GeometryCollection
 	/// <summary>
 	/// Returns the <see cref="MaterialIndex"/> of the geometry represented by <paramref name="token"/>.
 	/// </summary>
-	public MaterialIndex GetMaterialIndex(in EntityToken token)
+	public MaterialIndex GetMaterialIndex(EntityToken token)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
 
@@ -269,7 +277,7 @@ public sealed class GeometryCollection
 	/// <summary>
 	/// Returns the area of the geometry represented by <paramref name="token"/>.
 	/// </summary>
-	public float GetArea(in EntityToken token)
+	public float GetArea(EntityToken token)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
 
@@ -285,7 +293,7 @@ public sealed class GeometryCollection
 	/// Underlying implementation of <see cref="PreparedSceneOld.Sample"/>, functional
 	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
-	public Probable<GeometryPoint> Sample(in EntityToken token, in Float3 origin, Sample2D sample)
+	public Probable<GeometryPoint> Sample(EntityToken token, in Float3 origin, Sample2D sample)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
 
@@ -301,7 +309,7 @@ public sealed class GeometryCollection
 	/// Underlying implementation of <see cref="PreparedSceneOld.ProbabilityDensity"/>, functional
 	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
 	/// </summary>
-	public float ProbabilityDensity(in EntityToken token, in Float3 origin, in Float3 incident)
+	public float ProbabilityDensity(EntityToken token, in Float3 origin, in Float3 incident)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
 

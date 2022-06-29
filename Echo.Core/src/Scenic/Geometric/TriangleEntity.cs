@@ -144,77 +144,15 @@ public readonly struct PreparedTriangle : IPreparedPureGeometry //Winding order 
 	/// The famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
 	/// </summary>
 	[SkipLocalsInit]
-	public float Intersect(in Ray ray, out Float2 uv)
-	{
-		const float Infinity = float.PositiveInfinity;
-		Unsafe.SkipInit(out uv);
-
-		ref float u = ref Unsafe.As<Float2, float>(ref uv);
-		ref float v = ref Unsafe.Add(ref u, 1);
-
-		//Calculate determinant and u
-		Float3 cross2 = Float3.Cross(ray.direction, edge2);
-		float determinant = Float3.Dot(edge1, cross2);
-
-		//If determinant is close to zero, ray is parallel to triangle
-		if (determinant == 0f) return Infinity;
-		float determinantR = 1f / determinant;
-
-		Float3 offset = ray.origin - vertex0;
-		u = offset.Dot(cross2) * determinantR;
-
-		//Check if is outside barycentric bounds
-		if ((u < 0f) | (u > 1f)) return Infinity;
-
-		Float3 cross1 = Float3.Cross(offset, edge1);
-		v = ray.direction.Dot(cross1) * determinantR;
-
-		//Check if is outside barycentric bounds
-		if ((v < 0f) | (u + v > 1f)) return Infinity;
-
-		//Check if ray is pointing away from triangle
-		float distance = edge2.Dot(cross1) * determinantR;
-		return distance < 0f ? Infinity : distance;
-	}
+	public float Intersect(in Ray ray, out Float2 uv) => IntersectImpl(ray.origin, ray.direction, out uv);
 
 	/// <summary>
 	/// Returns whether <paramref name="ray"/> will intersect with this <see cref="PreparedTriangle"/> after <paramref name="travel"/>.
 	/// The famous Möller–Trumbore algorithm: https://cadxfem.org/inf/Fast%20MinimumStorage%20RayTriangle%20Intersection.pdf
 	/// </summary>
-	public bool Intersect(in Ray ray, float travel)
-	{
-		//Calculate determinant and u
-		Float3 cross2 = Float3.Cross(ray.direction, edge2);
-		float determinant = Float3.Dot(edge1, cross2);
+	public bool Intersect(in Ray ray, float travel) => IntersectImpl(ray.origin, ray.direction, travel);
 
-		//If determinant is close to zero, ray is parallel to triangle
-		if (determinant == 0f) return false;
-		float sign = MathF.Sign(determinant);
-		determinant *= sign;
-
-		Float3 offset = ray.origin - vertex0;
-		float u = offset.Dot(cross2) * sign;
-
-		//Check if is outside barycentric bounds
-		if ((u < 0f) | (u > determinant)) return false;
-
-		Float3 cross1 = Float3.Cross(offset, edge1);
-		float v = ray.direction.Dot(cross1) * sign;
-
-		//Check if is outside barycentric bounds
-		if ((v < 0f) | (u + v > determinant)) return false;
-
-		//Check if ray is pointing away from triangle
-		float distance = edge2.Dot(cross1) * sign;
-		return (distance >= 0f) & (distance < travel * determinant);
-	}
-
-	/// <summary>
-	/// Uniformly samples this <see cref="PreparedTriangle"/>.
-	/// </summary>
-	/// <param name="origin">The geometry-space point of whose perspective the result should be sampled through.</param>
-	/// <param name="sample">The <see cref="Sample2D"/> used to sample the result.</param>
-	/// <returns>The <see cref="Probable{T}"/> point that was sampled.</returns>
+	/// <inheritdoc/>
 	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
 	{
 		Float2 uv = sample.UniformTriangle;
@@ -225,20 +163,13 @@ public readonly struct PreparedTriangle : IPreparedPureGeometry //Winding order 
 		return (point, point.ProbabilityDensity(origin, Area));
 	}
 
-	/// <summary>
-	/// Calculates the pdf of selecting <see cref="incident"/> with <see cref="Sample"/>.
-	/// </summary>
-	/// <param name="origin">The geometry-space point of whose perspective the pdf should be calculated through.</param>
-	/// <param name="incident">The selected geometry-space unit direction that points from <paramref name="origin"/>.</param>
-	/// <returns>The probability density function (pdf) value over solid angles.</returns>
+	/// <inheritdoc/>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 	{
-		//OPTIMIZE: avoid expensive div in ray init by extracting Intersect to IntersectCore
-		Ray ray = new Ray(origin, incident);
+		float distance = IntersectImpl(origin, incident, out Float2 uv);
 
-		float distance = Intersect(ray, out Float2 uv);
-		if (float.IsPositiveInfinity(distance)) return 0f;
 		Assert.AreEqual(incident.SquaredMagnitude, 1f);
+		if (float.IsPositiveInfinity(distance)) return 0f;
 
 		return distance * distance / FastMath.Abs(GetNormal(uv).Dot(incident) * Area);
 	}
@@ -259,6 +190,67 @@ public readonly struct PreparedTriangle : IPreparedPureGeometry //Winding order 
 	}
 
 	public override string ToString() => $"<{nameof(vertex0)}: {vertex0}, {nameof(Vertex1)}: {Vertex1}, {nameof(Vertex2)}: {Vertex2}>";
+
+	float IntersectImpl(in Float3 origin, in Float3 direction, out Float2 uv)
+	{
+		const float Infinity = float.PositiveInfinity;
+		Unsafe.SkipInit(out uv);
+
+		ref float u = ref Unsafe.As<Float2, float>(ref uv);
+		ref float v = ref Unsafe.Add(ref u, 1);
+
+		//Calculate determinant and u
+		Float3 cross2 = Float3.Cross(direction, edge2);
+		float determinant = Float3.Dot(edge1, cross2);
+
+		//If determinant is close to zero, ray is parallel to triangle
+		if (determinant == 0f) return Infinity;
+		float determinantR = 1f / determinant;
+
+		Float3 offset = origin - vertex0;
+		u = offset.Dot(cross2) * determinantR;
+
+		//Check if is outside barycentric bounds
+		if ((u < 0f) | (u > 1f)) return Infinity;
+
+		Float3 cross1 = Float3.Cross(offset, edge1);
+		v = direction.Dot(cross1) * determinantR;
+
+		//Check if is outside barycentric bounds
+		if ((v < 0f) | (u + v > 1f)) return Infinity;
+
+		//Check if ray is pointing away from triangle
+		float distance = edge2.Dot(cross1) * determinantR;
+		return distance < 0f ? Infinity : distance;
+	}
+
+	bool IntersectImpl(in Float3 origin, in Float3 direction, float travel)
+	{
+		//Calculate determinant and u
+		Float3 cross2 = Float3.Cross(direction, edge2);
+		float determinant = Float3.Dot(edge1, cross2);
+
+		//If determinant is close to zero, ray is parallel to triangle
+		if (determinant == 0f) return false;
+		float sign = MathF.Sign(determinant);
+		determinant *= sign;
+
+		Float3 offset = origin - vertex0;
+		float u = offset.Dot(cross2) * sign;
+
+		//Check if is outside barycentric bounds
+		if ((u < 0f) | (u > determinant)) return false;
+
+		Float3 cross1 = Float3.Cross(offset, edge1);
+		float v = direction.Dot(cross1) * sign;
+
+		//Check if is outside barycentric bounds
+		if ((v < 0f) | (u + v > determinant)) return false;
+
+		//Check if ray is pointing away from triangle
+		float distance = edge2.Dot(cross1) * sign;
+		return (distance >= 0f) & (distance < travel * determinant);
+	}
 
 	Float3 GetPoint(Float2 uv) => vertex0 + uv.X * edge1 + uv.Y * edge2;
 

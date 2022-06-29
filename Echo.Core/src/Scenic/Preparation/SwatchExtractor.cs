@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
@@ -31,7 +32,7 @@ public class SwatchExtractor
 	/// <summary>
 	/// An empty <see cref="MaterialSwatch"/> used to replace null ones.
 	/// </summary>
-	static readonly MaterialSwatch emptySwatch = new();
+	static readonly MaterialSwatch emptyMaterialSwatch = new();
 
 	/// <summary>
 	/// Registers <paramref name="material"/> into this <see cref="SwatchExtractor"/> and returns a <see cref="MaterialIndex"/> which
@@ -70,16 +71,16 @@ public class SwatchExtractor
 
 	/// <summary>
 	/// Prepares <paramref name="swatch"/> into a <see cref="PreparedSwatch"/>. Note that once
-	/// this method is invoked, invocations to the registration methods is no longer supported.
+	/// this method is invoked, invocation to the registration methods is no longer supported.
 	/// </summary>
-	public PreparedSwatch Prepare(MaterialSwatch swatch)
+	public PreparedSwatch Prepare(MaterialSwatch swatch = null)
 	{
 		seal.TryApply();
 
 		//We will compare the swatches based on their content, not reference
 		var valueComparer = MaterialSwatch.valueEqualityComparer;
 
-		swatch ??= emptySwatch;
+		swatch ??= emptyMaterialSwatch;
 
 		//Find cached swatch again, this time look through all the ones that are not empty
 		cachedSwatches ??= new Dictionary<MaterialSwatch, PreparedSwatch>(valueComparer);
@@ -106,25 +107,6 @@ public class SwatchExtractor
 
 			return result;
 		}
-	}
-
-	public PreparedSwatch PrepareEmissive()
-	{
-		seal.TryApply();
-
-		int count = materialList.Count;
-		var result = new Material[count];
-
-		for (int i = 0; i < count; i++)
-		{
-			Material material = materialList[i].material;
-			if (material is not IEmissive) continue;
-
-			preparer.Prepare(material);
-			result[i] = material;
-		}
-
-		return new PreparedSwatch(result);
 	}
 
 	/// <summary>

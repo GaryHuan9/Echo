@@ -137,12 +137,7 @@ public readonly struct PreparedSphere : IPreparedPureGeometry
 		return distance >= threshold && distance < travel;
 	}
 
-	/// <summary>
-	/// Samples this <see cref="PreparedSphere"/>.
-	/// </summary>
-	/// <param name="origin">The geometry-space point of whose perspective the result should be sampled through.</param>
-	/// <param name="sample">The <see cref="Sample2D"/> used to sample the result.</param>
-	/// <returns>The <see cref="Probable{T}"/> point that was sampled.</returns>
+	/// <inheritdoc/>
 	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
 	{
 		//Check whether origin is inside sphere
@@ -183,12 +178,7 @@ public readonly struct PreparedSphere : IPreparedPureGeometry
 		return (GetPoint(transform.LocalToWorld(normal)), pdf);
 	}
 
-	/// <summary>
-	/// Calculates the pdf of selecting <see cref="incident"/> with <see cref="Sample"/>.
-	/// </summary>
-	/// <param name="origin">The geometry-space point of whose perspective the pdf should be calculated through.</param>
-	/// <param name="incident">The selected geometry-space unit direction that points from <paramref name="origin"/>.</param>
-	/// <returns>The probability density function (pdf) value over solid angles.</returns>
+	/// <inheritdoc/>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 	{
 		//Check whether point is inside this sphere

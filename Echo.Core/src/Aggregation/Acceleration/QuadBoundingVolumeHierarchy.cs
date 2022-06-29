@@ -315,7 +315,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		return false;
 	}
 
-	uint GetTraceCost(in EntityToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
+	uint GetTraceCost(EntityToken token, in Ray ray, ref float distance, float intersection = float.NegativeInfinity)
 	{
 		if (token.IsEmpty || intersection >= distance) return 0;
 		if (token.Type.IsGeometry()) return geometries.GetTraceCost(ray, ref distance, token);

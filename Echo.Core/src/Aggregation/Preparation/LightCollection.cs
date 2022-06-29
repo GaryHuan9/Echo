@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
-using CodeHelpers.Diagnostics;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
@@ -12,7 +12,6 @@ using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Lighting;
-using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Aggregation.Preparation;
@@ -49,7 +48,7 @@ public class LightCollection
 
 	readonly GeometryCollection geometries;
 
-	public View<Tokenized<LightBounds>> CreateBoundsView(PreparedSwatch emissiveSwatch)
+	public View<Tokenized<LightBounds>> CreateBoundsView()
 	{
 		var list = new SmallList<Tokenized<LightBounds>>();
 
@@ -74,7 +73,7 @@ public class LightCollection
 			for (int i = 0; i < array.Length; i++)
 			{
 				ref readonly T geometry = ref array.ItemRef(i);
-				float power = geometry.GetPower(emissiveSwatch);
+				float power = geometry.GetPower(geometries.swatch);
 
 				if (!FastMath.Positive(power)) continue;
 
@@ -88,15 +87,97 @@ public class LightCollection
 	}
 
 	/// <inheritdoc cref="IPreparedLight.Sample"/>
-	public Probable<RGB128> Sample(EntityToken token, in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel) { }
+	[SkipLocalsInit]
+	public Probable<RGB128> Sample(EntityToken token, in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
+	{
+		switch (token.Type)
+		{
+			case TokenType.Triangle:
+			{
+				ref readonly PreparedTriangle triangle = ref geometries.triangles.ItemRef(token.Index);
+				if (geometries.swatch[triangle.Material] is not IEmissive emissive) return Exit(out incident, out travel);
+				return HandleGeometry(triangle, emissive, origin, sample, out incident, out travel);
+			}
+			case TokenType.Sphere: return HandleGeometry(geometries.spheres[token.Index], point, sample, out incident, out travel);
+			case TokenType.Light:
+			{
+				switch (token.LightType)
+				{
+					case LightType.Point: return points[token.LightIndex].Sample(point, sample, out incident, out travel);
+					default:              throw new ArgumentOutOfRangeException(nameof(token));
+				}
+			}
+			default: throw new ArgumentOutOfRangeException(nameof(token));
+		}
+
+		static Probable<RGB128> HandleGeometry<T>(LightCollection lights, EntityToken token, in GeometryPoint origin, 
+												  Sample2D sample, out Float3 incident, out float travel) where T : IPreparedPureGeometry
+		{
+			(GeometryPoint point, float pdf) = geometry.Sample(origin, sample);
+			if (!FastMath.Positive(pdf)) return Exit(out incident, out travel);
+
+			Float3 delta = point.position - origin;
+			float travel2 = delta.SquaredMagnitude;
+
+			if (!FastMath.Positive(travel2)) return Exit(out incident, out travel);
+
+			travel = FastMath.Sqrt0(travel2);
+			incident = delta * (1f / travel);
+
+			travel = FastMath.Max0(travel - FastMath.Epsilon);
+			return (material.Emit(origin, -incident), pdf);
+		}
+
+		static Probable<RGB128> HandleGeometry<T>(in T geometry, IEmissive material, in GeometryPoint origin,
+												  Sample2D sample, out Float3 incident, out float travel) where T : IPreparedPureGeometry
+		{
+			(GeometryPoint point, float pdf) = geometry.Sample(origin, sample);
+			if (!FastMath.Positive(pdf)) return Exit(out incident, out travel);
+
+			Float3 delta = point.position - origin;
+			float travel2 = delta.SquaredMagnitude;
+
+			if (!FastMath.Positive(travel2)) return Exit(out incident, out travel);
+
+			travel = FastMath.Sqrt0(travel2);
+			incident = delta * (1f / travel);
+
+			travel = FastMath.Max0(travel - FastMath.Epsilon);
+			return (material.Emit(origin, -incident), pdf);
+		}
+
+		[SkipLocalsInit]
+		static Probable<RGB128> Exit(out Float3 incident, out float travel)
+		{
+			Unsafe.SkipInit(out incident);
+			Unsafe.SkipInit(out travel);
+			return Probable<RGB128>.Impossible;
+		}
+	}
 
 	/// <inheritdoc cref="IPreparedAreaLight.ProbabilityDensity"/>
-	public float ProbabilityDensity(EntityToken token, in GeometryPoint point, in Float3 incident)
+	public float ProbabilityDensity(EntityToken token, in GeometryPoint origin, in Float3 incident)
 	{
-		switch (token.LightType)
+		switch (token.Type)
 		{
-			case LightType.Point: break;
-			default:              throw new ArgumentOutOfRangeException();
+			case TokenType.Triangle: return HandleGeometry(geometries.triangles, token, point, incident);
+			case TokenType.Sphere:   return HandleGeometry(geometries.spheres, token, point, incident);
+			case TokenType.Light:
+			{
+				switch (token.LightType)
+				{
+					case LightType.Point: return 1f;
+					default:              throw new ArgumentOutOfRangeException(nameof(token));
+				}
+			}
+			default: throw new ArgumentOutOfRangeException(nameof(token));
+		}
+
+		static float HandleGeometry<T>(ImmutableArray<T> array, EntityToken token,
+									   in GeometryPoint origin, in Float3 incident) where T : IPreparedPureGeometry
+		{
+			ref readonly T geometry = ref array.ItemRef(token.Index);
+			return geometry.ProbabilityDensity(point, incident);
 		}
 	}
 
