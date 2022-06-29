@@ -26,7 +26,7 @@ public readonly struct LightBounds
 		energy + other.energy
 	);
 
-	public float Importance(in GeometryPoint point)
+	public float Importance(in GeometryPoint origin)
 	{
 		Float3 center = aabb.Center;
 		Float3 incident = center - point;

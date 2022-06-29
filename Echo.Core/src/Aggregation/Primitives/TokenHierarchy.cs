@@ -127,7 +127,7 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	/// Hashes an <see cref="EntityToken"/> at <paramref name="layer"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static uint Hash(in EntityToken token, int layer)
+	static uint Hash(EntityToken token, int layer)
 	{
 		uint content = 0;
 

@@ -155,7 +155,7 @@ public class BoundingVolumeHierarchy : Accelerator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			void Push(float hit, in EntityToken token, ref TraceQuery refQuery)
+			void Push(float hit, EntityToken token, ref TraceQuery refQuery)
 			{
 				if (hit >= refQuery.distance) return;
 
@@ -204,7 +204,7 @@ public class BoundingVolumeHierarchy : Accelerator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			bool Push(float hit, in EntityToken token, ref OccludeQuery refQuery)
+			bool Push(float hit, EntityToken token, ref OccludeQuery refQuery)
 			{
 				if (hit >= refQuery.travel) return false;
 
@@ -224,7 +224,7 @@ public class BoundingVolumeHierarchy : Accelerator
 		return false;
 	}
 
-	uint GetTraceCost(in EntityToken token, in Ray ray, ref float distance)
+	uint GetTraceCost(EntityToken token, in Ray ray, ref float distance)
 	{
 		if (token.Type.IsGeometry())
 		{
@@ -259,7 +259,7 @@ public class BoundingVolumeHierarchy : Accelerator
 	[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
 	readonly struct Node
 	{
-		public Node(in AxisAlignedBoundingBox aabb, in EntityToken token)
+		public Node(in AxisAlignedBoundingBox aabb, EntityToken token)
 		{
 			this.aabb = aabb;
 			this.token = token;

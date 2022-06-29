@@ -19,7 +19,7 @@ public class LightBoundingVolumeHierarchy : LightPicker
 
 	public override float ProbabilityDensity(EntityToken token) => throw new NotImplementedException();
 
-	public Probable<EntityToken> Sample(in GeometryPoint point, Sample1D sample) => Sample(point, sample, root, 1f);
+	public Probable<EntityToken> Sample(in GeometryPoint origin, Sample1D sample) => Sample(point, sample, root, 1f);
 
 	static Node Build(Span<int> indices, ReadOnlyView<LightBounds> lights, ReadOnlySpan<EntityToken> tokens)
 	{
@@ -77,7 +77,7 @@ public class LightBoundingVolumeHierarchy : LightPicker
 		);
 	}
 
-	static Probable<EntityToken> Sample(in GeometryPoint point, Sample1D sample, Node node, float pdf)
+	static Probable<EntityToken> Sample(in GeometryPoint origin, Sample1D sample, Node node, float pdf)
 	{
 		if (node.child0 == null) return new Probable<EntityToken>(node.token, pdf);
 

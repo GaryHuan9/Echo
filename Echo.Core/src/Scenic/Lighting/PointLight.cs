@@ -6,50 +6,18 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Lighting;
 
-public class PointLight : LightSource, ILightSource<PreparedPointLight>
+public class PointLight : LightEntity, ILightSource<PreparedPointLight>
 {
-	float _power;
-
-	public override float Power => _power;
-
-	public override void Prepare(PreparedSceneOld scene)
-	{
-		base.Prepare(scene);
-
-		_power = 4f * Scalars.Pi * Intensity.Luminance;
-	}
-
-	public override Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
-	{
-		Float3 delta = Position - point;
-		float travel2 = delta.SquaredMagnitude;
-
-		if (!FastMath.Positive(travel2))
-		{
-			incident = Float3.Zero;
-			travel = 0f;
-			return Probable<RGB128>.Impossible;
-		}
-
-		travel = FastMath.Sqrt0(travel2);
-
-		float travelR = 1f / travel;
-		incident = delta * travelR;
-
-		return (Intensity * travelR * travelR, 1f);
-	}
-
 	public PreparedPointLight Extract() => new(Intensity, ContainedPosition);
 }
 
-public readonly struct PreparedPointLight
+public readonly struct PreparedPointLight : IPreparedLight
 {
-	public PreparedPointLight(RGB128 intensity, Float3 position)
+	public PreparedPointLight(in RGB128 intensity, in Float3 position)
 	{
 		this.intensity = intensity;
 		this.position = position;
@@ -66,10 +34,11 @@ public readonly struct PreparedPointLight
 
 	public LightBounds LightBounds => new(BoxBounds, ConeBounds, energy);
 
+	/// <inheritdoc/>
 	[SkipLocalsInit]
-	public Probable<RGB128> Sample(in GeometryPoint point, out Float3 incident, out float travel)
+	public Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
-		Float3 offset = position - point;
+		Float3 offset = position - origin;
 		float travel2 = offset.SquaredMagnitude;
 
 		if (!FastMath.Positive(travel2))

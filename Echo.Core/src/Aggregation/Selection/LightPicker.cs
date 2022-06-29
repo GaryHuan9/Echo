@@ -20,9 +20,9 @@ public abstract class LightPicker
 
 	public abstract float ProbabilityDensity(EntityToken token);
 
-	public static LightPicker Create(LightCollection lights, PreparedSwatch emissiveSwatch)
+	public static LightPicker Create(LightCollection lights)
 	{
-		View<Tokenized<LightBounds>> boundsView = lights.CreateBoundsView(emissiveSwatch);
+		View<Tokenized<LightBounds>> boundsView = lights.CreateBoundsView();
 
 		throw new NotImplementedException();
 	}
