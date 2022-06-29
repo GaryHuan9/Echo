@@ -62,46 +62,43 @@ public class HilbertCurvePattern : ITilePattern
 {
 	public Int2[] CreateSequence(Int2 size)
 	{
-		Int2 topRightSize, topLeftSize, bottomRightSize, bottomLeftSize;
-		topRightSize = new Int2((int)Math.Ceiling(size.X / 2.0), (int)Math.Floor(size.Y / 2.0));
-		topLeftSize = new Int2((int)Math.Floor(size.X / 2.0), (int)Math.Floor(size.Y / 2.0));
-		bottomRightSize = new Int2((int)Math.Ceiling(size.X / 2.0), (int)Math.Ceiling(size.Y / 2.0));
-		bottomLeftSize = new Int2((int)Math.Floor(size.X / 2.0), (int)Math.Ceiling(size.Y / 2.0));
+		//Divide and get the hilbert curve for all four corners
+		Int2 topRightSize = new Int2(size.X.CeiledDivide(2), size.Y.FlooredDivide(2));
+		Int2 topLeftSize = new Int2(size.X.FlooredDivide(2), size.Y.FlooredDivide(2));
+		Int2 bottomRightSize = new Int2(size.X.CeiledDivide(2), size.Y.CeiledDivide(2));
+		Int2 bottomLeftSize = new Int2(size.X.FlooredDivide(2), size.Y.CeiledDivide(2));
 
-		var topRightCorner = topRightSize.X > topRightSize.Y ?
-			Hilbert2D(Int2.Zero, new Int2(topRightSize.X, 0), new Int2(0, topRightSize.Y)).ToArray() :
-			Hilbert2D(Int2.Zero, new Int2(0, topRightSize.Y), new Int2(topRightSize.X, 0)).ToArray();
+		var topRightCorner = Hilbert2D(topRightSize);
+		var topLeftCorner = Hilbert2D(topLeftSize);
+		var bottomRightCorner = Hilbert2D(bottomRightSize);
+		var bottomLeftCorner = Hilbert2D(bottomLeftSize);
 
-		var topLeftCorner = topLeftSize.X > topLeftSize.Y ?
-			Hilbert2D(Int2.Zero, new Int2(topLeftSize.X, 0), new Int2(0, topLeftSize.Y)).ToArray() :
-			Hilbert2D(Int2.Zero, new Int2(0, topLeftSize.Y), new Int2(topLeftSize.X, 0)).ToArray();
-
-		var bottomRightCorner = bottomRightSize.X > bottomRightSize.Y ?
-			Hilbert2D(Int2.Zero, new Int2(bottomRightSize.X, 0), new Int2(0, bottomRightSize.Y)).ToArray() :
-			Hilbert2D(Int2.Zero, new Int2(0, bottomRightSize.Y), new Int2(bottomRightSize.X, 0)).ToArray();
-
-		var bottomLeftCorner = bottomLeftSize.X > bottomLeftSize.Y ?
-			Hilbert2D(Int2.Zero, new Int2(bottomLeftSize.X, 0), new Int2(0, bottomLeftSize.Y)).ToArray() :
-			Hilbert2D(Int2.Zero, new Int2(0, bottomLeftSize.Y), new Int2(bottomLeftSize.X, 0)).ToArray();
-
-		// offset and interlace all corners
-		Int2[] result = new Int2[topLeftCorner.Length + topRightCorner.Length + bottomLeftCorner.Length + bottomRightCorner.Length];
-
+		//Offset and interlace all corners
 		for (int i = 0; i < topLeftCorner.Length; i++)
 		{
-			topLeftCorner[i] = new Int2(topLeftSize.X - topLeftCorner[i].X - 1, topLeftSize.Y - topLeftCorner[i].Y - 1);
+			topLeftCorner[i] = topLeftSize - topLeftCorner[i] - Int2.One;
 		}
 
 		for (int i = 0; i < topRightCorner.Length; i++)
 		{
-			topRightCorner[i] += new Int2(topLeftSize.X, 0);
-			topRightCorner[i] = new Int2(topRightCorner[i].X, topRightSize.Y - topRightCorner[i].Y - 1);
+			ref Int2 position = ref topRightCorner[i];
+
+			position = new Int2
+			(
+				position.X + topLeftSize.X,
+				topRightSize.Y - position.Y - 1
+			);
 		}
 
 		for (int i = 0; i < bottomLeftCorner.Length; i++)
 		{
-			bottomLeftCorner[i] += new Int2(0, topLeftSize.Y);
-			bottomLeftCorner[i] = new Int2(bottomLeftSize.X - bottomLeftCorner[i].X - 1, bottomLeftCorner[i].Y);
+			ref Int2 position = ref bottomLeftCorner[i];
+
+			position = new Int2
+			(
+				bottomLeftSize.X - position.X - 1,
+				position.Y + topLeftSize.Y
+			);
 		}
 
 		for (int i = 0; i < bottomRightCorner.Length; i++)
@@ -111,6 +108,9 @@ public class HilbertCurvePattern : ITilePattern
 
 		int topLeft = 0, topRight = 0, bottomLeft = 0, bottomRight = 0;
 
+		//Aggregate all corners into the result
+		Int2[] result = new Int2[size.Product];
+
 		for (int i = 0; i < result.Length;)
 		{
 			if (topLeft < topLeftCorner.Length) result[i++] = topLeftCorner[topLeft++];
@@ -119,11 +119,14 @@ public class HilbertCurvePattern : ITilePattern
 			if (bottomRight < bottomRightCorner.Length) result[i++] = bottomRightCorner[bottomRight++];
 		}
 
-
 		return result;
 	}
 
-	IEnumerable<Int2> Hilbert2D(Int2 position, Int2 rectA, Int2 rectB)
+	static Int2[] Hilbert2D(Int2 size) => size.X > size.Y ?
+		Hilbert2D(Int2.Zero, new Int2(size.X, 0), new Int2(0, size.Y)).ToArray() :
+		Hilbert2D(Int2.Zero, new Int2(0, size.Y), new Int2(size.X, 0)).ToArray();
+
+	static IEnumerable<Int2> Hilbert2D(Int2 position, Int2 rectA, Int2 rectB)
 	{
 		Int2 size = new Int2(rectA.Sum, rectB.Sum).Absoluted;
 
@@ -172,10 +175,7 @@ public class HilbertCurvePattern : ITilePattern
 			}
 			else
 			{
-				if (size2.Y % 2 != 0 && size.Y > 2)
-				{
-					rectB2 += db;
-				}
+				if (size2.Y % 2 != 0 && size.Y > 2) rectB2 += db;
 
 				var result = Hilbert2D(position, rectB2, rectA2);
 				foreach (var item in result) yield return item;
