@@ -1,13 +1,8 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+﻿using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common.Mathematics;
-using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometric;
 using Echo.Core.Scenic.Preparation;
 
@@ -21,7 +16,7 @@ public readonly struct PreparedInstance : IPreparedGeometry
 		this.swatch = swatch;
 
 		this.inverseTransform = inverseTransform;
-		forwardTransform = inverseTransform.Inversed;
+		forwardTransform = inverseTransform.Inverse;
 
 		inverseScale = inverseTransform.GetRow(0).XYZ_.Magnitude;
 		forwardScale = 1f / inverseScale;
@@ -98,46 +93,7 @@ public readonly struct PreparedInstance : IPreparedGeometry
 		return cost;
 	}
 
-	/// <summary>
-	/// Retrieves a <see cref="Material"/> from this <see cref="PreparedInstance"/>.
-	/// </summary>
-	/// <param name="index">The <see cref="MaterialIndex"/> pointing at the target <see cref="Material"/>.</param>
-	/// <returns>The <see cref="Material"/> that was found.</returns>
-	public Material GetMaterial(MaterialIndex index) => swatch[index];
-
 	float IPreparedGeometry.GetPower(PreparedSwatch _) => pack.lightPicker.Power * inverseScale * inverseScale;
-
-	/// <summary>
-	/// Picks an emissive geometry from this <see cref="PreparedInstance"/>.
-	/// </summary>
-	/// <param name="sample">The <see cref="Sample1D"/> value used to select the target emissive geometry.</param>
-	/// <param name="instance">Outputs the <see cref="PreparedInstance"/> that immediately holds this geometry.</param>
-	/// <returns>The picked <see cref="Probable{T}"/> of type <see cref="TokenHierarchy"/> that represents our emissive geometry.</returns>
-	/// <remarks>If <see cref="Power"/> is not positive, the behavior of this method is undefined.</remarks>
-	public Probable<TokenHierarchy> Pick(Sample1D sample, out PreparedInstance instance)
-	{
-		Assert.IsTrue(FastMath.Positive(Power));
-		var geometryToken = new TokenHierarchy();
-
-		instance = this;
-		float pdf = 1f;
-
-		do
-		{
-			// ReSharper disable once LocalVariableHidesMember
-			(EntityToken token, float tokenPdf) = instance.powerDistribution.Pick(ref sample);
-
-			Assert.IsTrue(token.Type.IsGeometry());
-
-			if (token.Type.IsRawGeometry()) geometryToken.TopToken = token;
-			else geometryToken.Push(instance = instance.pack.GetInstance(token));
-
-			pdf *= tokenPdf;
-		}
-		while (geometryToken.TopToken == default);
-
-		return (geometryToken, pdf);
-	}
 
 	/// <summary>
 	/// Transforms <paramref name="ray"/> from parent to local-space.

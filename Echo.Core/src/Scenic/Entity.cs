@@ -147,14 +147,14 @@ public class Entity
 
 		if (Parent == null)
 		{
-			_forwardTransform = transform.Inversed;
+			_forwardTransform = transform.Inverse;
 			_inverseTransform = transform;
 		}
 		else
 		{
 			Parent.RecalculateTransform();
 
-			_forwardTransform = Parent.ForwardTransform * transform.Inversed;
+			_forwardTransform = Parent.ForwardTransform * transform.Inverse;
 			_inverseTransform = Parent.InverseTransform * transform;
 		}
 

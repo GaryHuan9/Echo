@@ -21,11 +21,11 @@ public record NormalEvaluator : Evaluator
 		//Trace for intersection
 		while (scene.Trace(ref query))
 		{
-			Touch touch = scene.Interact(query);
-			touch.shade.material.Scatter(ref touch, allocator);
+			Contact contact = scene.Interact(query);
+			contact.shade.material.Scatter(ref contact, allocator);
 
-			if (touch.bsdf == null) query = query.SpawnTrace();
-			else return ((Normal96)touch.shade.Normal).ToFloat4();
+			if (contact.bsdf == null) query = query.SpawnTrace();
+			else return ((Normal96)contact.shade.Normal).ToFloat4();
 		}
 
 		//Return negative direction for escaped rays

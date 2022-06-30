@@ -29,7 +29,7 @@ public readonly struct LightBounds
 	public float Importance(in GeometryPoint origin)
 	{
 		Float3 center = aabb.Center;
-		Float3 incident = center - point;
+		Float3 incident = center - origin;
 
 		float length2 = incident.SquaredMagnitude;
 
@@ -55,7 +55,7 @@ public readonly struct LightBounds
 		float cosFinal = ClampSubtractCos(sinRemain, cosRemain, sinRadius, cosRadius);
 		if (cosFinal <= cone.cosExtend) return 0f;
 
-		float cosIncident = point.normal.Dot(incident);
+		float cosIncident = origin.normal.Dot(incident);
 		float sinIncident = FastMath.Identity(cosIncident);
 		float cosReflect = ClampSubtractCos(sinIncident, cosIncident, sinRadius, cosRadius);
 
