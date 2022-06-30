@@ -62,6 +62,8 @@ public class HilbertCurvePattern : ITilePattern
 {
 	public Int2[] CreateSequence(Int2 size)
 	{
+		if (size == Int2.One) return new[] { Int2.Zero };
+
 		//Divide and get the hilbert curve for all four corners
 		Int2 topRightSize = new Int2(size.X.CeiledDivide(2), size.Y.FlooredDivide(2));
 		Int2 topLeftSize = new Int2(size.X.FlooredDivide(2), size.Y.FlooredDivide(2));
@@ -132,8 +134,6 @@ public class HilbertCurvePattern : ITilePattern
 
 		Int2 da = rectA.Signed; // unit major direction
 		Int2 db = rectB.Signed; // unit orthogonal direction
-
-		if (size.X < 1 || size.Y < 1) throw new Exception("size is less than 1!");
 
 		if (size.Y == 1)
 		{
