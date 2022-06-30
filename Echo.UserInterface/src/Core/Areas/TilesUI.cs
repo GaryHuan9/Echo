@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
@@ -42,6 +43,8 @@ public class TilesUI : PlaneUI
 	EvaluationOperation lastOperation;
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
+
+	List<Vector2> tilePositions = new List<Vector2>();
 
 	const string TextureFilePath = "render.png";
 
