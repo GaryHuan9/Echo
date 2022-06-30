@@ -85,9 +85,9 @@ public class PreparedSceneOld
 
 	/// <summary>
 	/// Interacts with a concluded <see cref="TraceQuery"/> that was performed
-	/// on this <see cref="PreparedSceneOld"/> by creating a <see cref="Touch"/>.
+	/// on this <see cref="PreparedSceneOld"/> by creating a <see cref="Contact"/>.
 	/// </summary>
-	public Touch Interact(in TraceQuery query) => rootInstance.Interact(query);
+	public Contact Interact(in TraceQuery query) => rootInstance.Interact(query);
 
 	/// <summary>
 	/// Picks an <see cref="ILight"/> in this <see cref="PreparedSceneOld"/>.

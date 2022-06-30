@@ -45,7 +45,7 @@ public record PathTracedEvaluator : Evaluator
 		for (int depth = 0; depth < BounceLimit; depth++)
 		{
 			//Sample the bsdf
-			var bounce = new Bounce(path.touch, distribution.Next2D());
+			var bounce = new Bounce(path.contact, distribution.Next2D());
 			if (bounce.IsZero) break;
 
 			//Prefetch all samples so the order of them in subsequent bounces do not get messed up
@@ -80,14 +80,14 @@ public record PathTracedEvaluator : Evaluator
 				bool mis = area != null;
 
 				//Importance sample the selected light
-				RGB128 radiant = ImportanceSampleRadiant(light, path.touch, radiantSample, scene, mis);
+				RGB128 radiant = ImportanceSampleRadiant(light, path.contact, radiantSample, scene, mis);
 
 				if (mis)
 				{
 					//Perform MIS between scatter and radiant
 					path.Contribute(weight * radiant);
 
-					float radiantPdf = area.ProbabilityDensity(path.touch.point, bounce.incident);
+					float radiantPdf = area.ProbabilityDensity(path.contact.point, bounce.incident);
 					weight *= PowerHeuristic(bounce.scatterPdf, radiantPdf);
 
 					//Begin continue path to the next vertex and exit if path exhausted
@@ -117,7 +117,7 @@ public record PathTracedEvaluator : Evaluator
 					}
 
 					//Try add emission with MIS
-					if (hasToken && token == path.touch.token) path.ContributeEmissive(weight);
+					if (hasToken && token == path.contact.token) path.ContributeEmissive(weight);
 				}
 				else
 				{
@@ -143,33 +143,33 @@ public record PathTracedEvaluator : Evaluator
 	/// Importance samples an <see cref="ILight"/>.
 	/// </summary>
 	/// <param name="light">The <see cref="ILight"/> to sample.</param>
-	/// <param name="touch">The <see cref="Touch"/> to sample from.</param>
+	/// <param name="contact">The <see cref="Contact"/> to sample from.</param>
 	/// <param name="sample">The <see cref="Sample2D"/> value to use.</param>
 	/// <param name="scene">The <see cref="PreparedSceneOld"/> that all of this takes place.</param>
 	/// <param name="mis">Whether this method should use multiple importance sampling.</param>
 	/// <returns>The sampled radiant from the <see cref="ILight"/>.</returns>
-	static RGB128 ImportanceSampleRadiant(ILight light, in Touch touch, Sample2D sample, PreparedSceneOld scene, bool mis)
+	static RGB128 ImportanceSampleRadiant(ILight light, in Contact contact, Sample2D sample, PreparedSceneOld scene, bool mis)
 	{
 		//Importance sample light
-		(RGB128 radiant, float radiantPdf) = light.Sample(touch.point, sample, out Float3 incident, out float travel);
+		(RGB128 radiant, float radiantPdf) = light.Sample(contact.point, sample, out Float3 incident, out float travel);
 
 		if (!FastMath.Positive(radiantPdf) | radiant.IsZero) return RGB128.Black;
 
 		//Evaluate bsdf at the direction sampled for our light
-		ref readonly Float3 outgoing = ref touch.outgoing;
-		RGB128 scatter = touch.bsdf.Evaluate(outgoing, incident);
-		scatter *= touch.NormalDot(incident);
+		ref readonly Float3 outgoing = ref contact.outgoing;
+		RGB128 scatter = contact.bsdf.Evaluate(outgoing, incident);
+		scatter *= contact.NormalDot(incident);
 
 		//Conditionally terminate if radiant cannot be positive
 		if (scatter.IsZero) return RGB128.Black;
-		var query = touch.SpawnOcclude(incident, travel);
+		var query = contact.SpawnOcclude(incident, travel);
 		if (scene.Occlude(ref query)) return RGB128.Black;
 
 		//Calculate final radiant
 		radiant /= radiantPdf;
 		if (!mis) return scatter * radiant;
 
-		float scatterPdf = touch.bsdf.ProbabilityDensity(outgoing, incident);
+		float scatterPdf = contact.bsdf.ProbabilityDensity(outgoing, incident);
 		return PowerHeuristic(radiantPdf, scatterPdf) * scatter * radiant;
 	}
 
@@ -191,7 +191,7 @@ public record PathTracedEvaluator : Evaluator
 		{
 			Result = RGB128.Black;
 			energy = RGB128.White;
-			Unsafe.SkipInit(out touch);
+			Unsafe.SkipInit(out contact);
 			query = new TraceQuery(ray);
 		}
 
@@ -203,9 +203,9 @@ public record PathTracedEvaluator : Evaluator
 		RGB128 energy;
 
 		/// <summary>
-		/// The current <see cref="Touch"/> experienced on this <see cref="Path"/>.
+		/// The current <see cref="Contact"/> experienced on this <see cref="Path"/>.
 		/// </summary>
-		public Touch touch;
+		public Contact contact;
 
 		TraceQuery query;
 
@@ -214,7 +214,7 @@ public record PathTracedEvaluator : Evaluator
 		/// </summary>
 		public readonly Float3 CurrentDirection => query.ray.direction;
 
-		readonly Material Material => touch.shade.material;
+		readonly Material Material => contact.shade.material;
 
 		/// <summary>
 		/// Advance this <see cref="Path"/> to a new vertex.
@@ -228,10 +228,10 @@ public record PathTracedEvaluator : Evaluator
 
 			while (scene.Trace(ref query))
 			{
-				touch = scene.Interact(query);
+				contact = scene.Interact(query);
 
-				Material.Scatter(ref touch, allocator);
-				if (touch.bsdf != null) return true;
+				Material.Scatter(ref contact, allocator);
+				if (contact.bsdf != null) return true;
 
 				query = query.SpawnTrace();
 			}
@@ -266,7 +266,7 @@ public record PathTracedEvaluator : Evaluator
 		public void Contribute(in RGB128 value) => Result += energy * value; //OPTIMIZE: fma
 
 		/// <summary>
-		/// Contributes the emission of the <see cref="Material"/> of the current <see cref="touch"/>.
+		/// Contributes the emission of the <see cref="Material"/> of the current <see cref="contact"/>.
 		/// </summary>
 		/// <param name="weight">An optionally provided value to scale this contribution.</param>
 		public void ContributeEmissive(float weight = 1f)
@@ -274,7 +274,7 @@ public record PathTracedEvaluator : Evaluator
 			if (Material is not IEmissive emissive) return;
 			if (!FastMath.Positive(emissive.Power)) return;
 
-			Contribute(emissive.Emit(touch.point, touch.outgoing) * weight);
+			Contribute(emissive.Emit(contact.point, contact.outgoing) * weight);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -294,15 +294,15 @@ public record PathTracedEvaluator : Evaluator
 	/// </summary>
 	readonly struct Bounce
 	{
-		public Bounce(in Touch touch, Sample2D sample)
+		public Bounce(in Contact contact, Sample2D sample)
 		{
-			(scatter, scatterPdf) = touch.bsdf.Sample
+			(scatter, scatterPdf) = contact.bsdf.Sample
 			(
-				touch.outgoing, sample, out incident,
-				out function, TryExcludeSpecular(touch.bsdf)
+				contact.outgoing, sample, out incident,
+				out function, TryExcludeSpecular(contact.bsdf)
 			);
 
-			scatter *= touch.NormalDot(incident);
+			scatter *= contact.NormalDot(incident);
 		}
 
 		/// <summary>

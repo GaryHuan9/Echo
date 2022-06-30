@@ -87,7 +87,6 @@ public class LightCollection
 	}
 
 	/// <inheritdoc cref="IPreparedLight.Sample"/>
-	[SkipLocalsInit]
 	public Probable<RGB128> Sample(EntityToken token, in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
 		switch (token.Type)
@@ -98,34 +97,21 @@ public class LightCollection
 				if (geometries.swatch[triangle.Material] is not IEmissive emissive) return Exit(out incident, out travel);
 				return HandleGeometry(triangle, emissive, origin, sample, out incident, out travel);
 			}
-			case TokenType.Sphere: return HandleGeometry(geometries.spheres[token.Index], point, sample, out incident, out travel);
+			case TokenType.Sphere:
+			{
+				ref readonly PreparedSphere sphere = ref geometries.spheres.ItemRef(token.Index);
+				if (geometries.swatch[sphere.Material] is not IEmissive emissive) return Exit(out incident, out travel);
+				return HandleGeometry(sphere, emissive, origin, sample, out incident, out travel);
+			}
 			case TokenType.Light:
 			{
 				switch (token.LightType)
 				{
-					case LightType.Point: return points[token.LightIndex].Sample(point, sample, out incident, out travel);
+					case LightType.Point: return points[token.LightIndex].Sample(origin, sample, out incident, out travel);
 					default:              throw new ArgumentOutOfRangeException(nameof(token));
 				}
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(token));
-		}
-
-		static Probable<RGB128> HandleGeometry<T>(LightCollection lights, EntityToken token, in GeometryPoint origin, 
-												  Sample2D sample, out Float3 incident, out float travel) where T : IPreparedPureGeometry
-		{
-			(GeometryPoint point, float pdf) = geometry.Sample(origin, sample);
-			if (!FastMath.Positive(pdf)) return Exit(out incident, out travel);
-
-			Float3 delta = point.position - origin;
-			float travel2 = delta.SquaredMagnitude;
-
-			if (!FastMath.Positive(travel2)) return Exit(out incident, out travel);
-
-			travel = FastMath.Sqrt0(travel2);
-			incident = delta * (1f / travel);
-
-			travel = FastMath.Max0(travel - FastMath.Epsilon);
-			return (material.Emit(origin, -incident), pdf);
 		}
 
 		static Probable<RGB128> HandleGeometry<T>(in T geometry, IEmissive material, in GeometryPoint origin,
@@ -160,8 +146,8 @@ public class LightCollection
 	{
 		switch (token.Type)
 		{
-			case TokenType.Triangle: return HandleGeometry(geometries.triangles, token, point, incident);
-			case TokenType.Sphere:   return HandleGeometry(geometries.spheres, token, point, incident);
+			case TokenType.Triangle: return HandleGeometry(geometries.triangles, token, origin, incident);
+			case TokenType.Sphere:   return HandleGeometry(geometries.spheres, token, origin, incident);
 			case TokenType.Light:
 			{
 				switch (token.LightType)
@@ -177,7 +163,7 @@ public class LightCollection
 									   in GeometryPoint origin, in Float3 incident) where T : IPreparedPureGeometry
 		{
 			ref readonly T geometry = ref array.ItemRef(token.Index);
-			return geometry.ProbabilityDensity(point, incident);
+			return geometry.ProbabilityDensity(origin, incident);
 		}
 	}
 

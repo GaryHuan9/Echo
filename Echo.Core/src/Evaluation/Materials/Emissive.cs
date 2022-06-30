@@ -65,10 +65,10 @@ public class Emissive : Material, IEmissive
 		Power = emission.Luminance * Scalars.Tau;
 	}
 
-	public override void Scatter(ref Touch touch, Allocator allocator)
+	public override void Scatter(ref Contact contact, Allocator allocator)
 	{
 		//Empty bsdf for zero scattering
-		_ = new MakeBSDF(ref touch, allocator);
+		_ = new MakeBSDF(ref contact, allocator);
 	}
 
 	/// <inheritdoc/>

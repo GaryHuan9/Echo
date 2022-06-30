@@ -41,8 +41,7 @@ public class LinearAccelerator : Accelerator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections[i] >= query.distance) continue;
-				ref readonly EntityToken token = ref node.token4[i];
-				geometries.Trace(token, ref query);
+				geometries.Trace(node.token4[i], ref query);
 			}
 		}
 	}
@@ -56,8 +55,7 @@ public class LinearAccelerator : Accelerator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections[i] >= query.travel) continue;
-				ref readonly EntityToken token = ref node.token4[i];
-				if (geometries.Occlude(token, ref query)) return true;
+				if (geometries.Occlude(node.token4[i], ref query)) return true;
 			}
 		}
 
@@ -75,8 +73,7 @@ public class LinearAccelerator : Accelerator
 			for (int i = 0; i < Width; i++)
 			{
 				if (intersections[i] >= distance) continue;
-				ref readonly EntityToken token = ref node.token4[i];
-				cost += geometries.GetTraceCost(ray, ref distance, token);
+				cost += geometries.GetTraceCost(ray, ref distance, node.token4[i]);
 			}
 		}
 

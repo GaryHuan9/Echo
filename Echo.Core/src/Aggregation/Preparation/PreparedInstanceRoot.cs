@@ -37,9 +37,9 @@ public class PreparedInstanceRoot : PreparedInstance
 	}
 
 	/// <summary>
-	/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Primitives.Touch"/>.
+	/// Interacts with the result of <paramref name="query"/> by returning an <see cref="Contact"/>.
 	/// </summary>
-	public Touch Interact(in TraceQuery query)
+	public Contact Interact(in TraceQuery query)
 	{
 		query.AssertHit();
 

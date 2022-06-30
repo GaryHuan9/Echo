@@ -93,7 +93,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 				for (int j = 0; j < Width; j++)
 				{
-					ref readonly EntityToken child = ref node.token4[j];
+					EntityToken child = node.token4[j];
 
 					if (child.IsEmpty) continue;
 					if (child.Type == TokenType.Node) *next1++ = child;
@@ -113,8 +113,8 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 			for (int i = 0; i < Width; i++)
 			{
-				ref readonly EntityToken child = ref node.token4[i];
-				if (!child.IsEmpty) fill.Add(node.aabb4[i]);
+				if (node.token4[i].IsEmpty) continue;
+				fill.Add(node.aabb4[i]);
 			}
 		}
 	}
@@ -205,7 +205,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 				float hit = intersections[offset];
 				if (hit >= query.distance) return;
 
-				ref readonly EntityToken token = ref token4[offset];
+				EntityToken token = token4[offset];
 
 				if (!token.Type.IsGeometry())
 				{
@@ -301,7 +301,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 				float hit = intersections[offset];
 				if (hit >= query.travel) return false;
 
-				ref readonly EntityToken token = ref token4[offset];
+				EntityToken token = token4[offset];
 
 				if (token.Type.IsGeometry()) return geometries.Occlude(token, ref query); //Child is leaf
 

@@ -22,13 +22,13 @@ public record AlbedoEvaluator : Evaluator
 		//Trace for intersection
 		while (scene.Trace(ref query))
 		{
-			Touch touch = scene.Interact(query);
+			Contact contact = scene.Interact(query);
 
-			Material material = touch.shade.material;
-			material.Scatter(ref touch, allocator);
+			Material material = contact.shade.material;
+			material.Scatter(ref contact, allocator);
 
-			if (touch.bsdf == null) query = query.SpawnTrace();
-			else return (RGB128)material.SampleAlbedo(touch);
+			if (contact.bsdf == null) query = query.SpawnTrace();
+			else return (RGB128)material.SampleAlbedo(contact);
 		}
 
 		//Sample ambient

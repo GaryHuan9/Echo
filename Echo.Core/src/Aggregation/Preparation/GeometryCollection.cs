@@ -59,11 +59,6 @@ public sealed class GeometryCollection
 	public readonly PreparedSwatch swatch;
 	public readonly GeometryCounts counts;
 
-	public ImmutableArray<T> GetArray<T>() where T : IPreparedGeometry
-	{
-		if (typeof(T) == typeof(PreparedTriangle)) return Unsafe.As<ImmutableArray<PreparedTriangle>, ImmutableArray<T>>(ref Unsafe.AsRef(in triangles));
-	}
-
 	public View<Tokenized<AxisAlignedBoundingBox>> CreateBoundsView()
 	{
 		var result = new Tokenized<AxisAlignedBoundingBox>[counts.Total];
@@ -204,18 +199,9 @@ public sealed class GeometryCollection
 		}
 	}
 
-	/// <summary>
-	/// Creates a new <see cref="Touch"/> from <paramref name="query"/>. The <see cref="Material"/> is extracted from <paramref name="swatch"/>.
-	/// The world to local <see cref="Float4x4"/> for the geometry found with <paramref name="query"/> should be passed through <paramref name="transform"/>.
-	/// </summary>
-	public Touch Interact(in TraceQuery query, PreparedSwatch swatch, in Float4x4 transform)
+	public Contact.Info GetContactInfo(EntityToken token, Float2 uv)
 	{
-		EntityToken token = query.token.TopToken;
 		Assert.IsTrue(token.Type.IsRawGeometry());
-
-		Float3 normal;
-		Float2 texcoord;
-		MaterialIndex materialIndex;
 
 		switch (token.Type)
 		{
@@ -223,46 +209,30 @@ public sealed class GeometryCollection
 			{
 				ref readonly PreparedTriangle triangle = ref triangles.ItemRef(token.Index);
 
-				normal = triangle.GetNormal(query.uv);
-				texcoord = triangle.GetTexcoord(query.uv);
-				materialIndex = triangle.Material;
-
-				break;
+				return new Contact.Info
+				(
+					triangle.Material,
+					triangle.GetNormal(uv),
+					triangle.GetTexcoord(uv)
+				);
 			}
 			case TokenType.Sphere:
 			{
 				ref readonly PreparedSphere sphere = ref spheres.ItemRef(token.Index);
 
-				normal = PreparedSphere.GetNormal(query.uv);
-				texcoord = PreparedSphere.GetTexcoord(query.uv);
-				materialIndex = sphere.Material;
-
-				break;
+				return new Contact.Info
+				(
+					sphere.Material,
+					PreparedSphere.GetNormal(uv),
+					PreparedSphere.GetTexcoord(uv)
+				);
 			}
-			default: throw new ArgumentOutOfRangeException(nameof(query));
+			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
-
-		normal = transform.MultiplyDirection(normal).Normalized; //Apply world transform to normal
-		Material material = swatch[materialIndex];               //Find appropriate mapped material
-
-		//Construct touch
-		if (material == null) return new Touch(query, normal);
-		return new Touch(query, normal, material, texcoord);
 	}
 
-	/// <summary>
-	/// Returns the <see cref="PreparedInstance"/> stored in this <see cref="PreparedPack"/> represented by <paramref name="token"/>.
-	/// </summary>
-	public PreparedInstance GetInstance(EntityToken token)
-	{
-		Assert.AreEqual(token.Type, TokenType.Instance);
-		return instances[token.Index];
-	}
-
-	/// <summary>
-	/// Returns the <see cref="MaterialIndex"/> of the geometry represented by <paramref name="token"/>.
-	/// </summary>
-	public MaterialIndex GetMaterialIndex(EntityToken token)
+	/// <inheritdoc cref="IPreparedPureGeometry.Material"/>
+	public MaterialIndex GetMaterial(EntityToken token)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
 
@@ -274,9 +244,7 @@ public sealed class GeometryCollection
 		};
 	}
 
-	/// <summary>
-	/// Returns the area of the geometry represented by <paramref name="token"/>.
-	/// </summary>
+	/// <inheritdoc cref="IPreparedPureGeometry.Area"/>
 	public float GetArea(EntityToken token)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
@@ -289,10 +257,7 @@ public sealed class GeometryCollection
 		};
 	}
 
-	/// <summary>
-	/// Underlying implementation of <see cref="PreparedSceneOld.Sample"/>, functional
-	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
-	/// </summary>
+	/// <inheritdoc cref="IPreparedPureGeometry.Sample"/>
 	public Probable<GeometryPoint> Sample(EntityToken token, in Float3 origin, Sample2D sample)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
@@ -305,10 +270,7 @@ public sealed class GeometryCollection
 		};
 	}
 
-	/// <summary>
-	/// Underlying implementation of <see cref="PreparedSceneOld.ProbabilityDensity"/>, functional
-	/// according to the local coordinate system of this <see cref="PreparedPack"/>.
-	/// </summary>
+	/// <inheritdoc cref="IPreparedPureGeometry.ProbabilityDensity"/>
 	public float ProbabilityDensity(EntityToken token, in Float3 origin, in Float3 incident)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());

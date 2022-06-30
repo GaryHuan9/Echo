@@ -17,7 +17,7 @@ public class BSDF
 	/// <summary>
 	/// Resets and initializes this <see cref="BSDF"/> for new use.
 	/// </summary>
-	public void Reset(in Touch touch, float newEta = 1f)
+	public void Reset(in Contact contact, float newEta = 1f)
 	{
 		//Note that we do not need to worry about releasing the references from the functions
 		//because they are supposed to be allocated in an arena, which handles the deallocation
@@ -25,8 +25,8 @@ public class BSDF
 		count = 0;
 		eta = newEta;
 
-		transform = new NormalTransform(touch.shade.Normal);
-		geometricNormal = touch.point.normal;
+		transform = new NormalTransform(contact.shade.Normal);
+		geometricNormal = contact.point.normal;
 	}
 
 	int count;

@@ -47,10 +47,10 @@ public abstract class Material
 	public virtual void Prepare() => zeroNormal = Normal == Texture.normal || FastMath.AlmostZero(NormalIntensity);
 
 	/// <summary>
-	/// Determines the scattering properties of this material at <paramref name="touch"/>
-	/// and potentially initializes the appropriate properties in <paramref name="touch"/>.
+	/// Determines the scattering properties of this material at <paramref name="contact"/>
+	/// and potentially initializes the appropriate properties in <paramref name="contact"/>.
 	/// </summary>
-	public abstract void Scatter(ref Touch touch, Allocator allocator);
+	public abstract void Scatter(ref Contact contact, Allocator allocator);
 
 	/// <summary>
 	/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
@@ -76,34 +76,34 @@ public abstract class Material
 	}
 
 	/// <summary>
-	/// Samples <see cref="Albedo"/> at <paramref name="touch"/> and returns the resulting <see cref="RGBA128"/>.
+	/// Samples <see cref="Albedo"/> at <paramref name="contact"/> and returns the resulting <see cref="RGBA128"/>.
 	/// </summary>
-	public RGBA128 SampleAlbedo(in Touch touch) => Albedo[touch.shade.Texcoord];
+	public RGBA128 SampleAlbedo(in Contact contact) => Albedo[contact.shade.Texcoord];
 
 	/// <summary>
-	/// Samples <paramref name="texture"/> at <paramref name="touch"/> and returns the resulting <see cref="RGB128"/>.
+	/// Samples <paramref name="texture"/> at <paramref name="contact"/> and returns the resulting <see cref="RGB128"/>.
 	/// </summary>
-	protected static RGB128 Sample(Texture texture, in Touch touch) => (RGB128)texture[touch.shade.Texcoord];
+	protected static RGB128 Sample(Texture texture, in Contact contact) => (RGB128)texture[contact.shade.Texcoord];
 
 	/// <summary>
 	/// A wrapper struct used to easily create <see cref="BSDF"/> and add <see cref="BxDF"/> to it.
 	/// </summary>
 	protected readonly ref struct MakeBSDF
 	{
-		public MakeBSDF(ref Touch touch, Allocator allocator)
+		public MakeBSDF(ref Contact contact, Allocator allocator)
 		{
 			this.allocator = allocator;
 			bsdf = allocator.New<BSDF>();
 
-			touch.bsdf = bsdf;
-			bsdf.Reset(touch);
+			contact.bsdf = bsdf;
+			bsdf.Reset(contact);
 		}
 
 		readonly Allocator allocator;
 		readonly BSDF bsdf;
 
 		/// <summary>
-		/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Touch.bsdf"/> and returns it.
+		/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Contact.bsdf"/> and returns it.
 		/// </summary>
 		public T Add<T>() where T : BxDF, new()
 		{

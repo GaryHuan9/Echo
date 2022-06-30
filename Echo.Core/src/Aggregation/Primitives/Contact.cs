@@ -9,21 +9,21 @@ namespace Echo.Core.Aggregation.Primitives;
 /// <summary>
 /// A mutable struct that describes an interaction with a <see cref="PreparedSceneOld"/> from a concluded <see cref="TraceQuery"/>.
 /// </summary>
-public struct Touch
+public struct Contact
 {
-	public Touch(in TraceQuery query, in Float3 normal) : this
+	public Contact(in TraceQuery query, in Float3 normal) : this
 	(
 		query, new GeometryPoint(query.Position, normal)
 	) { }
 
-	public Touch(in TraceQuery query, in Float3 normal, Material material, Float2 texcoord) : this
+	public Contact(in TraceQuery query, in Float3 normal, Material material, Float2 texcoord) : this
 	(
 		query,
 		new GeometryPoint(query.Position, normal),
 		new GeometryShade(material, texcoord, normal)
 	) { }
 
-	public Touch(in TraceQuery query, in GeometryPoint point, in GeometryShade shade = default)
+	public Contact(in TraceQuery query, in GeometryPoint point, in GeometryShade shade = default)
 	{
 		query.AssertHit();
 		token = query.token;
@@ -41,7 +41,7 @@ public struct Touch
 	public readonly TokenHierarchy token;
 
 	/// <summary>
-	/// World-space outgoing direction of this <see cref="Touch"/>.
+	/// World-space outgoing direction of this <see cref="Contact"/>.
 	/// </summary>
 	public readonly Float3 outgoing;
 
@@ -56,17 +56,17 @@ public struct Touch
 	public readonly GeometryShade shade;
 
 	/// <summary>
-	/// The <see cref="BSDF"/> of this <see cref="Touch"/>.
+	/// The <see cref="BSDF"/> of this <see cref="Contact"/>.
 	/// </summary>
 	public BSDF bsdf;
 
 	/// <summary>
-	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Touch"/> towards <paramref name="direction"/>.
+	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Contact"/> towards <paramref name="direction"/>.
 	/// </summary>
 	public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(point.position, direction), float.PositiveInfinity, token);
 
 	/// <summary>
-	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Touch"/> with a direction directly opposite to <see cref="outgoing"/>.
+	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Contact"/> with a direction directly opposite to <see cref="outgoing"/>.
 	/// </summary>
 	public readonly TraceQuery SpawnTrace() => SpawnTrace(-outgoing);
 
@@ -86,7 +86,24 @@ public struct Touch
 	public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(shade.Normal));
 
 	/// <summary>
-	/// Converts to the position of <paramref name="touch"/>.
+	/// Converts to the position of <paramref name="contact"/>.
 	/// </summary>
-	public static implicit operator Float3(in Touch touch) => touch.point.position;
+	public static implicit operator Float3(in Contact contact) => contact.point.position;
+
+	/// <summary>
+	/// Preliminary information that can be used to construct a full <see cref="Contact"/>.
+	/// </summary>
+	public readonly struct Info
+	{
+		public Info(MaterialIndex material, Float3 normal, Float2 texcoord)
+		{
+			this.material = material;
+			this.normal = normal;
+			this.texcoord = texcoord;
+		}
+
+		public readonly MaterialIndex material;
+		public readonly Float3 normal;
+		public readonly Float2 texcoord;
+	}
 }
