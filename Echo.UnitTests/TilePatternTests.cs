@@ -1,46 +1,26 @@
-using System;
 using System.Collections.Generic;
-using CodeHelpers.Collections;
 using CodeHelpers.Packed;
 using Echo.Core.Evaluation.Operations;
 using NUnit.Framework;
 
 namespace Echo.UnitTests;
 
-[TestFixtureSource(nameof(sizeCandidates))]
+[TestFixtureSource(nameof(patternSource))]
 public class TilePatternTests
 {
-	static List<Int2> sizeCandidates;
+	public TilePatternTests(ITilePattern pattern) => this.pattern = pattern;
 
-	[SetUp]
-	public void SetUp()
-	{
-		sizeCandidates = new List<Int2> { new(10, 20), new(20, 10), new(1,3)};
-	}
-	
+	readonly ITilePattern pattern;
+
+	static IEnumerable<ITilePattern> patternSource = new ITilePattern[] { new OrderedPattern(), new ScrambledPattern(), new SpiralPattern(), new CheckerboardPattern(), new HilbertCurvePattern() };
+	static IEnumerable<Int2> sizeSource = new Int2[] { new(10, 20), new(31, 13), new(1, 3), new(1, 1), new(123, 456) };
+
 	[Test]
-	public void TestTilePatterns(Int2 size)
+	public void CreateSequence([ValueSource(nameof(sizeSource))] Int2 size)
 	{
-		List<Int2[]> patternResults = new List<Int2[]>();
-		patternResults.Add(new OrderedPattern().CreateSequence(size));
-		patternResults.Add(new ScrambledPattern().CreateSequence(size));
-		patternResults.Add(new SpiralPattern().CreateSequence(size));
-		patternResults.Add(new CheckerboardPattern().CreateSequence(size));
-		patternResults.Add(new HilbertCurvePattern().CreateSequence(size));
-
-		for (int j = 0; j < patternResults.Count; j++)
-		{
-			Assert.That(patternResults[j].Length == size.Product);
-			foreach (var item in patternResults[j])
-			{
-				Assert.That(item >= Int2.Zero && item < size);
-				int duplicateAmount = 0;
-				Array.ForEach(patternResults[j], delegate(Int2 int2)
-				{
-					if (int2 == item) duplicateAmount++;
-				});
-				Assert.That(duplicateAmount == 1);
-			}
-		}
+		Int2[] positions = pattern.CreateSequence(size);
+		Assert.That(positions, Has.Length.EqualTo(size.Product));
+		Assert.That(positions, Is.All.Matches<Int2>(position => Int2.Zero <= position && position < size));
+		Assert.That(positions, Is.Unique);
 	}
 }
