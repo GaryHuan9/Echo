@@ -34,27 +34,6 @@ public class PreparedPack
 	public readonly LightCollection lights;
 
 	/// <summary>
-	/// Calculates and outputs the <see cref="AxisAlignedBoundingBox"/> and <see cref="BoundingSphere"/> of
-	/// this <see cref="PreparedPack"/> to <paramref name="aabb"/> and <paramref name="boundingSphere"/>.
-	/// </summary>
-	protected void CalculateBounds(out AxisAlignedBoundingBox aabb, out BoundingSphere boundingSphere)
-	{
-		const int FetchDepth = 6; //How deep do we go into our accelerator to get the AABB of the nodes
-
-		using var _0 = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
-
-		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
-		accelerator.FillBounds(FetchDepth, ref fill);
-		aabbs = aabbs[..fill.Count];
-
-		using var _1 = Pool<Float3>.Fetch(aabbs.Length * 8, out View<Float3> points);
-		for (int i = 0; i < aabbs.Length; i++) aabbs[i].FillVertices(points[(i * 8)..]);
-
-		aabb = new AxisAlignedBoundingBox(aabbs);
-		boundingSphere = new BoundingSphere(points);
-	}
-
-	/// <summary>
 	/// Divides large triangles for better space partitioning.
 	/// </summary>
 	static void SubdivideTriangles(ConcurrentList<PreparedTriangle> triangles, SwatchExtractor extractor, ScenePreparer profile)

@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
@@ -18,7 +19,7 @@ public record BruteForcedEvaluator : Evaluator
 	/// </summary>
 	public int BounceLimit { get; init; } = 128;
 
-	public override Float4 Evaluate(PreparedSceneOld scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
 	{
 		int depth = BounceLimit;
 		var query = new TraceQuery(ray);

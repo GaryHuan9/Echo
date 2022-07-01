@@ -1,8 +1,7 @@
 ﻿using CodeHelpers;
-using Echo.Core.Common;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
-using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Operations;
@@ -13,9 +12,9 @@ namespace Echo.Core.Evaluation.Operations;
 public record EvaluationProfile
 {
 	/// <summary>
-	/// The <see cref="PreparedSceneOld"/> to evaluate.
+	/// The <see cref="PreparedScene"/> to evaluate.
 	/// </summary>
-	public PreparedSceneOld Scene { get; init; }
+	public PreparedScene Scene { get; init; }
 
 	/// <summary>
 	/// The fundamental evaluation method used.

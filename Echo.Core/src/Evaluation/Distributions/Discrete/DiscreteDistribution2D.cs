@@ -99,18 +99,18 @@ public readonly struct DiscreteDistribution2D
 	}
 
 	/// <summary>
-	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Pick"/>.
+	/// Calculates the pmf of selecting <paramref name="result"/> with <see cref="Pick"/>.
 	/// </summary>
 	/// <param name="result">The selected discrete point.</param>
-	/// <returns>The probability density function (pdf) value of the selection.</returns>
+	/// <returns>The probability mass function (pmf) value of the selection.</returns>
 	/// <seealso cref="Pick"/>
-	public float ProbabilityDensity(Int2 result)
+	public float ProbabilityMass(Int2 result)
 	{
 		ref readonly DiscreteDistribution1D slice = ref slices[result.Y];
 
-		float pdfX = slice.ProbabilityDensity(result.X);
-		float pdfY = vertical.ProbabilityDensity(result.Y);
+		float pmfX = slice.ProbabilityMass(result.X);
+		float pmfY = vertical.ProbabilityMass(result.Y);
 
-		return pdfX * pdfY;
+		return pmfX * pmfY;
 	}
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Common;
 using Echo.Core.Scenic.Instancing;
 
 namespace Echo.Core.Scenic;
@@ -100,9 +101,28 @@ public class Entity
 	public Float3 ContainedPosition => InverseTransform.GetColumn(3).XYZ;
 
 	/// <summary>
+	/// The <see cref="Rotation"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// </summary>
+	public Float3x3 ContainedRotation
+	{
+		get
+		{
+			float scaleR = 1f / ContainedScale;
+			Float4x4 transform = InverseTransform;
+
+			return new Float3x3
+			(
+				transform.f00 * scaleR, transform.f01 * scaleR, transform.f02 * scaleR,
+				transform.f10 * scaleR, transform.f11 * scaleR, transform.f12 * scaleR,
+				transform.f20 * scaleR, transform.f21 * scaleR, transform.f22 * scaleR
+			);
+		}
+	}
+
+	/// <summary>
 	/// The <see cref="Scale"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
 	/// </summary>
-	public float ContainedScale => InverseTransform.GetRow(0).XYZ_.Magnitude;
+	public float ContainedScale => Utility.GetScale(InverseTransform);
 
 	/// <summary>
 	/// Adds an <see cref="Entity"/> as a child.
