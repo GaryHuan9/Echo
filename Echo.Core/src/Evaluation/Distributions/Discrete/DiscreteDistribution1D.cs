@@ -137,12 +137,12 @@ public readonly struct DiscreteDistribution1D
 	}
 
 	/// <summary>
-	/// Calculates the pdf of selecting <paramref name="result"/> with <see cref="Pick(Sample1D)"/>.
+	/// Calculates the pmf of selecting <paramref name="result"/> with <see cref="Pick(Sample1D)"/>.
 	/// </summary>
 	/// <param name="result">The selected discrete value.</param>
-	/// <returns>The probability density function (pdf) value of the selection.</returns>
+	/// <returns>The probability mass function (pmf) value of the selection.</returns>
 	/// <seealso cref="Pick(Sample1D)"/>
-	public float ProbabilityDensity(int result)
+	public float ProbabilityMass(int result)
 	{
 		GetBounds(result, out float lower, out float upper);
 		return upper - lower;

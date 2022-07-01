@@ -2,6 +2,7 @@ using System;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Distributions;
@@ -14,7 +15,7 @@ namespace Echo.Core.Scenic.Lighting;
 /// <summary>
 /// An infinitely large directional light that surrounds the entire scene.
 /// </summary>
-public class AmbientLight : AreaLightSource
+public class AmbientLight : InfiniteLight
 {
 	NotNull<object> _texture = Textures.Texture.black; //Interfaces and implicit casts are not so nice to each other so object is used here
 
@@ -49,17 +50,17 @@ public class AmbientLight : AreaLightSource
 
 	public override float Power => _power;
 
-	public override void Prepare(PreparedSceneOld scene)
+	public override void Prepare(PreparedScene scene)
 	{
 		base.Prepare(scene);
 		Texture.Prepare();
 
 		//Calculate transforms
-		localToWorld = new Versor(Rotation);
+		localToWorld = ContainedRotation;
 		worldToLocal = localToWorld.Inverse;
 
 		//Calculate power
-		float radius = scene.info.boundingSphere.radius;
+		float radius = scene.accelerator.SphereBounds.radius;
 		float multiplier = Scalars.Pi * radius * radius;
 		_power = multiplier * Texture.Average.Luminance;
 	}

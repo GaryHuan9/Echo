@@ -35,6 +35,8 @@ public readonly struct PreparedInstance : IPreparedGeometry
 
 	public ConeBounds ConeBounds => pack.lightPicker.GetTransformedBounds(inverseTransform);
 
+	public float Power => pack.lightPicker.Power * inverseScale * inverseScale;
+
 	/// <summary>
 	/// Processes a <see cref="TraceQuery"/> through the underlying <see cref="Accelerator"/>.
 	/// </summary>
@@ -93,7 +95,8 @@ public readonly struct PreparedInstance : IPreparedGeometry
 		return cost;
 	}
 
-	float IPreparedGeometry.GetPower(PreparedSwatch _) => pack.lightPicker.Power * inverseScale * inverseScale;
+	/// <inheritdoc/>
+	float IPreparedGeometry.GetPower(PreparedSwatch _) => Power;
 
 	/// <summary>
 	/// Transforms <paramref name="ray"/> from parent to local-space.

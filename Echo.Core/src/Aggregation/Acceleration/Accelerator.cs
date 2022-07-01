@@ -23,6 +23,47 @@ public abstract class Accelerator
 
 	protected const MethodImplOptions ImplementationOptions = MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining;
 
+	AxisAlignedBoundingBox? _boxBounds;
+	BoundingSphere? _sphereBounds;
+
+	public AxisAlignedBoundingBox BoxBounds
+	{
+		get
+		{
+			if (_boxBounds == null)
+			{
+				var fill = new SpanFill<AxisAlignedBoundingBox>(stackalloc AxisAlignedBoundingBox[2]);
+				FillBounds(1, ref fill);
+				_boxBounds = new AxisAlignedBoundingBox(fill.Filled);
+			}
+
+			return _boxBounds.Value;
+		}
+	}
+
+	public BoundingSphere SphereBounds
+	{
+		get
+		{
+			if (_sphereBounds == null)
+			{
+				const int FetchDepth = 6; //How deep do we go into our accelerator to get the nodes
+				using var _0 = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
+
+				SpanFill<AxisAlignedBoundingBox> fill = aabbs;
+				FillBounds(FetchDepth, ref fill);
+				aabbs = aabbs[..fill.Count];
+
+				using var _1 = Pool<Float3>.Fetch(aabbs.Length * 8, out View<Float3> points);
+				for (int i = 0; i < aabbs.Length; i++) aabbs[i].FillVertices(points[(i * 8)..]);
+
+				_sphereBounds = new BoundingSphere(points);
+			}
+
+			return _sphereBounds.Value;
+		}
+	}
+
 	/// <summary>
 	/// Calculates a <see cref="AxisAlignedBoundingBox"/> that bounds this <see cref="Accelerator"/> while transformed.
 	/// </summary>

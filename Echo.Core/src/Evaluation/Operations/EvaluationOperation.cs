@@ -1,12 +1,12 @@
 ﻿using System.Collections.Immutable;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
-using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Operations;
@@ -35,7 +35,7 @@ public sealed partial class EvaluationOperation : Operation<EvaluationStatistics
 		(ContinuousDistribution distribution, Allocator allocator) = contexts[worker.Index];
 
 		Evaluator evaluator = profile.Evaluator;
-		PreparedSceneOld scene = profile.Scene;
+		PreparedScene scene = profile.Scene;
 		RenderBuffer buffer = profile.Buffer;
 
 		Int2 tilePosition = tilePositions[(int)procedure.index];

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Runtime.InteropServices;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Scenic.Geometric;
@@ -71,22 +72,15 @@ partial record ScenePreparer
 			);
 		}
 
-		public PreparedScene CreatePreparedScene(ScenePreparer preparer)
-		{
-			var builder = ImmutableArray.CreateBuilder<InfiniteLight>();
-
-			foreach (Entity entity in source.LoopChildren(true))
-			{
-				if (entity is InfiniteLight light) builder.Add(light);
-			}
-
-			return new PreparedScene
-			(
-				CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
-				CreatePreparedInstances(preparer), preparer.AcceleratorCreator,
-				new SwatchExtractor(preparer), builder.ToImmutable()
-			);
-		}
+		public PreparedScene CreatePreparedScene(ScenePreparer preparer) => new PreparedScene
+		(
+			CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
+			CreatePreparedInstances(preparer), preparer.AcceleratorCreator,
+			new SwatchExtractor(preparer), from entity in source.LoopChildren(true)
+										   let light = entity as InfiniteLight
+										   where light != null
+										   select light
+		);
 
 		ImmutableArray<PreparedInstance> CreatePreparedInstances(ScenePreparer preparer)
 		{

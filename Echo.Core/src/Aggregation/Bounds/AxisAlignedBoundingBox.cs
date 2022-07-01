@@ -22,6 +22,8 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
 	{
+		Assert.AreNotEqual(points.Length, 0);
+
 		min = Float3.PositiveInfinity;
 		max = Float3.NegativeInfinity;
 
@@ -36,6 +38,8 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
 	{
+		Assert.AreNotEqual(aabbs.Length, 0);
+
 		min = Float3.PositiveInfinity;
 		max = Float3.NegativeInfinity;
 

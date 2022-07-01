@@ -64,30 +64,30 @@ public class DiscreteDistribution1Tests
 	}
 
 	[Test]
-	public void ProbabilityDensity([Random(0f, 1f, 1000)] float random)
+	public void Probability([Random(0f, 1f, 1000)] float random)
 	{
 		Sample1D sample = (Sample1D)random;
 
-		foreach (DiscreteDistribution1D distribution in array) ProbabilityDensitySingle(distribution, sample);
+		foreach (DiscreteDistribution1D distribution in array) ProbabilitySingle(distribution, sample);
 	}
 
 	[Test]
-	public void ProbabilityDensityBoundaries()
+	public void ProbabilityBoundaries()
 	{
 		foreach (DiscreteDistribution1D distribution in array)
 		foreach (Sample1D sample in Uniform(distribution.Count))
 		{
-			ProbabilityDensitySingle(distribution, sample);
+			ProbabilitySingle(distribution, sample);
 		}
 	}
 
-	static void ProbabilityDensitySingle(DiscreteDistribution1D distribution, Sample1D sample)
+	static void ProbabilitySingle(DiscreteDistribution1D distribution, Sample1D sample)
 	{
 		var one = distribution.Sample(sample);
 		var two = distribution.Pick(sample, out float lower, out float upper);
 
 		Assert.That(distribution.ProbabilityDensity(one), Is.EqualTo(one.pdf).Roughly());
-		Assert.That(distribution.ProbabilityDensity(two), Is.EqualTo(two.pdf).Roughly());
+		Assert.That(distribution.ProbabilityMass(two), Is.EqualTo(two.pdf).Roughly());
 
 		Assert.That(one.pdf, Is.Not.Zero);
 		Assert.That(two.pdf, Is.Not.Zero);

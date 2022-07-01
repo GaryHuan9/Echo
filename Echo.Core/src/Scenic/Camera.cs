@@ -45,7 +45,7 @@ public class Camera : Entity
 	public Ray SpawnRay(in CameraSample sample, in RaySpawner spawner)
 	{
 		Float3 direction = spawner.SpawnX(sample.uv).CreateXY(forwardLength);
-		direction = LocalToWorld.MultiplyDirection(direction).Normalized;
+		direction = InverseTransform.MultiplyDirection(direction).Normalized;
 
 		return new Ray(Position, direction);
 	}
