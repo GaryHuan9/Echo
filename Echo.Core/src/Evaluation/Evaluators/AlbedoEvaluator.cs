@@ -33,6 +33,6 @@ public record AlbedoEvaluator : Evaluator
 		}
 
 		//Sample ambient
-		return scene.lights.EvaluateAmbient(query.ray.direction);
+		return scene.EvaluateAmbient(query.ray.direction);
 	}
 }

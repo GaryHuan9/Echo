@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics.Primitives;
@@ -78,6 +79,21 @@ public readonly struct DiscreteDistribution2D
 	{
 		Probable<int> y = vertical.Pick(sample.y);
 		Probable<int> x = slices[y].Pick(sample.x);
+
+		return (new Int2(x, y), x.pdf * y.pdf);
+	}
+
+	/// <inheritdoc cref="Pick(Sample2D)"/>
+	/// <remarks>Note that the input <see cref="Sample2D"/> is a reference; after the usage by this method, it will be
+	/// assigned to a new uniform and unbiased <see cref="Sample2D"/> value through the <see cref="Sample1D.Stretch"/>
+	/// operation, to be used again.</remarks>
+	public Probable<Int2> Pick(ref Sample2D sample)
+	{
+		ref Sample1D sampleX = ref Unsafe.AsRef(in sample.x);
+		ref Sample1D sampleY = ref Unsafe.AsRef(in sample.y);
+
+		Probable<int> y = vertical.Pick(ref sampleX);
+		Probable<int> x = slices[y].Pick(ref sampleY);
 
 		return (new Int2(x, y), x.pdf * y.pdf);
 	}

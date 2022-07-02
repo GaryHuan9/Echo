@@ -10,16 +10,16 @@ namespace Echo.Core.Aggregation.Selection;
 
 public class LightBoundingVolumeHierarchy : LightPicker
 {
-	public LightBoundingVolumeHierarchy(ReadOnlyView<LightBounds> lights, ReadOnlySpan<EntityToken> tokens) => 
+	public LightBoundingVolumeHierarchy(ReadOnlyView<LightBounds> lights, ReadOnlySpan<EntityToken> tokens) =>
 		root = Build(Enumerable.Range(0, lights.Length).ToArray(), lights, tokens);
 
 	readonly Node root;
 
 	public override Probable<EntityToken> Pick(Sample1D sample) => throw new NotImplementedException();
 
-	public override float ProbabilityDensity(EntityToken token) => throw new NotImplementedException();
+	public override float ProbabilityMass(EntityToken token) => throw new NotImplementedException();
 
-	public Probable<EntityToken> Sample(in GeometryPoint origin, Sample1D sample) => Sample(point, sample, root, 1f);
+	public Probable<EntityToken> Sample(in GeometryPoint origin, Sample1D sample) => Sample(origin, sample, root, 1f);
 
 	static Node Build(Span<int> indices, ReadOnlyView<LightBounds> lights, ReadOnlySpan<EntityToken> tokens)
 	{
@@ -81,18 +81,18 @@ public class LightBoundingVolumeHierarchy : LightPicker
 	{
 		if (node.child0 == null) return new Probable<EntityToken>(node.token, pdf);
 
-		float importance0 = node.child0.bounds.Importance(point);
-		float importance1 = node.child1.bounds.Importance(point);
+		float importance0 = node.child0.bounds.Importance(origin);
+		float importance1 = node.child1.bounds.Importance(origin);
 		float split = importance0 / (importance0 + importance1);
 
 		if (sample < split)
 		{
 			sample = sample.Stretch(0f, split);
-			return Sample(point, sample, node.child0, pdf * split);
+			return Sample(origin, sample, node.child0, pdf * split);
 		}
 
 		sample = sample.Stretch(split, 1f);
-		return Sample(point, sample, node.child1, pdf * (1f - split));
+		return Sample(origin, sample, node.child1, pdf * (1f - split));
 	}
 
 	class Node

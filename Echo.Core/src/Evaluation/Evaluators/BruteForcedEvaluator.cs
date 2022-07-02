@@ -29,7 +29,7 @@ public record BruteForcedEvaluator : Evaluator
 
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "force");
 
-	static Float4 Evaluate(PreparedSceneOld scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, ref int depth)
+	static Float4 Evaluate(PreparedScene scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, ref int depth)
 	{
 		if (--depth <= 0) return RGB128.Black;
 
@@ -66,7 +66,7 @@ public record BruteForcedEvaluator : Evaluator
 			query = query.SpawnTrace();
 		}
 
-		return scene.lights.EvaluateAmbient(query.ray.direction);
+		return scene.EvaluateAmbient(query.ray.direction);
 	}
 
 }

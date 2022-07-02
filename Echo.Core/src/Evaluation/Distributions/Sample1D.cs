@@ -1,4 +1,5 @@
-﻿using CodeHelpers.Diagnostics;
+﻿using System.Runtime.CompilerServices;
+using CodeHelpers.Diagnostics;
 using Echo.Core.Common.Mathematics;
 
 namespace Echo.Core.Evaluation.Distributions;
@@ -8,6 +9,7 @@ namespace Echo.Core.Evaluation.Distributions;
 /// </summary>
 public readonly struct Sample1D
 {
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	Sample1D(float u)
 	{
 		Assert.IsFalse(float.IsNaN(u));

@@ -8,7 +8,7 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
 
-public readonly struct PreparedInstance : IPreparedGeometry
+public readonly struct PreparedInstance
 {
 	public PreparedInstance(PreparedPack pack, PreparedSwatch swatch, in Float4x4 inverseTransform)
 	{
@@ -33,7 +33,12 @@ public readonly struct PreparedInstance : IPreparedGeometry
 
 	public AxisAlignedBoundingBox AABB => pack.accelerator.GetTransformedBounds(inverseTransform);
 
-	public ConeBounds ConeBounds => pack.lightPicker.GetTransformedBounds(inverseTransform);
+	public LightBounds LightBounds => new
+	(
+		pack.lightPicker.GetTransformedBounds(inverseTransform),
+		inverseTransform * pack.lightPicker.ConeBounds,
+		Power
+	);
 
 	public float Power => pack.lightPicker.Power * inverseScale * inverseScale;
 
@@ -94,9 +99,6 @@ public readonly struct PreparedInstance : IPreparedGeometry
 		distance *= inverseScale;
 		return cost;
 	}
-
-	/// <inheritdoc/>
-	float IPreparedGeometry.GetPower(PreparedSwatch _) => Power;
 
 	/// <summary>
 	/// Transforms <paramref name="ray"/> from parent to local-space.

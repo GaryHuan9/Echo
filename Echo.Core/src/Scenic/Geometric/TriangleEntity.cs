@@ -46,7 +46,7 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	}
 }
 
-public readonly struct PreparedTriangle : IPreparedPureGeometry //Winding order for triangles is CLOCKWISE
+public readonly struct PreparedTriangle : IPreparedGeometry //Winding order for triangles is CLOCKWISE
 {
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, MaterialIndex materialIndex) : this
 	(

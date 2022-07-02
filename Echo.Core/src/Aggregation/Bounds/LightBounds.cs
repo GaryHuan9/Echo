@@ -6,24 +6,24 @@ namespace Echo.Core.Aggregation.Bounds;
 
 public readonly struct LightBounds
 {
-	public LightBounds(in AxisAlignedBoundingBox aabb, in ConeBounds cone, float energy)
+	public LightBounds(in AxisAlignedBoundingBox aabb, in ConeBounds cone, float power)
 	{
 		this.aabb = aabb;
 		this.cone = cone;
-		this.energy = energy;
+		this.power = power;
 	}
 
 	public readonly AxisAlignedBoundingBox aabb;
 	public readonly ConeBounds cone;
-	public readonly float energy;
+	public readonly float power;
 
-	public float Area => aabb.HalfArea * cone.Area * energy; //relative
+	public float Area => aabb.HalfArea * cone.Area * power; //relative
 
 	public LightBounds Encapsulate(in LightBounds other) => new
 	(
 		aabb.Encapsulate(other.aabb),
 		cone.Encapsulate(other.cone),
-		energy + other.energy
+		power + other.power
 	);
 
 	public float Importance(in GeometryPoint origin)
@@ -59,7 +59,7 @@ public readonly struct LightBounds
 		float sinIncident = FastMath.Identity(cosIncident);
 		float cosReflect = ClampSubtractCos(sinIncident, cosIncident, sinRadius, cosRadius);
 
-		return FastMath.Max0(energy * cosFinal * length2R * cosReflect);
+		return FastMath.Max0(power * cosFinal * length2R * cosReflect);
 	}
 
 	static float ClampSubtractCos(float sin0, float cos0, float sin1, float cos1) => cos0 > cos1 ? 1f : cos0 * cos1 + sin0 * sin1;

@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using CodeHelpers;
 using CodeHelpers.Diagnostics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
 
@@ -47,6 +48,26 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 		{
 			min = min.Min(aabb.min);
 			max = max.Max(aabb.max);
+		}
+
+		Assert.IsTrue(max >= min);
+	}
+
+	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, in Float4x4 transform)
+	{
+		Assert.AreNotEqual(aabbs.Length, 0);
+		Float4x4 absolute = transform.Absoluted;
+
+		min = Float3.PositiveInfinity;
+		max = Float3.NegativeInfinity;
+
+		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
+		{
+			Float3 center = transform.MultiplyPoint(aabb.Center);
+			Float3 extend = absolute.MultiplyDirection(aabb.Extend);
+
+			min = min.Min(center - extend);
+			max = max.Max(center + extend);
 		}
 
 		Assert.IsTrue(max >= min);

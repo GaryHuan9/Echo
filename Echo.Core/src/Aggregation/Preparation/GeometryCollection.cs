@@ -26,7 +26,7 @@ public sealed class GeometryCollection
 		swatch = swatchExtractor.Prepare();
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
 
-		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources) where T : IPreparedPureGeometry
+		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources) where T : IPreparedGeometry
 		{
 			int length = 0;
 
@@ -66,8 +66,14 @@ public sealed class GeometryCollection
 
 		Add(ref fill, TokenType.Triangle, triangles);
 		Add(ref fill, TokenType.Sphere, spheres);
-		Add(ref fill, TokenType.Instance, instances);
 
+		for (int i = 0; i < instances.Length; i++)
+		{
+			ref readonly PreparedInstance instance = ref instances.ItemRef(i);
+			fill.Add((new EntityToken(TokenType.Instance, i), instance.AABB));
+		}
+
+		Assert.IsTrue(fill.IsFull);
 		return result;
 
 		void Add<T>(ref SpanFill<Tokenized<AxisAlignedBoundingBox>> fill, TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
@@ -231,7 +237,7 @@ public sealed class GeometryCollection
 		}
 	}
 
-	/// <inheritdoc cref="IPreparedPureGeometry.Material"/>
+	/// <inheritdoc cref="IPreparedGeometry.Material"/>
 	public MaterialIndex GetMaterial(EntityToken token)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
@@ -244,7 +250,7 @@ public sealed class GeometryCollection
 		};
 	}
 
-	/// <inheritdoc cref="IPreparedPureGeometry.Area"/>
+	/// <inheritdoc cref="IPreparedGeometry.Area"/>
 	public float GetArea(EntityToken token)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
@@ -257,7 +263,7 @@ public sealed class GeometryCollection
 		};
 	}
 
-	/// <inheritdoc cref="IPreparedPureGeometry.Sample"/>
+	/// <inheritdoc cref="IPreparedGeometry.Sample"/>
 	public Probable<GeometryPoint> Sample(EntityToken token, in Float3 origin, Sample2D sample)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());
@@ -270,7 +276,7 @@ public sealed class GeometryCollection
 		};
 	}
 
-	/// <inheritdoc cref="IPreparedPureGeometry.ProbabilityDensity"/>
+	/// <inheritdoc cref="IPreparedGeometry.ProbabilityDensity"/>
 	public float ProbabilityDensity(EntityToken token, in Float3 origin, in Float3 incident)
 	{
 		Assert.IsTrue(token.Type.IsRawGeometry());

@@ -12,13 +12,17 @@ namespace Echo.Core.Aggregation.Selection;
 
 public abstract class LightPicker
 {
+	public abstract ConeBounds ConeBounds { get; }
+
 	public abstract float Power { get; }
 
-	public abstract ConeBounds GetTransformedBounds(in Float4x4 transform);
+	public abstract AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform);
 
-	public abstract Probable<EntityToken> Pick(Sample1D sample);
+	public virtual Probable<EntityToken> Pick(Sample1D sample) => Pick(ref sample);
 
-	public abstract float ProbabilityDensity(EntityToken token);
+	public abstract Probable<EntityToken> Pick(ref Sample1D sample);
+
+	public abstract float ProbabilityMass(EntityToken token);
 
 	public static LightPicker Create(LightCollection lights)
 	{

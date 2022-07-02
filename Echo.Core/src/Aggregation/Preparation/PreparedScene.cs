@@ -31,14 +31,16 @@ public class PreparedScene : PreparedPack
 	{
 		rootInstance = new PreparedInstance(this, geometries.swatch, Float4x4.identity);
 		(this.infiniteLights, ambientLights) = FilterLights(infiniteLights, rootInstance);
-		infiniteLightsChance = CalculateLightChance(this.infiniteLights, rootInstance.Power);
+		infiniteLightsThreshold = CalculateThreshold(this.infiniteLights, rootInstance.Power);
+		infiniteLightsPdf = infiniteLightsThreshold / this.infiniteLights.Length;
 	}
 
 	public readonly ImmutableArray<InfiniteLight> infiniteLights;
 	public readonly ImmutableArray<AmbientLight> ambientLights;
 
 	readonly PreparedInstance rootInstance;
-	readonly float infiniteLightsChance;
+	readonly float infiniteLightsThreshold;
+	readonly float infiniteLightsPdf;
 
 	/// <summary>
 	/// Processes the <paramref name="query"/> and returns whether it intersected with something.
@@ -80,41 +82,37 @@ public class PreparedScene : PreparedPack
 
 	public Probable<TokenHierarchy> Pick(Sample1D sample)
 	{
-		var hierarchy = new TokenHierarchy();
-		float pdf;
-
-		if (sample < infiniteLightsChance)
+		if (sample < infiniteLightsThreshold)
 		{
-			sample = sample.Stretch(0f, infiniteLightsChance);
+			sample = sample.Stretch(0f, infiniteLightsThreshold);
 			int index = sample.Range(infiniteLights.Length);
+			var token = new EntityToken(LightType.Infinite, index);
 
-			hierarchy.TopToken = new EntityToken(LightType.Infinite, index);
-			pdf = infiniteLightsChance / infiniteLights.Length;
+			return (new TokenHierarchy { TopToken = token }, infiniteLightsPdf);
 		}
-		else
+
+		sample = sample.Stretch(infiniteLightsThreshold, 1f);
+
+		PreparedPack pack = this;
+		var hierarchy = new TokenHierarchy();
+		float pdf = 1f - infiniteLightsThreshold;
+
+		while (true)
 		{
-			sample = sample.Stretch(infiniteLightsChance, 1f);
+			(EntityToken token, float tokenPdf) = pack.lightPicker.Pick(ref sample);
 
-			pdf = 1f;
+			pdf *= tokenPdf;
 
-			PreparedPack pack = this;
-
-			while (true)
+			if (token.Type != TokenType.Instance)
 			{
-				(EntityToken token, float tokenPdf) = pack.lightPicker.Pick(sample);
-
-				pdf *= tokenPdf;
-
-				if (token.Type != TokenType.Instance)
-				{
-					hierarchy.TopToken = token;
-					break;
-				}
-
-				hierarchy.Push(token);
-				pack = pack.geometries.instances[token.Index].pack;
-				sample = sample.Stretch(/*TODO*/);
+				hierarchy.TopToken = token;
+				break;
 			}
+
+			ref readonly var instance = ref pack.geometries.instances.ItemRef(token.Index);
+
+			hierarchy.Push(token);
+			pack = instance.pack;
 		}
 
 		return new Probable<TokenHierarchy>(hierarchy, pdf);
@@ -122,7 +120,25 @@ public class PreparedScene : PreparedPack
 
 	public float ProbabilityMass(in TokenHierarchy light)
 	{
-		throw new NotImplementedException();
+		EntityToken topToken = light.TopToken;
+
+		if (topToken.Type == TokenType.Light && topToken.LightType == LightType.Infinite)
+		{
+			Assert.AreEqual(light.InstanceCount, 0);
+			return infiniteLightsPdf;
+		}
+
+		PreparedPack pack = this;
+		float pdf = 1f;
+
+		foreach (EntityToken token in light.Instances)
+		{
+			Assert.AreEqual(token.Type, TokenType.Instance);
+			pdf *= pack.lightPicker.ProbabilityMass(token);
+			pack = pack.geometries.instances.ItemRef(token.Index).pack;
+		}
+
+		return pdf * pack.lightPicker.ProbabilityMass(topToken);
 	}
 
 	public Probable<RGB128> Sample(in TokenHierarchy light, in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
@@ -224,12 +240,12 @@ public class PreparedScene : PreparedPack
 		return (infiniteLights.ToImmutableArray(), ambientLights.ToImmutable());
 	}
 
-	static float CalculateLightChance(ImmutableArray<InfiniteLight> infiniteLights, float instancePower)
+	static float CalculateThreshold(ImmutableArray<InfiniteLight> infiniteLights, float instancePower)
 	{
-		const float InstanceMultiplier = Scalars.Tau;
+		const float InstanceBias = Scalars.Tau;
 
 		float infiniteLightsPower = infiniteLights.Sum(light => light.Power);
-		float sum = infiniteLightsPower + instancePower * InstanceMultiplier;
+		float sum = infiniteLightsPower + instancePower * InstanceBias;
 		return FastMath.Positive(sum) ? infiniteLightsPower / sum : 1f;
 	}
 }
