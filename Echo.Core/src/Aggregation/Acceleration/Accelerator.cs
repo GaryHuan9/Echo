@@ -33,7 +33,7 @@ public abstract class Accelerator
 			if (_boxBounds == null)
 			{
 				var fill = new SpanFill<AxisAlignedBoundingBox>(stackalloc AxisAlignedBoundingBox[2]);
-				FillBounds(1, ref fill);
+				FillBounds(1, ref fill); //Only fill at the lowest depth because there is no transform
 				_boxBounds = new AxisAlignedBoundingBox(fill.Filled);
 			}
 
@@ -71,30 +71,16 @@ public abstract class Accelerator
 	/// <remarks>This transformation is usually performed inversely.</remarks>
 	public AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform)
 	{
+		//Potentially find a smaller bounds by encapsulating
+		//transformed children nodes instead of the full tree
+
 		const int FetchDepth = 6; //How deep do we go to get the box bounds of the nodes
 		using var _ = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
 
 		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
 		FillBounds(FetchDepth, ref fill);
-		aabbs = aabbs[..fill.Count];
-		Assert.IsFalse(aabbs.IsEmpty);
 
-		Float4x4 absolute = transform.Absoluted;
-
-		Float3 min = Float3.PositiveInfinity;
-		Float3 max = Float3.NegativeInfinity;
-
-		//Potentially find a smaller bounds by encapsulating transformed children nodes instead of the full tree
-		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
-		{
-			Float3 center = transform.MultiplyPoint(aabb.Center);
-			Float3 extend = absolute.MultiplyDirection(aabb.Extend);
-
-			min = min.Min(center - extend);
-			max = max.Max(center + extend);
-		}
-
-		return new AxisAlignedBoundingBox(min, max);
+		return new AxisAlignedBoundingBox(fill.Filled, transform);
 	}
 
 	/// <summary>

@@ -55,6 +55,12 @@ public readonly struct ConeBounds
 
 	public static ConeBounds CreateDirection(in Float3 direction, float cosExtend = 0f /* = cos(pi/2) */) => new(direction, 1f /* = cos(0) */, cosExtend);
 
+	public static ConeBounds operator *(in Float4x4 transform, ConeBounds bounds) => new
+	(
+		transform.MultiplyDirection(bounds.axis).Normalized,
+		bounds.cosOffset, bounds.cosExtend
+	);
+
 	static ConeBounds Union(in ConeBounds value0, in ConeBounds value1)
 	{
 		float offset0 = MathF.Acos(FastMath.Clamp11(value0.cosOffset));

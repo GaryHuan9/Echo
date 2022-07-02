@@ -14,17 +14,14 @@ public interface IPreparedGeometry
 
 	ConeBounds ConeBounds { get; }
 
-	float GetPower(PreparedSwatch swatch);
-}
-
-public interface IPreparedPureGeometry : IPreparedGeometry
-{
 	MaterialIndex Material { get; }
 
 	float Area { get; }
 
+	sealed float GetPower(PreparedSwatch swatch) => swatch[Material] is IEmissive emissive ? emissive.Power * Area : 0f;
+
 	/// <summary>
-	/// Samples this <see cref="IPreparedPureGeometry"/>.
+	/// Samples this <see cref="IPreparedGeometry"/>.
 	/// </summary>
 	/// <param name="origin">The geometry-space point of whose perspective the sampling should be performed through.</param>
 	/// <param name="sample">The <see cref="Sample2D"/> value used to sample the result.</param>
@@ -32,12 +29,10 @@ public interface IPreparedPureGeometry : IPreparedGeometry
 	Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample);
 
 	/// <summary>
-	/// Calculates the probability density function (pdf) value of sampling this <see cref="IPreparedPureGeometry"/> through <see cref="Sample"/>.
+	/// Calculates the probability density function (pdf) value of sampling this <see cref="IPreparedGeometry"/> through <see cref="Sample"/>.
 	/// </summary>
 	/// <param name="origin">The geometry-space point of whose perspective the pdf should be calculated through.</param>
-	/// <param name="incident">The sampled geometry-space unit direction that points from <paramref name="origin"/> towards this <see cref="IPreparedPureGeometry"/>.</param>
+	/// <param name="incident">The sampled geometry-space unit direction that points from <paramref name="origin"/> towards this <see cref="IPreparedGeometry"/>.</param>
 	/// <returns>The calculated pdf value over solid angles.</returns>
 	float ProbabilityDensity(in Float3 origin, in Float3 incident);
-
-	float IPreparedGeometry.GetPower(PreparedSwatch swatch) => swatch[Material] is IEmissive emissive ? emissive.Power * Area : 0f;
 }

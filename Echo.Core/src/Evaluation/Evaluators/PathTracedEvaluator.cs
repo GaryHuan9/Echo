@@ -74,21 +74,20 @@ public record PathTracedEvaluator : Evaluator
 			else
 			{
 				//Select light from scene for MIS
-				(ILight light, float lightPdf) = scene.PickLight(lightSample, allocator);
+				(TokenHierarchy light, float lightPdf) = scene.Pick(lightSample);
 
 				float weight = 1f / lightPdf;
-				var area = light as IAreaLight;
-				bool mis = area != null;
+				bool mis = light.TopToken.IsAreaLight();
 
 				//Importance sample the selected light
-				RGB128 radiant = ImportanceSampleRadiant(light, path.contact, radiantSample, scene, mis);
+				RGB128 radiant = ImportanceSampleRadiant(scene, light, path.contact, radiantSample, mis);
 
 				if (mis)
 				{
 					//Perform MIS between scatter and radiant
 					path.Contribute(weight * radiant);
 
-					float radiantPdf = area.ProbabilityDensity(path.contact.point, bounce.incident);
+					float radiantPdf = scene.ProbabilityDensity(light, path.contact.point, bounce.incident);
 					weight *= PowerHeuristic(bounce.scatterPdf, radiantPdf);
 
 					//Begin continue path to the next vertex and exit if path exhausted
@@ -143,16 +142,16 @@ public record PathTracedEvaluator : Evaluator
 	/// <summary>
 	/// Importance samples an <see cref="ILight"/>.
 	/// </summary>
-	/// <param name="light">The <see cref="ILight"/> to sample.</param>
+	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
+	/// <param name="light">A <see cref="TokenHierarchy"/> pointing at the light to sample.</param>
 	/// <param name="contact">The <see cref="Contact"/> to sample from.</param>
 	/// <param name="sample">The <see cref="Sample2D"/> value to use.</param>
-	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
 	/// <param name="mis">Whether this method should use multiple importance sampling.</param>
 	/// <returns>The sampled radiant from the <see cref="ILight"/>.</returns>
-	static RGB128 ImportanceSampleRadiant(ILight light, in Contact contact, Sample2D sample, PreparedScene scene, bool mis)
+	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in TokenHierarchy light, in Contact contact, Sample2D sample, bool mis)
 	{
 		//Importance sample light
-		(RGB128 radiant, float radiantPdf) = light.Sample(contact.point, sample, out Float3 incident, out float travel);
+		(RGB128 radiant, float radiantPdf) = scene.Sample(light, contact.point, sample, out Float3 incident, out float travel);
 
 		if (!FastMath.Positive(radiantPdf) | radiant.IsZero) return RGB128.Black;
 

@@ -7,7 +7,7 @@ namespace Echo.Core.Scenic.Geometric;
 
 public interface IGeometrySource { }
 
-public interface IGeometrySource<out T> : IGeometrySource where T : IPreparedPureGeometry
+public interface IGeometrySource<out T> : IGeometrySource where T : IPreparedGeometry
 {
 	/// <summary>
 	/// The exact number of prepared geometry the <see cref="Extract"/> will yield. 

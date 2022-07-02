@@ -109,18 +109,22 @@ public readonly struct DiscreteDistribution1D
 	/// </summary>
 	/// <param name="sample">The <see cref="Sample1D"/> used to pick the result.</param>
 	/// <returns>The discrete <see cref="Probable{T}"/> value picked.</returns>
-	public Probable<int> Pick(Sample1D sample) => Pick(sample, out _, out _);
-
-	/// <inheritdoc cref="Pick(Sample1D)"/>
-	/// <param name="lower">Outputs the lower bound that caused this result to be selected.
-	/// This will always be less than or equals to the value of the input <see cref="Sample1D"/>.</param>
-	/// <param name="upper">Outputs the upper bound that caused this result to be selected.
-	/// This will always be greater than the value of the input <see cref="Sample1D"/>.</param>
-	// ReSharper disable once InvalidXmlDocComment
-	public Probable<int> Pick(Sample1D sample, out float lower, out float upper)
+	public Probable<int> Pick(Sample1D sample)
 	{
 		int index = FindIndex(sample);
-		GetBounds(index, out lower, out upper);
+		GetBounds(index, out float lower, out float upper);
+		return new Probable<int>(index, upper - lower);
+	}
+
+	/// <inheritdoc cref="Pick(Sample1D)"/>
+	/// <remarks>Note that the input <see cref="Sample1D"/> is a reference; after the usage by this method, it will be
+	/// assigned to a new uniform and unbiased <see cref="Sample1D"/> value through the <see cref="Sample1D.Stretch"/>
+	/// operation, to be used again.</remarks>
+	public Probable<int> Pick(ref Sample1D sample)
+	{
+		int index = FindIndex(sample);
+		GetBounds(index, out float lower, out float upper);
+		sample = sample.Stretch(lower, upper);
 		return new Probable<int>(index, upper - lower);
 	}
 

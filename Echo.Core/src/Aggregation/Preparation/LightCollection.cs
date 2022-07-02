@@ -64,7 +64,15 @@ public class LightCollection
 
 		AddEmissive(TokenType.Triangle, geometries.triangles);
 		AddEmissive(TokenType.Sphere, geometries.spheres);
-		AddEmissive(TokenType.Instance, geometries.instances);
+
+		for (int i = 0; i < geometries.instances.Length; i++)
+		{
+			ref readonly PreparedInstance instance = ref geometries.instances.ItemRef(i);
+
+			if (!FastMath.Positive(instance.Power)) continue;
+			var token = new EntityToken(TokenType.Instance, i);
+			list.Add((token, instance.LightBounds));
+		}
 
 		return list;
 
@@ -115,7 +123,7 @@ public class LightCollection
 		}
 
 		static Probable<RGB128> HandleGeometry<T>(in T geometry, IEmissive material, in GeometryPoint origin,
-												  Sample2D sample, out Float3 incident, out float travel) where T : IPreparedPureGeometry
+												  Sample2D sample, out Float3 incident, out float travel) where T : IPreparedGeometry
 		{
 			(GeometryPoint point, float pdf) = geometry.Sample(origin, sample);
 			if (!FastMath.Positive(pdf)) return Exit(out incident, out travel);
@@ -160,7 +168,7 @@ public class LightCollection
 		}
 
 		static float HandleGeometry<T>(ImmutableArray<T> array, EntityToken token,
-									   in GeometryPoint origin, in Float3 incident) where T : IPreparedPureGeometry
+									   in GeometryPoint origin, in Float3 incident) where T : IPreparedGeometry
 		{
 			ref readonly T geometry = ref array.ItemRef(token.Index);
 			return geometry.ProbabilityDensity(origin, incident);

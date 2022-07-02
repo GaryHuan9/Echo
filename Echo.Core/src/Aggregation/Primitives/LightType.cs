@@ -2,7 +2,12 @@
 
 namespace Echo.Core.Aggregation.Primitives;
 
-public enum LightType : byte
+/// <summary>
+/// The light type of an <see cref="EntityToken"/> if that <see cref="EntityToken"/> is of type <see cref="TokenType.Light"/>.
+/// </summary>
+/// <remarks>Because of the data size <see cref="EntityToken"/>, at a maximum there can only be 64
+/// different <see cref="LightType"/>. See <see cref="EntityToken.LightIndexCount"/> for more.</remarks>
+public enum LightType : uint
 {
 	/// <summary>
 	/// Represents an <see cref="InfiniteLight"/>.

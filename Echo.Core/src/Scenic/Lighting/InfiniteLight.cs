@@ -7,6 +7,10 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Lighting;
 
+/// <summary>
+/// An <see cref="LightEntity"/> that is infinitely far away from the scene.
+/// </summary>
+/// <remarks>All <see cref="InfiniteLight"/> must have an area; delta <see cref="InfiniteLight"/> is not supported.</remarks>
 public abstract class InfiniteLight : LightEntity, IPreparedAreaLight
 {
 	public abstract float Power { get; }
