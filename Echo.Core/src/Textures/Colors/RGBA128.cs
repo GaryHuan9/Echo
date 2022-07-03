@@ -62,7 +62,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// <summary>
 	/// Returns this <see cref="RGBA128"/> converted as <typeparamref name="T"/> using <see cref="IColor{T}.FromRGBA128"/>.
 	/// </summary>
-	public T As<T>() where T : unmanaged, IColor<T> => default(T)!.FromRGBA128(this);
+	public T As<T>() where T : unmanaged, IColor<T> => default(T).FromRGBA128(this);
 
 	/// <inheritdoc cref="Parse(ReadOnlySpan{char})"/>
 	public static T Parse<T>(ReadOnlySpan<char> span) where T : unmanaged, IColor<T> => Parse(span).As<T>();
