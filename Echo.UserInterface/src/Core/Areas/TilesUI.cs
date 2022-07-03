@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using CodeHelpers.Mathematics;
@@ -43,8 +42,6 @@ public class TilesUI : PlaneUI
 	EvaluationOperation lastOperation;
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
-
-	List<Vector2> tilePositions = new List<Vector2>();
 
 	const string TextureFilePath = "render.png";
 
@@ -90,8 +87,8 @@ public class TilesUI : PlaneUI
 
 		uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
 		drawList.AddRectFilled(content.MinVector2, content.MaxVector2, 0xFF000000u);
-		drawList.AddRect(content.MinVector2, content.MaxVector2, borderColor);
 		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
+		drawList.AddRect(content.MinVector2, content.MaxVector2, borderColor);
 
 		DrawCurrentTiles(lastOperation, drawList, content);
 	}
