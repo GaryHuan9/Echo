@@ -274,6 +274,7 @@ public class SystemUI : AreaUI
 			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),
 			Pattern = new SpiralPattern(),
+			Pattern = new HilbertCurvePattern(),
 			MinEpoch = 1,
 			MaxEpoch = 20
 		};

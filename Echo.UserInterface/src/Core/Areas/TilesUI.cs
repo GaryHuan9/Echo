@@ -43,7 +43,8 @@ public class TilesUI : PlaneUI
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
 
-	const string TextureFilePath = "render.png";
+	const string TextureImagePath = "render.png";
+	const string TextureFilePath = "render.fpi";
 
 	protected override bool HasMenuBar => true;
 
@@ -87,8 +88,8 @@ public class TilesUI : PlaneUI
 
 		uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
 		drawList.AddRectFilled(content.MinVector2, content.MaxVector2, 0xFF000000u);
-		drawList.AddRect(content.MinVector2, content.MaxVector2, borderColor);
 		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
+		drawList.AddRect(content.MinVector2, content.MaxVector2, borderColor);
 
 		DrawCurrentTiles(lastOperation, drawList, content);
 	}
@@ -208,8 +209,11 @@ public class TilesUI : PlaneUI
 			{
 				if (ImGui.MenuItem("Save to Disk"))
 				{
-					ActionQueue.Enqueue("Serialize Evaluation Layer", Serialize);
-					void Serialize() => ((TextureGrid)layer).Save(TextureFilePath);
+					ActionQueue.Enqueue("Serialize Evaluation Layer", () =>
+					{
+						((TextureGrid)layer).Save(TextureImagePath);
+						((TextureGrid)layer).Save(TextureFilePath);
+					});
 				}
 
 				if (ImGui.MenuItem("Show Directory"))
