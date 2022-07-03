@@ -83,17 +83,20 @@ public class DiscreteDistribution1Tests
 
 	static void ProbabilitySingle(DiscreteDistribution1D distribution, Sample1D sample)
 	{
-		var one = distribution.Sample(sample);
-		var two = distribution.Pick(sample, out float lower, out float upper);
+		var continuous = distribution.Sample(sample);
+		var discrete = distribution.Pick(sample);
 
-		Assert.That(distribution.ProbabilityDensity(one), Is.EqualTo(one.pdf).Roughly());
-		Assert.That(distribution.ProbabilityMass(two), Is.EqualTo(two.pdf).Roughly());
+		Assert.That(distribution.ProbabilityDensity(continuous), Is.EqualTo(continuous.pdf).Roughly());
+		Assert.That(distribution.ProbabilityMass(discrete), Is.EqualTo(discrete.pdf).Roughly());
 
-		Assert.That(one.pdf, Is.Not.Zero);
-		Assert.That(two.pdf, Is.Not.Zero);
+		Assert.That(continuous.pdf, Is.Not.Zero);
+		Assert.That(discrete.pdf, Is.Not.Zero);
 
-		Assert.That(lower, Is.LessThanOrEqualTo((float)sample));
-		Assert.That(upper, Is.GreaterThan((float)sample));
+		Sample1D oldSample = sample;
+		var again = distribution.Pick(ref sample);
+		Assert.That(again, Is.EqualTo(discrete));
+
+		if (distribution.Count > 1) Assert.That(sample, Is.Not.EqualTo(oldSample));
 	}
 
 	static IEnumerable<Sample1D> Uniform(int count)

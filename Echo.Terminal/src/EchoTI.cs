@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Compute;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
@@ -46,24 +47,27 @@ public class EchoTI : RootTI
 
 		var scene = new SingleBunny();
 
-		var prepareProfile = new ScenePrepareProfile();
+		var scenePreparer = new ScenePreparer(scene);
+
+		PreparedScene preparedScene = scenePreparer.Prepare();
 
 		var evaluationProfile = new EvaluationProfile
 		{
-			Scene = new PreparedSceneOld(scene, prepareProfile),
+			Scene = preparedScene,
 			Evaluator = new PathTracedEvaluator(),
-			Distribution = new StratifiedDistribution { Extend = 64 },
+			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),
+			Pattern = new SpiralPattern(),
 			MinEpoch = 1,
-			MaxEpoch = 1
+			MaxEpoch = 20
 		};
 
-		var factory = new EvaluationOperation.Factory
+		var operation = new EvaluationOperation.Factory
 		{
 			NextProfile = evaluationProfile
 		};
 
-		device.Dispatch(factory);
+		device.Dispatch(operation);
 	}
 
 	// public override void Update(in Moment moment)

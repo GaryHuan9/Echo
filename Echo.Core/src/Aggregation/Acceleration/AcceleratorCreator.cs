@@ -66,7 +66,7 @@ public readonly record struct AcceleratorCreator
 	static Accelerator CreateBVH(GeometryCollection geometries)
 	{
 		var boundsView = geometries.CreateBoundsView();
-		var builder = new HierarchyBuilder(boundsView);
+		var builder = new SweepBuilder(boundsView);
 
 		return new BoundingVolumeHierarchy(geometries, builder.Build());
 	}
@@ -74,7 +74,7 @@ public readonly record struct AcceleratorCreator
 	static Accelerator CreateQBVH(GeometryCollection geometries)
 	{
 		var boundsView = geometries.CreateBoundsView();
-		var builder = new HierarchyBuilder(boundsView);
+		var builder = new SweepBuilder(boundsView);
 
 		return new QuadBoundingVolumeHierarchy(geometries, builder.Build());
 	}

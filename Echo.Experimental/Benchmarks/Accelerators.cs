@@ -58,16 +58,16 @@ public class Accelerators
 			occludeQueries[i] = new OccludeQuery(ray);
 		}
 
-		Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) } }), "Regular"));
-		Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }), "Quad"));
-		// Types.Add(new Pair(new PreparedScene(scene, new ScenePrepareProfile { AggregatorProfile = new AggregatorProfile { AggregatorType = typeof(LinearAggregator) } }), "Linear"));
+		Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) } }.Prepare(), "Regular"));
+		Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) } }.Prepare(), "Quad"));
+		// Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(LinearAccelerator) } }.Prepare(), "Linear"));
 
-		if (false)
+		if (true)
 		{
 			scene.Add(new PlaneEntity { Material = new Matte { Albedo = Texture.white }, Size = new Float2(32f, 24f) });
 
-			Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivRegular"));
-			Types.Add(new Pair(new PreparedSceneOld(scene, new ScenePrepareProfile { AcceleratorProfile = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }), "NoDivQuad"));
+			Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }.Prepare(), "NoDivRegular"));
+			Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }.Prepare(), "NoDivQuad"));
 		}
 	}
 
@@ -77,7 +77,7 @@ public class Accelerators
 	[ParamsSource(nameof(Types))]
 	public Pair Type { get; set; }
 
-	public List<Pair> Types { get; set; } = new List<Pair>();
+	public List<Pair> Types { get; init; } = new();
 
 	//First test set. Different sets will have different timings
 	//V0: 903.5us per 1000 intersections (recursive)
@@ -157,13 +157,13 @@ public class Accelerators
 
 	public readonly struct Pair
 	{
-		public Pair(PreparedSceneOld scene, string name)
+		public Pair(PreparedScene scene, string name)
 		{
 			this.scene = scene;
 			this.name = name;
 		}
 
-		public readonly PreparedSceneOld scene;
+		public readonly PreparedScene scene;
 		public readonly string name;
 
 		public override string ToString() => name;

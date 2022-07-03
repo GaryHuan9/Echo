@@ -22,9 +22,7 @@ public class AabbSimd
 		aabb3 = CreateAABB();
 
 		aabb0 = new AxisAlignedBoundingBox(Float3.NegativeOne, Float3.One);
-
 		aabb = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
-		aabbV2 = new AxisAlignedBoundingBox4.V2(aabb0, aabb1, aabb2, aabb3);
 
 		Float3 origin = CreateFloat3(10f);
 
@@ -39,8 +37,6 @@ public class AabbSimd
 		}
 
 		Float3 CreateFloat3(float range) => random.Next3(-range, range);
-
-		DebugHelper.Log(Regular(), Quad(), Quad2());
 	}
 
 	readonly AxisAlignedBoundingBox aabb0;
@@ -49,7 +45,6 @@ public class AabbSimd
 	readonly AxisAlignedBoundingBox aabb3;
 
 	readonly AxisAlignedBoundingBox4 aabb;
-	readonly AxisAlignedBoundingBox4.V2 aabbV2;
 
 	readonly Ray ray;
 
@@ -69,7 +64,4 @@ public class AabbSimd
 
 	[Benchmark]
 	public Float4 Quad() => aabb.Intersect(ray);
-
-	[Benchmark]
-	public Vector128<float> Quad2() => aabbV2.Intersect(ray);
 }

@@ -266,7 +266,7 @@ public class SystemUI : AreaUI
 		var scenePreparer = new ScenePreparer(scene);
 
 		PreparedScene preparedScene = scenePreparer.Prepare();
-		
+
 		var evaluationProfile = new EvaluationProfile
 		{
 			Scene = preparedScene,

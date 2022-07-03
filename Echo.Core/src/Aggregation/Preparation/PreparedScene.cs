@@ -81,7 +81,7 @@ public class PreparedScene : PreparedPack
 		return new Contact(query, normal, instance.swatch[info.material], info.texcoord);
 	}
 
-	public Probable<TokenHierarchy> Pick(Sample1D sample)
+	public Probable<TokenHierarchy> Pick(in GeometryPoint origin, Sample1D sample)
 	{
 		if (sample < infiniteLightsThreshold)
 		{
@@ -100,7 +100,7 @@ public class PreparedScene : PreparedPack
 
 		while (true)
 		{
-			(EntityToken token, float tokenPdf) = pack.lightPicker.Pick(ref sample);
+			(EntityToken token, float tokenPdf) = pack.lightPicker.Pick(origin, ref sample);
 
 			pdf *= tokenPdf;
 
@@ -119,7 +119,7 @@ public class PreparedScene : PreparedPack
 		return new Probable<TokenHierarchy>(hierarchy, pdf);
 	}
 
-	public float ProbabilityMass(in TokenHierarchy light)
+	public float ProbabilityMass(in GeometryPoint origin, in TokenHierarchy light)
 	{
 		if (light.TopToken.IsInfiniteLight())
 		{
@@ -133,11 +133,11 @@ public class PreparedScene : PreparedPack
 		foreach (EntityToken token in light.Instances)
 		{
 			Assert.AreEqual(token.Type, TokenType.Instance);
-			pdf *= pack.lightPicker.ProbabilityMass(token);
+			pdf *= pack.lightPicker.ProbabilityMass(origin, token);
 			pack = pack.geometries.instances.ItemRef(token.Index).pack;
 		}
 
-		return pdf * pack.lightPicker.ProbabilityMass(light.TopToken);
+		return pdf * pack.lightPicker.ProbabilityMass(origin, light.TopToken);
 	}
 
 	public Probable<RGB128> Sample(in TokenHierarchy light, in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)

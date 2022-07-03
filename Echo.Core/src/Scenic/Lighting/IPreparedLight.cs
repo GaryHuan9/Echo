@@ -25,7 +25,7 @@ public interface IPreparedLight
 /// <summary>
 /// An <see cref="IPreparedLight"/> that has area, which means that is it not a singularity.
 /// </summary>
-public interface IPreparedAreaLight : ILight
+public interface IPreparedAreaLight : IPreparedLight
 {
 	/// <summary>
 	/// Calculates the probability density function (pdf) value of sampling an <see cref="IPreparedAreaLight"/>.
