@@ -38,7 +38,7 @@ public record PathTracedEvaluator : Evaluator
 		var path = new Path(ray);
 
 		//Quick exit with ambient light if no intersection
-		if (!path.Advance(scene, allocator)) return EvaluateAllAmbient();
+		if (!path.Advance(scene, allocator)) return scene.EvaluateInfinite(path.CurrentDirection);
 
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
@@ -64,7 +64,7 @@ public record PathTracedEvaluator : Evaluator
 				if (!path.Advance(scene, allocator))
 				{
 					//None found, accumulate ambient and exit
-					path.Contribute(EvaluateAllAmbient());
+					path.Contribute(scene.EvaluateInfinite(path.CurrentDirection));
 					break;
 				}
 
@@ -73,87 +73,98 @@ public record PathTracedEvaluator : Evaluator
 			}
 			else
 			{
-				//Select light from scene for MIS
-				(TokenHierarchy light, float lightPdf) = scene.Pick(lightSample);
-
-				float weight = 1f / lightPdf;
-				bool mis = light.TopToken.IsAreaLight();
-
-				//Importance sample the selected light
-				RGB128 radiant = ImportanceSampleRadiant(scene, light, path.contact, radiantSample, mis);
+				//Importance sample scene radiance
+				path.Contribute(ImportanceSampleRadiant
+				(
+					scene, path.contact, lightSample,
+					radiantSample, out bool mis
+				));
 
 				if (mis)
 				{
-					//Perform MIS between scatter and radiant
-					path.Contribute(weight * radiant);
-
-					float radiantPdf = scene.ProbabilityDensity(light, path.contact.point, bounce.incident);
-					weight *= PowerHeuristic(bounce.scatterPdf, radiantPdf);
-
-					//Begin continue path to the next vertex and exit if path exhausted
+					//We have both an area light a non-delta BSDF, begin MIS
+					//Continue path to the next vertex and exit if path exhausted
 					if (!path.Continue(bounce, Survivability, survivalSample)) break;
 
-					//Cache GeometryToken from GeometryLight to potentially add emission after advancing
-					TokenHierarchy token;
-					bool hasToken;
+					GeometryPoint oldOrigin = path.contact.point;
 
-					if (area is not GeometryLight geometry)
+					//Advance path and perform MIS
+					if (path.Advance(scene, allocator))
 					{
-						Unsafe.SkipInit(out token);
-						hasToken = false;
+						ref readonly var light = ref path.contact.token;
+						float pmf = scene.ProbabilityMass(light);
+						if (!FastMath.Positive(pmf)) goto noLight;
+
+						float pdf = pmf * scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
+						if (!FastMath.Positive(pdf)) goto noLight;
+
+						float weight = PowerHeuristic(bounce.scatterPdf, pdf);
+						path.ContributeEmissive(weight / pdf);
+
+					noLight:
+						{ }
 					}
 					else
 					{
-						token = geometry.Token;
-						hasToken = true;
-					}
+						//Use infinite lights for MIS if there is no intersection
+						var hierarchy = new TokenHierarchy();
+						Float3 direction = path.CurrentDirection;
 
-					//Add ambient light and exit if no intersection
-					if (!path.Advance(scene, allocator))
-					{
-						if (area is AmbientLight ambient) path.Contribute(weight * ambient.Evaluate(path.CurrentDirection));
+						for (int i = 0; i < scene.infiniteLights.Length; i++)
+						{
+							InfiniteLight light = scene.infiniteLights[i];
+							hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
+
+							float pdf = light.ProbabilityDensity(oldOrigin, direction) * scene.ProbabilityMass(hierarchy);
+							if (!FastMath.Positive(pdf)) continue;
+
+							float weight = PowerHeuristic(bounce.scatterPdf, pdf);
+							path.Contribute(light.Evaluate(direction) / pdf * weight);
+						}
 
 						break;
 					}
-
-					//Try add emission with MIS
-					if (hasToken && token == path.contact.token) path.ContributeEmissive(weight);
 				}
 				else
 				{
-					//Our light does not like MIS either, so no MIS is performed
-					path.Contribute(weight * radiant);
-
+					//Our light does not like MIS either, so no MIS will be performed
 					//Begin continue path to the next vertex and exit if path exhausted
 					if (!path.Continue(bounce, Survivability, survivalSample)) break;
 
-					//Add ambient light and exit if no intersection
+					//Exit if no intersection with the scene
 					if (!path.Advance(scene, allocator)) break;
+
+					//TODO: Add infinite lights??
 				}
 			}
 		}
 
 		return path.Result;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		RGB128 EvaluateAllAmbient() => scene.EvaluateAmbient(path.CurrentDirection);
 	}
 
 	/// <summary>
-	/// Importance samples an <see cref="ILight"/>.
+	/// Importance samples a the radiant in a <see cref="PreparedScene"/>.
 	/// </summary>
 	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
-	/// <param name="light">A <see cref="TokenHierarchy"/> pointing at the light to sample.</param>
 	/// <param name="contact">The <see cref="Contact"/> to sample from.</param>
-	/// <param name="sample">The <see cref="Sample2D"/> value to use.</param>
-	/// <param name="mis">Whether this method should use multiple importance sampling.</param>
-	/// <returns>The sampled radiant from the <see cref="ILight"/>.</returns>
-	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in TokenHierarchy light, in Contact contact, Sample2D sample, bool mis)
+	/// <param name="lightSample">The <see cref="Sample1D"/> value to use to select a light.</param>
+	/// <param name="radiantSample">The <see cref="Sample2D"/> value to use to sample the light.</param>
+	/// <param name="mis">Whether this method used multiple importance sampling.</param>
+	/// <returns>The sampled radiant from the <see cref="PreparedScene"/>.</returns>
+	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, Sample1D lightSample, Sample2D radiantSample, out bool mis)
 	{
-		//Importance sample light
-		(RGB128 radiant, float radiantPdf) = scene.Sample(light, contact.point, sample, out Float3 incident, out float travel);
+		//Select light from scene and sample it
+		(TokenHierarchy light, float lightPdf) = scene.Pick(lightSample);
+		(RGB128 radiant, float radiantPdf) = scene.Sample
+		(
+			light, contact.point, radiantSample,
+			out Float3 incident, out float travel
+		);
 
-		if (!FastMath.Positive(radiantPdf) | radiant.IsZero) return RGB128.Black;
+		float pdf = lightPdf * radiantPdf;
+		mis = light.TopToken.IsAreaLight();
+
+		if (!FastMath.Positive(pdf) | radiant.IsZero) return RGB128.Black;
 
 		//Evaluate bsdf at the direction sampled for our light
 		ref readonly Float3 outgoing = ref contact.outgoing;
@@ -166,11 +177,11 @@ public record PathTracedEvaluator : Evaluator
 		if (scene.Occlude(ref query)) return RGB128.Black;
 
 		//Calculate final radiant
-		radiant /= radiantPdf;
+		radiant /= pdf;
 		if (!mis) return scatter * radiant;
 
-		float scatterPdf = contact.bsdf.ProbabilityDensity(outgoing, incident);
-		return PowerHeuristic(radiantPdf, scatterPdf) * scatter * radiant;
+		float weight = PowerHeuristic(pdf, contact.bsdf.ProbabilityDensity(outgoing, incident));
+		return radiant * weight * scatter;
 	}
 
 	/// <summary>
@@ -178,7 +189,11 @@ public record PathTracedEvaluator : Evaluator
 	/// NOTE: <paramref name="pdf0"/> will become the numerator, not <paramref name="pdf1"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static float PowerHeuristic(float pdf0, float pdf1) => pdf0 * pdf0 / (pdf0 * pdf0 + pdf1 * pdf1);
+	static float PowerHeuristic(float pdf0, float pdf1)
+	{
+		float squared = pdf0 * pdf0;
+		return squared / (squared + pdf1 * pdf1);
+	}
 
 	/// <summary>
 	/// The path of a photon within a <see cref="PreparedScene"/>. 

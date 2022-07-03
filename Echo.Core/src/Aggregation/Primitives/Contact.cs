@@ -43,6 +43,8 @@ public struct Contact
 	/// <summary>
 	/// World-space outgoing direction of this <see cref="Contact"/>.
 	/// </summary>
+	/// <remarks>This is basically pointing towards the direction
+	/// where this <see cref="Contact"/> came from.</remarks>
 	public readonly Float3 outgoing;
 
 	/// <summary>

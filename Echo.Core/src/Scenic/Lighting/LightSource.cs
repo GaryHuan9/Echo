@@ -31,7 +31,7 @@ public abstract class LightSource : Entity, ILight
 	public virtual void Prepare(PreparedSceneOld scene) { }
 
 	/// <inheritdoc/>
-	public abstract Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);
+	public abstract Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel);
 }
 
 /// <summary>
@@ -53,12 +53,12 @@ public interface ILight
 	/// <summary>
 	/// Samples the contribution of this <see cref="ILight"/>.
 	/// </summary>
-	/// <param name="point">The point towards which we are sampling the contribution of this <see cref="ILight"/> to.</param>
+	/// <param name="origin"></param>
 	/// <param name="sample">The <see cref="Sample2D"/> value to use for this sampling.</param>
 	/// <param name="incident">The incident direction pointing from <paramref name="point"/> towards this <see cref="ILight"/>.</param>
 	/// <param name="travel">The distance to travel in light-space from <paramref name="point"/> to this <see cref="ILight"/>.</param>
 	/// <returns>The sampled <see cref="Probable{T}"/> of type <see cref="RGB128"/>.</returns>
-	Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel);
+	Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel);
 }
 
 /// <summary>

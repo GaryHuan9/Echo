@@ -65,11 +65,7 @@ public class AmbientLight : InfiniteLight
 		_power = multiplier * Texture.Average.Luminance;
 	}
 
-	/// <summary>
-	/// Evaluates this <see cref="AmbientLight"/> at <paramref name="direction"/>
-	/// in world-space, which escaped the <see cref="PreparedSceneOld"/> geometries.
-	/// </summary>
-	public RGB128 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
+	public override RGB128 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
 
 	public override Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{

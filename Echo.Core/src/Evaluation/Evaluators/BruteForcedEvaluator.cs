@@ -66,7 +66,7 @@ public record BruteForcedEvaluator : Evaluator
 			query = query.SpawnTrace();
 		}
 
-		return scene.EvaluateAmbient(query.ray.direction);
+		return scene.EvaluateInfinite(query.ray.direction);
 	}
 
 }
