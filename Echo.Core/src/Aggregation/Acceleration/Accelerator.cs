@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
+﻿using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;

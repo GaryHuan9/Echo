@@ -537,15 +537,15 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 				//which means the cascading branches will always position the leaf node before the empty node.
 				axis = 3;
 
-				AddChild(null, ref child, ref count);
-				AddChild(node, ref child, ref count);
+				child = new BuildNode(null, child, ref count);
+				child = new BuildNode(node, child, ref count);
 			}
 			else
 			{
 				axis = GetChildrenSorted(node, out var child0, out var child1);
 
-				AddChild(child1, ref child, ref count);
-				AddChild(child0, ref child, ref count);
+				child = new BuildNode(child1, child, ref count);
+				child = new BuildNode(child0, child, ref count);
 			}
 
 			return axis;
@@ -567,10 +567,5 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 			return axis;
 		}
-
-		/// <summary>
-		/// Adds a new <see cref="BuildNode"/> to the linked list represented by <paramref name="child"/>.
-		/// </summary>
-		static void AddChild(SourceNode node, ref BuildNode child, ref int count) => child = new BuildNode(node, child, ref count);
 	}
 }

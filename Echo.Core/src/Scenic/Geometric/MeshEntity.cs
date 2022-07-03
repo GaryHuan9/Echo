@@ -10,7 +10,7 @@ public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
 	public Mesh Mesh { get; set; }
 	public MaterialLibrary MaterialLibrary { get; set; }
-	
+
 	uint IGeometrySource<PreparedTriangle>.Count => (uint)Mesh.TriangleCount;
 
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
@@ -74,7 +74,7 @@ public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 			Float3 GetNormal(int index)
 			{
 				Float3 normal = Mesh.GetNormal(triangle.normalIndices[index]);
-				return transform.MultiplyDirection(normal);
+				return transform.MultiplyDirection(normal).Normalized;
 			}
 
 			Float2 GetTexcoord(int index) => Mesh.GetTexcoord(triangle.texcoordIndices[index]);
