@@ -29,7 +29,7 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 	public IEnumerable<PreparedSphere> Extract(SwatchExtractor extractor)
 	{
 		MaterialIndex material = extractor.Register(Material);
-		Float3 position = ForwardTransform.MultiplyPoint(Float3.Zero);
+		Float3 position = InverseTransform.MultiplyPoint(Float3.Zero);
 		yield return new PreparedSphere(position, Radius, material);
 	}
 }

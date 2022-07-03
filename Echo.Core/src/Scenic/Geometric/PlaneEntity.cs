@@ -19,7 +19,7 @@ public class PlaneEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		Float2 extend = Size / 2f;
-		Float4x4 transform = ForwardTransform;
+		Float4x4 transform = InverseTransform;
 		MaterialIndex material = extractor.Register(Material, 2);
 
 		Float3 point00 = transform.MultiplyPoint(new Float3(-extend.X, 0f, -extend.Y));

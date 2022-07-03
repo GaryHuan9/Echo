@@ -30,17 +30,17 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		MaterialIndex material = extractor.Register(Material);
-		Float4x4 transform = ForwardTransform;
+		Float4x4 transform = InverseTransform;
 
-		Float3 normal = Float3.Cross(Vertex1 - Vertex0, Vertex2 - Vertex0).Normalized;
-		Float3 normal0 = Normal0?.Normalized ?? normal;
-		Float3 normal1 = Normal1?.Normalized ?? normal;
-		Float3 normal2 = Normal2?.Normalized ?? normal;
+		Float3 normal = Float3.Cross(Vertex1 - Vertex0, Vertex2 - Vertex0);
+		Float3 normal0 = Normal0 ?? normal;
+		Float3 normal1 = Normal1 ?? normal;
+		Float3 normal2 = Normal2 ?? normal;
 
 		yield return new PreparedTriangle
 		(
 			transform.MultiplyPoint(Vertex0), transform.MultiplyPoint(Vertex1), transform.MultiplyPoint(Vertex2),
-			transform.MultiplyDirection(normal0), transform.MultiplyDirection(normal1), transform.MultiplyDirection(normal2),
+			transform.MultiplyDirection(normal0).Normalized, transform.MultiplyDirection(normal1).Normalized, transform.MultiplyDirection(normal2).Normalized,
 			material
 		);
 	}

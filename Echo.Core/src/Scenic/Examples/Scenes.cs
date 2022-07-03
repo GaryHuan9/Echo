@@ -27,14 +27,14 @@ public class SingleBunny : StandardScene
 		var material2 = new Emissive { Albedo = Texture.white };
 		var material3 = new Mirror { Albedo = (Pure)new RGBA128(0.75f) };
 
-		Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load<RGB128>("ext/Scenes/SingleBunny/UlmerMuenster.jpg") } });
+		// Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load<RGB128>("ext/Scenes/SingleBunny/UlmerMuenster.jpg") } });
 
 		Add(new MeshEntity { Mesh = mesh, Material = material0, Position = new Float3(0f, 0f, -3f), Rotation = new Float3(0f, 180f, 0f), Scale = 2.5f });
 
-		Add(new SphereEntity { Material = material3, Radius = 1f, Position = new Float3(-3f, 1f, -2f) });
+		// Add(new SphereEntity { Material = material3, Radius = 1f, Position = new Float3(-3f, 1f, -2f) });
 
-		Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(4f, 1f, -2f), Rotation = new Float3(0f, 0f, 90f) });
-		Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(-5f, 1f, -3f), Rotation = new Float3(0f, 0f, 90f) });
+		// Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(4f, 1f, -2f), Rotation = new Float3(0f, 0f, 90f) });
+		// Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(-5f, 1f, -3f), Rotation = new Float3(0f, 0f, 90f) });
 
 		Add(new PointLight { Intensity = new RGB128(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
 		Add(new PointLight { Intensity = new RGB128(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });

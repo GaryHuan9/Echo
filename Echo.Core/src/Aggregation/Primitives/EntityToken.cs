@@ -23,7 +23,7 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 	{
 		Assert.IsTrue(index < IndexCount);
 		Assert.AreEqual(Type, type);
-		Assert.AreEqual(Index, index);
+		Assert.IsTrue(type == TokenType.Light || Index == index);
 	}
 
 	public EntityToken(LightType type, int index) : this(TokenType.Light, ((int)type << LightIndexBitLength) | index)
