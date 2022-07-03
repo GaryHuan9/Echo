@@ -24,7 +24,7 @@ public abstract class HierarchyBuilder
 
 			this.aabb = aabb;
 
-			nodeCount = child0.nodeCount + child1.nodeCount;
+			nodeCount = child0.nodeCount + child1.nodeCount + 1;
 			nodeDepth = Math.Max(child0.nodeDepth, child1.nodeDepth) + 1;
 
 			_child0 = child0;

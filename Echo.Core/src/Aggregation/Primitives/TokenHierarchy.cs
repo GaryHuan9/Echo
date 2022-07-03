@@ -11,7 +11,7 @@ using Echo.Core.Scenic.Preparation;
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// Represents a hierarchy of <see cref="EntityToken"/> that globally points to a unique object in a <see cref="PreparedSceneOld"/>
+/// Represents a hierarchy of <see cref="EntityToken"/> that globally points to a unique object in a <see cref="PreparedScene"/>
 /// </summary>
 /// <remarks>A fully and correctly constructed <see cref="TokenHierarchy"/> transcends <see cref="EntityPack"/> and <see cref="PackInstance"/>.</remarks>
 public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
@@ -24,16 +24,16 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	}
 
 	/// <summary>
-	/// A combined hash value of <see cref="Instances"/> for fast value comparison.
-	/// </summary>
-	uint instancesHash;
-
-	/// <summary>
 	/// A fixed sized array that actually stores the data of the <see cref="EntityToken"/> in <see cref="Instances"/>.
 	/// </summary>
 #pragma warning disable CS0649
 	fixed byte data[EntityToken.Size * EntityPack.MaxLayer];
 #pragma warning restore CS0649
+
+	/// <summary>
+	/// A combined hash value of <see cref="Instances"/> for fast value comparison.
+	/// </summary>
+	uint instancesHash;
 
 	/// <summary>
 	/// The number of layers of <see cref="PreparedInstance"/> that needs to be traversed

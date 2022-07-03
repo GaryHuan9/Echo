@@ -97,9 +97,9 @@ public readonly struct PreparedTriangle : IPreparedGeometry //Winding order for 
 		edge1 = vertex1 - vertex0;
 		edge2 = vertex2 - vertex0;
 
-		this.normal0 = normal0.Normalized;
-		this.normal1 = normal1.Normalized;
-		this.normal2 = normal2.Normalized;
+		this.normal0 = normal0;
+		this.normal1 = normal1;
+		this.normal2 = normal2;
 
 		this.texcoord0 = texcoord0;
 		this.texcoord1 = texcoord1;
