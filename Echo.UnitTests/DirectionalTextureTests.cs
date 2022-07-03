@@ -1,13 +1,41 @@
-﻿using CodeHelpers.Packed;
+﻿using System;
+using CodeHelpers.Mathematics;
+using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
 using Echo.Core.Textures.Grid;
 using NUnit.Framework;
 
-namespace Echo.UnitTests.DirectionalTexture;
+namespace Echo.UnitTests;
+
+[TestFixture]
+public class CylindricalTextureTests : DirectionalTextureBaseTests
+{
+	protected override IDirectionalTexture GetTexture() => new CylindricalTexture { Texture = GenerateRandomTexture((Int2)500) };
+}
+
+[TestFixture]
+public class CubemapTests : DirectionalTextureBaseTests
+{
+	protected override IDirectionalTexture GetTexture()
+	{
+		Span<Texture> textures = new Texture[Direction.All.Length];
+
+		foreach (ref Texture texture in textures) texture = GenerateRandomTexture((Int2)150);
+
+		return new Cubemap(textures);
+	}
+}
+
+[TestFixture]
+public class PureTests : DirectionalTextureBaseTests
+{
+	protected override IDirectionalTexture GetTexture() => Texture.normal;
+}
 
 public abstract class DirectionalTextureBaseTests
 {

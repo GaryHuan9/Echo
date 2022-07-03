@@ -37,40 +37,30 @@ public record FpiSerializer : Serializer
 	static void Write<T>(TextureGrid<T> texture, DataWriter writer) where T : unmanaged, IColor<T>
 	{
 		writer.WriteCompact(texture.size);
-		var sequence = Vector128<uint>.Zero;
+		var previous = Vector128<float>.Zero;
 
+		//Write the xor difference as variable length quantity for lossless compression
 		foreach (Int2 position in texture.size.Loop())
 		{
-			Vector128<uint> current = Cast(texture[position]);
-			Vector128<uint> xor = Sse2.Xor(sequence, current);
+			Vector128<float> current = texture[position].ToFloat4().v;
+			Vector128<uint> xor = Sse.Xor(previous, current).AsUInt32();
 
-			//Write the xor difference as variable length quantity for lossless compression
-
-			sequence = current;
+			previous = current;
 
 			writer.WriteCompact(xor.GetElement(0));
 			writer.WriteCompact(xor.GetElement(1));
 			writer.WriteCompact(xor.GetElement(2));
 			writer.WriteCompact(xor.GetElement(3));
 		}
-
-		static unsafe Vector128<uint> Cast(in T value)
-		{
-			// ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
-			RGBA128 color = value.ToRGBA128();
-			return *(Vector128<uint>*)&color;
-		}
 	}
 
-	static unsafe ArrayGrid<T> Read<T>(DataReader reader) where T : unmanaged, IColor<T>
+	static ArrayGrid<T> Read<T>(DataReader reader) where T : unmanaged, IColor<T>
 	{
 		Int2 size = reader.ReadInt2Compact();
 		var texture = new ArrayGrid<T>(size);
-
-		var sequence = Vector128<uint>.Zero;
+		var previous = Vector128<float>.Zero;
 
 		//Read the xor difference sequence
-
 		foreach (Int2 position in size.Loop())
 		{
 			Vector128<uint> xor = Vector128.Create
@@ -81,10 +71,10 @@ public record FpiSerializer : Serializer
 				reader.ReadUInt32Compact()
 			);
 
-			Vector128<uint> current = Sse2.Xor(sequence, xor);
-			texture.Set(position, (*(RGBA128*)&current).As<T>());
+			Vector128<float> current = Sse.Xor(previous, xor.AsSingle());
+			texture.Set(position, default(T).FromFloat4(new Float4(current)));
 
-			sequence = current;
+			previous = current;
 		}
 
 		return texture;

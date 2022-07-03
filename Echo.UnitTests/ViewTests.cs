@@ -1,41 +1,75 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Memory;
 using NUnit.Framework;
 
-namespace Echo.UnitTests.View;
+namespace Echo.UnitTests;
+
+[TestFixture]
+[TestFixtureSource(nameof(fixtureSource))]
+public class ViewIntTests : ViewBaseTests<int>
+{
+	public ViewIntTests(int[] inputReference, bool useSlice, Range inputRange) : base(inputReference, useSlice, inputRange) { }
+
+	static readonly object[][] fixtureSource = GetFixtureSource(new[]
+	{
+		Enumerable.Empty<int>(), Enumerable.Range(1, 10), Enumerable.Repeat(3, 42)
+	});
+}
+
+[TestFixture]
+[TestFixtureSource(nameof(fixtureSource))]
+public class ViewStringTests : ViewBaseTests<string>
+{
+	public ViewStringTests(string[] inputReference, bool useSlice, Range inputRange) : base(inputReference, useSlice, inputRange) { }
+
+	static readonly object[][] fixtureSource = GetFixtureSource(new[]
+	{
+		new[] { "blob", "DEADBEEF", "hehe stuff to test", "otherrandomthings", "12345", "shdfasfjqlkwer" },
+		Enumerable.Empty<string>(), Enumerable.Repeat("hello world!", 42), from value in Enumerable.Range(1, 10)
+																		   select value.ToString()
+	});
+}
 
 public abstract class ViewBaseTests<T>
 {
+	protected ViewBaseTests(T[] inputReference, bool useSlice, Range inputRange)
+	{
+		this.inputReference = inputReference;
+		this.useSlice = useSlice;
+		this.inputRange = inputRange;
+	}
+
 	[SetUp]
 	public void SetUp()
 	{
 		Prng random = Utility.NewRandom();
 
-		T[] reference = GetReference();
+		T[] reference = inputReference.ToArray();
 		random.Shuffle<T>(reference);
+		array = reference[inputRange];
 
-		array = reference[Range];
-
-		if (UseSlice)
+		if (useSlice)
 		{
-			roView = reference.AsView()[Range];
-			rgView = reference.AsView()[Range];
+			roView = reference.AsView()[inputRange];
+			rgView = reference.AsView()[inputRange];
 		}
 		else
 		{
-			roView = reference.AsView(Range);
-			rgView = reference.AsView(Range);
+			roView = reference.AsView(inputRange);
+			rgView = reference.AsView(inputRange);
 		}
 	}
+
+	readonly T[] inputReference;
+	readonly bool useSlice;
+	readonly Range inputRange;
 
 	T[] array;              //Reference
 	View<T> rgView;         //Regular view
 	ReadOnlyView<T> roView; //Read only view
-
-	protected bool UseSlice { private get; init; }
-
-	protected Range Range { private get; init; }
 
 	[Test]
 	public void Length()
@@ -127,9 +161,6 @@ public abstract class ViewBaseTests<T>
 		AsSpanSliceOne(1..^1);
 	}
 
-	protected abstract T[] GetReference();
-
-
 	void AsSpanSliceOne(Range range)
 	{
 		Span<T> reference = array.AsSpan(range);
@@ -148,11 +179,37 @@ public abstract class ViewBaseTests<T>
 		Assert.That(rgSpan.SequenceEqual(reference));
 		Assert.That(roSpan.SequenceEqual(reference));
 
-		//TODO: reenable after we added the overloads
 		rgSpan = rgView.AsSpan(range);
 		roSpan = roView.AsSpan(range);
 
 		Assert.That(rgSpan.SequenceEqual(reference));
 		Assert.That(roSpan.SequenceEqual(reference));
+	}
+
+	protected static object[][] GetFixtureSource(IEnumerable<IEnumerable<T>> sources)
+	{
+		return
+		(
+			from source in sources
+			let array = source.ToArray()
+			from useSlice in new[] { true, false }
+			from range in new[] { Range.All, 1.., 5.., ..^1, ..^5, ..1, ^1.., ..0 }
+			where ValidRange(range, array)
+			select new object[] { array, useSlice, range }
+		).ToArray();
+
+		static bool ValidRange(Range range, T[] array)
+		{
+			try
+			{
+				_ = range.GetOffsetAndLength(array.Length);
+			}
+			catch (ArgumentOutOfRangeException)
+			{
+				return false;
+			}
+
+			return true;
+		}
 	}
 }
