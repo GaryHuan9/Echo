@@ -27,7 +27,7 @@ public class PreparedScene : PreparedPack
 	public PreparedScene(ReadOnlySpan<IGeometrySource> geometrySources, ReadOnlySpan<ILightSource> lightSources,
 						 ImmutableArray<PreparedInstance> instances, in AcceleratorCreator acceleratorCreator,
 						 SwatchExtractor swatchExtractor, IEnumerable<InfiniteLight> infiniteLights, Camera camera)
-		: base(geometrySources, lightSources, instances, in acceleratorCreator, swatchExtractor)
+		: base(geometrySources, lightSources, instances, acceleratorCreator, swatchExtractor)
 	{
 		this.camera = camera;
 		rootInstance = new PreparedInstance(this, geometries.swatch, Float4x4.identity);
@@ -101,6 +101,7 @@ public class PreparedScene : PreparedPack
 		while (true)
 		{
 			(EntityToken token, float tokenPdf) = pack.lightPicker.Pick(origin, ref sample);
+			if (FastMath.AlmostZero(tokenPdf)) return Probable<TokenHierarchy>.Impossible;
 
 			pdf *= tokenPdf;
 
@@ -135,6 +136,8 @@ public class PreparedScene : PreparedPack
 			Assert.AreEqual(token.Type, TokenType.Instance);
 			pdf *= pack.lightPicker.ProbabilityMass(origin, token);
 			pack = pack.geometries.instances.ItemRef(token.Index).pack;
+
+			if (FastMath.AlmostZero(pdf)) return 0f;
 		}
 
 		return pdf * pack.lightPicker.ProbabilityMass(origin, light.TopToken);
@@ -146,7 +149,7 @@ public class PreparedScene : PreparedPack
 
 		if (token.IsInfiniteLight())
 		{
-			InfiniteLight infiniteLight = infiniteLights[token.Index];
+			var infiniteLight = infiniteLights[token.LightIndex];
 			return infiniteLight.Sample(origin, sample, out incident, out travel);
 		}
 
@@ -170,7 +173,7 @@ public class PreparedScene : PreparedPack
 
 		if (token.IsInfiniteLight())
 		{
-			InfiniteLight infiniteLight = infiniteLights[token.Index];
+			var infiniteLight = infiniteLights[token.LightIndex];
 			return infiniteLight.ProbabilityDensity(origin, incident);
 		}
 

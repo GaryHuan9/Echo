@@ -40,6 +40,6 @@ public unsafe struct EntityToken4
 
 	public override readonly int GetHashCode()
 	{
-		fixed (byte* ptr = &this) return Utility.GetHashCode(ptr);
+		fixed (EntityToken4* ptr = &this) return Utility.GetHashCode(ptr);
 	}
 }

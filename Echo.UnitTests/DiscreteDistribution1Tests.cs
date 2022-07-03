@@ -92,11 +92,8 @@ public class DiscreteDistribution1Tests
 		Assert.That(continuous.pdf, Is.Not.Zero);
 		Assert.That(discrete.pdf, Is.Not.Zero);
 
-		Sample1D oldSample = sample;
 		var again = distribution.Pick(ref sample);
 		Assert.That(again, Is.EqualTo(discrete));
-
-		if (distribution.Count > 1) Assert.That(sample, Is.Not.EqualTo(oldSample));
 	}
 
 	static IEnumerable<Sample1D> Uniform(int count)

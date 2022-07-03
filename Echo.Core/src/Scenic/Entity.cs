@@ -66,8 +66,8 @@ public class Entity
 		}
 	}
 
-	Float4x4 _forwardTransform;
-	Float4x4 _inverseTransform;
+	Float4x4 _forwardTransform = Float4x4.identity;
+	Float4x4 _inverseTransform = Float4x4.identity;
 
 	/// <summary>
 	/// A <see cref="Float4x4"/> that transforms from the space of the <see cref="EntityPack"/>
@@ -136,7 +136,7 @@ public class Entity
 		if (child.Parent == this) throw new ArgumentException("Cannot add a child to the same parent twice.", nameof(child));
 		if (child.Parent != null) throw new ArgumentException("Cannot move a child to a different parent.", nameof(child));
 
-		Add(child);
+		children.Add(child);
 		child.Parent = this;
 		child.DirtyTransform();
 	}

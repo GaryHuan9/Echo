@@ -16,7 +16,7 @@ public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		if (Mesh == null) yield break;
-		Float4x4 transform = ForwardTransform;
+		Float4x4 transform = InverseTransform;
 
 		for (int i = 0; i < Mesh.TriangleCount; i++)
 		{

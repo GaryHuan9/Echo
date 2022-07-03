@@ -19,7 +19,7 @@ public class BoxEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		Float3 extend = Size / 2f;
-		Float4x4 transform = ForwardTransform;
+		Float4x4 transform = InverseTransform;
 		MaterialIndex material = extractor.Register(Material, 12);
 
 		Float3 nnn = GetVertex(-1, -1, -1);

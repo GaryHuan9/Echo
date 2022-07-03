@@ -4,6 +4,7 @@ using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
@@ -22,10 +23,12 @@ public class LightBoundingVolumeHierarchy : LightPicker
 			if (node == null) return;
 			Assert.IsTrue(depth < 64);
 
-			map.Add(node.token, branches);
-
-			AddToMap(node.child0, depth + 1, branches);
-			AddToMap(node.child1, depth + 1, branches | (1ul << depth));
+			if (node.child0 == null) map.Add(node.token, branches);
+			else
+			{
+				AddToMap(node.child0, depth + 1, branches);
+				AddToMap(node.child1, depth + 1, branches | (1ul << depth));
+			}
 		}
 	}
 
@@ -41,7 +44,7 @@ public class LightBoundingVolumeHierarchy : LightPicker
 
 	public override float ProbabilityMass(in GeometryPoint origin, EntityToken token)
 	{
-		ulong branches = map[token];
+		if (!map.TryGetValue(token, out ulong branches)) return 0f;
 		return ProbabilityMass(origin, root, branches);
 	}
 
@@ -103,6 +106,9 @@ public class LightBoundingVolumeHierarchy : LightPicker
 
 		float importance0 = node.child0.bounds.Importance(origin);
 		float importance1 = node.child1.bounds.Importance(origin);
+
+		if (!FastMath.Positive(importance0) && !FastMath.Positive(importance1)) return Probable<EntityToken>.Impossible;
+
 		float split = importance0 / (importance0 + importance1);
 
 		if (sample < split)
@@ -141,6 +147,8 @@ public class LightBoundingVolumeHierarchy : LightPicker
 		{
 			this.child0 = child0;
 			this.child1 = child1;
+
+			bounds = child0.bounds.Encapsulate(child1.bounds);
 		}
 
 		public Node(LightBounds bounds, EntityToken token)

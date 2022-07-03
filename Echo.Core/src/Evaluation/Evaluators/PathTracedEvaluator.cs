@@ -155,8 +155,16 @@ public record PathTracedEvaluator : Evaluator
 	/// <returns>The sampled radiant from the <see cref="PreparedScene"/>.</returns>
 	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, Sample1D lightSample, Sample2D radiantSample, out bool mis)
 	{
-		//Select light from scene and sample it
+		//Select light from scene
 		(TokenHierarchy light, float lightPdf) = scene.Pick(contact.point, lightSample);
+
+		if (!FastMath.Positive(lightPdf))
+		{
+			mis = default;
+			return RGB128.Black;
+		}
+
+		//Sample the selected light
 		(RGB128 radiant, float radiantPdf) = scene.Sample
 		(
 			light, contact.point, radiantSample,
