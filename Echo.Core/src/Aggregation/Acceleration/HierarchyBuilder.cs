@@ -9,10 +9,7 @@ namespace Echo.Core.Aggregation.Acceleration;
 
 public abstract class HierarchyBuilder
 {
-	public HierarchyBuilder(View<Tokenized<AxisAlignedBoundingBox>> boundsView)
-	{
-		this.boundsView = boundsView;
-	}
+	public HierarchyBuilder(View<Tokenized<AxisAlignedBoundingBox>> boundsView) => this.boundsView = boundsView;
 
 	protected readonly View<Tokenized<AxisAlignedBoundingBox>> boundsView;
 
@@ -34,6 +31,8 @@ public abstract class HierarchyBuilder
 			_child1 = child1;
 			_axis = axis;
 		}
+
+		public Node(in Tokenized<AxisAlignedBoundingBox> tokenized) : this(tokenized.content, tokenized.token) { }
 
 		public Node(in AxisAlignedBoundingBox aabb, EntityToken token)
 		{

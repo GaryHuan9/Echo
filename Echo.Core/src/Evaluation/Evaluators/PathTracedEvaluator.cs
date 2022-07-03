@@ -91,8 +91,9 @@ public record PathTracedEvaluator : Evaluator
 					//Advance path and perform MIS
 					if (path.Advance(scene, allocator))
 					{
+						//Attempt to do MIS on the newly contacted surface
 						ref readonly var light = ref path.contact.token;
-						float pmf = scene.ProbabilityMass(light);
+						float pmf = scene.ProbabilityMass(oldOrigin, light);
 						if (!FastMath.Positive(pmf)) goto noLight;
 
 						float pdf = pmf * scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
@@ -115,7 +116,8 @@ public record PathTracedEvaluator : Evaluator
 							InfiniteLight light = scene.infiniteLights[i];
 							hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
 
-							float pdf = light.ProbabilityDensity(oldOrigin, direction) * scene.ProbabilityMass(hierarchy);
+							float pdf = scene.ProbabilityMass(oldOrigin, hierarchy) *
+										light.ProbabilityDensity(oldOrigin, direction);
 							if (!FastMath.Positive(pdf)) continue;
 
 							float weight = PowerHeuristic(bounce.scatterPdf, pdf);
@@ -154,7 +156,7 @@ public record PathTracedEvaluator : Evaluator
 	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, Sample1D lightSample, Sample2D radiantSample, out bool mis)
 	{
 		//Select light from scene and sample it
-		(TokenHierarchy light, float lightPdf) = scene.Pick(lightSample);
+		(TokenHierarchy light, float lightPdf) = scene.Pick(contact.point, lightSample);
 		(RGB128 radiant, float radiantPdf) = scene.Sample
 		(
 			light, contact.point, radiantSample,

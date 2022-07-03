@@ -24,33 +24,17 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 	public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
 	{
 		Assert.AreNotEqual(points.Length, 0);
-
-		min = Float3.PositiveInfinity;
-		max = Float3.NegativeInfinity;
-
-		foreach (ref readonly Float3 point in points)
-		{
-			min = min.Min(point);
-			max = max.Max(point);
-		}
-
-		Assert.IsTrue(max >= min);
+		var builder = CreateBuilder();
+		builder.Add(points);
+		this = builder.ToBoxBounds();
 	}
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
 	{
 		Assert.AreNotEqual(aabbs.Length, 0);
-
-		min = Float3.PositiveInfinity;
-		max = Float3.NegativeInfinity;
-
-		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
-		{
-			min = min.Min(aabb.min);
-			max = max.Max(aabb.max);
-		}
-
-		Assert.IsTrue(max >= min);
+		var builder = CreateBuilder();
+		builder.Add(aabbs);
+		this = builder.ToBoxBounds();
 	}
 
 	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, in Float4x4 transform)
@@ -176,4 +160,42 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"{Center.ToString(format, provider)} ± {Extend.ToString(format, provider)}";
+
+	public static Builder CreateBuilder() => new();
+
+	public ref struct Builder
+	{
+		public Builder()
+		{
+			min = Float4.PositiveInfinity;
+			max = Float4.NegativeInfinity;
+		}
+
+		Float4 min;
+		Float4 max;
+
+		public void Add(in AxisAlignedBoundingBox bounds)
+		{
+			min = min.Min((Float4)bounds.min);
+			max = max.Max((Float4)bounds.max);
+		}
+
+		public void Add(ReadOnlySpan<Float3> points)
+		{
+			foreach (ref readonly Float3 point in points)
+			{
+				Float4 converted = (Float4)point;
+
+				min = min.Min(converted);
+				max = max.Max(converted);
+			}
+		}
+
+		public void Add(ReadOnlySpan<AxisAlignedBoundingBox> span)
+		{
+			foreach (ref readonly AxisAlignedBoundingBox bounds in span) Add(bounds);
+		}
+
+		public AxisAlignedBoundingBox ToBoxBounds() => new((Float3)min, (Float3)max);
+	}
 }
