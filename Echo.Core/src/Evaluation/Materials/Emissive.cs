@@ -22,7 +22,7 @@ public interface IEmissive
 
 	/// <summary>
 	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
-	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
+	/// <paramref name="origin"/>, towards the <paramref name="outgoing"/> direction.
 	/// </summary>
 	public RGB128 Emit(in GeometryPoint origin, in Float3 outgoing);
 }

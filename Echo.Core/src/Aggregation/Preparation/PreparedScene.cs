@@ -26,17 +26,18 @@ public class PreparedScene : PreparedPack
 {
 	public PreparedScene(ReadOnlySpan<IGeometrySource> geometrySources, ReadOnlySpan<ILightSource> lightSources,
 						 ImmutableArray<PreparedInstance> instances, in AcceleratorCreator acceleratorCreator,
-						 SwatchExtractor swatchExtractor, IEnumerable<InfiniteLight> infiniteLights)
+						 SwatchExtractor swatchExtractor, IEnumerable<InfiniteLight> infiniteLights, Camera camera)
 		: base(geometrySources, lightSources, instances, in acceleratorCreator, swatchExtractor)
 	{
+		this.camera = camera;
 		rootInstance = new PreparedInstance(this, geometries.swatch, Float4x4.identity);
-		(this.infiniteLights, ambientLights) = FilterLights(infiniteLights, rootInstance);
+		this.infiniteLights = FilterLights(infiniteLights, rootInstance);
 		infiniteLightsThreshold = CalculateThreshold(this.infiniteLights, rootInstance.Power);
 		infiniteLightsPdf = infiniteLightsThreshold / this.infiniteLights.Length;
 	}
 
+	public readonly Camera camera;
 	public readonly ImmutableArray<InfiniteLight> infiniteLights;
-	public readonly ImmutableArray<AmbientLight> ambientLights;
 
 	readonly PreparedInstance rootInstance;
 	readonly float infiniteLightsThreshold;
@@ -120,9 +121,7 @@ public class PreparedScene : PreparedPack
 
 	public float ProbabilityMass(in TokenHierarchy light)
 	{
-		EntityToken topToken = light.TopToken;
-
-		if (topToken.Type == TokenType.Light && topToken.LightType == LightType.Infinite)
+		if (light.TopToken.IsInfiniteLight())
 		{
 			Assert.AreEqual(light.InstanceCount, 0);
 			return infiniteLightsPdf;
@@ -138,16 +137,24 @@ public class PreparedScene : PreparedPack
 			pack = pack.geometries.instances.ItemRef(token.Index).pack;
 		}
 
-		return pdf * pack.lightPicker.ProbabilityMass(topToken);
+		return pdf * pack.lightPicker.ProbabilityMass(light.TopToken);
 	}
 
 	public Probable<RGB128> Sample(in TokenHierarchy light, in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
+		EntityToken token = light.TopToken;
+
+		if (token.IsInfiniteLight())
+		{
+			InfiniteLight infiniteLight = infiniteLights[token.Index];
+			return infiniteLight.Sample(origin, sample, out incident, out travel);
+		}
+
 		ref readonly var instance = ref FindLayer(light, out Float4x4 forwardTransform, out Float4x4 inverseTransform);
 
 		Probable<RGB128> result = instance.pack.lights.Sample
 		(
-			light.TopToken, forwardTransform * origin,
+			token, forwardTransform * origin,
 			sample, out incident, out travel
 		);
 
@@ -159,11 +166,19 @@ public class PreparedScene : PreparedPack
 
 	public float ProbabilityDensity(in TokenHierarchy light, in GeometryPoint origin, in Float3 incident)
 	{
+		EntityToken token = light.TopToken;
+
+		if (token.IsInfiniteLight())
+		{
+			InfiniteLight infiniteLight = infiniteLights[token.Index];
+			return infiniteLight.ProbabilityDensity(origin, incident);
+		}
+
 		ref readonly var instance = ref FindLayer(light, out Float4x4 forwardTransform, out Float4x4 inverseTransform);
 
 		return instance.pack.lights.ProbabilityDensity
 		(
-			light.TopToken, forwardTransform * origin,
+			token, forwardTransform * origin,
 			inverseTransform.MultiplyDirection(incident).Normalized
 		);
 	}
@@ -173,13 +188,13 @@ public class PreparedScene : PreparedPack
 	/// </summary>
 	/// <param name="direction">The normalized direction in world-space.</param>
 	/// <returns>The evaluated <see cref="RGB128"/> light value.</returns>
-	public RGB128 EvaluateAmbient(Float3 direction)
+	public RGB128 EvaluateInfinite(Float3 direction)
 	{
 		Assert.AreEqual(direction.SquaredMagnitude, 1f);
 
 		var total = RGB128.Black;
 
-		foreach (AmbientLight light in ambientLights) total += light.Evaluate(direction);
+		foreach (var light in infiniteLights) total += light.Evaluate(direction);
 
 		return total;
 	}
@@ -208,21 +223,19 @@ public class PreparedScene : PreparedPack
 		return ref instance;
 	}
 
-	static (ImmutableArray<InfiniteLight>, ImmutableArray<AmbientLight>) FilterLights(IEnumerable<InfiniteLight> lights, in PreparedInstance rootInstance)
+	static ImmutableArray<InfiniteLight> FilterLights(IEnumerable<InfiniteLight> lights, in PreparedInstance rootInstance)
 	{
-		var infiniteLights = ImmutableArray.CreateBuilder<InfiniteLight>();
-		var ambientLights = ImmutableArray.CreateBuilder<AmbientLight>();
+		var builder = ImmutableArray.CreateBuilder<InfiniteLight>();
 
 		foreach (InfiniteLight light in lights)
 		{
 			light.Prepare((PreparedScene)rootInstance.pack);
 			if (!FastMath.Positive(light.Power)) continue;
 
-			infiniteLights.Add(light);
-			if (light is AmbientLight ambient) ambientLights.Add(ambient);
+			builder.Add(light);
 		}
 
-		if (infiniteLights.Count == 0 && !FastMath.Positive(rootInstance.Power))
+		if (builder.Count == 0 && !FastMath.Positive(rootInstance.Power))
 		{
 			//Degenerate case with literally zero light contributor; our output image will literally be
 			//completely black, but we add in a light so no exception is thrown when we look for lights.
@@ -230,14 +243,13 @@ public class PreparedScene : PreparedPack
 			var light = new AmbientLight { Intensity = RGB128.Black };
 			light.Prepare((PreparedScene)rootInstance.pack);
 
-			ambientLights.Capacity = 1;
-			ambientLights.Add(light);
+			builder.Capacity = 1;
+			builder.Add(light);
 
-			var result = ambientLights.MoveToImmutable();
-			return (result.CastArray<InfiniteLight>(), result);
+			return builder.MoveToImmutable();
 		}
 
-		return (infiniteLights.ToImmutableArray(), ambientLights.ToImmutable());
+		return builder.ToImmutableArray();
 	}
 
 	static float CalculateThreshold(ImmutableArray<InfiniteLight> infiniteLights, float instancePower)

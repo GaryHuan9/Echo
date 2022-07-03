@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Scenic.Lighting;
 
 namespace Echo.Core.Aggregation.Primitives;
 
@@ -157,7 +158,7 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 
 public static class EntityTokenExtensions
 {
-	const byte Invalid = byte.MaxValue;
+	const uint Invalid = uint.MaxValue;
 
 	/// <summary>
 	/// Returns whether a <see cref="TokenType"/> is of type <see cref="TokenType.Triangle"/>, <see cref="TokenType.Instance"/>, or <see cref="TokenType.Sphere"/>.
@@ -181,7 +182,15 @@ public static class EntityTokenExtensions
 		return AreEqual(token.LightType, LightType.Infinite);
 	}
 
-	//Automatically inlined by compiler
+	/// <summary>
+	/// Returns whether an <see cref="EntityToken"/> is representing an <see cref="InfiniteLight"/>.
+	/// </summary>
+	public static bool IsInfiniteLight(this EntityToken token) => token.Type == TokenType.Light && AreEqual(token.LightType, LightType.Infinite);
+
+	//Both comparison methods compares the first argument and see if it matches with any of the following arguments.
+	//These are done using some bitmask and shifting so it can handle a bunch of arguments with O(1) speed. Furthermore,
+	//the methods are designed to inline into the calling methods as only a few instructions
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static bool AreEqual(TokenType value,
 						 TokenType other00 = (TokenType)Invalid, TokenType other01 = (TokenType)Invalid, TokenType other02 = (TokenType)Invalid, TokenType other03 = (TokenType)Invalid,
@@ -198,7 +207,6 @@ public static class EntityTokenExtensions
 		static uint Once(TokenType type) => type == (TokenType)Invalid ? 0 : 1u << (int)type;
 	}
 
-	//Automatically inlined by compiler
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static bool AreEqual(LightType value,
 						 LightType other00 = (LightType)Invalid, LightType other01 = (LightType)Invalid, LightType other02 = (LightType)Invalid, LightType other03 = (LightType)Invalid,
