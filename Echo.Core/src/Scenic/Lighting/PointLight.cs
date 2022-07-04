@@ -21,7 +21,7 @@ public readonly struct PreparedPointLight : IPreparedLight
 	{
 		this.intensity = intensity;
 		this.position = position;
-		energy = 2f * Scalars.Tau * intensity.Luminance;
+		energy = 4f * Scalars.Pi * intensity.Luminance;
 	}
 
 	readonly RGB128 intensity;

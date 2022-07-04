@@ -29,37 +29,49 @@ public readonly struct LightBounds
 	public float Importance(in GeometryPoint origin)
 	{
 		Float3 center = aabb.Center;
-		Float3 incident = center - origin;
+		Float3 incident = origin - center;
 
 		float length2 = incident.SquaredMagnitude;
 
 		if (FastMath.AlmostZero(length2)) incident = Float3.Zero;
 		else incident *= FastMath.SqrtR0(length2); //Normalized
 
-		//TODO: clamp length2
-		float length2R = 1f / length2;
-
-		float cosAxis = -cone.axis.Dot(incident);
+		float cosAxis = cone.axis.Dot(incident);
 		float sinAxis = FastMath.Identity(cosAxis);
-
-		float radius2 = aabb.max.SquaredDistance(center);
-		float sinRadius2 = radius2 * length2R;
-		float sinRadius = FastMath.Sqrt0(sinRadius2);
-		float cosRadius = FastMath.Sqrt0(1f - sinRadius2);
 
 		float cosOffset = cone.cosOffset;
 		float sinOffset = FastMath.Identity(cosOffset);
+
+		FindSubtendedAngles(aabb, length2, out float sinRadius, out float cosRadius);
 
 		float cosRemain = ClampSubtractCos(sinAxis, cosAxis, sinOffset, cosOffset);
 		float sinRemain = ClampSubtractSin(sinAxis, cosAxis, sinOffset, cosOffset);
 		float cosFinal = ClampSubtractCos(sinRemain, cosRemain, sinRadius, cosRadius);
 		if (cosFinal <= cone.cosExtend) return 0f;
 
-		float cosIncident = origin.normal.Dot(incident);
+		float cosIncident = FastMath.Abs(origin.normal.Dot(incident));
 		float sinIncident = FastMath.Identity(cosIncident);
 		float cosReflect = ClampSubtractCos(sinIncident, cosIncident, sinRadius, cosRadius);
 
-		return FastMath.Max0(power * cosFinal * length2R * cosReflect);
+		//TODO: clamp length2
+		return FastMath.Max0(power / length2 * cosFinal * cosReflect);
+	}
+
+	static void FindSubtendedAngles(in AxisAlignedBoundingBox boxBounds, float length2, out float sin, out float cos)
+	{
+		float radius2 = (boxBounds.max - boxBounds.min).SquaredMagnitude / 4f;
+
+		if (length2 < radius2)
+		{
+			sin = 0f;
+			cos = -1f;
+		}
+		else
+		{
+			float sinRadius2 = radius2 / length2;
+			sin = FastMath.Sqrt0(sinRadius2);
+			cos = FastMath.Sqrt0(1f - sinRadius2);
+		}
 	}
 
 	static float ClampSubtractCos(float sin0, float cos0, float sin1, float cos1) => cos0 > cos1 ? 1f : cos0 * cos1 + sin0 * sin1;

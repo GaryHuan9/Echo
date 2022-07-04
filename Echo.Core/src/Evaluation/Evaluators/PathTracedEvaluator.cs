@@ -10,7 +10,6 @@ using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Scenic.Lighting;
-using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 
@@ -39,6 +38,11 @@ public record PathTracedEvaluator : Evaluator
 
 		//Quick exit with ambient light if no intersection
 		if (!path.Advance(scene, allocator)) return scene.EvaluateInfinite(path.CurrentDirection);
+
+		// Probable<TokenHierarchy> picked = scene.Pick(path.contact.point, distribution.Next1D());
+		// uint random = SquirrelPrng.Mangle((uint)picked.content.TopToken.Index);
+		//
+		// return (Float4)Unsafe.As<uint, Color32>(ref random);
 
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
@@ -80,12 +84,12 @@ public record PathTracedEvaluator : Evaluator
 					radiantSample, out bool mis
 				));
 
+				//Begin continue path to the next vertex and exit if path exhausted
+				if (!path.Continue(bounce, Survivability, survivalSample)) break;
+
 				if (mis)
 				{
 					//We have both an area light a non-delta BSDF, begin MIS
-					//Continue path to the next vertex and exit if path exhausted
-					if (!path.Continue(bounce, Survivability, survivalSample)) break;
-
 					GeometryPoint oldOrigin = path.contact.point;
 
 					//Advance path and perform MIS
@@ -93,14 +97,13 @@ public record PathTracedEvaluator : Evaluator
 					{
 						//Attempt to do MIS on the newly contacted surface
 						ref readonly var light = ref path.contact.token;
-						float pmf = scene.ProbabilityMass(oldOrigin, light);
+						float pmf = scene.ProbabilityMass(light, oldOrigin);
 						if (!FastMath.Positive(pmf)) goto noLight;
 
 						float pdf = pmf * scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
 						if (!FastMath.Positive(pdf)) goto noLight;
 
-						float weight = PowerHeuristic(bounce.scatterPdf, pdf);
-						path.ContributeEmissive(weight / pdf);
+						path.ContributeEmissive(PowerHeuristic(bounce.scatterPdf, pdf));
 
 					noLight:
 						{ }
@@ -116,7 +119,7 @@ public record PathTracedEvaluator : Evaluator
 							InfiniteLight light = scene.infiniteLights[i];
 							hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
 
-							float pdf = scene.ProbabilityMass(oldOrigin, hierarchy) *
+							float pdf = scene.ProbabilityMass(hierarchy, oldOrigin) *
 										light.ProbabilityDensity(oldOrigin, direction);
 							if (!FastMath.Positive(pdf)) continue;
 
@@ -130,13 +133,11 @@ public record PathTracedEvaluator : Evaluator
 				else
 				{
 					//Our light does not like MIS either, so no MIS will be performed
-					//Begin continue path to the next vertex and exit if path exhausted
-					if (!path.Continue(bounce, Survivability, survivalSample)) break;
 
 					//Exit if no intersection with the scene
 					if (!path.Advance(scene, allocator)) break;
 
-					//TODO: Add infinite lights??
+					//TODO: Add infinite lights and emissive lights??
 				}
 			}
 		}
@@ -160,7 +161,7 @@ public record PathTracedEvaluator : Evaluator
 
 		if (!FastMath.Positive(lightPdf))
 		{
-			mis = default;
+			mis = false;
 			return RGB128.Black;
 		}
 
@@ -187,11 +188,11 @@ public record PathTracedEvaluator : Evaluator
 		if (scene.Occlude(ref query)) return RGB128.Black;
 
 		//Calculate final radiant
-		radiant /= pdf;
-		if (!mis) return scatter * radiant;
+		radiant *= scatter / pdf;
+		if (!mis) return radiant;
 
-		float weight = PowerHeuristic(pdf, contact.bsdf.ProbabilityDensity(outgoing, incident));
-		return radiant * weight * scatter;
+		float scatterPdf = contact.bsdf.ProbabilityDensity(outgoing, incident);
+		return radiant * PowerHeuristic(pdf, scatterPdf);
 	}
 
 	/// <summary>

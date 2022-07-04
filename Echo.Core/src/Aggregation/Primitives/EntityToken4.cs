@@ -41,7 +41,7 @@ public unsafe struct EntityToken4
 	{
 		get
 		{
-			//Potential issue in the C# JIT compiler: https://tinyurl.com/yzpfsy96
+			//Potential issue in the C# JIT compiler: https://github.com/dotnet/runtime/issues/71601
 
 			Assert.IsTrue(index >= 0);
 			Assert.IsTrue(index < 4);

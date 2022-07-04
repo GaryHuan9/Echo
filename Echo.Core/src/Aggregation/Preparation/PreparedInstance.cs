@@ -56,8 +56,8 @@ public readonly struct PreparedInstance
 		pack.accelerator.Trace(ref query);
 
 		//Convert back to parent-space
-		query.distance *= inverseScale;
 		query.ray = oldRay;
+		query.distance *= inverseScale;
 	}
 
 	/// <summary>
@@ -66,6 +66,7 @@ public readonly struct PreparedInstance
 	public bool Occlude(ref OccludeQuery query)
 	{
 		var oldRay = query.ray;
+		var oldTravel = query.travel;
 
 		//Convert from parent-space to local-space
 		TransformForward(ref query.ray);
@@ -75,8 +76,8 @@ public readonly struct PreparedInstance
 		if (pack.accelerator.Occlude(ref query)) return true;
 
 		//Convert back to parent-space
-		query.travel *= inverseScale;
 		query.ray = oldRay;
+		query.travel = oldTravel;
 
 		return false;
 	}

@@ -137,7 +137,7 @@ public class LightCollection
 			incident = delta * (1f / travel);
 
 			travel = FastMath.Max0(travel - FastMath.Epsilon);
-			return (material.Emit(origin, -incident), pdf);
+			return (material.Emit(point, -incident), pdf);
 		}
 
 		[SkipLocalsInit]

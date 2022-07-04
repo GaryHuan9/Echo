@@ -20,7 +20,7 @@ public abstract class LightPicker
 
 	public abstract Probable<EntityToken> Pick(in GeometryPoint origin, ref Sample1D sample);
 
-	public abstract float ProbabilityMass(in GeometryPoint origin,EntityToken token);
+	public abstract float ProbabilityMass(EntityToken token, in GeometryPoint origin);
 
 	public static LightPicker Create(LightCollection lights)
 	{
