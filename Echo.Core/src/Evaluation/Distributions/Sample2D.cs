@@ -53,7 +53,7 @@ public readonly struct Sample2D
 	{
 		get
 		{
-			float v = MathF.Sqrt(x);
+			float v = FastMath.Sqrt0(x);
 			return new Float2(1f - v, y * v);
 		}
 	}

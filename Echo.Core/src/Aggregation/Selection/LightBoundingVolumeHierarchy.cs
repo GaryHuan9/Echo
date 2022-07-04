@@ -42,7 +42,7 @@ public class LightBoundingVolumeHierarchy : LightPicker
 
 	public override Probable<EntityToken> Pick(in GeometryPoint origin, ref Sample1D sample) => Pick(origin, ref sample, root, 1f);
 
-	public override float ProbabilityMass(in GeometryPoint origin, EntityToken token)
+	public override float ProbabilityMass(EntityToken token, in GeometryPoint origin)
 	{
 		if (!map.TryGetValue(token, out ulong branches)) return 0f;
 		return ProbabilityMass(origin, root, branches);

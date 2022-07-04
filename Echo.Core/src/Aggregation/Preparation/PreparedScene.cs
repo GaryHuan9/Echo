@@ -120,7 +120,7 @@ public class PreparedScene : PreparedPack
 		return new Probable<TokenHierarchy>(hierarchy, pdf);
 	}
 
-	public float ProbabilityMass(in GeometryPoint origin, in TokenHierarchy light)
+	public float ProbabilityMass(in TokenHierarchy light, in GeometryPoint origin)
 	{
 		if (light.TopToken.IsInfiniteLight())
 		{
@@ -134,13 +134,13 @@ public class PreparedScene : PreparedPack
 		foreach (EntityToken token in light.Instances)
 		{
 			Assert.AreEqual(token.Type, TokenType.Instance);
-			pdf *= pack.lightPicker.ProbabilityMass(origin, token);
+			pdf *= pack.lightPicker.ProbabilityMass(token, origin);
 			pack = pack.geometries.instances.ItemRef(token.Index).pack;
 
 			if (FastMath.AlmostZero(pdf)) return 0f;
 		}
 
-		return pdf * pack.lightPicker.ProbabilityMass(origin, light.TopToken);
+		return pdf * pack.lightPicker.ProbabilityMass(light.TopToken, origin);
 	}
 
 	public Probable<RGB128> Sample(in TokenHierarchy light, in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
@@ -177,12 +177,12 @@ public class PreparedScene : PreparedPack
 			return infiniteLight.ProbabilityDensity(origin, incident);
 		}
 
-		ref readonly var instance = ref FindLayer(light, out Float4x4 forwardTransform, out Float4x4 inverseTransform);
+		ref readonly var instance = ref FindLayer(light, out Float4x4 forwardTransform, out _);
 
 		return instance.pack.lights.ProbabilityDensity
 		(
 			token, forwardTransform * origin,
-			inverseTransform.MultiplyDirection(incident).Normalized
+			forwardTransform.MultiplyDirection(incident).Normalized
 		);
 	}
 

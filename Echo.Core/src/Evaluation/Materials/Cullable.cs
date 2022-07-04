@@ -54,10 +54,10 @@ public class Cullable : Material, IEmissive
 	}
 
 	/// <inheritdoc/>
-	public RGB128 Emit(in GeometryPoint origin, in Float3 outgoing)
+	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing)
 	{
-		bool none = emissive == null || Cull(origin.normal, outgoing);
-		return none ? RGB128.Black : emissive.Emit(origin, outgoing);
+		bool none = emissive == null || Cull(point.normal, outgoing);
+		return none ? RGB128.Black : emissive.Emit(point, outgoing);
 	}
 
 	bool Cull(in Contact contact) => Cull(contact.point.normal, contact.outgoing);
