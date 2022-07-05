@@ -28,11 +28,11 @@ public readonly struct PreparedPointLight : IPreparedLight
 	readonly Float3 position;
 	readonly float energy;
 
-	public AxisAlignedBoundingBox BoxBounds => new(position, position);
+	public BoxBound BoxBound => new(position, position);
 
-	public ConeBounds ConeBounds => ConeBounds.CreateFullSphere();
+	public ConeBound ConeBound => ConeBound.CreateFullSphere();
 
-	public LightBounds LightBounds => new(BoxBounds, ConeBounds, energy);
+	public LightBound LightBound => new(BoxBound, ConeBound, energy);
 
 	/// <inheritdoc/>
 	[SkipLocalsInit]

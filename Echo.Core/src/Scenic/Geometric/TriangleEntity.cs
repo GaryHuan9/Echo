@@ -126,11 +126,11 @@ public readonly struct PreparedTriangle : IPreparedGeometry //Winding order for 
 	public Float3 Vertex2 => vertex0 + edge2;
 
 	/// <summary>
-	/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedTriangle"/>.
+	/// The smallest <see cref="Aggregation.Bounds.BoxBound"/> that encloses this <see cref="PreparedTriangle"/>.
 	/// </summary>
-	public AxisAlignedBoundingBox AABB => new(stackalloc[] { vertex0, Vertex1, Vertex2 });
+	public BoxBound BoxBound => new(stackalloc[] { vertex0, Vertex1, Vertex2 });
 
-	public ConeBounds ConeBounds => ConeBounds.CreateDirection(Float3.Cross(edge1, edge2).Normalized);
+	public ConeBound ConeBound => ConeBound.CreateDirection(Float3.Cross(edge1, edge2).Normalized);
 
 	/// <summary>
 	/// The area of this <see cref="PreparedTriangle"/>.

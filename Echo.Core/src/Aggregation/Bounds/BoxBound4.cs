@@ -8,25 +8,25 @@ using Echo.Core.Common;
 namespace Echo.Core.Aggregation.Bounds;
 
 /// <summary>
-/// Stores four <see cref="AxisAlignedBoundingBox"/> in six four-wide SIMD vectors.
+/// Stores four <see cref="BoxBound"/> in six four-wide SIMD vectors.
 /// </summary>
-public readonly struct AxisAlignedBoundingBox4
+public readonly struct BoxBound4
 {
-	public AxisAlignedBoundingBox4(in AxisAlignedBoundingBox aabb0, in AxisAlignedBoundingBox aabb1, in AxisAlignedBoundingBox aabb2, in AxisAlignedBoundingBox aabb3)
+	public BoxBound4(in BoxBound bound0, in BoxBound bound1, in BoxBound bound2, in BoxBound bound3)
 	{
-		minX = new Float4(aabb0.min.X, aabb1.min.X, aabb2.min.X, aabb3.min.X);
-		minY = new Float4(aabb0.min.Y, aabb1.min.Y, aabb2.min.Y, aabb3.min.Y);
-		minZ = new Float4(aabb0.min.Z, aabb1.min.Z, aabb2.min.Z, aabb3.min.Z);
+		minX = new Float4(bound0.min.X, bound1.min.X, bound2.min.X, bound3.min.X);
+		minY = new Float4(bound0.min.Y, bound1.min.Y, bound2.min.Y, bound3.min.Y);
+		minZ = new Float4(bound0.min.Z, bound1.min.Z, bound2.min.Z, bound3.min.Z);
 
-		maxX = new Float4(aabb0.max.X, aabb1.max.X, aabb2.max.X, aabb3.max.X);
-		maxY = new Float4(aabb0.max.Y, aabb1.max.Y, aabb2.max.Y, aabb3.max.Y);
-		maxZ = new Float4(aabb0.max.Z, aabb1.max.Z, aabb2.max.Z, aabb3.max.Z);
+		maxX = new Float4(bound0.max.X, bound1.max.X, bound2.max.X, bound3.max.X);
+		maxY = new Float4(bound0.max.Y, bound1.max.Y, bound2.max.Y, bound3.max.Y);
+		maxZ = new Float4(bound0.max.Z, bound1.max.Z, bound2.max.Z, bound3.max.Z);
 	}
 
-	public AxisAlignedBoundingBox4(ReadOnlySpan<AxisAlignedBoundingBox> aabbs) : this
+	public BoxBound4(ReadOnlySpan<BoxBound> bounds) : this
 	(
-		aabbs.TryGetValue(0, AxisAlignedBoundingBox.none), aabbs.TryGetValue(1, AxisAlignedBoundingBox.none),
-		aabbs.TryGetValue(2, AxisAlignedBoundingBox.none), aabbs.TryGetValue(3, AxisAlignedBoundingBox.none)
+		bounds.TryGetValue(0, BoxBound.None), bounds.TryGetValue(1, BoxBound.None),
+		bounds.TryGetValue(2, BoxBound.None), bounds.TryGetValue(3, BoxBound.None)
 	) { }
 
 	readonly Float4 minX;
@@ -38,27 +38,27 @@ public readonly struct AxisAlignedBoundingBox4
 	readonly Float4 maxZ;
 
 	/// <summary>
-	/// Extracts out and returns a particular <see cref="AxisAlignedBoundingBox"/> at
+	/// Extracts out and returns a particular <see cref="BoxBound"/> at
 	/// <paramref name="index"/>, which should be between 0 (inclusive) and 4 (exclusive).
 	/// </summary>
-	public AxisAlignedBoundingBox this[int index] => new
+	public BoxBound this[int index] => new
 	(
 		new Float3(minX[index], minY[index], minZ[index]),
 		new Float3(maxX[index], maxY[index], maxZ[index])
 	);
 
 	/// <summary>
-	/// Calculates and returns an <see cref="AxisAlignedBoundingBox"/> that encapsulates the four
-	/// <see cref="AxisAlignedBoundingBox"/> contained in this <see cref="AxisAlignedBoundingBox4"/>.
+	/// Calculates and returns an <see cref="BoxBound"/> that encapsulates the four
+	/// <see cref="BoxBound"/> contained in this <see cref="BoxBound4"/>.
 	/// </summary>
-	public AxisAlignedBoundingBox Encapsulated => new
+	public BoxBound Encapsulated => new
 	(
 		new Float3(minX.MinComponent, minY.MinComponent, minZ.MinComponent),
 		new Float3(maxX.MaxComponent, maxY.MaxComponent, maxZ.MaxComponent)
 	);
 
 	/// <summary>
-	/// Finds the intersection between <paramref name="ray"/> and this <see cref="AxisAlignedBoundingBox4"/>.
+	/// Finds the intersection between <paramref name="ray"/> and this <see cref="BoxBound4"/>.
 	/// Returns either the intersection distance or <see cref="float.PositiveInfinity"/> if none was found.
 	/// </summary>
 	public Float4 Intersect(in Ray ray)
@@ -99,7 +99,7 @@ public readonly struct AxisAlignedBoundingBox4
 		far = far.Min(length0.Max(length1));
 		near = near.Max(length0.Min(length1));
 
-		far *= AxisAlignedBoundingBox.FarMultiplier;
+		far *= BoxBound.FarMultiplier;
 
 		return new Float4(Sse41.BlendVariable
 		(
@@ -113,6 +113,6 @@ public readonly struct AxisAlignedBoundingBox4
 
 	public override unsafe int GetHashCode()
 	{
-		fixed (AxisAlignedBoundingBox4* ptr = &this) return Utility.GetHashCode(ptr);
+		fixed (BoxBound4* ptr = &this) return Utility.GetHashCode(ptr);
 	}
 }

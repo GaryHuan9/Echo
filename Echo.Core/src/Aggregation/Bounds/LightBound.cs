@@ -4,31 +4,31 @@ using Echo.Core.Common.Mathematics;
 
 namespace Echo.Core.Aggregation.Bounds;
 
-public readonly struct LightBounds
+public readonly struct LightBound
 {
-	public LightBounds(in AxisAlignedBoundingBox aabb, in ConeBounds cone, float power)
+	public LightBound(in BoxBound box, in ConeBound cone, float power)
 	{
-		this.aabb = aabb;
+		this.box = box;
 		this.cone = cone;
 		this.power = power;
 	}
 
-	public readonly AxisAlignedBoundingBox aabb;
-	public readonly ConeBounds cone;
+	public readonly BoxBound box;
+	public readonly ConeBound cone;
 	public readonly float power;
 
-	public float Area => aabb.HalfArea * cone.Area * power; //relative
+	public float Area => box.HalfArea * cone.Area * power; //relative
 
-	public LightBounds Encapsulate(in LightBounds other) => new
+	public LightBound Encapsulate(in LightBound other) => new
 	(
-		aabb.Encapsulate(other.aabb),
+		box.Encapsulate(other.box),
 		cone.Encapsulate(other.cone),
 		power + other.power
 	);
 
 	public float Importance(in GeometryPoint origin)
 	{
-		Float3 center = aabb.Center;
+		Float3 center = box.Center;
 		Float3 incident = origin - center;
 
 		float length2 = incident.SquaredMagnitude;
@@ -42,7 +42,7 @@ public readonly struct LightBounds
 		float cosOffset = cone.cosOffset;
 		float sinOffset = FastMath.Identity(cosOffset);
 
-		FindSubtendedAngles(aabb, length2, out float sinRadius, out float cosRadius);
+		FindSubtendedAngles(box, length2, out float sinRadius, out float cosRadius);
 
 		float cosRemain = ClampSubtractCos(sinAxis, cosAxis, sinOffset, cosOffset);
 		float sinRemain = ClampSubtractSin(sinAxis, cosAxis, sinOffset, cosOffset);
@@ -57,9 +57,9 @@ public readonly struct LightBounds
 		return FastMath.Max0(power / length2 * cosFinal * cosReflect);
 	}
 
-	static void FindSubtendedAngles(in AxisAlignedBoundingBox boxBounds, float length2, out float sin, out float cos)
+	static void FindSubtendedAngles(in BoxBound boxBound, float length2, out float sin, out float cos)
 	{
-		float radius2 = (boxBounds.max - boxBounds.min).SquaredMagnitude / 4f;
+		float radius2 = (boxBound.max - boxBound.min).SquaredMagnitude / 4f;
 
 		if (length2 < radius2)
 		{

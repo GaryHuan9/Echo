@@ -51,16 +51,16 @@ public readonly struct PreparedSphere : IPreparedGeometry
 	public MaterialIndex Material { get; }
 
 	/// <summary>
-	/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedSphere"/>.
+	/// The smallest <see cref="Aggregation.Bounds.BoxBound"/> that encloses this <see cref="PreparedSphere"/>.
 	/// </summary>
-	public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
+	public BoxBound BoxBound => new(position - (Float3)radius, position + (Float3)radius);
 
-	public ConeBounds ConeBounds => ConeBounds.CreateFullSphere();
+	public ConeBound ConeBound => ConeBound.CreateFullSphere();
 
 	/// <summary>
 	/// The area of this <see cref="PreparedSphere"/>.
 	/// </summary>
-	public float Area => 2f * Scalars.Tau * radius * radius;
+	public float Area => 4f * Scalars.Pi * radius * radius;
 
 	/// <summary>
 	/// Because spheres have two intersection points, if an intersection distance is going to be under this value,

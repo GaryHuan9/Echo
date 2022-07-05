@@ -9,20 +9,20 @@ namespace Echo.Core.Aggregation.Acceleration;
 
 public abstract class HierarchyBuilder
 {
-	public HierarchyBuilder(View<Tokenized<AxisAlignedBoundingBox>> boundsView) => this.boundsView = boundsView;
+	public HierarchyBuilder(View<Tokenized<BoxBound>> bounds) => this.bounds = bounds;
 
-	protected readonly View<Tokenized<AxisAlignedBoundingBox>> boundsView;
+	protected readonly View<Tokenized<BoxBound>> bounds;
 
 	public abstract Node Build();
 
 	public sealed class Node
 	{
-		public Node(in AxisAlignedBoundingBox aabb, Node child0, Node child1, int axis)
+		public Node(in BoxBound bound, Node child0, Node child1, int axis)
 		{
 			Assert.IsNotNull(child0);
 			Assert.IsNotNull(child1);
 
-			this.aabb = aabb;
+			this.bound = bound;
 
 			nodeCount = child0.nodeCount + child1.nodeCount + 1;
 			nodeDepth = Math.Max(child0.nodeDepth, child1.nodeDepth) + 1;
@@ -32,17 +32,17 @@ public abstract class HierarchyBuilder
 			_axis = axis;
 		}
 
-		public Node(in Tokenized<AxisAlignedBoundingBox> tokenized) : this(tokenized.content, tokenized.token) { }
+		public Node(in Tokenized<BoxBound> tokenized) : this(tokenized.content, tokenized.token) { }
 
-		public Node(in AxisAlignedBoundingBox aabb, EntityToken token)
+		public Node(in BoxBound bound, EntityToken token)
 		{
-			this.aabb = aabb;
+			this.bound = bound;
 			nodeCount = 1;
 			nodeDepth = 1;
 			_token = token;
 		}
 
-		public readonly AxisAlignedBoundingBox aabb;
+		public readonly BoxBound bound;
 		public readonly uint nodeCount;
 		public readonly uint nodeDepth;
 

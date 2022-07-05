@@ -257,7 +257,10 @@ public class PreparedScene : PreparedPack
 
 	static float CalculateThreshold(ImmutableArray<InfiniteLight> infiniteLights, float instancePower)
 	{
-		const float InstanceBias = Scalars.Tau;
+		//We induce a multiplier to favor sampling the instance lights over the infinite lights because infinite
+		//lights can easily dominate over the scene and they are specially sampled when a ray escapes the scene
+
+		const float InstanceBias = Scalars.Phi * Scalars.Phi;
 
 		float infiniteLightsPower = infiniteLights.Sum(light => light.Power);
 		float sum = infiniteLightsPower + instancePower * InstanceBias;

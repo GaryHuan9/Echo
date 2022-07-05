@@ -11,9 +11,9 @@ namespace Echo.Core.Aggregation.Bounds;
 /// <summary>
 /// A 3D box that is aligned to the coordinate axes, usually used to bound other objects.
 /// </summary>
-public readonly struct AxisAlignedBoundingBox : IFormattable
+public readonly struct BoxBound : IFormattable
 {
-	public AxisAlignedBoundingBox(in Float3 min, in Float3 max)
+	public BoxBound(in Float3 min, in Float3 max)
 	{
 		this.min = min;
 		this.max = max;
@@ -21,34 +21,34 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 		Assert.IsTrue(max >= min);
 	}
 
-	public AxisAlignedBoundingBox(ReadOnlySpan<Float3> points)
+	public BoxBound(ReadOnlySpan<Float3> points)
 	{
 		Assert.AreNotEqual(points.Length, 0);
 		var builder = CreateBuilder();
 		builder.Add(points);
-		this = builder.ToBoxBounds();
+		this = builder.ToBoxBound();
 	}
 
-	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs)
+	public BoxBound(ReadOnlySpan<BoxBound> bounds)
 	{
-		Assert.AreNotEqual(aabbs.Length, 0);
+		Assert.AreNotEqual(bounds.Length, 0);
 		var builder = CreateBuilder();
-		builder.Add(aabbs);
-		this = builder.ToBoxBounds();
+		builder.Add(bounds);
+		this = builder.ToBoxBound();
 	}
 
-	public AxisAlignedBoundingBox(ReadOnlySpan<AxisAlignedBoundingBox> aabbs, in Float4x4 transform)
+	public BoxBound(ReadOnlySpan<BoxBound> bounds, in Float4x4 transform)
 	{
-		Assert.AreNotEqual(aabbs.Length, 0);
+		Assert.AreNotEqual(bounds.Length, 0);
 		Float4x4 absolute = transform.Absoluted;
 
 		min = Float3.PositiveInfinity;
 		max = Float3.NegativeInfinity;
 
-		foreach (ref readonly AxisAlignedBoundingBox aabb in aabbs)
+		foreach (ref readonly BoxBound bound in bounds)
 		{
-			Float3 center = transform.MultiplyPoint(aabb.Center);
-			Float3 extend = absolute.MultiplyDirection(aabb.Extend);
+			Float3 center = transform.MultiplyPoint(bound.Center);
+			Float3 extend = absolute.MultiplyDirection(bound.Extend);
 
 			min = min.Min(center - extend);
 			max = max.Max(center + extend);
@@ -57,16 +57,21 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 		Assert.IsTrue(max >= min);
 	}
 
-	public static readonly AxisAlignedBoundingBox none = new(Float3.PositiveInfinity, Float3.PositiveInfinity);
-
 	public readonly Float3 min;
 	public readonly Float3 max;
+
+	/// <summary>
+	/// Multiplier used on the far distance to remove floating point arithmetic errors when calculating
+	/// an intersection with <see cref="BoxBound"/> by converting false-misses into false-hits.
+	/// See https://www.arnoldrenderer.com/research/jcgt2013_robust_BVH-revised.pdf for details.
+	/// </summary>
+	public const float FarMultiplier = 1.00000024f;
 
 	public Float3 Center => (max + min) / 2f;
 	public Float3 Extend => (max - min) / 2f;
 
 	/// <summary>
-	/// The full surface area of this <see cref="AxisAlignedBoundingBox"/>.
+	/// The full surface area of this <see cref="BoxBound"/>.
 	/// </summary>
 	public float Area => HalfArea * 2f;
 
@@ -83,16 +88,11 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 	}
 
 	/// <summary>
-	/// Returns the axis (0 = x, 1 = y, 2 = z) that this <see cref="AxisAlignedBoundingBox"/> is the longest in.
+	/// Returns the axis (0 = x, 1 = y, 2 = z) that this <see cref="BoxBound"/> is the longest in.
 	/// </summary>
 	public int MajorAxis => (max - min).MaxIndex;
 
-	/// <summary>
-	/// Multiplier used on the far distance to remove floating point arithmetic errors when calculating
-	/// an intersection with <see cref="AxisAlignedBoundingBox"/> by converting false-misses into false-hits.
-	/// See https://www.arnoldrenderer.com/research/jcgt2013_robust_BVH-revised.pdf for details.
-	/// </summary>
-	public const float FarMultiplier = 1.00000024f;
+	public static BoxBound None => new(Float3.PositiveInfinity, Float3.PositiveInfinity);
 
 	/// <summary>
 	/// Tests intersection with bounding box. Returns distance to the nearest intersection point.
@@ -124,17 +124,17 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 	}
 
 	/// <summary>
-	/// Returns a new <see cref="AxisAlignedBoundingBox"/> that encapsulates both
-	/// this <see cref="AxisAlignedBoundingBox"/> and <paramref name="other"/>.
+	/// Returns a new <see cref="BoxBound"/> that encapsulates both
+	/// this <see cref="BoxBound"/> and <paramref name="other"/>.
 	/// </summary>
-	public AxisAlignedBoundingBox Encapsulate(in AxisAlignedBoundingBox other) => new
+	public BoxBound Encapsulate(in BoxBound other) => new
 	(
 		min.Min(other.min),
 		max.Max(other.max)
 	);
 
 	/// <summary>
-	/// Fills <paramref name="span"/> with the eight vertices of this <see cref="AxisAlignedBoundingBox"/>.
+	/// Fills <paramref name="span"/> with the eight vertices of this <see cref="BoxBound"/>.
 	/// Note that <paramref name="span"/> must have a <see cref="Span{T}.Length"/> greater than or equals to
 	/// eight. Returns the number elements used in <paramref name="span"/>, which is always eight.
 	/// </summary>
@@ -174,10 +174,10 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 		Float4 min;
 		Float4 max;
 
-		public void Add(in AxisAlignedBoundingBox bounds)
+		public void Add(in BoxBound bound)
 		{
-			min = min.Min((Float4)bounds.min);
-			max = max.Max((Float4)bounds.max);
+			min = min.Min((Float4)bound.min);
+			max = max.Max((Float4)bound.max);
 		}
 
 		public void Add(ReadOnlySpan<Float3> points)
@@ -191,11 +191,11 @@ public readonly struct AxisAlignedBoundingBox : IFormattable
 			}
 		}
 
-		public void Add(ReadOnlySpan<AxisAlignedBoundingBox> span)
+		public void Add(ReadOnlySpan<BoxBound> span)
 		{
-			foreach (ref readonly AxisAlignedBoundingBox bounds in span) Add(bounds);
+			foreach (ref readonly BoxBound bounds in span) Add(bounds);
 		}
 
-		public AxisAlignedBoundingBox ToBoxBounds() => new((Float3)min, (Float3)max);
+		public BoxBound ToBoxBound() => new((Float3)min, (Float3)max);
 	}
 }

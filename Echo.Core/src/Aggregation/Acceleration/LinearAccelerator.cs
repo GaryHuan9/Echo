@@ -16,19 +16,19 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// </summary>
 public class LinearAccelerator : Accelerator
 {
-	public LinearAccelerator(GeometryCollection geometries, ReadOnlyView<Tokenized<AxisAlignedBoundingBox>> boundsView) : base(geometries)
+	public LinearAccelerator(GeometryCollection geometries, ReadOnlyView<Tokenized<BoxBound>> bounds) : base(geometries)
 	{
-		totalCount = boundsView.Length;
+		totalCount = bounds.Length;
 		nodes = new Node[totalCount.CeiledDivide(Width)];
 
-		for (int i = 0; i < nodes.Length; i++) nodes[i] = new Node(boundsView[(i * Width)..]);
+		for (int i = 0; i < nodes.Length; i++) nodes[i] = new Node(bounds[(i * Width)..]);
 	}
 
 	readonly Node[] nodes;
 	readonly int totalCount;
 
 	/// <summary>
-	/// We store four <see cref="AxisAlignedBoundingBox"/> and tokens in one <see cref="Node"/>.
+	/// We store four <see cref="BoxBound"/> and tokens in one <see cref="Node"/>.
 	/// </summary>
 	const int Width = 4;
 
@@ -36,7 +36,7 @@ public class LinearAccelerator : Accelerator
 	{
 		foreach (ref readonly Node node in nodes.AsSpan())
 		{
-			Float4 intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.bound4.Intersect(query.ray);
 
 			for (int i = 0; i < Width; i++)
 			{
@@ -50,7 +50,7 @@ public class LinearAccelerator : Accelerator
 	{
 		foreach (ref readonly Node node in nodes.AsSpan())
 		{
-			Float4 intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.bound4.Intersect(query.ray);
 
 			for (int i = 0; i < Width; i++)
 			{
@@ -68,7 +68,7 @@ public class LinearAccelerator : Accelerator
 
 		foreach (ref readonly Node node in nodes.AsSpan())
 		{
-			Float4 intersections = node.aabb4.Intersect(ray);
+			Float4 intersections = node.bound4.Intersect(ray);
 
 			for (int i = 0; i < Width; i++)
 			{
@@ -85,27 +85,27 @@ public class LinearAccelerator : Accelerator
 		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, totalCount);
 	}
 
-	public override void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
+	public override void FillBounds(uint depth, ref SpanFill<BoxBound> fill)
 	{
 		fill.ThrowIfNotEmpty();
 
-		//If theres enough room to store every individual AABB
+		//If theres enough room to store every individual bound
 		if (fill.Length >= totalCount)
 		{
 			for (int i = 0; i < nodes.Length; i++)
 			for (int j = 0; j < Width; j++)
 			{
 				if (fill.Count == totalCount) return;
-				fill.Add(nodes[i].aabb4[j]);
+				fill.Add(nodes[i].bound4[j]);
 			}
 
 			return;
 		}
 
-		//If there is enough space to store AABBs that enclose every node's AABB4
+		//If there is enough space to store bounds that enclose every node's bound4
 		if (fill.Length >= nodes.Length)
 		{
-			Span<AxisAlignedBoundingBox> aabb4 = stackalloc AxisAlignedBoundingBox[Width];
+			Span<BoxBound> bounds = stackalloc BoxBound[Width];
 
 			for (int i = 0; i < nodes.Length; i++)
 			{
@@ -114,27 +114,26 @@ public class LinearAccelerator : Accelerator
 
 				if (count < Width)
 				{
-					for (int j = 0; j < count; j++) aabb4[j] = node.aabb4[j];
-					fill.Add(new AxisAlignedBoundingBox(aabb4[count..]));
+					for (int j = 0; j < count; j++) bounds[j] = node.bound4[j];
+					fill.Add(new BoxBound(bounds[count..]));
 
 					break;
 				}
 
-				fill.Add(node.aabb4.Encapsulated);
+				fill.Add(node.bound4.Encapsulated);
 			}
 
 			return;
 		}
 
-		//Finally, store all enclosure AABBs and then one last big AABB that encloses all the remaining AABBs
+		//Finally, store all enclosure bounds and then one last big bound that encloses all the remaining bounds
 		while (fill.Count < fill.Length - 1)
 		{
 			ref readonly Node node = ref nodes[fill.Count];
-			fill.Add(node.aabb4.Encapsulated);
+			fill.Add(node.bound4.Encapsulated);
 		}
 
-		var min = Float3.PositiveInfinity;
-		var max = Float3.NegativeInfinity;
+		var builder = BoxBound.CreateBuilder();
 
 		for (int i = fill.Count; i < nodes.Length; i++)
 		{
@@ -143,35 +142,29 @@ public class LinearAccelerator : Accelerator
 
 			if (count < Width)
 			{
-				for (int j = 0; j < count; j++) Encapsulate(node.aabb4[j]);
+				for (int j = 0; j < count; j++) builder.Add(node.bound4[j]);
 				break;
 			}
 
-			Encapsulate(node.aabb4.Encapsulated);
-
-			void Encapsulate(in AxisAlignedBoundingBox aabb)
-			{
-				min = min.Min(aabb.min);
-				max = max.Max(aabb.max);
-			}
+			builder.Add(node.bound4.Encapsulated);
 		}
 
-		fill.Add(new AxisAlignedBoundingBox(min, max));
+		fill.Add(builder.ToBoxBound());
 		Assert.IsTrue(fill.IsFull);
 	}
 
 	readonly struct Node
 	{
-		public Node(ReadOnlySpan<Tokenized<AxisAlignedBoundingBox>> boundsSpan)
+		public Node(ReadOnlySpan<Tokenized<BoxBound>> boundsSpan)
 		{
 			int length = boundsSpan.Length;
 
-			aabb4 = new AxisAlignedBoundingBox4
+			bound4 = new BoxBound4
 			(
-				length > 0 ? boundsSpan[0].content : AxisAlignedBoundingBox.none,
-				length > 1 ? boundsSpan[1].content : AxisAlignedBoundingBox.none,
-				length > 2 ? boundsSpan[2].content : AxisAlignedBoundingBox.none,
-				length > 3 ? boundsSpan[3].content : AxisAlignedBoundingBox.none
+				length > 0 ? boundsSpan[0].content : BoxBound.None,
+				length > 1 ? boundsSpan[1].content : BoxBound.None,
+				length > 2 ? boundsSpan[2].content : BoxBound.None,
+				length > 3 ? boundsSpan[3].content : BoxBound.None
 			);
 
 			token4 = new EntityToken4
@@ -183,7 +176,7 @@ public class LinearAccelerator : Accelerator
 			);
 		}
 
-		public readonly AxisAlignedBoundingBox4 aabb4;
+		public readonly BoxBound4 bound4;
 		public readonly EntityToken4 token4;
 	}
 }

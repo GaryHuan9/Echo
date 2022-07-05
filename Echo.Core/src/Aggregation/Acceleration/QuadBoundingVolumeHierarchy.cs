@@ -17,7 +17,7 @@ using SourceNode = HierarchyBuilder.Node;
 /// <summary>
 /// A four-way hierarchical spacial partitioning acceleration structure.
 /// Works best with very large quantities of geometries and tokens.
-/// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
+/// There must be more than one token and <see cref="BoxBound"/> to process.
 /// ref: https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf
 /// </summary>
 public class QuadBoundingVolumeHierarchy : Accelerator
@@ -45,9 +45,9 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 	const int Width = 4;
 
 	/// <summary>
-	/// Returns the root <see cref="AxisAlignedBoundingBox"/> that encapsulates the entire hierarchy.
+	/// Returns the root <see cref="BoxBound"/> that encapsulates the entire hierarchy.
 	/// </summary>
-	AxisAlignedBoundingBox RootAABB => nodes[RootToken.Index].aabb4.Encapsulated;
+	BoxBound RootBound => nodes[RootToken.Index].bound4.Encapsulated;
 
 	static EntityToken RootToken => NewNodeToken(0);
 
@@ -60,7 +60,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, stackSize);
 	}
 
-	public override unsafe void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
+	public override unsafe void FillBounds(uint depth, ref SpanFill<BoxBound> fill)
 	{
 		int length = 1 << (int)depth;
 		fill.ThrowIfTooSmall(length);
@@ -69,11 +69,11 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		//Output is too small
 		if (length < Width)
 		{
-			fill.Add(RootAABB);
+			fill.Add(RootBound);
 			return;
 		}
 
-		//Because we fetch the aabbs in packs of Width (4), moving down one more level yields 4x more aabbs
+		//Because we fetch the bound in packs of Width (4), moving down one more level yields 4x more bound
 		//Thus, we must carefully reduce the value of depth to make sure that we never exceed the span size
 		uint iteration = depth / 2 - 1;
 
@@ -97,7 +97,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 					if (child.IsEmpty) continue;
 					if (child.Type == TokenType.Node) *next1++ = child;
-					else fill.Add(node.aabb4[j]);
+					else fill.Add(node.bound4[j]);
 				}
 			}
 
@@ -114,7 +114,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			for (int i = 0; i < Width; i++)
 			{
 				if (node.token4[i].IsEmpty) continue;
-				fill.Add(node.aabb4[i]);
+				fill.Add(node.bound4[i]);
 			}
 		}
 	}
@@ -147,7 +147,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			if (*--hits >= query.distance) continue;
 
 			ref readonly Node node = ref Unsafe.Add(ref origin, index);
-			Float4 intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.bound4.Intersect(query.ray);
 
 			if (orders[node.axisMajor])
 			{
@@ -242,7 +242,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		{
 			int index = (--next)->Index;
 			ref readonly Node node = ref Unsafe.Add(ref origin, index);
-			Float4 intersections = node.aabb4.Intersect(query.ray);
+			Float4 intersections = node.bound4.Intersect(query.ray);
 
 			if (orders[node.axisMajor])
 			{
@@ -321,7 +321,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		if (token.Type.IsGeometry()) return geometries.GetTraceCost(ray, ref distance, token);
 
 		ref readonly Node node = ref nodes[token.Index];
-		Float4 intersections = node.aabb4.Intersect(ray);
+		Float4 intersections = node.bound4.Intersect(ray);
 
 		Span<bool> orders = stackalloc bool[Width]
 		{
@@ -407,32 +407,28 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 	[StructLayout(LayoutKind.Explicit, Size = 128)] //Pad to 128 bytes for cache line
 	readonly struct Node
 	{
+		[SkipLocalsInit]
 		public Node(BuildNode node, ReadOnlySpan<EntityToken> token4)
 		{
 			Assert.IsNotNull(node.child);
 			BuildNode child = node.child;
 
-			ref readonly var aabb0 = ref GetAABB(ref child);
-			ref readonly var aabb1 = ref GetAABB(ref child);
-			ref readonly var aabb2 = ref GetAABB(ref child);
-			ref readonly var aabb3 = ref GetAABB(ref child);
+			Span<BoxBound> bounds = stackalloc BoxBound[Width];
 
-			aabb4 = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
+			foreach (ref BoxBound bound in bounds)
+			{
+				var source = child.source;
+				child = child.sibling;
+				bound = source?.bound ?? BoxBound.None;
+			}
+
+			bound4 = new BoxBound4(bounds);
 
 			axisMajor = node.axisMajor;
 			axisMinor0 = node.axisMinor0;
 			axisMinor1 = node.axisMinor1;
 
 			this.token4 = new EntityToken4(token4);
-
-			static ref readonly AxisAlignedBoundingBox GetAABB(ref BuildNode node)
-			{
-				var source = node.source;
-				node = node.sibling;
-
-				if (source != null) return ref source.aabb;
-				return ref AxisAlignedBoundingBox.none;
-			}
 		}
 
 #if !RELEASE
@@ -447,9 +443,9 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 #endif
 
 		/// <summary>
-		/// The <see cref="AxisAlignedBoundingBox"/>s of the four children contained in this <see cref="Node"/>.
+		/// The <see cref="BoxBound"/>s of the four children contained in this <see cref="Node"/>.
 		/// </summary>
-		[FieldOffset(0)] public readonly AxisAlignedBoundingBox4 aabb4;
+		[FieldOffset(0)] public readonly BoxBound4 bound4;
 
 		/// <summary>
 		/// The integer value of the axis that divided the two primary nodes.
@@ -524,7 +520,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		/// <summary>
 		/// Adds children to the linked list represented by <paramref name="child"/>. If <paramref name="node"/> is a leaf,
 		/// add <paramref name="node"/> and an empty node to the linked list. Otherwise, add the two children of <paramref name="node"/>
-		/// to the linked list orderly, based on the position of their aabbs along <paramref name="node.axis"/>. The node with the
+		/// to the linked list orderly, based on the position of their bound along <paramref name="node.axis"/>. The node with the
 		/// smaller position will be placed before the node with the larger position. Returns <paramref name="node.axis"/>.
 		/// </summary>
 		static int AddChildren(SourceNode node, ref BuildNode child, ref int count)
@@ -553,7 +549,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 		/// <summary>
 		/// Outputs the two children of <paramref name="node"/> in sorted order. The children are stored based on the position of their
-		/// aabbs along <paramref name="node.axis"/>. The node with the smaller position will be placed in <paramref name="child0"/> and
+		/// bound along <paramref name="node.axis"/>. The node with the smaller position will be placed in <paramref name="child0"/> and
 		/// the other one will be placed in <paramref name="child1"/>. Returns <paramref name="node.axis"/>.
 		/// </summary>
 		static int GetChildrenSorted(SourceNode node, out SourceNode child0, out SourceNode child1)
@@ -563,7 +559,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			child1 = node.Child1;
 
 			//Put child1 as the first child if child0 has a larger position
-			if (child0.aabb.min[axis] > child1.aabb.min[axis]) CodeHelper.Swap(ref child0, ref child1);
+			if (child0.bound.min[axis] > child1.bound.min[axis]) CodeHelper.Swap(ref child0, ref child1);
 
 			return axis;
 		}

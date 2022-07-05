@@ -59,9 +59,9 @@ public sealed class GeometryCollection
 	public readonly PreparedSwatch swatch;
 	public readonly GeometryCounts counts;
 
-	public View<Tokenized<AxisAlignedBoundingBox>> CreateBoundsView()
+	public View<Tokenized<BoxBound>> CreateBounds()
 	{
-		var result = new Tokenized<AxisAlignedBoundingBox>[counts.Total];
+		var result = new Tokenized<BoxBound>[counts.Total];
 		var fill = result.AsFill();
 
 		Add(ref fill, TokenType.Triangle, triangles);
@@ -70,18 +70,18 @@ public sealed class GeometryCollection
 		for (int i = 0; i < instances.Length; i++)
 		{
 			ref readonly PreparedInstance instance = ref instances.ItemRef(i);
-			fill.Add((new EntityToken(TokenType.Instance, i), instance.AABB));
+			fill.Add((new EntityToken(TokenType.Instance, i), instance.BoxBound));
 		}
 
 		Assert.IsTrue(fill.IsFull);
 		return result;
 
-		void Add<T>(ref SpanFill<Tokenized<AxisAlignedBoundingBox>> fill, TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
+		void Add<T>(ref SpanFill<Tokenized<BoxBound>> fill, TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
 				ref readonly T geometry = ref array.ItemRef(i);
-				fill.Add((new EntityToken(type, i), geometry.AABB));
+				fill.Add((new EntityToken(type, i), geometry.BoxBound));
 			}
 		}
 	}

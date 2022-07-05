@@ -30,12 +30,12 @@ public readonly struct PreparedInstance
 	readonly float forwardScale = 1f; //The parent to local scale multiplier
 	readonly float inverseScale = 1f; //The local to parent scale multiplier
 
-	public AxisAlignedBoundingBox AABB => pack.accelerator.GetTransformedBounds(inverseTransform);
+	public BoxBound BoxBound => pack.accelerator.GetTransformedBound(inverseTransform);
 
-	public LightBounds LightBounds => new
+	public LightBound LightBound => new
 	(
 		pack.lightPicker.GetTransformedBounds(inverseTransform),
-		inverseTransform * pack.lightPicker.ConeBounds,
+		inverseTransform * pack.lightPicker.ConeBound,
 		Power
 	);
 

@@ -60,7 +60,7 @@ public class AmbientLight : InfiniteLight
 		worldToLocal = localToWorld.Inverse;
 
 		//Calculate power
-		float radius = scene.accelerator.SphereBounds.radius;
+		float radius = scene.accelerator.SphereBound.radius;
 		float multiplier = Scalars.Pi * radius * radius;
 		_power = multiplier * Texture.Average.Luminance;
 	}

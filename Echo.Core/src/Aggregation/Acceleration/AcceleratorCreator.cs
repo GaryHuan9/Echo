@@ -61,20 +61,20 @@ public readonly record struct AcceleratorCreator
 		}
 	}
 
-	static Accelerator CreateLinear(GeometryCollection geometries) => new LinearAccelerator(geometries, geometries.CreateBoundsView());
+	static Accelerator CreateLinear(GeometryCollection geometries) => new LinearAccelerator(geometries, geometries.CreateBounds());
 
 	static Accelerator CreateBVH(GeometryCollection geometries)
 	{
-		var boundsView = geometries.CreateBoundsView();
-		var builder = new SweepBuilder(boundsView);
+		var bounds = geometries.CreateBounds();
+		var builder = new SweepBuilder(bounds);
 
 		return new BoundingVolumeHierarchy(geometries, builder.Build());
 	}
 
 	static Accelerator CreateQBVH(GeometryCollection geometries)
 	{
-		var boundsView = geometries.CreateBoundsView();
-		var builder = new SweepBuilder(boundsView);
+		var bounds = geometries.CreateBounds();
+		var builder = new SweepBuilder(bounds);
 
 		return new QuadBoundingVolumeHierarchy(geometries, builder.Build());
 	}

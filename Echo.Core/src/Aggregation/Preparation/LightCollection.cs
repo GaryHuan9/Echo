@@ -48,18 +48,18 @@ public class LightCollection
 
 	readonly GeometryCollection geometries;
 
-	public View<Tokenized<LightBounds>> CreateBoundsView()
+	public View<Tokenized<LightBound>> CreateBounds()
 	{
-		var list = new SmallList<Tokenized<LightBounds>>();
+		var list = new SmallList<Tokenized<LightBound>>();
 
 		list.Expand(points.Length);
 
 		for (int i = 0; i < points.Length; i++)
 		{
 			var token = new EntityToken(LightType.Point, i);
-			LightBounds bounds = points[i].LightBounds;
+			LightBound bound = points[i].LightBound;
 
-			list.Add((token, bounds));
+			list.Add((token, bound));
 		}
 
 		AddEmissive(TokenType.Triangle, geometries.triangles);
@@ -71,7 +71,7 @@ public class LightCollection
 
 			if (!FastMath.Positive(instance.Power)) continue;
 			var token = new EntityToken(TokenType.Instance, i);
-			list.Add((token, instance.LightBounds));
+			list.Add((token, instance.LightBound));
 		}
 
 		return list;
@@ -88,7 +88,7 @@ public class LightCollection
 				list.Add
 				((
 					new EntityToken(type, i),
-					new LightBounds(geometry.AABB, geometry.ConeBounds, power)
+					new LightBound(geometry.BoxBound, geometry.ConeBound, power)
 				));
 			}
 		}

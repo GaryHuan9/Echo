@@ -27,8 +27,8 @@ public class SceneUI : AreaUI
 		if (ImGuiCustom.BeginProperties("Info"))
 		{
 			// ImGuiCustom.Property("Maximum Depth", info.depth.ToStringDefault());
-			ImGuiCustom.Property("Enclosing Box", scene.accelerator.BoxBounds.ToString(DefaultFormat.Floating));
-			ImGuiCustom.Property("Enclosing Sphere", scene.accelerator.SphereBounds.ToString(DefaultFormat.Floating));
+			ImGuiCustom.Property("Enclosing Box", scene.accelerator.BoxBound.ToString(DefaultFormat.Floating));
+			ImGuiCustom.Property("Enclosing Sphere", scene.accelerator.SphereBound.ToString(DefaultFormat.Floating));
 			// ImGuiCustom.Property("Material Count", info.materialCount.ToStringDefault());
 			// ImGuiCustom.Property("Entity Pack Count", info.entityPackCount.ToStringDefault());
 

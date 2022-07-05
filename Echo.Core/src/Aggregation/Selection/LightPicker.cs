@@ -10,11 +10,11 @@ namespace Echo.Core.Aggregation.Selection;
 
 public abstract class LightPicker
 {
-	public abstract ConeBounds ConeBounds { get; }
+	public abstract ConeBound ConeBound { get; }
 
 	public abstract float Power { get; }
 
-	public abstract AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform);
+	public abstract BoxBound GetTransformedBounds(in Float4x4 transform);
 
 	public virtual Probable<EntityToken> Pick(in GeometryPoint origin, Sample1D sample) => Pick(origin, ref sample);
 
@@ -24,7 +24,7 @@ public abstract class LightPicker
 
 	public static LightPicker Create(LightCollection lights)
 	{
-		View<Tokenized<LightBounds>> boundsView = lights.CreateBoundsView();
-		return new LightBoundingVolumeHierarchy(boundsView);
+		View<Tokenized<LightBound>> bounds = lights.CreateBounds();
+		return new LightBoundingVolumeHierarchy(bounds);
 	}
 }
