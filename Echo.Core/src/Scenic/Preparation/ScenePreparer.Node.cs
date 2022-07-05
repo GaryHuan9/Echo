@@ -4,9 +4,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Instancing;
-using Echo.Core.Scenic.Lighting;
+using Echo.Core.Scenic.Cameras;
+using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Hierarchies;
+using Echo.Core.Scenic.Lights;
 
 namespace Echo.Core.Scenic.Preparation;
 

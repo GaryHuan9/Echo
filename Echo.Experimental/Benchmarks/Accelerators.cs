@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using BenchmarkDotNet.Attributes;
 using CodeHelpers.Packed;
-using Echo.Core.Aggregation;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.InOut;
-using Echo.Core.Scenic;
-using Echo.Core.Scenic.Geometric;
+using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures;
 

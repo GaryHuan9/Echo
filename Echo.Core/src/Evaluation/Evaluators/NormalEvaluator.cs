@@ -2,9 +2,8 @@ using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
-using Echo.Core.Evaluation.Distributions.Continuous;
-using Echo.Core.Evaluation.Operations;
-using Echo.Core.Scenic.Preparation;
+using Echo.Core.Evaluation.Operation;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 

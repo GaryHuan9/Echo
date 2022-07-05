@@ -1,7 +1,6 @@
 ﻿using System;
 using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Bounds;
-using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
 

@@ -7,7 +7,7 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
-using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Sampling;
 
 namespace Echo.Core.Aggregation.Selection;
 

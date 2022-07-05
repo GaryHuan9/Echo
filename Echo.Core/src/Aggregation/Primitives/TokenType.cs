@@ -1,6 +1,6 @@
 ﻿using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Scenic.Geometric;
+using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.Aggregation.Primitives;
 

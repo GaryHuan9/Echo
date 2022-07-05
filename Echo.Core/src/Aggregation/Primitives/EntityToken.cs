@@ -2,7 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Scenic.Lighting;
+using Echo.Core.Scenic.Lights;
 
 namespace Echo.Core.Aggregation.Primitives;
 

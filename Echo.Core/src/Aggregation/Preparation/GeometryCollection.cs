@@ -1,16 +1,13 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Geometric;
+using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
