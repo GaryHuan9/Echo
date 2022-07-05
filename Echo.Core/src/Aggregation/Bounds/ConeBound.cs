@@ -6,9 +6,9 @@ using Echo.Core.Common.Mathematics;
 
 namespace Echo.Core.Aggregation.Bounds;
 
-public readonly struct ConeBounds
+public readonly struct ConeBound
 {
-	ConeBounds(in Float3 axis, float cosOffset = 1f, float cosExtend = 0f)
+	ConeBound(in Float3 axis, float cosOffset = 1f, float cosExtend = 0f)
 	{
 		Assert.AreEqual(axis.SquaredMagnitude, 1f);
 		Assert.IsTrue(cosOffset is >= -1f and <= 1f);
@@ -43,7 +43,7 @@ public readonly struct ConeBounds
 		}
 	}
 
-	public ConeBounds Encapsulate(in ConeBounds other)
+	public ConeBound Encapsulate(in ConeBound other)
 	{
 		Assert.AreNotEqual(axis, default);
 		Assert.AreNotEqual(other.axis, default);
@@ -51,17 +51,17 @@ public readonly struct ConeBounds
 		return other.cosOffset > cosOffset ? Union(this, other) : Union(other, this);
 	}
 
-	public static ConeBounds CreateFullSphere(float cosExtend = 0f /* = cos(pi/2) */) => new(Float3.Up, -1f /* = cos(pi) */, cosExtend);
+	public static ConeBound CreateFullSphere(float cosExtend = 0f /* = cos(pi/2) */) => new(Float3.Up, -1f /* = cos(pi) */, cosExtend);
 
-	public static ConeBounds CreateDirection(in Float3 direction, float cosExtend = 0f /* = cos(pi/2) */) => new(direction, 1f /* = cos(0) */, cosExtend);
+	public static ConeBound CreateDirection(in Float3 direction, float cosExtend = 0f /* = cos(pi/2) */) => new(direction, 1f /* = cos(0) */, cosExtend);
 
-	public static ConeBounds operator *(in Float4x4 transform, ConeBounds bounds) => new
+	public static ConeBound operator *(in Float4x4 transform, ConeBound bound) => new
 	(
-		transform.MultiplyDirection(bounds.axis).Normalized,
-		bounds.cosOffset, bounds.cosExtend
+		transform.MultiplyDirection(bound.axis).Normalized,
+		bound.cosOffset, bound.cosExtend
 	);
 
-	static ConeBounds Union(in ConeBounds value0, in ConeBounds value1)
+	static ConeBound Union(in ConeBound value0, in ConeBound value1)
 	{
 		float offset0 = MathF.Acos(FastMath.Clamp11(value0.cosOffset));
 		float offset1 = MathF.Acos(FastMath.Clamp11(value1.cosOffset));
@@ -73,7 +73,7 @@ public readonly struct ConeBounds
 		float max = value0.axis.Angle(value1.axis) + offset1;
 
 		//Early exit if the offset of value0 is large enough already and do not need to extended
-		if (FastMath.Min(max, Scalars.Pi) <= offset0) return new ConeBounds(axis, value0.cosOffset, cosExtend);
+		if (FastMath.Min(max, Scalars.Pi) <= offset0) return new ConeBound(axis, value0.cosOffset, cosExtend);
 
 		//Create new cone over the two inputs if the value0 is not large enough already
 		float offset = offset0;
@@ -87,6 +87,6 @@ public readonly struct ConeBounds
 		float rotation = offset - offset0;
 		axis = new Versor(cross, rotation) * axis;
 
-		return new ConeBounds(axis, MathF.Cos(offset), cosExtend);
+		return new ConeBound(axis, MathF.Cos(offset), cosExtend);
 	}
 }

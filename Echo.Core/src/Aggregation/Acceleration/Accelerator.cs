@@ -19,64 +19,64 @@ public abstract class Accelerator
 
 	protected const MethodImplOptions ImplementationOptions = MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining;
 
-	AxisAlignedBoundingBox? _boxBounds;
-	BoundingSphere? _sphereBounds;
+	BoxBound? _boxBound;
+	SphereBound? _sphereBound;
 
-	public AxisAlignedBoundingBox BoxBounds
+	public BoxBound BoxBound
 	{
 		get
 		{
-			if (_boxBounds == null)
+			if (_boxBound == null)
 			{
-				var fill = new SpanFill<AxisAlignedBoundingBox>(stackalloc AxisAlignedBoundingBox[2]);
+				var fill = new SpanFill<BoxBound>(stackalloc BoxBound[2]);
 				FillBounds(1, ref fill); //Only fill at the lowest depth because there is no transform
-				_boxBounds = new AxisAlignedBoundingBox(fill.Filled);
+				_boxBound = new BoxBound(fill.Filled);
 			}
 
-			return _boxBounds.Value;
+			return _boxBound.Value;
 		}
 	}
 
-	public BoundingSphere SphereBounds
+	public SphereBound SphereBound
 	{
 		get
 		{
-			if (_sphereBounds == null)
+			if (_sphereBound == null)
 			{
 				const int FetchDepth = 6; //How deep do we go into our accelerator to get the nodes
-				using var _0 = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
+				using var _0 = Pool<BoxBound>.Fetch(1 << FetchDepth, out var bounds);
 
-				SpanFill<AxisAlignedBoundingBox> fill = aabbs;
+				SpanFill<BoxBound> fill = bounds;
 				FillBounds(FetchDepth, ref fill);
-				aabbs = aabbs[..fill.Count];
+				bounds = bounds[..fill.Count];
 
-				using var _1 = Pool<Float3>.Fetch(aabbs.Length * 8, out View<Float3> points);
-				for (int i = 0; i < aabbs.Length; i++) aabbs[i].FillVertices(points[(i * 8)..]);
+				using var _1 = Pool<Float3>.Fetch(bounds.Length * 8, out View<Float3> points);
+				for (int i = 0; i < bounds.Length; i++) bounds[i].FillVertices(points[(i * 8)..]);
 
-				_sphereBounds = new BoundingSphere(points);
+				_sphereBound = new SphereBound(points);
 			}
 
-			return _sphereBounds.Value;
+			return _sphereBound.Value;
 		}
 	}
 
 	/// <summary>
-	/// Calculates a <see cref="AxisAlignedBoundingBox"/> that bounds this <see cref="Accelerator"/> while transformed.
+	/// Calculates a <see cref="BoxBound"/> that bounds this <see cref="Accelerator"/> while transformed.
 	/// </summary>
 	/// <param name="transform">The <see cref="Float4x4"/> used to transform this <see cref="Accelerator"/>.</param>
 	/// <remarks>This transformation is usually performed inversely.</remarks>
-	public AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform)
+	public BoxBound GetTransformedBound(in Float4x4 transform)
 	{
 		//Potentially find a smaller bounds by encapsulating
 		//transformed children nodes instead of the full tree
 
 		const int FetchDepth = 6; //How deep do we go to get the box bounds of the nodes
-		using var _ = Pool<AxisAlignedBoundingBox>.Fetch(1 << FetchDepth, out var aabbs);
+		using var _ = Pool<BoxBound>.Fetch(1 << FetchDepth, out var bounds);
 
-		SpanFill<AxisAlignedBoundingBox> fill = aabbs;
+		SpanFill<BoxBound> fill = bounds;
 		FillBounds(FetchDepth, ref fill);
 
-		return new AxisAlignedBoundingBox(fill.Filled, transform);
+		return new BoxBound(fill.Filled, transform);
 	}
 
 	/// <summary>
@@ -99,13 +99,13 @@ public abstract class Accelerator
 	public abstract uint TraceCost(in Ray ray, ref float distance);
 
 	/// <summary>
-	/// Fills a <see cref="SpanFill{T}"/> with the <see cref="AxisAlignedBoundingBox"/> in this <see cref="Accelerator"/>.
+	/// Fills a <see cref="SpanFill{T}"/> with the <see cref="BoxBound"/> in this <see cref="Accelerator"/>.
 	/// </summary>
-	/// <param name="depth">How deep to gather all of the <see cref="AxisAlignedBoundingBox"/>s (with the root node at 1).</param>
+	/// <param name="depth">How deep to gather all of the <see cref="BoxBound"/>s (with the root node at 1).</param>
 	/// <param name="fill">The destination <see cref="SpanFill{T}"/>; it should not be smaller than 2^<paramref name="depth"/>.</param>
 	/// <remarks>It is guaranteed that the entirety of this <see cref="Accelerator"/> will be
-	/// enclosed by all the <see cref="AxisAlignedBoundingBox"/>s that are filled.</remarks>
-	public abstract void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill);
+	/// enclosed by all the <see cref="BoxBound"/>s that are filled.</remarks>
+	public abstract void FillBounds(uint depth, ref SpanFill<BoxBound> fill);
 
 	/// <summary>
 	/// Creates a new <see cref="EntityToken"/> that is of type <see cref="TokenType.Node"/>.

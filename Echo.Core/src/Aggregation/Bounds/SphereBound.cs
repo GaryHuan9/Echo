@@ -1,4 +1,5 @@
 ﻿using System;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
@@ -6,14 +7,16 @@ using Echo.Core.Common.Mathematics;
 namespace Echo.Core.Aggregation.Bounds;
 
 /// <summary>
-/// A Sphere which is usually used for containing a bunch of points <br/>
+/// A sphere which is usually used for containing a bunch of points <br/>
 /// Tight fitting algorithm: https://ep.liu.se/ecp/034/009/ecp083409.pdf <br/>
 /// Exact Solver Algorithm: https://youtu.be/HojzdCICjmQ?t=575
 /// </summary>
-public readonly struct BoundingSphere : IFormattable
+public readonly struct SphereBound : IFormattable
 {
-	public BoundingSphere(ReadOnlySpan<Float3> points)
+	public SphereBound(ReadOnlySpan<Float3> points)
 	{
+		Assert.IsTrue(points.Length > 0);
+
 		if (points.Length > ExtremalCount)
 		{
 			// else there is no reason for us to solve less
@@ -32,7 +35,7 @@ public readonly struct BoundingSphere : IFormattable
 		radius *= 1f + FastMath.Epsilon;
 	}
 
-	public BoundingSphere(in Float3 center, float radius)
+	public SphereBound(in Float3 center, float radius)
 	{
 		this.center = center;
 		this.radius = radius;
@@ -47,7 +50,7 @@ public readonly struct BoundingSphere : IFormattable
 	static int ExtremalCount => normals.Length * 2;
 
 	/// <summary>
-	///     Returns whether <paramref name="point" /> is inside this <see cref="BoundingSphere" />.
+	///     Returns whether <paramref name="point" /> is inside this <see cref="SphereBound" />.
 	/// </summary>
 	public bool Contains(in Float3 point) => Contains(point, in center, radius);
 
@@ -115,6 +118,13 @@ public readonly struct BoundingSphere : IFormattable
 	/// </summary>
 	static void SolveExact(ReadOnlySpan<Float3> points, out Float3 center, out float radius)
 	{
+		if (points.Length == 1)
+		{
+			center = points[0];
+			radius = 0f;
+			return;
+		}
+
 		SolveFromDiameterPoints(points[0], points[1], out center, out radius);
 
 		for (int current = 2; current < points.Length; ++current)

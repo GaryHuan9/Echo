@@ -13,7 +13,7 @@ namespace Echo.Core.Aggregation.Acceleration;
 /// <summary>
 /// A binary hierarchical spacial partitioning acceleration structure.
 /// Works best with medium-level quantities of geometries and tokens.
-/// There must be more than one token and <see cref="AxisAlignedBoundingBox"/> to process.
+/// There must be more than one token and <see cref="BoxBound"/> to process.
 /// </summary>
 public class BoundingVolumeHierarchy : Accelerator
 {
@@ -27,7 +27,7 @@ public class BoundingVolumeHierarchy : Accelerator
 
 		Node CreateNode(HierarchyBuilder.Node node)
 		{
-			if (node.IsLeaf) return new Node(node.aabb, node.Token);
+			if (node.IsLeaf) return new Node(node.bound, node.Token);
 
 			int child0 = nodeIndex;
 			int child1 = child0 + 1;
@@ -36,7 +36,7 @@ public class BoundingVolumeHierarchy : Accelerator
 			nodes[child0] = CreateNode(node.Child0);
 			nodes[child1] = CreateNode(node.Child1);
 
-			return new Node(node.aabb, NewNodeToken(child0));
+			return new Node(node.bound, NewNodeToken(child0));
 		}
 	}
 
@@ -46,7 +46,7 @@ public class BoundingVolumeHierarchy : Accelerator
 	public override void Trace(ref TraceQuery query)
 	{
 		ref readonly Node root = ref nodes[0];
-		float hit = root.aabb.Intersect(query.ray);
+		float hit = root.bound.Intersect(query.ray);
 
 		if (hit < query.distance) TraceImpl(ref query);
 	}
@@ -54,7 +54,7 @@ public class BoundingVolumeHierarchy : Accelerator
 	public override bool Occlude(ref OccludeQuery query)
 	{
 		ref readonly Node root = ref nodes[0];
-		float hit = root.aabb.Intersect(query.ray);
+		float hit = root.bound.Intersect(query.ray);
 
 		return hit <= query.travel && OccludeImpl(ref query);
 	}
@@ -62,7 +62,7 @@ public class BoundingVolumeHierarchy : Accelerator
 	public override uint TraceCost(in Ray ray, ref float distance)
 	{
 		ref readonly Node root = ref nodes[0];
-		float hit = root.aabb.Intersect(ray);
+		float hit = root.bound.Intersect(ray);
 
 		if (hit >= distance) return 1;
 		return GetTraceCost(root.token, ray, ref distance) + 1;
@@ -73,7 +73,7 @@ public class BoundingVolumeHierarchy : Accelerator
 		fixed (Node* ptr = nodes) return Utility.GetHashCode(ptr, (uint)nodes.Length, maxDepth);
 	}
 
-	public override unsafe void FillBounds(uint depth, ref SpanFill<AxisAlignedBoundingBox> fill)
+	public override unsafe void FillBounds(uint depth, ref SpanFill<BoxBound> fill)
 	{
 		int length = 1 << (int)depth;
 		fill.ThrowIfNotEmpty();
@@ -101,7 +101,7 @@ public class BoundingVolumeHierarchy : Accelerator
 					*next1++ = node.token;
 					*next1++ = NewNodeToken(nextIndex);
 				}
-				else fill.Add(node.aabb); //If leaf then we write it to the result
+				else fill.Add(node.bound); //If leaf then we write it to the result
 			}
 
 			//Swap the two stacks
@@ -113,7 +113,7 @@ public class BoundingVolumeHierarchy : Accelerator
 		while (next0 != stack0)
 		{
 			ref readonly Node node = ref nodes[(--next0)->Index];
-			fill.Add(node.aabb);
+			fill.Add(node.bound);
 		}
 	}
 
@@ -137,8 +137,8 @@ public class BoundingVolumeHierarchy : Accelerator
 			ref readonly Node child0 = ref nodes[index];
 			ref readonly Node child1 = ref nodes[index + 1];
 
-			float hit0 = child0.aabb.Intersect(query.ray);
-			float hit1 = child1.aabb.Intersect(query.ray);
+			float hit0 = child0.bound.Intersect(query.ray);
+			float hit1 = child1.bound.Intersect(query.ray);
 
 			//Orderly intersects the two children so that there is a higher chance of intersection on the first child.
 			//Although the order of leaf intersection is wrong, the performance is actually better than reversing to correct it.
@@ -186,8 +186,8 @@ public class BoundingVolumeHierarchy : Accelerator
 			ref readonly Node child0 = ref nodes[index];
 			ref readonly Node child1 = ref nodes[index + 1];
 
-			float hit0 = child0.aabb.Intersect(query.ray);
-			float hit1 = child1.aabb.Intersect(query.ray);
+			float hit0 = child0.bound.Intersect(query.ray);
+			float hit1 = child1.bound.Intersect(query.ray);
 
 			//Orderly intersects the two children so that there is a higher chance of intersection on the first child.
 			//Although the order of leaf intersection is wrong, the performance is actually better than reversing to correct it.
@@ -236,8 +236,8 @@ public class BoundingVolumeHierarchy : Accelerator
 		ref readonly Node child0 = ref nodes[token.Index];
 		ref readonly Node child1 = ref nodes[token.Index + 1];
 
-		float hit0 = child0.aabb.Intersect(ray);
-		float hit1 = child1.aabb.Intersect(ray);
+		float hit0 = child0.bound.Intersect(ray);
+		float hit1 = child1.bound.Intersect(ray);
 
 		uint cost = 2;
 
@@ -256,25 +256,21 @@ public class BoundingVolumeHierarchy : Accelerator
 		return cost;
 	}
 
-	[StructLayout(LayoutKind.Explicit, Size = 32)] //Size must be under 32 bytes to fit two nodes in one cache line (64 bytes)
+	[StructLayout(LayoutKind.Sequential, Size = 32)] //Size is set to 32 bytes to fit two nodes in one cache line (64 bytes)
 	readonly struct Node
 	{
-		public Node(in AxisAlignedBoundingBox aabb, EntityToken token)
+		public Node(in BoxBound bound, EntityToken token)
 		{
-			this.aabb = aabb;
+			this.bound = bound;
 			this.token = token;
 		}
 
-		//NOTE: the AABB is 28 bytes large, but its last 4 bytes are not used and only occupied for SIMD loading
-		//So we can overlap the next four bytes onto the AABB and pay extra attention when first assigning the fields
-		//This technique is currently not used here
-
-		[FieldOffset(0)] public readonly AxisAlignedBoundingBox aabb;
+		public readonly BoxBound bound;
 
 		/// <summary>
 		/// This is the <see cref="EntityToken"/> stored in this <see cref="Node"/>, which might represent either the leaf geometry if this <see cref="EntityToken.IsGeometry"/>,
 		/// or the index of the first child of this <see cref="Node"/> if <see cref="EntityToken.IsNode"/> (and the second child can be accessed using <see cref="EntityToken.Next"/>.
 		/// </summary>
-		[FieldOffset(24)] public readonly EntityToken token;
+		public readonly EntityToken token;
 	}
 }

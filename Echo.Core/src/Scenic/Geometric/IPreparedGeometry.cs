@@ -10,9 +10,9 @@ namespace Echo.Core.Scenic.Geometric;
 
 public interface IPreparedGeometry
 {
-	AxisAlignedBoundingBox AABB { get; }
+	BoxBound BoxBound { get; }
 
-	ConeBounds ConeBounds { get; }
+	ConeBound ConeBound { get; }
 
 	MaterialIndex Material { get; }
 

@@ -13,9 +13,9 @@ namespace Echo.Core.Aggregation.Selection;
 
 public class LightBoundingVolumeHierarchy : LightPicker
 {
-	public LightBoundingVolumeHierarchy(View<Tokenized<LightBounds>> boundsView)
+	public LightBoundingVolumeHierarchy(View<Tokenized<LightBound>> bounds)
 	{
-		root = Build(boundsView);
+		root = Build(bounds);
 		AddToMap(root, 0, 0ul);
 
 		void AddToMap(Node node, int depth, ulong branches)
@@ -35,10 +35,10 @@ public class LightBoundingVolumeHierarchy : LightPicker
 	readonly Node root;
 	readonly Dictionary<EntityToken, ulong> map = new();
 
-	public override ConeBounds ConeBounds => root.bounds.cone;
-	public override float Power => root == null ? default : root.bounds.power;
+	public override ConeBound ConeBound => root.bound.cone;
+	public override float Power => root == null ? default : root.bound.power;
 
-	public override AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform) => new(stackalloc AxisAlignedBoundingBox[1] { root.bounds.aabb }, transform);
+	public override BoxBound GetTransformedBounds(in Float4x4 transform) => new(stackalloc BoxBound[1] { root.bound.box }, transform);
 
 	public override Probable<EntityToken> Pick(in GeometryPoint origin, ref Sample1D sample) => Pick(origin, ref sample, root, 1f);
 
@@ -48,42 +48,42 @@ public class LightBoundingVolumeHierarchy : LightPicker
 		return ProbabilityMass(origin, root, branches);
 	}
 
-	static Node Build(View<Tokenized<LightBounds>> boundsView)
+	static Node Build(View<Tokenized<LightBound>> bounds)
 	{
-		if (boundsView.Length == 1) return new Node(boundsView[0].content, boundsView[0].token);
-		if (boundsView.Length == 0) return null;
+		if (bounds.Length == 1) return new Node(bounds[0].content, bounds[0].token);
+		if (bounds.Length == 0) return null;
 
-		int length = boundsView.Length;
+		int length = bounds.Length;
 
-		AxisAlignedBoundingBox parentAabb = boundsView[0].content.aabb;
+		BoxBound parentBound = bounds[0].content.box;
 
-		foreach (ref readonly var pair in boundsView) parentAabb = parentAabb.Encapsulate(pair.content.aabb);
+		foreach (ref readonly var pair in bounds) parentBound = parentBound.Encapsulate(pair.content.box);
 
-		int majorAxis = parentAabb.MajorAxis;
-		boundsView.AsSpan().Sort((pair0, pair1) =>
+		int majorAxis = parentBound.MajorAxis;
+		bounds.AsSpan().Sort((pair0, pair1) =>
 		{
-			float center0 = pair0.content.aabb.Center[majorAxis];
-			float center1 = pair1.content.aabb.Center[majorAxis];
+			float center0 = pair0.content.box.Center[majorAxis];
+			float center1 = pair1.content.box.Center[majorAxis];
 			return center0.CompareTo(center1);
 		});
 
 		float[] costs = new float[length];
-		LightBounds lightBounds = boundsView[^1].content;
+		LightBound lightBound = bounds[^1].content;
 
 		for (int i = length - 2; i >= 0; i--)
 		{
-			costs[i + 1] = lightBounds.Area;
-			lightBounds = lightBounds.Encapsulate(boundsView[i].content);
+			costs[i + 1] = lightBound.Area;
+			lightBound = lightBound.Encapsulate(bounds[i].content);
 		}
 
 		float minCost = float.PositiveInfinity;
 		int minIndex = -1;
 
-		lightBounds = boundsView[0].content;
+		lightBound = bounds[0].content;
 
 		for (int i = 1; i < length; i++)
 		{
-			float cost = costs[i] + lightBounds.Area;
+			float cost = costs[i] + lightBound.Area;
 
 			if (cost < minCost)
 			{
@@ -91,13 +91,13 @@ public class LightBoundingVolumeHierarchy : LightPicker
 				minIndex = i;
 			}
 
-			lightBounds = lightBounds.Encapsulate(boundsView[i].content);
+			lightBound = lightBound.Encapsulate(bounds[i].content);
 		}
 
 		return new Node
 		(
-			Build(boundsView[minIndex..]),
-			Build(boundsView[..minIndex])
+			Build(bounds[minIndex..]),
+			Build(bounds[..minIndex])
 		);
 	}
 
@@ -105,8 +105,8 @@ public class LightBoundingVolumeHierarchy : LightPicker
 	{
 		if (node.child0 == null) return new Probable<EntityToken>(node.token, pdf);
 
-		float importance0 = node.child0.bounds.Importance(origin);
-		float importance1 = node.child1.bounds.Importance(origin);
+		float importance0 = node.child0.bound.Importance(origin);
+		float importance1 = node.child1.bound.Importance(origin);
 
 		if (!FastMath.Positive(importance0) && !FastMath.Positive(importance1)) return Probable<EntityToken>.Impossible;
 
@@ -130,8 +130,8 @@ public class LightBoundingVolumeHierarchy : LightPicker
 			return 1f;
 		}
 
-		float importance0 = node.child0.bounds.Importance(origin);
-		float importance1 = node.child1.bounds.Importance(origin);
+		float importance0 = node.child0.bound.Importance(origin);
+		float importance1 = node.child1.bound.Importance(origin);
 		float split = importance0 / (importance0 + importance1);
 
 		if ((branches & 1) == 0)
@@ -149,19 +149,19 @@ public class LightBoundingVolumeHierarchy : LightPicker
 			this.child0 = child0;
 			this.child1 = child1;
 
-			bounds = child0.bounds.Encapsulate(child1.bounds);
+			bound = child0.bound.Encapsulate(child1.bound);
 		}
 
-		public Node(LightBounds bounds, EntityToken token)
+		public Node(LightBound bound, EntityToken token)
 		{
-			this.bounds = bounds;
+			this.bound = bound;
 			this.token = token;
 		}
 
 		public readonly Node child0;
 		public readonly Node child1;
 
-		public readonly LightBounds bounds;
+		public readonly LightBound bound;
 		public readonly EntityToken token;
 	}
 }

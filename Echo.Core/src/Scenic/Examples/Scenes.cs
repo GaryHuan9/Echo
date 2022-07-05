@@ -34,22 +34,22 @@ public class SingleBunny : StandardScene
 		Add(new SphereEntity { Material = material3, Radius = 1f, Position = new Float3(-3f, 1f, -2f) });
 
 		Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(4f, 1f, -2f), Rotation = new Float3(0f, 0f, 90f) });
-		Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(-5f, 1f, -3f), Rotation = new Float3(0f, 0f, -90f) });
+		// Add(new PlaneEntity { Material = material2, Size = Float2.One * 2f, Position = new Float3(-5f, 1f, -3f), Rotation = new Float3(0f, 0f, -90f) });
 
-		Add(new PointLight { Intensity = new RGB128(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
-		Add(new PointLight { Intensity = new RGB128(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
+		// Add(new PointLight { Intensity = new RGB128(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
+		// Add(new PointLight { Intensity = new RGB128(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
 	}
 }
 
 public class RandomSpheres : StandardScene
 {
-	public RandomSpheres(int count)
+	public RandomSpheres(int count = 120)
 	{
 		AddSpheres(new MinMax(0f, 7f), new MinMax(0.4f, 0.7f), count);
 		AddSpheres(new MinMax(0f, 7f), new MinMax(0.1f, 0.2f), count * 3);
-	}
 
-	public RandomSpheres() : this(120) { }
+		Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load<RGB128>("ext/Scenes/SingleBunny/UlmerMuenster.jpg") } });
+	}
 
 	void AddSpheres(MinMax positionRange, MinMax radiusRange, int count)
 	{
@@ -67,18 +67,16 @@ public class RandomSpheres : StandardScene
 			while (IntersectingOthers(radius, position));
 
 			//Material
-			Float3 color = new Float3((float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value);
+			Float4 color = new Float4((float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value, 1f);
 
 			bool metal = RandomHelper.Value < 0.3d;
-			bool emissive = RandomHelper.Value < 0.05d;
+			bool emissive = RandomHelper.Value < 0.2d;
 
 			Material material;
 
-			// if (metal) material = new Glossy { Albedo = color, Smoothness = (float)RandomHelper.Value / 2f + 0.5f };
-			// else if (emissive) material = new Emissive { Emission = color / color.MaxComponent * 3f };
-			// else material = new Diffuse { Albedo = color };
-
-			material = new Matte();
+			if (metal) material = new Mirror { Albedo = (Pure)(RGBA128)color };
+			else if (emissive) material = new Emissive { Albedo = (Pure)(RGBA128)(color / color.MaxComponent * 3f) };
+			else material = new Matte { Albedo = (Pure)(RGBA128)color };
 
 			Add(new SphereEntity { Material = material, Radius = radius, Position = position });
 		}

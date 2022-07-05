@@ -1,50 +1,47 @@
 ﻿using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
-using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
-using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
 
 namespace Echo.Experimental.Benchmarks;
 
-public class AabbSimd
+public class BoxBounds
 {
-	public AabbSimd()
+	public BoxBounds()
 	{
 		Prng random = new SystemPrng(42);
 
-		aabb0 = CreateAABB();
-		aabb1 = CreateAABB();
-		aabb2 = CreateAABB();
-		aabb3 = CreateAABB();
+		bound0 = CreateBound();
+		bound1 = CreateBound();
+		bound2 = CreateBound();
+		bound3 = CreateBound();
 
-		aabb0 = new AxisAlignedBoundingBox(Float3.NegativeOne, Float3.One);
-		aabb = new AxisAlignedBoundingBox4(aabb0, aabb1, aabb2, aabb3);
+		bound0 = new BoxBound(Float3.NegativeOne, Float3.One);
+		bound = new BoxBound4(bound0, bound1, bound2, bound3);
 
 		Float3 origin = CreateFloat3(10f);
 
 		ray = new Ray(origin, -origin.Normalized);
 
-		AxisAlignedBoundingBox CreateAABB()
+		BoxBound CreateBound()
 		{
 			Float3 point0 = CreateFloat3(3f);
 			Float3 point1 = CreateFloat3(3f);
 
-			return new AxisAlignedBoundingBox(point0.Min(point1), point0.Max(point1));
+			return new BoxBound(point0.Min(point1), point0.Max(point1));
 		}
 
 		Float3 CreateFloat3(float range) => random.Next3(-range, range);
 	}
 
-	readonly AxisAlignedBoundingBox aabb0;
-	readonly AxisAlignedBoundingBox aabb1;
-	readonly AxisAlignedBoundingBox aabb2;
-	readonly AxisAlignedBoundingBox aabb3;
+	readonly BoxBound bound0;
+	readonly BoxBound bound1;
+	readonly BoxBound bound2;
+	readonly BoxBound bound3;
 
-	readonly AxisAlignedBoundingBox4 aabb;
+	readonly BoxBound4 bound;
 
 	readonly Ray ray;
 
@@ -56,12 +53,12 @@ public class AabbSimd
 	[Benchmark]
 	public Vector128<float> Regular() => Vector128.Create
 	(
-		aabb0.Intersect(ray),
-		aabb1.Intersect(ray),
-		aabb2.Intersect(ray),
-		aabb3.Intersect(ray)
+		bound0.Intersect(ray),
+		bound1.Intersect(ray),
+		bound2.Intersect(ray),
+		bound3.Intersect(ray)
 	);
 
 	[Benchmark]
-	public Float4 Quad() => aabb.Intersect(ray);
+	public Float4 Quad() => bound.Intersect(ray);
 }

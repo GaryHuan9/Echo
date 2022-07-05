@@ -10,30 +10,30 @@ using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;
 
-using BoundsView = View<Tokenized<AxisAlignedBoundingBox>>;
+using BoundsView = View<Tokenized<BoxBound>>;
 
 public class SweepBuilder : HierarchyBuilder
 {
-	public SweepBuilder(BoundsView boundsView) : base(boundsView) => sorter = new Sorter(boundsView.Length);
+	public SweepBuilder(BoundsView bounds) : base(bounds) => sorter = new Sorter(bounds.Length);
 
 	readonly Sorter sorter;
 
-	AxisAlignedBoundingBox[] cutTailVolumes;
+	BoxBound[] cutTailVolumes;
 
 	const int ParallelBuildThreshold = 4096; //We can increase this value to disable parallel building
 
 	public override Node Build()
 	{
-		if (boundsView.Length == 1) return new Node(boundsView[0]);
+		if (bounds.Length == 1) return new Node(bounds[0]);
 
-		var builder = AxisAlignedBoundingBox.CreateBuilder();
+		var builder = BoxBound.CreateBuilder();
 
-		foreach (ref readonly var pair in boundsView) builder.Add(pair.content);
+		foreach (ref readonly var pair in bounds) builder.Add(pair.content);
 
-		int axis = builder.ToBoxBounds().MajorAxis;
+		int axis = builder.ToBoxBound().MajorAxis;
 
-		SortIndices(boundsView, axis);
-		return BuildLayer(boundsView);
+		SortIndices(bounds, axis);
+		return BuildLayer(bounds);
 	}
 
 	Node BuildLayer(BoundsView data)
@@ -42,9 +42,9 @@ public class SweepBuilder : HierarchyBuilder
 		PrepareCutTailVolumes(data);
 
 		int minIndex = SearchSurfaceAreaHeuristics(data, out var headVolume, out var tailVolume);
-		AxisAlignedBoundingBox aabb = headVolume.Encapsulate(tailVolume);
+		BoxBound bound = headVolume.Encapsulate(tailVolume);
 
-		int axis = aabb.MajorAxis;
+		int axis = bound.MajorAxis;
 
 		//Split data based on minIndex; headData is always larger than tailData
 		BoundsView headData;
@@ -82,10 +82,10 @@ public class SweepBuilder : HierarchyBuilder
 		//Places the child with the larger surface area first to improve branch prediction
 		if (headVolume.HalfArea < tailVolume.HalfArea) CodeHelper.Swap(ref child0, ref child1);
 
-		return new Node(aabb, child0, child1, axis);
+		return new Node(bound, child0, child1, axis);
 	}
 
-	Node BuildChild(BoundsView data, in AxisAlignedBoundingBox parent, int parentAxis)
+	Node BuildChild(BoundsView data, in BoxBound parent, int parentAxis)
 	{
 		if (data.Length == 1) return new Node(data[0]);
 
@@ -94,13 +94,13 @@ public class SweepBuilder : HierarchyBuilder
 		return BuildLayer(data);
 	}
 
-	LayerBuilder BuildChildParallel(BoundsView data, in AxisAlignedBoundingBox parent, int parentAxis)
+	LayerBuilder BuildChildParallel(BoundsView data, in BoxBound parent, int parentAxis)
 	{
 		Assert.IsTrue(data.Length > 1);
 
 		int axis = parent.MajorAxis;
 		if (axis == parentAxis) axis = -1; //No need to sort because it is already sorted
-		return new LayerBuilder(this, data, axis);
+		return new LayerBuilder(data, axis);
 	}
 
 	/// <summary>
@@ -116,8 +116,8 @@ public class SweepBuilder : HierarchyBuilder
 	{
 		int length = data.Length;
 
-		cutTailVolumes ??= new AxisAlignedBoundingBox[length];
-		AxisAlignedBoundingBox cutTailVolume = data[^1].content;
+		cutTailVolumes ??= new BoxBound[length];
+		BoxBound cutTailVolume = data[^1].content;
 
 		for (int i = length - 2; i >= 0; i--)
 		{
@@ -130,9 +130,9 @@ public class SweepBuilder : HierarchyBuilder
 	/// Searches the length of <paramref name="data"/> to find and return the spot where the SAH is the lowest.
 	/// Also returns the two volumes after cutting at the returned index. NOTE: Uses the prepared <see cref="cutTailVolumes"/>.
 	/// </summary>
-	int SearchSurfaceAreaHeuristics(BoundsView data, out AxisAlignedBoundingBox headVolume, out AxisAlignedBoundingBox tailVolume)
+	int SearchSurfaceAreaHeuristics(BoundsView data, out BoxBound headVolume, out BoxBound tailVolume)
 	{
-		AxisAlignedBoundingBox cutHeadVolume = data[0].content;
+		BoxBound cutHeadVolume = data[0].content;
 
 		float minCost = float.MaxValue;
 		int minIndex = -1;
@@ -144,7 +144,7 @@ public class SweepBuilder : HierarchyBuilder
 
 		for (int i = 1; i < length; i++)
 		{
-			ref readonly AxisAlignedBoundingBox cutTailVolume = ref cutTailVolumes[i];
+			ref readonly BoxBound cutTailVolume = ref cutTailVolumes[i];
 			float cost = cutHeadVolume.HalfArea * i + cutTailVolume.HalfArea * (length - i);
 
 			if (cost < minCost)
@@ -164,35 +164,33 @@ public class SweepBuilder : HierarchyBuilder
 
 	class LayerBuilder
 	{
-		public LayerBuilder(SweepBuilder parent, BoundsView boundsView, int sortAxis)
+		public LayerBuilder(BoundsView bounds, int sortAxis)
 		{
-			this.parent = parent;
-			this.boundsView = boundsView;
+			this.bounds = bounds;
 			this.sortAxis = sortAxis;
 
 			buildTask = Task.Run(Build);
 		}
 
 		readonly Task<Node> buildTask;
-		readonly SweepBuilder parent;
-		readonly BoundsView boundsView;
+		readonly BoundsView bounds;
 		readonly int sortAxis;
 
 		public Node WaitForNode() => buildTask.Result;
 
 		Node Build()
 		{
-			var builder = new SweepBuilder(boundsView);
+			var builder = new SweepBuilder(bounds);
 
 			//Sort indices if requested by parent
-			if (sortAxis >= 0) builder.SortIndices(boundsView, sortAxis);
+			if (sortAxis >= 0) builder.SortIndices(bounds, sortAxis);
 
-			return builder.BuildLayer(boundsView);
+			return builder.BuildLayer(bounds);
 		}
 	}
 
 	/// <summary>
-	/// A sorter that sorts <see cref="BoundsView"/> based on the center locations of the <see cref="AxisAlignedBoundingBox"/> they contain.
+	/// A sorter that sorts <see cref="BoundsView"/> based on the center locations of the <see cref="BoxBound"/> they contain.
 	/// </summary>
 	class Sorter
 	{
@@ -210,19 +208,19 @@ public class SweepBuilder : HierarchyBuilder
 		BoundsView buffer;
 
 		/// <summary>
-		/// Sorts <paramref name="boundsView"/> based on the <see cref="axis"/> location value of the corresponding <see cref="AxisAlignedBoundingBox"/>.
+		/// Sorts <paramref name="bounds"/> based on the <see cref="axis"/> location value of the corresponding <see cref="BoxBound"/>.
 		/// </summary>
-		/// <remarks><paramref name="boundsView.Length"/> must be equal to or less than <see cref="capacity"/></remarks>
-		public void Sort(BoundsView boundsView, int axis)
+		/// <remarks><paramref name="bounds.Length"/> must be equal to or less than <see cref="capacity"/></remarks>
+		public void Sort(BoundsView bounds, int axis)
 		{
-			int length = boundsView.Length;
+			int length = bounds.Length;
 			Assert.IsFalse(length > capacity);
 
 			//Fetch and transform locations into key buffers
 			for (int i = 0; i < length; i++)
 			{
-				ref readonly var bounds = ref boundsView[i].content;
-				float value = bounds.min[axis] + bounds.max[axis];
+				ref readonly var bound = ref bounds[i].content;
+				float value = bound.min[axis] + bound.max[axis];
 
 				keys0[i] = Transform(value);
 			}
@@ -236,17 +234,17 @@ public class SweepBuilder : HierarchyBuilder
 					{
 						counts = new int[256];
 						keys1 = new uint[capacity];
-						buffer = new Tokenized<AxisAlignedBoundingBox>[capacity];
+						buffer = new Tokenized<BoxBound>[capacity];
 					}
 
-					var sorter = new RadixSorter(counts, keys0, keys1, boundsView, buffer);
+					var sorter = new RadixSorter(counts, keys0, keys1, bounds, buffer);
 					sorter.Sort();
 
 					break;
 				}
 				default:
 				{
-					InsertionSort(keys0.AsSpan(0, length), boundsView);
+					InsertionSort(keys0.AsSpan(0, length), bounds);
 					break;
 				}
 			}
@@ -306,7 +304,7 @@ public class SweepBuilder : HierarchyBuilder
 
 		ref struct RadixSorter
 		{
-			public RadixSorter(Span<int> counts, Span<uint> keys0, Span<uint> keys1, Span<Tokenized<AxisAlignedBoundingBox>> values0, Span<Tokenized<AxisAlignedBoundingBox>> values1)
+			public RadixSorter(Span<int> counts, Span<uint> keys0, Span<uint> keys1, Span<Tokenized<BoxBound>> values0, Span<Tokenized<BoxBound>> values1)
 			{
 #if DEBUG
 				Span<int> empty = stackalloc int[256];
@@ -330,8 +328,8 @@ public class SweepBuilder : HierarchyBuilder
 			Span<uint> keys0;
 			Span<uint> keys1;
 
-			Span<Tokenized<AxisAlignedBoundingBox>> values0;
-			Span<Tokenized<AxisAlignedBoundingBox>> values1;
+			Span<Tokenized<BoxBound>> values0;
+			Span<Tokenized<BoxBound>> values1;
 
 			public void Sort()
 			{
