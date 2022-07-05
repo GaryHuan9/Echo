@@ -56,8 +56,8 @@ public record PathTracedEvaluator : Evaluator
 			}
 
 			//Prefetch all samples so the order of them in subsequent bounces do not get messed up
-			Sample1D lightSample = distribution.Next1D();
 			Sample1D survivalSample = distribution.Next1D();
+			Sample1D lightSample = distribution.Next1D();
 			Sample2D radiantSample = distribution.Next2D();
 
 			if (bounce.IsSpecular)
@@ -65,19 +65,8 @@ public record PathTracedEvaluator : Evaluator
 				//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 				statistics.Report("Bounce/Specular");
 
-				//Check if the path is exhausted
+				//Exit if the path is exhausted
 				if (!path.Continue(bounce, Survivability, survivalSample)) break;
-
-				//Begin finding a new bounce
-				if (!path.Advance(scene, allocator))
-				{
-					//None found, accumulate ambient and exit
-					path.Contribute(EvaluateInfinite(scene, path, ref statistics));
-					break;
-				}
-
-				//Try add intersected emission
-				path.ContributeEmissive();
 			}
 			else
 			{
@@ -103,53 +92,50 @@ public record PathTracedEvaluator : Evaluator
 						//Attempt to do MIS on the newly contacted surface
 						ref readonly var light = ref path.contact.token;
 						float pmf = scene.ProbabilityMass(light, oldOrigin);
-						if (!FastMath.Positive(pmf)) goto noLight;
+						if (!FastMath.Positive(pmf)) continue;
 
 						float pdf = scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
-						if (!FastMath.Positive(pdf)) goto noLight;
+						if (!FastMath.Positive(pdf)) continue;
 
+						//Contribute emission with MIS and continue to the next bounce
 						path.ContributeEmissive(PowerHeuristic(bounce.scatterPdf, pmf * pdf));
-
-					noLight:
-						{ }
+						continue;
 					}
-					else
+
+					//Use infinite lights for MIS if there is no intersection
+					var hierarchy = new TokenHierarchy();
+					Float3 direction = path.CurrentDirection;
+
+					for (int i = 0; i < scene.infiniteLights.Length; i++)
 					{
-						//Use infinite lights for MIS if there is no intersection
-						var hierarchy = new TokenHierarchy();
-						Float3 direction = path.CurrentDirection;
+						InfiniteLight light = scene.infiniteLights[i];
+						hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
 
-						for (int i = 0; i < scene.infiniteLights.Length; i++)
-						{
-							InfiniteLight light = scene.infiniteLights[i];
-							hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
+						float pdf = scene.ProbabilityMass(hierarchy, oldOrigin) *
+									light.ProbabilityDensity(oldOrigin, direction);
+						if (!FastMath.Positive(pdf)) continue;
 
-							float pdf = scene.ProbabilityMass(hierarchy, oldOrigin) *
-										light.ProbabilityDensity(oldOrigin, direction);
-							if (!FastMath.Positive(pdf)) continue;
-
-							float weight = PowerHeuristic(bounce.scatterPdf, pdf);
-							path.Contribute(light.Evaluate(direction) * weight);
-						}
-
-						statistics.Report("Light/Evaluated Infinite");
-						break;
-					}
-				}
-				else
-				{
-					//Our light does not like MIS either, so no MIS will be performed
-					if (!path.Advance(scene, allocator))
-					{
-						//Add infinite lights and exit if path escapes the scene
-						path.Contribute(EvaluateInfinite(scene, path, ref statistics));
-						break;
+						float weight = PowerHeuristic(bounce.scatterPdf, pdf);
+						path.Contribute(light.Evaluate(direction) * weight);
 					}
 
-					//Add emissive contribution without MIS
-					path.ContributeEmissive();
+					statistics.Report("Light/Evaluated Infinite");
+					break;
 				}
+
+				//Continues to no MIS fallback if our light does not like MIS either
 			}
+
+			//Fallback with no MIS, either because of a specular bounce or delta light
+			if (!path.Advance(scene, allocator))
+			{
+				//No further intersection with scene is found, accumulate infinite lights and exit
+				path.Contribute(EvaluateInfinite(scene, path, ref statistics));
+				break;
+			}
+
+			//Try add intersected emissive contribution without MIS
+			path.ContributeEmissive();
 		}
 
 		return path.Result;
@@ -309,6 +295,17 @@ public record PathTracedEvaluator : Evaluator
 			if (survived) query = query.SpawnTrace(bounce.incident);
 
 			return survived;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			static bool RussianRoulette(ref RGB128 energy, float survivability, Sample1D sample)
+			{
+				float rate = FastMath.Clamp01(survivability * energy.Luminance);
+
+				if (sample >= rate) return false;
+
+				energy /= rate;
+				return true;
+			}
 		}
 
 		/// <summary>
@@ -327,17 +324,6 @@ public record PathTracedEvaluator : Evaluator
 			if (!FastMath.Positive(emissive.Power)) return;
 
 			Contribute(emissive.Emit(contact.point, contact.outgoing) * weight);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool RussianRoulette(ref RGB128 energy, float survivability, Sample1D sample)
-		{
-			float rate = FastMath.Clamp01(survivability * energy.Luminance);
-
-			if (sample >= rate) return false;
-
-			energy /= rate;
-			return true;
 		}
 	}
 
