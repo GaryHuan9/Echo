@@ -8,6 +8,7 @@ using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.Evaluation.Operations;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Scenic.Lighting;
 using Echo.Core.Textures.Colors;
@@ -32,12 +33,12 @@ public record PathTracedEvaluator : Evaluator
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
 
 	[SkipLocalsInit]
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
 	{
 		var path = new Path(ray);
 
 		//Quick exit with ambient light if no intersection
-		if (!path.Advance(scene, allocator)) return scene.EvaluateInfinite(path.CurrentDirection);
+		if (!path.Advance(scene, allocator)) return EvaluateInfinite(scene, path, ref statistics);
 
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
@@ -46,16 +47,24 @@ public record PathTracedEvaluator : Evaluator
 		{
 			//Sample the bsdf
 			var bounce = new Bounce(path.contact, distribution.Next2D());
-			if (bounce.IsZero) break;
+			statistics.Report("Bounce/Created");
+
+			if (bounce.IsZero)
+			{
+				statistics.Report("Bounce/Rejected");
+				break;
+			}
 
 			//Prefetch all samples so the order of them in subsequent bounces do not get messed up
 			Sample1D lightSample = distribution.Next1D();
 			Sample1D survivalSample = distribution.Next1D();
 			Sample2D radiantSample = distribution.Next2D();
 
-			//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 			if (bounce.IsSpecular)
 			{
+				//If the bounce is specular, then we do not use multiple importance sampling (MIS)
+				statistics.Report("Bounce/Specular");
+
 				//Check if the path is exhausted
 				if (!path.Continue(bounce, Survivability, survivalSample)) break;
 
@@ -63,7 +72,7 @@ public record PathTracedEvaluator : Evaluator
 				if (!path.Advance(scene, allocator))
 				{
 					//None found, accumulate ambient and exit
-					path.Contribute(scene.EvaluateInfinite(path.CurrentDirection));
+					path.Contribute(EvaluateInfinite(scene, path, ref statistics));
 					break;
 				}
 
@@ -75,8 +84,8 @@ public record PathTracedEvaluator : Evaluator
 				//Importance sample scene radiance
 				path.Contribute(ImportanceSampleRadiant
 				(
-					scene, path.contact, lightSample,
-					radiantSample, out bool mis
+					scene, path.contact, ref statistics,
+					lightSample, radiantSample, out bool mis
 				));
 
 				//Begin continue path to the next vertex and exit if path exhausted
@@ -86,6 +95,7 @@ public record PathTracedEvaluator : Evaluator
 				{
 					//We have both an area light a non-delta BSDF, begin MIS
 					GeometryPoint oldOrigin = path.contact.point;
+					statistics.Report("Bounce/Multiple Importance");
 
 					//Advance path and perform MIS
 					if (path.Advance(scene, allocator))
@@ -122,6 +132,7 @@ public record PathTracedEvaluator : Evaluator
 							path.Contribute(light.Evaluate(direction) * weight);
 						}
 
+						statistics.Report("Light/Evaluated Infinite");
 						break;
 					}
 				}
@@ -131,7 +142,7 @@ public record PathTracedEvaluator : Evaluator
 					if (!path.Advance(scene, allocator))
 					{
 						//Add infinite lights and exit if path escapes the scene
-						path.Contribute(scene.EvaluateInfinite(path.CurrentDirection));
+						path.Contribute(EvaluateInfinite(scene, path, ref statistics));
 						break;
 					}
 
@@ -144,16 +155,24 @@ public record PathTracedEvaluator : Evaluator
 		return path.Result;
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static RGB128 EvaluateInfinite(PreparedScene scene, in Path path, ref EvaluationStatistics statistics)
+	{
+		statistics.Report("Light/Evaluated Infinite");
+		return scene.EvaluateInfinite(path.CurrentDirection);
+	}
+
 	/// <summary>
 	/// Importance samples a the radiant in a <see cref="PreparedScene"/>.
 	/// </summary>
 	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
 	/// <param name="contact">The <see cref="Contact"/> to sample from.</param>
+	/// <param name="statistics">The <see cref="EvaluationStatistics"/> to report values through.</param>
 	/// <param name="lightSample">The <see cref="Sample1D"/> value to use to select a light.</param>
 	/// <param name="radiantSample">The <see cref="Sample2D"/> value to use to sample the light.</param>
 	/// <param name="mis">Whether this method used multiple importance sampling.</param>
 	/// <returns>The sampled radiant from the <see cref="PreparedScene"/>.</returns>
-	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, Sample1D lightSample, Sample2D radiantSample, out bool mis)
+	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, ref EvaluationStatistics statistics, Sample1D lightSample, Sample2D radiantSample, out bool mis)
 	{
 		//Select light from scene
 		(TokenHierarchy light, float lightPdf) = scene.Pick(contact.point, lightSample);
@@ -163,6 +182,8 @@ public record PathTracedEvaluator : Evaluator
 			mis = false;
 			return RGB128.Black;
 		}
+
+		statistics.Report("Light/Picked");
 
 		//Sample the selected light
 		(RGB128 radiant, float radiantPdf) = scene.Sample
@@ -176,6 +197,8 @@ public record PathTracedEvaluator : Evaluator
 
 		if (!FastMath.Positive(pdf) | radiant.IsZero) return RGB128.Black;
 
+		statistics.Report("Light/Sampled");
+
 		//Evaluate bsdf at the direction sampled for our light
 		ref readonly Float3 outgoing = ref contact.outgoing;
 		RGB128 scatter = contact.bsdf.Evaluate(outgoing, incident);
@@ -183,8 +206,12 @@ public record PathTracedEvaluator : Evaluator
 
 		//Conditionally terminate if radiant cannot be positive
 		if (scatter.IsZero) return RGB128.Black;
+		statistics.Report("Light/Occlusion Checked");
+
 		var query = contact.SpawnOcclude(incident, travel);
 		if (scene.Occlude(ref query)) return RGB128.Black;
+
+		statistics.Report("Light/Occlusion Passed");
 
 		//Calculate final radiant
 		radiant *= scatter / pdf;

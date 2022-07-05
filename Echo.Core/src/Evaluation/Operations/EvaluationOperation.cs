@@ -67,20 +67,26 @@ public sealed partial class EvaluationOperation : Operation<EvaluationStatistics
 					{
 						distribution.BeginSession();
 
-						Ray ray = scene.camera.SpawnRay(new CameraSample(distribution), spawner);
-						Float4 evaluated = evaluator.Evaluate(scene, ray, distribution, allocator);
+						var cameraSample = new CameraSample(distribution);
+						Ray ray = scene.camera.SpawnRay(cameraSample, spawner);
 
-						statistics.Report("Evaluated Sample");
+						Float4 evaluated = evaluator.Evaluate
+						(
+							scene, ray, distribution,
+							allocator, ref statistics
+						);
+
+						statistics.Report("Sample/Evaluated");
 
 						allocator.Release();
 
-						if (!accumulator.Add(evaluated)) statistics.Report("Rejected Sample");
+						if (!accumulator.Add(evaluated)) statistics.Report("Sample/Rejected");
 					}
 				}
 				while (epoch < profile.MaxEpoch && (epoch < profile.MinEpoch || accumulator.Noise.MaxComponent > profile.NoiseThreshold));
 
 				tile[position] = accumulator.Value;
-				statistics.Report("Pixel");
+				statistics.Report("Pixel/Evaluated");
 			}
 
 			worker.CheckSchedule();
