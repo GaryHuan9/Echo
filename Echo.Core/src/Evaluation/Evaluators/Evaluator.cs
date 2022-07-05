@@ -4,6 +4,7 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Distributions.Continuous;
+using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
@@ -29,8 +30,9 @@ public abstract record Evaluator
 	/// <param name="ray">The originating <see cref="Ray"/> where the entire evaluation begins.</param>
 	/// <param name="distribution">Generator to create any <see cref="Sample1D"/> or <see cref="Sample2D"/>.</param>
 	/// <param name="allocator">Memory allocator available to be used by this method.</param>
+	/// <param name="statistics">Access to an <see cref="EvaluationStatistics"/> to report various evaluation related values.</param>
 	/// <remarks>The implementation do not need to invoke <see cref="Allocator.Release"/> before this method returns.</remarks>
-	public abstract Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator);
+	public abstract Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics);
 
 	/// <summary>
 	/// Default implementation for <see cref="CreateOrClearLayer"/>.

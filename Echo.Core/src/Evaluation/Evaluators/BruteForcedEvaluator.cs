@@ -5,6 +5,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.Evaluation.Operations;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
@@ -19,7 +20,7 @@ public record BruteForcedEvaluator : Evaluator
 	/// </summary>
 	public int BounceLimit { get; init; } = 128;
 
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
 	{
 		int depth = BounceLimit;
 		var query = new TraceQuery(ray);
