@@ -11,7 +11,7 @@ using CodeHelpers.Pooling;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grid;
+using Echo.Core.Textures.Grids;
 using Echo.Core.Textures.Serialization;
 
 namespace Echo.Core.InOut;

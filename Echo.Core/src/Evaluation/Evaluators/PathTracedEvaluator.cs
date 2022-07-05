@@ -5,17 +5,20 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Evaluation.Operations;
+using Echo.Core.Evaluation.Operation;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Evaluation.Scattering;
-using Echo.Core.Scenic.Lighting;
+using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
+/// <summary>
+/// A unidirectional <see cref="Evaluator"/> able to simulate complex
+/// light effects such as global illumination and ambient occlusion.
+/// </summary>
 public record PathTracedEvaluator : Evaluator
 {
 	/// <summary>
@@ -141,6 +144,13 @@ public record PathTracedEvaluator : Evaluator
 		return path.Result;
 	}
 
+	/// <summary>
+	/// Evaluates <see cref="InfiniteLight"/>s.
+	/// </summary>
+	/// <param name="scene">The <see cref="PreparedScene"/> from which the <see cref="InfiniteLight"/>s should be evaluated.</param>
+	/// <param name="path">The current <see cref="Path"/> that escaped the <see cref="PreparedScene"/>.</param>
+	/// <param name="statistics">An <see cref="EvaluationStatistics"/> used during this operation.</param>
+	/// <returns>The evaluated <see cref="RGB128"/> value.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static RGB128 EvaluateInfinite(PreparedScene scene, in Path path, ref EvaluationStatistics statistics)
 	{

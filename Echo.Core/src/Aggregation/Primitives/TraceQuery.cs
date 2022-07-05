@@ -3,15 +3,15 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Mathematics;
-using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Preparation;
+using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PreparedSceneOld"/>
-/// exists, and if it does, the exact distance of that intersections and other specific information about it.
+/// Query for the traversal of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PreparedScene"/> exists.
+/// If an intersection exists, the exact distance of that intersections and other specific information about it are also recorded.
 /// </summary>
 public struct TraceQuery
 {

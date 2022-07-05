@@ -5,8 +5,7 @@ using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Mathematics.Randomization;
-using Echo.Core.Scenic.Instancing;
-using Echo.Core.Scenic.Preparation;
+using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Aggregation.Primitives;
 

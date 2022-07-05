@@ -8,10 +8,10 @@ using Echo.Core.Common;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
-using Echo.Core.Evaluation.Distributions;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Lighting;
+using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Aggregation.Preparation;

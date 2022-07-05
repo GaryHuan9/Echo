@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
-using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Directional;

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Evaluation.Distributions.Discrete;
+using Echo.Core.Evaluation.Sampling;
 using NUnit.Framework;
 
 namespace Echo.UnitTests;

@@ -5,7 +5,7 @@ using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Instancing;
+using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Preparation;
 

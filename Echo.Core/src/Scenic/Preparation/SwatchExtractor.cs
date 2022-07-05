@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Threads;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Instancing;
+using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Preparation;
 

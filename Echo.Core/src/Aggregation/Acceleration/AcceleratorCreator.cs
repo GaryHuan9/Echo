@@ -1,7 +1,7 @@
 using System;
 using CodeHelpers;
 using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Scenic.Instancing;
+using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Aggregation.Acceleration;
 

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using CodeHelpers.Packed;
-using Echo.Core.Evaluation.Operations;
+using Echo.Core.Evaluation.Operation;
 using NUnit.Framework;
 
 namespace Echo.UnitTests;

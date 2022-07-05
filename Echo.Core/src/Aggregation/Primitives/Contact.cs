@@ -1,4 +1,5 @@
 ﻿using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Scattering;
@@ -7,7 +8,8 @@ using Echo.Core.Scenic.Preparation;
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// A mutable struct that describes an interaction with a <see cref="PreparedSceneOld"/> from a concluded <see cref="TraceQuery"/>.
+/// A mutable struct that describes an interaction with the surface of a <see cref="PreparedScene"/>,
+/// constructed through a concluded <see cref="TraceQuery"/> and other information about that surface.
 /// </summary>
 public struct Contact
 {
@@ -97,7 +99,7 @@ public struct Contact
 	/// </summary>
 	public readonly struct Info
 	{
-		public Info(MaterialIndex material, Float3 normal, Float2 texcoord)
+		public Info(MaterialIndex material, in Float3 normal, Float2 texcoord)
 		{
 			this.material = material;
 			this.normal = normal;

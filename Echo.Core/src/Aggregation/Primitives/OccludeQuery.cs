@@ -1,10 +1,10 @@
-﻿using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Preparation;
+﻿using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// Query for the traverse of a <see cref="Ray"/> to find out whether anything inside <see cref="PreparedSceneOld"/> occludes its <see cref="travel"/> (distance).
+/// Query for the traversal of a <see cref="Ray"/> to find out whether anything inside <see cref="PreparedScene"/> occludes its <see cref="travel"/> (distance).
 /// NOTE: the only output of this query is a <see cref="bool"/> indicating any occlusion; more information can be accessed using a <see cref="TraceQuery"/>.
 /// </summary>
 public struct OccludeQuery

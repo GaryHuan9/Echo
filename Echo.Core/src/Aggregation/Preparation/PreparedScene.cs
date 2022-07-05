@@ -10,17 +10,18 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Scenic;
-using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Lighting;
+using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Cameras;
+using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Hierarchies;
+using Echo.Core.Scenic.Lights;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Aggregation.Preparation;
 
 /// <summary>
-/// A <see cref="Scene"/> prepared ready for fast interactions.
+/// A <see cref="Scene"/> prepared for fast interactions.
 /// </summary>
 public class PreparedScene : PreparedPack
 {
@@ -36,7 +37,14 @@ public class PreparedScene : PreparedPack
 		infiniteLightsPdf = infiniteLightsThreshold / this.infiniteLights.Length;
 	}
 
+	/// <summary>
+	/// The sensor that captures and evaluates this <see cref="PreparedScene"/>.
+	/// </summary>
 	public readonly Camera camera;
+
+	/// <summary>
+	/// All of the <see cref="InfiniteLight"/> in this <see cref="PreparedScene"/>.
+	/// </summary>
 	public readonly ImmutableArray<InfiniteLight> infiniteLights;
 
 	readonly PreparedInstance rootInstance;
@@ -44,8 +52,10 @@ public class PreparedScene : PreparedPack
 	readonly float infiniteLightsPdf;
 
 	/// <summary>
-	/// Processes the <paramref name="query"/> and returns whether it intersected with something.
+	/// Processes the <see cref="TraceQuery"/>.
 	/// </summary>
+	/// <returns>Whether the <see cref="TraceQuery"/> intersected with something.</returns>
+	/// <seealso cref="Accelerator.Trace"/>
 	public bool Trace(ref TraceQuery query)
 	{
 		Assert.AreEqual(query.current, new TokenHierarchy());
@@ -57,8 +67,10 @@ public class PreparedScene : PreparedPack
 	}
 
 	/// <summary>
-	/// Processes the <paramref name="query"/> and returns whether it is occluded by something.
+	/// Processes the <see cref="OccludeQuery"/>.
 	/// </summary>
+	/// <returns>Whether the <see cref="OccludeQuery"/> is occluded by something.</returns>
+	/// <seealso cref="Accelerator.Occlude"/>
 	public bool Occlude(ref OccludeQuery query)
 	{
 		Assert.AreEqual(query.current, new TokenHierarchy());
@@ -67,9 +79,12 @@ public class PreparedScene : PreparedPack
 	}
 
 	/// <summary>
-	/// Interacts with a concluded <see cref="TraceQuery"/> that was performed
-	/// on this <see cref="PreparedScene"/> by creating a <see cref="Contact"/>.
+	/// Interacts with a surface of this <see cref="PreparedScene"/>.
 	/// </summary>
+	/// <param name="query">A successfully concluded <see cref="TraceQuery"/>
+	/// performed on this <see cref="PreparedPack"/>.</param>
+	/// <returns>A <see cref="Contact"/> value containing the necessary information
+	/// about this interaction with the <see cref="PreparedScene"/>.</returns>
 	public Contact Interact(in TraceQuery query)
 	{
 		query.AssertHit();

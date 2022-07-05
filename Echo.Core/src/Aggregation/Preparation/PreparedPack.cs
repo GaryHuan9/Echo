@@ -6,8 +6,8 @@ using CodeHelpers.Collections;
 using CodeHelpers.Mathematics;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Selection;
-using Echo.Core.Scenic.Geometric;
-using Echo.Core.Scenic.Lighting;
+using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Lights;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;

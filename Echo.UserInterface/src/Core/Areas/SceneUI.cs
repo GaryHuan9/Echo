@@ -1,4 +1,4 @@
-﻿using Echo.Core.Evaluation.Operations;
+﻿using Echo.Core.Evaluation.Operation;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
