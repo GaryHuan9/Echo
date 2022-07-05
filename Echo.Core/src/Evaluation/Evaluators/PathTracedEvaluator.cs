@@ -39,11 +39,6 @@ public record PathTracedEvaluator : Evaluator
 		//Quick exit with ambient light if no intersection
 		if (!path.Advance(scene, allocator)) return scene.EvaluateInfinite(path.CurrentDirection);
 
-		// Probable<TokenHierarchy> picked = scene.Pick(path.contact.point, distribution.Next1D());
-		// uint random = SquirrelPrng.Mangle((uint)picked.content.TopToken.Index);
-		//
-		// return (Float4)Unsafe.As<uint, Color32>(ref random);
-
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
 
@@ -100,10 +95,10 @@ public record PathTracedEvaluator : Evaluator
 						float pmf = scene.ProbabilityMass(light, oldOrigin);
 						if (!FastMath.Positive(pmf)) goto noLight;
 
-						float pdf = pmf * scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
+						float pdf = scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
 						if (!FastMath.Positive(pdf)) goto noLight;
 
-						path.ContributeEmissive(PowerHeuristic(bounce.scatterPdf, pdf));
+						path.ContributeEmissive(PowerHeuristic(bounce.scatterPdf, pmf * pdf));
 
 					noLight:
 						{ }
@@ -124,7 +119,7 @@ public record PathTracedEvaluator : Evaluator
 							if (!FastMath.Positive(pdf)) continue;
 
 							float weight = PowerHeuristic(bounce.scatterPdf, pdf);
-							path.Contribute(light.Evaluate(direction) / pdf * weight);
+							path.Contribute(light.Evaluate(direction) * weight);
 						}
 
 						break;
@@ -133,11 +128,15 @@ public record PathTracedEvaluator : Evaluator
 				else
 				{
 					//Our light does not like MIS either, so no MIS will be performed
+					if (!path.Advance(scene, allocator))
+					{
+						//Add infinite lights and exit if path escapes the scene
+						path.Contribute(scene.EvaluateInfinite(path.CurrentDirection));
+						break;
+					}
 
-					//Exit if no intersection with the scene
-					if (!path.Advance(scene, allocator)) break;
-
-					//TODO: Add infinite lights and emissive lights??
+					//Add emissive contribution without MIS
+					path.ContributeEmissive();
 				}
 			}
 		}
