@@ -36,7 +36,7 @@ public class LightBoundingVolumeHierarchy : LightPicker
 	readonly Dictionary<EntityToken, ulong> map = new();
 
 	public override ConeBounds ConeBounds => root.bounds.cone;
-	public override float Power => root.bounds.power;
+	public override float Power => root == null ? default : root.bounds.power;
 
 	public override AxisAlignedBoundingBox GetTransformedBounds(in Float4x4 transform) => new(stackalloc AxisAlignedBoundingBox[1] { root.bounds.aabb }, transform);
 
@@ -51,6 +51,7 @@ public class LightBoundingVolumeHierarchy : LightPicker
 	static Node Build(View<Tokenized<LightBounds>> boundsView)
 	{
 		if (boundsView.Length == 1) return new Node(boundsView[0].content, boundsView[0].token);
+		if (boundsView.Length == 0) return null;
 
 		int length = boundsView.Length;
 
