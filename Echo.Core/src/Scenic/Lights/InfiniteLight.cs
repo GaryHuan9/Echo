@@ -3,6 +3,7 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Lights;
@@ -32,4 +33,6 @@ public abstract class InfiniteLight : LightEntity, IPreparedAreaLight
 
 	/// <inheritdoc/>
 	public abstract float ProbabilityDensity(in GeometryPoint origin, in Float3 incident);
+
+	protected override bool CanAddRoot(EntityPack root) => root is Scene;
 }
