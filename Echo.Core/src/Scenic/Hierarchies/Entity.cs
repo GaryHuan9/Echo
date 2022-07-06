@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
@@ -9,15 +10,22 @@ namespace Echo.Core.Scenic.Hierarchies;
 /// <summary>
 /// The base for any object that can exist in a <see cref="Scene"/>.
 /// </summary>
-public class Entity
+public class Entity : IEnumerable<Entity>
 {
 	readonly List<Entity> children = new();
 	bool transformDirty;
 
 	/// <summary>
-	/// The <see cref="Entity"/> that is containing this <see cref="Entity"/>.
+	/// The <see cref="Entity"/> at a higher hierarchy level that contains this <see cref="Entity"/>.
 	/// </summary>
+	/// <remarks>Null if no <see cref="Entity"/> ever invoked <see cref="Add"/> on this <see cref="Entity"/> yet.</remarks>
 	public Entity Parent { get; private set; }
+
+	/// <summary>
+	/// The <see cref="EntityPack"/> which is at the root of this <see cref="Entity"/>'s hierarchy.
+	/// </summary>
+	/// <remarks>Null if the root of this <see cref="Entity"/>'s hierarchy is not yet an <see cref="EntityPack"/>.</remarks>
+	public EntityPack Root { get; private set; }
 
 	Float3 _position;
 	Float3 _rotation;
@@ -134,36 +142,81 @@ public class Entity
 	/// <remarks>Once successfully added, <paramref name="child"/> will inherit the transform of this <see cref="Entity"/>.</remarks>
 	public void Add(Entity child)
 	{
-		if (child is EntityPack) throw new ArgumentException($"Cannot added an {nameof(EntityPack)} as a child.", nameof(child));
 		if (child.Parent == this) throw new ArgumentException("Cannot add a child to the same parent twice.", nameof(child));
 		if (child.Parent != null) throw new ArgumentException("Cannot move a child to a different parent.", nameof(child));
+		if (!child.CanAddParent(this)) throw new ArgumentException("Child does not accept this parent.", nameof(child));
 
-		children.Add(child);
-		child.Parent = this;
-		child.DirtyTransform();
+		AddImpl(child);
 	}
 
 	/// <summary>
 	/// Enumerates through all of the children of this <see cref="Entity"/>.
 	/// </summary>
-	/// <param name="recursive">Whether the children include the children of children and so on.</param>
+	/// <param name="recursive">Whether to also include and yield the children's children and so on.</param>
+	/// <param name="self">Whether to include this <see cref="Entity"/> in ths result as well.</param>
 	/// <returns>An <see cref="IEnumerable{T}"/> that enables this enumeration.</returns>
-	public IEnumerable<Entity> LoopChildren(bool recursive = false)
+	public IEnumerable<Entity> LoopChildren(bool recursive = false, bool self = false)
 	{
-		if (children.Count == 0) yield break;
+		if (self) yield return this;
 
 		foreach (Entity directChild in children)
 		{
 			yield return directChild;
 			if (!recursive) continue;
 
-			foreach (Entity child in directChild.children) yield return child;
+			foreach (Entity child in directChild.LoopChildren(true)) yield return child;
 		}
 	}
+
+	/// <summary>
+	/// Checks whether an <see cref="Entity"/> can be added as this <see cref="Entity"/>'s <see cref="Parent"/>.
+	/// </summary>
+	/// <param name="parent">The <see cref="Entity"/> that is potentially going to be the <see cref="Parent"/>.</param>
+	/// <returns>Whether the input <see cref="Entity"/> can be our <see cref="Parent"/>.</returns>
+	protected virtual bool CanAddParent(Entity parent) => true;
+
+	/// <summary>
+	/// Checks whether an <see cref="EntityPack"/> can be added as this <see cref="Entity"/>'s <see cref="Root"/>.
+	/// </summary>
+	/// <param name="root">The <see cref="EntityPack"/> that is potentially going to be the <see cref="Root"/>.</param>
+	/// <returns>Whether the input <see cref="EntityPack"/> can be our <see cref="Root"/>.</returns>
+	protected virtual bool CanAddRoot(EntityPack root) => true;
+
+	/// <summary>
+	/// The actual implementation of <see cref="Add"/>.
+	/// </summary>
+	/// <param name="child">The <see cref="Entity"/> to add as a child.</param>
+	protected virtual void AddImpl(Entity child)
+	{
+		children.Add(child);
+		child.Parent = this;
+		child.SetRoot(Root);
+		child.DirtyTransform();
+	}
+
+	/// <summary>
+	/// Sets the <see cref="Root"/> of this <see cref="Entity"/>.
+	/// </summary>
+	/// <param name="root">The <see cref="EntityPack"/> to set as <see cref="Root"/>.</param>
+	protected void SetRoot(EntityPack root)
+	{
+		if (Root == root) return;
+		if (root == null) throw new ArgumentNullException(nameof(root));
+		if (Root != null) throw new InvalidOperationException("Cannot change the root once it is set.");
+		if (!CanAddRoot(root)) throw new ArgumentException("Child does not accept this root.", nameof(root));
+
+		Root = root;
+
+		for (int i = 0; i < children.Count; i++) children[i].SetRoot(root);
+	}
+
+	IEnumerator<Entity> IEnumerable<Entity>.GetEnumerator() => children.GetEnumerator();
+	IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<Entity>)this).GetEnumerator();
 
 	void RecalculateTransform()
 	{
 		if (!transformDirty) return;
+		transformDirty = false;
 
 		Float4x4 transform = Float4x4.Transformation(Position, Rotation, (Float3)Scale);
 
@@ -179,8 +232,6 @@ public class Entity
 			_forwardTransform = Parent.ForwardTransform * transform.Inverse;
 			_inverseTransform = Parent.InverseTransform * transform;
 		}
-
-		transformDirty = false;
 	}
 
 	void DirtyTransform()
@@ -188,6 +239,6 @@ public class Entity
 		if (transformDirty) return;
 		transformDirty = true;
 
-		foreach (Entity child in children) child.DirtyTransform();
+		for (int i = 0; i < children.Count; i++) children[i].DirtyTransform();
 	}
 }

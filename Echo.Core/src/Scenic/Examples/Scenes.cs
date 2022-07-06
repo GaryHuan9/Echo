@@ -1,6 +1,4 @@
-﻿using CodeHelpers;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerable;
+﻿using CodeHelpers.Mathematics.Enumerable;
 using CodeHelpers.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.InOut;
@@ -15,7 +13,7 @@ using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Scenic.Examples;
 
-public class SingleBunny : StandardScene
+public class SingleBunny : Scene
 {
 	public SingleBunny()
 	{
@@ -24,9 +22,11 @@ public class SingleBunny : StandardScene
 		Pure blue = (Pure)new RGBA128(0.0250f, 0.1416f, 0.3736f);
 
 		var material0 = new Matte { Albedo = (Pure)new RGBA128(1f, 0.68f, 0.16f) };
-		var material1 = new Matte { Albedo = blue };
+		var material1 = new Matte { Albedo = (Pure)new RGBA128(0.75f) };
 		var material2 = new Emissive { Albedo = Texture.white };
 		var material3 = new Mirror { Albedo = (Pure)new RGBA128(0.75f) };
+
+		Add(new PlaneEntity { Material = material1, Size = new Float2(32f, 24f) });
 
 		Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load<RGB128>("ext/Scenes/SingleBunny/UlmerMuenster.jpg") } });
 
@@ -39,61 +39,8 @@ public class SingleBunny : StandardScene
 
 		Add(new PointLight { Intensity = new RGB128(20f, 10f, 10f), Position = new Float3(2f, 2f, -6f) });
 		Add(new PointLight { Intensity = new RGB128(10f, 10f, 10f), Position = new Float3(-3f, 3f, -4f) });
-	}
-}
 
-public class RandomSpheres : StandardScene
-{
-	public RandomSpheres(int count = 120)
-	{
-		AddSpheres(new MinMax(0f, 7f), new MinMax(0.4f, 0.7f), count);
-		AddSpheres(new MinMax(0f, 7f), new MinMax(0.1f, 0.2f), count * 3);
-
-		Add(new AmbientLight { Texture = new CylindricalTexture { Texture = TextureGrid.Load<RGB128>("ext/Scenes/SingleBunny/UlmerMuenster.jpg") } });
-	}
-
-	void AddSpheres(MinMax positionRange, MinMax radiusRange, int count)
-	{
-		for (int i = 0; i < count; i++)
-		{
-			//Orientation
-			float radius;
-			Float3 position;
-
-			do
-			{
-				radius = radiusRange.RandomValue;
-				position = new Float3(positionRange.RandomValue, radius, 0f).RotateXZ(RandomHelper.Range(360f));
-			}
-			while (IntersectingOthers(radius, position));
-
-			//Material
-			Float4 color = new Float4((float)RandomHelper.Value, (float)RandomHelper.Value, (float)RandomHelper.Value, 1f);
-
-			bool metal = RandomHelper.Value < 0.3d;
-			bool emissive = RandomHelper.Value < 0.2d;
-
-			Material material;
-
-			if (metal) material = new Mirror { Albedo = (Pure)(RGBA128)color };
-			else if (emissive) material = new Emissive { Albedo = (Pure)(RGBA128)(color / color.MaxComponent * 3f) };
-			else material = new Matte { Albedo = (Pure)(RGBA128)color };
-
-			Add(new SphereEntity { Material = material, Radius = radius, Position = position });
-		}
-	}
-
-	bool IntersectingOthers(float radius, Float3 position)
-	{
-		foreach (Entity child in LoopChildren())
-		{
-			if (child is not SphereEntity sphere) continue;
-
-			float distance = sphere.Radius + radius;
-			if ((sphere.Position - position).SquaredMagnitude <= distance * distance) return true;
-		}
-
-		return false;
+		Add(new Camera(110f) { Position = new Float3(0f, 3f, -6f), Rotation = new Float3(30f, 0f, 0f) });
 	}
 }
 
@@ -141,12 +88,12 @@ public class TestInstancing : Scene
 
 		foreach (Int2 offset in new EnumerableSpace2D(new Int2(-8, -5), new Int2(8, 5)))
 		{
-			bunnyWall.Add(new PackInstance { EntityPack = bunny, Position = offset.XY_ });
+			bunnyWall.Add(new PackInstance { Pack = bunny, Position = offset.XY_ });
 		}
 
 		for (int z = 0; z < 4; z++)
 		{
-			Add(new PackInstance { EntityPack = bunnyWall, Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = z + 1f });
+			Add(new PackInstance { Pack = bunnyWall, Position = new Float3(0f, 0f, z * 6f), Rotation = new Float3(0f, -20f * (z + 1f), 0f), Scale = z + 1f });
 		}
 
 		bunnyWall.Add(new PlaneEntity { Material = material0, Position = new Float3(1f, -1f, 0f), Rotation = new Float3(-90f, -10f, 0f) });

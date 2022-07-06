@@ -9,6 +9,9 @@ using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Preparation;
 
+/// <summary>
+/// An object used to create a <see cref="PreparedScene"/> from a <see cref="Scene"/>.
+/// </summary>
 public sealed partial record ScenePreparer
 {
 	public ScenePreparer(Scene scene) => this.scene = scene;
@@ -38,6 +41,7 @@ public sealed partial record ScenePreparer
 	/// How many times does the area of a triangle has to be over the average of all triangles to trigger a fragmentation.
 	/// Fragmentation can cause the construction of better <see cref="Accelerator"/>, however it can also backfire.
 	/// </summary>
+	/// <remarks>Currently unused.</remarks>
 	public float FragmentationThreshold
 	{
 		get => _fragmentationThreshold;
@@ -52,6 +56,7 @@ public sealed partial record ScenePreparer
 	/// The maximum number of fragmentation that can happen to one source triangle.
 	/// Note that we can completely disable fragmentation by setting this value to 0.
 	/// </summary>
+	/// <remarks>Currently unused.</remarks>
 	public int FragmentationMaxIteration
 	{
 		get => _fragmentationMaxIteration;
@@ -62,6 +67,10 @@ public sealed partial record ScenePreparer
 		}
 	}
 
+	/// <summary>
+	/// Creates a <see cref="PreparedScene"/>.
+	/// </summary>
+	/// <returns>The prepared version of the initially input <see cref="Scene"/>.</returns>
 	public PreparedScene Prepare()
 	{
 		Node root = CreateOrGetNode(scene);
@@ -103,6 +112,10 @@ public sealed partial record ScenePreparer
 		}
 	}
 
+	/// <summary>
+	/// Prepares a <see cref="Material"/>.
+	/// </summary>
+	/// <param name="material">The material to be prepared by this <see cref="ScenePreparer"/>.</param>
 	public void Prepare(Material material)
 	{
 		if (preparedMaterials.Add(material)) material.Prepare();

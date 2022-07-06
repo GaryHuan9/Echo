@@ -26,12 +26,12 @@ partial record ScenePreparer
 				if (entity is IGeometrySource geometry) geometrySources.Add(geometry);
 				if (entity is ILightSource light) lightSources.Add(light);
 
-				if (entity is PackInstance { EntityPack: { } } instance)
+				if (entity is PackInstance { Pack: { } } instance)
 				{
-					if (!children.TryGetValue(instance.EntityPack, out var pair))
+					if (!children.TryGetValue(instance.Pack, out var pair))
 					{
 						pair = (null, new List<PackInstance>());
-						children.Add(instance.EntityPack, pair);
+						children.Add(instance.Pack, pair);
 					}
 
 					pair.Instances.Add(instance);
@@ -103,7 +103,7 @@ partial record ScenePreparer
 
 		static PreparedInstance CreatePreparedInstance(ScenePreparer preparer, PackInstance source)
 		{
-			Node node = preparer.CreateOrGetNode(source.EntityPack);
+			Node node = preparer.CreateOrGetNode(source.Pack);
 
 			var pack = node.preparedPack;
 			var extractor = node.swatchExtractor;
