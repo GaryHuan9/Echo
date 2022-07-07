@@ -15,7 +15,7 @@ namespace Echo.Core.Textures.Directional;
 
 public class CylindricalTexture : IDirectionalTexture
 {
-	NotNull<Texture> _texture = Texture.black;
+	NotNull<Texture> _texture = Pure.black;
 
 	public Texture Texture
 	{

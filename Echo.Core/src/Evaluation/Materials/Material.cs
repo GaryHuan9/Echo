@@ -12,8 +12,8 @@ namespace Echo.Core.Evaluation.Materials;
 
 public abstract class Material
 {
-	NotNull<Texture> _albedo = Texture.black;
-	NotNull<Texture> _normal = Texture.normal;
+	NotNull<Texture> _albedo = Pure.black;
+	NotNull<Texture> _normal = Pure.normal;
 
 	/// <summary>
 	/// The primary color of this <see cref="Material"/>.
@@ -44,7 +44,7 @@ public abstract class Material
 	/// Invoked before a new render session begins; can be used to execute any kind of preprocessing work for this <see cref="Material"/>.
 	/// NOTE: invoking any of the rendering related methods prior to invoking this method after a change will result in undefined behaviors!
 	/// </summary>
-	public virtual void Prepare() => zeroNormal = Normal == Texture.normal || FastMath.AlmostZero(NormalIntensity);
+	public virtual void Prepare() => zeroNormal = Normal == Pure.normal || FastMath.AlmostZero(NormalIntensity);
 
 	/// <summary>
 	/// Determines the scattering properties of this material at <paramref name="contact"/>

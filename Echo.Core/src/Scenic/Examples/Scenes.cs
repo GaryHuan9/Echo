@@ -23,7 +23,7 @@ public class SingleBunny : Scene
 
 		var material0 = new Matte { Albedo = (Pure)new RGBA128(1f, 0.68f, 0.16f) };
 		var material1 = new Matte { Albedo = (Pure)new RGBA128(0.75f) };
-		var material2 = new Emissive { Albedo = Texture.white };
+		var material2 = new Emissive { Albedo = Pure.white };
 		var material3 = new Mirror { Albedo = (Pure)new RGBA128(0.75f) };
 
 		Add(new PlaneEntity { Material = material1, Size = new Float2(32f, 24f) });
@@ -74,8 +74,8 @@ public class TestInstancing : Scene
 	public TestInstancing()
 	{
 		var mesh = new Mesh("Assets/Models/StanfordBunny/lowPoly.obj");
-		var material0 = new Matte { Albedo = Texture.white };
-		var material1 = new Matte { Albedo = Texture.normal };
+		var material0 = new Matte { Albedo = Pure.white };
+		var material1 = new Matte { Albedo = Pure.normal };
 
 		// var mesh = new Mesh("Assets/Models/BlenderMaterialBall/MaterialBall.zip");
 		// var materials = new MaterialLibrary("Assets/Models/BlenderMaterialBall/MaterialBall.mat");

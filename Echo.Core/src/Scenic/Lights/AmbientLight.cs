@@ -6,20 +6,22 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
 
 namespace Echo.Core.Scenic.Lights;
 
 /// <summary>
-/// A directional <see cref="InfiniteLight"/> that surrounds the entirety of a <see cref="Scale"/>.
+/// A directional <see cref="InfiniteLight"/> that surrounds the entirety of a <see cref="Scene"/>.
 /// </summary>
 public class AmbientLight : InfiniteLight
 {
-	NotNull<object> _texture = Textures.Texture.black; //Interfaces and implicit casts are not so nice to each other so object is used here
+	NotNull<object> _texture = Pure.black;
 
 	/// <summary>
 	/// The <see cref="IDirectionalTexture"/> applied to this <see cref="AmbientLight"/>.
+	/// Defaults to <see cref="Pure.black"/>.
 	/// </summary>
 	public IDirectionalTexture Texture
 	{

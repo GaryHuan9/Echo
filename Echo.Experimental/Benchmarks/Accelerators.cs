@@ -62,7 +62,7 @@ public class Accelerators
 
 		if (true)
 		{
-			scene.Add(new PlaneEntity { Material = new Matte { Albedo = Texture.white }, Size = new Float2(32f, 24f) });
+			scene.Add(new PlaneEntity { Material = new Matte { Albedo = Pure.white }, Size = new Float2(32f, 24f) });
 
 			Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }.Prepare(), "NoDivRegular"));
 			Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }.Prepare(), "NoDivQuad"));

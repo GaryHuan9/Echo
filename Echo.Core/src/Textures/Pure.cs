@@ -29,4 +29,8 @@ public class Pure : Texture, IDirectionalTexture
 	RGB128 IDirectionalTexture.Evaluate(in Float3 incident) => color;
 
 	public static explicit operator Pure(in RGBA128 color) => new(color);
+	public static readonly Pure white = new(RGBA128.White);
+	public static readonly Pure black = new(RGBA128.Black);
+	public static readonly Pure clear = new(RGBA128.Zero);
+	public static readonly Pure normal = new(new RGBA128(0.5f, 0.5f, 1f));
 }

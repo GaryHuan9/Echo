@@ -34,7 +34,7 @@ public class CubemapTests : DirectionalTextureBaseTests
 [TestFixture]
 public class PureTests : DirectionalTextureBaseTests
 {
-	protected override IDirectionalTexture GetTexture() => Texture.normal;
+	protected override IDirectionalTexture GetTexture() => Pure.normal;
 }
 
 public abstract class DirectionalTextureBaseTests

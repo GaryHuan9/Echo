@@ -11,7 +11,7 @@ namespace Echo.Core.Evaluation.Materials;
 
 public class Matte : Material
 {
-	NotNull<Texture> _roughness = Texture.black;
+	NotNull<Texture> _roughness = Pure.black;
 
 	public Texture Roughness
 	{
