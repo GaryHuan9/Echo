@@ -73,7 +73,7 @@ public class MaterialLibrary
 					operation.Target = processing;
 
 					operations.Add(operation);
-					parsed = Texture.white;
+					parsed = Pure.white;
 				}
 
 				if (info == null) throw new Exception($"No attribute named: {token.ToString()}!");
