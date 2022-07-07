@@ -1,4 +1,3 @@
-using System;
 using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
@@ -6,6 +5,7 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
@@ -31,24 +31,6 @@ public class AmbientLight : InfiniteLight
 
 	Float3x3 localToWorld; //From local-space to world-space, rotation only
 	Float3x3 worldToLocal; //From world-space to local-space, rotation only
-
-	public override Float3 Position
-	{
-		set
-		{
-			if (value.EqualsExact(Position)) return;
-			ThrowModifyTransformException();
-		}
-	}
-
-	public override float Scale
-	{
-		set
-		{
-			if (value.Equals(Scale)) return;
-			ThrowModifyTransformException();
-		}
-	}
 
 	float _power;
 
@@ -86,6 +68,4 @@ public class AmbientLight : InfiniteLight
 		Float3 transformed = worldToLocal * incident;
 		return Texture.ProbabilityDensity(transformed);
 	}
-
-	static void ThrowModifyTransformException() => throw new Exception($"Cannot modify {nameof(AmbientLight)} transform!");
 }

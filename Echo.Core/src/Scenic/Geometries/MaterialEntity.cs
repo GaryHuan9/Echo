@@ -4,6 +4,9 @@ using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Geometries;
 
+/// <summary>
+/// An <see cref="Entity"/> that allows a <see cref="Material"/> to be applied to it; usually a geometric <see cref="Entity"/>.
+/// </summary>
 public abstract class MaterialEntity : Entity
 {
 	NotNull<Material> _material = Invisible.instance;

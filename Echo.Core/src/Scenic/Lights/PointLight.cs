@@ -10,29 +10,37 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Lights;
 
+/// <summary>
+/// A singularity <see cref="LightEntity"/> that emits from only one point.
+/// </summary>
 public class PointLight : LightEntity, ILightSource<PreparedPointLight>
 {
 	public PreparedPointLight Extract() => new(Intensity, ContainedPosition);
 }
 
+/// <summary>
+/// The prepared version of <see cref="PointLight"/>.
+/// </summary>
 public readonly struct PreparedPointLight : IPreparedLight
 {
 	public PreparedPointLight(in RGB128 intensity, in Float3 position)
 	{
 		this.intensity = intensity;
 		this.position = position;
-		energy = 4f * Scalars.Pi * intensity.Luminance;
+		Power = 4f * Scalars.Pi * intensity.Luminance;
 	}
 
 	readonly RGB128 intensity;
 	readonly Float3 position;
-	readonly float energy;
 
+	/// <inheritdoc/>
+	public float Power { get; }
+
+	/// <inheritdoc/>
 	public BoxBound BoxBound => new(position, position);
 
+	/// <inheritdoc/>
 	public ConeBound ConeBound => ConeBound.CreateFullSphere();
-
-	public LightBound LightBound => new(BoxBound, ConeBound, energy);
 
 	/// <inheritdoc/>
 	[SkipLocalsInit]
@@ -55,4 +63,7 @@ public readonly struct PreparedPointLight : IPreparedLight
 
 		return new Probable<RGB128>(intensity * travelR * travelR, 1f);
 	}
+
+	/// <inheritdoc/>
+	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 1f;
 }

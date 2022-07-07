@@ -16,6 +16,9 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Aggregation.Preparation;
 
+/// <summary>
+/// A collection that contains all of the light objects in a <see cref="PreparedScene"/>.
+/// </summary>
 public class LightCollection
 {
 	public LightCollection(ReadOnlySpan<ILightSource> lightSources, GeometryCollection geometries)
@@ -24,7 +27,7 @@ public class LightCollection
 
 		this.geometries = geometries;
 
-		static ImmutableArray<T> Extract<T>(ReadOnlySpan<ILightSource> lightSources)
+		static ImmutableArray<T> Extract<T>(ReadOnlySpan<ILightSource> lightSources) where T : IPreparedLight
 		{
 			int length = 0;
 
@@ -54,13 +57,7 @@ public class LightCollection
 
 		list.Expand(points.Length);
 
-		for (int i = 0; i < points.Length; i++)
-		{
-			var token = new EntityToken(LightType.Point, i);
-			LightBound bound = points[i].LightBound;
-
-			list.Add((token, bound));
-		}
+		AddLight(LightType.Point, points);
 
 		AddEmissive(TokenType.Triangle, geometries.triangles);
 		AddEmissive(TokenType.Sphere, geometries.spheres);
@@ -76,13 +73,24 @@ public class LightCollection
 
 		return list;
 
+		void AddLight<T>(LightType type, ImmutableArray<T> array) where T : IPreparedLight
+		{
+			for (int i = 0; i < array.Length; i++)
+			{
+				var token = new EntityToken(type, i);
+				list.Add((token, array[i].LightBound));
+			}
+		}
+
 		void AddEmissive<T>(TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
 				ref readonly T geometry = ref array.ItemRef(i);
-				float power = geometry.GetPower(geometries.swatch);
 
+				if (geometries.swatch[geometry.Material] is not IEmissive emissive) continue;
+
+				float power = emissive.Power * geometry.Area;
 				if (!FastMath.Positive(power)) continue;
 
 				list.Add
@@ -149,7 +157,7 @@ public class LightCollection
 		}
 	}
 
-	/// <inheritdoc cref="IPreparedAreaLight.ProbabilityDensity"/>
+	/// <inheritdoc cref="IPreparedLight.ProbabilityDensity"/>
 	public float ProbabilityDensity(EntityToken token, in GeometryPoint origin, in Float3 incident)
 	{
 		switch (token.Type)
