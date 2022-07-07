@@ -4,21 +4,35 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
 
+/// <summary>
+/// A solid geometric surface in a <see cref="Scene"/>.
+/// </summary>
 public interface IPreparedGeometry
 {
+	/// <summary>
+	/// A <see cref="BoxBound"/> that bounds the entirety of surface and position of this <see cref="IPreparedGeometry"/>.
+	/// </summary>
 	BoxBound BoxBound { get; }
 
+	/// <summary>
+	/// A <see cref="ConeBound"/> that bounds all of the positive normal directions of this <see cref="IPreparedGeometry"/>.
+	/// </summary>
 	ConeBound ConeBound { get; }
 
+	/// <summary>
+	/// The <see cref="MaterialIndex"/> of this <see cref="IPreparedGeometry"/>.
+	/// </summary>
 	MaterialIndex Material { get; }
 
+	/// <summary>
+	/// The total area of this <see cref="IPreparedGeometry"/>.
+	/// </summary>
 	float Area { get; }
-
-	sealed float GetPower(PreparedSwatch swatch) => swatch[Material] is IEmissive emissive ? emissive.Power * Area : 0f;
 
 	/// <summary>
 	/// Samples this <see cref="IPreparedGeometry"/>.

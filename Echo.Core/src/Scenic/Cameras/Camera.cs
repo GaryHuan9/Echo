@@ -8,6 +8,10 @@ using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Cameras;
 
+/// <summary>
+/// A sensor through which a <see cref="Scene"/> can be evaluated.
+/// </summary>
+/// <remarks>The origin of <see cref="Ray"/>s.</remarks>
 public class Camera : Entity
 {
 	public Camera(float fieldOfView) => FieldOfView = fieldOfView;
@@ -27,18 +31,6 @@ public class Camera : Entity
 			forwardLength = 0.5f / MathF.Tan(Scalars.ToRadians(value) / 2f);
 		}
 	}
-
-	/// <summary>
-	/// The distance at which the image should be fully sharp.
-	/// NOTE: This only affects depth of field.
-	/// </summary>
-	public float FocalLength { get; set; } = 12f;
-
-	/// <summary>
-	/// The intensity of the depth of field blur.
-	/// NOTE: This only affects depth of field.
-	/// </summary>
-	public float Aperture { get; set; } = 0f;
 
 	/// <summary>
 	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>.
