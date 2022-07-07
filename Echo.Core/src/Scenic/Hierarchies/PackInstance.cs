@@ -19,6 +19,7 @@ public class PackInstance : Entity
 		set
 		{
 			if (_pack == value) return;
+			if (value is Scene) throw new SceneException($"Attempting to instance a {nameof(Scene)}.");
 
 			if (Root != null)
 			{
