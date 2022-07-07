@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Echo.Core.Scenic.Hierarchies;
 using NUnit.Framework;
@@ -15,28 +16,42 @@ public class EntityPackTests
 		Check(scene);
 
 		var pack = new EntityPack();
-		Check(scene);
+		Check(pack);
 
 		scene.Add(new PackInstance { Pack = pack });
 		Check(scene, new[] { pack });
+	}
 
-		scene = new Scene { new() { new PackInstance { Pack = pack } } };
-		Check(scene, new[] { pack });
-
-		Entity current = new Scene();
-		for (int i = 0; i < 10; i++) current.Add(current = new PackInstance { Pack = pack });
+	[Test]
+	public void Simple1()
+	{
+		var pack = new EntityPack();
+		var scene = new Scene { new() { new PackInstance { Pack = pack } } };
 		Check(scene, new[] { pack });
 
 		var instance = new PackInstance();
 		scene = new Scene { instance };
 		instance.Pack = pack;
 		Check(scene, new[] { pack });
+
 		instance.Pack = null;
 		Check(scene);
 	}
 
 	[Test]
-	public void Simple1()
+	public void Simple2()
+	{
+		var pack = new EntityPack();
+		var scene = new Scene();
+		Entity current = scene;
+
+		for (int i = 0; i < 10; i++) current.Add(current = new PackInstance { Pack = pack });
+		Check(scene, new[] { pack });
+		Check(pack);
+	}
+
+	[Test]
+	public void Simple3()
 	{
 		var pack0 = new EntityPack();
 		var pack1 = new EntityPack();
@@ -48,14 +63,23 @@ public class EntityPackTests
 			new PackInstance { Pack = pack0 },
 			new PackInstance { Pack = pack1 }
 		};
-		Check(scene, new[] { pack0, pack1 });
 
-		scene = new Scene
+		Check(scene, new[] { pack0, pack1 });
+	}
+
+	[Test]
+	public void Complex0()
+	{
+		var pack0 = new EntityPack();
+		var pack1 = new EntityPack();
+
+		var scene = new Scene
 		{
 			new PackInstance { Pack = pack0 },
 			new() { new PackInstance { Pack = pack1 } },
 			new() { new Entity { new PackInstance { Pack = pack0 } } }
 		};
+
 		Check(scene, new[] { pack0, pack1 });
 
 		Check(pack0);
@@ -98,7 +122,7 @@ public class EntityPackTests
 	}
 
 	[Test]
-	public void Simple2()
+	public void Complex1()
 	{
 		var pack0 = new EntityPack();
 		var pack1 = new EntityPack { new PackInstance { Pack = pack0 } };
@@ -154,6 +178,62 @@ public class EntityPackTests
 	}
 
 	[Test]
+	public void Recursive0()
+	{
+		var pack = new EntityPack();
+		Check(pack);
+
+		CheckRecursive(() => pack.Add(new PackInstance { Pack = pack }));
+	}
+
+	[Test]
+	public void Recursive1()
+	{
+		var pack = new EntityPack();
+		var instance = new PackInstance();
+
+		pack.Add(instance);
+		CheckRecursive(() => instance.Pack = pack);
+	}
+
+	[Test]
+	public void Recursive2()
+	{
+		var pack0 = new EntityPack();
+		var pack1 = new EntityPack();
+		var pack2 = new EntityPack();
+		var pack3 = new EntityPack();
+
+		pack0.Add(new PackInstance { Pack = pack1 });
+		pack1.Add(new PackInstance { Pack = pack2 });
+		pack2.Add(new PackInstance { Pack = pack3 });
+
+		CheckRecursive(() => pack3.Add(new PackInstance { Pack = pack0 }));
+	}
+
+	[Test]
+	public void Recursive3()
+	{
+		var pack0 = new EntityPack();
+		var pack1 = new EntityPack();
+
+		var pack2 = new EntityPack
+		{
+			new() { new Entity { new PackInstance { Pack = pack0 } } }
+		};
+
+		var instance = new PackInstance();
+		pack0.Add(instance);
+		instance.Pack = pack1;
+
+		instance = new PackInstance();
+		var pack3 = new EntityPack { instance, new PackInstance { Pack = pack2 } };
+		instance.Pack = pack0;
+
+		CheckRecursive(() => pack1.Add(new PackInstance { Pack = pack3 }));
+	}
+
+	[Test]
 	public void Grid([Values(1, 2, 4)] int depth, [Values(0, 1, 2, 7, 300)] int width)
 	{
 		var scene = new Scene();
@@ -201,5 +281,18 @@ public class EntityPackTests
 
 		set.UnionWith(indirect);
 		Assert.That(pack.AllInstances, Is.EquivalentTo(set));
+	}
+
+	static void CheckRecursive(Action action)
+	{
+		try
+		{
+			action();
+		}
+		catch (SceneException exception)
+		{
+			if (exception.Message.Contains("recurs", StringComparison.InvariantCultureIgnoreCase)) return;
+			Assert.Fail();
+		}
 	}
 }
