@@ -8,7 +8,7 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Scenic.Lights;
 
 /// <summary>
-/// The source of color; creates radiance and illuminates the <see cref="Scene"/>.
+/// The source of color; creates radiance and illuminates a <see cref="Scene"/>.
 /// </summary>
 public interface IPreparedLight
 {
@@ -24,7 +24,7 @@ public interface IPreparedLight
 }
 
 /// <summary>
-/// An <see cref="IPreparedLight"/> that has area, which means that is it not a singularity.
+/// An <see cref="IPreparedLight"/> that has area, which means that is it not a singularity (ie. not from a single point).
 /// </summary>
 public interface IPreparedAreaLight : IPreparedLight
 {

@@ -26,13 +26,19 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	/// A fixed sized array that actually stores the data of the <see cref="EntityToken"/> in <see cref="Instances"/>.
 	/// </summary>
 #pragma warning disable CS0649
-	fixed byte data[EntityToken.Size * EntityPack.MaxLayer];
+	fixed byte data[EntityToken.Size * MaxLayer];
 #pragma warning restore CS0649
 
 	/// <summary>
 	/// A combined hash value of <see cref="Instances"/> for fast value comparison.
 	/// </summary>
 	uint instancesHash;
+
+	/// <summary>
+	/// The maximum number of instanced layers allowed (excluding the root).
+	/// Can be increased if needed at a performance and stack memory penalty.
+	/// </summary>
+	public const int MaxLayer = 5;
 
 	/// <summary>
 	/// The number of layers of <see cref="PreparedInstance"/> that needs to be traversed
@@ -100,7 +106,7 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	public void Push(EntityToken token)
 	{
 		Assert.AreEqual(token.Type, TokenType.Instance);
-		Assert.IsTrue(InstanceCount < EntityPack.MaxLayer);
+		Assert.IsTrue(InstanceCount < MaxLayer);
 
 		int layer = InstanceCount++;
 		this[layer] = token;

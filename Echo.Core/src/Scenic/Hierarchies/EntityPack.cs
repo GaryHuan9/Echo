@@ -12,12 +12,52 @@ namespace Echo.Core.Scenic.Hierarchies;
 /// </summary>
 public class EntityPack : Entity
 {
-	public EntityPack() => SetRoot(this);
-
-	readonly HashSet<EntityPack> allInstances = new();
 	readonly Dictionary<EntityPack, ulong> directInstances = new();
-	bool allInstancesDirty;
+	readonly HashSet<EntityPack> instanceParents = new();
+	readonly HashSet<EntityPack> allInstances = new();
+	bool instancesDirty;
 
+	public override Float3 Position
+	{
+		set
+		{
+			if (value.EqualsExact(Position)) return;
+			throw ModifyTransformException();
+		}
+	}
+
+	public override Float3 Rotation
+	{
+		set
+		{
+			if (value.EqualsExact(Rotation)) return;
+			throw ModifyTransformException();
+		}
+	}
+
+	public override float Scale
+	{
+		set
+		{
+			if (value.Equals(Scale)) return;
+			throw ModifyTransformException();
+		}
+	}
+
+	/// <summary>
+	/// The <see cref="EntityPack"/>s that are being directly instanced by this <see cref="EntityPack"/>.
+	/// </summary>
+	public IReadOnlyCollection<EntityPack> DirectInstances => directInstances.Keys;
+
+	/// <summary>
+	/// The <see cref="EntityPack"/>s that are directly instancing this <see cref="EntityPack"/>.
+	/// </summary>
+	public IReadOnlySet<EntityPack> InstanceParents => instanceParents;
+
+	/// <summary>
+	/// All of the <see cref="EntityPack"/>s instanced by this <see cref="EntityPack"/>, both
+	/// directly and indirectly (through other directly instanced <see cref="EntityPack"/>s).
+	/// </summary>
 	public IReadOnlySet<EntityPack> AllInstances
 	{
 		get
@@ -27,44 +67,8 @@ public class EntityPack : Entity
 		}
 	}
 
-	public IReadOnlyCollection<EntityPack> DirectInstances => directInstances.Keys;
-
-	public override Float3 Position
-	{
-		set
-		{
-			if (value.EqualsExact(Position)) return;
-			ThrowModifyTransformException();
-		}
-	}
-
-	public override Float3 Rotation
-	{
-		set
-		{
-			if (value.EqualsExact(Rotation)) return;
-			ThrowModifyTransformException();
-		}
-	}
-
-	public override float Scale
-	{
-		set
-		{
-			if (value.Equals(Scale)) return;
-			ThrowModifyTransformException();
-		}
-	}
-
-	/// <summary>
-	/// The maximum number of instanced layers allowed (excluding the root).
-	/// Can be increased if needed at a performance and stack memory penalty.
-	/// </summary>
-	public const int MaxLayer = 5;
-
-	protected sealed override bool CanAddParent(Entity parent) => false;
-
-	protected sealed override bool CanAddRoot(EntityPack root) => root == this;
+	protected sealed override void CheckParent(Entity parent) => throw new SceneException($"Cannot give an {nameof(EntityPack)} a {nameof(Parent)}.");
+	protected sealed override void CheckRoot(EntityPack root) => throw new SceneException($"Cannot give an {nameof(EntityPack)} a {nameof(Root)}.");
 
 	protected override void AddImpl(Entity child)
 	{
@@ -81,11 +85,13 @@ public class EntityPack : Entity
 	{
 		ref ulong count = ref CollectionsMarshal.GetValueRefOrAddDefault(directInstances, pack, out bool exists);
 		++count;
+		if (exists) return;
 
 		//If we just added a completely new directly instanced EntityPack, then we
 		//must dirty our all instances collection so it can be recalculated again
 
-		allInstancesDirty |= !exists;
+		DirtyInstances();
+		pack.instanceParents.Add(this);
 	}
 
 	internal void RemoveInstance(EntityPack pack)
@@ -99,15 +105,16 @@ public class EntityPack : Entity
 		//If we just completely removed a directly instanced EntityPack, then we
 		//must dirty our all instances collection so it can be recalculated again
 
-		allInstancesDirty = true;
+		DirtyInstances();
 		directInstances.Remove(pack);
+		pack.instanceParents.Remove(this);
 	}
 
 	void RecalculateInstances()
 	{
-		if (!allInstancesDirty) return;
+		if (!instancesDirty) return;
 
-		allInstancesDirty = false;
+		instancesDirty = false;
 		allInstances.Clear();
 
 		foreach (EntityPack pack in DirectInstances)
@@ -117,5 +124,13 @@ public class EntityPack : Entity
 		}
 	}
 
-	static void ThrowModifyTransformException() => throw new Exception($"Cannot modify {nameof(EntityPack)} transform!");
+	void DirtyInstances()
+	{
+		if (instancesDirty) return;
+		instancesDirty = true;
+
+		foreach (EntityPack parent in instanceParents) parent.DirtyInstances();
+	}
+
+	static SceneException ModifyTransformException() => new($"Cannot modify the transform of an {nameof(EntityPack)}.");
 }

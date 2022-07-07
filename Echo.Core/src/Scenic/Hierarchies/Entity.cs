@@ -12,6 +12,8 @@ namespace Echo.Core.Scenic.Hierarchies;
 /// </summary>
 public class Entity : IEnumerable<Entity>
 {
+	public Entity() => Root = this as EntityPack;
+
 	readonly List<Entity> children = new();
 	bool transformDirty;
 
@@ -68,7 +70,7 @@ public class Entity : IEnumerable<Entity>
 		get => _scale;
 		set
 		{
-			if (value <= 0f) throw new ArgumentOutOfRangeException(nameof(value));
+			if (value <= 0f) throw new SceneException($"The {nameof(Scale)} of an {nameof(Entity)} must be positive.");
 			if (_scale.AlmostEquals(value)) return;
 
 			_scale = value;
@@ -142,10 +144,10 @@ public class Entity : IEnumerable<Entity>
 	/// <remarks>Once successfully added, <paramref name="child"/> will inherit the transform of this <see cref="Entity"/>.</remarks>
 	public void Add(Entity child)
 	{
-		if (child.Parent == this) throw new ArgumentException("Cannot add a child to the same parent twice.", nameof(child));
-		if (child.Parent != null) throw new ArgumentException("Cannot move a child to a different parent.", nameof(child));
-		if (!child.CanAddParent(this)) throw new ArgumentException("Child does not accept this parent.", nameof(child));
+		if (child.Parent == this) throw new SceneException($"Cannot add a child to the same {nameof(Parent)} twice.");
+		if (child.Parent != null) throw new SceneException($"Cannot move a child to a different {nameof(Parent)}.");
 
+		child.CheckParent(this);
 		AddImpl(child);
 	}
 
@@ -169,18 +171,18 @@ public class Entity : IEnumerable<Entity>
 	}
 
 	/// <summary>
-	/// Checks whether an <see cref="Entity"/> can be added as this <see cref="Entity"/>'s <see cref="Parent"/>.
+	/// Checks whether an <see cref="Entity"/> can be set as this <see cref="Entity"/>'s <see cref="Parent"/>.
 	/// </summary>
 	/// <param name="parent">The <see cref="Entity"/> that is potentially going to be the <see cref="Parent"/>.</param>
-	/// <returns>Whether the input <see cref="Entity"/> can be our <see cref="Parent"/>.</returns>
-	protected virtual bool CanAddParent(Entity parent) => true;
+	/// <exception cref="SceneException">Thrown if the input <see cref="Entity"/> cannot be our <see cref="Parent"/>.</exception>
+	protected virtual void CheckParent(Entity parent) { }
 
 	/// <summary>
-	/// Checks whether an <see cref="EntityPack"/> can be added as this <see cref="Entity"/>'s <see cref="Root"/>.
+	/// Checks whether an <see cref="EntityPack"/> can be set as this <see cref="Entity"/>'s <see cref="Root"/>.
 	/// </summary>
 	/// <param name="root">The <see cref="EntityPack"/> that is potentially going to be the <see cref="Root"/>.</param>
-	/// <returns>Whether the input <see cref="EntityPack"/> can be our <see cref="Root"/>.</returns>
-	protected virtual bool CanAddRoot(EntityPack root) => true;
+	/// <exception cref="SceneException">Thrown if the input <see cref="Entity"/> cannot be our <see cref="Root"/>.</exception>
+	protected virtual void CheckRoot(EntityPack root) { }
 
 	/// <summary>
 	/// The actual implementation of <see cref="Add"/>.
@@ -198,13 +200,13 @@ public class Entity : IEnumerable<Entity>
 	/// Sets the <see cref="Root"/> of this <see cref="Entity"/>.
 	/// </summary>
 	/// <param name="root">The <see cref="EntityPack"/> to set as <see cref="Root"/>.</param>
-	protected void SetRoot(EntityPack root)
+	void SetRoot(EntityPack root)
 	{
 		if (Root == root) return;
 		if (root == null) throw new ArgumentNullException(nameof(root));
 		if (Root != null) throw new InvalidOperationException("Cannot change the root once it is set.");
-		if (!CanAddRoot(root)) throw new ArgumentException("Child does not accept this root.", nameof(root));
 
+		CheckRoot(root);
 		Root = root;
 
 		for (int i = 0; i < children.Count; i++) children[i].SetRoot(root);
