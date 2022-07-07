@@ -14,6 +14,10 @@ namespace Echo.Core.Scenic.Lights;
 /// <remarks>All <see cref="InfiniteLight"/> must have an area; delta <see cref="InfiniteLight"/> is not supported.</remarks>
 public abstract class InfiniteLight : LightEntity, IPreparedAreaLight
 {
+	/// <summary>
+	/// The total power of this <see cref="InfiniteLight"/>.
+	/// </summary>
+	/// <remarks>Should be initialized after <see cref="Prepare"/> is invoked.</remarks>
 	public abstract float Power { get; }
 
 	/// <summary>
@@ -34,5 +38,11 @@ public abstract class InfiniteLight : LightEntity, IPreparedAreaLight
 	/// <inheritdoc/>
 	public abstract float ProbabilityDensity(in GeometryPoint origin, in Float3 incident);
 
-	protected override bool CanAddRoot(EntityPack root) => root is Scene;
+	protected override void CheckRoot(EntityPack root)
+	{
+		base.CheckRoot(root);
+		if (root is Scene) return;
+
+		throw new SceneException($"Cannot add an {nameof(InfiniteLight)} to an {nameof(EntityPack)} that is not a {nameof(Scene)}.");
+	}
 }

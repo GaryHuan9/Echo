@@ -4,6 +4,7 @@ using CodeHelpers;
 using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Hierarchies;
 
@@ -74,7 +75,7 @@ public sealed partial record ScenePreparer
 	public PreparedScene Prepare()
 	{
 		Node root = CreateOrGetNode(scene);
-		CreateChildren(root, EntityPack.MaxLayer);
+		CreateChildren(root, TokenHierarchy.MaxLayer);
 
 		var visited = new HashSet<Node>();
 

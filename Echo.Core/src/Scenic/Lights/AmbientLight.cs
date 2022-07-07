@@ -12,12 +12,15 @@ using Echo.Core.Textures.Directional;
 namespace Echo.Core.Scenic.Lights;
 
 /// <summary>
-/// An infinitely large directional light that surrounds the entire scene.
+/// A directional <see cref="InfiniteLight"/> that surrounds the entirety of a <see cref="Scale"/>.
 /// </summary>
 public class AmbientLight : InfiniteLight
 {
 	NotNull<object> _texture = Textures.Texture.black; //Interfaces and implicit casts are not so nice to each other so object is used here
 
+	/// <summary>
+	/// The <see cref="IDirectionalTexture"/> applied to this <see cref="AmbientLight"/>.
+	/// </summary>
 	public IDirectionalTexture Texture
 	{
 		get => (IDirectionalTexture)_texture.Value;

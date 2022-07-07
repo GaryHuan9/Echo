@@ -2,7 +2,6 @@
 using System.Linq;
 using Echo.Core.Scenic.Hierarchies;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace Echo.UnitTests;
 
@@ -13,25 +12,27 @@ public class EntityPackTests
 	public void Simple0()
 	{
 		var scene = new Scene();
-		CheckInstances(scene, Is.Empty);
+		Check(scene);
 
 		var pack = new EntityPack();
-		CheckInstances(pack, Is.Empty);
-
-		Assert.That(pack.DirectInstances, Is.Empty);
-		Assert.That(pack.AllInstances, Is.Empty);
+		Check(scene);
 
 		scene.Add(new PackInstance { Pack = pack });
-		Check();
+		Check(scene, new[] { pack });
 
-		scene.Add(new Entity { new PackInstance { Pack = pack } });
-		Check();
+		scene = new Scene { new() { new PackInstance { Pack = pack } } };
+		Check(scene, new[] { pack });
 
-		Entity current = scene;
+		Entity current = new Scene();
 		for (int i = 0; i < 10; i++) current.Add(current = new PackInstance { Pack = pack });
-		Check();
+		Check(scene, new[] { pack });
 
-		void Check() => CheckInstances(scene, Has.Count.EqualTo(1).And.All.EqualTo(pack));
+		var instance = new PackInstance();
+		scene = new Scene { instance };
+		instance.Pack = pack;
+		Check(scene, new[] { pack });
+		instance.Pack = null;
+		Check(scene);
 	}
 
 	[Test]
@@ -47,7 +48,7 @@ public class EntityPackTests
 			new PackInstance { Pack = pack0 },
 			new PackInstance { Pack = pack1 }
 		};
-		Check();
+		Check(scene, new[] { pack0, pack1 });
 
 		scene = new Scene
 		{
@@ -55,26 +56,101 @@ public class EntityPackTests
 			new() { new PackInstance { Pack = pack1 } },
 			new() { new Entity { new PackInstance { Pack = pack0 } } }
 		};
-		Check();
+		Check(scene, new[] { pack0, pack1 });
 
-		CheckInstances(pack0, Is.Empty);
-		CheckInstances(pack1, Is.Empty);
+		Check(pack0);
+		Check(pack1);
 
-		pack1.Add(new PackInstance { Pack = pack0 });
+		var instance = new PackInstance();
+		pack0.Add(instance);
+		instance.Pack = pack1;
 
-		scene = new Scene { new PackInstance { Pack = pack1 } };
-		Assert.That(scene.DirectInstances.Single(), Is.EqualTo(pack1));
-		Assert.That(scene.AllInstances, Has.Count.EqualTo(2));
-		Assert.That(scene.AllInstances, Has.Member(pack0).And.Member(pack1));
+		Check(scene, new[] { pack0, pack1 });
+		Check(pack0, new[] { pack1 });
 
-		scene.Add(new Entity { new PackInstance { Pack = pack0 } });
+		var pack2 = new EntityPack();
+		pack0.Add(new PackInstance { Pack = pack2 });
+
+		Check(scene, new[] { pack0, pack1 }, new[] { pack2 });
+		Check(pack0, new[] { pack1, pack2 });
+		Check(pack2);
+
+		pack2.Add(new PackInstance { Pack = pack1 });
+		Check(scene, new[] { pack0, pack1 }, new[] { pack2 });
+		Check(pack0, new[] { pack1, pack2 });
+		Check(pack2, new[] { pack1 });
+
+		instance.Pack = null;
+
+		Check(scene, new[] { pack0, pack1 }, new[] { pack2 });
+		Check(pack0, new[] { pack2 }, new[] { pack1 });
+		Check(pack2, new[] { pack1 });
+		Check(pack1);
+
+		scene = new Scene { new PackInstance { Pack = pack2 } };
+		Check(scene, new[] { pack2 }, new[] { pack1 });
+
 		scene.Add(new Entity { new PackInstance { Pack = pack1 } });
-		Check();
+		scene.Add(new Entity { new PackInstance { Pack = pack2 } });
+		Check(scene, new[] { pack1, pack2 });
+		Check(pack2, new[] { pack1 });
+		Check(pack1);
+	}
 
-		CheckInstances(pack0, Is.Empty);
-		CheckInstances(pack1, Has.Count.EqualTo(1).And.All.EqualTo(pack0));
+	[Test]
+	public void Simple2()
+	{
+		var pack0 = new EntityPack();
+		var pack1 = new EntityPack { new PackInstance { Pack = pack0 } };
+		var pack2 = new EntityPack { new PackInstance { Pack = pack1 } };
 
-		void Check() => CheckInstances(scene, Has.Count.EqualTo(2).And.Contains(pack0).And.Contains(pack1));
+		var pack3 = new EntityPack
+		{
+			new PackInstance { Pack = pack0 },
+			new PackInstance { Pack = pack1 }
+		};
+
+		var instance1 = new PackInstance { Pack = pack1 };
+		var instance2 = new PackInstance { Pack = pack2 };
+		var instance3 = new PackInstance { Pack = pack3 };
+
+		var scene = new Scene
+		{
+			instance1,
+			instance2,
+			instance3
+		};
+
+		Check(pack0);
+		Check(pack1, new[] { pack0 });
+		Check(pack2, new[] { pack1 }, new[] { pack0 });
+		Check(pack3, new[] { pack0, pack1 });
+		Check(scene, new[] { pack1, pack2, pack3 }, new[] { pack0 });
+
+		var pack4 = new EntityPack();
+		pack0.Add(new PackInstance { Pack = pack4 });
+
+		Check(pack0, new[] { pack4 });
+		Check(pack1, new[] { pack0 }, new[] { pack4 });
+		Check(pack2, new[] { pack1 }, new[] { pack0, pack4 });
+		Check(pack3, new[] { pack0, pack1 }, new[] { pack4 });
+		Check(scene, new[] { pack1, pack2, pack3 }, new[] { pack0, pack4 });
+
+		instance1.Pack = null;
+		instance2.Pack = null;
+
+		Check(scene, new[] { pack3 }, new[] { pack0, pack1, pack4 });
+
+		instance2.Pack = pack2;
+		instance3.Pack = pack2;
+
+		Check(scene, new[] { pack2 }, new[] { pack0, pack1, pack4 });
+
+		instance2.Pack = null;
+		scene.Add(new PackInstance { Pack = pack0 });
+		instance3.Pack = pack0;
+
+		Check(scene, new[] { pack0 }, new[] { pack4 });
 	}
 
 	[Test]
@@ -96,15 +172,34 @@ public class EntityPackTests
 
 		if (width > 0)
 		{
-			Assert.That(scene.DirectInstances.Single(), Is.EqualTo(packs[0]));
-			Assert.That(scene.AllInstances, Is.EquivalentTo(packs));
+			EntityPack pack = scene;
+
+			for (int i = 0; i < depth; i++)
+			{
+				Check(pack, new[] { packs[i] }, packs.Skip(i));
+				pack = pack.DirectInstances.Single();
+			}
+
+			Check(pack);
 		}
-		else CheckInstances(scene, Is.Empty);
+		else
+		{
+			Check(scene);
+
+			foreach (EntityPack pack in packs) Check(pack);
+		}
 	}
 
-	static void CheckInstances(EntityPack pack, IResolveConstraint constraint)
+	static void Check(EntityPack pack, IEnumerable<EntityPack> direct = null, IEnumerable<EntityPack> indirect = null)
 	{
-		Assert.That(pack.DirectInstances, constraint);
-		Assert.That(pack.AllInstances, constraint);
+		direct ??= Enumerable.Empty<EntityPack>();
+		indirect ??= Enumerable.Empty<EntityPack>();
+
+		var set = new HashSet<EntityPack>(direct);
+
+		Assert.That(pack.DirectInstances, Is.EquivalentTo(set));
+
+		set.UnionWith(indirect);
+		Assert.That(pack.AllInstances, Is.EquivalentTo(set));
 	}
 }
