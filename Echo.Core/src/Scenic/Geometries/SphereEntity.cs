@@ -9,22 +9,32 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
 
+/// <summary>
+/// A geometric uniform sphere.
+/// </summary>
 public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 {
 	float _radius = 1f;
 
+	/// <summary>
+	/// The radius of this <see cref="SphereEntity"/>.
+	/// </summary>
+	/// <exception cref="SceneException">Thrown if the provided value is negative.</exception>
 	public float Radius
 	{
 		get => _radius;
-		set => _radius = value < 0f ? throw new ArgumentOutOfRangeException(nameof(value)) : value;
+		set => _radius = value < 0f ? throw new SceneException($"The {nameof(Radius)} of a {nameof(SphereEntity)} must be non-negative.") : value;
 	}
 
+	/// <inheritdoc/>
 	uint IGeometrySource<PreparedSphere>.Count => 1;
 
+	/// <inheritdoc/>
 	public IEnumerable<PreparedSphere> Extract(SwatchExtractor extractor)
 	{
 		MaterialIndex material = extractor.Register(Material);
@@ -33,6 +43,9 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 	}
 }
 
+/// <summary>
+/// The prepared version of a <see cref="SphereEntity"/>.
+/// </summary>
 public readonly struct PreparedSphere : IPreparedGeometry
 {
 	public PreparedSphere(in Float3 position, float radius, MaterialIndex material)
@@ -44,21 +57,19 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		Material = material;
 	}
 
-	public readonly Float3 position;
-	public readonly float radius;
+	readonly Float3 position;
+	readonly float radius;
 
+	/// <inheritdoc/>
 	public MaterialIndex Material { get; }
 
-	/// <summary>
-	/// The smallest <see cref="Aggregation.Bounds.BoxBound"/> that encloses this <see cref="PreparedSphere"/>.
-	/// </summary>
+	/// <inheritdoc/>
 	public BoxBound BoxBound => new(position - (Float3)radius, position + (Float3)radius);
 
+	/// <inheritdoc/>
 	public ConeBound ConeBound => ConeBound.CreateFullSphere();
 
-	/// <summary>
-	/// The area of this <see cref="PreparedSphere"/>.
-	/// </summary>
+	/// <inheritdoc/>
 	public float Area => 4f * Scalars.Pi * radius * radius;
 
 	/// <summary>

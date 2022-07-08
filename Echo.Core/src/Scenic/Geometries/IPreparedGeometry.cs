@@ -15,6 +15,11 @@ namespace Echo.Core.Scenic.Geometries;
 public interface IPreparedGeometry
 {
 	/// <summary>
+	/// The <see cref="MaterialIndex"/> of this <see cref="IPreparedGeometry"/> that defines its appearance.
+	/// </summary>
+	MaterialIndex Material { get; }
+
+	/// <summary>
 	/// A <see cref="BoxBound"/> that bounds the entirety of surface and position of this <see cref="IPreparedGeometry"/>.
 	/// </summary>
 	BoxBound BoxBound { get; }
@@ -23,11 +28,6 @@ public interface IPreparedGeometry
 	/// A <see cref="ConeBound"/> that bounds all of the positive normal directions of this <see cref="IPreparedGeometry"/>.
 	/// </summary>
 	ConeBound ConeBound { get; }
-
-	/// <summary>
-	/// The <see cref="MaterialIndex"/> of this <see cref="IPreparedGeometry"/>.
-	/// </summary>
-	MaterialIndex Material { get; }
 
 	/// <summary>
 	/// The total area of this <see cref="IPreparedGeometry"/>.

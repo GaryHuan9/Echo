@@ -21,7 +21,7 @@ public class PreparedPack
 		geometries = new GeometryCollection(swatchExtractor, geometrySources, instances);
 		lights = new LightCollection(lightSources, geometries);
 		accelerator = acceleratorCreator.Create(geometries);
-		lightPicker = LightPicker.Create(lights);
+		lightPicker = new LightTree(lights.CreateBounds());
 	}
 
 	public readonly Accelerator accelerator;

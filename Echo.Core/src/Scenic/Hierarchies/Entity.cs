@@ -64,13 +64,13 @@ public class Entity : IEnumerable<Entity>
 	/// <summary>
 	/// The scale of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
 	/// </summary>
-	/// <remarks>This must be a positive value.</remarks>
+	/// <exception cref="SceneException">Thrown if the provided value is negative.</exception>
 	public virtual float Scale
 	{
 		get => _scale;
 		set
 		{
-			if (value <= 0f) throw new SceneException($"The {nameof(Scale)} of an {nameof(Entity)} must be positive.");
+			if (value <= 0f) throw new SceneException($"The {nameof(Scale)} of an {nameof(Entity)} must be non-negative.");
 			if (_scale.AlmostEquals(value)) return;
 
 			_scale = value;

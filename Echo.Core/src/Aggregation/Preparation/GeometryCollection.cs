@@ -12,6 +12,9 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;
 
+/// <summary>
+/// A collection that contains all of the geometric objects in a <see cref="PreparedScene"/>.
+/// </summary>
 public sealed class GeometryCollection
 {
 	public GeometryCollection(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources, ImmutableArray<PreparedInstance> instances)
