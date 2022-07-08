@@ -23,7 +23,6 @@ public readonly struct Tint
 	{
 		//OPTIMIZE
 		return (RGBA128)(color * scale + offset);
-		// return PackedMath.FMA(color, scale, offset);
 	}
 
 	public static Tint Scale(in RGBA128 value) => new(value, RGBA128.Zero);

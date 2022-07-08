@@ -2,10 +2,11 @@
 using System.Diagnostics;
 using System.Linq;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Compute;
-using Echo.Core.Evaluation.Distributions.Continuous;
 using Echo.Core.Evaluation.Evaluators;
-using Echo.Core.Evaluation.Operations;
+using Echo.Core.Evaluation.Operation;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Examples;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
@@ -262,11 +263,13 @@ public class SystemUI : AreaUI
 	{
 		var scene = new SingleBunny();
 
-		var prepareProfile = new ScenePrepareProfile();
+		var scenePreparer = new ScenePreparer(scene);
+
+		PreparedScene preparedScene = scenePreparer.Prepare();
 
 		var evaluationProfile = new EvaluationProfile
 		{
-			Scene = new PreparedScene(scene, prepareProfile),
+			Scene = preparedScene,
 			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),

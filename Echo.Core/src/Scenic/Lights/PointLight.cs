@@ -1,44 +1,69 @@
+using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Scenic.Preparation;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Lights;
 
-public class PointLight : LightSource
+/// <summary>
+/// A singularity <see cref="LightEntity"/> that emits from only one point.
+/// </summary>
+public class PointLight : LightEntity, ILightSource<PreparedPointLight>
 {
-	float _power;
+	public PreparedPointLight Extract() => new(Intensity, ContainedPosition);
+}
 
-	public override float Power => _power;
-
-	public override void Prepare(PreparedScene scene)
+/// <summary>
+/// The prepared version of a <see cref="PointLight"/>.
+/// </summary>
+public readonly struct PreparedPointLight : IPreparedLight
+{
+	public PreparedPointLight(in RGB128 intensity, in Float3 position)
 	{
-		base.Prepare(scene);
-
-		_power = 4f * Scalars.Pi * Intensity.Luminance;
+		this.intensity = intensity;
+		this.position = position;
+		Power = 4f * Scalars.Pi * intensity.Luminance;
 	}
 
-	public override Probable<RGB128> Sample(in GeometryPoint point, Sample2D sample, out Float3 incident, out float travel)
+	readonly RGB128 intensity;
+	readonly Float3 position;
+
+	/// <inheritdoc/>
+	public float Power { get; }
+
+	/// <inheritdoc/>
+	public BoxBound BoxBound => new(position, position);
+
+	/// <inheritdoc/>
+	public ConeBound ConeBound => ConeBound.CreateFullSphere();
+
+	/// <inheritdoc/>
+	[SkipLocalsInit]
+	public Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
-		Float3 delta = Position - point;
-		float travel2 = delta.SquaredMagnitude;
+		Float3 offset = position - origin;
+		float travel2 = offset.SquaredMagnitude;
 
 		if (!FastMath.Positive(travel2))
 		{
-			incident = Float3.Zero;
-			travel = 0f;
+			Unsafe.SkipInit(out incident);
+			Unsafe.SkipInit(out travel);
 			return Probable<RGB128>.Impossible;
 		}
 
 		travel = FastMath.Sqrt0(travel2);
 
 		float travelR = 1f / travel;
-		incident = delta * travelR;
+		incident = offset * travelR;
 
-		return (Intensity * travelR * travelR, 1f);
+		return new Probable<RGB128>(intensity * travelR * travelR, 1f);
 	}
+
+	/// <inheritdoc/>
+	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 1f;
 }

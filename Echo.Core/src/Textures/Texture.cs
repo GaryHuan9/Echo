@@ -18,11 +18,6 @@ public abstract class Texture
 	/// </summary>
 	public virtual Int2 DiscreteResolution => (Int2)512;
 
-	public static readonly Pure white = new(RGBA128.White);
-	public static readonly Pure black = new(RGBA128.Black);
-	public static readonly Pure clear = new(RGBA128.Zero);
-	public static readonly Pure normal = new(new RGBA128(0.5f, 0.5f, 1f));
-
 	/// <summary>
 	/// Accesses the content of this <see cref="Texture"/> at <paramref name="texcoord"/>.
 	/// </summary>

@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grid;
+using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Textures.Evaluation;
 

@@ -47,10 +47,10 @@ public class Cullable : Material, IEmissive
 		emissive = Base is IEmissive casted && FastMath.Positive(casted.Power) ? casted : null;
 	}
 
-	public override void Scatter(ref Touch touch, Allocator allocator)
+	public override void Scatter(ref Contact contact, Allocator allocator)
 	{
-		if (!Cull(touch)) Base.Scatter(ref touch, allocator);
-		else Invisible.instance.Scatter(ref touch, allocator);
+		if (!Cull(contact)) Base.Scatter(ref contact, allocator);
+		else Invisible.instance.Scatter(ref contact, allocator);
 	}
 
 	/// <inheritdoc/>
@@ -60,7 +60,7 @@ public class Cullable : Material, IEmissive
 		return none ? RGB128.Black : emissive.Emit(point, outgoing);
 	}
 
-	bool Cull(in Touch touch) => Cull(touch.point.normal, touch.outgoing);
+	bool Cull(in Contact contact) => Cull(contact.point.normal, contact.outgoing);
 
 	bool Cull(in Float3 normal, in Float3 outgoing) => FastMath.Positive(outgoing.Dot(normal)) != Backface;
 }

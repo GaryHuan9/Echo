@@ -1,12 +1,13 @@
-﻿using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Common.Memory;
+﻿using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Textures.Colors;
-using Echo.Core.Scenic.Preparation;
-using Echo.Core.Evaluation.Distributions.Continuous;
-using CodeHelpers.Packed;
-using Echo.Core.Textures.Evaluation;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.Evaluation.Operation;
+using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Textures.Colors;
+using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
@@ -18,7 +19,7 @@ public record BruteForcedEvaluator : Evaluator
 	/// </summary>
 	public int BounceLimit { get; init; } = 128;
 
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
 	{
 		int depth = BounceLimit;
 		var query = new TraceQuery(ray);
@@ -36,27 +37,27 @@ public record BruteForcedEvaluator : Evaluator
 
 		while (scene.Trace(ref query))
 		{
-			Touch touch = scene.Interact(query);
-			Material material = touch.shade.material;
-			material.Scatter(ref touch, allocator);
+			Contact contact = scene.Interact(query);
+			Material material = contact.shade.material;
+			material.Scatter(ref contact, allocator);
 
-			if (touch.bsdf != null)
+			if (contact.bsdf != null)
 			{
 				var emission = RGB128.Black;
 
-				if (material is IEmissive emissive) emission += emissive.Emit(touch.point, touch.outgoing);
+				if (material is IEmissive emissive) emission += emissive.Emit(contact.point, contact.outgoing);
 
 				var scatterSample = distribution.Next2D();
-				Probable<RGB128> sample = touch.bsdf.Sample
+				Probable<RGB128> sample = contact.bsdf.Sample
 				(
-					touch.outgoing, scatterSample,
+					contact.outgoing, scatterSample,
 					out Float3 incident, out _
 				);
 
 				if (sample.NotPossible | sample.content.IsZero) return emission;
 
 				RGB128 scatter = sample.content / sample.pdf;
-				scatter *= touch.NormalDot(incident);
+				scatter *= contact.NormalDot(incident);
 				query = query.SpawnTrace(incident);
 
 				return scatter * Evaluate(scene, ref query, distribution, allocator, ref depth) + emission;
@@ -65,7 +66,7 @@ public record BruteForcedEvaluator : Evaluator
 			query = query.SpawnTrace();
 		}
 
-		return scene.lights.EvaluateAmbient(query.ray.direction);
+		return scene.EvaluateInfinite(query.ray.direction);
 	}
 
 }

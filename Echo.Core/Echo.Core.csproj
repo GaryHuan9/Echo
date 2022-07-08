@@ -37,7 +37,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="src\Evaluation\Engines\**" />
         <Compile Remove="src\Evaluation\MaterialsOld\**" />
         <Compile Remove="src\Scenic\ExamplesOld\**" />
         <Compile Remove="src\PostProcess\**" />

@@ -1,59 +1,76 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
+using CodeHelpers.Diagnostics;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
 
-public class SphereEntity : GeometryEntity
+/// <summary>
+/// A geometric uniform sphere.
+/// </summary>
+public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 {
-	public float Radius { get; set; } = 1f;
+	float _radius = 1f;
 
-	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor) => Enumerable.Empty<PreparedTriangle>();
-
-	public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor)
+	/// <summary>
+	/// The radius of this <see cref="SphereEntity"/>.
+	/// </summary>
+	/// <exception cref="SceneException">Thrown if the provided value is negative.</exception>
+	public float Radius
 	{
-		if (Radius <= 0f || FastMath.AlmostZero(Radius)) yield break;
-		yield return new PreparedSphere(this, extractor.Register(Material));
+		get => _radius;
+		set => _radius = value < 0f ? throw new SceneException($"The {nameof(Radius)} of a {nameof(SphereEntity)} must be non-negative.") : value;
+	}
+
+	/// <inheritdoc/>
+	uint IGeometrySource<PreparedSphere>.Count => 1;
+
+	/// <inheritdoc/>
+	public IEnumerable<PreparedSphere> Extract(SwatchExtractor extractor)
+	{
+		MaterialIndex material = extractor.Register(Material);
+		Float3 position = InverseTransform.MultiplyPoint(Float3.Zero);
+		yield return new PreparedSphere(position, Radius, material);
 	}
 }
 
-public readonly struct PreparedSphere
+/// <summary>
+/// The prepared version of a <see cref="SphereEntity"/>.
+/// </summary>
+public readonly struct PreparedSphere : IPreparedGeometry
 {
-	public PreparedSphere(SphereEntity sphere, MaterialIndex material) : this
-	(
-		sphere.LocalToWorld.MultiplyPoint(Float3.Zero),
-		sphere.Scale.MaxComponent * sphere.Radius,
-		material
-	) { }
-
 	public PreparedSphere(in Float3 position, float radius, MaterialIndex material)
 	{
+		Assert.IsTrue(radius > 0f);
+
 		this.position = position;
 		this.radius = radius;
-		this.material = material;
+		Material = material;
 	}
 
-	public readonly Float3 position;
-	public readonly float radius;
-	public readonly MaterialIndex material;
+	readonly Float3 position;
+	readonly float radius;
 
-	/// <summary>
-	/// The smallest <see cref="AxisAlignedBoundingBox"/> that encloses this <see cref="PreparedSphere"/>.
-	/// </summary>
-	public AxisAlignedBoundingBox AABB => new(position - (Float3)radius, position + (Float3)radius);
+	/// <inheritdoc/>
+	public MaterialIndex Material { get; }
 
-	/// <summary>
-	/// The area of this <see cref="PreparedSphere"/>.
-	/// </summary>
-	public float Area => 2f * Scalars.Tau * radius * radius;
+	/// <inheritdoc/>
+	public BoxBound BoxBound => new(position - (Float3)radius, position + (Float3)radius);
+
+	/// <inheritdoc/>
+	public ConeBound ConeBound => ConeBound.CreateFullSphere();
+
+	/// <inheritdoc/>
+	public float Area => 4f * Scalars.Pi * radius * radius;
 
 	/// <summary>
 	/// Because spheres have two intersection points, if an intersection distance is going to be under this value,
@@ -130,12 +147,7 @@ public readonly struct PreparedSphere
 		return distance >= threshold && distance < travel;
 	}
 
-	/// <summary>
-	/// Samples this <see cref="PreparedSphere"/>.
-	/// </summary>
-	/// <param name="origin">The geometry-space point of whose perspective the result should be sampled through.</param>
-	/// <param name="sample">The <see cref="Sample2D"/> used to sample the result.</param>
-	/// <returns>The <see cref="Probable{T}"/> point that was sampled.</returns>
+	/// <inheritdoc/>
 	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
 	{
 		//Check whether origin is inside sphere
@@ -176,12 +188,7 @@ public readonly struct PreparedSphere
 		return (GetPoint(transform.LocalToWorld(normal)), pdf);
 	}
 
-	/// <summary>
-	/// Calculates the pdf of selecting <see cref="incident"/> with <see cref="Sample"/>.
-	/// </summary>
-	/// <param name="origin">The geometry-space point of whose perspective the pdf should be calculated through.</param>
-	/// <param name="incident">The selected geometry-space unit direction that points from <paramref name="origin"/>.</param>
-	/// <returns>The probability density function (pdf) value over solid angles.</returns>
+	/// <inheritdoc/>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 	{
 		//Check whether point is inside this sphere
@@ -229,8 +236,8 @@ public readonly struct PreparedSphere
 
 		return new Float2
 		(
-			FastMath.FMA(MathF.Atan2(sinT, cosT), 1f / Scalars.Tau, 0.5f),
-			FastMath.FMA(MathF.Asin(FastMath.Clamp11(sinP)), 1f / Scalars.Pi, 0.5f)
+			FastMath.FMA(MathF.Atan2(sinT, cosT), Scalars.TauR, 0.5f),
+			FastMath.FMA(MathF.Asin(FastMath.Clamp11(sinP)), Scalars.PiR, 0.5f)
 		);
 	}
 
@@ -254,5 +261,5 @@ public readonly struct PreparedSphere
 		cosT = FastMath.Identity(sinT) * sign;
 	}
 
-	static float ProbabilityDensityCone(float cosMaxT) => 1f / Scalars.Tau / (1f - cosMaxT);
+	static float ProbabilityDensityCone(float cosMaxT) => Scalars.TauR / (1f - cosMaxT);
 }

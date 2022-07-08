@@ -3,26 +3,25 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Mathematics;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Scenic.Geometries;
-using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Primitives;
 
 /// <summary>
-/// Query for the traverse of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PreparedScene"/>
-/// exists, and if it does, the exact distance of that intersections and other specific information about it.
+/// Query for the traversal of a <see cref="Ray"/> to find out whether an intersection with a <see cref="PreparedScene"/> exists.
+/// If an intersection exists, the exact distance of that intersections and other specific information about it are also recorded.
 /// </summary>
 public struct TraceQuery
 {
-	public TraceQuery(in Ray ray, float distance = float.PositiveInfinity, in GeometryToken ignore = default)
+	public TraceQuery(in Ray ray, float distance = float.PositiveInfinity, in TokenHierarchy ignore = default)
 	{
 		this.ray = ray;
 		this.ignore = ignore;
 		this.distance = distance;
 
-		current = default;
+		current = new TokenHierarchy();
 		Unsafe.SkipInit(out token);
 		Unsafe.SkipInit(out uv);
 
@@ -38,24 +37,24 @@ public struct TraceQuery
 	public Ray ray;
 
 	/// <summary>
-	/// The <see cref="GeometryToken"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore.
-	/// This should mainly be assigned to the <see cref="GeometryToken"/> of the previous <see cref="TraceQuery"/> to
+	/// The <see cref="TokenHierarchy"/> that represents a geometry that this <see cref="TraceQuery"/> should ignore.
+	/// This should mainly be assigned to the <see cref="TokenHierarchy"/> of the previous <see cref="TraceQuery"/> to
 	/// avoid self intersections. Note that if the geometry is a <see cref="PreparedSphere"/>, then it will only be
 	/// ignored if its farthest distance is shorter than <see cref="PreparedSphere.DistanceThreshold"/>.
 	/// </summary>
-	public readonly GeometryToken ignore;
+	public readonly TokenHierarchy ignore;
 
 	/// <summary>
 	/// Used during intersection test; undefined after the test is concluded (do not use upon completion).
 	/// Records the intermediate instancing layers as the query travels through the scene and geometries.
 	/// </summary>
-	public GeometryToken current;
+	public TokenHierarchy current;
 
 	/// <summary>
-	/// After tracing completes, this field will be assigned the <see cref="GeometryToken"/>
+	/// After tracing completes, this field will be assigned the <see cref="TokenHierarchy"/>
 	/// of the intersected surface. NOTE: if no intersection occurs, this field is undefined.
 	/// </summary>
-	public GeometryToken token;
+	public TokenHierarchy token;
 
 	/// <summary>
 	/// After tracing completes, this field will be assigned the distance of the intersection to the <see cref="ray"/> origin.

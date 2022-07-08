@@ -41,8 +41,8 @@ public static class FastMath
 
 	/// <summary>
 	/// Returns <paramref name="value"/> if it is larger than zero, or zero otherwise.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float Max0(float value)
 	{
@@ -51,9 +51,33 @@ public static class FastMath
 	}
 
 	/// <summary>
-	/// Returns <paramref name="value"/> as if it is numerically clamped between zero and one.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
+	/// Returns <paramref name="value0"/> if it is smaller than <paramref name="value1"/>, otherwise <paramref name="value1"/> is returned.
 	/// </summary>
+	/// <remarks>If <paramref name="value0"/> or <paramref name="value1"/> is <see cref="float.NaN"/>, <paramref name="value1"/> is returned</remarks>
+	[MethodImpl(Options)]
+	public static float Min(float value0, float value1)
+	{
+		Vector128<float> value0V = Vector128.CreateScalarUnsafe(value0);
+		Vector128<float> value1V = Vector128.CreateScalarUnsafe(value1);
+		return Sse.MinScalar(value0V, value1V).ToScalar();
+	}
+
+	/// <summary>
+	/// Returns <paramref name="value0"/> if it is larger than <paramref name="value1"/>, otherwise <paramref name="value1"/> is returned.
+	/// </summary>
+	/// <remarks>If <paramref name="value0"/> or <paramref name="value1"/> is <see cref="float.NaN"/>, <paramref name="value1"/> is returned</remarks>
+	[MethodImpl(Options)]
+	public static float Max(float value0, float value1)
+	{
+		Vector128<float> value0V = Vector128.CreateScalarUnsafe(value0);
+		Vector128<float> value1V = Vector128.CreateScalarUnsafe(value1);
+		return Sse.MaxScalar(value0V, value1V).ToScalar();
+	}
+
+	/// <summary>
+	/// Returns <paramref name="value"/> as if it is numerically clamped between zero and one.
+	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float Clamp01(float value)
 	{
@@ -65,8 +89,8 @@ public static class FastMath
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is numerically clamped between negative one and one.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float Clamp11(float value)
 	{
@@ -79,8 +103,8 @@ public static class FastMath
 
 	/// <summary>
 	/// Returns <paramref name="value"/> as if it is clamped between zero (inclusive) and one (exclusive).
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float ClampEpsilon(float value)
 	{
@@ -92,8 +116,8 @@ public static class FastMath
 
 	/// <summary>
 	/// Returns the absolute value of <paramref name="value"/>.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float Abs(float value)
 	{
@@ -104,23 +128,23 @@ public static class FastMath
 
 	/// <summary>
 	/// Returns the square root of <paramref name="value"/> if is larger than zero, or zero otherwise.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float Sqrt0(float value) => value <= 0f ? 0f : MathF.Sqrt(value);
 
 	/// <summary>
 	/// Returns the inverse/reciprocal square root of <paramref name="value"/> if it is
 	/// larger than zero. Otherwise, <see cref="float.PositiveInfinity"/> is returned.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float SqrtR0(float value) => value <= 0f ? float.PositiveInfinity : 1f / MathF.Sqrt(value);
 
 	/// <summary>
 	/// Returns one minus <paramref name="value"/> squared using just one FMA instruction.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float OneMinus2(float value)
 	{
@@ -134,8 +158,8 @@ public static class FastMath
 	/// Returns either sine or cosine using the Pythagoras identity sin^2 + cos^2 = 1.
 	/// If <paramref name="value"/> is out of range (-1 to 1), then zero is returned.
 	/// The value returned is always nonnegative, unlike regular trigonometric functions.
-	/// NOTE: if <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.
 	/// </summary>
+	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float Identity(float value) => Sqrt0(OneMinus2(value));
 

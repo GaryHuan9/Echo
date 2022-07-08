@@ -21,10 +21,8 @@ public readonly struct ReadOnlyView<T>
 		Length = count;
 	}
 
-	/// <summary>
-	///	Returns an empty <see cref="ReadOnlyView{T}"/> object.
-	/// </summary>
-	public static ReadOnlyView<T> Empty => default;
+	readonly T[] array;
+	readonly int start;
 
 	/// <summary>
 	/// Returns a readonly reference to the specified element of the View.
@@ -41,8 +39,10 @@ public readonly struct ReadOnlyView<T>
 	/// </summary>
 	public int Length { get; }
 
-	readonly T[] array;
-	readonly int start;
+	/// <summary>
+	///	Returns an empty <see cref="ReadOnlyView{T}"/> object.
+	/// </summary>
+	public static ReadOnlyView<T> Empty => default;
 
 	/// <summary>
 	/// Returns an enumerator for this View.
