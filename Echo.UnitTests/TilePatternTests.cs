@@ -12,7 +12,12 @@ public class TilePatternTests
 
 	readonly ITilePattern pattern;
 
-	static IEnumerable<ITilePattern> patternSource = new ITilePattern[] { new OrderedPattern(), new ScrambledPattern(), new SpiralPattern(), new CheckerboardPattern(), new HilbertCurvePattern() };
+	static IEnumerable<ITilePattern> patternSource = new ITilePattern[]
+	{
+		new OrderedPattern(), new OrderedPattern(false), new ScrambledPattern(),
+		new SpiralPattern(), new CheckerboardPattern(), new HilbertCurvePattern()
+	};
+
 	static IEnumerable<Int2> sizeSource = new Int2[] { new(10, 20), new(31, 13), new(1, 3), new(1, 1), new(123, 456) };
 
 	[Test]

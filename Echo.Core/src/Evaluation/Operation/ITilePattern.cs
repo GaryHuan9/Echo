@@ -17,8 +17,14 @@ public interface ITilePattern
 
 public class OrderedPattern : ITilePattern
 {
+	public OrderedPattern(bool horizontal = true) => this.horizontal = horizontal;
+
+	readonly bool horizontal;
+
 	/// <inheritdoc/>
-	public virtual Int2[] CreateSequence(Int2 size) => size.Loop().ToArray();
+	public virtual Int2[] CreateSequence(Int2 size) => (horizontal ?
+		size.Loop() :
+		size.YX.Loop().Select(position => position.YX)).ToArray();
 }
 
 public class ScrambledPattern : OrderedPattern
