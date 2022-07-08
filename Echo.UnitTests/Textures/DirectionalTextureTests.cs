@@ -10,7 +10,7 @@ using Echo.Core.Textures.Directional;
 using Echo.Core.Textures.Grids;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Textures;
 
 [TestFixture]
 public class CylindricalTextureTests : DirectionalTextureBaseTests

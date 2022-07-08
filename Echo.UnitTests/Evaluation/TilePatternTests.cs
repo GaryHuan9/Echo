@@ -3,7 +3,7 @@ using CodeHelpers.Packed;
 using Echo.Core.Evaluation.Operation;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Evaluation;
 
 [TestFixtureSource(nameof(patternSource))]
 public class TilePatternTests

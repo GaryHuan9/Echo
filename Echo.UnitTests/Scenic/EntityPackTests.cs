@@ -4,7 +4,7 @@ using System.Linq;
 using Echo.Core.Scenic.Hierarchies;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Scenic;
 
 [TestFixture]
 public class EntityPackTests
@@ -278,6 +278,7 @@ public class EntityPackTests
 		var set = new HashSet<EntityPack>(direct);
 
 		Assert.That(pack.DirectInstances, Is.EquivalentTo(set));
+		Assert.That(set, Has.All.Matches<EntityPack>(child => child.InstanceParents.Contains(pack)));
 
 		set.UnionWith(indirect);
 		Assert.That(pack.AllInstances, Is.EquivalentTo(set));

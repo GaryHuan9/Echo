@@ -3,7 +3,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Common;
 
 [TestFixture]
 public class SummationTests
