@@ -43,8 +43,7 @@ public class TilesUI : PlaneUI
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
 
-	const string TextureImagePath = "render.png";
-	const string TextureFilePath = "render.fpi";
+	static ReadOnlySpan<string> ImagePaths => new[] { "render.fpi", "render.png" };
 
 	protected override bool HasMenuBar => true;
 
@@ -162,40 +161,36 @@ public class TilesUI : PlaneUI
 		uint* pixels = (uint*)pointer - min.X + stride * (tileSize.Y - 1);
 
 		//Convert and assign each pixel
-		for (int y = min.Y; y < max.Y; y++)
+		for (int y = min.Y; y < max.Y; y++, pixels -= stride)
+		for (int x = min.X; x < max.X; x++)
 		{
-			for (int x = min.X; x < max.X; x++)
+			Int2 position = new Int2(x, y);
+			Float4 color = tile[position];
+
+			if (compareTexture != null)
 			{
-				Int2 position = new Int2(x, y);
-				Float4 color = tile[position];
-
-				if (compareTexture != null)
-				{
-					Float2 uv = (position + Float2.Half) * textureSizeR;
-					Float4 reference = compareTexture[uv];
-					color = (color - reference).Absoluted;
-					color += Float4.Ana; //Force alpha to be 1
-				}
-
-				color = ApproximateSqrt(color.Max(Float4.Zero));
-				color = color.Min(Float4.One) * byte.MaxValue;
-
-				// 000000WW 000000ZZ 000000YY 000000XX               original
-				//       00 0000WW00 0000ZZ00 0000YY000000XX         shift by 3 bytes
-				// 000000WW 0000WWZZ 0000ZZYY 0000YYXX               or with original
-				//              0000 00WW0000 WWZZ0000ZZYY0000YYXX   shift by 6 bytes
-				// 000000WW 0000WWZZ 00WWZZYY WWZZYYXX               or with original
-
-				Vector128<uint> pixel = Sse2.ConvertToVector128Int32(color.v).AsUInt32();
-				pixel = Sse2.Or(pixel, Sse2.ShiftRightLogical128BitLane(pixel, 3));
-				pixel = Sse2.Or(pixel, Sse2.ShiftRightLogical128BitLane(pixel, 6));
-
-				pixels[x] = pixel.ToScalar();
-
-				static Float4 ApproximateSqrt(in Float4 value) => new(Sse.Reciprocal(Sse.ReciprocalSqrt(value.v)));
+				Float2 uv = (position + Float2.Half) * textureSizeR;
+				Float4 reference = compareTexture[uv];
+				color = Float4.Half + color - reference;
+				color += Float4.Ana; //Force alpha to be 1
 			}
 
-			pixels -= stride;
+			color = ApproximateSqrt(color.Max(Float4.Zero));
+			color = color.Min(Float4.One) * byte.MaxValue;
+
+			// 000000WW 000000ZZ 000000YY 000000XX               original
+			//       00 0000WW00 0000ZZ00 0000YY000000XX         shift by 3 bytes
+			// 000000WW 0000WWZZ 0000ZZYY 0000YYXX               or with original
+			//              0000 00WW0000 WWZZ0000ZZYY0000YYXX   shift by 6 bytes
+			// 000000WW 0000WWZZ 00WWZZYY WWZZYYXX               or with original
+
+			Vector128<uint> pixel = Sse2.ConvertToVector128Int32(color.v).AsUInt32();
+			pixel = Sse2.Or(pixel, Sse2.ShiftRightLogical128BitLane(pixel, 3));
+			pixel = Sse2.Or(pixel, Sse2.ShiftRightLogical128BitLane(pixel, 6));
+
+			pixels[x] = pixel.ToScalar();
+
+			static Float4 ApproximateSqrt(in Float4 value) => new(Sse.Reciprocal(Sse.ReciprocalSqrt(value.v)));
 		}
 
 		SDL_UnlockTexture(texture);
@@ -211,8 +206,7 @@ public class TilesUI : PlaneUI
 				{
 					ActionQueue.Enqueue("Serialize Evaluation Layer", () =>
 					{
-						((TextureGrid)layer).Save(TextureImagePath);
-						((TextureGrid)layer).Save(TextureFilePath);
+						foreach (string path in ImagePaths) ((TextureGrid)layer).Save(path);
 					});
 				}
 
@@ -224,16 +218,23 @@ public class TilesUI : PlaneUI
 					Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
 				}
 
-				bool compare = compareTexture != null;
+				bool wasComparing = compareTexture != null;
 
-				if (ImGui.MenuItem(compare ? "End Comparison" : "Compare with File"))
+				if (ImGui.MenuItem(wasComparing ? "End Comparison" : "Compare with File"))
 				{
-					if (!compare)
+					compareTexture = null;
+
+					if (!wasComparing)
 					{
-						if (File.Exists(TextureFilePath)) compareTexture = ((TextureGrid)layer).Load(TextureFilePath);
-						else LogList.AddError($"Unable to find texture file at {Path.GetFullPath(TextureFilePath)}.");
+						foreach (string path in ImagePaths)
+						{
+							if (!File.Exists(path)) continue;
+							compareTexture = ((TextureGrid)layer).Load(path);
+							break;
+						}
+
+						if (compareTexture == null) LogList.AddError($"Unable to find reference texture file at {Environment.CurrentDirectory}.");
 					}
-					else compareTexture = null;
 
 					RestartTextureUpdate();
 				}
