@@ -3,11 +3,11 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Randomization;
-using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
-using Echo.Core.Textures.Grid;
+using Echo.Core.Textures.Grids;
 using NUnit.Framework;
 
 namespace Echo.UnitTests;
@@ -34,7 +34,7 @@ public class CubemapTests : DirectionalTextureBaseTests
 [TestFixture]
 public class PureTests : DirectionalTextureBaseTests
 {
-	protected override IDirectionalTexture GetTexture() => Texture.normal;
+	protected override IDirectionalTexture GetTexture() => Pure.normal;
 }
 
 public abstract class DirectionalTextureBaseTests

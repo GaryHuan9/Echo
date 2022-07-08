@@ -8,15 +8,14 @@ using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Evaluation.Distributions.Discrete;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Directional;
 
 public class CylindricalTexture : IDirectionalTexture
 {
-	NotNull<Texture> _texture = Texture.black;
+	NotNull<Texture> _texture = Pure.black;
 
 	public Texture Texture
 	{
@@ -30,7 +29,7 @@ public class CylindricalTexture : IDirectionalTexture
 	/// The Jacobian used to convert from uv coordinates to spherical coordinates.
 	/// NOTE: we are also missing the one over sin phi term.
 	/// </summary>
-	const float Jacobian = 1f / Scalars.Tau / Scalars.Pi;
+	const float Jacobian = Scalars.TauR / Scalars.Pi;
 
 	public RGB128 Average { get; private set; }
 
@@ -143,7 +142,7 @@ public class CylindricalTexture : IDirectionalTexture
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float2 ToUV(in Float3 direction) => new
 	(
-		FastMath.FMA(MathF.Atan2(direction.X, direction.Z), 0.5f / Scalars.Pi, 0.5f),
-		FastMath.FMA(MathF.Acos(FastMath.Clamp11(direction.Y)), -1f / Scalars.Pi, 1f)
+		FastMath.FMA(MathF.Atan2(direction.X, direction.Z), Scalars.PiR / 2f, 0.5f),
+		FastMath.FMA(MathF.Acos(FastMath.Clamp11(direction.Y)), -Scalars.PiR, 1f)
 	);
 }

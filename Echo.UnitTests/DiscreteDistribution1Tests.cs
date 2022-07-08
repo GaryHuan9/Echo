@@ -1,6 +1,5 @@
 using System.Collections.Generic;
-using Echo.Core.Evaluation.Distributions;
-using Echo.Core.Evaluation.Distributions.Discrete;
+using Echo.Core.Evaluation.Sampling;
 using NUnit.Framework;
 
 namespace Echo.UnitTests;
@@ -64,36 +63,36 @@ public class DiscreteDistribution1Tests
 	}
 
 	[Test]
-	public void ProbabilityDensity([Random(0f, 1f, 1000)] float random)
+	public void Probability([Random(0f, 1f, 1000)] float random)
 	{
 		Sample1D sample = (Sample1D)random;
 
-		foreach (DiscreteDistribution1D distribution in array) ProbabilityDensitySingle(distribution, sample);
+		foreach (DiscreteDistribution1D distribution in array) ProbabilitySingle(distribution, sample);
 	}
 
 	[Test]
-	public void ProbabilityDensityBoundaries()
+	public void ProbabilityBoundaries()
 	{
 		foreach (DiscreteDistribution1D distribution in array)
 		foreach (Sample1D sample in Uniform(distribution.Count))
 		{
-			ProbabilityDensitySingle(distribution, sample);
+			ProbabilitySingle(distribution, sample);
 		}
 	}
 
-	static void ProbabilityDensitySingle(DiscreteDistribution1D distribution, Sample1D sample)
+	static void ProbabilitySingle(DiscreteDistribution1D distribution, Sample1D sample)
 	{
-		var one = distribution.Sample(sample);
-		var two = distribution.Pick(sample, out float lower, out float upper);
+		var continuous = distribution.Sample(sample);
+		var discrete = distribution.Pick(sample);
 
-		Assert.That(distribution.ProbabilityDensity(one), Is.EqualTo(one.pdf).Roughly());
-		Assert.That(distribution.ProbabilityDensity(two), Is.EqualTo(two.pdf).Roughly());
+		Assert.That(distribution.ProbabilityDensity(continuous), Is.EqualTo(continuous.pdf).Roughly());
+		Assert.That(distribution.ProbabilityMass(discrete), Is.EqualTo(discrete.pdf).Roughly());
 
-		Assert.That(one.pdf, Is.Not.Zero);
-		Assert.That(two.pdf, Is.Not.Zero);
+		Assert.That(continuous.pdf, Is.Not.Zero);
+		Assert.That(discrete.pdf, Is.Not.Zero);
 
-		Assert.That(lower, Is.LessThanOrEqualTo((float)sample));
-		Assert.That(upper, Is.GreaterThan((float)sample));
+		var again = distribution.Pick(ref sample);
+		Assert.That(again, Is.EqualTo(discrete));
 	}
 
 	static IEnumerable<Sample1D> Uniform(int count)

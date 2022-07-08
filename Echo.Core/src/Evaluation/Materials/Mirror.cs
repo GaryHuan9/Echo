@@ -7,11 +7,11 @@ namespace Echo.Core.Evaluation.Materials;
 
 public class Mirror : Material
 {
-	public override void Scatter(ref Touch touch, Allocator allocator)
+	public override void Scatter(ref Contact contact, Allocator allocator)
 	{
-		var make = new MakeBSDF(ref touch, allocator);
+		var make = new MakeBSDF(ref contact, allocator);
 
-		var albedo = (RGB128)SampleAlbedo(touch);
+		var albedo = (RGB128)SampleAlbedo(contact);
 		if (albedo.IsZero) return;
 
 		make.Add<SpecularReflection>().Reset(albedo);

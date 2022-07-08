@@ -6,7 +6,7 @@ namespace Echo.Core.Evaluation.Materials;
 
 /// <summary>
 /// Represents a completely invisible <see cref="Material"/>, which
-/// generate no <see cref="BSDF"/> for <see cref="Touch.bsdf"/>
+/// generate no <see cref="BSDF"/> for <see cref="Contact.bsdf"/>
 /// </summary>
 public sealed class Invisible : Material
 {
@@ -15,5 +15,5 @@ public sealed class Invisible : Material
 	/// </summary>
 	public static readonly Invisible instance = new();
 
-	public override void Scatter(ref Touch touch, Allocator allocator) => touch.bsdf = null;
+	public override void Scatter(ref Contact contact, Allocator allocator) => contact.bsdf = null;
 }

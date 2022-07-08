@@ -65,7 +65,6 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 
 	public static RGB128 operator +(in RGB128 first, in RGB128 second) => new(first.d + second.d);
 	public static RGB128 operator *(in RGB128 first, in RGB128 second) => new(first.d * second.d);
-	public static RGB128 operator *(float first, in RGB128 second) => second * first;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static RGB128 operator *(in RGB128 first, float second)
@@ -79,7 +78,6 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 
 	public static RGB128 operator /(in RGB128 first, float second) => new(Check(first.d / second));
 	public static RGB128 operator /(in RGB128 first, in RGB128 second) => Divide(first.d, second.d);
-	public static RGB128 operator /(float first, in RGB128 second) => Divide(((Float4)first).XYZ_, second.d);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static RGB128 Divide(in Float4 first, in Float4 second)

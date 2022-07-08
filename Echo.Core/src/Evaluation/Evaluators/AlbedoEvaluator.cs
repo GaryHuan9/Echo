@@ -1,11 +1,11 @@
-﻿using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Common.Memory;
+﻿using CodeHelpers.Packed;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Textures.Colors;
-using Echo.Core.Scenic.Preparation;
-using Echo.Core.Evaluation.Distributions.Continuous;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.Evaluation.Operation;
+using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
@@ -14,7 +14,7 @@ public record AlbedoEvaluator : Evaluator
 {
 	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "albedo");
 
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
 	{
 		var query = new TraceQuery(ray);
 
@@ -23,16 +23,16 @@ public record AlbedoEvaluator : Evaluator
 		//Trace for intersection
 		while (scene.Trace(ref query))
 		{
-			Touch touch = scene.Interact(query);
+			Contact contact = scene.Interact(query);
 
-			Material material = touch.shade.material;
-			material.Scatter(ref touch, allocator);
+			Material material = contact.shade.material;
+			material.Scatter(ref contact, allocator);
 
-			if (touch.bsdf == null) query = query.SpawnTrace();
-			else return (RGB128)material.SampleAlbedo(touch);
+			if (contact.bsdf == null) query = query.SpawnTrace();
+			else return (RGB128)material.SampleAlbedo(contact);
 		}
 
 		//Sample ambient
-		return scene.lights.EvaluateAmbient(query.ray.direction);
+		return scene.EvaluateInfinite(query.ray.direction);
 	}
 }

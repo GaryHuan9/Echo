@@ -1,19 +1,34 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.InOut;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
 
-public class MeshEntity : GeometryEntity
+/// <summary>
+/// A geometric mesh object.
+/// </summary>
+public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
+	/// <summary>
+	/// The source of the series of triangles.
+	/// </summary>
 	public Mesh Mesh { get; set; }
+
+	/// <summary>
+	/// The source of materials.
+	/// </summary>
 	public MaterialLibrary MaterialLibrary { get; set; }
 
-	public override IEnumerable<PreparedTriangle> ExtractTriangles(SwatchExtractor extractor)
+	/// <inheritdoc/>
+	uint IGeometrySource<PreparedTriangle>.Count => (uint)Mesh.TriangleCount;
+
+	/// <inheritdoc/>
+	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		if (Mesh == null) yield break;
+		Float4x4 transform = InverseTransform;
 
 		for (int i = 0; i < Mesh.TriangleCount; i++)
 		{
@@ -65,18 +80,16 @@ public class MeshEntity : GeometryEntity
 			Float3 GetVertex(int index)
 			{
 				Float3 vertex = Mesh.GetVertex(triangle.vertexIndices[index]);
-				return LocalToWorld.MultiplyPoint(vertex);
+				return transform.MultiplyPoint(vertex);
 			}
 
 			Float3 GetNormal(int index)
 			{
 				Float3 normal = Mesh.GetNormal(triangle.normalIndices[index]);
-				return LocalToWorld.MultiplyDirection(normal);
+				return transform.MultiplyDirection(normal).Normalized;
 			}
 
 			Float2 GetTexcoord(int index) => Mesh.GetTexcoord(triangle.texcoordIndices[index]);
 		}
 	}
-
-	public override IEnumerable<PreparedSphere> ExtractSpheres(SwatchExtractor extractor) => Enumerable.Empty<PreparedSphere>();
 }

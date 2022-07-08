@@ -18,13 +18,14 @@ public interface IEmissive
 	/// Returns the approximated emitted power of this <see cref="IEmissive"/> per unit area.
 	/// If this property returns a non-positive value, this entire interface can be ignored.
 	/// </summary>
-	public float Power { get; }
+	float Power { get; }
 
 	/// <summary>
-	/// Returns the emission of this <see cref="IEmissive"/> on a surface and leaving
-	/// <paramref name="point"/>, towards the <paramref name="outgoing"/> direction.
+	/// Returns the emission of this <see cref="IEmissive"/>.
 	/// </summary>
-	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing);
+	/// <param name="point">A <see cref="GeometryPoint"/> on this <see cref="IEmissive"/> surface.</param>
+	/// <param name="outgoing">A direction leaving this <see cref="IEmissive"/> surface from <paramref name="point"/>.</param>
+	RGB128 Emit(in GeometryPoint point, in Float3 outgoing);
 }
 
 /// <summary>
@@ -62,15 +63,15 @@ public class Emissive : Material, IEmissive
 
 		//Calculate emission and power from total sum
 		emission = (RGB128)total.Result / size.Product;
-		Power = emission.Luminance * Scalars.Tau;
+		Power = emission.Luminance * Scalars.Tau; //NOTE: multiply by 2 Pi here because we still assume that an emissive surface is two sided
 	}
 
-	public override void Scatter(ref Touch touch, Allocator allocator)
+	public override void Scatter(ref Contact contact, Allocator allocator)
 	{
 		//Empty bsdf for zero scattering
-		_ = new MakeBSDF(ref touch, allocator);
+		_ = new MakeBSDF(ref contact, allocator);
 	}
 
 	/// <inheritdoc/>
-	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing) => emission;
+	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing) => outgoing.Dot(point.normal) > 0f ? emission : RGB128.Black;
 }

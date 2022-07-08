@@ -4,7 +4,7 @@ using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Evaluation.Distributions;
+using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Scattering;
@@ -40,7 +40,7 @@ public abstract class BxDF
 	public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
 		if (!SameHemisphere(outgoing, incident)) return 0f;
-		return FastMath.Abs(CosineP(incident)) * (1f / Scalars.Pi);
+		return FastMath.Abs(CosineP(incident)) * Scalars.PiR;
 	}
 
 	/// <summary>

@@ -6,7 +6,7 @@ using CodeHelpers.Mathematics.Enumerable;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grid;
+using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.InOut;
 

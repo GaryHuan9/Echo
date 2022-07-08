@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Echo.Core.Common.Memory;
@@ -47,7 +48,11 @@ public sealed unsafe class AlignedArray<T> : IDisposable where T : unmanaged
 	public int Length { get; private set; }
 
 	/// <inheritdoc cref="Item(uint)"/>
-	public ref T this[int index] => ref this[(uint)index];
+	public ref T this[int index]
+	{
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		get => ref this[(uint)index];
+	}
 
 	/// <summary>
 	/// Accesses an item in this <see cref="AlignedArray{T}"/>.
@@ -59,11 +64,14 @@ public sealed unsafe class AlignedArray<T> : IDisposable where T : unmanaged
 	/// in RELEASE mode is undefined for performance reasons.</remarks>
 	public ref T this[uint index]
 	{
+#if RELEASE
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		get
 		{
-#if RELEASE
 			return ref Pointer[index];
 #else
+		get
+		{
 			if (index < Length) return ref Pointer[index];
 			throw new IndexOutOfRangeException(nameof(index));
 #endif

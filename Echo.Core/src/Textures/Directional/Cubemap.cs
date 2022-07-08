@@ -5,7 +5,7 @@ using CodeHelpers;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grid;
+using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Textures.Directional;
 
@@ -14,7 +14,7 @@ public class Cubemap : IDirectionalTexture
 	public Cubemap()
 	{
 		textures = new NotNull<Texture>[fileNames.Length];
-		foreach (ref var texture in textures.AsSpan()) texture = Texture.black;
+		foreach (ref var texture in textures.AsSpan()) texture = Pure.black;
 	}
 
 	public Cubemap(ReadOnlySpan<Texture> textures)
@@ -24,7 +24,7 @@ public class Cubemap : IDirectionalTexture
 		int min = Math.Min(length, textures.Length);
 		this.textures = new NotNull<Texture>[length];
 
-		for (int i = 0; i < length; i++) this.textures[i] = i < min ? textures[i] : Texture.black;
+		for (int i = 0; i < length; i++) this.textures[i] = i < min ? textures[i] : Pure.black;
 	}
 
 	public Cubemap(string path)

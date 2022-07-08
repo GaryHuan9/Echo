@@ -11,7 +11,7 @@ using CodeHelpers.Pooling;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grid;
+using Echo.Core.Textures.Grids;
 using Echo.Core.Textures.Serialization;
 
 namespace Echo.Core.InOut;
@@ -73,7 +73,7 @@ public class MaterialLibrary
 					operation.Target = processing;
 
 					operations.Add(operation);
-					parsed = Texture.white;
+					parsed = Pure.white;
 				}
 
 				if (info == null) throw new Exception($"No attribute named: {token.ToString()}!");

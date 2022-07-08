@@ -43,7 +43,7 @@ public readonly struct GeometryShade
 	}
 
 	/// <summary>
-	/// The shading normal at
+	/// The shading normal at this target point.
 	/// </summary>
 	public Float3 Normal
 	{

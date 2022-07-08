@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.Intrinsics;
+using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 
 namespace Echo.Core.Common;
@@ -25,7 +26,9 @@ public static class Utility
 	/// <param name="length">The number of items to copy.</param>
 	/// <typeparam name="T">The type of item to copy.</typeparam>
 	public static unsafe void MemoryCopy<T>(T* source, T* target, long length) where T : unmanaged =>
-		Buffer.MemoryCopy(source, target, length * sizeof(Float4), length * sizeof(Float4));
+		Buffer.MemoryCopy(source, target, length * sizeof(T), length * sizeof(T));
+
+	public static float GetScale(in Float4x4 transform) => transform.GetRow(0).XYZ_.Magnitude;
 
 	/// <summary>
 	/// Ensures an <see cref="Array"/> is large enough for some number of items.
