@@ -3,7 +3,7 @@ using CodeHelpers.Mathematics;
 using Echo.Core.Common.Mathematics;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Common;
 
 [TestFixture]
 public class FastMathTests

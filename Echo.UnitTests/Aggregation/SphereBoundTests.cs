@@ -3,7 +3,7 @@ using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Common.Mathematics.Randomization;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Aggregation;
 
 [TestFixture]
 public class SphereBoundTests

@@ -7,7 +7,7 @@ using CodeHelpers.Packed;
 using Echo.Core.Textures.Colors;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Textures;
 
 [TestFixture]
 public class RGBA128ParserTests

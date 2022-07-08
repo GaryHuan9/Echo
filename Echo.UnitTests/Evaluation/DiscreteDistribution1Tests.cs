@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Echo.Core.Evaluation.Sampling;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Evaluation;
 
 [TestFixture]
 public class DiscreteDistribution1Tests

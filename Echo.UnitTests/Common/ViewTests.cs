@@ -5,7 +5,7 @@ using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Memory;
 using NUnit.Framework;
 
-namespace Echo.UnitTests;
+namespace Echo.UnitTests.Common;
 
 [TestFixture]
 [TestFixtureSource(nameof(fixtureSource))]
