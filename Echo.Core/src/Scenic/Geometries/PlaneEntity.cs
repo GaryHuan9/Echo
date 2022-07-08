@@ -5,17 +5,40 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
 
+/// <summary>
+/// A geometric rectangular plane.
+/// </summary>
 public class PlaneEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
+	/// <summary>
+	/// The size of the plane.
+	/// </summary>
 	public Float2 Size { get; set; } = Float2.One;
 
+	/// <summary>
+	/// The texture coordinate of the bottom left of the plane.
+	/// </summary>
 	public Float2 Texcoord00 { get; set; } = Float2.Zero;
+
+	/// <summary>
+	/// The texture coordinate of the bottom right of the plane.
+	/// </summary>
 	public Float2 Texcoord01 { get; set; } = Float2.Right;
+
+	/// <summary>
+	/// The texture coordinate of the top left of the plane.
+	/// </summary>
 	public Float2 Texcoord10 { get; set; } = Float2.Up;
+
+	/// <summary>
+	/// The texture coordinate of the top right of the plane.
+	/// </summary>
 	public Float2 Texcoord11 { get; set; } = Float2.One;
 
+	/// <inheritdoc/>
 	uint IGeometrySource<PreparedTriangle>.Count => 2;
 
+	/// <inheritdoc/>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		Float2 extend = Size / 2f;

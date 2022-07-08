@@ -11,9 +11,14 @@ using Echo.Core.Evaluation.Sampling;
 
 namespace Echo.Core.Aggregation.Selection;
 
-public class LightBoundingVolumeHierarchy : LightPicker
+/// <summary>
+/// An implementation of <see cref="LightPicker"/>.
+/// </summary>
+/// <remarks>This class is currently awfully unoptimized and messy. However it is functional, and we
+/// are running out of time for the deadline. Thus optimization is delayed until the future. </remarks>
+public class LightTree : LightPicker
 {
-	public LightBoundingVolumeHierarchy(View<Tokenized<LightBound>> bounds)
+	public LightTree(View<Tokenized<LightBound>> bounds)
 	{
 		root = Build(bounds);
 		AddToMap(root, 0, 0ul);

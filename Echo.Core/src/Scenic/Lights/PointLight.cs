@@ -19,7 +19,7 @@ public class PointLight : LightEntity, ILightSource<PreparedPointLight>
 }
 
 /// <summary>
-/// The prepared version of <see cref="PointLight"/>.
+/// The prepared version of a <see cref="PointLight"/>.
 /// </summary>
 public readonly struct PreparedPointLight : IPreparedLight
 {

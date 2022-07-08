@@ -6,13 +6,25 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
 
+/// <summary>
+/// A geometric mesh object.
+/// </summary>
 public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
+	/// <summary>
+	/// The source of the series of triangles.
+	/// </summary>
 	public Mesh Mesh { get; set; }
+
+	/// <summary>
+	/// The source of materials.
+	/// </summary>
 	public MaterialLibrary MaterialLibrary { get; set; }
 
+	/// <inheritdoc/>
 	uint IGeometrySource<PreparedTriangle>.Count => (uint)Mesh.TriangleCount;
 
+	/// <inheritdoc/>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		if (Mesh == null) yield break;

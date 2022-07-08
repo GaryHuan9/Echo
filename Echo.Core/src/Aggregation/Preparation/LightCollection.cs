@@ -19,7 +19,7 @@ namespace Echo.Core.Aggregation.Preparation;
 /// <summary>
 /// A collection that contains all of the light objects in a <see cref="PreparedScene"/>.
 /// </summary>
-public class LightCollection
+public sealed class LightCollection
 {
 	public LightCollection(ReadOnlySpan<ILightSource> lightSources, GeometryCollection geometries)
 	{

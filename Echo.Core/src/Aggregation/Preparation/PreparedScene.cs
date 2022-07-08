@@ -23,7 +23,7 @@ namespace Echo.Core.Aggregation.Preparation;
 /// <summary>
 /// A <see cref="Scene"/> prepared for fast interactions.
 /// </summary>
-public class PreparedScene : PreparedPack
+public sealed class PreparedScene : PreparedPack
 {
 	public PreparedScene(ReadOnlySpan<IGeometrySource> geometrySources, ReadOnlySpan<ILightSource> lightSources,
 						 ImmutableArray<PreparedInstance> instances, in AcceleratorCreator acceleratorCreator,
@@ -96,6 +96,12 @@ public class PreparedScene : PreparedPack
 		return new Contact(query, normal, instance.swatch[info.material], info.texcoord);
 	}
 
+	/// <summary>
+	/// Selects a light in this <see cref="PreparedScene"/>.
+	/// </summary>
+	/// <param name="origin">The <see cref="GeometryPoint"/> from which this light should be selected based off of.</param>
+	/// <param name="sample">The <see cref="Sample1D"/> value used for this selection.</param>
+	/// <returns>The selected light, packaged into a <see cref="TokenHierarchy"/>.</returns>
 	public Probable<TokenHierarchy> Pick(in GeometryPoint origin, Sample1D sample)
 	{
 		if (sample < infiniteLightsThreshold)
@@ -135,6 +141,12 @@ public class PreparedScene : PreparedPack
 		return new Probable<TokenHierarchy>(hierarchy, pdf);
 	}
 
+	/// <summary>
+	/// Returns the probability mass function (pmf) value of selecting a light in this <see cref="PreparedScene"/>.
+	/// </summary>
+	/// <param name="light">A <see cref="TokenHierarchy"/> that represents the light that was selected.</param>
+	/// <param name="origin">The <see cref="GeometryPoint"/> from which the selection was based off of.</param>
+	/// <returns>The calculated pmf value.</returns>
 	public float ProbabilityMass(in TokenHierarchy light, in GeometryPoint origin)
 	{
 		if (light.TopToken.IsInfiniteLight())
@@ -158,6 +170,7 @@ public class PreparedScene : PreparedPack
 		return pdf * pack.lightPicker.ProbabilityMass(light.TopToken, origin);
 	}
 
+	/// <inheritdoc cref="IPreparedLight.Sample"/>
 	public Probable<RGB128> Sample(in TokenHierarchy light, in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
 		EntityToken token = light.TopToken;
@@ -182,6 +195,7 @@ public class PreparedScene : PreparedPack
 		return result;
 	}
 
+	/// <inheritdoc cref="IPreparedLight.ProbabilityDensity"/>
 	public float ProbabilityDensity(in TokenHierarchy light, in GeometryPoint origin, in Float3 incident)
 	{
 		EntityToken token = light.TopToken;

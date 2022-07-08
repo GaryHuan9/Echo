@@ -14,6 +14,9 @@ using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
 
+/// <summary>
+/// A geometric triangle.
+/// </summary>
 public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
 	public Float3 Vertex0 { get; set; } = Float3.Zero;
@@ -45,7 +48,11 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	}
 }
 
-public readonly struct PreparedTriangle : IPreparedGeometry //Winding order for triangles is CLOCKWISE
+/// <summary>
+/// The prepared version of a <see cref="TriangleEntity"/>.
+/// </summary>
+/// <remarks>Winding order is clockwise.</remarks>
+public readonly struct PreparedTriangle : IPreparedGeometry
 {
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, MaterialIndex materialIndex) : this
 	(
@@ -119,21 +126,19 @@ public readonly struct PreparedTriangle : IPreparedGeometry //Winding order for 
 	public readonly Float2 texcoord1;
 	public readonly Float2 texcoord2;
 
-	public MaterialIndex Material { get; }
-
 	public Float3 Vertex1 => vertex0 + edge1;
 	public Float3 Vertex2 => vertex0 + edge2;
 
-	/// <summary>
-	/// The smallest <see cref="Aggregation.Bounds.BoxBound"/> that encloses this <see cref="PreparedTriangle"/>.
-	/// </summary>
+	/// <inheritdoc/>
+	public MaterialIndex Material { get; }
+
+	/// <inheritdoc/>
 	public BoxBound BoxBound => new(stackalloc[] { vertex0, Vertex1, Vertex2 });
 
+	/// <inheritdoc/>
 	public ConeBound ConeBound => ConeBound.CreateDirection(Float3.Cross(edge1, edge2).Normalized);
 
-	/// <summary>
-	/// The area of this <see cref="PreparedTriangle"/>.
-	/// </summary>
+	/// <inheritdoc/>
 	public float Area => Float3.Cross(edge1, edge2).Magnitude / 2f;
 
 	/// <summary>
