@@ -31,9 +31,9 @@ namespace Echo.Core.Scenic.Examples
 			Add(new PlaneEntity { Material = blue, Size = (Float2)Width, Position = new Float3(0f, Half, Half), Rotation = new Float3(-90f, 0f, 0f) });     //Back
 			Add(new PlaneEntity { Material = cullable, Size = (Float2)Width, Position = new Float3(0f, Half, -Half), Rotation = new Float3(90f, 0f, 0f) }); //Front
 
-			Add(new PlaneEntity { Material = green, Size = (Float2)Width, Position = new Float3(Half, Half, 0f), Rotation = new Float3(0f, 0f, 90f) }); //Right
-			Add(new PlaneEntity { Material = red, Size = (Float2)Width, Position = new Float3(-Half, Half, 0f), Rotation = new Float3(0f, 0f, -90f) }); //Left
-			Add(new PlaneEntity { Material = light, Size = (Float2)Half, Position = new Float3(0f, Width - 0.01f, 0f), Rotation = Float3.Zero });       //Light
+			Add(new PlaneEntity { Material = green, Size = (Float2)Width, Position = new Float3(Half, Half, 0f), Rotation = new Float3(0f, 0f, 90f) });        //Right
+			Add(new PlaneEntity { Material = red, Size = (Float2)Width, Position = new Float3(-Half, Half, 0f), Rotation = new Float3(0f, 0f, -90f) });        //Left
+			Add(new PlaneEntity { Material = light, Size = (Float2)Half, Position = new Float3(0f, Width - 0.01f, 0f), Rotation = new Float3(180f, 0f, 0f) }); //Light
 
 			Add(new BoxEntity { Material = white, Size = (Float3)Size, Position = new Float3(Size / 1.5f, Size / 2f, -Size / 1.5f), Rotation = Float3.Up * 21f });
 			Add(new BoxEntity { Material = white, Size = new Float3(Size, Size * 2f, Size), Position = new Float3(-Size / 1.5f, Size, Size / 1.5f), Rotation = Float3.Up * -21f });
