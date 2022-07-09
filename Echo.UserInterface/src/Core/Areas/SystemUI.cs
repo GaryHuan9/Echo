@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Linq;
 using CodeHelpers.Packed;
-using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Compute;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Operation;
@@ -265,11 +264,9 @@ public class SystemUI : AreaUI
 
 		var scenePreparer = new ScenePreparer(scene);
 
-		PreparedScene preparedScene = scenePreparer.Prepare();
-
 		var evaluationProfile = new EvaluationProfile
 		{
-			Scene = preparedScene,
+			Scene = scenePreparer.Prepare(),
 			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),
