@@ -1,58 +1,120 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using CodeHelpers.Diagnostics;
 
 namespace Echo.Core.InOut;
 
-public sealed class SceneFormatReader : IDisposable
+using CharSpan = ReadOnlySpan<char>;
+
+public sealed partial class SceneFormatReader : IDisposable
 {
 	public SceneFormatReader(string path) : this(File.OpenRead(path)) { }
 
-	public SceneFormatReader(Stream stream, bool leaveOpen = false) => reader = new SegmentReader(stream, leaveOpen);
-
-	readonly SegmentReader reader;
-
-	public void Read()
+	public SceneFormatReader(Stream stream, bool leaveOpen = false)
 	{
-		ReadOnlySpan<char> token = reader.ReadSegment();
-
-		while (!token.IsEmpty)
-		{
-			Console.WriteLine(token.ToString());
-			token = reader.ReadSegment();
-		}
+		reader = new SegmentReader(stream, leaveOpen);
+		root = ScopeNode.Create(reader, null);
 	}
 
+	readonly SegmentReader reader;
+	readonly ScopeNode root;
+
 	public void Dispose() => reader?.Dispose();
+
+	static bool IsIdentifier(char value) => (('0' <= value) & (value <= '9')) |
+											(('A' <= value) & (value <= 'Z')) |
+											(('a' <= value) & (value <= 'z'));
+
+	static bool IsIdentifier(CharSpan value)
+	{
+		if (value.Length == 0) return false;
+
+		foreach (char current in value)
+		{
+			if (!IsIdentifier(current)) return false;
+		}
+
+		return true;
+	}
 
 	sealed class SegmentReader : IDisposable
 	{
 		public SegmentReader(Stream stream, bool leaveOpen = false) => reader = new StreamReader(stream, leaveOpen);
 
 		readonly StreamReader reader;
-		readonly char[] buffer = new char[32];
+		readonly char[] buffer = new char[256];
 
 		int currentPosition;
 		int currentLength;
 
-		public ReadOnlySpan<char> ReadSegment() => ReadSegmentImpl(default);
+		readonly Dictionary<char, Func<char, bool>> matchPredicateMap = new();
 
-		public ReadOnlySpan<char> ReadSegment(char match) => ReadSegmentImpl(match);
+		static readonly Func<char, bool> identifierPredicate = value => !IsIdentifier(value);
 
-		ReadOnlySpan<char> ReadSegmentImpl(char match)
+		public CharSpan ReadNext()
 		{
 			if (!SkipWhiteSpace()) return ReadOnlySpan<char>.Empty;
 
+			if (!Grab(identifierPredicate, out CharSpan identifier)) return identifier;
+			return identifier.IsEmpty ? buffer.AsSpan(currentPosition++, 1) : identifier;
+		}
+
+		public CharSpan PeekNext()
+		{
+			if (!SkipWhiteSpace()) return ReadOnlySpan<char>.Empty;
+
+			if (!Grab(identifierPredicate, out CharSpan identifier) || !identifier.IsEmpty)
+			{
+				currentPosition -= identifier.Length;
+				Assert.IsTrue(currentLength >= 0);
+
+				return identifier;
+			}
+
+			return buffer.AsSpan(currentPosition, 1);
+		}
+
+		public CharSpan ReadUntil(char match)
+		{
+			return SkipWhiteSpace() &&
+				   Grab(GetPredicate(), out CharSpan result) &&
+				   ++currentPosition is { }
+				? result
+				: throw new FormatException($"No match of {match} found.");
+
+			Func<char, bool> GetPredicate()
+			{
+				if (!matchPredicateMap.TryGetValue(match, out var predicate))
+				{
+					predicate = value => value == match;
+					matchPredicateMap.Add(match, predicate);
+				}
+
+				return predicate;
+			}
+		}
+
+		public CharSpan ReadIdentifier() =>
+			SkipWhiteSpace() &&
+			Grab(identifierPredicate, out CharSpan result) is { } &&
+			result is { IsEmpty: false }
+				? result
+				: throw new FormatException("No identifier found.");
+
+		public void Dispose() => reader?.Dispose();
+
+		bool Grab(Func<char, bool> predicate, out CharSpan result)
+		{
 			int start = currentPosition;
 
 			do
 			{
 				for (; currentPosition < currentLength; currentPosition++)
 				{
-					char current = buffer[currentPosition];
-
-					if (match == default
-						? char.IsWhiteSpace(current)
-						: match == current) goto exit;
+					if (!predicate(buffer[currentPosition])) continue;
+					result = buffer.AsSpan(start..currentPosition);
+					return true;
 				}
 
 				if (start > 0)
@@ -64,35 +126,34 @@ public sealed class SceneFormatReader : IDisposable
 					start = 0;
 				}
 
-				var slice = buffer.AsSpan(currentLength);
+				Assert.AreEqual(currentLength, currentPosition);
+				Span<char> slice = buffer.AsSpan(currentLength);
 
 				if (!slice.IsEmpty) currentLength += reader.Read(slice);
-				else throw new Exception("Parsing segment is too long.");
+				else throw new FormatException("Identifier too long.");
 			}
-			while (currentLength > currentPosition);
+			while (currentPosition < currentLength);
 
-		exit:
-			return buffer.AsSpan(start..currentPosition++);
+			//Reached end of file
+			result = buffer.AsSpan(start..currentPosition);
+			return false;
 		}
 
 		bool SkipWhiteSpace()
 		{
-			do
+			while (true)
 			{
 				for (; currentPosition < currentLength; currentPosition++)
 				{
 					if (!char.IsWhiteSpace(buffer[currentPosition])) return true;
 				}
 
-				currentLength = reader.Read(buffer);
+				int read = reader.Read(buffer);
+				if (read == 0) return false; //Reached end of file
+
+				currentLength = read;
 				currentPosition = 0;
 			}
-			while (currentLength > 0);
-
-			//Reached end of line
-			return false;
 		}
-
-		public void Dispose() => reader?.Dispose();
 	}
 }

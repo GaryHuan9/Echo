@@ -1,29 +1,28 @@
-version [v1.0]
-declare Scene scene
+:scene = new Scene
 {
-	declare SphereEntity sphere
+	:sphere = new SphereEntity
 	{
-		.Radius = [1];
-		.Position = [-3, 1, -2];
+		.Radius = [1]
+		.Position = [-3 1 -2]
 	}
 
-	.Add(sphere);
+	.Add(link sphere)
 	.Add(new SphereEntity
 	{
-		.Radius = [3];
-		.Position = [2, 2, -6];
-	});
+		.Radius = [3]
+		.Position = [2 2 -6]
+	})
 }
 
-declare ScenePreparer(scene) preparer;
+:preparer = new ScenePreparer(link scene) { }
 
-declare EvaluationProfile profile
+:profile = new EvaluationProfile
 {
-	.Scene = preparer.Prepare();
-	.Evaluator = new PathTracedEvaluator;
-	.Distribution = new StratifiedDistribution { .Extend = [16]; };
-	.Buffer = new RenderBuffer([960, 540]);
-	.Pattern = new HilbertCurvePattern;
-	.MinEpoch = [1];
-	.MaxEpoch = [20];
+	.Scene = link preparer.Prepare()
+	.Evaluator = new PathTracedEvaluator { }
+	.Distribution = new StratifiedDistribution { .Extend = [16] }
+	.Buffer = new RenderBuffer([960 540]) { }
+	.Pattern = new HilbertCurvePattern { }
+	.MinEpoch = [1]
+	.MaxEpoch = [20]
 }
