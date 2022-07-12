@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Echo.Core.InOut;
 
@@ -27,12 +28,11 @@ partial class SceneFormatReader
 		{
 			CharSpan next = reader.ReadNext();
 
-			//OPTIMIZE: use https://github.com/dotnet/csharplang/issues/1881 when we switch to dotnet 7 
-			return next.ToString() switch
+			return next.ToString() switch //OPTIMIZE: use https://github.com/dotnet/csharplang/issues/1881 when we switch to dotnet 7 
 			{
-				"["    => LiteralNode.Create(reader),
+				"`"    => LiteralNode.Create(reader),
 				"new"  => TypedNode.Create(reader, scope),
-				"link" => LinkNode.Create(reader, scope),
+				"link" => ReferenceNode.Create(reader, scope),
 				_      => throw UnexpectedTokenException(next)
 			};
 		}
@@ -44,72 +44,118 @@ partial class SceneFormatReader
 
 		public readonly string content;
 
-		public static LiteralNode Create(SegmentReader reader) => new(reader.ReadUntil(']'));
+		public static LiteralNode Create(SegmentReader reader)
+		{
+			CharSpan next = reader.PeekNext();
+			//TODO: handle explicitly defined types using `next`
+
+			return new(reader.ReadUntil('`'));
+		}
 	}
 
 	sealed class TypedNode : ArgumentNode
 	{
-		TypedNode(ScopeNode scope, InvocationNode constructor)
+		TypedNode(ScopeNode scope, CharSpan type, InvocationNode constructor)
 		{
 			this.scope = scope;
+			this.type = new string(type);
 			this.constructor = constructor;
 		}
 
 		public readonly ScopeNode scope;
+		public readonly string type;
 		public readonly InvocationNode constructor;
 
 		new public static TypedNode Create(SegmentReader reader, ScopeNode scope)
 		{
 			CharSpan type = reader.ReadIdentifier();
-			CharSpan next = reader.ReadNext();
+			CharSpan next = reader.PeekNext();
 			InvocationNode constructor;
+			ScopeNode innerScope;
 
 			if (next.SequenceEqual("("))
 			{
-				constructor = InvocationNode.Create(reader, scope, type);
-				next = reader.ReadNext();
+				ThrowIfTokenMismatch(reader.ReadNext(), "(");
+				constructor = InvocationNode.Create(reader, scope);
+				next = reader.PeekNext();
 			}
-			else constructor = InvocationNode.Create(type);
+			else constructor = InvocationNode.empty;
 
-			ThrowIfTokenMismatch(next, "{");
+			if (next.SequenceEqual("{"))
+			{
+				ThrowIfTokenMismatch(reader.ReadNext(), "{");
+				innerScope = ScopeNode.Create(reader, scope);
+			}
+			else innerScope = scope;
 
-			return new TypedNode(ScopeNode.Create(reader, scope), constructor);
+			return new TypedNode(innerScope, type, constructor);
 		}
 	}
 
-	sealed class LinkNode : ArgumentNode
+	sealed class ReferenceNode : ArgumentNode
 	{
-		LinkNode(ScopeNode parent, CharSpan identifier, InvocationNode invocation)
+		ReferenceNode(ScopeNode scope, InvocationNode invocation, List<Reference> references)
 		{
-			this.parent = parent;
-			this.identifier = new string(identifier);
+			this.scope = scope;
 			this.invocation = invocation;
+			this.references = references;
 		}
 
-		public readonly ScopeNode parent;
-		public readonly string identifier;
+		public readonly ScopeNode scope;
 		public readonly InvocationNode invocation;
+		readonly List<Reference> references;
 
-		new public static LinkNode Create(SegmentReader reader, ScopeNode parent)
+		new public static ReferenceNode Create(SegmentReader reader, ScopeNode scope)
 		{
-			CharSpan identifier = reader.ReadIdentifier();
+			CharSpan next = reader.ReadNext();
+			List<Reference> references = new();
 
-			if (reader.PeekNext().SequenceEqual("."))
+			while(true)
 			{
-				ThrowIfTokenMismatch(reader.ReadNext(), ".");
-				CharSpan secondary = reader.ReadIdentifier();
+				bool declared;
 
-				if (reader.PeekNext().SequenceEqual("("))
-				{
-					ThrowIfTokenMismatch(reader.ReadNext(), "(");
-					var invocation = InvocationNode.Create(reader, parent, secondary);
-					return new LinkNode(parent, identifier, invocation);
-				}
+				if (next.SequenceEqual(":")) declared = true;
+				else if (next.SequenceEqual(".") && !scope.IsRoot) declared = false;
+				else throw UnexpectedTokenException(next);
 
-				return new LinkNode(parent, identifier, InvocationNode.Create(secondary));
+				references.Add(new Reference(declared, reader.ReadIdentifier()));
+
+				next = reader.ReadNext();
+
+				if (next.SequenceEqual(";")) break;
+				else if (next.SequenceEqual("(")) ref
 			}
 
-			return new LinkNode(parent, identifier, null);
+			// CharSpan identifier = reader.ReadIdentifier();
+			//
+			// if (reader.PeekNext().SequenceEqual("."))
+			// {
+			// 	ThrowIfTokenMismatch(reader.ReadNext(), ".");
+			// 	CharSpan secondary = reader.ReadIdentifier();
+			//
+			// 	if (reader.PeekNext().SequenceEqual("("))
+			// 	{
+			// 		ThrowIfTokenMismatch(reader.ReadNext(), "(");
+			// 		var invocation = ParametersNode.Create(reader, scope, secondary);
+			// 		return new LinkNode(scope, identifier, invocation);
+			// 	}
+			//
+			// 	return new LinkNode(scope, identifier, ParametersNode.Create(secondary));
+			// }
+			//
+			// return new LinkNode(scope, identifier, null);
+		}
+
+		readonly struct Reference
+		{
+			public Reference(bool declared, CharSpan identifier)
+			{
+				this.declared = declared;
+				this.identifier = new string(identifier);
+			}
+
+			public readonly bool declared;
+			public readonly string identifier;
 		}
 	}
 
@@ -121,14 +167,31 @@ partial class SceneFormatReader
 
 		readonly Dictionary<string, ArgumentNode> declarations = new();
 		readonly Dictionary<string, ArgumentNode> assignments = new();
-		readonly List<InvocationNode> invocations = new();
+		readonly List<ReferenceNode> invocations = new();
+
+		public bool IsRoot => parent == null;
+
+		public ArgumentNode Find(string identifier)
+		{
+			ScopeNode current = this;
+
+			do
+			{
+				if (declarations.TryGetValue(identifier, out var node)) return node;
+				current = current.parent;
+			}
+			while (current != null);
+
+			return null;
+		}
 
 		public static ScopeNode Create(SegmentReader reader, ScopeNode parent)
 		{
-			var node = new ScopeNode(parent);
+			ScopeNode node = new(parent);
 			CharSpan next = reader.ReadNext();
+			string endToken = node.IsRoot ? "" : "}";
 
-			while (!next.SequenceEqual("}"))
+			while (!next.SequenceEqual(endToken))
 			{
 				if (next.SequenceEqual(":"))
 				{
@@ -137,7 +200,7 @@ partial class SceneFormatReader
 					ThrowIfTokenMismatch(reader.ReadNext(), "=");
 					AddAssignment(node.declarations, identifier);
 				}
-				else if (next.SequenceEqual(".") && parent != null)
+				else if (next.SequenceEqual(".") && !node.IsRoot)
 				{
 					CharSpan identifier = reader.ReadIdentifier();
 
@@ -147,20 +210,19 @@ partial class SceneFormatReader
 					else if (next.SequenceEqual("(")) AddInvocation(identifier);
 					else throw UnexpectedTokenException(next);
 				}
-				else if (next.IsEmpty && parent == null) break;
 				else throw UnexpectedTokenException(next);
 
 				next = reader.ReadNext();
 
 				void AddAssignment(Dictionary<string, ArgumentNode> map, CharSpan identifier)
 				{
-					var converted = new string(identifier);
+					string converted = new(identifier);
 
 					if (!map.ContainsKey(converted)) map.Add(converted, ArgumentNode.Create(reader, node));
 					else throw new FormatException($"Duplicated identifier '{converted}' for assignment.");
 				}
 
-				void AddInvocation(CharSpan identifier) => node.invocations.Add(InvocationNode.Create(reader, node, identifier));
+				void AddInvocation(CharSpan identifier) => node.invocations.Add(InvocationNode.Create(reader, node));
 			}
 
 			return node;
@@ -169,36 +231,35 @@ partial class SceneFormatReader
 
 	sealed class InvocationNode : Node
 	{
-		InvocationNode(CharSpan identifier) => this.identifier = new string(identifier);
-
-		public readonly string identifier;
-
 		readonly List<ArgumentNode> arguments = new();
+
+		public static readonly InvocationNode empty = new();
 
 		public Node this[int index] => arguments[index];
 
-		public static InvocationNode Create(SegmentReader reader, ScopeNode parent, CharSpan identifier)
+		public static InvocationNode Create(SegmentReader reader, ScopeNode scope)
 		{
-			var next = reader.PeekNext();
-			var node = Create(identifier);
+			CharSpan next = reader.PeekNext();
 
 			if (next.SequenceEqual(")"))
 			{
 				reader.ReadNext();
-				return node;
+				return empty;
 			}
+
+			InvocationNode node = new();
 
 			while (true)
 			{
-				node.arguments.Add(ArgumentNode.Create(reader, parent));
+				node.arguments.Add(ArgumentNode.Create(reader, scope));
 
 				next = reader.ReadNext();
 
-				if (next.SequenceEqual(")")) return node;
+				if (next.SequenceEqual(")")) break;
 				ThrowIfTokenMismatch(next, ",");
 			}
-		}
 
-		public static InvocationNode Create(CharSpan identifier) => new(identifier);
+			return node;
+		}
 	}
 }
