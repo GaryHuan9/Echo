@@ -14,11 +14,11 @@ public sealed partial class SceneFormatReader : IDisposable
 	public SceneFormatReader(Stream stream, bool leaveOpen = false)
 	{
 		reader = new SegmentReader(stream, leaveOpen);
-		root = ScopeNode.Create(reader, null);
+		root = RootNode.Create(reader);
 	}
 
 	readonly SegmentReader reader;
-	readonly ScopeNode root;
+	readonly RootNode root;
 
 	public void Dispose() => reader?.Dispose();
 
@@ -95,11 +95,11 @@ public sealed partial class SceneFormatReader : IDisposable
 			}
 		}
 
-		public CharSpan ReadIdentifier() =>
+		public string ReadIdentifier() =>
 			SkipWhiteSpace() &&
 			Grab(identifierPredicate, out CharSpan result) is { } &&
 			result is { IsEmpty: false }
-				? result
+				? new string(result)
 				: throw new FormatException("No identifier found.");
 
 		public void Dispose() => reader?.Dispose();
