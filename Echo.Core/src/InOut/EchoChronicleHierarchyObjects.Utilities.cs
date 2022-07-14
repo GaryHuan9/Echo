@@ -1,46 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 
 namespace Echo.Core.InOut;
 
 using CharSpan = ReadOnlySpan<char>;
 
-public sealed partial class SceneFormatReader : IDisposable
+partial class EchoChronicleHierarchyObjects
 {
-	public SceneFormatReader(string path) : this(File.OpenRead(path)) { }
-
-	public SceneFormatReader(Stream stream, bool leaveOpen = false)
-	{
-		reader = new SegmentReader(stream, leaveOpen);
-		root = RootNode.Create(reader);
-	}
-
-	readonly SegmentReader reader;
-	readonly RootNode root;
-
-	public void Dispose() => reader?.Dispose();
-
-	static bool IsIdentifier(char value) => (('0' <= value) & (value <= '9')) |
-											(('A' <= value) & (value <= 'Z')) |
-											(('a' <= value) & (value <= 'z'));
-
-	static bool IsIdentifier(CharSpan value)
-	{
-		if (value.Length == 0) return false;
-
-		foreach (char current in value)
-		{
-			if (!IsIdentifier(current)) return false;
-		}
-
-		return true;
-	}
-
 	sealed class SegmentReader : IDisposable
 	{
-		public SegmentReader(Stream stream, bool leaveOpen = false) => reader = new StreamReader(stream, leaveOpen);
+		public SegmentReader(Stream stream) => reader = new StreamReader(stream);
 
 		readonly StreamReader reader;
 		readonly char[] buffer = new char[256];
@@ -50,7 +26,9 @@ public sealed partial class SceneFormatReader : IDisposable
 
 		readonly Dictionary<char, Func<char, bool>> matchPredicateMap = new();
 
-		static readonly Func<char, bool> identifierPredicate = value => !IsIdentifier(value);
+		static readonly Func<char, bool> identifierPredicate = value => !((('0' <= value) & (value <= '9')) |
+																		  (('A' <= value) & (value <= 'Z')) |
+																		  (('a' <= value) & (value <= 'z')));
 
 		public CharSpan ReadNext()
 		{
@@ -155,5 +133,95 @@ public sealed partial class SceneFormatReader : IDisposable
 				currentPosition = 0;
 			}
 		}
+	}
+
+	readonly record struct Identified<T>(string identifier, T node) where T : Node
+	{
+		public readonly string identifier = identifier;
+		public readonly T node = node;
+	}
+
+	readonly ref struct ScopeStack
+	{
+		public ScopeStack() => stack = new List<Dictionary<string, ArgumentNode>>();
+
+		readonly List<Dictionary<string, ArgumentNode>> stack;
+
+		public ReleaseHandle Advance() => new(stack);
+
+		public void Add(Identified<ArgumentNode> item)
+		{
+			Dictionary<string, ArgumentNode> declarations = stack[^1];
+
+			if (declarations == null)
+			{
+				declarations = new Dictionary<string, ArgumentNode>(1);
+				stack[^1] = declarations;
+			}
+
+			declarations.TryAdd(item.identifier, item.node);
+		}
+
+		public ArgumentNode Find(string identifier)
+		{
+			for (int i = stack.Count - 1; i >= 0; i--)
+			{
+				Dictionary<string, ArgumentNode> declarations = stack[i];
+				ArgumentNode node = declarations?.TryGetValue(identifier);
+				if (node != null) return node;
+			}
+
+			return null;
+		}
+
+		public struct ReleaseHandle : IDisposable
+		{
+			public ReleaseHandle(List<Dictionary<string, ArgumentNode>> stack)
+			{
+				this.stack = stack;
+				stack.Add(null);
+			}
+
+			List<Dictionary<string, ArgumentNode>> stack;
+
+			void IDisposable.Dispose()
+			{
+				if (stack == null) return;
+				stack.RemoveAt(stack.Count - 1);
+				stack = null;
+			}
+		}
+	}
+
+	sealed class TypeMap
+	{
+		public TypeMap()
+		{
+			foreach (Type type in typeof(TypeMap).Assembly.GetExportedTypes())
+			{
+				if (type.IsValueType || type.IsAbstract) continue;
+
+				CollectionsMarshal.GetValueRefOrAddDefault
+				(
+					map, type.Name,
+					out bool exists
+				) = exists ? null : type;
+			}
+		}
+
+		readonly Dictionary<string, Type> map = new(StringComparer.Ordinal);
+
+		static readonly object locker = new();
+		static TypeMap _instance;
+
+		public static TypeMap Instance
+		{
+			get
+			{
+				lock (locker) return _instance ??= new TypeMap();
+			}
+		}
+
+		public Type this[string identifier] => map.TryGetValue(identifier);
 	}
 }
