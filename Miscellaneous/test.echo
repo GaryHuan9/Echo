@@ -2,10 +2,10 @@
 {
 	:blue = new Pure(`hdr(0.0250 0.1416 0.3736)`)
 
-	:material0 = new Matte { .Albedo = new Pure(`hdr(1 0.68 0.16)`) }
-	:material1 = new Matte { .Albedo = new Pure(`hdr(0.75)`) }
-	:material2 = new Emissive { .Albedo = new Pure(`hdr(1)`) }
-	:material3 = new Mirror { .Albedo = new Pure(`hdr(0.75)`) }
+	:material0 = new Matte { .Albedo = new Pure(`hdr(1, 0.68, 0.16)`) }
+	:material1 = new Matte { .Albedo = new Pure(`hdr(0.75, 0.75, 0.75)`) }
+	:material2 = new Emissive { .Albedo = new Pure(`hdr(1, 1, 1)`) }
+	:material3 = new Mirror { .Albedo = new Pure(`hdr(0.75, 0.75, 0.75)`) }
 
 	.Add(new PlaneEntity { .Material = link material1 .Size = `32 24` })
 
