@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using CodeHelpers;
+using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Memory;
@@ -17,12 +18,23 @@ partial class EvaluationOperation
 	{
 		Context[] contexts; //cache contexts to reuse them
 
+		NotNull<PreparedScene> _nextScene;
 		NotNull<EvaluationProfile> _nextProfile;
+
+		/// <summary>
+		/// The next <see cref="PreparedScene"/> to evaluate.
+		/// </summary>
+		/// <remarks>Must not be null.</remarks>
+		public PreparedScene NextScene
+		{
+			get => _nextScene;
+			set => _nextScene = value;
+		}
 
 		/// <summary>
 		/// The next <see cref="EvaluationProfile"/> to use.
 		/// </summary>
-		/// <remarks>Cannot be null.</remarks>
+		/// <remarks>Must not be null.</remarks>
 		public EvaluationProfile NextProfile
 		{
 			get => _nextProfile;
@@ -33,14 +45,14 @@ partial class EvaluationOperation
 		public Common.Compute.Operation CreateOperation(ImmutableArray<IWorker> workers)
 		{
 			//Validate profile
-			var profile = NextProfile ?? throw ExceptionHelper.Invalid(nameof(NextProfile), InvalidType.isNull);
+			var profile = NextProfile;
 			profile.Validate();
 
 			//Create contexts
 			CreateContexts(profile, workers.Length);
 
 			//Return new operation
-			return new EvaluationOperation(profile, workers, contexts.ToImmutableArray());
+			return new EvaluationOperation(NextScene, profile, workers, contexts.ToImmutableArray());
 		}
 
 		void CreateContexts(EvaluationProfile profile, int population)

@@ -19,7 +19,7 @@ public class SceneUI : AreaUI
 
 	protected override void Update(in Moment moment)
 	{
-		if (operationUI.SelectedOperation is not EvaluationOperation { profile.Scene: { } scene }) return;
+		if (operationUI.SelectedOperation is not EvaluationOperation { scene: { } scene }) return;
 
 		// var info = scene.info;
 		// var lights = scene.lights;
