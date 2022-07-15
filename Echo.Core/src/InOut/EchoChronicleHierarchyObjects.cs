@@ -46,8 +46,12 @@ public sealed partial class EchoChronicleHierarchyObjects
 
 		public string Identifier => identifiedNode.identifier;
 
-		public Type Type => identifiedNode.node.GetType(objects.typeMap);
+		public Type Type => identifiedNode.node.GetType(objects);
 
-		public T Construct<T>() where T : class => identifiedNode.node.Construct(objects) as T;
+		public T Construct<T>() where T : class
+		{
+			if (!Type.IsAssignableFrom(typeof(T))) return null;
+			return (T)identifiedNode.node.Construct(objects);
+		}
 	}
 }

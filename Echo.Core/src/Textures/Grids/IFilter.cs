@@ -20,7 +20,7 @@ public interface IFilter
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
 	RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>;
 
-	class Point : IFilter
+	private class Point : IFilter
 	{
 		/// <inheritdoc/>
 		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>
@@ -31,7 +31,7 @@ public interface IFilter
 		}
 	}
 
-	class Bilinear : IFilter
+	private class Bilinear : IFilter
 	{
 		/// <inheritdoc/>
 		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>

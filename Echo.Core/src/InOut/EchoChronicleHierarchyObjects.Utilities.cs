@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
@@ -195,11 +192,11 @@ partial class EchoChronicleHierarchyObjects
 
 	sealed class TypeMap
 	{
-		public TypeMap()
+		TypeMap()
 		{
 			foreach (Type type in typeof(TypeMap).Assembly.GetExportedTypes())
 			{
-				if (type.IsValueType || type.IsAbstract) continue;
+				if (type.IsValueType || type.IsAbstract || type.IsNotPublic || type.IsNestedPrivate) continue;
 
 				CollectionsMarshal.GetValueRefOrAddDefault
 				(
