@@ -46,14 +46,10 @@ public class EchoTI : RootTI
 		base.ProcessArguments(arguments);
 
 		var scene = new SingleBunny();
-
-		var scenePreparer = new ScenePreparer(scene);
-
-		PreparedScene preparedScene = scenePreparer.Prepare();
+		var preparer = new ScenePreparer(scene);
 
 		var evaluationProfile = new EvaluationProfile
 		{
-			Scene = preparedScene,
 			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),
@@ -64,6 +60,7 @@ public class EchoTI : RootTI
 
 		var operation = new EvaluationOperation.Factory
 		{
+			NextScene = preparer.Prepare(),
 			NextProfile = evaluationProfile
 		};
 

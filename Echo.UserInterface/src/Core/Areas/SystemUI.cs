@@ -261,12 +261,10 @@ public class SystemUI : AreaUI
 	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 	{
 		var scene = new SingleBunny();
-
-		var scenePreparer = new ScenePreparer(scene);
+		var preparer = new ScenePreparer(scene);
 
 		var evaluationProfile = new EvaluationProfile
 		{
-			Scene = scenePreparer.Prepare(),
 			Evaluator = new PathTracedEvaluator(),
 			Distribution = new StratifiedDistribution { Extend = 16 },
 			Buffer = new RenderBuffer(new Int2(960, 540)),
@@ -277,6 +275,7 @@ public class SystemUI : AreaUI
 
 		var operation = new EvaluationOperation.Factory
 		{
+			NextScene = preparer.Prepare(),
 			NextProfile = evaluationProfile
 		};
 
