@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using CodeHelpers.Diagnostics;
@@ -14,18 +13,7 @@ using CharSpan = ReadOnlySpan<char>;
 
 partial class EchoChronicleHierarchyObjects
 {
-	abstract class Node
-	{
-		protected static FormatException UnexpectedTokenException(CharSpan token) => new($"Encountered unexpected token: {token}.");
-
-		[DebuggerHidden]
-		[StackTraceHidden]
-		protected static void ThrowIfTokenMismatch(CharSpan token, CharSpan expected)
-		{
-			if (token.SequenceEqual(expected)) return;
-			throw new FormatException($"Expecting token '{expected}', encountered: '{token}'.");
-		}
-	}
+	abstract class Node { }
 
 	abstract class ArgumentNode : Node
 	{
@@ -41,8 +29,8 @@ partial class EchoChronicleHierarchyObjects
 			{
 				"`"    => LiteralNode.Create(reader),
 				"new"  => TypedNode.Create(reader, stack),
-				"link" => stack.Find(new string(reader.ReadIdentifier())),
-				_      => throw UnexpectedTokenException(next)
+				"link" => stack.Find(reader.ReadIdentifier()),
+				_      => throw reader.UnexpectedTokenException(next)
 			};
 		}
 	}
@@ -63,10 +51,9 @@ partial class EchoChronicleHierarchyObjects
 
 			while (!next.IsEmpty)
 			{
-				ThrowIfTokenMismatch(next, ":");
-
+				reader.ThrowIfTokenMismatch(':', next);
 				string identifier = reader.ReadIdentifier();
-				ThrowIfTokenMismatch(reader.ReadNext(), "=");
+				reader.ThrowIfNextMismatch('=');
 
 				ArgumentNode argument = ArgumentNode.Create(reader, stack);
 				Identified<ArgumentNode> identified = new(identifier, argument);
@@ -149,9 +136,9 @@ partial class EchoChronicleHierarchyObjects
 		{
 			CharSpan next = reader.PeekNext();
 
-			if (next.SequenceEqual(")"))
+			if (EqualsSingle(next, ')'))
 			{
-				ThrowIfTokenMismatch(reader.ReadNext(), ")");
+				reader.ThrowIfNextMismatch(')');
 				return empty;
 			}
 
@@ -163,8 +150,8 @@ partial class EchoChronicleHierarchyObjects
 
 				next = reader.ReadNext();
 
-				if (next.SequenceEqual(")")) break;
-				ThrowIfTokenMismatch(next, ",");
+				if (EqualsSingle(next, ')')) break;
+				reader.ThrowIfTokenMismatch(',', next);
 			}
 
 			return node;
@@ -310,9 +297,9 @@ partial class EchoChronicleHierarchyObjects
 			CharSpan next = reader.PeekNext();
 			ParametersNode parameters;
 
-			if (next.SequenceEqual("("))
+			if (EqualsSingle(next, '('))
 			{
-				ThrowIfTokenMismatch(reader.ReadNext(), "(");
+				reader.ThrowIfNextMismatch('(');
 				parameters = ParametersNode.Create(reader, stack);
 				next = reader.PeekNext();
 			}
@@ -320,36 +307,37 @@ partial class EchoChronicleHierarchyObjects
 
 			TypedNode node = new(new Identified<ParametersNode>(type, parameters));
 
-			if (!next.SequenceEqual("{")) return node;
+			if (!EqualsSingle(next, '{')) return node;
 
 			using var _ = stack.Advance();
 
-			ThrowIfTokenMismatch(reader.ReadNext(), "{");
+			reader.ThrowIfNextMismatch('{');
 			next = reader.ReadNext();
 
-			while (!next.SequenceEqual("}"))
+			while (!EqualsSingle(next, '}'))
 			{
-				if (next.SequenceEqual("."))
+				if (EqualsSingle(next, '.'))
 				{
 					string identifier = reader.ReadIdentifier();
 					Node child;
 
 					next = reader.ReadNext();
 
-					if (next.SequenceEqual("=")) child = ArgumentNode.Create(reader, stack);
-					else if (next.SequenceEqual("(")) child = ParametersNode.Create(reader, stack);
-					else throw UnexpectedTokenException(next);
+					if (EqualsSingle(next, '=')) child = ArgumentNode.Create(reader, stack);
+					else if (EqualsSingle(next, '(')) child = ParametersNode.Create(reader, stack);
+					else throw reader.UnexpectedTokenException(next);
 
 					node.children.Add(new Identified<Node>(identifier, child));
 				}
-				else if (next.SequenceEqual(":"))
+				else if (EqualsSingle(next, ':'))
+
 				{
 					string identifier = reader.ReadIdentifier();
-					ThrowIfTokenMismatch(reader.ReadNext(), "=");
+					reader.ThrowIfNextMismatch('=');
 
 					stack.Add(new Identified<ArgumentNode>(identifier, ArgumentNode.Create(reader, stack)));
 				}
-				else throw UnexpectedTokenException(next);
+				else throw reader.UnexpectedTokenException(next);
 
 				next = reader.ReadNext();
 			}

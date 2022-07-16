@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using CodeHelpers.Collections;
@@ -16,22 +17,18 @@ partial class EchoChronicleHierarchyObjects
 		public SegmentReader(Stream stream) => reader = new StreamReader(stream);
 
 		readonly StreamReader reader;
-		readonly char[] buffer = new char[256];
+		readonly char[] buffer = new char[16];
 
 		int currentPosition;
 		int currentLength;
 
-		readonly Dictionary<char, Func<char, bool>> matchPredicateMap = new();
-
-		static readonly Func<char, bool> identifierPredicate = value => !((('0' <= value) & (value <= '9')) |
-																		  (('A' <= value) & (value <= 'Z')) |
-																		  (('a' <= value) & (value <= 'z')));
+		public int CurrentLine { get; private set; } = 1;
 
 		public CharSpan ReadNext()
 		{
 			if (!SkipWhiteSpace()) return ReadOnlySpan<char>.Empty;
 
-			if (!Grab(identifierPredicate, out CharSpan identifier)) return identifier;
+			if (!Grab(new IdentifierPredicate(), out CharSpan identifier)) return identifier;
 			return identifier.IsEmpty ? buffer.AsSpan(currentPosition++, 1) : identifier;
 		}
 
@@ -39,47 +36,60 @@ partial class EchoChronicleHierarchyObjects
 		{
 			if (!SkipWhiteSpace()) return ReadOnlySpan<char>.Empty;
 
-			if (!Grab(identifierPredicate, out CharSpan identifier) || !identifier.IsEmpty)
+			int line = CurrentLine;
+
+			if (!Grab(new IdentifierPredicate(), out CharSpan identifier) || !identifier.IsEmpty)
 			{
 				currentPosition -= identifier.Length;
 				Assert.IsTrue(currentLength >= 0);
-
-				return identifier;
 			}
+			else identifier = buffer.AsSpan(currentPosition, 1);
 
-			return buffer.AsSpan(currentPosition, 1);
+			CurrentLine = line;
+			return identifier;
 		}
 
 		public CharSpan ReadUntil(char match)
 		{
-			return SkipWhiteSpace() &&
-				   Grab(GetPredicate(), out CharSpan result) &&
-				   ++currentPosition is { }
-				? result
-				: throw new FormatException($"No match of {match} found.");
+			if (char.IsWhiteSpace(match)) throw new ArgumentOutOfRangeException(nameof(match));
 
-			Func<char, bool> GetPredicate()
+			if (SkipWhiteSpace() && Grab(new MatchPredicate(match), out CharSpan result))
 			{
-				if (!matchPredicateMap.TryGetValue(match, out var predicate))
-				{
-					predicate = value => value == match;
-					matchPredicateMap.Add(match, predicate);
-				}
-
-				return predicate;
+				++currentPosition;
+				return result;
 			}
+
+			throw new FormatException($"Next match of {match} not found on line {CurrentLine}.");
 		}
 
-		public string ReadIdentifier() =>
-			SkipWhiteSpace() &&
-			Grab(identifierPredicate, out CharSpan result) is { } &&
-			result is { IsEmpty: false }
-				? new string(result)
-				: throw new FormatException("No identifier found.");
+		public string ReadIdentifier()
+		{
+			if (SkipWhiteSpace())
+			{
+				Grab(new IdentifierPredicate(), out CharSpan result);
+				if (!result.IsEmpty) return new string(result);
+			}
+
+			throw new FormatException($"Next identifier not found on line {CurrentLine}.");
+		}
+
+		public FormatException UnexpectedTokenException(CharSpan token) => new($"Encountered unexpected token '{token}' on line {CurrentLine}.");
+
+		[DebuggerHidden]
+		[StackTraceHidden]
+		public void ThrowIfTokenMismatch(char expected, CharSpan token)
+		{
+			if (EqualsSingle(token, expected)) return;
+			throw new FormatException($"Expecting token '{expected}', however encountered '{token}' on line {CurrentLine}.");
+		}
+
+		[DebuggerHidden]
+		[StackTraceHidden]
+		public void ThrowIfNextMismatch(char expected) => ThrowIfTokenMismatch(expected, ReadNext());
 
 		public void Dispose() => reader?.Dispose();
 
-		bool Grab(Func<char, bool> predicate, out CharSpan result)
+		bool Grab<T>(T predicate, out CharSpan result) where T : struct, IGrabPredicate
 		{
 			int start = currentPosition;
 
@@ -87,7 +97,10 @@ partial class EchoChronicleHierarchyObjects
 			{
 				for (; currentPosition < currentLength; currentPosition++)
 				{
-					if (!predicate(buffer[currentPosition])) continue;
+					char current = buffer[currentPosition];
+					if (IsNewLine(current)) ++CurrentLine;
+					if (predicate.Continue(current)) continue;
+
 					result = buffer.AsSpan(start..currentPosition);
 					return true;
 				}
@@ -104,8 +117,9 @@ partial class EchoChronicleHierarchyObjects
 				Assert.AreEqual(currentLength, currentPosition);
 				Span<char> slice = buffer.AsSpan(currentLength);
 
-				if (!slice.IsEmpty) currentLength += reader.Read(slice);
-				else throw new FormatException("Identifier too long.");
+				if (slice.IsEmpty) throw new FormatException($"Identifier '{buffer.AsSpan(0, 16)}...' exceeds buffer size of {buffer.Length} on line {CurrentLine}.");
+
+				currentLength += reader.Read(slice);
 			}
 			while (currentPosition < currentLength);
 
@@ -120,7 +134,9 @@ partial class EchoChronicleHierarchyObjects
 			{
 				for (; currentPosition < currentLength; currentPosition++)
 				{
-					if (!char.IsWhiteSpace(buffer[currentPosition])) return true;
+					char current = buffer[currentPosition];
+					if (!char.IsWhiteSpace(current)) return true;
+					if (IsNewLine(current)) ++CurrentLine;
 				}
 
 				int read = reader.Read(buffer);
@@ -129,6 +145,29 @@ partial class EchoChronicleHierarchyObjects
 				currentLength = read;
 				currentPosition = 0;
 			}
+		}
+
+		static bool IsNewLine(char value) => value == '\n';
+
+		interface IGrabPredicate
+		{
+			bool Continue(char value);
+		}
+
+		readonly struct MatchPredicate : IGrabPredicate
+		{
+			public MatchPredicate(char match) => this.match = match;
+
+			readonly char match;
+
+			public bool Continue(char value) => value != match;
+		}
+
+		readonly struct IdentifierPredicate : IGrabPredicate
+		{
+			public bool Continue(char value) => ('a' <= value) & (value <= 'z') ||
+												('A' <= value) & (value <= 'Z') ||
+												('0' <= value) & (value <= '9');
 		}
 	}
 
