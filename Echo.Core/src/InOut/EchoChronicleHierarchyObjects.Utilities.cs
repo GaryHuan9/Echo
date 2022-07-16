@@ -17,7 +17,7 @@ partial class EchoChronicleHierarchyObjects
 		public SegmentReader(Stream stream) => reader = new StreamReader(stream);
 
 		readonly StreamReader reader;
-		readonly char[] buffer = new char[16];
+		readonly char[] buffer = new char[256];
 
 		int currentPosition;
 		int currentLength;
@@ -29,7 +29,10 @@ partial class EchoChronicleHierarchyObjects
 			if (!SkipWhiteSpace()) return ReadOnlySpan<char>.Empty;
 
 			if (!Grab(new IdentifierPredicate(), out CharSpan identifier)) return identifier;
-			return identifier.IsEmpty ? buffer.AsSpan(currentPosition++, 1) : identifier;
+
+			if (!identifier.IsEmpty) return identifier;
+			Assert.IsFalse(IsNewLine(buffer[currentPosition]));
+			return buffer.AsSpan(currentPosition++, 1);
 		}
 
 		public CharSpan PeekNext()
@@ -51,10 +54,11 @@ partial class EchoChronicleHierarchyObjects
 
 		public CharSpan ReadUntil(char match)
 		{
-			if (char.IsWhiteSpace(match)) throw new ArgumentOutOfRangeException(nameof(match));
-
 			if (SkipWhiteSpace() && Grab(new MatchPredicate(match), out CharSpan result))
 			{
+				Assert.AreEqual(match, buffer[currentPosition]);
+				if (IsNewLine(match)) ++CurrentLine;
+
 				++currentPosition;
 				return result;
 			}
@@ -98,8 +102,11 @@ partial class EchoChronicleHierarchyObjects
 				for (; currentPosition < currentLength; currentPosition++)
 				{
 					char current = buffer[currentPosition];
-					if (IsNewLine(current)) ++CurrentLine;
-					if (predicate.Continue(current)) continue;
+					if (predicate.Continue(current))
+					{
+						if (IsNewLine(current)) ++CurrentLine;
+						continue;
+					}
 
 					result = buffer.AsSpan(start..currentPosition);
 					return true;
