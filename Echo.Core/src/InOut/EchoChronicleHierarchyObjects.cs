@@ -33,6 +33,26 @@ public sealed partial class EchoChronicleHierarchyObjects
 		}
 	}
 
+	public T ConstructFirst<T>() where T : class => ConstructFirst<T>(out _);
+
+	public T ConstructFirst<T>(out string identifier) where T : class
+	{
+		for (int i = 0; i < Length; i++)
+		{
+			Entry entry = this[i];
+			T constructed = entry.Construct<T>();
+			if (constructed == null) continue;
+
+			identifier = entry.Identifier;
+			return constructed;
+		}
+
+		identifier = default;
+		return null;
+	}
+
+	static bool EqualsSingle(CharSpan span, char target) => span.Length == 1 && span[0] == target;
+
 	public readonly ref struct Entry
 	{
 		internal Entry(EchoChronicleHierarchyObjects objects, int index)
