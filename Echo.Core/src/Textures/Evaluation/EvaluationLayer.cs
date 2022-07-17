@@ -41,14 +41,14 @@ public interface IEvaluationLayer
 	/// <param name="tilePosition">The tile position to get the bounds of.</param>
 	/// <param name="min">The minimum pixel position of the tile (inclusive).</param>
 	/// <param name="max">The maximum pixel position of the tile (exclusive).</param>
-	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max);
+	void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max);
 
 	/// <summary>
 	/// Gets the position of the tile that contains a particular pixel position.
 	/// </summary>
 	/// <param name="position">The input pixel position.</param>
 	/// <returns>The position of the tile.</returns>
-	public Int2 GetTilePosition(Int2 position);
+	Int2 GetTilePosition(Int2 position);
 }
 
 /// <summary>
