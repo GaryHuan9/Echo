@@ -9,7 +9,7 @@ public sealed partial class EchoChronicleHierarchyObjects
 {
 	public EchoChronicleHierarchyObjects(string path)
 	{
-		this.path = path;
+		directory = Path.GetDirectoryName(path);
 		typeMap = TypeMap.Instance;
 
 		using SegmentReader reader = new(File.OpenRead(path));
@@ -18,7 +18,7 @@ public sealed partial class EchoChronicleHierarchyObjects
 		Length = root.Children.Length;
 	}
 
-	readonly string path;
+	readonly string directory;
 	readonly TypeMap typeMap;
 	readonly RootNode root;
 

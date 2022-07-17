@@ -24,6 +24,9 @@ partial class EchoChronicleHierarchyObjects
 
 		public int CurrentLine { get; private set; } = 1;
 
+		const char NewLine = '\n';
+		const string Comment = "//";
+
 		public CharSpan ReadNext()
 		{
 			if (!SkipWhiteSpace()) return ReadOnlySpan<char>.Empty;
@@ -126,7 +129,7 @@ partial class EchoChronicleHierarchyObjects
 
 				if (slice.IsEmpty) throw new FormatException($"Identifier '{buffer.AsSpan(0, 16)}...' exceeds buffer size of {buffer.Length} on line {CurrentLine}.");
 
-				currentLength += reader.Read(slice);
+				currentLength += Read(slice);
 			}
 			while (currentPosition < currentLength);
 
@@ -146,7 +149,7 @@ partial class EchoChronicleHierarchyObjects
 					if (IsNewLine(current)) ++CurrentLine;
 				}
 
-				int read = reader.Read(buffer);
+				int read = Read(buffer);
 				if (read == 0) return false; //Reached end of file
 
 				currentLength = read;
@@ -154,7 +157,39 @@ partial class EchoChronicleHierarchyObjects
 			}
 		}
 
-		static bool IsNewLine(char value) => value == '\n';
+		int Read(Span<char> span)
+		{
+			CharSpan read = span[..reader.Read(span)];
+			int length = read.IndexOf(Comment);
+			if (length < 0) return read.Length;
+
+			int cursor = length;
+
+			while (true)
+			{
+				read = read[(length + Comment.Length)..];
+				int lineEnd = read.IndexOf(NewLine);
+				if (lineEnd < 0) break;
+
+				read = read[lineEnd..];
+				length = read.IndexOf(Comment);
+
+				if (length < 0)
+				{
+					read.CopyTo(span[cursor..]);
+					cursor += read.Length;
+					break;
+				}
+
+				CharSpan slice = read[..length];
+				slice.CopyTo(span[cursor..]);
+				cursor += slice.Length;
+			}
+
+			return cursor;
+		}
+
+		static bool IsNewLine(char value) => value == NewLine;
 
 		interface IGrabPredicate
 		{
