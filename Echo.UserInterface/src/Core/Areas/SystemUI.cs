@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using CodeHelpers.Packed;
 using Echo.Core.Common.Compute;
-using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Operation;
-using Echo.Core.Evaluation.Sampling;
-using Echo.Core.Scenic.Examples;
+using Echo.Core.InOut;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures.Evaluation;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -260,23 +257,16 @@ public class SystemUI : AreaUI
 
 	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 	{
-		var scene = new SingleBunny();
-		var preparer = new ScenePreparer(scene);
+		var objects = new EchoChronicleHierarchyObjects("ext/Scenes/SingleBunny/bunny.echo");
 
-		var evaluationProfile = new EvaluationProfile
-		{
-			Evaluator = new PathTracedEvaluator(),
-			Distribution = new StratifiedDistribution { Extend = 16 },
-			Buffer = new RenderBuffer(new Int2(960, 540)),
-			Pattern = new HilbertCurvePattern(),
-			MinEpoch = 1,
-			MaxEpoch = 20
-		};
+		var scene = objects.ConstructFirst<Scene>();
+		var preparer = new ScenePreparer(scene);
+		var profile = objects.ConstructFirst<EvaluationProfile>();
 
 		var operation = new EvaluationOperation.Factory
 		{
 			NextScene = preparer.Prepare(),
-			NextProfile = evaluationProfile
+			NextProfile = profile
 		};
 
 		device.Dispatch(operation);

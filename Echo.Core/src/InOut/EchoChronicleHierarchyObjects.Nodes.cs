@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using CodeHelpers.Collections;
 using CodeHelpers.Diagnostics;
 using CodeHelpers.Packed;
 using Echo.Core.Common.Memory;
+using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
+using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.InOut;
 
@@ -17,9 +21,9 @@ partial class EchoChronicleHierarchyObjects
 
 	abstract class ArgumentNode : Node
 	{
-		public abstract Type GetType(EchoChronicleHierarchyObjects objects);
+		public abstract Type GetType(EchoChronicleHierarchyObjects main);
 
-		public abstract object Construct(EchoChronicleHierarchyObjects objects, Type targetType);
+		public abstract object Construct(EchoChronicleHierarchyObjects main, Type targetType);
 
 		public static ArgumentNode Create(SegmentReader reader, ScopeStack stack)
 		{
@@ -27,11 +31,20 @@ partial class EchoChronicleHierarchyObjects
 
 			return next.ToString() switch //OPTIMIZE: use https://github.com/dotnet/csharplang/issues/1881 when we switch to dotnet 7 
 			{
-				"`"    => LiteralNode.Create(reader),
+				"\""   => LiteralNode.Create(reader),
 				"new"  => TypedNode.Create(reader, stack),
-				"link" => stack.Find(reader.ReadIdentifier()),
+				"link" => FindLink(reader, stack),
 				_      => throw reader.UnexpectedTokenException(next)
 			};
+
+			static ArgumentNode FindLink(SegmentReader reader, ScopeStack stack)
+			{
+				string identifier = reader.ReadIdentifier();
+				ArgumentNode node = stack.Find(identifier);
+				if (node != null) return node;
+
+				throw new FormatException($"Cannot find object in scope with identifier '{identifier}' on line {reader.CurrentLine}.");
+			}
 		}
 	}
 
@@ -76,7 +89,7 @@ partial class EchoChronicleHierarchyObjects
 
 		public static readonly ParametersNode empty = new();
 
-		public object[] Construct(EchoChronicleHierarchyObjects objects, MethodBase targetMethod)
+		public object[] Construct(EchoChronicleHierarchyObjects main, MethodBase targetMethod)
 		{
 			if (constructed != null) return constructed;
 			var parameters = targetMethod.GetParameters();
@@ -96,7 +109,7 @@ partial class EchoChronicleHierarchyObjects
 				if (i < arguments.Count)
 				{
 					Type type = parameters[i].ParameterType;
-					argument = arguments[i].Construct(objects, type);
+					argument = arguments[i].Construct(main, type);
 				}
 				else argument = Type.Missing; //For optional parameters
 			}
@@ -104,7 +117,7 @@ partial class EchoChronicleHierarchyObjects
 			return constructed;
 		}
 
-		public T FirstMatch<T>(EchoChronicleHierarchyObjects objects, ReadOnlySpan<T> methods) where T : MethodBase
+		public T FirstMatch<T>(EchoChronicleHierarchyObjects main, ReadOnlySpan<T> methods) where T : MethodBase
 		{
 			foreach (T method in methods)
 			{
@@ -117,7 +130,7 @@ partial class EchoChronicleHierarchyObjects
 
 					if (i < arguments.Count)
 					{
-						Type argument = arguments[i].GetType(objects);
+						Type argument = arguments[i].GetType(main);
 						if (argument != null && !parameter.ParameterType.IsAssignableFrom(argument)) goto next;
 					}
 					else if (!parameter.IsOptional) goto next;
@@ -162,26 +175,42 @@ partial class EchoChronicleHierarchyObjects
 	{
 		LiteralNode(CharSpan content) => this.content = new string(content);
 
+		static LiteralNode()
+		{
+			AddTryParser<int>(Parsers.TryParse);
+			AddTryParser<float>(Parsers.TryParse);
+			AddTryParser<Float2>(Parsers.TryParse);
+			AddTryParser<Float3>(Parsers.TryParse);
+			AddTryParser<Float4>(Parsers.TryParse);
+			AddTryParser<Int2>(Parsers.TryParse);
+			AddTryParser<Int3>(Parsers.TryParse);
+			AddTryParser<Int4>(Parsers.TryParse);
+			AddTryParser<RGBA128>(RGBA128.TryParse);
+			AddTryParser<RGB128>(RGBA128.TryParse);
+			AddPathTryParser<Texture>(path => TextureGrid.Load<RGB128>(path));
+			AddPathTryParser(path => new Mesh(path));
+			AddParser(span => span);
+
+			void AddTryParser<T>(TryParser<T> source) => parsers.Add(typeof(T), (TryParser<object>)((CharSpan span, out object result) =>
+			{
+				bool success = source(span, out T original);
+				result = original;
+				return success;
+			}));
+
+			void AddPathTryParser<T>(Func<string, T> source) => parsers.Add(typeof(T), (PathParser<object>)(path => source(Path.GetFullPath(path))));
+
+			void AddParser<T>(Parser<T> source) => parsers.Add(typeof(T), (Parser<object>)(span => source(span)));
+		}
+
 		readonly string content;
 		object constructed;
 
-		static readonly Dictionary<Type, TryParser<object>> parsers = new()
-		{
-			{ typeof(int), ConvertTryParser<int>(Parsers.TryParse) },
-			{ typeof(float), ConvertTryParser<float>(Parsers.TryParse) },
-			{ typeof(Float2), ConvertTryParser<Float2>(Parsers.TryParse) },
-			{ typeof(Float3), ConvertTryParser<Float3>(Parsers.TryParse) },
-			{ typeof(Float4), ConvertTryParser<Float4>(Parsers.TryParse) },
-			{ typeof(Int2), ConvertTryParser<Int2>(Parsers.TryParse) },
-			{ typeof(Int3), ConvertTryParser<Int3>(Parsers.TryParse) },
-			{ typeof(Int4), ConvertTryParser<Int4>(Parsers.TryParse) },
-			{ typeof(RGBA128), ConvertTryParser<RGBA128>(RGBA128.TryParse) },
-			{ typeof(RGB128), ConvertTryParser<RGB128>(RGBA128.TryParse) }
-		};
+		static readonly Dictionary<Type, object> parsers = new();
 
-		public override Type GetType(EchoChronicleHierarchyObjects objects) => null;
+		public override Type GetType(EchoChronicleHierarchyObjects main) => null;
 
-		public override object Construct(EchoChronicleHierarchyObjects objects, Type targetType)
+		public override object Construct(EchoChronicleHierarchyObjects main, Type targetType)
 		{
 			if (targetType.HasElementType) targetType = targetType.GetElementType()!;
 
@@ -191,8 +220,31 @@ partial class EchoChronicleHierarchyObjects
 				return constructed;
 			}
 
-			if (!parsers.TryGetValue(targetType, out TryParser<object> parser)) throw new FormatException($"No parser found for literal type '{targetType}'.");
-			if (!parser(content, out constructed)) throw new FormatException($"Unable to parse literal string '{content}' to destination type '{targetType}'.");
+			bool success;
+
+			switch (parsers.TryGetValue(targetType))
+			{
+				case TryParser<object> parser:
+				{
+					success = parser(content, out constructed);
+					break;
+				}
+				case PathParser<object> parser:
+				{
+					constructed = parser(Path.Join(main.directory, content));
+					success = true;
+					break;
+				}
+				case Parser<object> parser:
+				{
+					constructed = parser(content);
+					success = true;
+					break;
+				}
+				default: throw new FormatException($"No parser found for literal type '{targetType}'.");
+			}
+
+			if (!success) throw new FormatException($"Unable to parse literal string '{content}' to destination type '{targetType}'.");
 
 			return constructed;
 		}
@@ -201,19 +253,17 @@ partial class EchoChronicleHierarchyObjects
 		{
 			// CharSpan next = reader.PeekNext();
 			//TODO: handle explicitly defined types using 'next'
-			//note that the returned span can change if we invoke ReadNext again
 
-			return new LiteralNode(reader.ReadUntil('`'));
+			return new LiteralNode(reader.ReadUntil('"'));
 		}
 
-		static TryParser<object> ConvertTryParser<T>(TryParser<T> source) => (CharSpan span, out object result) =>
-		{
-			bool success = source(span, out T original);
-			result = original;
-			return success;
-		};
+		// ReSharper disable TypeParameterCanBeVariant
 
 		delegate bool TryParser<T>(CharSpan span, out T result);
+		delegate T PathParser<T>(string path);
+		delegate T Parser<T>(string span);
+
+		// ReSharper restore TypeParameterCanBeVariant
 	}
 
 	sealed class TypedNode : ArgumentNode
@@ -228,27 +278,27 @@ partial class EchoChronicleHierarchyObjects
 
 		string TypeString => constructor.identifier;
 
-		public override Type GetType(EchoChronicleHierarchyObjects objects) => _type ??= objects.typeMap[TypeString] ?? throw new FormatException($"Unrecognized type '{TypeString}'.");
+		public override Type GetType(EchoChronicleHierarchyObjects main) => _type ??= main.typeMap[TypeString] ?? throw new FormatException($"Unrecognized type '{TypeString}'.");
 
-		public override object Construct(EchoChronicleHierarchyObjects objects, Type targetType)
+		public override object Construct(EchoChronicleHierarchyObjects main, Type targetType)
 		{
-			object result = Construct(objects);
+			object result = Construct(main);
 			Assert.IsTrue(targetType.IsInstanceOfType(result));
 			return result;
 		}
 
-		public object Construct(EchoChronicleHierarchyObjects objects)
+		public object Construct(EchoChronicleHierarchyObjects main)
 		{
 			if (constructed != null) return constructed;
 
-			Type type = GetType(objects);
+			Type type = GetType(main);
 
 			ReadOnlySpan<ConstructorInfo> candidates = type.GetConstructors();
-			ConstructorInfo matched = constructor.node.FirstMatch(objects, candidates);
+			ConstructorInfo matched = constructor.node.FirstMatch(main, candidates);
 
 			if (matched == null) throw new FormatException($"No matching constructor for type '{TypeString}'.");
 
-			constructed = matched.Invoke(constructor.node.Construct(objects, matched));
+			constructed = matched.Invoke(constructor.node.Construct(main, matched));
 
 			foreach ((string identifier, Node node) in children)
 			{
@@ -265,11 +315,11 @@ partial class EchoChronicleHierarchyObjects
 							if (method.Name == identifier) fill.Add(method);
 						}
 
-						MethodInfo selected = parameters.FirstMatch<MethodInfo>(objects, fill.Filled);
+						MethodInfo selected = parameters.FirstMatch<MethodInfo>(main, fill.Filled);
 
 						if (selected == null) throw new FormatException($"No matching method named '{identifier}' on type '{TypeString}'.");
 
-						selected.Invoke(constructed, parameters.Construct(objects, selected));
+						selected.Invoke(constructed, parameters.Construct(main, selected));
 
 						break;
 					}
@@ -279,7 +329,7 @@ partial class EchoChronicleHierarchyObjects
 						PropertyInfo property = type.GetProperty(identifier);
 						MethodInfo setter = property?.GetSetMethod();
 
-						if (setter != null) setter.Invoke(constructed, new[] { argument.Construct(objects, property.PropertyType) });
+						if (setter != null) setter.Invoke(constructed, new[] { argument.Construct(main, property.PropertyType) });
 						else throw new FormatException($"No setter found for property named '{identifier}' on type '{TypeString}'.");
 
 						break;
