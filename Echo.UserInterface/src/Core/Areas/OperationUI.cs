@@ -97,7 +97,7 @@ public class OperationUI : AreaUI
 		ImGui.NewLine();
 
 		ImGuiCustom.Property("Time Spent", time.ToStringDefault());
-		ImGuiCustom.Property("Time Spend (All Worker)", operation.TotalTime.ToStringDefault());
+		ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToStringDefault());
 
 		if (progress.AlmostEquals() || progress.AlmostEquals(1d))
 		{
@@ -158,8 +158,8 @@ public class OperationUI : AreaUI
 			}
 			else
 			{
-				ImGuiCustom.TableItem((count * timeR).ToStringDefault());
-				ImGuiCustom.TableItem((count * progressR).ToStringDefault());
+				ImGuiCustom.TableItem(((float)(count * timeR)).ToStringDefault());
+				ImGuiCustom.TableItem(((ulong)(count * progressR)).ToStringDefault());
 			}
 		}
 
