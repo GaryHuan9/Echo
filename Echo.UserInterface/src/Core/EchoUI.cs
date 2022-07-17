@@ -125,8 +125,8 @@ public sealed class EchoUI : IApplication
 		{
 			0 or 1 => new RGB128(0.1581f, 0.6112f, 0.3763f), //Green
 			2 or 3 => (RGB128)RGBA128.Parse("#FA983A"),      //Orange
-			4 => (RGB128)RGBA128.Parse("#DD444C"),           //REDO
-			_ => new RGB128(0.1581f, 0.3763f, 0.6112f)       //Signature
+			4      => (RGB128)RGBA128.Parse("#DD444C"),      //REDO
+			_      => new RGB128(0.1581f, 0.3763f, 0.6112f)  //Signature
 		};
 
 		const float Alpha0 = 0.33f;
