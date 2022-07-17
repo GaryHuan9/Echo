@@ -41,7 +41,7 @@ public record EvaluationProfile
 	/// <summary>
 	/// The maximum possible number of epochs that can be performed.
 	/// </summary>
-	public int MaxEpoch { get; init; } = 16;
+	public int MaxEpoch { get; init; } = 20;
 
 	/// <summary>
 	/// Evaluation is completed after noise is under this threshold.
@@ -51,7 +51,7 @@ public record EvaluationProfile
 	/// <summary>
 	/// The <see cref="ITilePattern"/> used to determine the sequence of the tiles.
 	/// </summary>
-	public ITilePattern Pattern { get; init; } = new ScrambledPattern();
+	public ITilePattern Pattern { get; init; } = new HilbertCurvePattern();
 
 	/// <summary>
 	/// To be invoked to authenticate the validity of this <see cref="EvaluationProfile"/>.
