@@ -188,7 +188,6 @@ partial class EchoChronicleHierarchyObjects
 			AddTryParser<RGBA128>(RGBA128.TryParse);
 			AddTryParser<RGB128>(RGBA128.TryParse);
 			AddPathTryParser<Texture>(path => TextureGrid.Load<RGB128>(path));
-			AddPathTryParser(path => new Mesh(path));
 			AddParser(span => span);
 
 			void AddTryParser<T>(TryParser<T> source) => parsers.Add(typeof(T), (TryParser<object>)((CharSpan span, out object result) =>
@@ -213,12 +212,7 @@ partial class EchoChronicleHierarchyObjects
 		public override object Construct(EchoChronicleHierarchyObjects main, Type targetType)
 		{
 			if (targetType.HasElementType) targetType = targetType.GetElementType()!;
-
-			if (constructed != null)
-			{
-				Assert.AreEqual(constructed.GetType(), targetType);
-				return constructed;
-			}
+			if (constructed != null && targetType.IsInstanceOfType(constructed)) return constructed;
 
 			bool success;
 
@@ -249,13 +243,7 @@ partial class EchoChronicleHierarchyObjects
 			return constructed;
 		}
 
-		public static LiteralNode Create(SegmentReader reader)
-		{
-			// CharSpan next = reader.PeekNext();
-			//TODO: handle explicitly defined types using 'next'
-
-			return new LiteralNode(reader.ReadUntil('"'));
-		}
+		public static LiteralNode Create(SegmentReader reader) => new(reader.ReadUntil('"'));
 
 		// ReSharper disable TypeParameterCanBeVariant
 
@@ -380,7 +368,6 @@ partial class EchoChronicleHierarchyObjects
 					node.children.Add(new Identified<Node>(identifier, child));
 				}
 				else if (EqualsSingle(next, ':'))
-
 				{
 					string identifier = reader.ReadIdentifier();
 					reader.ThrowIfNextMismatch('=');

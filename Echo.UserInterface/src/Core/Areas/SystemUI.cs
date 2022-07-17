@@ -257,7 +257,7 @@ public class SystemUI : AreaUI
 
 	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 	{
-		var objects = new EchoChronicleHierarchyObjects("ext/Scenes/SingleBunny/bunny.echo");
+		var objects = new EchoChronicleHierarchyObjects("ext/Scenes/Simple/cornell.echo");
 
 		var scene = objects.ConstructFirst<Scene>();
 		var preparer = new ScenePreparer(scene);
