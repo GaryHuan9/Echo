@@ -55,7 +55,7 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 
 		var moment = new Moment();
 
-		while (!application.RequestTermination)
+		while (true)
 		{
 			//Capture the time for this frame
 			moment = new Moment(moment, stopwatch);

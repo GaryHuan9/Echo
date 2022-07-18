@@ -32,7 +32,6 @@ public sealed class EchoUI : IApplication
 	public TimeSpan UpdateDelay { get; set; } = TimeSpan.Zero;
 	public string Label => "Echo User Interface";
 
-	public bool RequestTermination { get; private set; }
 	public ImGuiDevice Backend { get; private set; }
 
 	public void Initialize(ImGuiDevice backend)

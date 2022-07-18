@@ -30,7 +30,7 @@ public class LogsUI : AreaUI
 		ImGui.Separator();
 		ImGui.BeginChild("History");
 
-		foreach (string log in LogList.Logs) ImGui.TextUnformatted(log);
+		foreach (string log in LogList.Logs) ImGui.TextWrapped(log);
 
 		if (autoScroll && ImGui.GetScrollY() >= ImGui.GetScrollMaxY()) ImGui.SetScrollHereY(1f);
 
