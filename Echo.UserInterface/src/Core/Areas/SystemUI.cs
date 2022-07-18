@@ -14,19 +14,13 @@ public class SystemUI : AreaUI
 	public override void Initialize()
 	{
 		base.Initialize();
-
-		CreateDevice();
 		AssignUpdateFrequency();
 	}
-
-	Device device;
 
 	string frameTime;
 	string frameRate;
 	TimeSpan lastUpdateTime;
 	int updateFrequency = 100;
-
-	bool HasDevice => device is { Disposed: false };
 
 	protected override void Update(in Moment moment)
 	{
@@ -39,27 +33,19 @@ public class SystemUI : AreaUI
 		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
 		if (ImGui.CollapsingHeader("Device and Workers"))
 		{
-			if (!HasDevice)
+			var device = Device.Instance;
+
+			if (device == null)
 			{
-				if (ImGui.Button("Create")) CreateDevice();
+				if (ImGui.Button("Create")) Device.CreateOrGet();
 				ImGui.TextWrapped("Create a compute device to begin!");
 			}
-			else DrawDevice();
-
-			if (HasDevice) DrawWorkers();
+			else
+			{
+				DrawDevice(device);
+				DrawWorkers(device);
+			}
 		}
-	}
-
-	protected override void Dispose(bool disposing)
-	{
-		base.Dispose(disposing);
-		if (disposing) device?.Dispose();
-	}
-
-	void CreateDevice()
-	{
-		device = Device.Create();
-		LogList.Add("Created CPU compute device.");
 	}
 
 	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
@@ -93,7 +79,18 @@ public class SystemUI : AreaUI
 		if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
 	}
 
-	void DrawGarbageCollector()
+	static string GetCompilerMode()
+	{
+#if DEBUG
+		return "DEBUG";
+#elif RELEASE
+		return "RELEASE";
+#else
+		return "Unknown";
+#endif
+	}
+
+	static void DrawGarbageCollector()
 	{
 		var info = GC.GetGCMemoryInfo();
 
@@ -148,7 +145,7 @@ public class SystemUI : AreaUI
 		}
 	}
 
-	void DrawDevice()
+	static void DrawDevice(Device device)
 	{
 		//Buttons
 		ImGui.BeginDisabled(device.IsIdle);
@@ -172,7 +169,6 @@ public class SystemUI : AreaUI
 		if (ImGui.Button("Dispose"))
 		{
 			ActionQueue.Enqueue("Device Dispose", device.Dispose);
-			device = null;
 			return;
 		}
 
@@ -199,7 +195,7 @@ public class SystemUI : AreaUI
 		}
 	}
 
-	void DrawWorkers()
+	static void DrawWorkers(Device device)
 	{
 		//Worker table
 		if (ImGui.BeginTable("State", 3, ImGuiCustom.DefaultTableFlags))
@@ -218,16 +214,5 @@ public class SystemUI : AreaUI
 
 			ImGui.EndTable();
 		}
-	}
-
-	static string GetCompilerMode()
-	{
-#if DEBUG
-		return "DEBUG";
-#elif RELEASE
-		return "RELEASE";
-#else
-		return "Unknown";
-#endif
 	}
 }
