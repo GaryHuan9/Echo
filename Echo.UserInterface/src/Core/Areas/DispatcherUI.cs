@@ -36,6 +36,21 @@ public class DispatcherUI : AreaUI
 		RecurseSubdirectories = false
 	};
 
+	public override void Initialize()
+	{
+		base.Initialize();
+
+		string[] arguments = Environment.GetCommandLineArgs();
+
+		if (arguments.Length > 1)
+		{
+			filePath = Path.GetRelativePath(Environment.CurrentDirectory, arguments[1]);
+
+			ReadFile();
+			Dispatch(Device.CreateOrGet());
+		}
+	}
+
 	protected override unsafe void Update(in Moment moment)
 	{
 		var device = Device.Instance;
@@ -61,7 +76,7 @@ public class DispatcherUI : AreaUI
 		if (ImGui.Button("Load and Dispatch"))
 		{
 			ReadFile();
-			if (objects != null) Dispatch(device);
+			Dispatch(device);
 		}
 
 		if (objects == null)
@@ -116,6 +131,8 @@ public class DispatcherUI : AreaUI
 
 	void Dispatch(Device device)
 	{
+		if (objects == null) return;
+
 		string sceneLabel = sceneLabels.TryGetValue(sceneIndex);
 		string profileLabel = profileLabels.TryGetValue(profileIndex);
 
