@@ -21,14 +21,7 @@ partial struct Float3
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Int4(in Float3 value) => (Int4)(Int3)value;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static explicit operator Float2(in Float3 value)
-	{
-#if NET5_0_OR_GREATER
-		return Unsafe.As<Float3, Float2>(ref Unsafe.AsRef(in value));
-#else
-			return new Float2(value.X, value.Y);
-#endif
-	}
+	public static explicit operator Float2(in Float3 value) => Unsafe.As<Float3, Float2>(ref Unsafe.AsRef(in value));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Float3(float value) => new Float3(value, value, value);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Float4(in Float3 value) => new Float4(value.X, value.Y, value.Z, 0f);
@@ -41,24 +34,10 @@ partial struct Float4
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Int4(in Float4 value) => new Int4((int)value.X, (int)value.Y, (int)value.Z, (int)value.W);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static explicit operator Float2(in Float4 value)
-	{
-#if NET5_0_OR_GREATER
-		return Unsafe.As<Float4, Float2>(ref Unsafe.AsRef(in value));
-#else
-			return new Float2(value.X, value.Y);
-#endif
-	}
+	public static explicit operator Float2(in Float4 value) => Unsafe.As<Float4, Float2>(ref Unsafe.AsRef(in value));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static explicit operator Float3(in Float4 value)
-	{
-#if NET5_0_OR_GREATER
-		return Unsafe.As<Float4, Float3>(ref Unsafe.AsRef(in value));
-#else
-			return new Float3(value.X, value.Y, value.Z);
-#endif
-	}
+	public static explicit operator Float3(in Float4 value) => Unsafe.As<Float4, Float3>(ref Unsafe.AsRef(in value));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Float4(float value) => new Float4(Vector128.Create(value));
 }
@@ -77,14 +56,7 @@ partial struct Int2
 partial struct Int3
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static explicit operator Int2(in Int3 value)
-	{
-#if NET5_0_OR_GREATER
-		return Unsafe.As<Int3, Int2>(ref Unsafe.AsRef(in value));
-#else
-			return new Int2(value.X, value.Y);
-#endif
-	}
+	public static explicit operator Int2(in Int3 value) => Unsafe.As<Int3, Int2>(ref Unsafe.AsRef(in value));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Int3(int value) => new Int3(value, value, value);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Int4(in Int3 value) => new Int4(value.X, value.Y, value.Z, 0);
@@ -97,24 +69,10 @@ partial struct Int3
 partial struct Int4
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static explicit operator Int2(in Int4 value)
-	{
-#if NET5_0_OR_GREATER
-		return Unsafe.As<Int4, Int2>(ref Unsafe.AsRef(in value));
-#else
-			return new Int2(value.X, value.Y);
-#endif
-	}
+	public static explicit operator Int2(in Int4 value) => Unsafe.As<Int4, Int2>(ref Unsafe.AsRef(in value));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static explicit operator Int3(in Int4 value)
-	{
-#if NET5_0_OR_GREATER
-		return Unsafe.As<Int4, Int3>(ref Unsafe.AsRef(in value));
-#else
-			return new Int3(value.X, value.Y, value.Z);
-#endif
-	}
+	public static explicit operator Int3(in Int4 value) => Unsafe.As<Int4, Int3>(ref Unsafe.AsRef(in value));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static explicit operator Int4(int value) => new Int4(value, value, value, value);
 

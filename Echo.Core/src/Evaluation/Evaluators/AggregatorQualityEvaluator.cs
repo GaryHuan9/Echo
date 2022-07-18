@@ -6,7 +6,6 @@
 // using Echo.Core.Textures.Evaluation;
 // using Echo.Core.Scenic.Preparation;
 // using Echo.Core.Evaluation.Operations;
-// using CodeHelpers.Packed;
 
 // namespace Echo.Core.Evaluation.Evaluators;
 

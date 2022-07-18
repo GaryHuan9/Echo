@@ -5,7 +5,6 @@ using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;

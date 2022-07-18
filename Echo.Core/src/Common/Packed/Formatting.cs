@@ -2,7 +2,7 @@
 using CharSpan = System.ReadOnlySpan<char>;
 
 namespace Echo.Core.Common.Packed;
-#if NET6_0
+
 static class Formatting
 {
 	public static bool Begin(Span<char> destination, out int charsWritten)
@@ -47,19 +47,16 @@ static class Formatting
 		return true;
 	}
 }
-#endif
 
 partial struct Float2
 {
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"({X.ToString(format, provider)}, {Y.ToString(format, provider)})";
 
-#if NET6_0
 	public bool TryFormat(Span<char> destination, out int charsWritten, CharSpan format = default, IFormatProvider provider = null) =>
 		Formatting.Begin(destination, out charsWritten) &&
 		Formatting.AppendOne(destination, X, ref charsWritten, format, provider) &&
 		Formatting.AppendEnd(destination, Y, ref charsWritten, format, provider);
-#endif
 }
 
 partial struct Float3
@@ -67,13 +64,11 @@ partial struct Float3
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"({X.ToString(format, provider)}, {Y.ToString(format, provider)}, {Z.ToString(format, provider)})";
 
-#if NET6_0
 	public bool TryFormat(Span<char> destination, out int charsWritten, CharSpan format = default, IFormatProvider provider = null) =>
 		Formatting.Begin(destination, out charsWritten) &&
 		Formatting.AppendOne(destination, X, ref charsWritten, format, provider) &&
 		Formatting.AppendOne(destination, Y, ref charsWritten, format, provider) &&
 		Formatting.AppendEnd(destination, Z, ref charsWritten, format, provider);
-#endif
 }
 
 partial struct Float4
@@ -81,14 +76,12 @@ partial struct Float4
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"({X.ToString(format, provider)}, {Y.ToString(format, provider)}, {Z.ToString(format, provider)}, {W.ToString(format, provider)})";
 
-#if NET6_0
 	public bool TryFormat(Span<char> destination, out int charsWritten, CharSpan format = default, IFormatProvider provider = null) =>
 		Formatting.Begin(destination, out charsWritten) &&
 		Formatting.AppendOne(destination, X, ref charsWritten, format, provider) &&
 		Formatting.AppendOne(destination, Y, ref charsWritten, format, provider) &&
 		Formatting.AppendOne(destination, Z, ref charsWritten, format, provider) &&
 		Formatting.AppendEnd(destination, W, ref charsWritten, format, provider);
-#endif
 }
 
 partial struct Int2
@@ -96,12 +89,10 @@ partial struct Int2
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"({X.ToString(format, provider)}, {Y.ToString(format, provider)})";
 
-#if NET6_0
 	public bool TryFormat(Span<char> destination, out int charsWritten, CharSpan format = default, IFormatProvider provider = null) =>
 		Formatting.Begin(destination, out charsWritten) &&
 		Formatting.AppendOne(destination, X, ref charsWritten, format, provider) &&
 		Formatting.AppendEnd(destination, Y, ref charsWritten, format, provider);
-#endif
 }
 
 partial struct Int3
@@ -109,13 +100,11 @@ partial struct Int3
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"({X.ToString(format, provider)}, {Y.ToString(format, provider)}, {Z.ToString(format, provider)})";
 
-#if NET6_0
 	public bool TryFormat(Span<char> destination, out int charsWritten, CharSpan format = default, IFormatProvider provider = null) =>
 		Formatting.Begin(destination, out charsWritten) &&
 		Formatting.AppendOne(destination, X, ref charsWritten, format, provider) &&
 		Formatting.AppendOne(destination, Y, ref charsWritten, format, provider) &&
 		Formatting.AppendEnd(destination, Z, ref charsWritten, format, provider);
-#endif
 }
 
 partial struct Int4
@@ -123,12 +112,10 @@ partial struct Int4
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"({X.ToString(format, provider)}, {Y.ToString(format, provider)}, {Z.ToString(format, provider)}, {W.ToString(format, provider)})";
 
-#if NET6_0
 	public bool TryFormat(Span<char> destination, out int charsWritten, CharSpan format = default, IFormatProvider provider = null) =>
 		Formatting.Begin(destination, out charsWritten) &&
 		Formatting.AppendOne(destination, X, ref charsWritten, format, provider) &&
 		Formatting.AppendOne(destination, Y, ref charsWritten, format, provider) &&
 		Formatting.AppendOne(destination, Z, ref charsWritten, format, provider) &&
 		Formatting.AppendEnd(destination, W, ref charsWritten, format, provider);
-#endif
 }

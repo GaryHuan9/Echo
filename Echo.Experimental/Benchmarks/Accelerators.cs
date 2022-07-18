@@ -113,7 +113,7 @@ public class Accelerators
 	// |   Trace | Regular | 59.15 ms | 0.317 ms | 0.297 ms |
 	// | Occlude | Regular | 47.05 ms | 0.334 ms | 0.296 ms |
 
-	// Using CodeHelpers Float4 SIMD
+	// Using Float4 SIMD
 	// |  Method |         Type |      Mean |     Error |    StdDev |
 	// |-------- |------------- |----------:|----------:|----------:|
 	// |   Trace |    NoDivQuad | 41.065 ms | 0.2996 ms | 0.2802 ms |
