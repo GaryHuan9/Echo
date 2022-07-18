@@ -216,6 +216,13 @@ public sealed class Device : IDisposable
 	{
 		if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
 
+		//Unregister from active instance
+		lock (instanceLocker)
+		{
+			Assert.AreEqual(_instance, this);
+			Instance = null;
+		}
+
 		//Dispose workers
 		lock (manageLocker)
 		{
@@ -300,5 +307,17 @@ public sealed class Device : IDisposable
 
 		if (Instance == null) return Instance = new Device(Environment.ProcessorCount);
 		throw new InvalidOperationException($"Only one {nameof(Device)} can exist within one {nameof(AppDomain)}.");
+	}
+
+	/// <summary>
+	/// Creates or get a <see cref="Device"/>.
+	/// </summary>
+	/// <returns>The <see cref="Device"/> that was created or retrieved.</returns>
+	/// <remarks>This method is similar to atomically checking whether <see cref="Instance"/> is null
+	/// and then conditional invoking <see cref="Create"/> if <see cref="Instance"/> is null.</remarks>
+	public static Device CreateOrGet()
+	{
+		using var _ = instanceLocker.Fetch();
+		return Instance ?? Create();
 	}
 }

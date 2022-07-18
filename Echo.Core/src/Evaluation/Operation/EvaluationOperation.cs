@@ -13,16 +13,18 @@ namespace Echo.Core.Evaluation.Operation;
 public sealed partial class EvaluationOperation : Operation<EvaluationStatistics>
 {
 	// ReSharper disable LocalVariableHidesMember
-	EvaluationOperation(EvaluationProfile profile, ImmutableArray<IWorker> workers, ImmutableArray<Context> contexts)
+	EvaluationOperation(PreparedScene scene, EvaluationProfile profile, ImmutableArray<IWorker> workers, ImmutableArray<Context> contexts)
 		: base(workers, Construct(profile, out var tilePositions, out var destination))
 	// ReSharper restore LocalVariableHidesMember
 	{
+		this.scene = scene;
 		this.profile = profile;
 		this.tilePositions = tilePositions;
 		this.destination = destination;
 		this.contexts = contexts;
 	}
 
+	public readonly PreparedScene scene;
 	public readonly EvaluationProfile profile;
 	public readonly ImmutableArray<Int2> tilePositions;
 	public readonly IEvaluationLayer destination;
@@ -34,7 +36,6 @@ public sealed partial class EvaluationOperation : Operation<EvaluationStatistics
 		(ContinuousDistribution distribution, Allocator allocator) = contexts[worker.Index];
 
 		Evaluator evaluator = profile.Evaluator;
-		PreparedScene scene = profile.Scene;
 		RenderBuffer buffer = profile.Buffer;
 
 		Int2 tilePosition = tilePositions[(int)procedure.index];
