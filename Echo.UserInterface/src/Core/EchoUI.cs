@@ -21,7 +21,8 @@ public sealed class EchoUI : IApplication
 		builder.Add(new OperationUI { Root = this });
 		builder.Add(new TilesUI { Root = this });
 		builder.Add(new LogsUI { Root = this });
-		builder.Add(new SceneUI { Root = this });
+		// builder.Add(new SceneUI { Root = this });
+		builder.Add(new DispatcherUI { Root = this });
 
 		areas = builder.ToImmutable();
 	}
@@ -31,7 +32,6 @@ public sealed class EchoUI : IApplication
 	public TimeSpan UpdateDelay { get; set; } = TimeSpan.Zero;
 	public string Label => "Echo User Interface";
 
-	public bool RequestTermination { get; private set; }
 	public ImGuiDevice Backend { get; private set; }
 
 	public void Initialize(ImGuiDevice backend)
@@ -121,12 +121,12 @@ public sealed class EchoUI : IApplication
 
 		var colors = style.Colors;
 
-		RGB128 color = SystemPrng.Shared.Next1(16) switch
+		RGB128 color = SystemPrng.Shared.Next1(32) switch
 		{
 			0 or 1 => new RGB128(0.1581f, 0.6112f, 0.3763f), //Green
 			2 or 3 => (RGB128)RGBA128.Parse("#FA983A"),      //Orange
-			4 => (RGB128)RGBA128.Parse("#DD444C"),           //REDO
-			_ => new RGB128(0.1581f, 0.3763f, 0.6112f)       //Signature
+			4      => (RGB128)RGBA128.Parse("#DD444C"),      //REDO
+			_      => new RGB128(0.1581f, 0.3763f, 0.6112f)  //Signature
 		};
 
 		const float Alpha0 = 0.33f;

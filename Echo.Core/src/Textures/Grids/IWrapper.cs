@@ -27,7 +27,7 @@ public interface IWrapper
 	/// </summary>
 	void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>;
 
-	class Clamp : IWrapper
+	private class Clamp : IWrapper
 	{
 		/// <inheritdoc/>
 		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T> => position = position.Clamp(Int2.Zero, texture.oneLess);
@@ -62,7 +62,7 @@ public interface IWrapper
 		}
 	}
 
-	class Repeat : IWrapper
+	private class Repeat : IWrapper
 	{
 		/// <inheritdoc/>
 		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T> => position = position.Repeat(texture.size);
@@ -74,7 +74,7 @@ public interface IWrapper
 		}
 	}
 
-	class Mirror : IWrapper
+	private class Mirror : IWrapper
 	{
 		/// <inheritdoc/>
 		public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T>

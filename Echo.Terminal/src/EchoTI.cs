@@ -1,12 +1,8 @@
-﻿using CodeHelpers.Packed;
-using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Common.Compute;
-using Echo.Core.Evaluation.Evaluators;
+﻿using Echo.Core.Common.Compute;
 using Echo.Core.Evaluation.Operation;
-using Echo.Core.Evaluation.Sampling;
-using Echo.Core.Scenic.Examples;
+using Echo.Core.InOut;
+using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures.Evaluation;
 using Echo.Terminal.Application;
 using Echo.Terminal.Application.Report;
 using Echo.Terminal.Core.Interface;
@@ -45,26 +41,16 @@ public class EchoTI : RootTI
 	{
 		base.ProcessArguments(arguments);
 
-		var scene = new SingleBunny();
+		var objects = new EchoChronicleHierarchyObjects("ext/Scenes/SingleBunny/bunny.echo");
 
-		var scenePreparer = new ScenePreparer(scene);
-
-		PreparedScene preparedScene = scenePreparer.Prepare();
-
-		var evaluationProfile = new EvaluationProfile
-		{
-			Scene = preparedScene,
-			Evaluator = new PathTracedEvaluator(),
-			Distribution = new StratifiedDistribution { Extend = 16 },
-			Buffer = new RenderBuffer(new Int2(960, 540)),
-			Pattern = new SpiralPattern(),
-			MinEpoch = 1,
-			MaxEpoch = 20
-		};
+		var scene = objects.ConstructFirst<Scene>();
+		var preparer = new ScenePreparer(scene);
+		var profile = objects.ConstructFirst<EvaluationProfile>();
 
 		var operation = new EvaluationOperation.Factory
 		{
-			NextProfile = evaluationProfile
+			NextScene = preparer.Prepare(),
+			NextProfile = profile
 		};
 
 		device.Dispatch(operation);
