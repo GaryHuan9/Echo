@@ -1,14 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using CodeHelpers.Packed;
 using Echo.Core.Common.Compute;
-using Echo.Core.Evaluation.Evaluators;
-using Echo.Core.Evaluation.Operation;
-using Echo.Core.Evaluation.Sampling;
-using Echo.Core.Scenic.Examples;
-using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures.Evaluation;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -22,24 +14,13 @@ public class SystemUI : AreaUI
 	public override void Initialize()
 	{
 		base.Initialize();
-
-		if (Environment.GetCommandLineArgs().Contains("-start", StringComparer.OrdinalIgnoreCase))
-		{
-			CreateDevice();
-			DispatchDevice(device);
-		}
-
 		AssignUpdateFrequency();
 	}
-
-	Device device;
 
 	string frameTime;
 	string frameRate;
 	TimeSpan lastUpdateTime;
 	int updateFrequency = 100;
-
-	bool HasDevice => device is { Disposed: false };
 
 	protected override void Update(in Moment moment)
 	{
@@ -52,34 +33,19 @@ public class SystemUI : AreaUI
 		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
 		if (ImGui.CollapsingHeader("Device and Workers"))
 		{
-			if (!HasDevice)
-			{
-				if (ImGui.Button("Create and Dispatch"))
-				{
-					CreateDevice();
-					DispatchDevice(device);
-				}
+			var device = Device.Instance;
 
-				ImGui.SameLine();
-				if (ImGui.Button("Create")) CreateDevice();
+			if (device == null)
+			{
+				if (ImGui.Button("Create")) Device.CreateOrGet();
 				ImGui.TextWrapped("Create a compute device to begin!");
 			}
-			else DrawDevice();
-
-			if (HasDevice) DrawWorkers();
+			else
+			{
+				DrawDevice(device);
+				DrawWorkers(device);
+			}
 		}
-	}
-
-	protected override void Dispose(bool disposing)
-	{
-		base.Dispose(disposing);
-		if (disposing) device?.Dispose();
-	}
-
-	void CreateDevice()
-	{
-		device = Device.Create();
-		LogList.Add("Created CPU compute device.");
 	}
 
 	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
@@ -113,7 +79,18 @@ public class SystemUI : AreaUI
 		if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
 	}
 
-	void DrawGarbageCollector()
+	static string GetCompilerMode()
+	{
+#if DEBUG
+		return "DEBUG";
+#elif RELEASE
+		return "RELEASE";
+#else
+		return "Unknown";
+#endif
+	}
+
+	static void DrawGarbageCollector()
 	{
 		var info = GC.GetGCMemoryInfo();
 
@@ -168,18 +145,11 @@ public class SystemUI : AreaUI
 		}
 	}
 
-	void DrawDevice()
+	static void DrawDevice(Device device)
 	{
 		//Buttons
-		bool idle = device.IsIdle;
-		ImGui.BeginDisabled(!idle);
+		ImGui.BeginDisabled(device.IsIdle);
 
-		if (ImGui.Button("Dispatch")) DispatchDevice(device);
-
-		ImGui.EndDisabled();
-		ImGui.BeginDisabled(idle);
-
-		ImGui.SameLine();
 		if (ImGui.Button("Pause"))
 		{
 			device.Pause();
@@ -199,7 +169,6 @@ public class SystemUI : AreaUI
 		if (ImGui.Button("Dispose"))
 		{
 			ActionQueue.Enqueue("Device Dispose", device.Dispose);
-			device = null;
 			return;
 		}
 
@@ -226,7 +195,7 @@ public class SystemUI : AreaUI
 		}
 	}
 
-	void DrawWorkers()
+	static void DrawWorkers(Device device)
 	{
 		//Worker table
 		if (ImGui.BeginTable("State", 3, ImGuiCustom.DefaultTableFlags))
@@ -246,40 +215,4 @@ public class SystemUI : AreaUI
 			ImGui.EndTable();
 		}
 	}
-
-	static string GetCompilerMode()
-	{
-#if DEBUG
-		return "DEBUG";
-#elif RELEASE
-		return "RELEASE";
-#else
-		return "Unknown";
-#endif
-	}
-
-	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
-	{
-		var scene = new SingleBunny();
-
-		var scenePreparer = new ScenePreparer(scene);
-
-		var evaluationProfile = new EvaluationProfile
-		{
-			Scene = scenePreparer.Prepare(),
-			Evaluator = new PathTracedEvaluator(),
-			Distribution = new StratifiedDistribution { Extend = 16 },
-			Buffer = new RenderBuffer(new Int2(960, 540)),
-			Pattern = new HilbertCurvePattern(),
-			MinEpoch = 1,
-			MaxEpoch = 20
-		};
-
-		var operation = new EvaluationOperation.Factory
-		{
-			NextProfile = evaluationProfile
-		};
-
-		device.Dispatch(operation);
-	});
 }

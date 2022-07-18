@@ -1,5 +1,4 @@
 ﻿using CodeHelpers;
-using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Evaluation;
@@ -11,11 +10,6 @@ namespace Echo.Core.Evaluation.Operation;
 /// </summary>
 public record EvaluationProfile
 {
-	/// <summary>
-	/// The <see cref="PreparedScene"/> to evaluate.
-	/// </summary>
-	public PreparedScene Scene { get; init; }
-
 	/// <summary>
 	/// The fundamental evaluation method used.
 	/// </summary>
@@ -58,7 +52,6 @@ public record EvaluationProfile
 	/// </summary>
 	public void Validate()
 	{
-		if (Scene == null) throw ExceptionHelper.Invalid(nameof(Scene), InvalidType.isNull);
 		if (Evaluator == null) throw ExceptionHelper.Invalid(nameof(Evaluator), InvalidType.isNull);
 		if (Distribution == null) throw ExceptionHelper.Invalid(nameof(Distribution), InvalidType.isNull);
 		if (Buffer == null) throw ExceptionHelper.Invalid(nameof(Buffer), InvalidType.isNull);
