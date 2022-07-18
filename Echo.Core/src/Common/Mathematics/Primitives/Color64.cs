@@ -40,20 +40,20 @@ public readonly struct Color64 : IEquatable<Color64>
 		}
 	}
 
-	public static readonly Color64 black = new Color64(0, 0, 0);
-	public static readonly Color64 white = new Color64(ushort.MaxValue, ushort.MaxValue, ushort.MaxValue);
+	public static readonly Color64 black = new(0, 0, 0);
+	public static readonly Color64 white = new(ushort.MaxValue, ushort.MaxValue, ushort.MaxValue);
 
 	static float ToDecimal(ushort value) => (float)value / ushort.MaxValue;
 	static ushort ToInteger(float value) => (ushort)(value.Clamp() * ushort.MaxValue);
 
-	public static explicit operator Color64(Float3 value) => new Color64(value.X, value.Y, value.Z);
-	public static explicit operator Color64(Int3 value) => new Color64(value.X, value.Y, value.Z);
+	public static explicit operator Color64(Float3 value) => new(value.X, value.Y, value.Z);
+	public static explicit operator Color64(Int3 value) => new(value.X, value.Y, value.Z);
 
-	public static explicit operator Float3(Color64 value) => new Float3(value.RFloat, value.GFloat, value.BFloat);
-	public static explicit operator Int3(Color64 value) => new Int3(value.r, value.g, value.b);
+	public static explicit operator Float3(Color64 value) => new(value.RFloat, value.GFloat, value.BFloat);
+	public static explicit operator Int3(Color64 value) => new(value.r, value.g, value.b);
 
-	public static explicit operator Float4(Color64 value) => new Float4(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
-	public static explicit operator Color32(Color64 value) => new Color32(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
+	public static explicit operator Float4(Color64 value) => new(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
+	public static explicit operator Color32(Color64 value) => new(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
 
 	public static bool operator ==(Color64 first, Color64 second) => first.Equals(second);
 	public static bool operator !=(Color64 first, Color64 second) => !first.Equals(second);

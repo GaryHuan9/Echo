@@ -137,14 +137,14 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 		}
 	}
 
-	public Float3x3 Absoluted => new Float3x3
+	public Float3x3 Absoluted => new
 	(
 		Math.Abs(f00), Math.Abs(f01), Math.Abs(f02),
 		Math.Abs(f10), Math.Abs(f11), Math.Abs(f12),
 		Math.Abs(f20), Math.Abs(f21), Math.Abs(f22)
 	);
 
-	public Float3x3 Transposed => new Float3x3
+	public Float3x3 Transposed => new
 	(
 		f00, f10, f20,
 		f01, f11, f21,
@@ -158,7 +158,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	/// <summary>
 	/// The idempotent <see cref="Float3x3"/> value.
 	/// </summary>
-	public static readonly Float3x3 identity = new Float3x3
+	public static readonly Float3x3 identity = new
 	(
 		1f, 0f, 0f,
 		0f, 1f, 0f,
@@ -247,7 +247,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	/// <summary>
 	/// Creates and returns a 3D scaling matrix.
 	/// </summary>
-	public static Float3x3 Scale(in Float3 scale) => new Float3x3
+	public static Float3x3 Scale(in Float3 scale) => new
 	(
 		scale.X, 0f, 0f,
 		0f, scale.Y, 0f,
@@ -259,7 +259,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 #region Operators
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float3x3 operator *(in Float3x3 first, in Float3x3 second) => new Float3x3
+	public static Float3x3 operator *(in Float3x3 first, in Float3x3 second) => new
 	(
 		first.f00 * second.f00 + first.f01 * second.f10 + first.f02 * second.f20, first.f00 * second.f01 + first.f01 * second.f11 + first.f02 * second.f21, first.f00 * second.f02 + first.f01 * second.f12 + first.f02 * second.f22,
 		first.f10 * second.f00 + first.f11 * second.f10 + first.f12 * second.f20, first.f10 * second.f01 + first.f11 * second.f11 + first.f12 * second.f21, first.f10 * second.f02 + first.f11 * second.f12 + first.f12 * second.f22,
@@ -267,7 +267,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float3 operator *(in Float3x3 first, in Float3 second) => new Float3
+	public static Float3 operator *(in Float3x3 first, in Float3 second) => new
 	(
 		first.f00 * second.X + first.f01 * second.Y + first.f02 * second.Z,
 		first.f10 * second.X + first.f11 * second.Y + first.f12 * second.Z,
@@ -277,7 +277,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	public static bool operator ==(in Float3x3 first, in Float3x3 second) => first.EqualsFast(second);
 	public static bool operator !=(in Float3x3 first, in Float3x3 second) => !first.EqualsFast(second);
 
-	public static explicit operator Float3x3(in Float4x4 value) => new Float3x3
+	public static explicit operator Float3x3(in Float4x4 value) => new
 	(
 		value.f00, value.f01, value.f02,
 		value.f10, value.f11, value.f12,

@@ -159,13 +159,13 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 	public Float3 Absoluted
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Float3(Math.Abs(X), Math.Abs(Y), Math.Abs(Z));
+		get => new(Math.Abs(X), Math.Abs(Y), Math.Abs(Z));
 	}
 
 	public Int3 Signed
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Int3(X.Sign(), Y.Sign(), Z.Sign());
+		get => new(X.Sign(), Y.Sign(), Z.Sign());
 	}
 
 	public Float3 Normalized
@@ -223,37 +223,37 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 	public Int3 Floored
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Int3((int)Math.Floor(X), (int)Math.Floor(Y), (int)Math.Floor(Z));
+		get => new((int)Math.Floor(X), (int)Math.Floor(Y), (int)Math.Floor(Z));
 	}
 
 	public Float3 FlooredFloat
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Float3((float)Math.Floor(X), (float)Math.Floor(Y), (float)Math.Floor(Z));
+		get => new((float)Math.Floor(X), (float)Math.Floor(Y), (float)Math.Floor(Z));
 	}
 
 	public Int3 Ceiled
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Int3((int)Math.Ceiling(X), (int)Math.Ceiling(Y), (int)Math.Ceiling(Z));
+		get => new((int)Math.Ceiling(X), (int)Math.Ceiling(Y), (int)Math.Ceiling(Z));
 	}
 
 	public Float3 CeiledFloat
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Float3((float)Math.Ceiling(X), (float)Math.Ceiling(Y), (float)Math.Ceiling(Z));
+		get => new((float)Math.Ceiling(X), (float)Math.Ceiling(Y), (float)Math.Ceiling(Z));
 	}
 
 	public Int3 Rounded
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Int3((int)Math.Round(X), (int)Math.Round(Y), (int)Math.Round(Z));
+		get => new((int)Math.Round(X), (int)Math.Round(Y), (int)Math.Round(Z));
 	}
 
 	public Float3 RoundedFloat
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Float3((float)Math.Round(X), (float)Math.Round(Y), (float)Math.Round(Z));
+		get => new((float)Math.Round(X), (float)Math.Round(Y), (float)Math.Round(Z));
 	}
 
 #endregion
@@ -265,7 +265,7 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 #region Instance
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public Float3 Cross(in Float3 other) => new Float3
+	public Float3 Cross(in Float3 other) => new
 	(
 		(float)((double)Y * other.Z - (double)Z * other.Y),
 		(float)((double)Z * other.X - (double)X * other.Z),
@@ -300,11 +300,11 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public float SquaredDistance(in Float3 other) => (other - this).SquaredMagnitude;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public double SquaredDistanceDouble(in Float3 other) => (other - this).SquaredMagnitudeDouble;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Min(in Float3 other) => new Float3(Math.Min(X, other.X), Math.Min(Y, other.Y), Math.Min(Z, other.Z));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Max(in Float3 other) => new Float3(Math.Max(X, other.X), Math.Max(Y, other.Y), Math.Max(Z, other.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Min(in Float3 other) => new(Math.Min(X, other.X), Math.Min(Y, other.Y), Math.Min(Z, other.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Max(in Float3 other) => new(Math.Max(X, other.X), Math.Max(Y, other.Y), Math.Max(Z, other.Z));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Clamp(in Float3 min, in Float3 max) => new Float3(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y), Z.Clamp(min.Z, max.Z));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Clamp(float min = 0f, float max = 1f) => new Float3(X.Clamp(min, max), Y.Clamp(min, max), Z.Clamp(min, max));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Clamp(in Float3 min, in Float3 max) => new(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y), Z.Clamp(min.Z, max.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Clamp(float min = 0f, float max = 1f) => new(X.Clamp(min, max), Y.Clamp(min, max), Z.Clamp(min, max));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Float3 ClampMagnitude(float max)
@@ -316,17 +316,17 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 		return new Float3(X * scale, Y * scale, Z * scale);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Power(in Float3 value) => new Float3((float)Math.Pow(X, value.X), (float)Math.Pow(Y, value.Y), (float)Math.Pow(Z, value.Z));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Power(float value) => new Float3((float)Math.Pow(X, value), (float)Math.Pow(Y, value), (float)Math.Pow(Z, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Power(in Float3 value) => new((float)Math.Pow(X, value.X), (float)Math.Pow(Y, value.Y), (float)Math.Pow(Z, value.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Power(float value) => new((float)Math.Pow(X, value), (float)Math.Pow(Y, value), (float)Math.Pow(Z, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Lerp(in Float3 other, in Float3 value) => new Float3(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y), Scalars.Lerp(Z, other.Z, value.Z));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Lerp(in Float3 other, float value) => new Float3(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value), Scalars.Lerp(Z, other.Z, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Lerp(in Float3 other, in Float3 value) => new(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y), Scalars.Lerp(Z, other.Z, value.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Lerp(in Float3 other, float value) => new(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value), Scalars.Lerp(Z, other.Z, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 InverseLerp(in Float3 other, in Float3 value) => new Float3(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y), Scalars.InverseLerp(Z, other.Z, value.Z));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 InverseLerp(in Float3 other, float value) => new Float3(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value), Scalars.InverseLerp(Z, other.Z, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 InverseLerp(in Float3 other, in Float3 value) => new(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y), Scalars.InverseLerp(Z, other.Z, value.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 InverseLerp(in Float3 other, float value) => new(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value), Scalars.InverseLerp(Z, other.Z, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Repeat(in Float3 length) => new Float3(X.Repeat(length.X), Y.Repeat(length.Y), Z.Repeat(length.Z));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Repeat(float length) => new Float3(X.Repeat(length), Y.Repeat(length), Z.Repeat(length));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Repeat(in Float3 length) => new(X.Repeat(length.X), Y.Repeat(length.Y), Z.Repeat(length.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Repeat(float length) => new(X.Repeat(length), Y.Repeat(length), Z.Repeat(length));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 RotateXY(float degrees) => CreateXY(XY.Rotate(degrees), Z);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 RotateXY(float degrees, Float2 pivot) => CreateXY(XY.Rotate(degrees, pivot), Z);
@@ -473,13 +473,13 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateX(float value, float other = 0f) => new Float3(value, other, other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateY(float value, float other = 0f) => new Float3(other, value, other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateZ(float value, float other = 0f) => new Float3(other, other, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateX(float value, float other = 0f) => new(value, other, other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateY(float value, float other = 0f) => new(other, value, other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateZ(float value, float other = 0f) => new(other, other, value);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateXY(Float2 value, float other = 0f) => new Float3(value.X, value.Y, other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateYZ(Float2 value, float other = 0f) => new Float3(other, value.X, value.Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateXZ(Float2 value, float other = 0f) => new Float3(value.X, other, value.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateXY(Float2 value, float other = 0f) => new(value.X, value.Y, other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateYZ(Float2 value, float other = 0f) => new(other, value.X, value.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Float3 CreateXZ(Float2 value, float other = 0f) => new(value.X, other, value.Y);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Float3 Replace(int index, float value)
@@ -495,36 +495,36 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceX(float value) => new Float3(value, Y, Z);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceY(float value) => new Float3(X, value, Z);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceZ(float value) => new Float3(X, Y, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceX(float value) => new(value, Y, Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceY(float value) => new(X, value, Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceZ(float value) => new(X, Y, value);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceXY(Float2 value) => new Float3(value.X, value.Y, Z);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceYZ(Float2 value) => new Float3(X, value.X, value.Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceXZ(Float2 value) => new Float3(value.X, Y, value.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceXY(Float2 value) => new(value.X, value.Y, Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceYZ(Float2 value) => new(X, value.X, value.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float3 ReplaceXZ(Float2 value) => new(value.X, Y, value.Y);
 
 #endregion
 
 #region Operators
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator +(in Float3 first, in Float3 second) => new Float3(first.X + second.X, first.Y + second.Y, first.Z + second.Z);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator -(in Float3 first, in Float3 second) => new Float3(first.X - second.X, first.Y - second.Y, first.Z - second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator +(in Float3 first, in Float3 second) => new(first.X + second.X, first.Y + second.Y, first.Z + second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator -(in Float3 first, in Float3 second) => new(first.X - second.X, first.Y - second.Y, first.Z - second.Z);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator *(in Float3 first, in Float3 second) => new Float3(first.X * second.X, first.Y * second.Y, first.Z * second.Z);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator /(in Float3 first, in Float3 second) => new Float3(first.X / second.X, first.Y / second.Y, first.Z / second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator *(in Float3 first, in Float3 second) => new(first.X * second.X, first.Y * second.Y, first.Z * second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator /(in Float3 first, in Float3 second) => new(first.X / second.X, first.Y / second.Y, first.Z / second.Z);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator *(in Float3 first, float second) => new Float3(first.X * second, first.Y * second, first.Z * second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator /(in Float3 first, float second) => new Float3(first.X / second, first.Y / second, first.Z / second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator *(in Float3 first, float second) => new(first.X * second, first.Y * second, first.Z * second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator /(in Float3 first, float second) => new(first.X / second, first.Y / second, first.Z / second);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator *(float first, in Float3 second) => new Float3(first * second.X, first * second.Y, first * second.Z);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator /(float first, in Float3 second) => new Float3(first / second.X, first / second.Y, first / second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator *(float first, in Float3 second) => new(first * second.X, first * second.Y, first * second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator /(float first, in Float3 second) => new(first / second.X, first / second.Y, first / second.Z);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator +(in Float3 value) => value;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator -(in Float3 value) => new Float3(-value.X, -value.Y, -value.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator -(in Float3 value) => new(-value.X, -value.Y, -value.Z);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator %(in Float3 first, in Float3 second) => new Float3(first.X % second.X, first.Y % second.Y, first.Z % second.Z);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator %(in Float3 first, float second) => new Float3(first.X % second, first.Y % second, first.Z % second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator %(float first, in Float3 second) => new Float3(first % second.X, first % second.Y, first % second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator %(in Float3 first, in Float3 second) => new(first.X % second.X, first.Y % second.Y, first.Z % second.Z);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator %(in Float3 first, float second) => new(first.X % second, first.Y % second, first.Z % second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float3 operator %(float first, in Float3 second) => new(first % second.X, first % second.Y, first % second.Z);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator ==(in Float3 first, in Float3 second) => first.Equals(second);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator !=(in Float3 first, in Float3 second) => !first.Equals(second);
@@ -545,7 +545,7 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 	/// Returns an enumerable that can be put into a foreach loop.
 	/// Yields the two components of this vector in a series.
 	/// </summary>
-	public SeriesEnumerable Series() => new SeriesEnumerable(this);
+	public SeriesEnumerable Series() => new(this);
 
 	public readonly struct SeriesEnumerable : IEnumerable<float>
 	{

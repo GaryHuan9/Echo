@@ -39,22 +39,22 @@ public readonly struct Color32 : IEquatable<Color32>
 		}
 	}
 
-	public static readonly Color32 black = new Color32(0, 0, 0);
-	public static readonly Color32 white = new Color32(byte.MaxValue, byte.MaxValue, byte.MaxValue);
+	public static readonly Color32 black = new(0, 0, 0);
+	public static readonly Color32 white = new(byte.MaxValue, byte.MaxValue, byte.MaxValue);
 
 	static float ToDecimal(byte value) => (float)value / byte.MaxValue;
 	static byte ToInteger(float value) => (byte)(value * byte.MaxValue).Round().Clamp(0, byte.MaxValue);
 
-	public static explicit operator Color32(Float3 value) => new Color32(value.X, value.Y, value.Z);
-	public static explicit operator Color32(Int3 value) => new Color32(value.X, value.Y, value.Z);
+	public static explicit operator Color32(Float3 value) => new(value.X, value.Y, value.Z);
+	public static explicit operator Color32(Int3 value) => new(value.X, value.Y, value.Z);
 
-	public static explicit operator Float3(Color32 value) => new Float3(value.RFloat, value.GFloat, value.BFloat);
-	public static explicit operator Int3(Color32 value) => new Int3(value.r, value.g, value.b);
+	public static explicit operator Float3(Color32 value) => new(value.RFloat, value.GFloat, value.BFloat);
+	public static explicit operator Int3(Color32 value) => new(value.r, value.g, value.b);
 
-	public static explicit operator Color32(Float4 value) => new Color32(value.X, value.Y, value.Z, value.W);
+	public static explicit operator Color32(Float4 value) => new(value.X, value.Y, value.Z, value.W);
 
-	public static explicit operator Float4(Color32 value) => new Float4(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
-	public static explicit operator Color64(Color32 value) => new Color64(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
+	public static explicit operator Float4(Color32 value) => new(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
+	public static explicit operator Color64(Color32 value) => new(value.RFloat, value.GFloat, value.BFloat, value.AFloat);
 
 	public static bool operator ==(Color32 first, Color32 second) => first.Equals(second);
 	public static bool operator !=(Color32 first, Color32 second) => !first.Equals(second);

@@ -195,7 +195,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		}
 	}
 
-	public Float4x4 Absoluted => new Float4x4
+	public Float4x4 Absoluted => new
 	(
 		Math.Abs(f00), Math.Abs(f01), Math.Abs(f02), Math.Abs(f03),
 		Math.Abs(f10), Math.Abs(f11), Math.Abs(f12), Math.Abs(f13),
@@ -203,7 +203,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		Math.Abs(f30), Math.Abs(f31), Math.Abs(f32), Math.Abs(f33)
 	);
 
-	public Float4x4 Transposed => new Float4x4
+	public Float4x4 Transposed => new
 	(
 		f00, f10, f20, f30,
 		f01, f11, f21, f31,
@@ -218,7 +218,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	/// <summary>
 	/// The idempotent <see cref="Float4x4"/> value.
 	/// </summary>
-	public static readonly Float4x4 identity = new Float4x4
+	public static readonly Float4x4 identity = new
 	(
 		1f, 0f, 0f, 0f,
 		0f, 1f, 0f, 0f,
@@ -257,14 +257,14 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		}
 	}
 
-	public Float3 MultiplyPoint(in Float3 point) => new Float3
+	public Float3 MultiplyPoint(in Float3 point) => new
 	(
 		f00 * point.X + f01 * point.Y + f02 * point.Z + f03,
 		f10 * point.X + f11 * point.Y + f12 * point.Z + f13,
 		f20 * point.X + f21 * point.Y + f22 * point.Z + f23
 	);
 
-	public Float3 MultiplyDirection(in Float3 direction) => new Float3
+	public Float3 MultiplyDirection(in Float3 direction) => new
 	(
 		f00 * direction.X + f01 * direction.Y + f02 * direction.Z,
 		f10 * direction.X + f11 * direction.Y + f12 * direction.Z,
@@ -333,7 +333,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	/// <summary>
 	/// Creates and returns a positional matrix.
 	/// </summary>
-	public static Float4x4 Position(in Float3 position) => new Float4x4
+	public static Float4x4 Position(in Float3 position) => new
 	(
 		1f, 0f, 0f, position.X,
 		0f, 1f, 0f, position.Y,
@@ -356,7 +356,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 #region Operators
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float4x4 operator *(in Float4x4 first, in Float4x4 second) => new Float4x4
+	public static Float4x4 operator *(in Float4x4 first, in Float4x4 second) => new
 	(
 		first.f00 * second.f00 + first.f01 * second.f10 + first.f02 * second.f20 + first.f03 * second.f30, first.f00 * second.f01 + first.f01 * second.f11 + first.f02 * second.f21 + first.f03 * second.f31, first.f00 * second.f02 + first.f01 * second.f12 + first.f02 * second.f22 + first.f03 * second.f32, first.f00 * second.f03 + first.f01 * second.f13 + first.f02 * second.f23 + first.f03 * second.f33,
 		first.f10 * second.f00 + first.f11 * second.f10 + first.f12 * second.f20 + first.f13 * second.f30, first.f10 * second.f01 + first.f11 * second.f11 + first.f12 * second.f21 + first.f13 * second.f31, first.f10 * second.f02 + first.f11 * second.f12 + first.f12 * second.f22 + first.f13 * second.f32, first.f10 * second.f03 + first.f11 * second.f13 + first.f12 * second.f23 + first.f13 * second.f33,
@@ -365,7 +365,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float4 operator *(in Float4x4 first, in Float4 second) => new Float4
+	public static Float4 operator *(in Float4x4 first, in Float4 second) => new
 	(
 		first.f00 * second.X + first.f01 * second.Y + first.f02 * second.Z + first.f03 * second.W,
 		first.f10 * second.X + first.f11 * second.Y + first.f12 * second.Z + first.f13 * second.W,
@@ -376,7 +376,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	public static bool operator ==(in Float4x4 first, in Float4x4 second) => first.EqualsFast(second);
 	public static bool operator !=(in Float4x4 first, in Float4x4 second) => !first.EqualsFast(second);
 
-	public static implicit operator Float4x4(in Float3x3 value) => new Float4x4
+	public static implicit operator Float4x4(in Float3x3 value) => new
 	(
 		value.f00, value.f01, value.f02, 0f,
 		value.f10, value.f11, value.f12, 0f,

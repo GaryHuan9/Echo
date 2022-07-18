@@ -40,7 +40,7 @@ public readonly struct FieldOfView
 	/// <summary>
 	/// Returns the <see cref="x"/> and <see cref="y"/> field of view values combined in degrees.
 	/// </summary>
-	public Float2 Degrees => new Float2(x, y);
+	public Float2 Degrees => new(x, y);
 
 	/// <summary>
 	/// Changes the horizontal/<see cref="x"/> field of view while maintaining the same <see cref="aspect"/>.

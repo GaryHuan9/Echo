@@ -128,7 +128,7 @@ public class ConcurrentList<T> : IReadOnlyList<T>
 		return array;
 	}
 
-	public Enumerator GetEnumerator() => new Enumerator(this);
+	public Enumerator GetEnumerator() => new(this);
 
 	T IReadOnlyList<T>.this[int index] => this[index];
 
