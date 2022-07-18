@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
 using Echo.Core.Common.Compute;
-using Echo.Core.Evaluation.Operation;
-using Echo.Core.InOut;
-using Echo.Core.Scenic.Hierarchies;
-using Echo.Core.Scenic.Preparation;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -20,12 +15,7 @@ public class SystemUI : AreaUI
 	{
 		base.Initialize();
 
-		if (Environment.GetCommandLineArgs().Contains("-start", StringComparer.OrdinalIgnoreCase))
-		{
-			CreateDevice();
-			DispatchDevice(device);
-		}
-
+		CreateDevice();
 		AssignUpdateFrequency();
 	}
 
@@ -51,13 +41,6 @@ public class SystemUI : AreaUI
 		{
 			if (!HasDevice)
 			{
-				if (ImGui.Button("Create and Dispatch"))
-				{
-					CreateDevice();
-					DispatchDevice(device);
-				}
-
-				ImGui.SameLine();
 				if (ImGui.Button("Create")) CreateDevice();
 				ImGui.TextWrapped("Create a compute device to begin!");
 			}
@@ -168,15 +151,8 @@ public class SystemUI : AreaUI
 	void DrawDevice()
 	{
 		//Buttons
-		bool idle = device.IsIdle;
-		ImGui.BeginDisabled(!idle);
+		ImGui.BeginDisabled(device.IsIdle);
 
-		if (ImGui.Button("Dispatch")) DispatchDevice(device);
-
-		ImGui.EndDisabled();
-		ImGui.BeginDisabled(idle);
-
-		ImGui.SameLine();
 		if (ImGui.Button("Pause"))
 		{
 			device.Pause();
@@ -254,21 +230,4 @@ public class SystemUI : AreaUI
 		return "Unknown";
 #endif
 	}
-
-	static void DispatchDevice(Device device) => ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
-	{
-		var objects = new EchoChronicleHierarchyObjects("ext/Scenes/Simple/cornell.echo");
-
-		var scene = objects.ConstructFirst<Scene>();
-		var preparer = new ScenePreparer(scene);
-		var profile = objects.ConstructFirst<EvaluationProfile>();
-
-		var operation = new EvaluationOperation.Factory
-		{
-			NextScene = preparer.Prepare(),
-			NextProfile = profile
-		};
-
-		device.Dispatch(operation);
-	});
 }

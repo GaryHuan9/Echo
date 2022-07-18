@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using CodeHelpers.Mathematics;
 using CodeHelpers.Packed;
 using Echo.Core.Common;
@@ -15,12 +17,11 @@ public class OperationUI : AreaUI
 {
 	public OperationUI() : base("Operation") { }
 
-	int selectionIndex;
-	int lastOperationCount;
+	int operationIndex;
 	Operation lastOperation;
 
-	string[] operationLabels;
 	EventRow[] eventRows;
+	readonly List<string> operationLabels = new();
 	readonly WorkerData workerData = new();
 
 	public Operation SelectedOperation
@@ -31,7 +32,7 @@ public class OperationUI : AreaUI
 			if (device == null) return null;
 			var operations = device.PastOperations;
 			if (operations.Length == 0) return null;
-			return operations[Math.Min(lastOperationCount, operations.Length - 1)];
+			return operations[operationIndex];
 		}
 	}
 
@@ -42,47 +43,43 @@ public class OperationUI : AreaUI
 
 		if (operations.Length == 0)
 		{
-			selectionIndex = 0;
-			lastOperationCount = 0;
+			operationIndex = 0;
 			lastOperation = null;
 			return;
 		}
 
-		UpdateOperationLabels(operations);
+		//Populate operation labels
+		if (operations.Length != operationLabels.Count)
+		{
+			operationLabels.Clear();
 
-		ImGui.Combo("Select", ref selectionIndex, operationLabels, lastOperationCount);
+			foreach (Operation operation in operations)
+			{
+				string creation = operation.creationTime.ToStringDefault();
+				operationLabels.Add($"{operation.GetType().Name} ({creation})");
+			}
 
-		var operation = SelectedOperation;
+			operationIndex = operations.Length - 1;
+		}
 
-		if (lastOperation != operation)
+		//Draw operation selector
+		ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(operationLabels), ref operationIndex);
+
+		Operation selected = operations[operationIndex];
+
+		if (lastOperation != selected)
 		{
 			LogList.Add($"Changed selected operation in {nameof(OperationUI)}.");
-			lastOperation = operation;
+			lastOperation = selected;
 		}
-
-		double progress = operation.Progress;
-		TimeSpan time = operation.Time;
 
 		//Draw properties
-		DrawMain(progress, operation, time);
-		DrawEventRows(operation, time, progress);
-		DrawWorkers(operation);
-	}
+		double progress = selected.Progress;
+		TimeSpan time = selected.Time;
 
-	void UpdateOperationLabels(ReadOnlySpan<Operation> operations)
-	{
-		if (operations.Length == lastOperationCount) return;
-		Array.Resize(ref operationLabels, operations.Length);
-
-		for (int i = 0; i < operations.Length; i++)
-		{
-			Operation operation = operations[i];
-			string creation = operation.creationTime.ToStringDefault();
-			operationLabels[i] = $"{operation.GetType().Name} ({creation})";
-		}
-
-		selectionIndex = operations.Length - 1;
-		lastOperationCount = operations.Length;
+		DrawMain(progress, selected, time);
+		DrawEventRows(selected, time, progress);
+		DrawWorkers(selected);
 	}
 
 	void DrawMain(double progress, Operation operation, TimeSpan time)
