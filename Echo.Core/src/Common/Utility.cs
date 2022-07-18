@@ -14,7 +14,7 @@ public static class Utility
 	/// </summary>
 	public static ref readonly T TryGetValue<T>(this ReadOnlySpan<T> span, int index, in T defaultValue = default)
 	{
-		if ((0 <= index) & (index < span.Length)) return ref span[index];
+		if ((uint)index < span.Length) return ref span[index];
 		return ref defaultValue;
 	}
 
@@ -37,7 +37,7 @@ public static class Utility
 	/// <param name="capacity">The number of items to potentially store.</param>
 	/// <param name="copy">Whether to copy over the old items in <paramref name="array"/> to the new one.</param>
 	/// <param name="capacityMin">The minimum <see cref="Array.Length"/> if a new <see cref="Array"/> is created.</param>
-	public static void EnsureCapacity<T>(ref T[] array, int capacity, bool copy = false, int capacityMin = 8)
+	public static void EnsureCapacity<T>(ref T[] array, int capacity, bool copy = false, int capacityMin = 4)
 	{
 		if ((array?.Length ?? 0) >= capacity) return;
 

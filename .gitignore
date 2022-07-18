@@ -375,4 +375,4 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 Echo.Core/ext/Scenes/*
-!Echo.Core/ext/Scenes/SingleBunny
+!Echo.Core/ext/Scenes/Simple

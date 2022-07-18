@@ -233,7 +233,7 @@ public class TilesUI : PlaneUI
 							break;
 						}
 
-						if (compareTexture == null) LogList.AddError($"Unable to find reference texture file at {Environment.CurrentDirectory}.");
+						if (compareTexture == null) LogList.AddError($"Unable to find reference texture file at '{Environment.CurrentDirectory}'.");
 					}
 
 					RestartTextureUpdate();

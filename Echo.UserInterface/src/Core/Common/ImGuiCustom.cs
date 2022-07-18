@@ -1,6 +1,8 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using CodeHelpers.Mathematics;
+using Echo.Core.Common;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Common;
@@ -38,6 +40,45 @@ public static class ImGuiCustom
 	}
 
 	public static void EndProperties() => ImGui.EndTable();
+
+	public static bool Selector(string label, ReadOnlySpan<string> items, ref int currentIndex)
+	{
+		int oldIndex = currentIndex;
+		currentIndex = currentIndex.Clamp(0, items.Length - 1);
+		string preview = items.TryGetValue(currentIndex) ?? "";
+
+		ImGui.PushID(label);
+
+		float width = ImGui.CalcItemWidth();
+		float button = ImGui.GetFrameHeight();
+		float gap = ImGui.GetStyle().ItemInnerSpacing.X;
+		ImGui.SetNextItemWidth(width - gap * 2f - button * 2f);
+
+		if (ImGui.BeginCombo("##Combo", preview, ImGuiComboFlags.NoArrowButton))
+		{
+			for (int i = 0; i < items.Length; i++)
+			{
+				bool selected = i == currentIndex;
+				if (ImGui.Selectable(items[i], selected)) currentIndex = i;
+				if (selected) ImGui.SetItemDefaultFocus();
+			}
+
+			ImGui.EndCombo();
+		}
+
+		ImGui.SameLine(0f, gap);
+		if (ImGui.ArrowButton("##Left", ImGuiDir.Left) && currentIndex > 0) --currentIndex;
+
+		ImGui.SameLine(0f, gap);
+		if (ImGui.ArrowButton("##Right", ImGuiDir.Right) && currentIndex < items.Length - 1) ++currentIndex;
+
+		ImGui.PopID();
+
+		ImGui.SameLine(0f, gap);
+		ImGui.TextUnformatted(label);
+
+		return currentIndex != oldIndex;
+	}
 
 	public static Vector4 GetColor(ImGuiCol color = ImGuiCol.CheckMark) => ImGui.GetStyle().Colors[(int)color];
 
