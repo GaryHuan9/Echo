@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Common;
+using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Scenic.Hierarchies;
 

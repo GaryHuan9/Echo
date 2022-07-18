@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Scenic.Hierarchies;
 
@@ -99,7 +99,7 @@ public class EntityPack : Entity
 		ref ulong count = ref CollectionsMarshal.GetValueRefOrNullRef(directInstances, pack);
 		if (Unsafe.IsNullRef(ref count)) throw new ArgumentException("Count mismatch.", nameof(pack));
 
-		Assert.IsTrue(count > 0);
+		Ensure.IsTrue(count > 0);
 		if (--count > 0) return;
 
 		//If we just completely removed a directly instanced EntityPack, then we

@@ -14,9 +14,9 @@ public static class FastMath
 #if !RELEASE
 	static FastMath()
 	{
-		uint bits0 = CodeHelpers.Mathematics.Scalars.SingleToUInt32Bits(OneMinusEpsilon);
-		uint bits1 = CodeHelpers.Mathematics.Scalars.SingleToUInt32Bits(1f) - 1u;
-		CodeHelpers.Diagnostics.Assert.AreEqual(bits0, bits1);
+		uint bits0 = BitConverter.SingleToUInt32Bits(OneMinusEpsilon);
+		uint bits1 = BitConverter.SingleToUInt32Bits(1f) - 1u;
+		Diagnostics.Ensure.AreEqual(bits0, bits1);
 	}
 #endif
 

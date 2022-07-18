@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
@@ -50,7 +49,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 {
 	public PreparedSphere(in Float3 position, float radius, MaterialIndex material)
 	{
-		Assert.IsTrue(radius > 0f);
+		Ensure.IsTrue(radius > 0f);
 
 		this.position = position;
 		this.radius = radius;

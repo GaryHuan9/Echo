@@ -1,6 +1,6 @@
-﻿using CodeHelpers.Packed;
-using Echo.Core.Common.Mathematics.Primitives;
+﻿using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
+using Echo.Core.Common.Packed;
 using NUnit.Framework;
 
 namespace Echo.UnitTests.Common;

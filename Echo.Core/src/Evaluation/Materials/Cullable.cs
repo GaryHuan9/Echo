@@ -1,9 +1,8 @@
-﻿using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
-using Echo.Core.Aggregation.Primitives;
+﻿using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
@@ -39,7 +38,7 @@ public class Cullable : Material, IEmissive
 
 	public override void Prepare()
 	{
-		Assert.IsTrue(Base is not Cullable);
+		Ensure.IsTrue(Base is not Cullable);
 
 		base.Prepare();
 		Base.Prepare();

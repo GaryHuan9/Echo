@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.Aggregation.Primitives;
@@ -77,7 +77,7 @@ public struct TraceQuery
 	{
 		get
 		{
-			AssertHit();
+			EnsureHit();
 			return ray.GetPoint(Math.Max(distance, FastMath.Epsilon));
 		}
 	}
@@ -118,11 +118,11 @@ public struct TraceQuery
 	/// <summary>
 	/// Ensures that this <see cref="TraceQuery"/> has <see cref="Hit"/> something.
 	/// </summary>
-	[Conditional(Assert.DebugSymbol)]
-	public readonly void AssertHit()
+	[Conditional("DEBUG")]
+	public readonly void EnsureHit()
 	{
 #if DEBUG
-		Assert.IsTrue(Hit);
+		Ensure.IsTrue(Hit);
 #endif
 	}
 }

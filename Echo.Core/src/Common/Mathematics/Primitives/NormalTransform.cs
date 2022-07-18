@@ -1,5 +1,5 @@
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Common.Mathematics.Primitives;
 
@@ -17,8 +17,8 @@ public readonly struct NormalTransform
 		tangent = Float3.Cross(normal, helper).Normalized;
 		binormal = Float3.Cross(normal, tangent);
 
-		Assert.AreEqual(normal.SquaredMagnitude, 1f);
-		Assert.AreEqual(binormal.SquaredMagnitude, 1f);
+		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
+		Ensure.AreEqual(binormal.SquaredMagnitude, 1f);
 	}
 
 	public readonly Float3 normal;

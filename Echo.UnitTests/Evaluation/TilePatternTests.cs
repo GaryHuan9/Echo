@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Operation;
 using NUnit.Framework;
 

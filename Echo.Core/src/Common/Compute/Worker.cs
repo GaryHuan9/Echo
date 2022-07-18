@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Common.Compute;
 
@@ -111,7 +111,7 @@ public static class WorkerStateExtensions
 	public static string ToDisplayString(this WorkerState state)
 	{
 		uint integer = (uint)state;
-		Assert.AreEqual(BitOperations.PopCount(integer), 1);
+		Ensure.AreEqual(BitOperations.PopCount(integer), 1);
 		int index = BitOperations.LeadingZeroCount(integer);
 		return workerStateLabels[31 - index];
 	}
@@ -153,8 +153,8 @@ sealed class Worker : IWorker, IDisposable
 			if (old == value) return;
 			uint integer = (uint)value;
 
-			Assert.AreNotEqual(old, WorkerState.Disposed);
-			Assert.AreEqual(BitOperations.PopCount(integer), 1);
+			Ensure.AreNotEqual(old, WorkerState.Disposed);
+			Ensure.AreEqual(BitOperations.PopCount(integer), 1);
 
 			Interlocked.Exchange(ref _state, integer);
 			locker.Signal();

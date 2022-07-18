@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CodeHelpers;
-using CodeHelpers.Mathematics.Enumerable;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Enumeration;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
@@ -154,9 +154,9 @@ public class Font
 			>= 'A' and <= 'Z' => character - 'A',
 			>= 'a' and <= 'z' => character - 'a' + LetterCount,
 			>= '0' and <= '9' => character - '0' + LetterCount * 2,
-			'.' => LetterCount * 2 + 10,
-			',' => LetterCount * 2 + 11,
-			_ => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
+			'.'               => LetterCount * 2 + 10,
+			','               => LetterCount * 2 + 11,
+			_                 => throw ExceptionHelper.Invalid(nameof(character), character, InvalidType.unexpected)
 		};
 
 		Int2 position = new Int2(order % MapSize, order / MapSize);

@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
 using Echo.UserInterface.Backend;
 using ImGuiNET;
 

@@ -1,7 +1,7 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;
@@ -18,8 +18,8 @@ public abstract class HierarchyBuilder
 	{
 		public Node(in BoxBound bound, Node child0, Node child1, int axis)
 		{
-			Assert.IsNotNull(child0);
-			Assert.IsNotNull(child1);
+			Ensure.IsNotNull(child0);
+			Ensure.IsNotNull(child1);
 
 			this.bound = bound;
 
@@ -55,7 +55,7 @@ public abstract class HierarchyBuilder
 		{
 			get
 			{
-				Assert.IsFalse(IsLeaf);
+				Ensure.IsFalse(IsLeaf);
 				return _child0;
 			}
 		}
@@ -64,7 +64,7 @@ public abstract class HierarchyBuilder
 		{
 			get
 			{
-				Assert.IsFalse(IsLeaf);
+				Ensure.IsFalse(IsLeaf);
 				return _child1;
 			}
 		}
@@ -76,7 +76,7 @@ public abstract class HierarchyBuilder
 		{
 			get
 			{
-				Assert.IsFalse(IsLeaf);
+				Ensure.IsFalse(IsLeaf);
 				return _axis;
 			}
 		}
@@ -87,7 +87,7 @@ public abstract class HierarchyBuilder
 		{
 			get
 			{
-				Assert.IsTrue(IsLeaf);
+				Ensure.IsTrue(IsLeaf);
 				return _token;
 			}
 		}

@@ -3,7 +3,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 using ImGuiNET;
 using SDL2;
 
@@ -248,12 +248,12 @@ public sealed unsafe class ImGuiDevice : IDisposable
 	{
 		int mouseButton = (uint)mouseButtonEvent.button switch
 		{
-			SDL_BUTTON_LEFT => 0,
-			SDL_BUTTON_RIGHT => 1,
+			SDL_BUTTON_LEFT   => 0,
+			SDL_BUTTON_RIGHT  => 1,
 			SDL_BUTTON_MIDDLE => 2,
-			SDL_BUTTON_X1 => 3,
-			SDL_BUTTON_X2 => 4,
-			_ => -1
+			SDL_BUTTON_X1     => 3,
+			SDL_BUTTON_X2     => 4,
+			_                 => -1
 		};
 
 		if (mouseButton < 0) return;

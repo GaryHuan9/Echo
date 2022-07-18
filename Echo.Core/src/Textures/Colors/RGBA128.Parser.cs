@@ -1,6 +1,5 @@
 ﻿using System;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Textures.Colors;
 
@@ -59,7 +58,7 @@ partial struct RGBA128
 
 			static bool RemovePrefix(ref ReadOnlySpan<char> span, ReadOnlySpan<char> prefix)
 			{
-				Assert.IsTrue(prefix.Length > 0);
+				Ensure.IsTrue(prefix.Length > 0);
 
 				if (!span.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
 

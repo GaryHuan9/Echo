@@ -1,7 +1,7 @@
 ﻿using System;
-using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
@@ -48,8 +48,8 @@ public class SpecularReflection : BxDF
 		RGB128 evaluated = mode switch
 		{
 			Mode.Dielectric => dielectric.Evaluate(cosI),
-			Mode.Conductor => conductor.Evaluate(cosI),
-			_ => RGB128.White
+			Mode.Conductor  => conductor.Evaluate(cosI),
+			_               => RGB128.White
 		};
 
 		return (evaluated * reflectance / FastMath.Abs(cosI), 1f);

@@ -1,6 +1,6 @@
-﻿using CodeHelpers.Packed;
-using Echo.Core.Aggregation.Preparation;
+﻿using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Scenic.Preparation;
@@ -27,7 +27,7 @@ public struct Contact
 
 	public Contact(in TraceQuery query, in GeometryPoint point, in GeometryShade shade = default)
 	{
-		query.AssertHit();
+		query.EnsureHit();
 		token = query.token;
 		outgoing = -query.ray.direction;
 

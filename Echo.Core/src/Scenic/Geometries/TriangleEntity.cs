@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Preparation;
 
@@ -95,9 +93,9 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 							in Float3 normal0, in Float3 normal1, in Float3 normal2,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material)
 	{
-		Assert.AreEqual(normal0.SquaredMagnitude, 1f);
-		Assert.AreEqual(normal1.SquaredMagnitude, 1f);
-		Assert.AreEqual(normal2.SquaredMagnitude, 1f);
+		Ensure.AreEqual(normal0.SquaredMagnitude, 1f);
+		Ensure.AreEqual(normal1.SquaredMagnitude, 1f);
+		Ensure.AreEqual(normal2.SquaredMagnitude, 1f);
 
 		this.vertex0 = vertex0;
 		edge1 = vertex1 - vertex0;
@@ -172,7 +170,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 	{
 		float distance = IntersectImpl(origin, incident, out Float2 uv);
 
-		Assert.AreEqual(incident.SquaredMagnitude, 1f);
+		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
 		if (float.IsPositiveInfinity(distance)) return 0f;
 
 		return distance * distance / FastMath.Abs(GetNormal(uv).Dot(incident) * Area);

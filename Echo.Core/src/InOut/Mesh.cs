@@ -5,11 +5,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeHelpers;
-using CodeHelpers.Collections;
-using CodeHelpers.Packed;
-using CodeHelpers.Pooling;
-using CodeHelpers.Threads;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
+using Echo.Core.Common.Threading;
 
 namespace Echo.Core.InOut;
 
@@ -56,24 +54,21 @@ public class Mesh
 					{
 						'n' => normalLines,
 						't' => texcoordLines,
-						_ => null
+						_   => null
 					},
 					_ => null
 				},
-				'f' when index == 1 => faceLines,
+				'f' when index == 1                 => faceLines,
 				'u' when span.StartsWith("usemtl ") => usemtlLines,
-				_ => null
+				_                                   => null
 			};
 
 			list?.Add(new Line(line, height++, Range.StartAt(index + 1)));
 		}
 
 		//Structure usemtl usages
-		using var heightHandles = CollectionPooler<int>.list.Fetch();
-		using var nameHandles = CollectionPooler<string>.list.Fetch();
-
-		List<int> materialHeights = heightHandles.Target;
-		List<string> materialNames = nameHandles.Target;
+		List<int> materialHeights = new();
+		List<string> materialNames = new();
 
 		if (usemtlLines.Count > 0)
 		{
@@ -209,28 +204,28 @@ public class Mesh
 
 	public Triangle GetTriangle(int index)
 	{
-		if (triangles0.IsIndexValid(index)) return triangles0[index];
+		if (index < triangles0.Length) return triangles0[index];
 		index -= triangles0.Length;
 
-		if (triangles1.IsIndexValid(index)) return triangles1[index];
+		if (index < triangles1.Length) return triangles1[index];
 		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
 	}
 
 	public Float3 GetVertex(int index)
 	{
-		if (vertices.IsIndexValid(index)) return vertices[index];
+		if (index < vertices.Length) return vertices[index];
 		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
 	}
 
 	public Float3 GetNormal(int index)
 	{
-		if (normals.IsIndexValid(index)) return normals[index];
+		if (index < normals.Length) return normals[index];
 		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
 	}
 
 	public Float2 GetTexcoord(int index)
 	{
-		if (texcoords.IsIndexValid(index)) return texcoords[index];
+		if (index < texcoords.Length) return texcoords[index];
 		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
 	}
 

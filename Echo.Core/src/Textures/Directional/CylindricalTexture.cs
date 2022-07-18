@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
@@ -39,7 +37,7 @@ public class CylindricalTexture : IDirectionalTexture
 		Texture texture = Texture;
 		Int2 size = texture.DiscreteResolution;
 
-		Assert.IsTrue(size > Int2.Zero);
+		Ensure.IsTrue(size > Int2.Zero);
 		Float2 sizeR = 1f / size;
 
 		using var _ = Pool<float>.Fetch(size.Product, out View<float> weights);
@@ -71,7 +69,7 @@ public class CylindricalTexture : IDirectionalTexture
 				sum += average;
 			}
 
-			Assert.IsTrue(fill.IsFull);
+			Ensure.IsTrue(fill.IsFull);
 
 			return sum;
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Common.Compute;
 
@@ -46,7 +46,7 @@ public sealed class Device : IDisposable
 		get
 		{
 			using var _ = signalLocker.Fetch();
-			Assert.IsFalse(runningCount < 0);
+			Ensure.IsFalse(runningCount < 0);
 			return runningCount == 0;
 		}
 	}
@@ -130,7 +130,7 @@ public sealed class Device : IDisposable
 		}
 		private set
 		{
-			Assert.IsTrue(Monitor.IsEntered(instanceLocker));
+			Ensure.IsTrue(Monitor.IsEntered(instanceLocker));
 			_instance = value;
 		}
 	}
@@ -219,7 +219,7 @@ public sealed class Device : IDisposable
 		//Unregister from active instance
 		lock (instanceLocker)
 		{
-			Assert.AreEqual(_instance, this);
+			Ensure.AreEqual(_instance, this);
 			Instance = null;
 		}
 
@@ -267,7 +267,7 @@ public sealed class Device : IDisposable
 		{
 			//Just stopped running
 			using var _ = signalLocker.Fetch();
-			Assert.IsFalse(runningCount <= 0);
+			Ensure.IsFalse(runningCount <= 0);
 			--runningCount;
 
 			//Signal if all workers are idle
@@ -277,7 +277,7 @@ public sealed class Device : IDisposable
 		{
 			//Just started running
 			using var _ = signalLocker.Fetch();
-			Assert.IsFalse(runningCount >= workers.Length);
+			Ensure.IsFalse(runningCount >= workers.Length);
 			++runningCount;
 
 			//Signal if not all workers are idle

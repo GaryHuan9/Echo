@@ -1,5 +1,5 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+﻿using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
 
 namespace Echo.Core.Aggregation.Primitives;
@@ -11,8 +11,8 @@ public readonly struct GeometryShade
 {
 	public GeometryShade(Material material, Float2 texcoord, in Float3 normal)
 	{
-		Assert.IsNotNull(material);
-		Assert.AreEqual(normal.SquaredMagnitude, 1f);
+		Ensure.IsNotNull(material);
+		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
 
 		this.material = material;
 		_texcoord = texcoord;
@@ -37,7 +37,7 @@ public readonly struct GeometryShade
 	{
 		get
 		{
-			Assert.IsNotNull(material);
+			Ensure.IsNotNull(material);
 			return _texcoord;
 		}
 	}
@@ -49,7 +49,7 @@ public readonly struct GeometryShade
 	{
 		get
 		{
-			Assert.IsNotNull(material);
+			Ensure.IsNotNull(material);
 			return _normal;
 		}
 	}

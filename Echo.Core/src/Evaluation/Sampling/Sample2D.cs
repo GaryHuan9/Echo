@@ -1,7 +1,6 @@
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Evaluation.Sampling;
 
@@ -116,7 +115,7 @@ public readonly struct Sample2D
 	/// </summary>
 	public Int2 Range(Int2 max)
 	{
-		Assert.IsTrue(max >= Int2.Zero);
+		Ensure.IsTrue(max >= Int2.Zero);
 		return (Int2)((Float2)this * max);
 	}
 
@@ -125,7 +124,7 @@ public readonly struct Sample2D
 	/// </summary>
 	public Int2 Range(Int2 min, Int2 max)
 	{
-		Assert.IsTrue(min < max);
+		Ensure.IsTrue(min < max);
 		return Range(max - min) + min;
 	}
 

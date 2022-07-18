@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -101,7 +101,7 @@ public abstract class PlaneUI : AreaUI
 	{
 		public Bounds(Float2 center, Float2 extend)
 		{
-			Assert.IsTrue(extend >= Float2.Zero);
+			Ensure.IsTrue(extend >= Float2.Zero);
 
 			this.center = center;
 			this.extend = extend;

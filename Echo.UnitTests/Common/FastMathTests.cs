@@ -1,5 +1,4 @@
 ﻿using System;
-using CodeHelpers.Mathematics;
 using Echo.Core.Common.Mathematics;
 using NUnit.Framework;
 
@@ -35,7 +34,7 @@ public class FastMathTests
 	[Test]
 	public void ClampEpsilon([ValueSource(nameof(floatValues))] float value)
 	{
-		float epsilon = Scalars.UInt32ToSingleBits(Scalars.SingleToUInt32Bits(1f) - 1u);
+		float epsilon = BitConverter.UInt32BitsToSingle(BitConverter.SingleToUInt32Bits(1f) - 1u);
 		Assert.That(FastMath.ClampEpsilon(value), Is.EqualTo(value < 0f ? 0f : value >= 1f ? epsilon : value));
 	}
 
