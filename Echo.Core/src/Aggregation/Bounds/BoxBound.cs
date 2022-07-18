@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Bounds;
 
@@ -18,12 +17,12 @@ public readonly struct BoxBound : IFormattable
 		this.min = min;
 		this.max = max;
 
-		Assert.IsTrue(max >= min);
+		Ensure.IsTrue(max >= min);
 	}
 
 	public BoxBound(ReadOnlySpan<Float3> points)
 	{
-		Assert.AreNotEqual(points.Length, 0);
+		Ensure.AreNotEqual(points.Length, 0);
 		var builder = CreateBuilder();
 		builder.Add(points);
 		this = builder.ToBoxBound();
@@ -31,7 +30,7 @@ public readonly struct BoxBound : IFormattable
 
 	public BoxBound(ReadOnlySpan<BoxBound> bounds)
 	{
-		Assert.AreNotEqual(bounds.Length, 0);
+		Ensure.AreNotEqual(bounds.Length, 0);
 		var builder = CreateBuilder();
 		builder.Add(bounds);
 		this = builder.ToBoxBound();
@@ -39,7 +38,7 @@ public readonly struct BoxBound : IFormattable
 
 	public BoxBound(ReadOnlySpan<BoxBound> bounds, in Float4x4 transform)
 	{
-		Assert.AreNotEqual(bounds.Length, 0);
+		Ensure.AreNotEqual(bounds.Length, 0);
 		Float4x4 absolute = transform.Absoluted;
 
 		min = Float3.PositiveInfinity;
@@ -54,7 +53,7 @@ public readonly struct BoxBound : IFormattable
 			max = max.Max(center + extend);
 		}
 
-		Assert.IsTrue(max >= min);
+		Ensure.IsTrue(max >= min);
 	}
 
 	public readonly Float3 min;

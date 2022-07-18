@@ -114,11 +114,11 @@ public partial class StatisticsGenerator : IIncrementalGenerator
 
 		static ITypeSymbol GetSymbolType(ISymbol symbol) => symbol switch
 		{
-			ILocalSymbol local => local.Type,
-			IFieldSymbol field => field.Type,
-			IPropertySymbol property => property.Type,
+			ILocalSymbol local         => local.Type,
+			IFieldSymbol field         => field.Type,
+			IPropertySymbol property   => property.Type,
 			IParameterSymbol parameter => parameter.Type,
-			_ => null
+			_                          => null
 		};
 	}
 

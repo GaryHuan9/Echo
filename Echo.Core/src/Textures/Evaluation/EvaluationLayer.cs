@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.Numerics;
 using System.Threading;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
@@ -98,7 +98,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public IEvaluationWriteTile CreateTile(Int2 tilePosition)
 	{
-		AssertValidPosition(tilePosition, tileRange);
+		EnsureValidPosition(tilePosition, tileRange);
 		GetTileBounds(tilePosition, out Int2 min, out Int2 max);
 		return new WriteTile(tilePosition, min, max);
 	}
@@ -106,7 +106,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public IEvaluationReadTile RequestTile(Int2 tilePosition)
 	{
-		AssertValidPosition(tilePosition, tileRange);
+		EnsureValidPosition(tilePosition, tileRange);
 		return tiles[GetTileIndex(tilePosition)];
 	}
 
@@ -135,18 +135,18 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max)
 	{
-		AssertValidPosition(tilePosition, tileRange);
+		EnsureValidPosition(tilePosition, tileRange);
 
 		min = tilePosition * tileSize;
 		max = size.Min(min + tileSize);
 
-		AssertMinMax(min, max);
+		EnsureMinMax(min, max);
 	}
 
 	/// <inheritdoc/>
 	public Int2 GetTilePosition(Int2 position)
 	{
-		AssertValidPosition(position);
+		EnsureValidPosition(position);
 
 		return new Int2
 		(
@@ -157,32 +157,32 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 
 	int GetTileIndex(Int2 tilePosition)
 	{
-		AssertValidPosition(tilePosition, tileRange);
+		EnsureValidPosition(tilePosition, tileRange);
 		return tilePosition.Y * tileRange.X + tilePosition.X;
 	}
 
 	static int GetLocalOffset(Int2 position, Int2 min, Int2 max)
 	{
-		AssertMinMax(min, max);
+		EnsureMinMax(min, max);
 		Int2 size = max - min;
 		position -= min;
 
-		AssertValidPosition(position, size);
+		EnsureValidPosition(position, size);
 		return position.Y * size.X + position.X;
 	}
 
-	[Conditional(Assert.DebugSymbol)]
-	static void AssertMinMax(Int2 min, Int2 max)
+	[Conditional("DEBUG")]
+	static void EnsureMinMax(Int2 min, Int2 max)
 	{
-		Assert.IsTrue(max > min);
-		Assert.IsTrue(min >= Int2.Zero);
+		Ensure.IsTrue(max > min);
+		Ensure.IsTrue(min >= Int2.Zero);
 	}
 
 	class Tile : IEvaluationTile
 	{
 		public Tile(Int2 tilePosition, Int2 min, Int2 max)
 		{
-			AssertMinMax(min, max);
+			EnsureMinMax(min, max);
 			this.tilePosition = tilePosition;
 
 			Min = min;
@@ -211,7 +211,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		{
 			set
 			{
-				Assert.IsNotNull(buffer);
+				Ensure.IsNotNull(buffer);
 				int offset = GetLocalOffset(position, Min, Max);
 				buffer[offset] = default(T).FromFloat4(value);
 			}
@@ -222,7 +222,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	{
 		public ReadTile(Int2 tilePosition, Int2 min, Int2 max, T[] buffer) : base(tilePosition, min, max)
 		{
-			Assert.IsNotNull(buffer);
+			Ensure.IsNotNull(buffer);
 			this.buffer = buffer;
 		}
 

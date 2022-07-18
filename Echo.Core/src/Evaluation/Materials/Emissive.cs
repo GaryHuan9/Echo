@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 

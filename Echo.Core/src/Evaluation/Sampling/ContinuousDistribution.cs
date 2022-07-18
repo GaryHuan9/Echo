@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Evaluation.Sampling;
 
@@ -85,7 +84,7 @@ public abstract record ContinuousDistribution
 	public virtual void BeginSeries(Int2 position)
 	{
 		monoThread.Ensure();
-		Assert.IsTrue(position >= Int2.Zero);
+		Ensure.IsTrue(position >= Int2.Zero);
 
 		SeriesPosition = position;
 		SessionNumber = -1;
@@ -228,7 +227,7 @@ public abstract record ContinuousDistribution
 				if (++head < cache.Count)
 				{
 					buffer = cache[head];
-					Assert.AreEqual(buffer.Length, length);
+					Ensure.AreEqual(buffer.Length, length);
 				}
 				else
 				{
@@ -236,12 +235,12 @@ public abstract record ContinuousDistribution
 					cache.Add(buffer);
 				}
 
-				Assert.AreEqual(next, head);
+				Ensure.AreEqual(next, head);
 				return true;
 			}
 
 			buffer = cache[next];
-			Assert.AreEqual(buffer.Length, length);
+			Ensure.AreEqual(buffer.Length, length);
 			return false;
 		}
 

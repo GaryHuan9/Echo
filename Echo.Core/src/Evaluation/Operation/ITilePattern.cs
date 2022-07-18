@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using CodeHelpers.Collections;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Mathematics.Enumerable;
-using CodeHelpers.Packed;
+using Echo.Core.Common;
+using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Enumeration;
+using Echo.Core.Common.Mathematics.Randomization;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Evaluation.Operation;
 
@@ -32,8 +33,7 @@ public class ScrambledPattern : OrderedPattern
 	public override Int2[] CreateSequence(Int2 size)
 	{
 		Int2[] array = base.CreateSequence(size);
-
-		array.Shuffle();
+		SystemPrng.Shared.Shuffle<Int2>(array);
 		return array;
 	}
 }
@@ -57,7 +57,7 @@ public class CheckerboardPattern : SpiralPattern
 	public override Int2[] CreateSequence(Int2 size)
 	{
 		Int2[] array = base.CreateSequence(size);
-		for (int i = 0; i < array.Length / 2; i += 2) array.Swap(i, array.Length - i - 1);
+		for (int i = 0; i < array.Length / 2; i += 2) Utility.Swap(ref array[i], ref array[array.Length - i - 1]);
 
 		return array;
 	}

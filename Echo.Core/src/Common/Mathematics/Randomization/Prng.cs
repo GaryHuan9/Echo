@@ -1,9 +1,7 @@
 using System;
 using System.Numerics;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Common.Mathematics.Randomization;
 
@@ -51,7 +49,7 @@ public abstract record Prng
 			uint exponent = (126u - count) << 23;
 			uint mantissa = (uint)source & Mask;
 
-			return Scalars.UInt32ToSingleBits(exponent | mantissa);
+			return BitConverter.UInt32BitsToSingle(exponent | mantissa);
 		}
 
 		//The following code will only be reached 1 out of 2^40 times (probabilistically).
@@ -79,7 +77,7 @@ public abstract record Prng
 	/// </summary>
 	public int Next1(int max)
 	{
-		Assert.IsTrue(max > 0);
+		Ensure.IsTrue(max > 0);
 		return (int)Next1Impl((uint)max);
 	}
 
@@ -88,7 +86,7 @@ public abstract record Prng
 	/// </summary>
 	public int Next1(int min, int max)
 	{
-		Assert.IsTrue(max > min);
+		Ensure.IsTrue(max > min);
 		uint distance = (uint)((long)max - min);
 		return (int)Next1Impl(distance) + min;
 	}
@@ -223,19 +221,19 @@ public abstract record Prng
 	/// </summary>
 	public void Shuffle<T>(Span<T> span)
 	{
-		for (int i = span.Length - 1; i > 0; i--) CodeHelper.Swap(ref span[i], ref span[Next1(i + 1)]);
+		for (int i = span.Length - 1; i > 0; i--) Utility.Swap(ref span[i], ref span[Next1(i + 1)]);
 	}
 
 	public virtual bool Equals(Prng other) => other?.GetType() == GetType();
 	public override int GetHashCode() => GetType().GetHashCode();
-  
+
 	/// <summary>
 	/// Computes a discrete uniform random value from 0 (inclusive) to <paramref name="max"/> (exclusive).
 	/// Implementation based on academic paper by Daniel Lemire: https://arxiv.org/abs/1805.10941
 	/// </summary>
 	uint Next1Impl(uint max)
 	{
-		Assert.AreNotEqual(max, 0u);
+		Ensure.AreNotEqual(max, 0u);
 
 		ulong value = (ulong)NextUInt32() * max;
 		if ((uint)value >= max) goto exit;

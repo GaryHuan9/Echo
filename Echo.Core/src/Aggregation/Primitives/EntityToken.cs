@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Scenic.Lights;
 
 namespace Echo.Core.Aggregation.Primitives;
@@ -21,17 +21,17 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 	/// must be between 0 (inclusive) and <see cref="IndexCount"/> (exclusive).</param>
 	public EntityToken(TokenType type, int index) : this(((uint)type << IndexBitLength) | (uint)index)
 	{
-		Assert.IsTrue(index < IndexCount);
-		Assert.AreEqual(Type, type);
-		Assert.IsTrue(type == TokenType.Light || Index == index);
+		Ensure.IsTrue(index < IndexCount);
+		Ensure.AreEqual(Type, type);
+		Ensure.IsTrue(type == TokenType.Light || Index == index);
 	}
 
 	public EntityToken(LightType type, int index) : this(TokenType.Light, ((int)type << LightIndexBitLength) | index)
 	{
-		Assert.IsTrue(index < LightIndexCount);
-		Assert.AreEqual(Type, TokenType.Light);
-		Assert.AreEqual(LightType, type);
-		Assert.AreEqual(LightIndex, index);
+		Ensure.IsTrue(index < LightIndexCount);
+		Ensure.AreEqual(Type, TokenType.Light);
+		Ensure.AreEqual(LightType, type);
+		Ensure.AreEqual(LightIndex, index);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,7 +81,7 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 	{
 		get
 		{
-			Assert.AreNotEqual(data, EmptyTokenValue);
+			Ensure.AreNotEqual(data, EmptyTokenValue);
 			return (TokenType)(data >> IndexBitLength);
 		}
 	}
@@ -95,8 +95,8 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 	{
 		get
 		{
-			Assert.AreNotEqual(data, EmptyTokenValue);
-			Assert.AreEqual(Type, TokenType.Light);
+			Ensure.AreNotEqual(data, EmptyTokenValue);
+			Ensure.AreEqual(Type, TokenType.Light);
 
 			return (LightType)((data >> LightIndexBitLength) & LightTypeMask);
 		}
@@ -112,8 +112,8 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 	{
 		get
 		{
-			Assert.AreNotEqual(data, EmptyTokenValue);
-			Assert.AreNotEqual(Type, TokenType.Light);
+			Ensure.AreNotEqual(data, EmptyTokenValue);
+			Ensure.AreNotEqual(Type, TokenType.Light);
 			return (int)(data & (IndexLength - 1));
 		}
 	}
@@ -128,8 +128,8 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 	{
 		get
 		{
-			Assert.AreNotEqual(data, EmptyTokenValue);
-			Assert.AreEqual(Type, TokenType.Light);
+			Ensure.AreNotEqual(data, EmptyTokenValue);
+			Ensure.AreEqual(Type, TokenType.Light);
 			return (int)(data & (LightIndexLength - 1));
 		}
 	}

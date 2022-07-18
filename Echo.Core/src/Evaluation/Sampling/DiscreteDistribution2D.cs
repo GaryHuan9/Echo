@@ -1,9 +1,9 @@
 using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Evaluation.Sampling;
 
@@ -18,11 +18,11 @@ public readonly struct DiscreteDistribution2D
 	/// </summary>
 	public DiscreteDistribution2D(ReadOnlySpan<float> function, int width)
 	{
-		Assert.IsFalse(function.IsEmpty);
+		Ensure.IsFalse(function.IsEmpty);
 
 		//Calculate size and create arrays
 		size = new Int2(width, function.Length / width);
-		Assert.AreEqual(function.Length, size.Product);
+		Ensure.AreEqual(function.Length, size.Product);
 
 		slices = new DiscreteDistribution1D[size.Y];
 		using var _ = Pool<float>.Fetch(size.Y, out var sums);

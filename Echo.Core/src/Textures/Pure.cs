@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Packed;
+﻿using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Directional;
 

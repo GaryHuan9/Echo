@@ -1,10 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;
@@ -231,7 +231,7 @@ public class BoundingVolumeHierarchy : Accelerator
 			return geometries.GetTraceCost(ray, ref distance, token);
 		}
 
-		Assert.AreEqual(token.Type, TokenType.Node);
+		Ensure.AreEqual(token.Type, TokenType.Node);
 		ref readonly Node child0 = ref nodes[token.Index];
 		ref readonly Node child1 = ref nodes[token.Index + 1];
 

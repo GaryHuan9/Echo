@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using NUnit.Framework;
 

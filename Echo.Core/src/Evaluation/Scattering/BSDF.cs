@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
@@ -150,13 +150,13 @@ public class BSDF
 
 		//If there is only one function, we have finished
 		if (matched == 1) return sampled;
-		Assert.IsTrue(matched > 1);
+		Ensure.IsTrue(matched > 1);
 
 		//If the selected function is specular, we are also finished
 		if (selected.type.Any(FunctionType.Specular))
 		{
 			//Specular functions are Dirac delta distributions
-			Assert.AreEqual(sampled.pdf, 1f);
+			Ensure.AreEqual(sampled.pdf, 1f);
 			return (sampled, 1f / matched);
 		}
 

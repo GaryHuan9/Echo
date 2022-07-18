@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Mathematics;
 using Echo.Core.Common;
+using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Common;

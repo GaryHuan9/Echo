@@ -2,11 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures;
@@ -40,7 +38,7 @@ public class Gradient : IEnumerable<float>
 		{
 			{
 				if (anchors.Count == 0) throw new Exception("Cannot sample with zero anchor!");
-				int index = anchors.BinarySearch(percent, Comparer.instance);
+				int index = anchors.BinarySearch(new Anchor(percent, default));
 
 				if (index < 0) index = ~index;
 				else return anchors[index].color;
@@ -59,9 +57,9 @@ public class Gradient : IEnumerable<float>
 	/// </summary>
 	public void Add(float percent, in RGBA128 color)
 	{
-		seal.AssertNotApplied();
+		seal.EnsureNotApplied();
 
-		int index = anchors.BinarySearch(percent, Comparer.instance);
+		int index = anchors.BinarySearch(new Anchor(percent, default));
 		Anchor anchor = new Anchor(percent, color);
 
 		if (index >= 0) anchors[index] = anchor;
@@ -74,31 +72,20 @@ public class Gradient : IEnumerable<float>
 	/// </summary>
 	public bool Remove(float percent)
 	{
-		seal.AssertNotApplied();
+		seal.EnsureNotApplied();
 
-		int index = anchors.BinarySearch(percent, Comparer.instance);
+		int index = anchors.BinarySearch(new Anchor(percent, default));
 		if (index < 0) return false;
 
 		anchors.RemoveAt(index);
 		return true;
 	}
-	
+
 	IEnumerator<float> IEnumerable<float>.GetEnumerator() => anchors.Select(anchor => anchor.percent).GetEnumerator();
 
 	IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable<float>)this).GetEnumerator();
 
-	class Comparer : IDoubleComparer<Anchor, float>
-	{
-		public static readonly Comparer instance = new();
-
-		public int CompareTo(Anchor first, float second)
-		{
-			if (first.percent.AlmostEquals(second)) return 0;
-			return first.percent.CompareTo(second);
-		}
-	}
-
-	readonly struct Anchor
+	readonly struct Anchor : IComparable<Anchor>
 	{
 		public Anchor(float percent, in RGBA128 color)
 		{
@@ -108,5 +95,7 @@ public class Gradient : IEnumerable<float>
 
 		public readonly float percent;
 		public readonly RGBA128 color;
+
+		public int CompareTo(Anchor other) => percent.CompareTo(other.percent);
 	}
 }

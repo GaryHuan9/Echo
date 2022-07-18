@@ -1,8 +1,8 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Grids;
@@ -98,7 +98,7 @@ public interface IWrapper
 
 	static Vector128<int> RepeatFast(in Vector128<int> value, int length, bool isPowerOfTwo)
 	{
-		Assert.AreEqual(length.IsPowerOfTwo(), isPowerOfTwo);
+		Ensure.AreEqual(length.IsPowerOfTwo(), isPowerOfTwo);
 
 		if (!isPowerOfTwo) return Fallback(value, length);
 		return Sse2.And(value, Vector128.Create(length - 1));

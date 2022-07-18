@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 using Echo.Terminal;
 using Echo.Terminal.Core;
 using Echo.Terminal.Core.Interface;

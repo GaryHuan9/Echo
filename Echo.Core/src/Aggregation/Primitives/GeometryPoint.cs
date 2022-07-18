@@ -1,7 +1,7 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+﻿using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Primitives;
 
@@ -12,7 +12,7 @@ public readonly struct GeometryPoint
 {
 	public GeometryPoint(in Float3 position, in Float3 normal)
 	{
-		Assert.AreEqual(normal.SquaredMagnitude, 1f);
+		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
 
 		this.position = position;
 		this.normal = normal;
@@ -34,7 +34,7 @@ public readonly struct GeometryPoint
 	/// </summary>
 	public float ProbabilityDensity(in Float3 origin, float area)
 	{
-		Assert.IsTrue(FastMath.Positive(area));
+		Ensure.IsTrue(FastMath.Positive(area));
 
 		Float3 delta = position - origin;
 		float length2 = delta.SquaredMagnitude;

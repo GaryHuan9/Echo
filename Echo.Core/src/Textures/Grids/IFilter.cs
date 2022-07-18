@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Grids;

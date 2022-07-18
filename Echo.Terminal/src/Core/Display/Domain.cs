@@ -1,6 +1,6 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Terminal.Core.Display;
 
@@ -13,8 +13,8 @@ public readonly struct Domain
 
 	Domain(Int2 size, char[] array)
 	{
-		Assert.IsTrue(size >= Int2.Zero);
-		Assert.IsTrue(array.Length >= size.Product);
+		Ensure.IsTrue(size >= Int2.Zero);
+		Ensure.IsTrue(array.Length >= size.Product);
 
 		this.size = size;
 		this.array = array;

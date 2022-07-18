@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
@@ -26,7 +25,7 @@ public class LightTree : LightPicker
 		void AddToMap(Node node, int depth, ulong branches)
 		{
 			if (node == null) return;
-			Assert.IsTrue(depth < 64);
+			Ensure.IsTrue(depth < 64);
 
 			if (node.child0 == null) map.Add(node.token, branches);
 			else
@@ -131,7 +130,7 @@ public class LightTree : LightPicker
 	{
 		if (node.child0 == null)
 		{
-			Assert.AreEqual(branches, 0ul);
+			Ensure.AreEqual(branches, 0ul);
 			return 1f;
 		}
 
