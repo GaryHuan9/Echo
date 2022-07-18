@@ -3,8 +3,8 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Common.Compute.Statistics;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Common.Compute;
@@ -112,7 +112,7 @@ public abstract class Operation : IDisposable
 		get
 		{
 			TimeSpan time = stopwatch.Elapsed;
-			Assert.AreNotEqual(time, default);
+			Ensure.AreNotEqual(time, default);
 
 			using var _ = totalTimeLocker.Fetch();
 			TimeSpan result = totalRecordedTime;
@@ -171,7 +171,7 @@ public abstract class Operation : IDisposable
 	public void ChangeWorkerState(IWorker worker, bool idle)
 	{
 		TimeSpan time = stopwatch.Elapsed;
-		Assert.AreNotEqual(time, default);
+		Ensure.AreNotEqual(time, default);
 
 		ref WorkerData data = ref workerData[worker.Index];
 		data.ThrowIfInconsistent(worker.Guid);
@@ -214,7 +214,7 @@ public abstract class Operation : IDisposable
 	public void FillWorkerTimes(ref SpanFill<TimeSpan> fill)
 	{
 		TimeSpan time = stopwatch.Elapsed;
-		Assert.AreNotEqual(time, default);
+		Ensure.AreNotEqual(time, default);
 
 		fill.ThrowIfNotEmpty();
 
@@ -250,7 +250,7 @@ public abstract class Operation : IDisposable
 	/// </summary>
 	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="EventRow"/>s.</param>
 	/// <remarks>The maximum number of available items filled from this method is <see cref="EventRowCount"/>.</remarks>
-	public virtual void FillEventRows(ref SpanFill<EventRow> fill) => Assert.AreEqual(EventRowCount, 0);
+	public virtual void FillEventRows(ref SpanFill<EventRow> fill) => Ensure.AreEqual(EventRowCount, 0);
 
 	public void Dispose()
 	{
@@ -309,7 +309,7 @@ public abstract class Operation : IDisposable
 		public void ThrowIfInconsistent(in Guid guid)
 		{
 			monoThread.Ensure();
-			Assert.AreEqual(workerGuid, guid);
+			Ensure.AreEqual(workerGuid, guid);
 		}
 	}
 }

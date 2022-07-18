@@ -1,7 +1,7 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Terminal.Core.Display;
 
@@ -11,8 +11,8 @@ public readonly struct Canvas
 {
 	public Canvas(Int2 size, char[] array, int stride, int offset)
 	{
-		Assert.IsTrue(size > Int2.Zero);
-		Assert.IsNotNull(array);
+		Ensure.IsTrue(size > Int2.Zero);
+		Ensure.IsNotNull(array);
 
 		this.size = size;
 		this.array = array;
@@ -50,8 +50,8 @@ public readonly struct Canvas
 	{
 		get
 		{
-			Assert.IsTrue(new Int2(x, y) >= Int2.Zero);
-			Assert.IsTrue(new Int2(x, y) < size);
+			Ensure.IsTrue(new Int2(x, y) >= Int2.Zero);
+			Ensure.IsTrue(new Int2(x, y) < size);
 			return ref array[y * stride + x + offset];
 		}
 	}
@@ -64,7 +64,7 @@ public readonly struct Canvas
 	{
 		get
 		{
-			Assert.IsTrue(0 <= y && y < size.Y);
+			Ensure.IsTrue(0 <= y && y < size.Y);
 			return array.AsSpan(y * stride + offset, size.X);
 		}
 	}
@@ -283,7 +283,7 @@ public readonly struct Canvas
 	static void JustifiedCopy(CharSpan source, Span<char> target)
 	{
 		source = source.TrimEnd();
-		Assert.IsTrue(source.Length <= target.Length);
+		Ensure.IsTrue(source.Length <= target.Length);
 		CopyStart(ref source, ref target, true);
 
 		Count(source, out int wordCount, out int charCount);
@@ -309,7 +309,7 @@ public readonly struct Canvas
 			source = source.TrimStart();
 		}
 
-		Assert.AreEqual(source.Length, target.Length);
+		Ensure.AreEqual(source.Length, target.Length);
 		source.CopyTo(target);
 
 		static void CopyStart(ref CharSpan source, ref Span<char> target, bool whiteSpace)

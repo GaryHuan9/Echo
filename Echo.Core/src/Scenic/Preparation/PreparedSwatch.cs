@@ -11,7 +11,7 @@ public readonly struct PreparedSwatch
 	public PreparedSwatch(Material[] materials)
 	{
 #if DEBUG
-		foreach (Material material in materials) CodeHelpers.Diagnostics.Assert.IsNotNull(material);
+		foreach (Material material in materials) Common.Diagnostics.Ensure.IsNotNull(material);
 #endif
 		this.materials = materials;
 	}

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Hierarchies;
 
@@ -108,7 +107,7 @@ public sealed partial record ScenePreparer
 				if (visited.Add(child)) CreatePrepared(child);
 			}
 
-			Assert.IsFalse(visited.Contains(node));
+			Ensure.IsFalse(visited.Contains(node));
 			node.CreatePreparedPack(this);
 		}
 	}

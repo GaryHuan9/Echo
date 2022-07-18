@@ -1,8 +1,7 @@
 using System;
 using System.Threading;
-using CodeHelpers;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Threading;
 
 namespace Echo.Core.Common.Memory;
 
@@ -161,7 +160,7 @@ public sealed record Allocator
 	{
 		lock (tokens)
 		{
-			Assert.IsFalse(tokens.Adding);
+			Ensure.IsFalse(tokens.Adding);
 			foreach (var token in tokens) token.value = Token.Unmanaged;
 
 			Interlocked.Exchange(ref tokenCount, 0);
@@ -213,7 +212,7 @@ public sealed record Allocator
 				int value = Interlocked.Increment(ref tokenCount) - 1;
 				original = Interlocked.Exchange(ref read, value);
 
-				Assert.IsTrue(original < 0);
+				Ensure.IsTrue(original < 0);
 				tokens.ImmediateAdd(token);
 				return value;
 			}

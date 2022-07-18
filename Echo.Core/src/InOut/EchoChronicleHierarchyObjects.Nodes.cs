@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
@@ -272,7 +272,7 @@ partial class EchoChronicleHierarchyObjects
 		public override object Construct(EchoChronicleHierarchyObjects main, Type targetType)
 		{
 			object result = Construct(main);
-			Assert.IsTrue(targetType.IsInstanceOfType(result));
+			Ensure.IsTrue(targetType.IsInstanceOfType(result));
 			return result;
 		}
 

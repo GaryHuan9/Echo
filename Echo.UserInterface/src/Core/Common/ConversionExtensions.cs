@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 
 namespace Echo.UserInterface.Core.Common;
 

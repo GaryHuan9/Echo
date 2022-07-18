@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.InOut;
 using Echo.Core.Scenic.Preparation;
 

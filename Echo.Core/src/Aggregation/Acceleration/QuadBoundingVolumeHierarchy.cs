@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Acceleration;
 
@@ -33,7 +32,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		nodes[0] = CreateNode(buildRoot, ref nodeIndex, out int maxDepth);
 
 		stackSize = maxDepth * 3 + 1; //This equation is not arbitrary!
-		Assert.AreEqual((long)nodeIndex, nodes.Length);
+		Ensure.AreEqual((long)nodeIndex, nodes.Length);
 	}
 
 	readonly Node[] nodes;
@@ -363,7 +362,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 
 	Node CreateNode(BuildNode buildNode, ref int nodeIndex, out int depth)
 	{
-		Assert.IsNotNull(buildNode.child);
+		Ensure.IsNotNull(buildNode.child);
 		BuildNode current = buildNode.child;
 
 		Span<EntityToken> token4 = stackalloc EntityToken[Width];
@@ -410,7 +409,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 		[SkipLocalsInit]
 		public Node(BuildNode node, ReadOnlySpan<EntityToken> token4)
 		{
-			Assert.IsNotNull(node.child);
+			Ensure.IsNotNull(node.child);
 			BuildNode child = node.child;
 
 			Span<BoxBound> bounds = stackalloc BoxBound[Width];
@@ -559,7 +558,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			child1 = node.Child1;
 
 			//Put child1 as the first child if child0 has a larger position
-			if (child0.bound.min[axis] > child1.bound.min[axis]) CodeHelper.Swap(ref child0, ref child1);
+			if (child0.bound.min[axis] > child1.bound.min[axis]) Utility.Swap(ref child0, ref child1);
 
 			return axis;
 		}

@@ -6,8 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using CodeHelpers.Packed;
-using CodeHelpers.Pooling;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
@@ -23,10 +22,9 @@ public class MaterialLibrary
 		path = AssetsUtility.GetAbsolutePath(acceptableFileExtensions, path); //Formulate path
 
 		using StreamReader reader = new StreamReader(File.OpenRead(path));
-		using var operationsHandle = CollectionPooler<TextureLoadOperation>.list.Fetch();
 
 		materials = new Dictionary<string, Material>();
-		List<TextureLoadOperation> operations = operationsHandle;
+		List<TextureLoadOperation> operations = new();
 
 		Material processing = null;
 

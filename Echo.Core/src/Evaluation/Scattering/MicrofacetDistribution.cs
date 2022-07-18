@@ -1,7 +1,6 @@
 ﻿using System;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Evaluation.Scattering;
 

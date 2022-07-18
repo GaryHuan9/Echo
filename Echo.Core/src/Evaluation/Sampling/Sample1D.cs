@@ -1,5 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 
 namespace Echo.Core.Evaluation.Sampling;
@@ -12,7 +12,7 @@ public readonly struct Sample1D
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	Sample1D(float u)
 	{
-		Assert.IsFalse(float.IsNaN(u));
+		Ensure.IsFalse(float.IsNaN(u));
 		this.u = FastMath.ClampEpsilon(u);
 	}
 
@@ -25,7 +25,7 @@ public readonly struct Sample1D
 	/// <returns>The mapped integer between zero (inclusive) and <paramref name="max"/>.</returns>
 	public int Range(int max)
 	{
-		Assert.IsTrue(max > 0);
+		Ensure.IsTrue(max > 0);
 		return (int)(u * max);
 	}
 
@@ -37,7 +37,7 @@ public readonly struct Sample1D
 	/// <returns>The mapped integer between <paramref name="min"/> and <paramref name="max"/>.</returns>
 	public int Range(int min, int max)
 	{
-		Assert.IsTrue(min < max);
+		Ensure.IsTrue(min < max);
 		return (int)FastMath.FMA(u, max - min, min);
 	}
 
@@ -72,8 +72,8 @@ public readonly struct Sample1D
 	/// utilizing the continuous (fractional) part of the discrete quantization.</remarks>
 	public Sample1D Stretch(float lower, float upper)
 	{
-		Assert.IsTrue(u >= lower);
-		Assert.IsTrue(u < upper);
+		Ensure.IsTrue(u >= lower);
+		Ensure.IsTrue(u < upper);
 
 		return (Sample1D)((u - lower) / (upper - lower));
 	}

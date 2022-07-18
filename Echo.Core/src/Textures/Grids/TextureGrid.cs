@@ -3,9 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 using Echo.Core.InOut;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Serialization;
@@ -164,8 +163,8 @@ public abstract class TextureGrid : Texture
 	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid"/>.
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
-	[Conditional(Assert.DebugSymbol)]
-	protected void AssertValidPosition(Int2 position) => AssertValidPosition(position, size);
+	[Conditional("DEBUG")]
+	protected void EnsureValidPosition(Int2 position) => EnsureValidPosition(position, size);
 
 	/// <summary>
 	/// Performs a <see cref="Load{T}"/> operation asynchronously.
@@ -194,16 +193,16 @@ public abstract class TextureGrid : Texture
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
 	/// <param name="size">The upper limit of the bounds (exclusive).</param>
-	[Conditional(Assert.DebugSymbol)]
-	protected static void AssertValidPosition(Int2 position, Int2 size)
+	[Conditional("DEBUG")]
+	protected static void EnsureValidPosition(Int2 position, Int2 size)
 	{
-		Assert.IsTrue(Int2.Zero <= position);
-		Assert.IsTrue(position < size);
+		Ensure.IsTrue(Int2.Zero <= position);
+		Ensure.IsTrue(position < size);
 	}
 
 	static Int2 IsPowerOfTwo(Int2 size)
 	{
-		Assert.IsTrue(size > Int2.Zero);
+		Ensure.IsTrue(size > Int2.Zero);
 
 		return new Int2
 		(
@@ -241,7 +240,7 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
-		Assert.IsTrue(float.IsFinite(uv.Sum));
+		Ensure.IsTrue(float.IsFinite(uv.Sum));
 		return Filter.Evaluate(this, uv);
 	}
 }

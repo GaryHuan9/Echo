@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Evaluation.Operation;
 

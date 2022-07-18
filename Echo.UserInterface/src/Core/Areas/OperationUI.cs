@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Common;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Statistics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;

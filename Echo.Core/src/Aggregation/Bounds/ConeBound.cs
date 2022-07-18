@@ -1,8 +1,8 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Bounds;
 
@@ -10,9 +10,9 @@ public readonly struct ConeBound
 {
 	ConeBound(in Float3 axis, float cosOffset = 1f, float cosExtend = 0f)
 	{
-		Assert.AreEqual(axis.SquaredMagnitude, 1f);
-		Assert.IsTrue(cosOffset is >= -1f and <= 1f);
-		Assert.IsTrue(cosExtend is >= 0f and <= 1f);
+		Ensure.AreEqual(axis.SquaredMagnitude, 1f);
+		Ensure.IsTrue(cosOffset is >= -1f and <= 1f);
+		Ensure.IsTrue(cosExtend is >= 0f and <= 1f);
 
 		this.axis = axis;
 		this.cosOffset = cosOffset;
@@ -27,7 +27,7 @@ public readonly struct ConeBound
 	{
 		get
 		{
-			Assert.AreNotEqual(axis, default);
+			Ensure.AreNotEqual(axis, default);
 
 			float offset = MathF.Acos(FastMath.Clamp11(cosOffset));
 			float extend = MathF.Acos(FastMath.Clamp11(cosExtend));
@@ -45,8 +45,8 @@ public readonly struct ConeBound
 
 	public ConeBound Encapsulate(in ConeBound other)
 	{
-		Assert.AreNotEqual(axis, default);
-		Assert.AreNotEqual(other.axis, default);
+		Ensure.AreNotEqual(axis, default);
+		Ensure.AreNotEqual(other.axis, default);
 
 		return other.cosOffset > cosOffset ? Union(this, other) : Union(other, this);
 	}
@@ -67,7 +67,7 @@ public readonly struct ConeBound
 		float offset1 = MathF.Acos(FastMath.Clamp11(value1.cosOffset));
 		float cosExtend = FastMath.Min(value0.cosExtend, value1.cosExtend);
 
-		Assert.IsTrue(offset0 >= offset1);
+		Ensure.IsTrue(offset0 >= offset1);
 
 		Float3 axis = value0.axis;
 		float max = value0.axis.Angle(value1.axis) + offset1;

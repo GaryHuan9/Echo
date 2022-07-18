@@ -1,13 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.Intrinsics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Common;
 
 public static class Utility
 {
+	/// <summary>
+	/// Swaps the item held by two references..
+	/// </summary>
+	/// <param name="first">The first reference to swap from.</param>
+	/// <param name="second">The second reference to swap from.</param>
+	/// <typeparam name="T">The type of the item to swap.</typeparam>
+	public static void Swap<T>(ref T first, ref T second)
+	{
+		T storage = first;
+		first = second;
+		second = storage;
+	}
+
 	/// <summary>
 	/// If <paramref name="index"/> is valid for <paramref name="span"/>, returns
 	/// the item it points. Otherwise, <paramref name="defaultValue"/> is returned.
@@ -17,6 +31,14 @@ public static class Utility
 		if ((uint)index < span.Length) return ref span[index];
 		return ref defaultValue;
 	}
+
+	/// <summary>
+	/// Tries to retrieve from an <see cref="IReadOnlyDictionary{TKey,TValue}"/>.
+	/// </summary>
+	/// <param name="dictionary">The <see cref="IReadOnlyDictionary{TKey,TValue}"/> to retrieve from.</param>
+	/// <param name="key">The item used to attempt to locate the value in <paramref name="dictionary"/>.</param>
+	/// <returns>If found, the value of that was retrieved, otherwise default.</returns>
+	public static TValue TryGetValue<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> dictionary, TKey key) => dictionary.TryGetValue(key, out TValue value) ? value : default;
 
 	/// <summary>
 	/// Unsafe fast memory copy.

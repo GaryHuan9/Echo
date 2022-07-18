@@ -2,8 +2,8 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Scenic.Hierarchies;
 
@@ -58,8 +58,8 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 		readonly get => _topToken;
 		set
 		{
-			Assert.AreNotEqual(value.Type, TokenType.Instance);
-			Assert.AreNotEqual(value.Type, TokenType.Node);
+			Ensure.AreNotEqual(value.Type, TokenType.Instance);
+			Ensure.AreNotEqual(value.Type, TokenType.Node);
 			_topToken = value;
 		}
 	}
@@ -73,7 +73,7 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	{
 		get
 		{
-			Assert.IsTrue(InstanceCount > 0);
+			Ensure.IsTrue(InstanceCount > 0);
 			return ref this[InstanceCount - 1];
 		}
 	}
@@ -105,8 +105,8 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	/// of <see cref="TokenType.Instance"/>, otherwise the behavior of this method is unknown.</remarks>
 	public void Push(EntityToken token)
 	{
-		Assert.AreEqual(token.Type, TokenType.Instance);
-		Assert.IsTrue(InstanceCount < MaxLayer);
+		Ensure.AreEqual(token.Type, TokenType.Instance);
+		Ensure.IsTrue(InstanceCount < MaxLayer);
 
 		int layer = InstanceCount++;
 		this[layer] = token;
@@ -119,7 +119,7 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 	/// <returns>The <see cref="EntityToken"/> that was popped.</returns>
 	public EntityToken Pop()
 	{
-		Assert.IsTrue(InstanceCount > 0);
+		Ensure.IsTrue(InstanceCount > 0);
 
 		int layer = --InstanceCount;
 
@@ -137,7 +137,7 @@ public unsafe struct TokenHierarchy : IEquatable<TokenHierarchy>
 		uint content = 0;
 
 		Unsafe.As<uint, EntityToken>(ref content) = token;
-		Assert.IsTrue(EntityToken.Size <= sizeof(uint));
+		Ensure.IsTrue(EntityToken.Size <= sizeof(uint));
 
 		uint hash = SquirrelPrng.Mangle(content);
 		return BitOperations.RotateLeft(hash, layer);

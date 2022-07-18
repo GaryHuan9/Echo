@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 
@@ -14,7 +13,7 @@ public readonly struct DiscreteDistribution1D
 {
 	public DiscreteDistribution1D(ReadOnlySpan<float> pdfValues)
 	{
-		Assert.IsFalse(pdfValues.IsEmpty);
+		Ensure.IsFalse(pdfValues.IsEmpty);
 
 		int length = pdfValues.Length;
 		cdfValues = new float[length];
@@ -25,7 +24,7 @@ public readonly struct DiscreteDistribution1D
 
 		for (int i = 0; i < length; i++)
 		{
-			Assert.IsFalse(pdfValues[i] < 0f); //pdf should not be negative
+			Ensure.IsFalse(pdfValues[i] < 0f); //pdf should not be negative
 			cdfValues[i] = (float)(rolling += pdfValues[i]);
 		}
 
@@ -97,7 +96,7 @@ public readonly struct DiscreteDistribution1D
 
 		//Export values
 		float gap = upper - lower;
-		Assert.AreNotEqual(gap, 0f);
+		Ensure.AreNotEqual(gap, 0f);
 
 		float shift = (sample - lower) / gap + index;
 		Sample1D result = (Sample1D)(shift * countR);
@@ -158,7 +157,7 @@ public readonly struct DiscreteDistribution1D
 		int index = BinarySearch(cdfValues, sample);
 
 		//Majority of the times we will simply exit because we are between two anchors
-		Assert.IsTrue(~index < Count);
+		Ensure.IsTrue(~index < Count);
 		if (index < 0) return ~index;
 
 		//When we landed exactly on an anchor, we need to perform some special checks
@@ -183,7 +182,7 @@ public readonly struct DiscreteDistribution1D
 			//because if there are some zero pdfs at the end, their cdfValues will be exactly one, which is higher than
 			//the maximum value for our sample, so they will never get selected by the binary search.
 
-			Assert.IsTrue(index < Count - 1);
+			Ensure.IsTrue(index < Count - 1);
 
 			lower = upper;
 			upper = cdfValues[++index];
@@ -196,7 +195,8 @@ public readonly struct DiscreteDistribution1D
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void GetBounds(int index, out float lower, out float upper)
 	{
-		Assert.IsTrue(cdfValues.IsIndexValid(index));
+		Ensure.IsTrue(index >= 0);
+		Ensure.IsTrue(index < cdfValues.Length);
 		lower = index == 0 ? 0f : cdfValues[index - 1];
 		upper = cdfValues[index];
 	}

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.InOut;
 
@@ -34,7 +34,7 @@ partial class EchoChronicleHierarchyObjects
 			if (!Grab(new IdentifierPredicate(), out CharSpan identifier)) return identifier;
 
 			if (!identifier.IsEmpty) return identifier;
-			Assert.IsFalse(IsNewLine(buffer[currentPosition]));
+			Ensure.IsFalse(IsNewLine(buffer[currentPosition]));
 			return buffer.AsSpan(currentPosition++, 1);
 		}
 
@@ -47,7 +47,7 @@ partial class EchoChronicleHierarchyObjects
 			if (!Grab(new IdentifierPredicate(), out CharSpan identifier) || !identifier.IsEmpty)
 			{
 				currentPosition -= identifier.Length;
-				Assert.IsTrue(currentLength >= 0);
+				Ensure.IsTrue(currentLength >= 0);
 			}
 			else identifier = buffer.AsSpan(currentPosition, 1);
 
@@ -59,7 +59,7 @@ partial class EchoChronicleHierarchyObjects
 		{
 			if (SkipWhiteSpace() && Grab(new MatchPredicate(match), out CharSpan result))
 			{
-				Assert.AreEqual(match, buffer[currentPosition]);
+				Ensure.AreEqual(match, buffer[currentPosition]);
 				if (IsNewLine(match)) ++CurrentLine;
 
 				++currentPosition;
@@ -124,7 +124,7 @@ partial class EchoChronicleHierarchyObjects
 					start = 0;
 				}
 
-				Assert.AreEqual(currentLength, currentPosition);
+				Ensure.AreEqual(currentLength, currentPosition);
 				Span<char> slice = buffer.AsSpan(currentLength);
 
 				if (slice.IsEmpty) throw new FormatException($"Identifier '{buffer.AsSpan(0, 16)}...' exceeds buffer size of {buffer.Length} on line {CurrentLine}.");

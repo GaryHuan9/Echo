@@ -1,6 +1,5 @@
-﻿using CodeHelpers;
-using CodeHelpers.Mathematics;
-using Echo.Core.Aggregation.Primitives;
+﻿using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Scattering;

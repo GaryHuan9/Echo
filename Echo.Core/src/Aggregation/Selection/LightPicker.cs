@@ -1,5 +1,4 @@
-﻿using CodeHelpers.Mathematics;
-using Echo.Core.Aggregation.Bounds;
+﻿using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;

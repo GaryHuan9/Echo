@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.InOut;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
-using CodeHelpers.Mathematics;
+using Echo.Core.Common.Mathematics;
 
 namespace Echo.Experimental.Benchmarks;
 
@@ -107,28 +107,6 @@ public class MathFunctions
 		foreach (float value in array) result += 1f / MathF.Sqrt(value);
 
 		return result;
-	}
-
-	[Benchmark]
-	public float FastReciprocalSqrt()
-	{
-		float result = 0f;
-
-		foreach (float value in array) result += FRSqrt(value);
-
-		return result;
-
-		static float FRSqrt(float value)
-		{
-			float x2 = value * 0.5F;
-			int i = Scalars.SingleToInt32Bits(value);
-			i = 0x5F3759DF - (i >> 1);
-			float y = Scalars.Int32ToSingleBits(i);
-			y *= 1.5f - x2 * y * y;
-			y *= 1.5f - x2 * y * y;
-
-			return y;
-		}
 	}
 
 	[Benchmark]

@@ -40,15 +40,15 @@ public abstract record Serializer
 
 		return new string(span) switch
 		{
-			"png" => SystemSerializer.png,
+			"png"  => SystemSerializer.png,
 			"jpeg" => SystemSerializer.jpeg,
-			"jpg" => SystemSerializer.jpeg,
+			"jpg"  => SystemSerializer.jpeg,
 			"tiff" => SystemSerializer.tiff,
-			"bmp" => SystemSerializer.bmp,
-			"gif" => SystemSerializer.gif,
+			"bmp"  => SystemSerializer.bmp,
+			"gif"  => SystemSerializer.gif,
 			"exif" => SystemSerializer.exif,
-			"fpi" => FpiSerializer.fpi,
-			_ => null
+			"fpi"  => FpiSerializer.fpi,
+			_      => null
 		};
 	}
 }

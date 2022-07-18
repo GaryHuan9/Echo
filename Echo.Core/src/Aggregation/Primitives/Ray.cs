@@ -1,5 +1,5 @@
-﻿using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+﻿using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Primitives;
 
@@ -16,7 +16,7 @@ public readonly struct Ray
 	/// <param name="direction">The unit direction of the ray.</param>
 	public Ray(Float3 origin, Float3 direction)
 	{
-		Assert.AreEqual(direction.SquaredMagnitude, 1f);
+		Ensure.AreEqual(direction.SquaredMagnitude, 1f);
 
 		this.origin = origin;
 		this.direction = direction;

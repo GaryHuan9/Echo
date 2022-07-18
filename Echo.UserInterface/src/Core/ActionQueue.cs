@@ -2,9 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.UserInterface.Core;
 
@@ -48,7 +47,7 @@ public static class ActionQueue
 
 			// ReSharper disable once RedundantAssignment
 			bool removed = labels.Remove(label);
-			Assert.IsTrue(removed);
+			Ensure.IsTrue(removed);
 		}
 	}
 

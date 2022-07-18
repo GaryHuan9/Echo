@@ -1,8 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using CodeHelpers.Diagnostics;
 using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Aggregation.Primitives;
 
@@ -43,8 +43,8 @@ public unsafe struct EntityToken4
 		{
 			//Potential issue in the C# JIT compiler: https://github.com/dotnet/runtime/issues/71601
 
-			Assert.IsTrue(index >= 0);
-			Assert.IsTrue(index < 4);
+			Ensure.IsTrue(index >= 0);
+			Ensure.IsTrue(index < 4);
 
 			return Unsafe.Add(ref Unsafe.As<EntityToken4, EntityToken>(ref Unsafe.AsRef(in this)), index);
 		}

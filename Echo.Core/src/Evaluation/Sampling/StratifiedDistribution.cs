@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Evaluation.Sampling;
 
@@ -22,7 +22,7 @@ public record StratifiedDistribution : HorizontalDistribution
 	public override void BeginSeries(Int2 position)
 	{
 		base.BeginSeries(position);
-		Assert.IsNotNull(Prng);
+		Ensure.IsNotNull(Prng);
 	}
 
 	public virtual bool Equals(StratifiedDistribution other) => base.Equals(other) && other!.Jitter == Jitter;
@@ -59,7 +59,7 @@ public record StratifiedDistribution : HorizontalDistribution
 
 	void FillStratum(Span<Sample2D> span, int size)
 	{
-		Assert.AreEqual(span.Length, size * size);
+		Ensure.AreEqual(span.Length, size * size);
 
 		float sizeR = 1f / size;
 

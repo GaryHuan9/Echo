@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Common.Memory;
 
@@ -13,8 +13,8 @@ public readonly struct View<T>
 
 	public View(T[] array, int start, int count)
 	{
-		Assert.IsNotNull(array);
-		Assert.IsFalse((ulong)(uint)start + (uint)count > (uint)array.Length);
+		Ensure.IsNotNull(array);
+		Ensure.IsFalse((ulong)(uint)start + (uint)count > (uint)array.Length);
 
 		this.array = array;
 		this.start = start;
@@ -32,7 +32,7 @@ public readonly struct View<T>
 	/// <summary>
 	/// Returns a reference to the specified element of the View.
 	/// </summary>
-	public ref T this[int index] => ref Unsafe.Add(ref array[0], AssertShift(index));
+	public ref T this[int index] => ref Unsafe.Add(ref array[0], EnsureShift(index));
 
 	/// <summary>
 	///	Returns a value which indicates whether this view is empty.
@@ -55,7 +55,7 @@ public readonly struct View<T>
 	public View<T> Slice(int offset) => Slice(offset, Length - offset);
 
 	/// <inheritdoc cref="Slice(int)"/>
-	public View<T> Slice(int offset, int length) => new(array, AssertShift(offset), length);
+	public View<T> Slice(int offset, int length) => new(array, EnsureShift(offset), length);
 
 	/// <summary>
 	/// Converts the current view into a <see cref="Span{T}"/>.
@@ -63,10 +63,10 @@ public readonly struct View<T>
 	public Span<T> AsSpan() => array.AsSpan(start, Length);
 
 	/// <inheritdoc cref="AsSpan()"/>
-	public Span<T> AsSpan(int offset) => array.AsSpan(AssertShift(offset));
+	public Span<T> AsSpan(int offset) => array.AsSpan(EnsureShift(offset));
 
 	/// <inheritdoc cref="AsSpan()"/>
-	public Span<T> AsSpan(int offset, int length) => array.AsSpan(AssertShift(offset), length);
+	public Span<T> AsSpan(int offset, int length) => array.AsSpan(EnsureShift(offset), length);
 
 	/// <inheritdoc cref="AsSpan()"/>
 	public Span<T> AsSpan(Range range)
@@ -79,13 +79,13 @@ public readonly struct View<T>
 	public Span<T> AsSpan(Index startIndex) => AsSpan(startIndex.GetOffset(Length));
 
 	/// <summary>
-	/// Asserts and Shifts the view array index to the original array index,
+	/// Ensures and Shifts the view array index to the original array index,
 	/// if the <paramref name="index"/> is not greater than <see cref="Length"/>.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	int AssertShift(int index)
+	int EnsureShift(int index)
 	{
-		Assert.IsFalse((uint)index > Length);
+		Ensure.IsFalse((uint)index > Length);
 		return start + index;
 	}
 

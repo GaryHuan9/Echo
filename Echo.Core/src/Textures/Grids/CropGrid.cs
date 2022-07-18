@@ -1,5 +1,5 @@
-﻿using CodeHelpers;
-using CodeHelpers.Packed;
+﻿using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Grids;

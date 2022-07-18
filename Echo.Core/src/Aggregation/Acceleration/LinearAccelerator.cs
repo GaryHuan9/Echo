@@ -1,12 +1,12 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Acceleration;
 
@@ -150,7 +150,7 @@ public class LinearAccelerator : Accelerator
 		}
 
 		fill.Add(builder.ToBoxBound());
-		Assert.IsTrue(fill.IsFull);
+		Ensure.IsTrue(fill.IsFull);
 	}
 
 	readonly struct Node
