@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Common.Mathematics.Primitives;

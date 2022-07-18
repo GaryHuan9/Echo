@@ -43,7 +43,6 @@ public static class DefaultFormat
 
 	/// <summary>
 	/// Formats <paramref name="value"/> to its abbreviations using metric prefixes.
-	/// Adapted from <see cref="Scalars"/> in <see cref="CodeHelpers.Mathematics"/>.
 	/// </summary>
 	/// <returns>The formatted <see cref="string"/> (eg. 123.4K, 12.34M, or 1.234G).</returns>
 	/// <remarks>The returned <see cref="string"/> will also have a <see cref="string.Length"/> of 6 or shorter.</remarks>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
 
@@ -137,18 +138,7 @@ public class ConcurrentList<T> : IReadOnlyList<T>
 	static int GetIndex(int index, out int offset)
 	{
 		++index;
-#if NETCOREAPP3_0_OR_GREATER
-		int log = System.Numerics.BitOperations.Log2((uint)index);
-#else
-			int log = -1;
-			uint value = (uint)index;
-
-			while (value > 0)
-			{
-				value >>= 1;
-				++log;
-			}
-#endif
+		int log = BitOperations.Log2((uint)index);
 		offset = index & ~(1 << log);
 		return log;
 	}
