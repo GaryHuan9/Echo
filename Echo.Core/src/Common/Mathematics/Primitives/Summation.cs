@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Packed;
+﻿using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Common.Mathematics.Primitives;
 

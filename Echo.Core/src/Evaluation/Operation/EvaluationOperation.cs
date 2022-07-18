@@ -1,9 +1,9 @@
 ﻿using System.Collections.Immutable;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Evaluation;

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Textures.Colors;
 
@@ -69,8 +69,8 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static RGB128 operator *(in RGB128 first, float second)
 	{
-		Assert.IsTrue(second >= 0f);
-		Assert.IsTrue(float.IsFinite(second));
+		Ensure.IsTrue(second >= 0f);
+		Ensure.IsTrue(float.IsFinite(second));
 		return new RGB128(first.d * second);
 	}
 
@@ -89,9 +89,9 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float4 Check(in Float4 value)
 	{
-		Assert.AreEqual(value.W, 0f);
-		Assert.IsTrue(value.XYZ >= Float3.Zero);
-		Assert.IsTrue(float.IsFinite(value.Sum));
+		Ensure.AreEqual(value.W, 0f);
+		Ensure.IsTrue(value.XYZ >= Float3.Zero);
+		Ensure.IsTrue(float.IsFinite(value.Sum));
 
 		return value;
 	}

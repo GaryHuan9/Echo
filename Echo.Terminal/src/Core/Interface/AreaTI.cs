@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 using Echo.Terminal.Core.Display;
 
 namespace Echo.Terminal.Core.Interface;

@@ -1,9 +1,8 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 
@@ -84,7 +83,7 @@ public abstract class BxDF
 	/// </summary>
 	public virtual RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
 	{
-		Assert.AreEqual(samples0.Length, samples1.Length);
+		Ensure.AreEqual(samples0.Length, samples1.Length);
 
 		var result = RGB128.Black;
 

@@ -1,4 +1,4 @@
-﻿using CodeHelpers.Diagnostics;
+﻿using Echo.Core.Common.Diagnostics;
 using Echo.Core.Evaluation.Materials;
 
 namespace Echo.Core.Scenic.Preparation;
@@ -14,7 +14,7 @@ public readonly struct MaterialIndex
 	/// </summary>
 	public MaterialIndex(int count)
 	{
-		Assert.IsTrue(count >= 0);
+		Ensure.IsTrue(count >= 0);
 		data = (uint)count;
 	}
 

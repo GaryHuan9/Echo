@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Cameras;
 using Echo.Core.Scenic.Geometries;
@@ -58,7 +57,7 @@ public sealed class PreparedScene : PreparedPack
 	/// <seealso cref="Accelerator.Trace"/>
 	public bool Trace(ref TraceQuery query)
 	{
-		Assert.AreEqual(query.current, new TokenHierarchy());
+		Ensure.AreEqual(query.current, new TokenHierarchy());
 		if (!FastMath.Positive(query.distance)) return false;
 		float original = query.distance;
 
@@ -73,7 +72,7 @@ public sealed class PreparedScene : PreparedPack
 	/// <seealso cref="Accelerator.Occlude"/>
 	public bool Occlude(ref OccludeQuery query)
 	{
-		Assert.AreEqual(query.current, new TokenHierarchy());
+		Ensure.AreEqual(query.current, new TokenHierarchy());
 		if (!FastMath.Positive(query.travel)) return false;
 		return accelerator.Occlude(ref query);
 	}
@@ -87,7 +86,7 @@ public sealed class PreparedScene : PreparedPack
 	/// about this interaction with the <see cref="PreparedScene"/>.</returns>
 	public Contact Interact(in TraceQuery query)
 	{
-		query.AssertHit();
+		query.EnsureHit();
 
 		ref readonly var instance = ref FindLayer(query.token, out _, out Float4x4 inverseTransform);
 		Contact.Info info = instance.pack.geometries.GetContactInfo(query.token.TopToken, query.uv);
@@ -151,7 +150,7 @@ public sealed class PreparedScene : PreparedPack
 	{
 		if (light.TopToken.IsInfiniteLight())
 		{
-			Assert.AreEqual(light.InstanceCount, 0);
+			Ensure.AreEqual(light.InstanceCount, 0);
 			return infiniteLightsPdf;
 		}
 
@@ -160,7 +159,7 @@ public sealed class PreparedScene : PreparedPack
 
 		foreach (EntityToken token in light.Instances)
 		{
-			Assert.AreEqual(token.Type, TokenType.Instance);
+			Ensure.AreEqual(token.Type, TokenType.Instance);
 			pdf *= pack.lightPicker.ProbabilityMass(token, origin);
 			pack = pack.geometries.instances.ItemRef(token.Index).pack;
 
@@ -222,7 +221,7 @@ public sealed class PreparedScene : PreparedPack
 	/// <returns>The evaluated <see cref="RGB128"/> light value.</returns>
 	public RGB128 EvaluateInfinite(Float3 direction)
 	{
-		Assert.AreEqual(direction.SquaredMagnitude, 1f);
+		Ensure.AreEqual(direction.SquaredMagnitude, 1f);
 
 		var total = RGB128.Black;
 
@@ -244,7 +243,7 @@ public sealed class PreparedScene : PreparedPack
 		//Traverse down the instancing hierarchy
 		foreach (ref readonly EntityToken token in hierarchy.Instances)
 		{
-			Assert.AreEqual(token.Type, TokenType.Instance);
+			Ensure.AreEqual(token.Type, TokenType.Instance);
 			instance = ref instance.pack.geometries.instances.ItemRef(token.Index);
 
 			//Because we traverse in reverse, we must also multiply the transform in reverse

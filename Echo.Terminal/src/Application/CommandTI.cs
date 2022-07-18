@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using CodeHelpers.Mathematics;
+using Echo.Core.Common.Mathematics;
 using Echo.Terminal.Core;
 using Echo.Terminal.Core.Display;
 using Echo.Terminal.Core.Interface;

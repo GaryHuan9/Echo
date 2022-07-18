@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Evaluation.Materials;
 
@@ -44,7 +44,7 @@ public class MaterialSwatch
 
 				hash ^= ~Hash(old) ^ Hash(material);
 				bool removed = map.Remove(material);
-				Assert.IsTrue(removed);
+				Ensure.IsTrue(removed);
 			}
 			else
 			{

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Bounds;
 

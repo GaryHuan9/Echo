@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Threads;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Threading;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Hierarchies;
@@ -40,8 +40,8 @@ public class SwatchExtractor
 	/// </summary>
 	public MaterialIndex Register(Material material, int count = 1)
 	{
-		Assert.IsTrue(count > 0);
-		seal.AssertNotApplied();
+		Ensure.IsTrue(count > 0);
+		seal.EnsureNotApplied();
 
 		if (map.TryGetValue(material, out Data data))
 		{
@@ -63,8 +63,8 @@ public class SwatchExtractor
 	/// </summary>
 	public void Register(MaterialIndex index, int count = 1)
 	{
-		Assert.IsTrue(count > 0);
-		seal.AssertNotApplied();
+		Ensure.IsTrue(count > 0);
+		seal.EnsureNotApplied();
 		materialList[index].Register(count);
 	}
 

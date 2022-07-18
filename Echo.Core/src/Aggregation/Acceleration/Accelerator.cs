@@ -1,10 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Acceleration;
 

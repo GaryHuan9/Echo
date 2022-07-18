@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using CodeHelpers.Collections;
-using CodeHelpers.Diagnostics;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Threading;
 using Echo.UserInterface.Core.Common;
 
 namespace Echo.UserInterface.Core;

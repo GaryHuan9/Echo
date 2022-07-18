@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using CodeHelpers.Collections;
 using Echo.Core.Common.Compute;
 using Echo.Core.Evaluation.Operation;
 using Echo.Core.InOut;
@@ -133,8 +132,8 @@ public class DispatcherUI : AreaUI
 	{
 		if (objects == null) return;
 
-		string sceneLabel = sceneLabels.TryGetValue(sceneIndex);
-		string profileLabel = profileLabels.TryGetValue(profileIndex);
+		string sceneLabel = sceneLabels.Count == 0 ? default : sceneLabels[sceneIndex];
+		string profileLabel = profileLabels.Count == 0 ? default : profileLabels[profileIndex];
 
 		if (sceneLabel == null || profileLabel == null)
 		{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 
 namespace Echo.UserInterface.Core.Common;
 
@@ -30,7 +30,7 @@ public static class DefaultFormat
 	{
 		Span<char> span = stackalloc char[80]; //36x2 + a bit extra
 		bool formatted = guid.TryFormat(span, out int length, "D");
-		Assert.IsTrue(formatted && length <= span.Length / 2);
+		Ensure.IsTrue(formatted && length <= span.Length / 2);
 
 		//Convert to upper case
 		ReadOnlySpan<char> lower = span[..length];
@@ -61,7 +61,7 @@ public static class DefaultFormat
 			>= L3 => Format(L3, 'G'),
 			>= L2 => Format(L2, 'M'),
 			>= L1 => Format(L1, 'K'),
-			_ => value.ToString()
+			_     => value.ToString()
 		};
 
 		string Format(uint level, char suffix)
@@ -95,7 +95,7 @@ public static class DefaultFormat
 			>= L3 => Format(L3, 'G'),
 			>= L2 => Format(L2, 'M'),
 			>= L1 => Format(L1, 'K'),
-			_ => value.ToString()
+			_     => value.ToString()
 		};
 
 		string Format(ulong level, char suffix)
@@ -110,8 +110,8 @@ public static class DefaultFormat
 
 	static string MergeMetricParts(uint head, uint tail, char separator, char suffix)
 	{
-		Assert.IsTrue(head < 1000);
-		Assert.IsTrue(tail < 1000);
+		Ensure.IsTrue(head < 1000);
+		Ensure.IsTrue(tail < 1000);
 
 		//Create buffer, 123.456 is the maximum length
 		Span<char> span = stackalloc char[7];
@@ -120,7 +120,7 @@ public static class DefaultFormat
 		bool formatted = head.TryFormat(span, /*            */ out int length0)
 					   & tail.TryFormat(span[(length0 + 1)..], out int length1, "D3");
 
-		Assert.IsTrue(formatted);
+		Ensure.IsTrue(formatted);
 
 		//Add the separator and the suffix
 		int length = Math.Min(length0 + 1 + length1 + 1, 6);

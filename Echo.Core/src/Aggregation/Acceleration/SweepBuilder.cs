@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using CodeHelpers;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Core.Aggregation.Acceleration;
@@ -38,7 +38,7 @@ public class SweepBuilder : HierarchyBuilder
 
 	Node BuildLayer(BoundsView data)
 	{
-		Assert.IsFalse(data.Length < 2);
+		Ensure.IsFalse(data.Length < 2);
 		PrepareCutTailVolumes(data);
 
 		int minIndex = SearchSurfaceAreaHeuristics(data, out var headVolume, out var tailVolume);
@@ -60,7 +60,7 @@ public class SweepBuilder : HierarchyBuilder
 			headData = data[minIndex..];
 			tailData = data[..minIndex];
 
-			CodeHelper.Swap(ref headVolume, ref tailVolume);
+			Utility.Swap(ref headVolume, ref tailVolume);
 		}
 
 		//Recursively construct deeper layers
@@ -80,7 +80,7 @@ public class SweepBuilder : HierarchyBuilder
 		}
 
 		//Places the child with the larger surface area first to improve branch prediction
-		if (headVolume.HalfArea < tailVolume.HalfArea) CodeHelper.Swap(ref child0, ref child1);
+		if (headVolume.HalfArea < tailVolume.HalfArea) Utility.Swap(ref child0, ref child1);
 
 		return new Node(bound, child0, child1, axis);
 	}
@@ -96,7 +96,7 @@ public class SweepBuilder : HierarchyBuilder
 
 	LayerBuilder BuildChildParallel(BoundsView data, in BoxBound parent, int parentAxis)
 	{
-		Assert.IsTrue(data.Length > 1);
+		Ensure.IsTrue(data.Length > 1);
 
 		int axis = parent.MajorAxis;
 		if (axis == parentAxis) axis = -1; //No need to sort because it is already sorted
@@ -214,7 +214,7 @@ public class SweepBuilder : HierarchyBuilder
 		public void Sort(BoundsView bounds, int axis)
 		{
 			int length = bounds.Length;
-			Assert.IsFalse(length > capacity);
+			Ensure.IsFalse(length > capacity);
 
 			//Fetch and transform locations into key buffers
 			for (int i = 0; i < length; i++)
@@ -260,7 +260,7 @@ public class SweepBuilder : HierarchyBuilder
 			const uint AllBits = ~0u;
 
 			//Conditionally flip some bits
-			uint converted = Scalars.SingleToUInt32Bits(value);
+			uint converted = BitConverter.SingleToUInt32Bits(value);
 			uint flip = (converted >> 31) * (AllBits - HeadBit);
 
 			return converted ^ (flip + HeadBit);
@@ -271,7 +271,7 @@ public class SweepBuilder : HierarchyBuilder
 		/// </summary>
 		static void InsertionSort(Span<uint> keys, BoundsView values)
 		{
-			Assert.AreEqual(keys.Length, values.Length);
+			Ensure.AreEqual(keys.Length, values.Length);
 
 			//Run for every key value pair except the first one
 			for (int i = 1; i < keys.Length; i++)
@@ -309,7 +309,7 @@ public class SweepBuilder : HierarchyBuilder
 #if DEBUG
 				Span<int> empty = stackalloc int[256];
 				empty.Clear();
-				Assert.IsTrue(counts.SequenceEqual(empty));
+				Ensure.IsTrue(counts.SequenceEqual(empty));
 #endif
 
 				length = values0.Length;

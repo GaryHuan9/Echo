@@ -2,8 +2,8 @@
 using System.Collections.Immutable;
 using System.Numerics;
 using System.Runtime.Intrinsics;
-using CodeHelpers.Packed;
 using Echo.Core.Common.Mathematics.Randomization;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Areas;

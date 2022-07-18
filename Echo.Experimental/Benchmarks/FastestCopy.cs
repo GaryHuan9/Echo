@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Experimental.Benchmarks;
 

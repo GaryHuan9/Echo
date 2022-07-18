@@ -1,9 +1,9 @@
-using CodeHelpers;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Textures;

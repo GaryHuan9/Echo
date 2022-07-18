@@ -1,8 +1,8 @@
 ﻿using System;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Bounds;
 
@@ -15,7 +15,7 @@ public readonly struct SphereBound : IFormattable
 {
 	public SphereBound(ReadOnlySpan<Float3> points)
 	{
-		Assert.IsTrue(points.Length > 0);
+		Ensure.IsTrue(points.Length > 0);
 
 		if (points.Length > ExtremalCount)
 		{

@@ -2,8 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Textures.Colors;
 
@@ -96,8 +96,8 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float4 CheckInput(in Float4 value)
 	{
-		Assert.IsTrue(value >= Float4.Zero);
-		Assert.IsTrue(float.IsFinite(value.Sum));
+		Ensure.IsTrue(value >= Float4.Zero);
+		Ensure.IsTrue(float.IsFinite(value.Sum));
 
 		return value;
 	}

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
 using Echo.Core.Common;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Grids;
@@ -60,7 +60,7 @@ public class ArrayGrid<T> : SettableGrid<T> where T : unmanaged, IColor<T>
 	/// </summary>
 	public int ToIndex(Int2 position)
 	{
-		AssertValidPosition(position);
+		EnsureValidPosition(position);
 		return position.X + position.Y * size.X;
 	}
 
@@ -70,7 +70,7 @@ public class ArrayGrid<T> : SettableGrid<T> where T : unmanaged, IColor<T>
 	/// <param name="index">The index of the pixel, must be between 0 (inclusive) and <see cref="length"/> (exclusive).</param>
 	public Int2 ToPosition(int index)
 	{
-		Assert.IsTrue(0 <= index && index < length);
+		Ensure.IsTrue(0 <= index && index < length);
 		return new Int2(index % size.X, index / size.X);
 	}
 

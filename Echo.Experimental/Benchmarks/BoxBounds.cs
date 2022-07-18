@@ -1,9 +1,9 @@
 ﻿using System.Runtime.Intrinsics;
 using BenchmarkDotNet.Attributes;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Experimental.Benchmarks;
 

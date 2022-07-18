@@ -1,8 +1,8 @@
-﻿using CodeHelpers.Mathematics;
-using CodeHelpers.Packed;
-using Echo.Core.Aggregation.Acceleration;
+﻿using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Aggregation.Preparation;

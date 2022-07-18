@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Immutable;
-using CodeHelpers.Diagnostics;
-using CodeHelpers.Packed;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Preparation;
@@ -73,7 +73,7 @@ public sealed class GeometryCollection
 			fill.Add((new EntityToken(TokenType.Instance, i), instance.BoxBound));
 		}
 
-		Assert.IsTrue(fill.IsFull);
+		Ensure.IsTrue(fill.IsFull);
 		return result;
 
 		void Add<T>(ref SpanFill<Tokenized<BoxBound>> fill, TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
@@ -92,7 +92,7 @@ public sealed class GeometryCollection
 	/// <remarks>The intersection is only considered if it occurs before the original <see cref="TraceQuery.distance"/>.</remarks>
 	public void Trace(EntityToken token, ref TraceQuery query)
 	{
-		Assert.IsTrue(token.Type.IsGeometry());
+		Ensure.IsTrue(token.Type.IsGeometry());
 
 		switch (token.Type)
 		{
@@ -134,7 +134,7 @@ public sealed class GeometryCollection
 				instances[token.Index].Trace(ref query);
 
 				EntityToken popped = query.current.Pop();
-				Assert.AreEqual(popped, token);
+				Ensure.AreEqual(popped, token);
 				break;
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(token));
@@ -147,7 +147,7 @@ public sealed class GeometryCollection
 	/// <remarks>The intersection is only considered if it occurs before the original <see cref="OccludeQuery.travel"/>.</remarks>
 	public bool Occlude(EntityToken token, ref OccludeQuery query)
 	{
-		Assert.IsTrue(token.Type.IsGeometry());
+		Ensure.IsTrue(token.Type.IsGeometry());
 
 		switch (token.Type)
 		{
@@ -171,7 +171,7 @@ public sealed class GeometryCollection
 				if (instances[token.Index].Occlude(ref query)) return true;
 
 				EntityToken popped = query.current.Pop();
-				Assert.AreEqual(popped, token);
+				Ensure.AreEqual(popped, token);
 				return false;
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(token));
@@ -183,7 +183,7 @@ public sealed class GeometryCollection
 	/// </summary>
 	public uint GetTraceCost(in Ray ray, ref float distance, EntityToken token)
 	{
-		Assert.IsTrue(token.Type.IsGeometry());
+		Ensure.IsTrue(token.Type.IsGeometry());
 
 		switch (token.Type)
 		{
@@ -207,7 +207,7 @@ public sealed class GeometryCollection
 
 	public Contact.Info GetContactInfo(EntityToken token, Float2 uv)
 	{
-		Assert.IsTrue(token.Type.IsRawGeometry());
+		Ensure.IsTrue(token.Type.IsRawGeometry());
 
 		switch (token.Type)
 		{
@@ -240,7 +240,7 @@ public sealed class GeometryCollection
 	/// <inheritdoc cref="IPreparedGeometry.Material"/>
 	public MaterialIndex GetMaterial(EntityToken token)
 	{
-		Assert.IsTrue(token.Type.IsRawGeometry());
+		Ensure.IsTrue(token.Type.IsRawGeometry());
 
 		return token.Type switch
 		{
@@ -253,7 +253,7 @@ public sealed class GeometryCollection
 	/// <inheritdoc cref="IPreparedGeometry.Area"/>
 	public float GetArea(EntityToken token)
 	{
-		Assert.IsTrue(token.Type.IsRawGeometry());
+		Ensure.IsTrue(token.Type.IsRawGeometry());
 
 		return token.Type switch
 		{
@@ -266,7 +266,7 @@ public sealed class GeometryCollection
 	/// <inheritdoc cref="IPreparedGeometry.Sample"/>
 	public Probable<GeometryPoint> Sample(EntityToken token, in Float3 origin, Sample2D sample)
 	{
-		Assert.IsTrue(token.Type.IsRawGeometry());
+		Ensure.IsTrue(token.Type.IsRawGeometry());
 
 		return token.Type switch
 		{
@@ -279,7 +279,7 @@ public sealed class GeometryCollection
 	/// <inheritdoc cref="IPreparedGeometry.ProbabilityDensity"/>
 	public float ProbabilityDensity(EntityToken token, in Float3 origin, in Float3 incident)
 	{
-		Assert.IsTrue(token.Type.IsRawGeometry());
+		Ensure.IsTrue(token.Type.IsRawGeometry());
 
 		return token.Type switch
 		{
