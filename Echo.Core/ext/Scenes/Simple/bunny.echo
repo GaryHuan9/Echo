@@ -1,7 +1,5 @@
 :scene = new Scene
 {
-	:mesh = new Mesh("ext/Scenes/SingleBunny/bunny.obj")
-
 	:blue = new Pure("hdr(0.0250 0.1416 0.3736)")
 
 	:material0 = new Matte { .Albedo = new Pure("hdr(1, 0.68, 0.16)") }
@@ -13,7 +11,7 @@
 
 	.Add(new AmbientLight { .Texture = new CylindricalTexture { .Texture = "UlmerMuenster.jpg" } })
 
-	.Add(new MeshEntity { .Mesh = link mesh .Material = link material0 .Position = "0 0 -3" .Rotation = "0 180 0" .Scale = "2.5" })
+	.Add(new MeshEntity { .Mesh = "bunny.obj" .Material = link material0 .Position = "0 0 -3" .Rotation = "0 180 0" .Scale = "2.5" })
 
 	.Add(new SphereEntity { .Material = link material3 .Radius = "1" .Position = "-3 1 -2" })
 

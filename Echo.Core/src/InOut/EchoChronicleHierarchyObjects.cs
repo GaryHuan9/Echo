@@ -3,8 +3,6 @@ using System.IO;
 
 namespace Echo.Core.InOut;
 
-using CharSpan = ReadOnlySpan<char>;
-
 public sealed partial class EchoChronicleHierarchyObjects
 {
 	public EchoChronicleHierarchyObjects(string path)
@@ -51,7 +49,7 @@ public sealed partial class EchoChronicleHierarchyObjects
 		return null;
 	}
 
-	static bool EqualsSingle(CharSpan span, char target) => span.Length == 1 && span[0] == target;
+	static bool EqualsSingle(ReadOnlySpan<char> span, char target) => span.Length == 1 && span[0] == target;
 
 	public readonly ref struct Entry
 	{
