@@ -141,13 +141,13 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 	public Int2 Absoluted
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Int2(Math.Abs(X), Math.Abs(Y));
+		get => new(Math.Abs(X), Math.Abs(Y));
 	}
 
 	public Int2 Signed
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Int2(X.Sign(), Y.Sign());
+		get => new(X.Sign(), Y.Sign());
 	}
 
 	public Float2 Normalized
@@ -165,7 +165,7 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 	public Int2 Perpendicular
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => new Int2(-Y, X);
+		get => new(-Y, X);
 	}
 
 	public Int2 Sorted
@@ -200,14 +200,14 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public int SquaredDistance(Int2 other) => (other - this).SquaredMagnitude;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public long SquaredDistanceLong(Int2 other) => (other - this).SquaredMagnitudeLong;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Min(Int2 other) => new Int2(Math.Min(X, other.X), Math.Min(Y, other.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Max(Int2 other) => new Int2(Math.Max(X, other.X), Math.Max(Y, other.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Min(Int2 other) => new(Math.Min(X, other.X), Math.Min(Y, other.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Max(Int2 other) => new(Math.Max(X, other.X), Math.Max(Y, other.Y));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Clamp(Int2 min, Int2 max) => new Int2(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Clamp(int min = 0, int max = 1) => new Int2(X.Clamp(min, max), Y.Clamp(min, max));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Clamp(Int2 min, Int2 max) => new(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Clamp(int min = 0, int max = 1) => new(X.Clamp(min, max), Y.Clamp(min, max));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Clamp(Float2 min, Float2 max) => new Float2(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Clamp(float min, float max = 1f) => new Float2(X.Clamp(min, max), Y.Clamp(min, max));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Clamp(Float2 min, Float2 max) => new(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Clamp(float min, float max = 1f) => new(X.Clamp(min, max), Y.Clamp(min, max));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Float2 ClampMagnitude(float max)
@@ -219,32 +219,32 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 		return new Float2(X * scale, Y * scale);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Power(Float2 value) => new Float2((float)Math.Pow(X, value.X), (float)Math.Pow(Y, value.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Power(float value) => new Float2((float)Math.Pow(X, value), (float)Math.Pow(Y, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Power(Float2 value) => new((float)Math.Pow(X, value.X), (float)Math.Pow(Y, value.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Power(float value) => new((float)Math.Pow(X, value), (float)Math.Pow(Y, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Lerp(Int2 other, Int2 value) => new Int2(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Lerp(Int2 other, int value) => new Int2(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Lerp(Int2 other, Int2 value) => new(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Lerp(Int2 other, int value) => new(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Lerp(Int2 other, Float2 value) => new Float2(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Lerp(Int2 other, float value) => new Float2(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Lerp(Int2 other, Float2 value) => new(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Lerp(Int2 other, float value) => new(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 InverseLerp(Int2 other, Int2 value) => new Int2(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 InverseLerp(Int2 other, int value) => new Int2(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 InverseLerp(Int2 other, Int2 value) => new(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 InverseLerp(Int2 other, int value) => new(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 InverseLerp(Int2 other, Float2 value) => new Float2(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 InverseLerp(Int2 other, float value) => new Float2(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 InverseLerp(Int2 other, Float2 value) => new(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 InverseLerp(Int2 other, float value) => new(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Repeat(Int2 length) => new Int2(X.Repeat(length.X), Y.Repeat(length.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Repeat(int length) => new Int2(X.Repeat(length), Y.Repeat(length));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Repeat(Int2 length) => new(X.Repeat(length.X), Y.Repeat(length.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Repeat(int length) => new(X.Repeat(length), Y.Repeat(length));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Repeat(Float2 length) => new Float2(((float)X).Repeat(length.X), ((float)Y).Repeat(length.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Repeat(float length) => new Float2(((float)X).Repeat(length), ((float)Y).Repeat(length));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Repeat(Float2 length) => new(((float)X).Repeat(length.X), ((float)Y).Repeat(length.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Repeat(float length) => new(((float)X).Repeat(length), ((float)Y).Repeat(length));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 FlooredDivide(Int2 divisor) => new Int2(X.FlooredDivide(divisor.X), Y.FlooredDivide(divisor.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 FlooredDivide(int divisor) => new Int2(X.FlooredDivide(divisor), Y.FlooredDivide(divisor));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 FlooredDivide(Int2 divisor) => new(X.FlooredDivide(divisor.X), Y.FlooredDivide(divisor.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 FlooredDivide(int divisor) => new(X.FlooredDivide(divisor), Y.FlooredDivide(divisor));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 CeiledDivide(Int2 divisor) => new Int2(X.CeiledDivide(divisor.X), Y.CeiledDivide(divisor.Y));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 CeiledDivide(int divisor) => new Int2(X.CeiledDivide(divisor), Y.CeiledDivide(divisor));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 CeiledDivide(Int2 divisor) => new(X.CeiledDivide(divisor.X), Y.CeiledDivide(divisor.Y));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 CeiledDivide(int divisor) => new(X.CeiledDivide(divisor), Y.CeiledDivide(divisor));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Float2 Rotate(float degrees)
@@ -377,8 +377,8 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Int2 CreateX(int value, int other = 0) => new Int2(value, other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Int2 CreateY(int value, int other = 0) => new Int2(other, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Int2 CreateX(int value, int other = 0) => new(value, other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public static Int2 CreateY(int value, int other = 0) => new(other, value);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Int3 CreateXY(int other = 0) => Int3.CreateXY(this, other);
 	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Int3 CreateYZ(int other = 0) => Int3.CreateYZ(this, other);
@@ -417,43 +417,43 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Int2 ReplaceX(int value) => new Int2(value, Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Int2 ReplaceY(int value) => new Int2(X, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Int2 ReplaceX(int value) => new(value, Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Int2 ReplaceY(int value) => new(X, value);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float2 ReplaceX(float value) => new Float2(value, Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float2 ReplaceY(float value) => new Float2(X, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float2 ReplaceX(float value) => new(value, Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining), EditorBrowsable(EditorBrowsableState.Never)] public Float2 ReplaceY(float value) => new(X, value);
 
 #endregion
 
 #region Operators
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator +(Int2 first, Int2 second) => new Int2(first.X + second.X, first.Y + second.Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator -(Int2 first, Int2 second) => new Int2(first.X - second.X, first.Y - second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator +(Int2 first, Int2 second) => new(first.X + second.X, first.Y + second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator -(Int2 first, Int2 second) => new(first.X - second.X, first.Y - second.Y);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator *(Int2 first, Int2 second) => new Int2(first.X * second.X, first.Y * second.Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator /(Int2 first, Int2 second) => new Int2(first.X / second.X, first.Y / second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator *(Int2 first, Int2 second) => new(first.X * second.X, first.Y * second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator /(Int2 first, Int2 second) => new(first.X / second.X, first.Y / second.Y);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator *(Int2 first, int second) => new Int2(first.X * second, first.Y * second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator /(Int2 first, int second) => new Int2(first.X / second, first.Y / second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator *(Int2 first, int second) => new(first.X * second, first.Y * second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator /(Int2 first, int second) => new(first.X / second, first.Y / second);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator *(Int2 first, float second) => new Float2(first.X * second, first.Y * second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator /(Int2 first, float second) => new Float2(first.X / second, first.Y / second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator *(Int2 first, float second) => new(first.X * second, first.Y * second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator /(Int2 first, float second) => new(first.X / second, first.Y / second);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator *(int first, Int2 second) => new Int2(first * second.X, first * second.Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator /(int first, Int2 second) => new Int2(first / second.X, first / second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator *(int first, Int2 second) => new(first * second.X, first * second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator /(int first, Int2 second) => new(first / second.X, first / second.Y);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator *(float first, Int2 second) => new Float2(first * second.X, first * second.Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator /(float first, Int2 second) => new Float2(first / second.X, first / second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator *(float first, Int2 second) => new(first * second.X, first * second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator /(float first, Int2 second) => new(first / second.X, first / second.Y);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator +(Int2 value) => value;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator -(Int2 value) => new Int2(-value.X, -value.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator -(Int2 value) => new(-value.X, -value.Y);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator %(Int2 first, Int2 second) => new Int2(first.X % second.X, first.Y % second.Y);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator %(Int2 first, int second) => new Int2(first.X % second, first.Y % second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator %(int first, Int2 second) => new Int2(first % second.X, first % second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator %(Int2 first, Int2 second) => new(first.X % second.X, first.Y % second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator %(Int2 first, int second) => new(first.X % second, first.Y % second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int2 operator %(int first, Int2 second) => new(first % second.X, first % second.Y);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator %(Int2 first, float second) => new Float2(first.X % second, first.Y % second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator %(float first, Int2 second) => new Float2(first % second.X, first % second.Y);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator %(Int2 first, float second) => new(first.X % second, first.Y % second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float2 operator %(float first, Int2 second) => new(first % second.X, first % second.Y);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator ==(Int2 first, Int2 second) => first.Equals(second);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator !=(Int2 first, Int2 second) => !first.Equals(second);
@@ -474,13 +474,13 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 	/// Returns an enumerable that can be put into a foreach loop.
 	/// Yields the two components of this vector in a series.
 	/// </summary>
-	public SeriesEnumerable Series() => new SeriesEnumerable(this);
+	public SeriesEnumerable Series() => new(this);
 
 	/// <summary>
 	/// Returns an enumerable that can be put into a foreach loop; from (0,0,0) to (vector.x-1,vector.y-1,vector.z-1)
 	/// If <paramref name="zeroAsOne"/> is true then the loop will treat zeros in the vector as ones.
 	/// </summary>
-	public LoopEnumerable Loop(bool zeroAsOne = false) => new LoopEnumerable(this, zeroAsOne);
+	public LoopEnumerable Loop(bool zeroAsOne = false) => new(this, zeroAsOne);
 
 	public readonly struct SeriesEnumerable : IEnumerable<int>
 	{
@@ -551,7 +551,7 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 
 			object IEnumerator.Current => Current;
 
-			public Int2 Current => new Int2
+			public Int2 Current => new
 			(
 				current % sizeX * direction.X,
 				current / sizeX * direction.Y

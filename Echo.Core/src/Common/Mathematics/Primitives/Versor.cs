@@ -60,7 +60,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 
 	internal readonly Float4 d;
 
-	public Versor Conjugate => new Versor(-d.X, -d.Y, -d.Z, d.W);
+	public Versor Conjugate => new(-d.X, -d.Y, -d.Z, d.W);
 	public Versor Inverse => Conjugate;
 
 	public Float3 Angles
@@ -94,7 +94,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		}
 	}
 
-	public static Versor Identity = new Versor(Float4.Ana);
+	public static Versor Identity = new(Float4.Ana);
 
 	public float Dot(in Versor other) => d.Dot(other.d);
 
@@ -176,8 +176,8 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		);
 	}
 
-	static Float3 Sin(in Float3 radians) => new Float3((float)Math.Sin(radians.X), (float)Math.Sin(radians.Y), (float)Math.Sin(radians.Z));
-	static Float3 Cos(in Float3 radians) => new Float3((float)Math.Cos(radians.X), (float)Math.Cos(radians.Y), (float)Math.Cos(radians.Z));
+	static Float3 Sin(in Float3 radians) => new((float)Math.Sin(radians.X), (float)Math.Sin(radians.Y), (float)Math.Sin(radians.Z));
+	static Float3 Cos(in Float3 radians) => new((float)Math.Cos(radians.X), (float)Math.Cos(radians.Y), (float)Math.Cos(radians.Z));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Versor Apply(in Versor first, in Versor second, bool conjugate)

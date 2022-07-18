@@ -28,7 +28,7 @@ public class Loops
 	}
 
 	readonly long[] array;
-	readonly List<long> list = new List<long>();
+	readonly List<long> list = new();
 	readonly ReadOnlyCollection<long> readOnlyCollection;
 	readonly IReadOnlyList<long> readOnlyList;
 

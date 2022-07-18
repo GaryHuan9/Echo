@@ -30,13 +30,13 @@ public class DataReader : BinaryReader
 		return new Color64(r, g, b, a);
 	}
 
-	public Direction ReadDirection() => new Direction(ReadByte());
+	public Direction ReadDirection() => new(ReadByte());
 
-	public Float2 ReadFloat2() => new Float2(ReadSingle(), ReadSingle());
-	public Float3 ReadFloat3() => new Float3(ReadSingle(), ReadSingle(), ReadSingle());
-	public Float4 ReadFloat4() => new Float4(ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle());
+	public Float2 ReadFloat2() => new(ReadSingle(), ReadSingle());
+	public Float3 ReadFloat3() => new(ReadSingle(), ReadSingle(), ReadSingle());
+	public Float4 ReadFloat4() => new(ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle());
 
-	public Float4x4 ReadFloat4x4() => new Float4x4
+	public Float4x4 ReadFloat4x4() => new
 	(
 		ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle(),
 		ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle(),
@@ -44,10 +44,10 @@ public class DataReader : BinaryReader
 		ReadSingle(), ReadSingle(), ReadSingle(), ReadSingle()
 	);
 
-	public Int2 ReadInt2() => new Int2(ReadInt32(), ReadInt32());
-	public Int3 ReadInt3() => new Int3(ReadInt32(), ReadInt32(), ReadInt32());
+	public Int2 ReadInt2() => new(ReadInt32(), ReadInt32());
+	public Int3 ReadInt3() => new(ReadInt32(), ReadInt32(), ReadInt32());
 
-	public Versor ReadVersor() => new Versor(ReadFloat4());
+	public Versor ReadVersor() => new(ReadFloat4());
 
 	public unsafe Guid ReadGuid()
 	{
@@ -124,6 +124,6 @@ public class DataReader : BinaryReader
 		return value;
 	}
 
-	public Int2 ReadInt2Compact() => new Int2(ReadInt32Compact(), ReadInt32Compact());
-	public Int3 ReadInt3Compact() => new Int3(ReadInt32Compact(), ReadInt32Compact(), ReadInt32Compact());
+	public Int2 ReadInt2Compact() => new(ReadInt32Compact(), ReadInt32Compact());
+	public Int3 ReadInt3Compact() => new(ReadInt32Compact(), ReadInt32Compact(), ReadInt32Compact());
 }
