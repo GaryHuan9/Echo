@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using CodeHelpers.Packed;
@@ -41,7 +42,8 @@ public class PolygonFileFormatReader
 			}
 			else
 			{
-				int vertexAmount = BitConverter.ToChar(new[] { (byte)file.ReadByte() }, 0);
+				buffer[0] = (byte)file.ReadByte();
+				int vertexAmount = BitConverter.ToChar(buffer, 0);
 				currentFaceValues = new int[vertexAmount + 1];
 				Array.Copy(ReadBinaryInts(file, ref buffer, vertexAmount), 0, currentFaceValues, 1, vertexAmount);
 				currentFaceTriangleAmount = vertexAmount - 2;
@@ -177,7 +179,7 @@ public class PolygonFileFormatReader
 	{
 		Utility.EnsureCapacity(ref buffer, 4, true, 4);
 		file.Read(buffer, 0, 4);
-		return BitConverter.ToInt32(buffer, 0);
+		return (int)BitConverter.ToUInt32(buffer, 0);
 	}
 
 	static float[] ReadBinaryFloats(FileStream file, ref byte[] buffer, int amount)
@@ -204,6 +206,29 @@ public class PolygonFileFormatReader
 	string[] currentFaceStrings = { };
 	long[] asciiVertexLineStarts = { };
 
+	static readonly Dictionary<string, DataTypes> dataTypesMap = new Dictionary<string, DataTypes>()
+	{
+		{ "char", DataTypes.CHAR },
+		{ "uchar", DataTypes.UCHAR },
+		{ "short", DataTypes.SHORT },
+		{ "ushort", DataTypes.USHORT },
+		{ "int", DataTypes.INT },
+		{ "uint", DataTypes.UINT },
+		{ "float", DataTypes.FLOAT },
+		{ "double", DataTypes.DOUBLE }
+	};
+
+	static readonly Dictionary<DataTypes, int> dataTypeSizeMap = new Dictionary<DataTypes, int>()
+	{
+		{ DataTypes.CHAR, 1 },
+		{ DataTypes.UCHAR, 1 },
+		{ DataTypes.SHORT, 2 },
+		{ DataTypes.USHORT, 2 },
+		{ DataTypes.INT, 4 },
+		{ DataTypes.UINT, 4 },
+		{ DataTypes.FLOAT, 4 },
+		{ DataTypes.DOUBLE, 8 }
+	};
 
 	public struct Triangle
 	{
@@ -373,6 +398,80 @@ public class PolygonFileFormatReader
 		}
 	}
 
+	class BinReader
+	{
+		FileStream file;
+		Header header;
+		byte[] buffer = new byte[8];
+
+		public BinReader(FileStream fileStream, Header header)
+		{
+			this.file = fileStream;
+			this.header = header;
+		}
+
+		public void SetPosition(long position)
+		{
+			file.Position = position;
+		}
+
+		public long GetPosition() => file.Position;
+
+		public float ReadFloat(DataTypes dataType) => Convert.ToSingle(ReadType(dataType));
+		public int ReadInt(DataTypes dataType) => Convert.ToInt32(ReadType(dataType));
+
+		Object ReadType(DataTypes type)
+		{
+			switch (type)
+			{
+				case DataTypes.CHAR:
+					buffer[0] = (byte)file.ReadByte();
+					return BitConverter.ToChar(buffer, 0);
+				case DataTypes.UCHAR:
+					buffer[0] = (byte)file.ReadByte();
+					return BitConverter.ToChar(buffer, 0);
+				case DataTypes.SHORT:
+					file.Read(buffer, 0, 2);
+					if (BitConverter.IsLittleEndian && header.format == Format.BINARY_LITTLE_ENDIAN)
+						return BitConverter.ToInt16(buffer, 0);
+					Array.Reverse(buffer);
+					return BitConverter.ToInt16(buffer, 6);
+				case DataTypes.USHORT:
+					file.Read(buffer, 0, 2);
+					if (BitConverter.IsLittleEndian && header.format == Format.BINARY_LITTLE_ENDIAN)
+						return BitConverter.ToUInt16(buffer, 0);
+					Array.Reverse(buffer);
+					return BitConverter.ToUInt16(buffer, 6);
+				case DataTypes.INT:
+					file.Read(buffer, 0, 4);
+					if (BitConverter.IsLittleEndian && header.format == Format.BINARY_LITTLE_ENDIAN)
+						return BitConverter.ToInt32(buffer, 0);
+					Array.Reverse(buffer);
+					return BitConverter.ToInt32(buffer, 4);
+				case DataTypes.UINT:
+					file.Read(buffer, 0, 4);
+					if (BitConverter.IsLittleEndian && header.format == Format.BINARY_LITTLE_ENDIAN)
+						return BitConverter.ToUInt32(buffer, 0);
+					Array.Reverse(buffer);
+					return BitConverter.ToUInt32(buffer, 4);
+				case DataTypes.FLOAT:
+					file.Read(buffer, 0, 4);
+					if (BitConverter.IsLittleEndian && header.format == Format.BINARY_LITTLE_ENDIAN)
+						return BitConverter.ToSingle(buffer, 0);
+					Array.Reverse(buffer);
+					return BitConverter.ToSingle(buffer, 4);
+				case DataTypes.DOUBLE:
+					file.Read(buffer, 0, 8);
+					if (BitConverter.IsLittleEndian && header.format == Format.BINARY_LITTLE_ENDIAN)
+						return BitConverter.ToDouble(buffer, 0);
+					Array.Reverse(buffer);
+					return BitConverter.ToDouble(buffer, 0);
+			}
+
+			return null;
+		}
+	}
+
 	enum Format
 	{
 		ASCII,
@@ -395,6 +494,18 @@ public class PolygonFileFormatReader
 		T,
 
 		NONE
+	}
+
+	enum DataTypes
+	{
+		CHAR,
+		UCHAR,
+		SHORT,
+		USHORT,
+		INT,
+		UINT,
+		FLOAT,
+		DOUBLE
 	}
 
 }
