@@ -1,11 +1,12 @@
 :scene = new Scene
 {
 	:blue = new Pure("hdr(0.0250 0.1416 0.3736)")
+	:gray = new Pure("hdr(0.75, 0.75, 0.75)")
 
 	:material0 = new Matte { .Albedo = new Pure("hdr(1, 0.68, 0.16)") }
-	:material1 = new Matte { .Albedo = new Pure("hdr(0.75, 0.75, 0.75)") }
+	:material1 = new Matte { .Albedo = link gray }
 	:material2 = new Emissive { .Albedo = new Pure("hdr(1, 1, 1)") }
-	:material3 = new Mirror { .Albedo = new Pure("hdr(0.75, 0.75, 0.75)") }
+	:material3 = new Mirror { .Albedo = link gray }
 
 	.Add(new PlaneEntity { .Material = link material1 .Size = "32 24" })
 
@@ -30,6 +31,7 @@
 	.Distribution = new StratifiedDistribution { .Extend = "16" }
 	.Buffer = new RenderBuffer("960 540")
 	.Pattern = new HilbertCurvePattern
+	# .NoiseThreshold = "0.001"
 	.MinEpoch = "1"
 	.MaxEpoch = "20"
 }
