@@ -13,21 +13,21 @@
 	:boxSize0 = "3 3 3"
 	:boxSize1 = "3 6 3"
 
-	.Add(new PlaneEntity { .Material = link white .Size = link wallSize })                                               //Floor
-	.Add(new PlaneEntity { .Material = link white .Size = link wallSize .Position = "0 10 0" .Rotation = "180 0 0" })    //Roof
-	.Add(new PlaneEntity { .Material = link blue .Size = link wallSize .Position = "0 5 5" .Rotation = "-90 0 0" })     //Back
-	.Add(new PlaneEntity { .Material = link cullable .Size = link wallSize .Position = "0 5 -5" .Rotation = "90 0 0" }) //Front
+	.Add(new PlaneEntity { .Material = link white .Size = link wallSize })                                               # Floor
+	.Add(new PlaneEntity { .Material = link white .Size = link wallSize .Position = "0 10 0" .Rotation = "180 0 0" })    # Roof
+	.Add(new PlaneEntity { .Material = link blue .Size = link wallSize .Position = "0 5 5" .Rotation = "-90 0 0" })      # Back
+	.Add(new PlaneEntity { .Material = link cullable .Size = link wallSize .Position = "0 5 -5" .Rotation = "90 0 0" })  # Front
 
-	.Add(new PlaneEntity { .Material = link green .Size = link wallSize .Position = "5 5 0" .Rotation = "0 0 90" })      //Right
-	.Add(new PlaneEntity { .Material = link red .Size = link wallSize .Position = "-5 5 0" .Rotation = "0 0 -90" })      //Left
-	.Add(new PlaneEntity { .Material = link light .Size = link wallSize5 .Position = "0 9.99 0" .Rotation = "180 0 0" }) //Light
+	.Add(new PlaneEntity { .Material = link green .Size = link wallSize .Position = "5 5 0" .Rotation = "0 0 90" })      # Right
+	.Add(new PlaneEntity { .Material = link red .Size = link wallSize .Position = "-5 5 0" .Rotation = "0 0 -90" })      # Left
+	.Add(new PlaneEntity { .Material = link light .Size = link wallSize5 .Position = "0 9.99 0" .Rotation = "180 0 0" }) # Light
 
 	.Add(new BoxEntity { .Material = link white .Size = link boxSize0 .Position = "2 1.5 -2" .Rotation = "0 21 0"})
 	.Add(new BoxEntity { .Material = link white .Size = link boxSize1 .Position = "-2 3 2" .Rotation = "0 -21 0" })
 
-	//Camera position adjusted to fit entire FOV into the box
-	//float radian = Scalars.ToRadians(camera.FieldOfView / 2f)
-	//camera.Position += Float3.Backward * (5 / MathF.Tan(radian))
+	# Camera position adjusted to fit entire FOV into the box
+	# float radian = Scalars.ToRadians(camera.FieldOfView / 2f)
+	# camera.Position += Float3.Backward * (5 / MathF.Tan(radian))
 	.Add(new Camera("42") { .Position = "0 5 -18.025444" })
 }
 

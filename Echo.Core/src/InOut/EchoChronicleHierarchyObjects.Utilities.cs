@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Memory;
 
 namespace Echo.Core.InOut;
 
@@ -21,11 +22,12 @@ partial class EchoChronicleHierarchyObjects
 
 		int currentPosition;
 		int currentLength;
+		bool currentComment;
 
 		public int CurrentLine { get; private set; } = 1;
 
 		const char NewLine = '\n';
-		const string Comment = "//";
+		const char Comment = '#';
 
 		public CharSpan ReadNext()
 		{
@@ -160,33 +162,39 @@ partial class EchoChronicleHierarchyObjects
 		int Read(Span<char> span)
 		{
 			CharSpan read = span[..reader.Read(span)];
-			int length = read.IndexOf(Comment);
-			if (length < 0) return read.Length;
 
-			int cursor = length;
+			int readHead = 0;
+			int spanHead = 0;
 
 			while (true)
 			{
-				read = read[(length + Comment.Length)..];
-				int lineEnd = read.IndexOf(NewLine);
-				if (lineEnd < 0) break;
+				int index;
 
-				read = read[lineEnd..];
-				length = read.IndexOf(Comment);
-
-				if (length < 0)
+				if (currentComment)
 				{
-					read.CopyTo(span[cursor..]);
-					cursor += read.Length;
-					break;
+					index = read.IndexOf(NewLine);
+					if (index < 0) break;
+				}
+				else
+				{
+					index = read.IndexOf(Comment);
+					bool endOfBuffer = index < 0;
+					index = endOfBuffer ? read.Length : index;
+
+					if (readHead != spanHead) read[..index].CopyTo(span);
+
+					spanHead += index;
+					span = span[index..];
+					if (endOfBuffer) break;
 				}
 
-				CharSpan slice = read[..length];
-				slice.CopyTo(span[cursor..]);
-				cursor += slice.Length;
+				readHead += index;
+				read = read[index..];
+
+				currentComment = !currentComment;
 			}
 
-			return cursor;
+			return spanHead;
 		}
 
 		static bool IsNewLine(char value) => value == NewLine;
