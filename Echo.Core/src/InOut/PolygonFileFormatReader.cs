@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Text;
 using CodeHelpers.Packed;
 using Echo.Core.Common;
 
 namespace Echo.Core.InOut;
 
-public class PLYModelLoader
+public class PolygonFileFormatReader
 {
-	public PLYModelLoader(string path)
+	public PolygonFileFormatReader(string path)
 	{
 		file = new FileStream(path, FileMode.Open);
 
