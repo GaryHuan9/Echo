@@ -31,6 +31,10 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	const float RadianceWeightG = 0.715160f;
 	const float RadianceWeightB = 0.072169f;
 
+	public float R => d.X;
+	public float G => d.Y;
+	public float B => d.Z;
+
 	public float Luminance => d.Dot(new Float4(RadianceWeightR, RadianceWeightG, RadianceWeightB, 0f));
 
 	public bool IsZero
@@ -50,7 +54,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 
 	public override int GetHashCode() => d.GetHashCode();
 	public override string ToString() => ToString(default);
-	
+
 	public string ToString(string format, IFormatProvider provider = null) => d.XYZ.ToString(format, provider);
 
 	/// <inheritdoc/>
@@ -58,7 +62,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 
 	/// <inheritdoc/>
 	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
-	
+
 	public static implicit operator Float4(in RGB128 value) => value.d;
 	public static explicit operator RGB128(in Float4 value) => new(Check(value.XYZ_));
 	public static explicit operator RGB128(in RGBA128 value) => new(((Float4)value).XYZ_);
