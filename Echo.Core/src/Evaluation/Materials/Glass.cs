@@ -8,14 +8,14 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
-public class Matte : Material
+public class Glass : Material
 {
-	NotNull<Texture> _roughness = Pure.black;
+	NotNull<Texture> _refractiveIndex = Pure.white;
 
-	public Texture Roughness
+	public Texture RefractiveIndex
 	{
-		get => _roughness;
-		set => _roughness = value;
+		get => _refractiveIndex;
+		set => _refractiveIndex = value;
 	}
 
 	public override void Scatter(ref Contact contact, Allocator allocator)
@@ -25,9 +25,8 @@ public class Matte : Material
 		var albedo = (RGB128)SampleAlbedo(contact);
 		if (albedo.IsZero) return;
 
-		float roughness = FastMath.Clamp01(Sample(Roughness, contact).R);
+		float index = FastMath.Max0(Sample(RefractiveIndex, contact).R);
 
-		if (FastMath.AlmostZero(roughness)) make.Add<LambertianReflection>().Reset(albedo);
-		else make.Add<OrenNayar>().Reset(albedo, Scalars.ToRadians(roughness * 90f));
+		make.Add<SpecularFresnel>().Reset(albedo, 1f, index);
 	}
 }

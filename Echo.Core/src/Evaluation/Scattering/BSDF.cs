@@ -76,6 +76,9 @@ public class BSDF
 	/// </summary>
 	public RGB128 Evaluate(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.All)
 	{
+		Ensure.AreEqual(outgoingWorld.SquaredMagnitude, 1f);
+		Ensure.AreEqual(incidentWorld.SquaredMagnitude, 1f);
+
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		Float3 incident = transform.WorldToLocal(incidentWorld);
 
@@ -98,6 +101,9 @@ public class BSDF
 	/// </summary>
 	public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.All)
 	{
+		Ensure.AreEqual(outgoingWorld.SquaredMagnitude, 1f);
+		Ensure.AreEqual(incidentWorld.SquaredMagnitude, 1f);
+
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		Float3 incident = transform.WorldToLocal(incidentWorld);
 
@@ -146,6 +152,7 @@ public class BSDF
 			return Probable<RGB128>.Impossible;
 		}
 
+		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
 		incidentWorld = transform.LocalToWorld(incident);
 
 		//If there is only one function, we have finished

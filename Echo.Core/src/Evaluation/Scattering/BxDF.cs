@@ -104,7 +104,7 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns the local surface normal that lies in the same hemisphere as <paramref name="direction"/>.
 	/// </summary>
-	public static Float3 Normal(in Float3 direction) => direction.Z < 0f ? Float3.Backward : Float3.Forward;
+	public static Float3 Normal(in Float3 direction) => CosineP(direction) < 0f ? Float3.Backward : Float3.Forward;
 
 	/// <summary>
 	/// Returns the cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.

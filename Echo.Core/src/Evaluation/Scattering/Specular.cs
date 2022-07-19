@@ -42,18 +42,20 @@ public class SpecularReflection : BxDF
 
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
-		incident = new Float3(-outgoing.X, -outgoing.Y, outgoing.Z);
+		incident = Reflect(outgoing);
 		float cosI = CosineP(incident);
 
 		RGB128 evaluated = mode switch
 		{
-			Mode.Dielectric => dielectric.Evaluate(cosI),
+			Mode.Dielectric => new RGB128(dielectric.Evaluate(cosI)),
 			Mode.Conductor  => conductor.Evaluate(cosI),
 			_               => RGB128.White
 		};
 
 		return (evaluated * reflectance / FastMath.Abs(cosI), 1f);
 	}
+
+	public static Float3 Reflect(in Float3 outgoing) => new(-outgoing.X, -outgoing.Y, outgoing.Z);
 
 	enum Mode
 	{
@@ -81,13 +83,61 @@ public class SpecularTransmission : BxDF
 
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
-		RGB128 evaluated = RGB128.White - dielectric.Evaluate(outgoing, out incident);
-		return (evaluated * transmittance / Math.Abs(CosineP(incident)), 1f);
+		float cosI = CosineP(outgoing);
+		float fresnel = dielectric.Evaluate(ref cosI, out float cosT, out float eta);
+
+		fresnel = 1f - fresnel;
+
+		if (FastMath.AlmostZero(fresnel))
+		{
+			incident = Normal(outgoing);
+			return (RGB128.Black, 1f);
+		}
+
+		incident = Transmit(outgoing, cosI, cosT, eta);
+		return (transmittance * fresnel / FastMath.Abs(CosineP(incident)), 1f);
+	}
+
+	public static Float3 Transmit(in Float3 outgoing, float cosI, float cosT, float eta)
+	{
+		Float3 incident = Normal(outgoing);
+		incident *= eta * cosI - cosT;
+		incident -= eta * outgoing;
+		return incident;
 	}
 }
 
 public class SpecularFresnel : BxDF
 {
 	public SpecularFresnel() : base(FunctionType.Specular | FunctionType.Reflective | FunctionType.Transmissive) { }
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => throw new NotImplementedException();
+
+	public void Reset(in RGB128 newScatter, float newEtaAbove, float newEtaBelow)
+	{
+		scatter = newScatter;
+		dielectric = new FresnelDielectric(newEtaAbove, newEtaBelow);
+	}
+
+	RGB128 scatter;
+	FresnelDielectric dielectric;
+
+	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
+	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
+
+	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	{
+		float cosI = CosineP(outgoing);
+		float fresnel = dielectric.Evaluate(ref cosI, out float cosT, out float eta);
+
+		if (sample.x < fresnel)
+		{
+			//Perform specular reflection
+			incident = SpecularReflection.Reflect(outgoing);
+			return (scatter * fresnel / FastMath.Abs(CosineP(incident)), fresnel);
+		}
+
+		//Perform specular transmission
+		fresnel = 1f - fresnel;
+		incident = SpecularTransmission.Transmit(outgoing, cosI, cosT, eta);
+		return (scatter * fresnel / FastMath.Abs(CosineP(incident)), fresnel);
+	}
 }

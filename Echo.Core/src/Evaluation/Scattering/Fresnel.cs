@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Echo.Core.Common.Mathematics;
+﻿using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
@@ -16,42 +15,21 @@ public readonly struct FresnelDielectric
 	readonly float etaAbove;
 	readonly float etaBelow;
 
-	public RGB128 Evaluate(float cosI)
+	public float Evaluate(float cosI) => Evaluate(ref cosI, out _, out _);
+
+	public float Evaluate(ref float cosI, out float cosT, out float eta)
 	{
 		//Get the indices of reflection
 		GetIndices(ref cosI, out float etaI, out float etaT);
 
 		//Apply Snell's law
-		if (GetCosineTransmittance(cosI, etaI / etaT, out float cosT)) return RGB128.White;
+		eta = etaI / etaT;
+		if (GetCosineTransmittance(cosI, eta, out cosT)) return 1f;
 
 		//Fresnel equation
 		return Apply(cosI, cosT, etaI, etaT);
 	}
 
-	public RGB128 Evaluate(in Float3 incoming, out Float3 transmit)
-	{
-		//Get the indices of reflection
-		float cosI = BxDF.CosineP(incoming);
-		GetIndices(ref cosI, out float etaI, out float etaT);
-
-		//Apply Snell's law
-		float eta = etaI / etaT;
-
-		if (GetCosineTransmittance(cosI, eta, out float cosT))
-		{
-			transmit = default;
-			return RGB128.White;
-		}
-
-		//Fresnel equation
-		Float3 normal = BxDF.Normal(incoming);
-		transmit = (eta * cosI - cosT) * normal - eta * incoming;
-		transmit = transmit.Normalized;
-
-		return Apply(cosI, cosT, etaI, etaT);
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void GetIndices(ref float cosI, out float etaI, out float etaT)
 	{
 		etaI = etaAbove;
@@ -66,49 +44,34 @@ public readonly struct FresnelDielectric
 		cosI = -cosI;
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static bool GetCosineTransmittance(float cosI, float eta, out float cosT)
 	{
-		float sinT = eta * FastMath.Identity(cosI);
+		float sinI2 = FastMath.OneMinus2(cosI);
+		float sinT2 = eta * eta * sinI2;
 
-		if (sinT >= 1f)
+		if (sinT2 >= 1f)
 		{
 			//Total internal reflection
 			cosT = 0f;
 			return true;
 		}
 
-		cosT = FastMath.Identity(sinT);
+		cosT = FastMath.Sqrt0(1f - sinT2);
 		return false;
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static RGB128 Apply(float cosI, float cosT, float etaI, float etaT)
+	static float Apply(float cosI, float cosT, float etaI, float etaT)
 	{
-		float paraHead = etaT * cosI;
-		float paraTail = etaI * cosT;
+		float para0 = etaT * cosI;
+		float para1 = etaI * cosT;
 
-		float perpHead = etaI * cosI;
-		float perpTail = etaT * cosT;
+		float perp0 = etaI * cosI;
+		float perp1 = etaT * cosT;
 
-		float para = (paraHead - paraTail) / (paraHead + paraTail);
-		float perp = (perpHead - perpTail) / (perpHead + perpTail);
+		float para = (para0 - para1) / (para0 + para1);
+		float perp = (perp0 - perp1) / (perp0 + perp1);
 
-		return new RGB128(para * para + perp * perp) / 2f;
-
-		// var m0 = Vector128.Create(etaT, etaI, etaI, etaT);
-		// var m1 = Vector128.Create(cosI, cosT, cosI, cosT);
-		// var m = Sse.Multiply(m0, m1);
-		//
-		// var s0 = Avx.Permute(m, 0b1111_0101);
-		// var s1 = Avx.Permute(m, 0b1010_0000);
-		// var s = Sse3.AddSubtract(s0, s1);
-		//
-		// var d0 = Avx.Permute(s, 0b1101_1101);
-		// var d1 = Avx.Permute(s, 0b1000_1000);
-		// var d = Sse.Divide(d0, d1);
-		//
-		// var dot = Sse.Multiply(Sse.Multiply(d, d), Vector128.Create(2f));
+		return (para * para + perp * perp) / 2f;
 	}
 }
 
@@ -152,7 +115,8 @@ public readonly struct FresnelConductor
 		Float4 perp = (perpHead - perpTail) / (perpHead + perpTail);
 
 		return (RGB128)(para * perp + para) / 2f;
-	}
 
-	static Float4 Sqrt(in Float4 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z), 1f);
+		//OPTIMIZE:
+		static Float4 Sqrt(in Float4 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z), 1f);
+	}
 }
