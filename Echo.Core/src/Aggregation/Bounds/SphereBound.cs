@@ -17,21 +17,24 @@ public readonly struct SphereBound : IFormattable
 	{
 		Ensure.IsTrue(points.Length > 0);
 
-		if (points.Length > ExtremalCount)
+		float radius2;
+
+		if (points.Length > normals.Length * 2)
 		{
 			// else there is no reason for us to solve less
-			Span<Float3> extremes = stackalloc Float3[ExtremalCount];
+			Span<Float3> extremes = stackalloc Float3[normals.Length * 2];
 
 			FillExtremes(points, extremes);
 
-			SolveExact(extremes, out center, out radius);
-			GrowSphere(points, ref center, ref radius);
+			SolveExact(extremes, out center, out radius2);
+			GrowSphere(points, ref center, ref radius2);
 		}
-		else SolveExact(points, out center, out radius);
+		else SolveExact(points, out center, out radius2);
 
 		//Because floating point arithmetic accuracy issues, we will increase the radius of
 		//the sphere by an epsilon to ensure that the sphere contains all the input points.
 
+		radius = FastMath.Sqrt0(radius2);
 		radius *= 1f + FastMath.Epsilon;
 	}
 
@@ -41,18 +44,31 @@ public readonly struct SphereBound : IFormattable
 		this.radius = radius;
 	}
 
+	static SphereBound()
+	{
+		//Normals are used to estimate the extremes from a bunch of input points
+		//The number of normals can be increased for more precision if required
+
+		//A rotation is applied on these directions to find the best extremes in general
+		Versor rotation = new Versor(45f, 45f, 45f);
+
+		normals = new[]
+		{
+			rotation * Float3.Right,
+			rotation * Float3.Up,
+			rotation * Float3.Forward
+		};
+	}
+
 	public readonly Float3 center;
 	public readonly float radius;
 
-	//NOTE: The number of normals can be increased more precision is required
-	static readonly Float3[] normals = { Float3.Right, Float3.Up, Float3.Forward };
-
-	static int ExtremalCount => normals.Length * 2;
+	static readonly Float3[] normals;
 
 	/// <summary>
 	///     Returns whether <paramref name="point" /> is inside this <see cref="SphereBound" />.
 	/// </summary>
-	public bool Contains(in Float3 point) => Contains(point, in center, radius);
+	public bool Contains(in Float3 point) => point.SquaredDistance(center) <= radius * radius;
 
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"{center.ToString(format, provider)} ± {radius.ToString(format, provider)}";
@@ -60,12 +76,11 @@ public readonly struct SphereBound : IFormattable
 	// Finds extremes from given point using the normals and fills it into extremes span
 	static void FillExtremes(ReadOnlySpan<Float3> points, Span<Float3> extremes)
 	{
-		int current = 0;
-
 		foreach (Float3 normal in normals)
 		{
 			float min = float.PositiveInfinity;
 			float max = float.NegativeInfinity;
+
 			Float3 min3 = Float3.Zero;
 			Float3 max3 = Float3.Zero;
 
@@ -87,116 +102,129 @@ public readonly struct SphereBound : IFormattable
 				}
 			}
 
-			extremes[current] = min3;
-			extremes[current + 1] = max3;
-			current += 2;
+			extremes[0] = min3;
+			extremes[1] = max3;
+			extremes = extremes[2..];
 		}
 	}
 
-	static void GrowSphere(ReadOnlySpan<Float3> points, ref Float3 center, ref float radius)
+	static void GrowSphere(ReadOnlySpan<Float3> points, ref Float3 center, ref float radius2)
 	{
-		for (int current = 0; current < points.Length; ++current)
+		for (int index = 0; index < points.Length; ++index)
 		{
-			if (Contains(points[current], center, radius)) continue;
+			ref readonly Float3 current = ref points[index];
+
+			if (Contains(current, center, radius2)) continue;
 			// else doesn't contain point
 
-			// SolveExactRecursive(points, current, out center, out radius, current);
+			Float3 offset = center - current;
+			float length = FastMath.Sqrt0(offset.SquaredMagnitude);
+			float radius = (FastMath.Sqrt0(radius2) + length) / 2f;
 
-			Float3 point0 = points[current];
-
-			Float3 direction = (center - point0).Normalized;
-
-			Float3 point1 = center + direction * radius;
-
-			center = (point0 + point1) / 2f;
-			radius = point0.Distance(point1) / 2f;
+			center = current + offset / length * radius;
+			radius2 = radius * radius;
 		}
 	}
 
 	/// <summary>
 	///     Solves the exact sphere using the given points, reference: https://www.youtube.com/watch?v=HojzdCICjmQ
 	/// </summary>
-	static void SolveExact(ReadOnlySpan<Float3> points, out Float3 center, out float radius)
+	static void SolveExact(ReadOnlySpan<Float3> points, out Float3 center, out float radius2)
 	{
 		if (points.Length == 1)
 		{
 			center = points[0];
-			radius = 0f;
+			radius2 = 0f;
 			return;
 		}
 
-		SolveFromDiameterPoints(points[0], points[1], out center, out radius);
+		SolveFromDiameterPoints(points[0], points[1], out center, out radius2);
 
-		for (int current = 2; current < points.Length; ++current)
+		for (int index = 2; index < points.Length; ++index)
 		{
-			if (Contains(points[current], center, radius)) continue;
+			if (Contains(points[index], center, radius2)) continue;
 			// else doesn't contain point
 
-			SolveExactRecursive(points, current, out center, out radius, current);
+			SolveExactRecursive(points, index, out center, out radius2, index);
 		}
 	}
 
 	/// <summary>
 	///     Solves the exact sphere using the given points with anchored pins (or you could say guessed extreme points)
 	/// </summary>
-	static void SolveExactRecursive(ReadOnlySpan<Float3> points, int end, out Float3 center, out float radius, int pin1, int pin2 = -1, int pin3 = -1)
+	static void SolveExactRecursive(ReadOnlySpan<Float3> points, int end, out Float3 center, out float radius2, int pin1, int pin2 = -1, int pin3 = -1)
 	{
-		int current = 0;
+		int index = 0;
 
 		if (pin2 < 0) // no pin 2
 		{
 			// only pin 1
-			SolveFromDiameterPoints(points[0], points[pin1], out center, out radius);
-			current = 1;
+			SolveFromDiameterPoints(points[0], points[pin1], out center, out radius2);
+			index = 1;
 		}
 		else // have pin 1 and 2
 		{
 			if (pin3 < 0) // only have pin 1 & 2
-				SolveFromDiameterPoints(points[pin1], points[pin2], out center, out radius);
+				SolveFromDiameterPoints(points[pin1], points[pin2], out center, out radius2);
 			else // and also have pin 3
-				SolveFromTriangle(points[pin1], points[pin2], points[pin3], out center, out radius);
+				SolveFromTriangle(points[pin1], points[pin2], points[pin3], out center, out radius2);
 		}
 
-		for (; current < end; ++current)
+		for (; index < end; ++index)
 		{
-			if (Contains(points[current], center, radius)) continue;
+			if (Contains(points[index], center, radius2)) continue;
 			// else doesn't contain point
 
 			if (pin2 < 0) // no pin 2
 			{
 				// only pin 1
-				SolveExactRecursive(points, current, out center, out radius, pin1, current);
+				SolveExactRecursive(points, index, out center, out radius2, pin1, index);
 				continue;
 			}
 			// else have pin 1 and 2
 
 			if (pin3 < 0) // only have pin 1 & 2
 			{
-				SolveExactRecursive(points, current, out center, out radius, pin1, pin2, current);
+				SolveExactRecursive(points, index, out center, out radius2, pin1, pin2, index);
 				continue;
 			}
 			// and also have pin 3
 
-			SolveCircumSphereFromFourExtremes(points[pin1], points[pin2], points[pin3], points[current], out center, out radius);
+			SolveCircumSphereFromFourExtremes(points[pin1], points[pin2], points[pin3], points[index], out center, out radius2);
 		}
 	}
 
-	static bool Contains(in Float3 point, in Float3 center, float radius) => center.SquaredDistance(point) <= radius * radius;
+	static bool Contains(in Float3 point, in Float3 center, float radius2) => center.SquaredDistance(point) <= radius2;
 
 	/// <summary>
 	///     Solves the CircumSphere from three points
 	/// </summary>
-	static void SolveFromTriangle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius)
+	static void SolveFromTriangle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius2)
 	{
 		Float3 pba = b - a;
 		Float3 pca = c - a;
 		Float3 planeNormal = pba.Cross(pca);
 
-		center = (pba.SquaredMagnitude * pca - pca.SquaredMagnitude * pba).Cross(planeNormal) / 2f / planeNormal.SquaredMagnitude + a;
-		radius = center.Distance(a);
+		float magnitude2 = planeNormal.SquaredMagnitude;
+
+		if (magnitude2 > 0f)
+		{
+			center = (pba.SquaredMagnitude * pca - pca.SquaredMagnitude * pba).Cross(planeNormal) / magnitude2 / 2f + a;
+			radius2 = center.SquaredDistance(a);
+		}
+		else if (pba.Dot(pca) > 0f)
+		{
+			SolveFromDiameterPoints(a, b, out center, out radius2);
+			Ensure.IsTrue(Contains(c, center, radius2));
+		}
+		else
+		{
+			SolveFromDiameterPoints(b, c, out center, out radius2);
+			Ensure.IsTrue(Contains(a, center, radius2));
+		}
 	}
 
-	static void SolveCircumSphereFromFourExtremes(in Float3 a, in Float3 b, in Float3 c, in Float3 d, out Float3 center, out float radius)
+	static void SolveCircumSphereFromFourExtremes(in Float3 a, in Float3 b, in Float3 c, in Float3 d, out Float3 center, out float radius2)
 	{
 		float a2 = a.SquaredMagnitude;
 		float b2 = b.SquaredMagnitude;
@@ -236,16 +264,16 @@ public readonly struct SphereBound : IFormattable
 			).Determinant
 		);
 
-		radius = center.Distance(a);
+		radius2 = center.SquaredDistance(a);
 	}
 
 	/// <summary>
 	///     Solves the sphere from two extreme points (assuming they are the sphere's diameter end points)
 	/// </summary>
-	static void SolveFromDiameterPoints(in Float3 a, in Float3 b, out Float3 center, out float radius)
+	static void SolveFromDiameterPoints(in Float3 a, in Float3 b, out Float3 center, out float radius2)
 	{
 		center = (a + b) / 2f;
-		radius = (a - b).Magnitude / 2f;
+		radius2 = (a - b).SquaredMagnitude / 4f;
 	}
 }
 
