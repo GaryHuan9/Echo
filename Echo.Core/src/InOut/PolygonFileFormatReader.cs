@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -38,11 +39,11 @@ public class PolygonFileFormatReader
 		}
 
 		long prevPos = file.Position;
-		file.Position = currentFaceValues[currentTriangle + 1];
+		file.Position = currentFaceValues[currentTriangle + 1] * header.propertiesPositions.Count + header.vertexListStart;
 		float[] vertex0Data = ReadBinaryFloats(file, ref buffer, header.propertiesPositions.Count);
-		file.Position = currentFaceValues[currentTriangle + 2];
+		file.Position = currentFaceValues[currentTriangle + 2] * header.propertiesPositions.Count + header.vertexListStart;
 		float[] vertex1Data = ReadBinaryFloats(file, ref buffer, header.propertiesPositions.Count);
-		file.Position = currentFaceValues[currentTriangle + 3];
+		file.Position = currentFaceValues[currentTriangle + 3] * header.propertiesPositions.Count + header.vertexListStart;
 		float[] vertex2Data = ReadBinaryFloats(file, ref buffer, header.propertiesPositions.Count);
 		file.Position = prevPos;
 
@@ -105,14 +106,13 @@ public class PolygonFileFormatReader
 
 	static float ReadBinaryFloat(FileStream file, ref byte[] buffer)
 	{
-		Utility.EnsureCapacity(ref buffer, 4, true, 4);
 		file.Read(buffer, 0, 4);
-		return BitConverter.ToSingle(buffer, 0);
+		//return BitConverter.ToSingle(buffer, 0);
+		return BinaryPrimitives.ReadSingleLittleEndian(buffer);
 	}
 
 	static uint ReadBinaryUInt(FileStream file, ref byte[] buffer)
 	{
-		Utility.EnsureCapacity(ref buffer, 4, true, 4);
 		file.Read(buffer, 0, 4);
 		return BitConverter.ToUInt32(buffer, 0);
 	}
@@ -131,7 +131,7 @@ public class PolygonFileFormatReader
 		return ints;
 	}
 
-	byte[] buffer = new byte[1];
+	byte[] buffer = new byte[8];
 	readonly FileStream file;
 	readonly Header header;
 
@@ -152,11 +152,11 @@ public class PolygonFileFormatReader
 
 	struct Header
 	{
-		readonly int vertexAmount;
-		readonly int faceAmount;
+		public readonly int vertexAmount;
+		public readonly int faceAmount;
 		public readonly Dictionary<Properties, int> propertiesPositions;
 
-		readonly long vertexListStart;
+		public readonly long vertexListStart;
 		public readonly long faceListStart;
 
 		public Header(ref FileStream file, ref byte[] buffer, ref long[] asciiLineStarts)
