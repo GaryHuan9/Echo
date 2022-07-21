@@ -3,8 +3,8 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using CodeHelpers.Packed;
 using Echo.Core.Common;
+using Echo.Core.Common.Packed;
 
 namespace Echo.Core.InOut;
 
@@ -14,15 +14,22 @@ public class PolygonFileFormatReader
 	{
 		file = new FileStream(path, FileMode.Open);
 
-		// check for magic number
-
+		//Check for magic number
 		string line = ReadLine(file, ref buffer);
 		if (line != "ply") throw new Exception($"Error loading {path}");
 
-		// read the header
-		header = new Header(ref file, ref buffer);
+		//Read the header
+		header = new Header(file, ref buffer);
 		file.Position = header.faceListStart;
 	}
+
+	readonly byte[] buffer = new byte[8];
+	readonly FileStream file;
+	public readonly Header header;
+
+	uint[] currentFaceValues = { };
+	int currentTriangle; //Since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
+	int currentFaceTriangleAmount;
 
 	public Triangle ReadTriangle()
 	{
@@ -30,7 +37,7 @@ public class PolygonFileFormatReader
 
 		if (currentTriangle >= currentFaceTriangleAmount)
 		{
-			// we've read all triangles in the current face so read the next face
+			//We've read all triangles in the current face so read the next face
 			int vertexAmount = file.ReadByte();
 			if (vertexAmount == -1)
 				throw new Exception("The file has ended but you are still trying to read more triangles!");
@@ -102,15 +109,13 @@ public class PolygonFileFormatReader
 			if (Convert.ToChar(buffer[i++]) == '\n') break;
 		}
 
-		string result = Encoding.ASCII.GetString(buffer, 0, stringSize - 1); // stringSize - 1 to remove the \n
-		return result;
+		return Encoding.ASCII.GetString(buffer, 0, stringSize - 1); //stringSize - 1 to remove the \n
 	}
 
 	float ReadBinaryFloat()
 	{
 		file.Read(buffer, 0, 4);
 
-		//return BitConverter.ToSingle(buffer, 0);
 		return BinaryPrimitives.ReadSingleLittleEndian(buffer);
 	}
 
@@ -135,14 +140,6 @@ public class PolygonFileFormatReader
 		return ints;
 	}
 
-	readonly byte[] buffer = new byte[8];
-	readonly FileStream file;
-	public readonly Header header;
-
-	uint[] currentFaceValues = { };
-	int currentTriangle; // since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
-	int currentFaceTriangleAmount;
-
 	public struct Triangle
 	{
 		public Float3 vertex0, vertex1, vertex2;
@@ -152,17 +149,9 @@ public class PolygonFileFormatReader
 		public override string ToString() => $"v0:{vertex0} v1:{vertex1} v2{vertex2} n0{normal0} n1{normal1} n2{normal2} tex0{texcoord0} tex1{texcoord1} tex2{texcoord2}";
 	}
 
-	public struct Header
+	public readonly struct Header
 	{
-		public readonly int vertexAmount;
-		public readonly int triangleAmount;
-		public readonly int faceAmount;
-		public readonly Dictionary<Properties, int> propertiesPositions;
-
-		public readonly long vertexListStart;
-		public readonly long faceListStart;
-
-		public Header(ref FileStream file, ref byte[] buffer)
+		public Header(FileStream file, ref byte[] buffer)
 		{
 			int propertyIndex = 0;
 			propertiesPositions = new Dictionary<Properties, int>();
@@ -174,73 +163,59 @@ public class PolygonFileFormatReader
 				string[] tokens = ReadLine(file, ref buffer).Split(' ', StringSplitOptions.RemoveEmptyEntries);
 				switch (tokens[0])
 				{
-					case "comment":
-						continue;
+					case "comment": continue;
 					case "format":
-						/*
-						format = tokens[1] switch
-						{
-							"ascii"                => Format.ASCII,
-							"binary_little_endian" => Format.BINARY_LITTLE_ENDIAN,
-							"binary_big_endian"    => Format.BINARY_BIG_ENDIAN,
-							_                      => throw new Exception($"PLY specified format {tokens[1]} is invalid!")
-						};
-						*/
+					{
+						// format = tokens[1] switch
+						// {
+						// 	"ascii"                => Format.ASCII,
+						// 	"binary_little_endian" => Format.BINARY_LITTLE_ENDIAN,
+						// 	"binary_big_endian"    => Format.BINARY_BIG_ENDIAN,
+						// 	_                      => throw new Exception($"PLY specified format {tokens[1]} is invalid!")
+						// };
 						if (tokens[1] != "binary_little_endian") throw new Exception("Only binary_little_endian format is supported right now!");
 						break;
+					}
 					case "element":
+					{
 						switch (tokens[1])
 						{
 							case "vertex":
+							{
 								vertexAmount = int.Parse(tokens[2]);
 								break;
+							}
 							case "face":
+							{
 								faceAmount = int.Parse(tokens[2]);
 								break;
+							}
 						}
 
 						break;
+					}
 					case "property":
-						if (tokens[1] == "list")
-						{
-							break;
-						}
+					{
+						if (tokens[1] == "list") break;
+						if (tokens[1] != "float") throw new Exception("Only float properties are supported right now");
 
-						if (tokens[1] != "float")
-							throw new Exception("Only float properties are supported right now");
-
-						switch (tokens[2])
+						propertiesPositions.Add(tokens[2] switch
 						{
-							case "x":
-								propertiesPositions.Add(Properties.X, propertyIndex++);
-								break;
-							case "y":
-								propertiesPositions.Add(Properties.Y, propertyIndex++);
-								break;
-							case "z":
-								propertiesPositions.Add(Properties.Z, propertyIndex++);
-								break;
-							case "nx":
-								propertiesPositions.Add(Properties.NX, propertyIndex++);
-								break;
-							case "ny":
-								propertiesPositions.Add(Properties.NY, propertyIndex++);
-								break;
-							case "nz":
-								propertiesPositions.Add(Properties.NZ, propertyIndex++);
-								break;
-							case "s":
-								propertiesPositions.Add(Properties.S, propertyIndex++);
-								break;
-							case "t":
-								propertiesPositions.Add(Properties.T, propertyIndex++);
-								break;
-							default:
-								throw new Exception($"property {tokens[2]} is not supported yet!");
-						}
+							"x"  => Properties.X,
+							"y"  => Properties.Y,
+							"z"  => Properties.Z,
+							"nx" => Properties.NX,
+							"ny" => Properties.NY,
+							"nz" => Properties.NZ,
+							"s"  => Properties.S,
+							"t"  => Properties.T,
+							_    => throw new Exception($"property {tokens[2]} is not supported yet!")
+						}, propertyIndex++);
 
 						break;
+					}
 					case "end_header":
+					{
 						vertexListStart = file.Position;
 						//asciiLineStarts = new long[vertexAmount];
 						faceListStart = vertexListStart + vertexAmount * sizeof(float) * propertiesPositions.Count;
@@ -256,34 +231,40 @@ public class PolygonFileFormatReader
 
 						file.Position = vertexListStart;
 
-						goto header_finished;
+						goto end;
+					}
 				}
 			}
 
-		header_finished: ;
+		end:
+			{ }
 		}
+
+		public readonly int vertexAmount;
+		public readonly int triangleAmount;
+		public readonly int faceAmount;
+		public readonly Dictionary<Properties, int> propertiesPositions;
+
+		public readonly long vertexListStart;
+		public readonly long faceListStart;
 	}
 
-	/*
-		enum Format
-		{
-			ASCII,
-			BINARY_LITTLE_ENDIAN,
-			BINARY_BIG_ENDIAN
-		}
-	*/
+	// enum Format
+	// {
+	// 	ASCII,
+	// 	BINARY_LITTLE_ENDIAN,
+	// 	BINARY_BIG_ENDIAN
+	// }
+
 	public enum Properties
 	{
-		// position
-		X,
-		Y,
-		Z,
-		// normal
-		NX,
-		NY,
-		NZ,
-		// texture coords
-		S,
-		T
+		//Position
+		X, Y, Z,
+
+		//Normal
+		NX, NY, NZ,
+
+		//Texture coordinates
+		S, T
 	}
 }
