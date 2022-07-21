@@ -1,5 +1,4 @@
-﻿using System;
-using Echo.Core.Common.Mathematics;
+﻿using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
@@ -23,7 +22,7 @@ public class OrenNayar : BxDF
 
 		float sigma2 = sigma * sigma;
 
-		a = 1f - sigma2 / 2f / (sigma2 + 0.33f);
+		a = 1f - sigma2 / (sigma2 + 0.33f) / 2f;
 		b = 0.45f * sigma2 / (sigma2 + 0.09f);
 	}
 
@@ -40,18 +39,20 @@ public class OrenNayar : BxDF
 
 		float cosMax = 0f;
 
-		if (!FastMath.AlmostZero(sinO) & !FastMath.AlmostZero(sinI))
+		if (FastMath.Positive(sinO) && FastMath.Positive(sinI))
 		{
+			//Calculate cosMax using trigonometric identities
 			float cos = CosineT(outgoing) * CosineT(incident);
 			float sin = SineT(outgoing) * SineT(incident);
-			cosMax = Math.Max(cos + sin, 0f);
+			cosMax = FastMath.Max0(cos + sin);
 		}
+
+		//Calculate sine and tangent
+		float sinA;
+		float tanB;
 
 		float cosO = FastMath.Abs(CosineP(outgoing));
 		float cosI = FastMath.Abs(CosineP(incident));
-
-		float sinA;
-		float tanB;
 
 		if (cosO < cosI)
 		{
