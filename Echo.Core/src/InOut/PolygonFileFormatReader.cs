@@ -20,7 +20,7 @@ public class PolygonFileFormatReader
 		if (line != "ply") throw new Exception($"Error loading {path}");
 
 		// read the header
-		header = new Header(ref file, ref buffer, ref asciiVertexLineStarts);
+		header = new Header(ref file, ref buffer);
 		file.Position = header.faceListStart;
 	}
 
@@ -32,19 +32,21 @@ public class PolygonFileFormatReader
 		{
 			// we've read all triangles in the current face so read the next face
 			int vertexAmount = file.ReadByte();
+			if (vertexAmount == -1)
+				throw new Exception("The file has ended but you are still trying to read more triangles!");
 			currentFaceValues = new uint[vertexAmount + 1];
-			Array.Copy(ReadBinaryInts(file, ref buffer, vertexAmount), 0, currentFaceValues, 0, vertexAmount);
+			Array.Copy(ReadBinaryInts(vertexAmount), 0, currentFaceValues, 0, vertexAmount);
 			currentFaceTriangleAmount = vertexAmount - 2;
 			currentTriangle = 0;
 		}
 
 		long prevPos = file.Position;
 		file.Position = currentFaceValues[currentTriangle + 1] * header.propertiesPositions.Count + header.vertexListStart;
-		float[] vertex0Data = ReadBinaryFloats(file, ref buffer, header.propertiesPositions.Count);
+		float[] vertex0Data = ReadBinaryFloats(header.propertiesPositions.Count);
 		file.Position = currentFaceValues[currentTriangle + 2] * header.propertiesPositions.Count + header.vertexListStart;
-		float[] vertex1Data = ReadBinaryFloats(file, ref buffer, header.propertiesPositions.Count);
+		float[] vertex1Data = ReadBinaryFloats(header.propertiesPositions.Count);
 		file.Position = currentFaceValues[currentTriangle + 3] * header.propertiesPositions.Count + header.vertexListStart;
-		float[] vertex2Data = ReadBinaryFloats(file, ref buffer, header.propertiesPositions.Count);
+		float[] vertex2Data = ReadBinaryFloats(header.propertiesPositions.Count);
 		file.Position = prevPos;
 
 		resultTriangle.vertex0 = new Float3(
@@ -104,42 +106,42 @@ public class PolygonFileFormatReader
 		return result;
 	}
 
-	static float ReadBinaryFloat(FileStream file, ref byte[] buffer)
+	float ReadBinaryFloat()
 	{
 		file.Read(buffer, 0, 4);
+
 		//return BitConverter.ToSingle(buffer, 0);
 		return BinaryPrimitives.ReadSingleLittleEndian(buffer);
 	}
 
-	static uint ReadBinaryUInt(FileStream file, ref byte[] buffer)
+	uint ReadBinaryUInt()
 	{
 		file.Read(buffer, 0, 4);
+
 		return BitConverter.ToUInt32(buffer, 0);
 	}
 
-	static float[] ReadBinaryFloats(FileStream file, ref byte[] buffer, int amount)
+	float[] ReadBinaryFloats(int amount)
 	{
 		float[] floats = new float[amount];
-		for (int i = 0; i < amount; i++) floats[i] = ReadBinaryFloat(file, ref buffer);
+		for (int i = 0; i < amount; i++) floats[i] = ReadBinaryFloat();
 		return floats;
 	}
 
-	static uint[] ReadBinaryInts(FileStream file, ref byte[] buffer, int amount)
+	uint[] ReadBinaryInts(int amount)
 	{
 		uint[] ints = new uint[amount];
-		for (int i = 0; i < amount; i++) ints[i] = ReadBinaryUInt(file, ref buffer);
+		for (int i = 0; i < amount; i++) ints[i] = ReadBinaryUInt();
 		return ints;
 	}
 
-	byte[] buffer = new byte[8];
+	readonly byte[] buffer = new byte[8];
 	readonly FileStream file;
-	readonly Header header;
+	public readonly Header header;
 
 	uint[] currentFaceValues = { };
 	int currentTriangle; // since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
 	int currentFaceTriangleAmount;
-	readonly long[] asciiVertexLineStarts = { };
-
 
 	public struct Triangle
 	{
@@ -150,20 +152,22 @@ public class PolygonFileFormatReader
 		public override string ToString() => $"v0:{vertex0} v1:{vertex1} v2{vertex2} n0{normal0} n1{normal1} n2{normal2} tex0{texcoord0} tex1{texcoord1} tex2{texcoord2}";
 	}
 
-	struct Header
+	public struct Header
 	{
 		public readonly int vertexAmount;
+		public readonly int triangleAmount;
 		public readonly int faceAmount;
 		public readonly Dictionary<Properties, int> propertiesPositions;
 
 		public readonly long vertexListStart;
 		public readonly long faceListStart;
 
-		public Header(ref FileStream file, ref byte[] buffer, ref long[] asciiLineStarts)
+		public Header(ref FileStream file, ref byte[] buffer)
 		{
 			int propertyIndex = 0;
 			propertiesPositions = new Dictionary<Properties, int>();
 			vertexAmount = 0;
+			triangleAmount = 0;
 			faceAmount = 0;
 			while (true)
 			{
@@ -240,6 +244,18 @@ public class PolygonFileFormatReader
 						vertexListStart = file.Position;
 						//asciiLineStarts = new long[vertexAmount];
 						faceListStart = vertexListStart + vertexAmount * sizeof(float) * propertiesPositions.Count;
+
+						file.Position = faceListStart;
+
+						for (int i = 0; i < faceAmount; i++)
+						{
+							int vertAmountInFace = file.ReadByte();
+							triangleAmount += vertAmountInFace - 2;
+							file.Position += vertAmountInFace * sizeof(uint);
+						}
+
+						file.Position = vertexListStart;
+
 						goto header_finished;
 				}
 			}
@@ -256,7 +272,7 @@ public class PolygonFileFormatReader
 			BINARY_BIG_ENDIAN
 		}
 	*/
-	enum Properties
+	public enum Properties
 	{
 		// position
 		X,
