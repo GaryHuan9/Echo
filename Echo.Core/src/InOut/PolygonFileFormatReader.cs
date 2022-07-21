@@ -30,9 +30,9 @@ public class PolygonFileFormatReader
 		if (currentTriangle >= currentFaceTriangleAmount)
 		{
 			// we've read all triangles in the current face so read the next face
-			int vertexAmount = BitConverter.ToChar(new[] { (byte)file.ReadByte() }, 0);
-			currentFaceValues = new int[vertexAmount + 1];
-			Array.Copy(ReadBinaryInts(file, ref buffer, vertexAmount), 0, currentFaceValues, 1, vertexAmount);
+			int vertexAmount = file.ReadByte();
+			currentFaceValues = new uint[vertexAmount + 1];
+			Array.Copy(ReadBinaryInts(file, ref buffer, vertexAmount), 0, currentFaceValues, 0, vertexAmount);
 			currentFaceTriangleAmount = vertexAmount - 2;
 			currentTriangle = 0;
 		}
@@ -110,11 +110,11 @@ public class PolygonFileFormatReader
 		return BitConverter.ToSingle(buffer, 0);
 	}
 
-	static int ReadBinaryInt(FileStream file, ref byte[] buffer)
+	static uint ReadBinaryUInt(FileStream file, ref byte[] buffer)
 	{
 		Utility.EnsureCapacity(ref buffer, 4, true, 4);
 		file.Read(buffer, 0, 4);
-		return BitConverter.ToInt32(buffer, 0);
+		return BitConverter.ToUInt32(buffer, 0);
 	}
 
 	static float[] ReadBinaryFloats(FileStream file, ref byte[] buffer, int amount)
@@ -124,10 +124,10 @@ public class PolygonFileFormatReader
 		return floats;
 	}
 
-	static int[] ReadBinaryInts(FileStream file, ref byte[] buffer, int amount)
+	static uint[] ReadBinaryInts(FileStream file, ref byte[] buffer, int amount)
 	{
-		int[] ints = new int[amount];
-		for (int i = 0; i < amount; i++) ints[i] = ReadBinaryInt(file, ref buffer);
+		uint[] ints = new uint[amount];
+		for (int i = 0; i < amount; i++) ints[i] = ReadBinaryUInt(file, ref buffer);
 		return ints;
 	}
 
@@ -135,7 +135,7 @@ public class PolygonFileFormatReader
 	readonly FileStream file;
 	readonly Header header;
 
-	int[] currentFaceValues = { };
+	uint[] currentFaceValues = { };
 	int currentTriangle; // since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
 	int currentFaceTriangleAmount;
 	readonly long[] asciiVertexLineStarts = { };
@@ -231,13 +231,15 @@ public class PolygonFileFormatReader
 							case "t":
 								propertiesPositions.Add(Properties.T, propertyIndex++);
 								break;
+							default:
+								throw new Exception($"property {tokens[2]} is not supported yet!");
 						}
 
 						break;
 					case "end_header":
 						vertexListStart = file.Position;
-						asciiLineStarts = new long[vertexAmount];
-						faceListStart = vertexListStart + faceAmount * sizeof(float) * propertiesPositions.Count;
+						//asciiLineStarts = new long[vertexAmount];
+						faceListStart = vertexListStart + vertexAmount * sizeof(float) * propertiesPositions.Count;
 						goto header_finished;
 				}
 			}
