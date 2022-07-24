@@ -21,6 +21,15 @@ public class PolygonFileFormatReader
 
 		//Read the header
 		header = new Header(file, ref buffer);
+		file.Position = header.vertexListStart;
+
+		// read the vertex data from the file into the vertexData array
+		int vertexDataSize = header.vertexAmount * header.propertiesPositions.Count * sizeof(float);
+		byte[] vertexDataBytes = new byte[vertexDataSize];
+		vertexData = new float[header.vertexAmount * header.propertiesPositions.Count];
+		file.Read(vertexDataBytes, 0, vertexDataSize);
+		Buffer.BlockCopy(vertexDataBytes, 0, vertexData, 0, vertexDataSize);
+
 		file.Position = header.faceListStart;
 	}
 
@@ -32,6 +41,8 @@ public class PolygonFileFormatReader
 	int currentTriangle; //Since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
 	int currentFaceTriangleAmount;
 
+	float[] vertexData;
+
 	public Triangle ReadTriangle()
 	{
 		Triangle resultTriangle = new Triangle();
@@ -42,20 +53,29 @@ public class PolygonFileFormatReader
 			int vertexAmount = file.ReadByte();
 			if (vertexAmount == -1)
 				throw new Exception("The file has ended but you are still trying to read more triangles!");
-			currentFaceValues = new uint[vertexAmount + 1];
+			currentFaceValues = new uint[vertexAmount];
 			Array.Copy(ReadBinaryInts(vertexAmount), 0, currentFaceValues, 0, vertexAmount);
 			currentFaceTriangleAmount = vertexAmount - 2;
 			currentTriangle = 0;
 		}
+		/*
+				long prevPos = file.Position;
+				file.Position = currentFaceValues[currentTriangle + 1] * header.propertiesPositions.Count + header.vertexListStart;
+				float[] vertex0Data = ReadBinaryFloats(header.propertiesPositions.Count);
+				file.Position = currentFaceValues[currentTriangle + 2] * header.propertiesPositions.Count + header.vertexListStart;
+				float[] vertex1Data = ReadBinaryFloats(header.propertiesPositions.Count);
+				file.Position = currentFaceValues[currentTriangle + 3] * header.propertiesPositions.Count + header.vertexListStart;
+				float[] vertex2Data = ReadBinaryFloats(header.propertiesPositions.Count);
+				file.Position = prevPos;
+		*/
 
-		long prevPos = file.Position;
-		file.Position = currentFaceValues[currentTriangle + 1] * header.propertiesPositions.Count + header.vertexListStart;
-		float[] vertex0Data = ReadBinaryFloats(header.propertiesPositions.Count);
-		file.Position = currentFaceValues[currentTriangle + 2] * header.propertiesPositions.Count + header.vertexListStart;
-		float[] vertex1Data = ReadBinaryFloats(header.propertiesPositions.Count);
-		file.Position = currentFaceValues[currentTriangle + 3] * header.propertiesPositions.Count + header.vertexListStart;
-		float[] vertex2Data = ReadBinaryFloats(header.propertiesPositions.Count);
-		file.Position = prevPos;
+		float[] vertex0Data = new float[header.propertiesPositions.Count];
+		float[] vertex1Data = new float[header.propertiesPositions.Count];
+		float[] vertex2Data = new float[header.propertiesPositions.Count];
+
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex0Data, 0, header.propertiesPositions.Count);
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex1Data, 0, header.propertiesPositions.Count);
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex2Data, 0, header.propertiesPositions.Count);
 
 		resultTriangle.vertex0 = new Float3(
 			vertex0Data[header.propertiesPositions[Properties.X]],
