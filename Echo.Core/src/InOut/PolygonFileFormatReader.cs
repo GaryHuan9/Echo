@@ -8,7 +8,7 @@ using Echo.Core.Common.Packed;
 
 namespace Echo.Core.InOut;
 
-public class PolygonFileFormatReader
+public class PolygonFileFormatReader : IDisposable
 {
 	public PolygonFileFormatReader(string path)
 	{
@@ -286,5 +286,10 @@ public class PolygonFileFormatReader
 
 		//Texture coordinates
 		S, T
+	}
+
+	public void Dispose()
+	{
+		file?.Dispose();
 	}
 }
