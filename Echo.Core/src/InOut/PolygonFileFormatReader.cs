@@ -28,15 +28,15 @@ public class PolygonFileFormatReader : IDisposable
 		file.Position = header.vertexListStart;
 
 		// read the vertex data from the file into the vertexData array
-		int vertexDataSize = header.vertexAmount * header.propertiesPositions.Count * sizeof(float);
+		int vertexDataSize = header.vertexAmount * header.propertyCount * sizeof(float);
 		byte[] vertexDataBytes = new byte[vertexDataSize];
-		vertexData = new float[header.vertexAmount * header.propertiesPositions.Count];
+		vertexData = new float[header.vertexAmount * header.propertyCount];
 		file.Read(vertexDataBytes, 0, vertexDataSize);
 		Buffer.BlockCopy(vertexDataBytes, 0, vertexData, 0, vertexDataSize);
 
-		vertex0Data = new float[header.propertiesPositions.Count];
-		vertex1Data = new float[header.propertiesPositions.Count];
-		vertex2Data = new float[header.propertiesPositions.Count];
+		vertex0Data = new float[header.propertyCount];
+		vertex1Data = new float[header.propertyCount];
+		vertex2Data = new float[header.propertyCount];
 
 		file.Position = header.faceListStart;
 	}
@@ -78,45 +78,45 @@ public class PolygonFileFormatReader : IDisposable
 			currentTriangle = 0;
 		}
 
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex0Data, 0, header.propertiesPositions.Count * sizeof(float));
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertiesPositions.Count, vertex1Data, 0, header.propertiesPositions.Count * sizeof(float));
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertiesPositions.Count, vertex2Data, 0, header.propertiesPositions.Count * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertyCount, vertex0Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertyCount, vertex1Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertyCount, vertex2Data, 0, header.propertyCount * sizeof(float));
 
 		Float3 vertex0 = new Float3(
-			vertex0Data[header.propertiesPositions[Properties.X]],
-			vertex0Data[header.propertiesPositions[Properties.Y]],
-			vertex0Data[header.propertiesPositions[Properties.Z]]);
+			vertex0Data[header.xPos],
+			vertex0Data[header.yPos],
+			vertex0Data[header.zPos]);
 		Float3 vertex1 = new Float3(
-			vertex1Data[header.propertiesPositions[Properties.X]],
-			vertex1Data[header.propertiesPositions[Properties.Y]],
-			vertex1Data[header.propertiesPositions[Properties.Z]]);
+			vertex1Data[header.xPos],
+			vertex1Data[header.yPos],
+			vertex1Data[header.zPos]);
 		Float3 vertex2 = new Float3(
-			vertex2Data[header.propertiesPositions[Properties.X]],
-			vertex2Data[header.propertiesPositions[Properties.Y]],
-			vertex2Data[header.propertiesPositions[Properties.Z]]);
+			vertex2Data[header.xPos],
+			vertex2Data[header.yPos],
+			vertex2Data[header.zPos]);
 
 		Float3 normal0 = new Float3(
-			vertex0Data[header.propertiesPositions[Properties.NX]],
-			vertex0Data[header.propertiesPositions[Properties.NY]],
-			vertex0Data[header.propertiesPositions[Properties.NZ]]);
+			vertex0Data[header.nxPos],
+			vertex0Data[header.nyPos],
+			vertex0Data[header.nzPos]);
 		Float3 normal1 = new Float3(
-			vertex1Data[header.propertiesPositions[Properties.NX]],
-			vertex1Data[header.propertiesPositions[Properties.NY]],
-			vertex1Data[header.propertiesPositions[Properties.NZ]]);
+			vertex1Data[header.nxPos],
+			vertex1Data[header.nyPos],
+			vertex1Data[header.nzPos]);
 		Float3 normal2 = new Float3(
-			vertex2Data[header.propertiesPositions[Properties.NX]],
-			vertex2Data[header.propertiesPositions[Properties.NY]],
-			vertex2Data[header.propertiesPositions[Properties.NZ]]);
+			vertex2Data[header.nxPos],
+			vertex2Data[header.nyPos],
+			vertex2Data[header.nzPos]);
 
 		Float2 texcoord0 = new Float2(
-			vertex0Data[header.propertiesPositions[Properties.S]],
-			vertex0Data[header.propertiesPositions[Properties.T]]);
+			vertex0Data[header.sPos],
+			vertex0Data[header.tPos]);
 		Float2 texcoord1 = new Float2(
-			vertex1Data[header.propertiesPositions[Properties.S]],
-			vertex1Data[header.propertiesPositions[Properties.T]]);
+			vertex1Data[header.sPos],
+			vertex1Data[header.tPos]);
 		Float2 texcoord2 = new Float2(
-			vertex2Data[header.propertiesPositions[Properties.S]],
-			vertex2Data[header.propertiesPositions[Properties.T]]);
+			vertex2Data[header.sPos],
+			vertex2Data[header.tPos]);
 
 		currentTriangle++;
 
@@ -195,7 +195,6 @@ public class PolygonFileFormatReader : IDisposable
 		public Header(FileStream file, ref byte[] buffer)
 		{
 			int propertyIndex = 0;
-			propertiesPositions = new Dictionary<Properties, int>();
 			vertexAmount = 0;
 			triangleAmount = 0;
 			faceAmount = 0;
@@ -240,18 +239,43 @@ public class PolygonFileFormatReader : IDisposable
 						if (tokens[1] == "list") break;
 						if (tokens[1] != "float") throw new Exception("Only float properties are supported right now");
 
-						propertiesPositions.Add(tokens[2] switch
+						switch (tokens[2])
 						{
-							"x"  => Properties.X,
-							"y"  => Properties.Y,
-							"z"  => Properties.Z,
-							"nx" => Properties.NX,
-							"ny" => Properties.NY,
-							"nz" => Properties.NZ,
-							"s"  => Properties.S,
-							"t"  => Properties.T,
-							_    => throw new Exception($"property {tokens[2]} is not supported yet!")
-						}, propertyIndex++);
+							case "x":
+								xPos = propertyIndex++;
+								propertyCount++;
+								break;
+							case "y":
+								yPos = propertyIndex++;
+								propertyCount++;
+								break;
+							case "z":
+								zPos = propertyIndex++;
+								propertyCount++;
+								break;
+							case "nx":
+								nxPos = propertyIndex++;
+								propertyCount++;
+								break;
+							case "ny":
+								nyPos = propertyIndex++;
+								propertyCount++;
+								break;
+							case "nz":
+								nzPos = propertyIndex++;
+								propertyCount++;
+								break;
+							case "s":
+								sPos = propertyIndex++;
+								propertyCount++;
+								break;
+							case "t":
+								tPos = propertyIndex++;
+								propertyCount++;
+								break;
+							default:
+								throw new Exception($"property {tokens[2]} is not supported yet!");
+						}
 
 						break;
 					}
@@ -259,7 +283,7 @@ public class PolygonFileFormatReader : IDisposable
 					{
 						vertexListStart = file.Position;
 						//asciiLineStarts = new long[vertexAmount];
-						faceListStart = vertexListStart + vertexAmount * sizeof(float) * propertiesPositions.Count;
+						faceListStart = vertexListStart + vertexAmount * sizeof(float) * propertyCount;
 
 						file.Position = faceListStart;
 
@@ -284,7 +308,16 @@ public class PolygonFileFormatReader : IDisposable
 		public readonly int vertexAmount;
 		public readonly int triangleAmount;
 		public readonly int faceAmount;
-		public readonly Dictionary<Properties, int> propertiesPositions;
+
+		public readonly int propertyCount = 0;
+		public readonly int xPos = 0;
+		public readonly int yPos = 0;
+		public readonly int zPos = 0;
+		public readonly int nxPos = 0;
+		public readonly int nyPos = 0;
+		public readonly int nzPos = 0;
+		public readonly int sPos = 0;
+		public readonly int tPos = 0;
 
 		public readonly long vertexListStart;
 		public readonly long faceListStart;
