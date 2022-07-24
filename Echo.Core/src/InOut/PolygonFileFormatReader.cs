@@ -10,6 +10,11 @@ namespace Echo.Core.InOut;
 
 public class PolygonFileFormatReader : IDisposable
 {
+	/// <summary>
+	/// Initializes a new <see cref="Echo.Core.InOut.PolygonFileFormatReader"/> to stream triangles from the given .ply file
+	/// </summary>
+	/// <param name="path">path to the .ply file</param>
+	/// <exception cref="Exception">When providing a .ply file with custom properties or a format other than binary_little_endian, an exception will be thrown.</exception>
 	public PolygonFileFormatReader(string path)
 	{
 		file = new FileStream(path, FileMode.Open);
@@ -52,6 +57,11 @@ public class PolygonFileFormatReader : IDisposable
 
 	uint[] readUintBuffer = { };
 
+	/// <summary>
+	/// reads the next triangle from the stream.
+	/// </summary>
+	/// <returns>a new triangle containing 3 vertices, 3 normals and 3 texture coordinates</returns>
+	/// <exception cref="Exception">throws an exception when trying to read more triangles than there are in header.<see cref="Header.triangleAmount"/></exception>
 	public Triangle ReadTriangle()
 	{
 		Triangle resultTriangle = new Triangle();
@@ -157,7 +167,7 @@ public class PolygonFileFormatReader : IDisposable
 			readUintBuffer = new uint[amount];
 		//for (int i = 0; i < amount; i++) readUintBuffer[i] = ReadBinaryUInt();
 		file.Read(buffer, 0, amount * sizeof(uint));
-		Buffer.BlockCopy(buffer, 0, readUintBuffer, 0, amount * sizeof(uint)); 
+		Buffer.BlockCopy(buffer, 0, readUintBuffer, 0, amount * sizeof(uint));
 	}
 
 	public struct Triangle
