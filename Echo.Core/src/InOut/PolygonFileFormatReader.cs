@@ -1,6 +1,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Echo.Core.Common;
@@ -30,6 +31,17 @@ public class PolygonFileFormatReader
 	uint[] currentFaceValues = { };
 	int currentTriangle; //Since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
 	int currentFaceTriangleAmount;
+
+	public static long TestReadTime()
+	{
+		Stopwatch stopwatch = Stopwatch.StartNew();
+		PolygonFileFormatReader reader = new PolygonFileFormatReader("ext/Scenes/monke.ply");
+		for (int i = 0; i < reader.header.triangleAmount; i++)
+			reader.ReadTriangle();
+		stopwatch.Stop();
+		Console.WriteLine($"Time taken to load {reader.header.triangleAmount} triangles was {stopwatch.ElapsedMilliseconds}ms.");
+		return stopwatch.ElapsedMilliseconds;
+	}
 
 	public Triangle ReadTriangle()
 	{
