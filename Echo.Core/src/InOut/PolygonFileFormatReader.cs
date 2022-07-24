@@ -64,8 +64,6 @@ public class PolygonFileFormatReader : IDisposable
 	/// <exception cref="Exception">throws an exception when trying to read more triangles than there are in header.<see cref="Header.triangleAmount"/></exception>
 	public Triangle ReadTriangle()
 	{
-		Triangle resultTriangle = new Triangle();
-
 		if (currentTriangle >= currentFaceTriangleAmount)
 		{
 			//We've read all triangles in the current face so read the next face
@@ -84,45 +82,45 @@ public class PolygonFileFormatReader : IDisposable
 		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertiesPositions.Count, vertex1Data, 0, header.propertiesPositions.Count * sizeof(float));
 		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertiesPositions.Count, vertex2Data, 0, header.propertiesPositions.Count * sizeof(float));
 
-		resultTriangle.vertex0 = new Float3(
+		Float3 vertex0 = new Float3(
 			vertex0Data[header.propertiesPositions[Properties.X]],
 			vertex0Data[header.propertiesPositions[Properties.Y]],
 			vertex0Data[header.propertiesPositions[Properties.Z]]);
-		resultTriangle.vertex1 = new Float3(
+		Float3 vertex1 = new Float3(
 			vertex1Data[header.propertiesPositions[Properties.X]],
 			vertex1Data[header.propertiesPositions[Properties.Y]],
 			vertex1Data[header.propertiesPositions[Properties.Z]]);
-		resultTriangle.vertex2 = new Float3(
+		Float3 vertex2 = new Float3(
 			vertex2Data[header.propertiesPositions[Properties.X]],
 			vertex2Data[header.propertiesPositions[Properties.Y]],
 			vertex2Data[header.propertiesPositions[Properties.Z]]);
 
-		resultTriangle.normal0 = new Float3(
+		Float3 normal0 = new Float3(
 			vertex0Data[header.propertiesPositions[Properties.NX]],
 			vertex0Data[header.propertiesPositions[Properties.NY]],
 			vertex0Data[header.propertiesPositions[Properties.NZ]]);
-		resultTriangle.normal1 = new Float3(
+		Float3 normal1 = new Float3(
 			vertex1Data[header.propertiesPositions[Properties.NX]],
 			vertex1Data[header.propertiesPositions[Properties.NY]],
 			vertex1Data[header.propertiesPositions[Properties.NZ]]);
-		resultTriangle.normal2 = new Float3(
+		Float3 normal2 = new Float3(
 			vertex2Data[header.propertiesPositions[Properties.NX]],
 			vertex2Data[header.propertiesPositions[Properties.NY]],
 			vertex2Data[header.propertiesPositions[Properties.NZ]]);
 
-		resultTriangle.texcoord0 = new Float2(
+		Float2 texcoord0 = new Float2(
 			vertex0Data[header.propertiesPositions[Properties.S]],
 			vertex0Data[header.propertiesPositions[Properties.T]]);
-		resultTriangle.texcoord1 = new Float2(
+		Float2 texcoord1 = new Float2(
 			vertex1Data[header.propertiesPositions[Properties.S]],
 			vertex1Data[header.propertiesPositions[Properties.T]]);
-		resultTriangle.texcoord2 = new Float2(
+		Float2 texcoord2 = new Float2(
 			vertex2Data[header.propertiesPositions[Properties.S]],
 			vertex2Data[header.propertiesPositions[Properties.T]]);
 
 		currentTriangle++;
 
-		return resultTriangle;
+		return new Triangle(vertex0, vertex1, vertex2, normal0, normal1, normal2, texcoord0, texcoord1, texcoord2);
 	}
 
 	static string ReadLine(FileStream file, ref byte[] buffer)
@@ -170,11 +168,24 @@ public class PolygonFileFormatReader : IDisposable
 		Buffer.BlockCopy(buffer, 0, readUintBuffer, 0, amount * sizeof(uint));
 	}
 
-	public struct Triangle
+	public readonly struct Triangle
 	{
-		public Float3 vertex0, vertex1, vertex2;
-		public Float3 normal0, normal1, normal2;
-		public Float2 texcoord0, texcoord1, texcoord2;
+		public readonly Float3 vertex0, vertex1, vertex2;
+		public readonly Float3 normal0, normal1, normal2;
+		public readonly Float2 texcoord0, texcoord1, texcoord2;
+
+		public Triangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal0, Float3 normal1, Float3 normal2, Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
+		{
+			this.vertex0 = vertex0;
+			this.vertex1 = vertex1;
+			this.vertex2 = vertex2;
+			this.normal0 = normal0;
+			this.normal1 = normal1;
+			this.normal2 = normal2;
+			this.texcoord0 = texcoord0;
+			this.texcoord1 = texcoord1;
+			this.texcoord2 = texcoord2;
+		}
 
 		public override string ToString() => $"v0:{vertex0} v1:{vertex1} v2{vertex2} n0{normal0} n1{normal1} n2{normal2} tex0{texcoord0} tex1{texcoord1} tex2{texcoord2}";
 	}
