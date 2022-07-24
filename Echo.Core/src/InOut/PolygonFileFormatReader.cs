@@ -50,6 +50,8 @@ public class PolygonFileFormatReader
 	readonly float[] vertex1Data;
 	readonly float[] vertex2Data;
 
+	uint[] readUintBuffer = { };
+
 	public Triangle ReadTriangle()
 	{
 		Triangle resultTriangle = new Triangle();
@@ -62,7 +64,8 @@ public class PolygonFileFormatReader
 				throw new Exception("The file has ended but you are still trying to read more triangles!");
 			if (currentFaceValues.Length < vertexAmount)
 				currentFaceValues = new uint[vertexAmount];
-			Array.Copy(ReadBinaryInts(vertexAmount), 0, currentFaceValues, 0, vertexAmount);
+			ReadBinaryInts(vertexAmount);
+			Array.Copy(readUintBuffer, 0, currentFaceValues, 0, vertexAmount);
 			currentFaceTriangleAmount = vertexAmount - 2;
 			currentTriangle = 0;
 		}
@@ -148,11 +151,13 @@ public class PolygonFileFormatReader
 		return floats;
 	}
 
-	uint[] ReadBinaryInts(int amount)
+	void ReadBinaryInts(int amount)
 	{
-		uint[] ints = new uint[amount];
-		for (int i = 0; i < amount; i++) ints[i] = ReadBinaryUInt();
-		return ints;
+		if (readUintBuffer.Length < amount)
+			readUintBuffer = new uint[amount];
+		//for (int i = 0; i < amount; i++) readUintBuffer[i] = ReadBinaryUInt();
+		file.Read(buffer, 0, amount * sizeof(uint));
+		Buffer.BlockCopy(buffer, 0, readUintBuffer, 0, amount * sizeof(uint)); 
 	}
 
 	public struct Triangle
