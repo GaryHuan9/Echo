@@ -1,7 +1,6 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Echo.Core.Common;
@@ -33,7 +32,7 @@ public class PolygonFileFormatReader
 		vertex0Data = new float[header.propertiesPositions.Count];
 		vertex1Data = new float[header.propertiesPositions.Count];
 		vertex2Data = new float[header.propertiesPositions.Count];
-		
+
 		file.Position = header.faceListStart;
 	}
 
@@ -45,9 +44,11 @@ public class PolygonFileFormatReader
 	int currentTriangle; //Since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
 	int currentFaceTriangleAmount;
 
-	float[] vertexData;
+	readonly float[] vertexData;
 
-	float[] vertex0Data, vertex1Data, vertex2Data;
+	readonly float[] vertex0Data;
+	readonly float[] vertex1Data;
+	readonly float[] vertex2Data;
 
 	public Triangle ReadTriangle()
 	{
@@ -59,15 +60,16 @@ public class PolygonFileFormatReader
 			int vertexAmount = file.ReadByte();
 			if (vertexAmount == -1)
 				throw new Exception("The file has ended but you are still trying to read more triangles!");
-			currentFaceValues = new uint[vertexAmount];
+			if (currentFaceValues.Length < vertexAmount)
+				currentFaceValues = new uint[vertexAmount];
 			Array.Copy(ReadBinaryInts(vertexAmount), 0, currentFaceValues, 0, vertexAmount);
 			currentFaceTriangleAmount = vertexAmount - 2;
 			currentTriangle = 0;
 		}
 
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex0Data, 0, header.propertiesPositions.Count);
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex1Data, 0, header.propertiesPositions.Count);
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex2Data, 0, header.propertiesPositions.Count);
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertiesPositions.Count, vertex0Data, 0, header.propertiesPositions.Count * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertiesPositions.Count, vertex1Data, 0, header.propertiesPositions.Count * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertiesPositions.Count, vertex2Data, 0, header.propertiesPositions.Count * sizeof(float));
 
 		resultTriangle.vertex0 = new Float3(
 			vertex0Data[header.propertiesPositions[Properties.X]],
