@@ -14,6 +14,6 @@ public class Mirror : Material
 		var albedo = (RGB128)SampleAlbedo(contact);
 		if (albedo.IsZero) return;
 
-		make.Add<SpecularReflection>().Reset(albedo);
+		make.Add<SpecularReflection<PassthroughFresnel>>().Reset(albedo, new PassthroughFresnel());
 	}
 }
