@@ -4,18 +4,23 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Scattering;
 
-public readonly struct FresnelDielectric
+public interface IFresnel
 {
-	public FresnelDielectric(float etaAbove, float etaBelow)
+	RGB128 Evaluate(float cosI);
+}
+
+public readonly struct DielectricFresnel : IFresnel
+{
+	public DielectricFresnel(float etaAbove, float etaBelow)
 	{
 		this.etaAbove = etaAbove;
 		this.etaBelow = etaBelow;
 	}
 
-	readonly float etaAbove;
-	readonly float etaBelow;
+	public readonly float etaAbove;
+	public readonly float etaBelow;
 
-	public float Evaluate(float cosI) => Evaluate(ref cosI, out _, out _);
+	public RGB128 Evaluate(float cosI) => new(Evaluate(ref cosI, out _, out _));
 
 	public float Evaluate(ref float cosI, out float cosT, out float eta)
 	{
@@ -75,9 +80,9 @@ public readonly struct FresnelDielectric
 	}
 }
 
-public readonly struct FresnelConductor
+public readonly struct ConductorFresnel : IFresnel
 {
-	public FresnelConductor(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 absorption)
+	public ConductorFresnel(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 absorption)
 	{
 		Float4 etaIncidentR = 1f / (Float4)etaAbove;
 
@@ -119,4 +124,9 @@ public readonly struct FresnelConductor
 		//OPTIMIZE:
 		static Float4 Sqrt(in Float4 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z), 1f);
 	}
+}
+
+public readonly struct PassthroughFresnel : IFresnel
+{
+	public RGB128 Evaluate(float cosI) => RGB128.White;
 }
