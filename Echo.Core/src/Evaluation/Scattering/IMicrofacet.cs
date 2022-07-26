@@ -51,15 +51,11 @@ public interface IMicrofacet
 
 	/// <summary>
 	/// Returns the alpha value mapped from an artistic <paramref name="roughness"/> value between zero to one.
-	/// https://github.com/mmp/pbrt-v3/blob/aaa552a4b9cbf9dccb71450f47b268e0ed6370e2/src/core/microfacet.h#L83
 	/// </summary>
-	protected static float GetAlpha(float roughness)
+	public static float GetAlpha(float roughness)
 	{
-		float a = MathF.Log(Math.Max(roughness, FastMath.Epsilon));
-		float a2 = a * a;
-
-		//https://www.desmos.com/calculator/wvossaascu
-		return 1.62142f + 0.819955f * a + 0.1734f * a2 + 0.0171201f * a2 * a + 0.000640711f * a2 * a2;
+		float alpha = FastMath.Sqrt0(FastMath.Sqrt0(roughness));
+		return FastMath.Max(Scalars.Phi * alpha, FastMath.Epsilon);
 	}
 }
 
@@ -99,6 +95,12 @@ public readonly struct BeckmannSpizzichinoMicrofacet : IMicrofacet
 		float denominator = 3.535f * x + 2.181f * x * x;
 		return numerator / denominator;
 	}
+
+	public Float3 Sample(in Float3 direction, Sample2D sample)
+	{
+		//Use and cite: https://hal.inria.fr/hal-00996995v2/file/supplemental1.pdf
+		throw new NotImplementedException();
+	}
 }
 
 /// <summary>
@@ -132,5 +134,11 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 
 		float product = interpolated * interpolated * tan2;
 		return FastMath.Sqrt0(1f + product) / 2f - 0.5f;
+	}
+
+	public Float3 Sample(in Float3 direction, Sample2D sample)
+	{
+		//Use and cite: https://hal.inria.fr/hal-00996995v2/file/supplemental1.pdf
+		throw new NotImplementedException();
 	}
 }
