@@ -82,23 +82,23 @@ public readonly struct DielectricFresnel : IFresnel
 
 public readonly struct ConductorFresnel : IFresnel
 {
-	public ConductorFresnel(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 absorption)
+	public ConductorFresnel(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 extinction)
 	{
-		Float4 etaIncidentR = 1f / (Float4)etaAbove;
+		Float4 etaAboveR = 1f / (Float4)etaAbove;
 
-		eta2 = etaBelow * etaIncidentR;
-		etaK2 = absorption * etaIncidentR;
+		eta2 = etaBelow * etaAboveR;
+		etaK2 = extinction * etaAboveR;
 
 		eta2 *= eta2;
 		etaK2 *= etaK2;
 	}
 
 	readonly Float4 eta2;  //(etaBelow   / etaAbove)^2
-	readonly Float4 etaK2; //(absorption / etaAbove)^2
+	readonly Float4 etaK2; //(extinction / etaAbove)^2
 
 	public RGB128 Evaluate(float cosI) //https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
 	{
-		cosI = FastMath.Clamp11(cosI);
+		cosI = FastMath.Clamp01(FastMath.Abs(cosI));
 
 		float cosI2 = cosI * cosI;
 		float sinI2 = 1f - cosI2;
@@ -107,17 +107,16 @@ public readonly struct ConductorFresnel : IFresnel
 		Float4 a2b2 = Sqrt(term * term + 4f * eta2 * etaK2);
 
 		//Parallel terms
-		Float4 a = Sqrt((a2b2 + term) / 2f);
-		Float4 paraHead = a2b2 + (Float4)cosI2;
-		Float4 paraTail = cosI * a * 2f;
+		Float4 para0 = a2b2 + (Float4)cosI2;
+		Float4 para1 = cosI * Sqrt((a2b2 + term) * 2f);
 
 		//Perpendicular terms
-		Float4 perpHead = cosI2 * a2b2 + (Float4)(sinI2 * sinI2);
-		Float4 perpTail = paraTail * sinI2;
+		Float4 perp0 = cosI2 * a2b2 + (Float4)(sinI2 * sinI2);
+		Float4 perp1 = para1 * sinI2;
 
 		//Combine the two terms
-		Float4 para = (paraHead - paraTail) / (paraHead + paraTail);
-		Float4 perp = (perpHead - perpTail) / (perpHead + perpTail);
+		Float4 para = (para0 - para1) / (para0 + para1);
+		Float4 perp = (perp0 - perp1) / (perp0 + perp1);
 
 		return (RGB128)(para * perp + para) / 2f;
 

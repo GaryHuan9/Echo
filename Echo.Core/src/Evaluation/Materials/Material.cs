@@ -12,7 +12,7 @@ namespace Echo.Core.Evaluation.Materials;
 
 public abstract class Material
 {
-	NotNull<Texture> _albedo = Pure.black;
+	NotNull<Texture> _albedo = Pure.white;
 	NotNull<Texture> _normal = Pure.normal;
 
 	/// <summary>

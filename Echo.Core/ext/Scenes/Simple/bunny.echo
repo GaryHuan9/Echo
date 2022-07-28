@@ -1,14 +1,14 @@
 :scene = new Scene
 {
 	:blue = new Pure("hdr(0.0250 0.1416 0.3736)")
-	:gray = new Pure("hdr(0.75, 0.75, 0.75)")
+	:gray = new Pure("hdr(0.75 0.75 0.75)")
 
-	:material0 = new Matte { .Albedo = new Pure("hdr(1, 0.68, 0.16)") .Roughness = new Pure("hdr(1, 1, 1)") }
+	:material0 = new Matte { .Albedo = new Pure("hdr(1 0.68 0.16)") .Roughness = new Pure("hdr(1 1 1)") }
 	:material1 = new Matte { .Albedo = link gray }
-	:material2 = new Emissive { .Albedo = new Pure("hdr(1, 1, 1)") }
+	:material2 = new Emissive { .Albedo = new Pure("hdr(1 1 1)") }
 	:material3 = new Mirror { .Albedo = link gray }
-	:material4 = new Glass { .Albedo = link gray .RefractiveIndex = new Pure("hdr(1.5, 0, 0)") }
-	:material5 = new Metal { .Albedo = link blue .RefractiveIndex = new Pure("hdr(1, 1, 1)") .Roughness = new Pure("hdr(1, 1, 0)") }
+	:material4 = new Glass { .Albedo = link gray .RefractiveIndex = new Pure("hdr(1.5 0 0)") }
+	:material5 = new Metal { .Albedo = new Pure("hdr(3.032326 2.056108 1.616293)") .RefractiveIndex = new Pure("hdr(2.865601 2.119182 1.940077)") .Roughness = new Pure("hdr(0.25 0.25 0)") }
 
 	.Add(new PlaneEntity { .Material = link material1 .Size = "32 24" })
 

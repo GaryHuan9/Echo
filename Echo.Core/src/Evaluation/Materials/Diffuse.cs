@@ -8,21 +8,14 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
-public class Metal : Material
+public class Diffuse : Material
 {
 	NotNull<Texture> _roughness = Pure.black;
-	NotNull<Texture> _refractiveIndex = Pure.white;
 
 	public Texture Roughness
 	{
 		get => _roughness;
 		set => _roughness = value;
-	}
-
-	public Texture RefractiveIndex
-	{
-		get => _refractiveIndex;
-		set => _refractiveIndex = value;
 	}
 
 	public override void Scatter(ref Contact contact, Allocator allocator)
@@ -32,17 +25,9 @@ public class Metal : Material
 		var albedo = (RGB128)SampleAlbedo(contact);
 		if (albedo.IsZero) return;
 
-		RGB128 index = Sample(RefractiveIndex, contact);
-		RGB128 roughness = Sample(Roughness, contact);
+		float roughness = FastMath.Clamp01(Sample(Roughness, contact).R);
 
-		float alphaX = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.R));
-		float alphaY = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.G));
-
-		make.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ConductorFresnel>>().Reset
-		(
-			RGB128.White,
-			new TrowbridgeReitzMicrofacet(alphaX, alphaY),
-			new ConductorFresnel(RGB128.White, index, albedo)
-		);
+		if (FastMath.AlmostZero(roughness)) make.Add<LambertianReflection>().Reset(albedo);
+		else make.Add<OrenNayar>().Reset(albedo, Scalars.ToRadians(roughness * 90f));
 	}
 }
