@@ -88,7 +88,7 @@ public sealed class LightCollection
 			{
 				ref readonly T geometry = ref array.ItemRef(i);
 
-				if (geometries.swatch[geometry.Material] is not IEmissive emissive) continue;
+				if (geometries.swatch[geometry.Material] is not Emissive emissive) continue;
 
 				float power = emissive.Power * geometry.Area;
 				if (!FastMath.Positive(power)) continue;
@@ -110,13 +110,13 @@ public sealed class LightCollection
 			case TokenType.Triangle:
 			{
 				ref readonly PreparedTriangle triangle = ref geometries.triangles.ItemRef(token.Index);
-				if (geometries.swatch[triangle.Material] is not IEmissive emissive) return Exit(out incident, out travel);
+				if (geometries.swatch[triangle.Material] is not Emissive emissive) return Exit(out incident, out travel);
 				return HandleGeometry(triangle, emissive, origin, sample, out incident, out travel);
 			}
 			case TokenType.Sphere:
 			{
 				ref readonly PreparedSphere sphere = ref geometries.spheres.ItemRef(token.Index);
-				if (geometries.swatch[sphere.Material] is not IEmissive emissive) return Exit(out incident, out travel);
+				if (geometries.swatch[sphere.Material] is not Emissive emissive) return Exit(out incident, out travel);
 				return HandleGeometry(sphere, emissive, origin, sample, out incident, out travel);
 			}
 			case TokenType.Light:
@@ -130,7 +130,7 @@ public sealed class LightCollection
 			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
 
-		static Probable<RGB128> HandleGeometry<T>(in T geometry, IEmissive material, in GeometryPoint origin,
+		static Probable<RGB128> HandleGeometry<T>(in T geometry, Emissive material, in GeometryPoint origin,
 												  Sample2D sample, out Float3 incident, out float travel) where T : IPreparedGeometry
 		{
 			(GeometryPoint point, float pdf) = geometry.Sample(origin, sample);

@@ -50,7 +50,17 @@ public abstract class Material
 	/// Determines the scattering properties of this material at <paramref name="contact"/>
 	/// and potentially initializes the appropriate properties in <paramref name="contact"/>.
 	/// </summary>
-	public abstract void Scatter(ref Contact contact, Allocator allocator);
+	public virtual void Scatter(ref Contact contact, Allocator allocator)
+	{
+		RGBA128 sampled = SampleAlbedo(contact);
+		var albedo = (RGB128)sampled;
+
+		if (sampled.Alpha < 0.5f || albedo.IsZero) return;
+		contact.bsdf = Scatter(contact, allocator, albedo);
+	}
+
+	/// <inheritdoc cref="Scatter(ref Contact, Allocator"/>
+	public abstract BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo);
 
 	/// <summary>
 	/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
@@ -76,8 +86,10 @@ public abstract class Material
 	}
 
 	/// <summary>
-	/// Samples <see cref="Albedo"/> at <paramref name="contact"/> and returns the resulting <see cref="RGBA128"/>.
+	/// Samples the <see cref="Albedo"/>.
 	/// </summary>
+	/// <param name="contact">The <see cref="Contact"/> at which we should sample the <see cref="Albedo"/>.</param>
+	/// <returns>The sampled result.</returns>
 	public RGBA128 SampleAlbedo(in Contact contact) => Albedo[contact.shade.Texcoord];
 
 	/// <summary>
@@ -86,31 +98,12 @@ public abstract class Material
 	protected static RGB128 Sample(Texture texture, in Contact contact) => (RGB128)texture[contact.shade.Texcoord];
 
 	/// <summary>
-	/// A wrapper struct used to easily create <see cref="BSDF"/> and add <see cref="BxDF"/> to it.
+	/// Creates a new <see cref="BSDF"/>
 	/// </summary>
-	protected readonly ref struct MakeBSDF
+	protected static BSDF NewBSDF(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
-		public MakeBSDF(ref Contact contact, Allocator allocator)
-		{
-			this.allocator = allocator;
-			bsdf = allocator.New<BSDF>();
-
-			contact.bsdf = bsdf;
-			bsdf.Reset(contact);
-		}
-
-		readonly Allocator allocator;
-		readonly BSDF bsdf;
-
-		/// <summary>
-		/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Contact.bsdf"/> and returns it.
-		/// </summary>
-		public T Add<T>() where T : BxDF, new()
-		{
-			T function = allocator.New<T>();
-
-			bsdf.Add(function);
-			return function;
-		}
+		var bsdf = allocator.New<BSDF>();
+		bsdf.Reset(contact, albedo);
+		return bsdf;
 	}
 }

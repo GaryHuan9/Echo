@@ -7,7 +7,7 @@ namespace Echo.Core.Evaluation.Scattering;
 /// <summary>
 /// Microfacet diffuse reflection based on Oren and Nayer (1994)
 /// </summary>
-public class OrenNayar : BxDF
+public sealed class OrenNayar : BxDF
 {
 	public OrenNayar() : base
 	(
@@ -15,19 +15,13 @@ public class OrenNayar : BxDF
 		FunctionType.Diffuse
 	) { }
 
-	public void Reset(in RGB128 newReflectance, float newSigma)
+	public void Reset(float newRadian)
 	{
-		reflectance = newReflectance;
-		sigma = newSigma;
-
-		float sigma2 = sigma * sigma;
+		float sigma2 = newRadian * newRadian;
 
 		a = 1f - sigma2 / (sigma2 + 0.33f) / 2f;
 		b = 0.45f * sigma2 / (sigma2 + 0.09f);
 	}
-
-	RGB128 reflectance;
-	float sigma;
 
 	float a;
 	float b;
@@ -65,6 +59,6 @@ public class OrenNayar : BxDF
 			tanB = sinO / cosO;
 		}
 
-		return reflectance * (a + b * cosMax * sinA * tanB) * Scalars.PiR;
+		return new RGB128(Scalars.PiR) * (a + b * cosMax * sinA * tanB);
 	}
 }

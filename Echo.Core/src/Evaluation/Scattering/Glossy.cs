@@ -10,13 +10,11 @@ public class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrofacet : 
 {
 	public GlossyReflection() : base(FunctionType.Glossy | FunctionType.Reflective) { }
 
-	RGB128 reflectance;
 	TMicrofacet microfacet;
 	TFresnel fresnel;
 
-	public void Reset(in RGB128 newReflectance, in TMicrofacet newMicrofacet, in TFresnel newFresnel)
+	public void Reset(in TMicrofacet newMicrofacet, in TFresnel newFresnel)
 	{
-		reflectance = newReflectance;
 		microfacet = newMicrofacet;
 		fresnel = newFresnel;
 	}
@@ -35,7 +33,7 @@ public class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrofacet : 
 		normal *= FastMath.SqrtR0(length2); //Normalize
 
 		float fraction = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
-		return fresnel.Evaluate(outgoing.Dot(normal)) * reflectance * fraction / (4f * cosO * cosI);
+		return fresnel.Evaluate(outgoing.Dot(normal)) * fraction / (4f * cosO * cosI);
 	}
 }
 
@@ -43,13 +41,11 @@ public class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofa
 {
 	public GlossyTransmission() : base(FunctionType.Glossy | FunctionType.Transmissive) { }
 
-	RGB128 reflectance;
 	TMicrofacet microfacet;
 	DielectricFresnel fresnel;
 
-	public void Reset(in RGB128 newReflectance, in TMicrofacet newMicrofacet, float newEtaAbove, float newEtaBelow)
+	public void Reset(in TMicrofacet newMicrofacet, float newEtaAbove, float newEtaBelow)
 	{
-		reflectance = newReflectance;
 		microfacet = newMicrofacet;
 		fresnel = new DielectricFresnel(newEtaAbove, newEtaBelow);
 	}
