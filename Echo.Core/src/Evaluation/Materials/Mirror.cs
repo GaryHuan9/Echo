@@ -5,15 +5,12 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
-public class Mirror : Material
+public sealed class Mirror : Material
 {
-	public override void Scatter(ref Contact contact, Allocator allocator)
+	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
-		var make = new MakeBSDF(ref contact, allocator);
-
-		var albedo = (RGB128)SampleAlbedo(contact);
-		if (albedo.IsZero) return;
-
-		make.Add<SpecularReflection<PassthroughFresnel>>().Reset(albedo, new PassthroughFresnel());
+		BSDF bsdf = NewBSDF(contact, allocator, albedo);
+		bsdf.Add<SpecularReflection<PassthroughFresnel>>(allocator).Reset(new PassthroughFresnel());
+		return bsdf;
 	}
 }

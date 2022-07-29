@@ -8,7 +8,7 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
-public class Diffuse : Material
+public sealed class Diffuse : Material
 {
 	NotNull<Texture> _roughness = Pure.black;
 
@@ -18,16 +18,15 @@ public class Diffuse : Material
 		set => _roughness = value;
 	}
 
-	public override void Scatter(ref Contact contact, Allocator allocator)
+	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
-		var make = new MakeBSDF(ref contact, allocator);
-
-		var albedo = (RGB128)SampleAlbedo(contact);
-		if (albedo.IsZero) return;
+		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
 		float roughness = FastMath.Clamp01(Sample(Roughness, contact).R);
 
-		if (FastMath.AlmostZero(roughness)) make.Add<LambertianReflection>().Reset(albedo);
-		else make.Add<OrenNayar>().Reset(albedo, Scalars.ToRadians(roughness * 90f));
+		if (FastMath.AlmostZero(roughness)) bsdf.Add<LambertianReflection>(allocator);
+		else bsdf.Add<OrenNayar>(allocator).Reset(Scalars.ToRadians(roughness * 90f));
+
+		return bsdf;
 	}
 }

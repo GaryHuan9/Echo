@@ -1,11 +1,11 @@
 ﻿:scene = new Scene
 {
-	:green = new Matte { .Albedo = new Pure("0x00CB21") }
-	:red = new Matte { .Albedo = new Pure("0xCB0021") }
-	:blue = new Matte { .Albedo = new Pure("0x0021CB") }
-	:white = new Matte { .Albedo = new Pure("0xEEEEF2") }
+	:green = new Diffuse { .Albedo = new Pure("0x00CB21") }
+	:red = new Diffuse { .Albedo = new Pure("0xCB0021") }
+	:blue = new Diffuse { .Albedo = new Pure("0x0021CB") }
+	:white = new Diffuse { .Albedo = new Pure("0xEEEEF2") }
 
-	:cullable = new Cullable { .Base = link white }
+	:cullable = new OneSided { .Base = link white }
 	:light = new Emissive { .Albedo = new Pure("0xFFFAF4") }
 
 	:wallSize = "10 10"

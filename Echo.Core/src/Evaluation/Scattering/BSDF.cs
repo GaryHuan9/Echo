@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
@@ -17,20 +18,20 @@ public class BSDF
 	/// <summary>
 	/// Resets and initializes this <see cref="BSDF"/> for new use.
 	/// </summary>
-	public void Reset(in Contact contact, float newEta = 1f)
+	public void Reset(in Contact contact, in RGB128 newAlbedo)
 	{
 		//Note that we do not need to worry about releasing the references from the functions
 		//because they are supposed to be allocated in an arena, which handles the deallocation
 
 		count = 0;
-		eta = newEta;
+		albedo = newAlbedo;
 
 		transform = new NormalTransform(contact.shade.Normal);
 		geometricNormal = contact.point.normal;
 	}
 
 	int count;
-	float eta;
+	RGB128 albedo;
 
 	NormalTransform transform;
 	Float3 geometricNormal;
@@ -38,6 +39,19 @@ public class BSDF
 	BxDF[] functions = new BxDF[InitialSize];
 
 	const int InitialSize = 8;
+
+	/// <summary>
+	/// Adds a new <see cref="BxDF"/> to this <see cref="BSDF"/>.
+	/// </summary>
+	/// <param name="allocator">The <see cref="Allocator"/> to use to create the new <see cref="BxDF"/>.</param>
+	/// <typeparam name="T">The type of <see cref="BxDF"/> to create.</typeparam>
+	/// <returns>The newly created <see cref="BxDF"/>.</returns>
+	public T Add<T>(Allocator allocator) where T : BxDF, new()
+	{
+		T function = allocator.New<T>();
+		Add(function);
+		return function;
+	}
 
 	/// <summary>
 	/// Adds <paramref name="function"/> into this <see cref="BSDF"/>.
@@ -92,7 +106,7 @@ public class BSDF
 			total += function.Evaluate(outgoing, incident);
 		}
 
-		return total;
+		return albedo * total;
 	}
 
 	/// <summary>
@@ -146,7 +160,7 @@ public class BSDF
 		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 		var sampled = selected.Sample(sample, outgoing, out Float3 incident);
 
-		if (sampled.NotPossible | sampled.content.IsZero)
+		if (sampled.NotPossible || sampled.content.IsZero)
 		{
 			incidentWorld = Float3.Zero;
 			return Probable<RGB128>.Impossible;
@@ -156,7 +170,7 @@ public class BSDF
 		incidentWorld = transform.LocalToWorld(incident);
 
 		//If there is only one function, we have finished
-		if (matched == 1) return sampled;
+		if (matched == 1) return (albedo * sampled, sampled.pdf);
 		Ensure.IsTrue(matched > 1);
 
 		//If the selected function is specular, we are also finished
@@ -182,45 +196,45 @@ public class BSDF
 			if (function.type.Any(reflect)) total += function.Evaluate(outgoing, incident);
 		}
 
-		return (total, pdf / matched);
+		return (albedo * total, pdf / matched);
 	}
 
-	/// <summary>
-	/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	/// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Sample2D})"/> for more information.
-	/// </summary>
-	public RGB128 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
-	{
-		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		var reflectance = RGB128.Black;
-
-		for (int i = 0; i < count; i++)
-		{
-			BxDF function = functions[i];
-			if (!function.type.Fits(type)) continue;
-			reflectance += function.GetReflectance(outgoing, samples);
-		}
-
-		return reflectance;
-	}
-
-	/// <summary>
-	/// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	/// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Sample2D}, ReadOnlySpan{Sample2D})"/> for more information.
-	/// </summary>
-	public RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1, FunctionType type)
-	{
-		var reflectance = RGB128.Black;
-
-		for (int i = 0; i < count; i++)
-		{
-			BxDF function = functions[i];
-			if (!function.type.Fits(type)) continue;
-			reflectance += function.GetReflectance(samples0, samples1);
-		}
-
-		return reflectance;
-	}
+	// /// <summary>
+	// /// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
+	// /// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Sample2D})"/> for more information.
+	// /// </summary>
+	// public RGB128 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
+	// {
+	// 	Float3 outgoing = transform.WorldToLocal(outgoingWorld);
+	// 	var reflectance = RGB128.Black;
+	//
+	// 	for (int i = 0; i < count; i++)
+	// 	{
+	// 		BxDF function = functions[i];
+	// 		if (!function.type.Fits(type)) continue;
+	// 		reflectance += function.GetReflectance(outgoing, samples);
+	// 	}
+	//
+	// 	return reflectance;
+	// }
+	//
+	// /// <summary>
+	// /// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
+	// /// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Sample2D}, ReadOnlySpan{Sample2D})"/> for more information.
+	// /// </summary>
+	// public RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1, FunctionType type)
+	// {
+	// 	var reflectance = RGB128.Black;
+	//
+	// 	for (int i = 0; i < count; i++)
+	// 	{
+	// 		BxDF function = functions[i];
+	// 		if (!function.type.Fits(type)) continue;
+	// 		reflectance += function.GetReflectance(samples0, samples1);
+	// 	}
+	//
+	// 	return reflectance;
+	// }
 
 	/// <summary>
 	/// Determines whether the direction pair <paramref name="outgoingWorld"/> and <paramref name="incidentWorld"/>

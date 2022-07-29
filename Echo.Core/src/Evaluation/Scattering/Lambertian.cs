@@ -9,7 +9,7 @@ namespace Echo.Core.Evaluation.Scattering;
 /// <summary>
 /// Perfectly uniform Lambertian diffuse reflection.
 /// </summary>
-public class LambertianReflection : BxDF
+public sealed class LambertianReflection : BxDF
 {
 	public LambertianReflection() : base
 	(
@@ -17,20 +17,16 @@ public class LambertianReflection : BxDF
 		FunctionType.Diffuse
 	) { }
 
-	public void Reset(in RGB128 newReflectance) => reflectance = newReflectance;
+	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => new(Scalars.PiR);
 
-	RGB128 reflectance;
-
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => reflectance * Scalars.PiR;
-
-	public override RGB128 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => reflectance;
-	public override RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => reflectance;
+	public override RGB128 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => RGB128.White;
+	public override RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => RGB128.White;
 }
 
 /// <summary>
 /// Perfectly uniform Lambertian diffuse transmission.
 /// </summary>
-public class LambertianTransmission : BxDF
+public sealed class LambertianTransmission : BxDF
 {
 	public LambertianTransmission() : base
 	(
@@ -38,12 +34,8 @@ public class LambertianTransmission : BxDF
 		FunctionType.Diffuse
 	) { }
 
-	public void Reset(in RGB128 newTransmittance) => transmittance = newTransmittance;
+	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => new(Scalars.PiR);
 
-	RGB128 transmittance;
-
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => transmittance * Scalars.PiR;
-
-	public override RGB128 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => transmittance;
-	public override RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => transmittance;
+	public override RGB128 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => RGB128.White;
+	public override RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => RGB128.White;
 }

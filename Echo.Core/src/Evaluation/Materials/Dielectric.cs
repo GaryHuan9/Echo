@@ -9,7 +9,7 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
-public class Dielectric : Material
+public sealed class Dielectric : Material
 {
 	NotNull<Texture> _roughness = Pure.black;
 	NotNull<Texture> _refractiveIndex = Pure.white;
@@ -26,12 +26,9 @@ public class Dielectric : Material
 		set => _refractiveIndex = value;
 	}
 
-	public override void Scatter(ref Contact contact, Allocator allocator)
+	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
-		var make = new MakeBSDF(ref contact, allocator);
-
-		var albedo = (RGB128)SampleAlbedo(contact);
-		if (albedo.IsZero) return;
+		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
 		float index = Sample(RefractiveIndex, contact).R;
 		RGB128 roughness = Sample(Roughness, contact);
@@ -42,6 +39,8 @@ public class Dielectric : Material
 		{
 			throw new NotImplementedException();
 		}
-		else make.Add<SpecularFresnel>().Reset(albedo, 1f, index);
+		else bsdf.Add<SpecularFresnel>(allocator).Reset(1f, index);
+
+		return bsdf;
 	}
 }

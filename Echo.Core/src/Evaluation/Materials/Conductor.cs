@@ -7,7 +7,7 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
-public class Conductor : Material
+public sealed class Conductor : Material
 {
 	NotNull<Texture> _roughness = Pure.black;
 	NotNull<Texture> _refractiveIndex = Pure.white;
@@ -24,12 +24,9 @@ public class Conductor : Material
 		set => _refractiveIndex = value;
 	}
 
-	public override void Scatter(ref Contact contact, Allocator allocator)
+	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
-		var make = new MakeBSDF(ref contact, allocator);
-
-		var albedo = (RGB128)SampleAlbedo(contact);
-		if (albedo.IsZero) return;
+		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
 		RGB128 index = Sample(RefractiveIndex, contact);
 		RGB128 roughness = Sample(Roughness, contact);
@@ -40,11 +37,12 @@ public class Conductor : Material
 		float alphaX = roughness.R;
 		float alphaY = roughness.G;
 
-		make.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ConductorFresnel>>().Reset
+		bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ConductorFresnel>>(allocator).Reset
 		(
-			RGB128.White,
 			new TrowbridgeReitzMicrofacet(alphaX, alphaY),
 			new ConductorFresnel(RGB128.White, index, albedo)
 		);
+
+		return bsdf;
 	}
 }

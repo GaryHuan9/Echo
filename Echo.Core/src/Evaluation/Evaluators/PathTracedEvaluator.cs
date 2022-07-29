@@ -330,7 +330,7 @@ public record PathTracedEvaluator : Evaluator
 		/// <param name="weight">An optionally provided value to scale this contribution.</param>
 		public void ContributeEmissive(float weight = 1f)
 		{
-			if (Material is not IEmissive emissive) return;
+			if (Material is not Emissive emissive) return;
 			if (!FastMath.Positive(emissive.Power)) return;
 
 			Contribute(emissive.Emit(contact.point, contact.outgoing) * weight);
