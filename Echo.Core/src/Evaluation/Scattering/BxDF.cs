@@ -53,7 +53,6 @@ public abstract class BxDF
 	{
 		incident = sample.CosineHemisphere;
 		if (outgoing.Z < 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
-
 		return (Evaluate(outgoing, incident), ProbabilityDensity(outgoing, incident));
 	}
 

@@ -30,10 +30,11 @@ public sealed class Dielectric : Material
 	{
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
-		float index = Sample(RefractiveIndex, contact).R;
 		RGB128 roughness = Sample(Roughness, contact);
 		float roughnessU = FastMath.Clamp01(roughness.R);
 		float roughnessV = FastMath.Clamp01(roughness.G);
+
+		float index = Sample(RefractiveIndex, contact).R;
 
 		if (!FastMath.AlmostZero(roughnessU) || !FastMath.AlmostZero(roughnessV))
 		{

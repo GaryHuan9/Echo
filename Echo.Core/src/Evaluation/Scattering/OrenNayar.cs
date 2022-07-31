@@ -5,7 +5,7 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Evaluation.Scattering;
 
 /// <summary>
-/// Microfacet diffuse reflection based on Oren and Nayer (1994)
+/// Microfacet diffuse reflection based on Oren and Nayar (1994)
 /// </summary>
 public sealed class OrenNayar : BxDF
 {
@@ -31,11 +31,11 @@ public sealed class OrenNayar : BxDF
 		float sinO = SineP(outgoing);
 		float sinI = SineP(incident);
 
+		//Calculate cosMax using trigonometric identities
 		float cosMax = 0f;
 
 		if (FastMath.Positive(sinO) && FastMath.Positive(sinI))
 		{
-			//Calculate cosMax using trigonometric identities
 			float cos = CosineT(outgoing) * CosineT(incident);
 			float sin = SineT(outgoing) * SineT(incident);
 			cosMax = FastMath.Max0(cos + sin);

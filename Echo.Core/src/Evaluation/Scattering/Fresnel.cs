@@ -9,9 +9,9 @@ public interface IFresnel
 	RGB128 Evaluate(float cosI);
 }
 
-public readonly struct DielectricFresnel : IFresnel
+public readonly struct RealFresnel : IFresnel
 {
-	public DielectricFresnel(float etaAbove, float etaBelow)
+	public RealFresnel(float etaAbove, float etaBelow)
 	{
 		this.etaAbove = etaAbove;
 		this.etaBelow = etaBelow;
@@ -80,9 +80,9 @@ public readonly struct DielectricFresnel : IFresnel
 	}
 }
 
-public readonly struct ConductorFresnel : IFresnel
+public readonly struct ComplexFresnel : IFresnel
 {
-	public ConductorFresnel(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 extinction)
+	public ComplexFresnel(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 extinction)
 	{
 		Float4 etaAboveR = 1f / (Float4)etaAbove;
 
@@ -108,7 +108,7 @@ public readonly struct ConductorFresnel : IFresnel
 
 		//Parallel terms
 		Float4 para0 = a2b2 + (Float4)cosI2;
-		Float4 para1 = cosI * Sqrt((a2b2 + term) * 2f);
+		Float4 para1 = cosI * Scalars.Root2 * Sqrt(a2b2 + term);
 
 		//Perpendicular terms
 		Float4 perp0 = cosI2 * a2b2 + (Float4)(sinI2 * sinI2);

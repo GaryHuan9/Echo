@@ -42,12 +42,12 @@ public class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofa
 	public GlossyTransmission() : base(FunctionType.Glossy | FunctionType.Transmissive) { }
 
 	TMicrofacet microfacet;
-	DielectricFresnel fresnel;
+	RealFresnel fresnel;
 
 	public void Reset(in TMicrofacet newMicrofacet, float newEtaAbove, float newEtaBelow)
 	{
 		microfacet = newMicrofacet;
-		fresnel = new DielectricFresnel(newEtaAbove, newEtaBelow);
+		fresnel = new RealFresnel(newEtaAbove, newEtaBelow);
 	}
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
