@@ -53,10 +53,12 @@ public abstract class Material
 	public virtual void Scatter(ref Contact contact, Allocator allocator)
 	{
 		RGBA128 sampled = SampleAlbedo(contact);
-		var albedo = (RGB128)sampled;
+		if (sampled.Alpha < 0.5f) return;
 
-		if (sampled.Alpha < 0.5f || albedo.IsZero) return;
-		contact.bsdf = Scatter(contact, allocator, albedo);
+		var albedo = (RGB128)sampled;
+		contact.bsdf = albedo.IsZero ?
+			NewBSDF(contact, allocator, RGB128.Black) :
+			Scatter(contact, allocator, albedo);
 	}
 
 	/// <inheritdoc cref="Scatter(ref Contact, Allocator"/>

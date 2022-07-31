@@ -33,9 +33,9 @@ public class SpecularTransmission : BxDF
 {
 	public SpecularTransmission() : base(FunctionType.Specular | FunctionType.Transmissive) { }
 
-	public void Reset(float newEtaAbove, float newEtaBelow) => fresnel = new DielectricFresnel(newEtaAbove, newEtaBelow);
+	public void Reset(float newEtaAbove, float newEtaBelow) => fresnel = new RealFresnel(newEtaAbove, newEtaBelow);
 
-	DielectricFresnel fresnel;
+	RealFresnel fresnel;
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
@@ -72,9 +72,9 @@ public class SpecularFresnel : BxDF
 {
 	public SpecularFresnel() : base(FunctionType.Specular | FunctionType.Reflective | FunctionType.Transmissive) { }
 
-	public void Reset(float newEtaAbove, float newEtaBelow) => fresnel = new DielectricFresnel(newEtaAbove, newEtaBelow);
+	public void Reset(float newEtaAbove, float newEtaBelow) => fresnel = new RealFresnel(newEtaAbove, newEtaBelow);
 
-	DielectricFresnel fresnel;
+	RealFresnel fresnel;
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
@@ -87,7 +87,7 @@ public class SpecularFresnel : BxDF
 		if (sample.x < evaluated)
 		{
 			//Perform specular reflection
-			incident = SpecularReflection<DielectricFresnel>.Reflect(outgoing);
+			incident = SpecularReflection<RealFresnel>.Reflect(outgoing);
 			return (new RGB128(evaluated) / FastMath.Abs(CosineP(incident)), evaluated);
 		}
 

@@ -1,5 +1,6 @@
 ﻿using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Textures;
@@ -10,7 +11,9 @@ namespace Echo.Core.Evaluation.Materials;
 public sealed class Conductor : Material
 {
 	NotNull<Texture> _roughness = Pure.black;
+
 	NotNull<Texture> _refractiveIndex = Pure.white;
+	NotNull<Texture> _extinction = Pure.white;
 
 	public Texture Roughness
 	{
@@ -24,24 +27,33 @@ public sealed class Conductor : Material
 		set => _refractiveIndex = value;
 	}
 
+	public Texture Extinction
+	{
+		get => _extinction;
+		set => _extinction = value;
+	}
+
 	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
-		RGB128 index = Sample(RefractiveIndex, contact);
 		RGB128 roughness = Sample(Roughness, contact);
+		float alphaX = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.R));
+		float alphaY = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.G));
 
-		// float alphaX = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.R));
-		// float alphaY = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.G));
+		RGB128 index = Sample(RefractiveIndex, contact);
+		RGB128 extinction = Sample(Extinction, contact);
 
-		float alphaX = roughness.R;
-		float alphaY = roughness.G;
+		var fresnel = new ComplexFresnel(RGB128.White, index, extinction);
 
-		bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ConductorFresnel>>(allocator).Reset
-		(
-			new TrowbridgeReitzMicrofacet(alphaX, alphaY),
-			new ConductorFresnel(RGB128.White, index, albedo)
-		);
+		if (!FastMath.AlmostZero(alphaX) || !FastMath.AlmostZero(alphaY))
+		{
+			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset
+			(
+				new TrowbridgeReitzMicrofacet(alphaX, alphaY), fresnel
+			);
+		}
+		else bsdf.Add<SpecularReflection<ComplexFresnel>>(allocator).Reset(fresnel);
 
 		return bsdf;
 	}

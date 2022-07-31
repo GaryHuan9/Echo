@@ -1,4 +1,5 @@
 ﻿using System;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -54,8 +55,9 @@ public interface IMicrofacet
 	/// </summary>
 	public static float GetAlpha(float roughness)
 	{
-		float alpha = FastMath.Sqrt0(FastMath.Sqrt0(roughness));
-		return FastMath.Max(Scalars.Phi * alpha, FastMath.Epsilon);
+		Ensure.IsTrue(roughness >= 0f);
+		Ensure.IsTrue(roughness <= 1f);
+		return Scalars.Phi * FastMath.Sqrt0(roughness);
 	}
 }
 
@@ -91,6 +93,7 @@ public readonly struct BeckmannSpizzichinoMicrofacet : IMicrofacet
 
 		if (x >= 1.6f) return 0f;
 
+		//Polynomial approximation checkout this article: http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html
 		float numerator = 1f - 1.259f * x + 0.396f * x * x;
 		float denominator = 3.535f * x + 2.181f * x * x;
 		return numerator / denominator;
