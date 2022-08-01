@@ -48,10 +48,12 @@ public sealed class Conductor : Material
 
 		if (!FastMath.AlmostZero(alphaX) || !FastMath.AlmostZero(alphaY))
 		{
-			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset
-			(
-				new TrowbridgeReitzMicrofacet(alphaX, alphaY), fresnel
-			);
+			alphaX = FastMath.Max(alphaX, FastMath.Epsilon);
+			alphaY = FastMath.Max(alphaY, FastMath.Epsilon);
+
+			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
+
+			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset(microfacet, fresnel);
 		}
 		else bsdf.Add<SpecularReflection<ComplexFresnel>>(allocator).Reset(fresnel);
 

@@ -57,7 +57,7 @@ public interface IMicrofacet
 	{
 		Ensure.IsTrue(roughness >= 0f);
 		Ensure.IsTrue(roughness <= 1f);
-		return Scalars.Phi * FastMath.Sqrt0(roughness);
+		return roughness * roughness;
 	}
 }
 

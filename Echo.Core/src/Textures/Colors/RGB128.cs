@@ -49,7 +49,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 		);
 	}
 
-	public static RGB128 Black => new(new Float4(0f, 0f, 0f, 0f));
+	public static RGB128 Black => new(new Float4(0f, 0f, 0f, 0f)); //We can replace this with `new RGB128()` for smaller JIT asm, however if more collapsing is added to the JIT then this is probably fine
 	public static RGB128 White => new(new Float4(1f, 1f, 1f, 0f));
 
 	public override int GetHashCode() => d.GetHashCode();
