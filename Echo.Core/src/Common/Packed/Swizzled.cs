@@ -632,7 +632,7 @@ partial struct Float4
 	F4 Shuffle(byte shuffle) => new(Sse.Shuffle(v, v, shuffle));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-	F4 Blend(byte blend) => new(Sse41.Blend(v, Vector128<float>.Zero, blend));
+	F4 Blend(byte blend) => new(Sse41.Blend(v, Vector128<float>.Zero, blend)); //OPTIMIZE: we can use _mm_insert_ps here to save one instruction
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
 	F4 ShuffleBlend(byte shuffle, byte blend) => new(Sse41.Blend(Sse.Shuffle(v, v, shuffle), Vector128<float>.Zero, blend));
