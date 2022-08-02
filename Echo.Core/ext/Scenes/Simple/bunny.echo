@@ -8,7 +8,7 @@
 	:material2 = new Emissive
 	:material3 = new Mirror { .Albedo = link gray }
 	:material4 = new Dielectric { .Albedo = link gray .RefractiveIndex = new Pure("hdr(1.5 0 0)") }
-	:material5 = new Conductor { .Roughness = new Pure("hdr(1 0.5 0)") .RefractiveIndex = new Pure("hdr(0.18, 0.42, 1.37)") .Extinction = new Pure("hdr(3.42, 2.35, 1.77)") }
+	:material5 = new Conductor { .Roughness = new Pure("hdr(0.5 0.5 0)") .RefractiveIndex = new Pure("hdr(0.18 0.42 1.37)") .Extinction = new Pure("hdr(3.42 2.35 1.77)") }
 
 	.Add(new PlaneEntity { .Material = link material1 .Size = "32 24" })
 

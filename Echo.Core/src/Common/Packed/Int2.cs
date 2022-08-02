@@ -274,7 +274,7 @@ public readonly partial struct Int2 : IEquatable<Int2>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Damp(Float2 target, ref Float2 velocity, Float2 smoothTime, float deltaTime) => Float2.Damp(this, target, ref velocity, smoothTime, deltaTime);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Damp(Float2 target, ref Float2 velocity, float smoothTime, float deltaTime) => Float2.Damp(this, target, ref velocity, smoothTime, deltaTime);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Reflect(Int2 normal) => -2 * Dot(normal) * normal + this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int2 Reflect(Int2 normal) => 2 * Dot(normal) * normal - this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Project(Float2 normal) => normal * (normal.Dot(this) / normal.SquaredMagnitude);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public override bool Equals(object obj) => obj is Int2 other && Equals(other);

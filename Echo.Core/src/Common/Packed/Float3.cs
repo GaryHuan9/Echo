@@ -360,7 +360,7 @@ public readonly partial struct Float3 : IEquatable<Float3>, ISpanFormattable
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Damp(in Float3 target, ref Float3 velocity, float smoothTime, float deltaTime) => Damp(target, ref velocity, (Float3)smoothTime, deltaTime);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Reflect(in Float3 normal) => -2f * Dot(normal) * normal + this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Reflect(in Float3 normal) => 2f * Dot(normal) * normal - this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Project(in Float3 normal) => normal * (Dot(normal) / normal.SquaredMagnitude);
 
 	// ReSharper disable CompareOfFloatsByEqualityOperator

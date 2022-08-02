@@ -327,7 +327,7 @@ public class TilesUI : PlaneUI
 			if (compareTexture != null)
 			{
 				uv = (position + Float2.Half) / textureSize;
-				color = (color - compareTexture[uv]).Absoluted;
+				color -= compareTexture[uv];
 			}
 
 			ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {color:N4}");

@@ -404,7 +404,7 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Damp(in Float4 target, ref Float4 velocity, in Float4 smoothTime, float deltaTime) => Float4.Damp(this, target, ref velocity, smoothTime, deltaTime);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Damp(in Float4 target, ref Float4 velocity, float smoothTime, float deltaTime) => Float4.Damp(this, target, ref velocity, smoothTime, deltaTime);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Reflect(in Int4 normal) => -2 * Dot(normal) * normal + this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Reflect(in Int4 normal) => 2 * Dot(normal) * normal - this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Project(in Float4 normal) => normal * (normal.Dot(this) / normal.SquaredMagnitude);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public override bool Equals(object obj) => obj is Int4 other && Equals(other);
