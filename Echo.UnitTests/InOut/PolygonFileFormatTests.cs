@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Echo.Core.InOut;
+using Echo.Core.InOut.Models;
 using NUnit.Framework;
 
 namespace Echo.UnitTests.InOut;

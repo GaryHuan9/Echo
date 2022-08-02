@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using Echo.Core.Common.Compute;
 using Echo.Core.Evaluation.Operation;
 using Echo.Core.InOut;
+using Echo.Core.InOut.Scenes;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 using Echo.UserInterface.Backend;

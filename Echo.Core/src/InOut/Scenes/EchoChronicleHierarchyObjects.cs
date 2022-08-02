@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Scenes;
 
 public sealed partial class EchoChronicleHierarchyObjects
 {

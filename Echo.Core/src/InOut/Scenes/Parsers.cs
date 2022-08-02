@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Packed;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Scenes;
 
 using CharSpan = ReadOnlySpan<char>;
 

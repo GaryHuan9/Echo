@@ -8,12 +8,12 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.InOut.Images;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
-using Echo.Core.Textures.Serialization;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Models;
 
 public class MaterialLibrary
 {

@@ -1,17 +1,16 @@
 using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Echo.Core.Common;
 using Echo.Core.Common.Packed;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Models;
 
 public class PolygonFileFormatReader : IDisposable
 {
 	/// <summary>
-	/// Initializes a new <see cref="Echo.Core.InOut.PolygonFileFormatReader"/> to stream triangles from the given .ply file
+	/// Initializes a new <see cref="PolygonFileFormatReader"/> to stream triangles from the given .ply file
 	/// </summary>
 	/// <param name="path">path to the .ply file</param>
 	/// <exception cref="Exception">When providing a .ply file with custom properties or a format other than binary_little_endian, an exception will be thrown.</exception>
