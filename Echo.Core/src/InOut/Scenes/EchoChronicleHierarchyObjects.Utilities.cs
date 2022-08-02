@@ -5,9 +5,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Memory;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Scenes;
 
 using CharSpan = ReadOnlySpan<char>;
 

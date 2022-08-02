@@ -3,11 +3,10 @@ using System.IO;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Packed;
-using Echo.Core.InOut;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
-namespace Echo.Core.Textures.Serialization;
+namespace Echo.Core.InOut.Images;
 
 /// <summary>
 /// An <see cref="Serializer"/> for the <see cref="Echo"/> custom floating-point image (.fpi) format.

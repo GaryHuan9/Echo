@@ -8,6 +8,7 @@ using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.InOut;
+using Echo.Core.InOut.Models;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;

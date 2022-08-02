@@ -2,6 +2,7 @@
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut;
+using Echo.Core.InOut.Models;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;

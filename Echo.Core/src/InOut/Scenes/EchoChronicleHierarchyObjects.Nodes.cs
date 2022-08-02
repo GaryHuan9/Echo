@@ -7,11 +7,12 @@ using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.Models;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Scenes;
 
 using CharSpan = ReadOnlySpan<char>;
 
