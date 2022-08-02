@@ -16,25 +16,25 @@ public interface IMicrofacet
 	/// <summary>
 	/// Calculates the projected area of the microfacet faces along a normal.
 	/// </summary>
-	/// <param name="normal">The surface normal to measure against.</param>
+	/// <param name="normal">The microfacet surface normal to measure against.</param>
 	/// <returns>The calculated projected area.</returns>
-	float ProjectedArea(in Float3 normal);
+	public float ProjectedArea(in Float3 normal);
 
 	/// <summary>
 	/// Calculates the ratio of the projected area of invisible over visible microfacet faces.
 	/// </summary>
-	/// <param name="outgoing">The direction towards which the projected face areas are calculated from.</param>
+	/// <param name="direction">The direction towards which the projected face areas are calculated from.</param>
 	/// <returns>The area of the shadowed microfacet (blocked by others) over the area of the visible microfacet.</returns>
-	float ShadowingRatio(in Float3 outgoing);
+	float ShadowingRatio(in Float3 direction);
 
-	Float3 Sample(in Float3 direction, Sample2D sample);
+	Float3 Sample(in Float3 outgoing, Sample2D sample);
 
 	/// <summary>
 	/// Calculates the fraction of visible microfacet faces over all microfacet faces from a direction.
 	/// </summary>
-	/// <param name="outgoing">The direction towards which the visibility is calculated.</param>
+	/// <param name="direction">The direction towards which the visibility is calculated.</param>
 	/// <returns>The calculated fraction, between 0 and 1.</returns>
-	sealed float Visibility(in Float3 outgoing) => 1f / (1f + ShadowingRatio(outgoing));
+	sealed float Visibility(in Float3 direction) => 1f / (1f + ShadowingRatio(direction));
 
 	/// <summary>
 	/// Calculates the fraction of visible microfacet faces from two directions.
@@ -44,6 +44,13 @@ public interface IMicrofacet
 	/// <returns>The calculated fraction, between 0 and 1.</returns>
 	sealed float Visibility(in Float3 outgoing, in Float3 incident) => 1f / (1f + ShadowingRatio(outgoing) + ShadowingRatio(incident));
 
+	/// <summary>
+	/// Calculates the pdf of selecting <paramref name="normal"/> from <see cref="outgoing"/> with <see cref="Sample"/>.
+	/// </summary>
+	/// <param name="outgoing">The unit local source direction from which we hit this <see cref="IMicrofacet"/>.</param>
+	/// <param name="normal">The unit local normal direction that was probabilistically selected to be sampled.</param>
+	/// <returns>The probability density function (pdf) value of this selection.</returns>
+	/// <seealso cref="Sample"/>
 	sealed float ProbabilityDensity(in Float3 outgoing, in Float3 normal)
 	{
 		float fraction = ProjectedArea(normal) * Visibility(outgoing);
@@ -62,52 +69,7 @@ public interface IMicrofacet
 }
 
 /// <summary>
-/// A Gaussian distribution based microfacet model from Beckmann and Spizzichino (1963).
-/// </summary>
-public readonly struct BeckmannSpizzichinoMicrofacet : IMicrofacet
-{
-	public BeckmannSpizzichinoMicrofacet(float alphaX, float alphaY) => alpha = new Float2(alphaX, alphaY);
-
-	readonly Float2 alpha;
-
-	public float ProjectedArea(in Float3 normal)
-	{
-		float cos2 = CosineP2(normal);
-		if (FastMath.AlmostZero(cos2)) return 0f;
-		float tan2 = SineP2(normal) / cos2;
-
-		Float2 theta = new Float2(CosineT2(normal), SineT2(normal));
-		float exp = MathF.Exp(-tan2 * (theta / (alpha * alpha)).Sum);
-		return exp / (Scalars.Pi * alpha.Product * cos2 * cos2);
-	}
-
-	public float ShadowingRatio(in Float3 outgoing)
-	{
-		float cos = CosineP(outgoing);
-		if (FastMath.AlmostZero(cos)) return 0f;
-		float tan = SineP(outgoing) / cos;
-
-		Float2 phi = new Float2(CosineT2(outgoing), SineT2(outgoing));
-		float interpolated = FastMath.Sqrt0((phi * alpha * alpha).Sum);
-		float x = 1f / (interpolated * FastMath.Abs(tan));
-
-		if (x >= 1.6f) return 0f;
-
-		//Polynomial approximation checkout this article: http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html
-		float numerator = 1f - 1.259f * x + 0.396f * x * x;
-		float denominator = 3.535f * x + 2.181f * x * x;
-		return numerator / denominator;
-	}
-
-	public Float3 Sample(in Float3 direction, Sample2D sample)
-	{
-		//Use and cite: https://hal.inria.fr/hal-00996995v2/file/supplemental1.pdf
-		throw new NotImplementedException();
-	}
-}
-
-/// <summary>
-/// A microfacet distribution model from Trowbridge and Reitz (1975).
+/// A microfacet distribution model first proposed by Trowbridge and Reitz (1975).
 /// </summary>
 public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 {
@@ -119,29 +81,37 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 	{
 		float cos2 = CosineP2(normal);
 		if (FastMath.AlmostZero(cos2)) return 0f;
-		float tan2 = SineP2(normal) / cos2;
 
 		Float2 theta = new Float2(CosineT2(normal), SineT2(normal));
-		float sum = cos2 + cos2 * tan2 * (theta / (alpha * alpha)).Sum;
+		float sum = (theta / (alpha * alpha)).Sum * SineP2(normal) + cos2;
 		return 1f / (sum * sum * alpha.Product * Scalars.Pi);
 	}
 
-	public float ShadowingRatio(in Float3 outgoing)
+	public float ShadowingRatio(in Float3 direction)
 	{
-		float cos2 = CosineP2(outgoing);
+		float cos2 = CosineP2(direction);
 		if (FastMath.AlmostZero(cos2)) return 0f;
-		float tan2 = SineP2(outgoing) / cos2;
+		float tan2 = SineP2(direction) / cos2;
 
-		Float2 phi = new Float2(CosineT2(outgoing), SineT2(outgoing));
-		float interpolated = FastMath.Sqrt0((phi * alpha * alpha).Sum);
-
-		float product = interpolated * interpolated * tan2;
-		return FastMath.Sqrt0(1f + product) / 2f - 0.5f;
+		Float2 theta = new Float2(CosineT2(direction), SineT2(direction));
+		float alpha2Tan2 = (alpha * alpha * theta).Sum * tan2;
+		return FastMath.Sqrt0(1f + alpha2Tan2) / 2f - 0.5f;
 	}
 
-	public Float3 Sample(in Float3 direction, Sample2D sample)
+	public Float3 Sample(in Float3 outgoing, Sample2D sample)
 	{
-		//Use and cite: https://hal.inria.fr/hal-00996995v2/file/supplemental1.pdf
-		throw new NotImplementedException();
+		Float3 v = new Float3(alpha.X * outgoing.X, alpha.Y * outgoing.Y, outgoing.Z).Normalized;
+
+		Float3 t1 = v.Z < 0.9999f ? v.Cross(Float3.Forward).Normalized : Float3.Right;
+		Float3 t2 = Float3.Cross(t1, v);
+
+		float a = 1f / (1f + v.Z);
+		float r = FastMath.Sqrt0(sample.x);
+		float phi = sample.y < a ? sample.y / a * Scalars.Pi : Scalars.Pi + (sample.y - a) / (1f - a) * Scalars.Pi;
+		float p1 = r * MathF.Cos(phi);
+		float p2 = r * MathF.Sin(phi) * (sample.y < a ? 1f : v.Z);
+
+		Float3 n = p1 * t1 + p2 * t2 + FastMath.Sqrt0(1f - p1 * p1 - p2 * p2) * v;
+		return new Float3(alpha.X * n.X, alpha.Y * n.Y, MathF.Max(0f, n.Z)).Normalized;
 	}
 }
