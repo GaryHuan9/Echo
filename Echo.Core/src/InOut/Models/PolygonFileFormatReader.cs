@@ -57,13 +57,77 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 
 	uint[] readUintBuffer = Array.Empty<uint>();
 
-	public bool ReadTriangle(out ITriangleStream.Triangle triangle) => throw new NotImplementedException();
+	public bool ReadTriangle(out ITriangleStream.Triangle triangle)
+	{
+		if (currentTriangle >= currentFaceTriangleAmount)
+		{
+			//We've read all triangles in the current face so read the next face
+			int vertexAmount = file.ReadByte();
+			if (vertexAmount == -1)
+			{
+				triangle = new ITriangleStream.Triangle();
+				return false;
+			}
+
+			if (currentFaceValues.Length < vertexAmount)
+				currentFaceValues = new uint[vertexAmount];
+			ReadBinaryInts(vertexAmount);
+			Array.Copy(readUintBuffer, 0, currentFaceValues, 0, vertexAmount);
+			currentFaceTriangleAmount = vertexAmount - 2;
+			currentTriangle = 0;
+		}
+
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertyCount, vertex0Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertyCount, vertex1Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertyCount, vertex2Data, 0, header.propertyCount * sizeof(float));
+
+		Float3 vertex0 = new Float3(
+			vertex0Data[header.xPos],
+			vertex0Data[header.yPos],
+			vertex0Data[header.zPos]);
+		Float3 vertex1 = new Float3(
+			vertex1Data[header.xPos],
+			vertex1Data[header.yPos],
+			vertex1Data[header.zPos]);
+		Float3 vertex2 = new Float3(
+			vertex2Data[header.xPos],
+			vertex2Data[header.yPos],
+			vertex2Data[header.zPos]);
+
+		Float3 normal0 = new Float3(
+			vertex0Data[header.nxPos],
+			vertex0Data[header.nyPos],
+			vertex0Data[header.nzPos]);
+		Float3 normal1 = new Float3(
+			vertex1Data[header.nxPos],
+			vertex1Data[header.nyPos],
+			vertex1Data[header.nzPos]);
+		Float3 normal2 = new Float3(
+			vertex2Data[header.nxPos],
+			vertex2Data[header.nyPos],
+			vertex2Data[header.nzPos]);
+
+		Float2 texcoord0 = new Float2(
+			vertex0Data[header.sPos],
+			vertex0Data[header.tPos]);
+		Float2 texcoord1 = new Float2(
+			vertex1Data[header.sPos],
+			vertex1Data[header.tPos]);
+		Float2 texcoord2 = new Float2(
+			vertex2Data[header.sPos],
+			vertex2Data[header.tPos]);
+
+		currentTriangle++;
+		triangle = new ITriangleStream.Triangle(vertex0, vertex1, vertex2, normal0, normal1, normal2, texcoord0, texcoord1, texcoord2);
+		return true;
+	}
 
 	/// <summary>
 	/// reads the next triangle from the stream.
 	/// </summary>
 	/// <returns>a new triangle containing 3 vertices, 3 normals and 3 texture coordinates</returns>
 	/// <exception cref="Exception">throws an exception when trying to read more triangles than there are in header.<see cref="Header.triangleAmount"/></exception>
+	/*
 	public Triangle ReadTriangle()
 	{
 		if (currentTriangle >= currentFaceTriangleAmount)
@@ -124,7 +188,7 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 
 		return new Triangle(vertex0, vertex1, vertex2, normal0, normal1, normal2, texcoord0, texcoord1, texcoord2);
 	}
-
+	 */
 	static string ReadLine(FileStream file, ref byte[] buffer)
 	{
 		int stringSize = 0;
@@ -170,7 +234,8 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 		Buffer.BlockCopy(buffer, 0, readUintBuffer, 0, amount * sizeof(uint));
 	}
 
-	public readonly struct Triangle
+	/*
+	 public readonly struct Triangle
 	{
 		public readonly Float3 vertex0, vertex1, vertex2;
 		public readonly Float3 normal0, normal1, normal2;
@@ -191,6 +256,7 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 
 		public override string ToString() => $"v0:{vertex0} v1:{vertex1} v2{vertex2} n0{normal0} n1{normal1} n2{normal2} tex0{texcoord0} tex1{texcoord1} tex2{texcoord2}";
 	}
+	*/
 
 	public readonly struct Header
 	{
