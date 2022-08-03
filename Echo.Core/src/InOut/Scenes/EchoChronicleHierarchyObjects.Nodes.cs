@@ -8,6 +8,7 @@ using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut.Models;
+using Echo.Core.Scenic.Geometries;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
@@ -189,7 +190,7 @@ partial class EchoChronicleHierarchyObjects
 			AddTryParser<RGBA128>(RGBA128.TryParse);
 			AddTryParser<RGB128>(RGBA128.TryParse);
 			AddPathTryParser<Texture>(path => TextureGrid.Load<RGB128>(path));
-			AddPathTryParser(path => new WavefrontObjectFormatReader(path));
+			AddPathTryParser<ITriangleSource>(path => new FileTriangleSource(path));
 			AddParser(span => span);
 
 			void AddTryParser<T>(TryParser<T> source) => parsers.Add(typeof(T), (TryParser<object>)((CharSpan span, out object result) =>
