@@ -5,6 +5,10 @@ using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.InOut.Models;
 
+/// <summary>
+/// An implementation of <see cref="ITriangleSource"/> that allows the usage of different 3D model file formats.
+/// </summary>
+/// <remarks>Currently .ply and .obj files are supported.</remarks>
 public sealed class FileTriangleSource : ITriangleSource
 {
 	public FileTriangleSource(string path)
@@ -27,6 +31,7 @@ public sealed class FileTriangleSource : ITriangleSource
 		{ ".zip", path => new WavefrontObjectFormatReader(path) } //Legacy
 	};
 
+	/// <inheritdoc/>
 	public ITriangleStream CreateStream() => factory(path);
 
 	delegate ITriangleStream Factory(string path);
