@@ -25,31 +25,7 @@ public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 
 		while (stream.ReadTriangle(out ITriangleStream.Triangle triangle))
 		{
-			if (triangle.HasNormal)
-			{
-				yield return new PreparedTriangle
-				(
-					transform.MultiplyPoint(triangle.vertex0),
-					transform.MultiplyPoint(triangle.vertex1),
-					transform.MultiplyPoint(triangle.vertex2),
-					transform.MultiplyDirection(triangle.normal0).Normalized,
-					transform.MultiplyDirection(triangle.normal1).Normalized,
-					transform.MultiplyDirection(triangle.normal2).Normalized,
-					triangle.texcoord0, triangle.texcoord1, triangle.texcoord2,
-					material
-				);
-			}
-			else
-			{
-				yield return new PreparedTriangle
-				(
-					transform.MultiplyPoint(triangle.vertex0),
-					transform.MultiplyPoint(triangle.vertex1),
-					transform.MultiplyPoint(triangle.vertex2),
-					triangle.texcoord0, triangle.texcoord1, triangle.texcoord2,
-					material
-				);
-			}
+			yield return triangle.Prepare(transform, material);
 		}
 	}
 }

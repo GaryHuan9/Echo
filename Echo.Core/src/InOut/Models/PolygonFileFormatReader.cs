@@ -8,6 +8,9 @@ using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.InOut.Models;
 
+/// <summary>
+/// An implementation of an <see cref="ITriangleStream"/> for .ply files based on http://paulbourke.net/dataformats/ply/
+/// </summary>
 public sealed class PolygonFileFormatReader : ITriangleStream
 {
 	/// <summary>
@@ -57,15 +60,16 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 
 	uint[] readUintBuffer = Array.Empty<uint>();
 
+	/// <inheritdoc/>
 	public bool ReadTriangle(out ITriangleStream.Triangle triangle)
 	{
 		if (currentTriangle >= currentFaceTriangleAmount)
 		{
 			//We've read all triangles in the current face so read the next face
 			int vertexAmount = file.ReadByte();
-			if (vertexAmount == -1)
+			if (vertexAmount < 0)
 			{
-				triangle = new ITriangleStream.Triangle();
+				triangle = default;
 				return false;
 			}
 

@@ -12,7 +12,7 @@ using Echo.Core.Scenic.Geometries;
 namespace Echo.Core.InOut.Models;
 
 /// <summary>
-/// Reads .obj files based on http://paulbourke.net/dataformats/obj/
+/// An implementation of an <see cref="ITriangleStream"/> for .obj files based on http://paulbourke.net/dataformats/obj/
 /// </summary>
 public sealed class WavefrontObjectFormatReader : ITriangleStream
 {
@@ -203,6 +203,7 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 
 	int TriangleCount => packs0.Length + packs1.Length;
 
+	/// <inheritdoc/>
 	public bool ReadTriangle(out ITriangleStream.Triangle triangle)
 	{
 		if (currentIndex == TriangleCount)
