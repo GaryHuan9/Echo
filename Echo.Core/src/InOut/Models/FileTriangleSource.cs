@@ -1,0 +1,33 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Echo.Core.Scenic.Geometries;
+
+namespace Echo.Core.InOut.Models;
+
+public sealed class FileTriangleSource : ITriangleSource
+{
+	public FileTriangleSource(string path)
+	{
+		if (!File.Exists(path)) throw new FileNotFoundException("Triangle source file not found.", path);
+
+		string extension = Path.GetExtension(path);
+
+		if (factories.TryGetValue(extension, out factory)) this.path = path;
+		else throw new ArgumentException($"Unrecognized triangle file extension '{extension}'.", nameof(path));
+	}
+
+	readonly string path;
+	readonly Factory factory;
+
+	static readonly Dictionary<string, Factory> factories = new()
+	{
+		{ ".ply", path => new PolygonFileFormatReader(path) },
+		{ ".obj", path => new WavefrontObjectFormatReader(path) },
+		{ ".zip", path => new WavefrontObjectFormatReader(path) } //Legacy
+	};
+
+	public ITriangleStream CreateStream() => factory(path);
+
+	delegate ITriangleStream Factory(string path);
+}

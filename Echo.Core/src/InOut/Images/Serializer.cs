@@ -38,7 +38,7 @@ public abstract record Serializer
 		Span<char> span = stackalloc char[extension.Length];
 		span = span[..extension[1..].ToLowerInvariant(span)];
 
-		return new string(span) switch
+		return new string(span) switch //OPTIMIZE: switch on Span with dotnet 7
 		{
 			"png"  => SystemSerializer.png,
 			"jpeg" => SystemSerializer.jpeg,

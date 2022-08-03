@@ -28,27 +28,15 @@ public sealed class GeometryCollection
 
 		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources) where T : IPreparedGeometry
 		{
-			int length = 0;
+			var builder = ImmutableArray.CreateBuilder<T>();
 
 			foreach (IGeometrySource source in geometrySources)
 			{
 				if (source is not IGeometrySource<T> match) continue;
-				length += (int)match.Count;
-			}
-
-			var builder = ImmutableArray.CreateBuilder<T>(length);
-
-			foreach (IGeometrySource source in geometrySources)
-			{
-				if (source is not IGeometrySource<T> match) continue;
-
-				int expected = builder.Count + (int)match.Count;
 				builder.AddRange(match.Extract(swatchExtractor));
-
-				if (expected != builder.Count) throw new Exception($"{nameof(IGeometrySource<T>.Count)} mismatch on {source}.");
 			}
 
-			return builder.MoveToImmutable();
+			return builder.ToImmutable();
 		}
 	}
 

@@ -244,7 +244,7 @@ partial class EchoChronicleHierarchyObjects
 				stack[^1] = declarations;
 			}
 
-			declarations.TryAdd(item.identifier, item.node);
+			declarations.Add(item.identifier, item.node);
 		}
 
 		public ArgumentNode Find(string identifier)
