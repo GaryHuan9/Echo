@@ -8,15 +8,17 @@ using System.Threading.Tasks;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Common.Threading;
+using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.InOut.Models;
 
-public class Mesh
+/// <summary>
+/// Reads .obj files based on http://paulbourke.net/dataformats/obj/
+/// </summary>
+public sealed class WavefrontObjectFormatReader : ITriangleStream
 {
-	public Mesh(string path) //Loads .obj based on http://paulbourke.net/dataformats/obj/
+	public WavefrontObjectFormatReader(string path)
 	{
-		path = AssetsUtility.GetAbsolutePath(acceptableFileExtensions, path);
-
 		//These lists will become too large to pool
 		var vertexLines = new List<Line>();
 		var normalLines = new List<Line>();
@@ -190,8 +192,6 @@ public class Mesh
 			}
 		}
 	}
-
-	static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] { ".obj", ".zip" });
 
 	readonly Triangle[] triangles0; //Triangles are stored in two different arrays to support loading quads
 	readonly Triangle[] triangles1;
@@ -375,6 +375,13 @@ public class Mesh
 
 		public override string ToString() => height < 0 ? this : $"{this} ({height})";
 	}
+
+	public void Dispose()
+	{
+		throw new NotImplementedException();
+	}
+
+	public bool ReadTriangle(out ITriangleStream.Triangle triangle) => throw new NotImplementedException();
 }
 
 public readonly struct Triangle

@@ -36,9 +36,6 @@ public class PlaneEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	public Float2 Texcoord11 { get; set; } = Float2.One;
 
 	/// <inheritdoc/>
-	uint IGeometrySource<PreparedTriangle>.Count => 2;
-
-	/// <inheritdoc/>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		Float2 extend = Size / 2f;

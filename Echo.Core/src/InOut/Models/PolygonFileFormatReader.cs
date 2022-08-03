@@ -4,10 +4,11 @@ using System.IO;
 using System.Text;
 using Echo.Core.Common;
 using Echo.Core.Common.Packed;
+using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.InOut.Models;
 
-public class PolygonFileFormatReader : IDisposable
+public sealed class PolygonFileFormatReader : ITriangleStream
 {
 	/// <summary>
 	/// Initializes a new <see cref="PolygonFileFormatReader"/> to stream triangles from the given .ply file
@@ -44,7 +45,7 @@ public class PolygonFileFormatReader : IDisposable
 	readonly FileStream file;
 	public readonly Header header;
 
-	uint[] currentFaceValues = { };
+	uint[] currentFaceValues = Array.Empty<uint>();
 	int currentTriangle; //Since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
 	int currentFaceTriangleAmount;
 
@@ -54,7 +55,9 @@ public class PolygonFileFormatReader : IDisposable
 	readonly float[] vertex1Data;
 	readonly float[] vertex2Data;
 
-	uint[] readUintBuffer = { };
+	uint[] readUintBuffer = Array.Empty<uint>();
+
+	public bool ReadTriangle(out ITriangleStream.Triangle triangle) => throw new NotImplementedException();
 
 	/// <summary>
 	/// reads the next triangle from the stream.

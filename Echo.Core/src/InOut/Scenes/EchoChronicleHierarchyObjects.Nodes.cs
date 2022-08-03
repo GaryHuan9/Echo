@@ -189,7 +189,7 @@ partial class EchoChronicleHierarchyObjects
 			AddTryParser<RGBA128>(RGBA128.TryParse);
 			AddTryParser<RGB128>(RGBA128.TryParse);
 			AddPathTryParser<Texture>(path => TextureGrid.Load<RGB128>(path));
-			AddPathTryParser(path => new Mesh(path));
+			AddPathTryParser(path => new WavefrontObjectFormatReader(path));
 			AddParser(span => span);
 
 			void AddTryParser<T>(TryParser<T> source) => parsers.Add(typeof(T), (TryParser<object>)((CharSpan span, out object result) =>

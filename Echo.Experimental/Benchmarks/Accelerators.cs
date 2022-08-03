@@ -20,11 +20,14 @@ public class Accelerators
 {
 	public Accelerators()
 	{
-		Scene scene = new Scene();
-
-		//This is some really temporary benchmarking code
-		Mesh mesh = new("ext/Scenes/Assets/Models/BlenderBMW/BlenderBMW.obj");
-		scene.Add(new MeshEntity { Mesh = mesh, Material = new Matte() });
+		Scene scene = new Scene
+		{
+			new MeshEntity
+			{
+				Source = new FileTriangleSource("ext/Scenes/Assets/Models/BlenderBMW/BlenderBMW.obj"),
+				Material = new Matte()
+			}
+		};
 
 		const int Length = 65536;
 

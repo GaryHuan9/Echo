@@ -25,8 +25,6 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	public Float3? Normal1 { get; set; }
 	public Float3? Normal2 { get; set; }
 
-	uint IGeometrySource<PreparedTriangle>.Count => 1;
-
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		MaterialIndex material = extractor.Register(Material);
