@@ -85,41 +85,60 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertyCount, vertex1Data, 0, header.propertyCount * sizeof(float));
 		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertyCount, vertex2Data, 0, header.propertyCount * sizeof(float));
 
-		Float3 vertex0 = new Float3(
-			vertex0Data[header.xPos],
-			vertex0Data[header.yPos],
-			vertex0Data[header.zPos]);
-		Float3 vertex1 = new Float3(
-			vertex1Data[header.xPos],
-			vertex1Data[header.yPos],
-			vertex1Data[header.zPos]);
-		Float3 vertex2 = new Float3(
-			vertex2Data[header.xPos],
-			vertex2Data[header.yPos],
-			vertex2Data[header.zPos]);
+		Float3 vertex0 = Float3.Zero;
+		Float3 vertex1 = Float3.Zero;
+		Float3 vertex2 = Float3.Zero;
+		Float3 normal0 = Float3.Zero;
+		Float3 normal1 = Float3.Zero;
+		Float3 normal2 = Float3.Zero;
+		Float2 texcoord0 = Float2.Zero;
+		Float2 texcoord1 = Float2.Zero;
+		Float2 texcoord2 = Float2.Zero;
+		
+		if (header.hasPosition)
+		{
+			vertex0 = new Float3(
+				vertex0Data[header.xPos],
+				vertex0Data[header.yPos],
+				vertex0Data[header.zPos]);
+			vertex1 = new Float3(
+				vertex1Data[header.xPos],
+				vertex1Data[header.yPos],
+				vertex1Data[header.zPos]);
+			vertex2 = new Float3(
+				vertex2Data[header.xPos],
+				vertex2Data[header.yPos],
+				vertex2Data[header.zPos]);
+		}
 
-		Float3 normal0 = new Float3(
-			vertex0Data[header.nxPos],
-			vertex0Data[header.nyPos],
-			vertex0Data[header.nzPos]);
-		Float3 normal1 = new Float3(
-			vertex1Data[header.nxPos],
-			vertex1Data[header.nyPos],
-			vertex1Data[header.nzPos]);
-		Float3 normal2 = new Float3(
-			vertex2Data[header.nxPos],
-			vertex2Data[header.nyPos],
-			vertex2Data[header.nzPos]);
+		if (header.hasNormals)
+		{
+			normal0 = new Float3(
+				vertex0Data[header.nxPos],
+				vertex0Data[header.nyPos],
+				vertex0Data[header.nzPos]);
+			normal1 = new Float3(
+				vertex1Data[header.nxPos],
+				vertex1Data[header.nyPos],
+				vertex1Data[header.nzPos]);
+			normal2 = new Float3(
+				vertex2Data[header.nxPos],
+				vertex2Data[header.nyPos],
+				vertex2Data[header.nzPos]);
+		}
 
-		Float2 texcoord0 = new Float2(
-			vertex0Data[header.sPos],
-			vertex0Data[header.tPos]);
-		Float2 texcoord1 = new Float2(
-			vertex1Data[header.sPos],
-			vertex1Data[header.tPos]);
-		Float2 texcoord2 = new Float2(
-			vertex2Data[header.sPos],
-			vertex2Data[header.tPos]);
+		if (header.hasTexcoords)
+		{
+			texcoord0 = new Float2(
+				vertex0Data[header.sPos],
+				vertex0Data[header.tPos]);
+			texcoord1 = new Float2(
+				vertex1Data[header.sPos],
+				vertex1Data[header.tPos]);
+			texcoord2 = new Float2(
+				vertex2Data[header.sPos],
+				vertex2Data[header.tPos]);
+		}
 
 		currentTriangle++;
 		triangle = new ITriangleStream.Triangle(vertex0, vertex1, vertex2, normal0, normal1, normal2, texcoord0, texcoord1, texcoord2);
@@ -316,34 +335,42 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 							case "x":
 								xPos = propertyIndex++;
 								propertyCount++;
+								hasPosition = true;
 								break;
 							case "y":
 								yPos = propertyIndex++;
 								propertyCount++;
+								hasPosition = true;
 								break;
 							case "z":
 								zPos = propertyIndex++;
 								propertyCount++;
+								hasPosition = true;
 								break;
 							case "nx":
 								nxPos = propertyIndex++;
 								propertyCount++;
+								hasNormals = true;
 								break;
 							case "ny":
 								nyPos = propertyIndex++;
 								propertyCount++;
+								hasNormals = true;
 								break;
 							case "nz":
 								nzPos = propertyIndex++;
 								propertyCount++;
+								hasNormals = true;
 								break;
 							case "s":
 								sPos = propertyIndex++;
 								propertyCount++;
+								hasTexcoords = true;
 								break;
 							case "t":
 								tPos = propertyIndex++;
 								propertyCount++;
+								hasTexcoords = true;
 								break;
 							default:
 								throw new Exception($"property {tokens[2]} is not supported yet!");
@@ -390,6 +417,10 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 		public readonly int nzPos = 0;
 		public readonly int sPos = 0;
 		public readonly int tPos = 0;
+
+		public readonly bool hasPosition = false;
+		public readonly bool hasNormals = false;
+		public readonly bool hasTexcoords = false;
 
 		public readonly long vertexListStart;
 		public readonly long faceListStart;
