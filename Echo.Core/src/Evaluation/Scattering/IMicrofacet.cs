@@ -58,13 +58,20 @@ public interface IMicrofacet
 	}
 
 	/// <summary>
-	/// Returns the alpha value mapped from an artistic <paramref name="roughness"/> value between zero to one.
+	/// Calculates the alpha value for an <see cref="IMicrofacet"/>.
 	/// </summary>
-	public static float GetAlpha(float roughness)
+	/// <param name="roughness">An artistic value between zero and one to be mapped to the alpha value.</param>
+	/// <param name="specular">Outputs whether the alpha value is too small and the model should be considered as a delta distribution.</param>
+	/// <returns>The alpha value to be used with standard <see cref="IMicrofacet"/> models.</returns>
+	public static float GetAlpha(float roughness, out bool specular)
 	{
 		Ensure.IsTrue(roughness >= 0f);
 		Ensure.IsTrue(roughness <= 1f);
-		return roughness * roughness;
+
+		const float Threshold = 0.0001f;
+		float alpha = roughness * roughness;
+		specular = alpha < Threshold;
+		return specular ? Threshold : alpha;
 	}
 }
 
