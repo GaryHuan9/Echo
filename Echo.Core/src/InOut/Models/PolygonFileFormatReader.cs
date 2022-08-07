@@ -81,9 +81,9 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 			currentTriangle = 0;
 		}
 
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertyCount, vertex0Data, 0, header.propertyCount * sizeof(float));
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertyCount, vertex1Data, 0, header.propertyCount * sizeof(float));
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertyCount, vertex2Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertyCount * sizeof(float), vertex0Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertyCount * sizeof(float), vertex1Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertyCount * sizeof(float), vertex2Data, 0, header.propertyCount * sizeof(float));
 
 		Float3 vertex0 = Float3.Zero;
 		Float3 vertex1 = Float3.Zero;
@@ -94,7 +94,7 @@ public sealed class PolygonFileFormatReader : ITriangleStream
 		Float2 texcoord0 = Float2.Zero;
 		Float2 texcoord1 = Float2.Zero;
 		Float2 texcoord2 = Float2.Zero;
-		
+
 		if (header.hasPosition)
 		{
 			vertex0 = new Float3(
