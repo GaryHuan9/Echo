@@ -77,7 +77,8 @@ public interface IMicrofacet
 }
 
 /// <summary>
-/// A microfacet distribution model first proposed by Trowbridge and Reitz (1975).
+/// A microfacet distribution model first proposed by
+/// Average irregularity representation of a rough surface for ray reflection [Trowbridge and Reitz 1975].
 /// </summary>
 public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 {
@@ -85,6 +86,7 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 
 	readonly Float2 alpha;
 
+	/// <inheritdoc/>
 	public float ProjectedArea(in Float3 normal)
 	{
 		float cos2 = CosineP2(normal);
@@ -95,6 +97,7 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 		return 1f / (sum * sum * alpha.Product * Scalars.Pi);
 	}
 
+	/// <inheritdoc/>
 	public float ShadowingRatio(in Float3 direction)
 	{
 		float cos2 = CosineP2(direction);
@@ -106,6 +109,9 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 		return FastMath.Sqrt0(1f + alpha2Tan2) / 2f - 0.5f;
 	}
 
+	/// <inheritdoc/>
+	/// Implementation based on
+	/// A Simpler and Exact Sampling Routine for the GGX Distribution of Visible Normals [Heitz 2017].
 	public Float3 Sample(in Float3 outgoing, Sample2D sample)
 	{
 		Float3 scaled = new Float3
