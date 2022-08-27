@@ -1,6 +1,7 @@
-﻿using System;
+﻿using System.Net.NetworkInformation;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 
@@ -14,7 +15,7 @@ using static BxDF;
 public interface IMicrofacet
 {
 	/// <summary>
-	/// Calculates the projected area of the microfacet faces along a normal.
+	/// Calculates the projected differential area of the microfacet faces along a normal.
 	/// </summary>
 	/// <param name="normal">The microfacet surface normal to measure against.</param>
 	/// <returns>The calculated projected area.</returns>
@@ -89,8 +90,8 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 		float cos2 = CosineP2(normal);
 		if (FastMath.AlmostZero(cos2)) return 0f;
 
-		Float2 theta = new Float2(CosineT2(normal), SineT2(normal));
-		float sum = (theta / (alpha * alpha)).Sum * SineP2(normal) + cos2;
+		Float2 theta2 = new Float2(CosineT2(normal), SineT2(normal));
+		float sum = (theta2 / (alpha * alpha)).Sum * SineP2(normal) + cos2;
 		return 1f / (sum * sum * alpha.Product * Scalars.Pi);
 	}
 
@@ -100,25 +101,43 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 		if (FastMath.AlmostZero(cos2)) return 0f;
 		float tan2 = SineP2(direction) / cos2;
 
-		Float2 theta = new Float2(CosineT2(direction), SineT2(direction));
-		float alpha2Tan2 = (alpha * alpha * theta).Sum * tan2;
+		Float2 theta2 = new Float2(CosineT2(direction), SineT2(direction));
+		float alpha2Tan2 = (alpha * alpha * theta2).Sum * tan2;
 		return FastMath.Sqrt0(1f + alpha2Tan2) / 2f - 0.5f;
 	}
 
 	public Float3 Sample(in Float3 outgoing, Sample2D sample)
 	{
-		Float3 v = new Float3(alpha.X * outgoing.X, alpha.Y * outgoing.Y, outgoing.Z).Normalized;
+		Float3 scaled = new Float3
+		(
+			outgoing.X * alpha.X,
+			outgoing.Y * alpha.Y,
+			outgoing.Z
+		).Normalized;
 
-		Float3 t1 = v.Z < 0.9999f ? v.Cross(Float3.Forward).Normalized : Float3.Right;
-		Float3 t2 = Float3.Cross(t1, v);
+		if (scaled.Z < 0f) scaled = -scaled;
 
-		float a = 1f / (1f + v.Z);
-		float r = FastMath.Sqrt0(sample.x);
-		float phi = sample.y < a ? sample.y / a * Scalars.Pi : Scalars.Pi + (sample.y - a) / (1f - a) * Scalars.Pi;
-		float p1 = r * MathF.Cos(phi);
-		float p2 = r * MathF.Sin(phi) * (sample.y < a ? 1f : v.Z);
+		float threshold = 1f / (1f + scaled.Z);
+		float radius = FastMath.Sqrt0(sample.x);
+		float theta = sample.y < threshold ? sample.y / threshold : 1f + (sample.y - threshold) / (1f - threshold);
 
-		Float3 n = p1 * t1 + p2 * t2 + FastMath.Sqrt0(1f - p1 * p1 - p2 * p2) * v;
-		return new Float3(alpha.X * n.X, alpha.Y * n.Y, MathF.Max(0f, n.Z)).Normalized;
+		FastMath.SinCos(theta * Scalars.Pi, out float sin, out float cos);
+
+		float pointX = radius * sin;
+		float pointY = radius * cos;
+
+		if (sample.y >= threshold) pointY *= scaled.Z;
+		float pointZ = FastMath.Sqrt0(1f - new Float2(pointX, pointY).SquaredMagnitude);
+
+		Float3 point = new Float3(pointX, pointY, pointZ);
+		var transform = new OrthonormalTransform(scaled);
+		Float3 transformed = transform.LocalToWorld(point);
+
+		return new Float3
+		(
+			transformed.X * alpha.X,
+			transformed.Y * alpha.Y,
+			FastMath.Max(transformed.Z, FastMath.Epsilon)
+		).Normalized;
 	}
 }

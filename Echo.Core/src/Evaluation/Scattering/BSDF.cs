@@ -26,14 +26,14 @@ public class BSDF
 		count = 0;
 		albedo = newAlbedo;
 
-		transform = new NormalTransform(contact.shade.Normal);
+		transform = new OrthonormalTransform(contact.shade.Normal);
 		geometricNormal = contact.point.normal;
 	}
 
 	int count;
 	RGB128 albedo;
 
-	NormalTransform transform;
+	OrthonormalTransform transform;
 	Float3 geometricNormal;
 
 	BxDF[] functions = new BxDF[InitialSize];

@@ -38,19 +38,16 @@ public sealed class Conductor : Material
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
 		RGB128 roughness = Sample(Roughness, contact);
-		float alphaX = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.R));
-		float alphaY = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.G));
+		float alphaX = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.R), out bool isSpecularX);
+		float alphaY = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.G), out bool isSpecularY);
 
 		RGB128 index = Sample(RefractiveIndex, contact);
 		RGB128 extinction = Sample(Extinction, contact);
 
 		var fresnel = new ComplexFresnel(RGB128.White, index, extinction);
 
-		if (!FastMath.AlmostZero(alphaX) || !FastMath.AlmostZero(alphaY))
+		if (!isSpecularX || !isSpecularY)
 		{
-			alphaX = FastMath.Max(alphaX, FastMath.Epsilon);
-			alphaY = FastMath.Max(alphaY, FastMath.Epsilon);
-
 			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
 
 			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset(microfacet, fresnel);

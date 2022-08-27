@@ -183,7 +183,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		float pdf = ProbabilityDensityCone(cosMaxT);
 
 		//Transform and returns point
-		var transform = new NormalTransform(offset / length);
+		var transform = new OrthonormalTransform(offset / length);
 		return (GetPoint(transform.LocalToWorld(normal)), pdf);
 	}
 
