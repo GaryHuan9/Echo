@@ -18,6 +18,9 @@ public abstract class Material
 	/// <summary>
 	/// The primary color of this <see cref="Material"/>.
 	/// </summary>
+	/// <remarks>This <see cref="Texture"/> is applied universally to all <see cref="Material"/>s by a simple multiplication,
+	/// essentially tinting their output. Thus, some <see cref="Material"/> might not be physical if this property is assigned
+	/// to something other than <see cref="Pure.white"/>.</remarks>
 	public Texture Albedo
 	{
 		get => _albedo;
