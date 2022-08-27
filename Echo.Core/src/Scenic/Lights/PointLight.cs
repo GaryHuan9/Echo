@@ -64,5 +64,5 @@ public readonly struct PreparedPointLight : IPreparedLight
 	}
 
 	/// <inheritdoc/>
-	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 1f;
+	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 0f;
 }

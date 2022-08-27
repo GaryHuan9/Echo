@@ -4,20 +4,25 @@ using Echo.Core.Common.Packed;
 namespace Echo.Core.Common.Mathematics.Primitives;
 
 /// <summary>
-/// A transform constructed from a surface normal. Can be used to transform a direction between local and world-space.
+/// A transform defined by three unit vectors that are orthogonal to each other.
+/// Can be used to transform a direction between local and world-space.
 /// </summary>
-public readonly struct NormalTransform
+public readonly struct OrthonormalTransform
 {
-	public NormalTransform(in Float3 normal)
+	public OrthonormalTransform(in Float3 normal)
 	{
+		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
+
 		this.normal = normal;
 
-		Float3 helper = FastMath.Abs(normal.X) >= 0.9f ? Float3.Forward : Float3.Right;
+		tangent = FastMath.Abs(normal.X) > 0.9f ?
+			new Float3(normal.Y, -normal.X, 0f) :
+			new Float3(0f, normal.Z, -normal.Y);
 
-		tangent = Float3.Cross(normal, helper).Normalized;
+		tangent = tangent.Normalized;
 		binormal = Float3.Cross(normal, tangent);
 
-		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
+		Ensure.AreEqual(tangent.SquaredMagnitude, 1f);
 		Ensure.AreEqual(binormal.SquaredMagnitude, 1f);
 	}
 
@@ -27,12 +32,12 @@ public readonly struct NormalTransform
 	readonly Float3 binormal;
 
 	/// <summary>
-	/// Transforms a <paramref name="direction"/> from world-space to local-space using this <see cref="NormalTransform"/>.
+	/// Transforms a <paramref name="direction"/> from world-space to local-space using this <see cref="OrthonormalTransform"/>.
 	/// </summary>
 	public Float3 WorldToLocal(in Float3 direction) => new(direction.Dot(tangent), direction.Dot(binormal), direction.Dot(normal));
 
 	/// <summary>
-	/// Transforms a <paramref name="direction"/> from local-space to world-space using this <see cref="NormalTransform"/>.
+	/// Transforms a <paramref name="direction"/> from local-space to world-space using this <see cref="OrthonormalTransform"/>.
 	/// </summary>
 	public Float3 LocalToWorld(in Float3 direction) => new
 	(

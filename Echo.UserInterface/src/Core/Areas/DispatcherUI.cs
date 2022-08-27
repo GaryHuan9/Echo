@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Compute;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Evaluation.Operation;
 using Echo.Core.InOut;
 using Echo.Core.Scenic.Hierarchies;
@@ -132,8 +133,8 @@ public class DispatcherUI : AreaUI
 	{
 		if (objects == null) return;
 
-		string sceneLabel = sceneLabels.Count == 0 ? default : sceneLabels[sceneIndex];
-		string profileLabel = profileLabels.Count == 0 ? default : profileLabels[profileIndex];
+		string sceneLabel = sceneLabels.Count == 0 ? null : sceneLabels[sceneIndex];
+		string profileLabel = profileLabels.Count == 0 ? null : profileLabels[profileIndex];
 
 		if (sceneLabel == null || profileLabel == null)
 		{
@@ -162,7 +163,10 @@ public class DispatcherUI : AreaUI
 			{
 				EchoChronicleHierarchyObjects.Entry entry = objects[i];
 				if (!label.AsSpan().StartsWith(entry.Identifier)) continue;
-				return objects.ConstructFirst<T>();
+
+				T constructed = entry.Construct<T>();
+				Ensure.IsNotNull(constructed);
+				return constructed;
 			}
 
 			return null;

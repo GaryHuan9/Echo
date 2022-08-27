@@ -31,9 +31,9 @@ public static class FastMath
 	public const float Epsilon = 8E-7f;
 
 	/// <summary>
-	/// This is the largest IEEE-754 float32 value that is smaller than 1f (ie. 1f - 1ulp).
+	/// The largest IEEE-754 float32 value that is smaller than 1f (ie. 1f - 1ulp).
 	/// </summary>
-	const float OneMinusEpsilon = 0.99999994f;
+	public const float OneMinusEpsilon = 0.99999994f;
 
 	const MethodImplOptions Options = MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization;
 
