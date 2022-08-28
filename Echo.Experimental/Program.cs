@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
+using JitBuddy;
 
 namespace Echo.Experimental;
 
@@ -21,6 +22,7 @@ public class Program
 		// BenchmarkRunner.Run<MathFunctions>();
 		// BenchmarkRunner.Run<BufferCopy>();
 		// BenchmarkRunner.Run<Timing>();
+		// BenchmarkRunner.Run<DotProduct>();
 	}
 
 	static void TestMonteCarlo()
@@ -60,8 +62,6 @@ public class Program
 
 	static void TestJitter()
 	{
-		DebugHelper.Log(new Float4(7f, -0f, -2f, 3f).XYZ);
-
 		// var method = typeof(AxisAlignedBoundingBox4).GetMethod(nameof(AxisAlignedBoundingBox4.Intersect));
 		// DebugHelper.Log(method.ToAsm());
 
@@ -70,6 +70,19 @@ public class Program
 
 		// var method = typeof(Float4x4).GetMethod(nameof(Float4x4.MultiplyPoint));
 		// DebugHelper.Log(method.ToAsm());
+
+		DebugHelper.Log(Entry());
+
+		Log(Entry);
+
+		static Float4 Entry()
+		{
+			Float4 one = Float4.One * 1f;
+			Float4 two = Float4.One * 2f;
+			return one + two;
+		}
+
+		static void Log(object method) => Console.WriteLine(((Delegate)method).Method.ToAsm());
 	}
 
 	static unsafe void TestUnmanaged()
