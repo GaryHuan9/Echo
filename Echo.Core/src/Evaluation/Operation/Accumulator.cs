@@ -39,8 +39,8 @@ public struct Accumulator
 			//Sqrt(Variance) / (count - 1) / Value = 1 / Sqrt((count - 1)^3 * Value^2 / squared.Result)
 			//Then at the end we can use a binary mask to remove the degenerate case when Value is zero
 
-			uint oneLess = count - 1;
-			oneLess *= oneLess * oneLess;
+			float oneLess = count - 1u;
+			oneLess *= oneLess * oneLess; //We must perform this as a float or otherwise uint can easily overflow
 
 			Vector128<float> numerator = (Value * Value * oneLess).v;
 			Vector128<float> denominator = Sse.Reciprocal(squared.Result.v);

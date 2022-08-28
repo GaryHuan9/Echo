@@ -44,7 +44,16 @@ public class DispatcherUI : AreaUI
 
 		if (arguments.Length > 1)
 		{
-			filePath = Path.GetRelativePath(Environment.CurrentDirectory, arguments[1]);
+			filePath = arguments[1];
+
+			if (arguments.Length > 2 && arguments[2] == "build-path")
+			{
+				const string ProjectPath = "../../../../Echo.Core/";
+				filePath = Path.Combine(ProjectPath, filePath);
+			}
+
+			filePath = Path.GetFullPath(filePath, Environment.CurrentDirectory);
+			filePath = Path.GetRelativePath(Environment.CurrentDirectory, filePath);
 
 			ReadFile();
 			Dispatch(Device.CreateOrGet());
@@ -127,16 +136,23 @@ public class DispatcherUI : AreaUI
 		PopulateLabels<EvaluationProfile>(read, profileLabels);
 
 		objects = read;
+		sceneIndex = 0;
+		profileIndex = 0;
 	}
 
 	void Dispatch(Device device)
 	{
 		if (objects == null) return;
 
-		string sceneLabel = sceneLabels.Count == 0 ? null : sceneLabels[sceneIndex];
-		string profileLabel = profileLabels.Count == 0 ? null : profileLabels[profileIndex];
+		string sceneLabel;
+		string profileLabel;
 
-		if (sceneLabel == null || profileLabel == null)
+		try
+		{
+			sceneLabel = sceneLabels[sceneIndex];
+			profileLabel = profileLabels[profileIndex];
+		}
+		catch (IndexOutOfRangeException)
 		{
 			LogList.AddError($"Missing specified {nameof(Scene)} or {nameof(EvaluationProfile)} to dispatch.");
 			return;
