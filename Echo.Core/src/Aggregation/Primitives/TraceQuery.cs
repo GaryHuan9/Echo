@@ -121,7 +121,7 @@ public struct TraceQuery
 	public readonly void EnsureHit()
 	{
 #if DEBUG
-		Ensure.IsTrue(Hit);
+		Common.Diagnostics.Ensure.IsTrue(Hit);
 #endif
 	}
 }
