@@ -19,7 +19,7 @@ public struct Seal
 	public readonly void EnsureNotApplied()
 	{
 #if DEBUG
-		if (applied) throw new InvalidOperationException($"Operation invalid after the {nameof(Seal)} has been applied.");
+		if (applied) throw new System.InvalidOperationException($"Operation invalid after the {nameof(Seal)} has been applied.");
 #endif
 	}
 
@@ -30,7 +30,7 @@ public struct Seal
 	public readonly void EnsureApplied()
 	{
 #if DEBUG
-		if (!applied) throw new InvalidOperationException($"Operation invalid before the {nameof(Seal)} has been applied.");
+		if (!applied) throw new System.InvalidOperationException($"Operation invalid before the {nameof(Seal)} has been applied.");
 #endif
 	}
 }
