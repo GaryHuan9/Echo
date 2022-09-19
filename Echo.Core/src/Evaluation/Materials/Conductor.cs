@@ -25,7 +25,7 @@ public sealed class Conductor : Material
 	/// </summary>
 	/// <remarks>If this is true, <see cref="MainColor"/> and <see cref="EdgeColor"/> are used by
 	/// this <see cref="Conductor"/> while <see cref="RefractiveIndex"/> and <see cref="Extinction"/>
-	/// are entirely ignored. Otherwise, the opposite behavior will occur.</remarks>
+	/// are entirely ignored. If this property is false, the opposite behavior will occur.</remarks>
 	public bool Artistic { get; set; } = true;
 
 	NotNull<Texture> _mainColor = Pure.white;
@@ -63,8 +63,8 @@ public sealed class Conductor : Material
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
 		RGB128 roughness = Sample(Roughness, contact);
-		float alphaX = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.R), out bool isSpecularX);
-		float alphaY = IMicrofacet.GetAlpha(FastMath.Clamp01(roughness.G), out bool isSpecularY);
+		float alphaX = IMicrofacet.GetAlpha(roughness.R, out bool isSpecularX);
+		float alphaY = IMicrofacet.GetAlpha(roughness.G, out bool isSpecularY);
 
 		RGB128 index;
 		RGB128 extinction;

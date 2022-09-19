@@ -1,5 +1,4 @@
-﻿using System;
-using Echo.Core.Common.Mathematics;
+﻿using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -76,11 +75,85 @@ public class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofa
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
+		if (SameHemisphere(outgoing, incident)) return RGB128.Black;
+
 		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
 
 		if (FastMath.AlmostZero(cosO) || FastMath.AlmostZero(cosI)) return RGB128.Black;
 
-		throw new NotImplementedException();
+		float eta = cosO > 0f ? fresnel.etaBelow / fresnel.etaAbove : fresnel.etaAbove / fresnel.etaBelow;
+
+		Float3 normal = (outgoing + incident * eta).Normalized;
+		if (normal.Z < 0f) normal = -normal;
+
+		float dotO = outgoing.Dot(normal);
+		float dotI = incident.Dot(normal);
+
+		if (FastMath.Positive(dotO * dotI)) return RGB128.Black;
+		RGB128 evaluated = RGB128.White - fresnel.Evaluate(dotO);
+
+		float numerator = eta * eta * dotO * dotI;
+		float denominator = FastMath.FMA(eta, dotI, dotO);
+		denominator *= denominator * cosO * cosI;
+
+		float fraction = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
+		return evaluated * FastMath.Abs(fraction * numerator / denominator);
+	}
+
+	// public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
+	// {
+	// 	if (SameHemisphere(outgoing, incident)) return 0f;
+	// 	return FastMath.Abs(CosineP(incident)) * Scalars.PiR;
+	// }
+	//
+	// public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	// {
+	// 	incident = sample.CosineHemisphere;
+	// 	if (outgoing.Z > 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
+	// 	return (Evaluate(outgoing, incident), ProbabilityDensity(outgoing, incident));
+	// }
+
+
+	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
+	{
+		if (SameHemisphere(outgoing, incident)) return 0f;
+
+		float eta = CosineP(outgoing) > 0f ? fresnel.etaBelow / fresnel.etaAbove : fresnel.etaAbove / fresnel.etaBelow;
+
+		Float3 normal = (outgoing + incident * eta).Normalized;
+
+		float dotO = outgoing.Dot(normal);
+		float dotI = incident.Dot(normal);
+
+		if (FastMath.Positive(dotO * dotI)) return 0f;
+		float denominator = FastMath.FMA(eta, dotI, dotO);
+
+		return microfacet.ProbabilityDensity(outgoing, normal) * FastMath.Abs((eta * eta * dotI) / (denominator * denominator));
+	}
+
+	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	{
+		if (FastMath.AlmostZero(outgoing.Z, 0f))
+		{
+			incident = default;
+			return Probable<RGB128>.Impossible;
+		}
+
+		Float3 normal = microfacet.Sample(outgoing, sample);
+
+		if (!FastMath.Positive(outgoing.Dot(normal)))
+		{
+			incident = default;
+			return Probable<RGB128>.Impossible;
+		}
+
+		float cosI = CosineP(outgoing);
+
+		fresnel.Evaluate(ref cosI, out float cosT, out float eta);
+		incident = SpecularTransmission.Transmit(outgoing, normal, cosI, cosT, eta);
+		incident = incident.Normalized;
+
+		return (Evaluate(outgoing, incident), ProbabilityDensity(outgoing, incident));
 	}
 }
