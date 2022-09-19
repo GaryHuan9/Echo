@@ -61,13 +61,12 @@ public interface IMicrofacet
 	/// <summary>
 	/// Calculates the alpha value for an <see cref="IMicrofacet"/>.
 	/// </summary>
-	/// <param name="roughness">An artistic value between zero and one to be mapped to the alpha value.</param>
+	/// <param name="roughness">An artistic value between zero and one to be mapped to the alpha value. This value will be clamped.</param>
 	/// <param name="specular">Outputs whether the alpha value is too small and the model should be considered as a delta distribution.</param>
 	/// <returns>The alpha value to be used with standard <see cref="IMicrofacet"/> models.</returns>
 	public static float GetAlpha(float roughness, out bool specular)
 	{
-		Ensure.IsTrue(roughness >= 0f);
-		Ensure.IsTrue(roughness <= 1f);
+		roughness = FastMath.Clamp01(roughness);
 
 		const float Threshold = 0.0001f;
 		float alpha = roughness * roughness;
@@ -125,7 +124,8 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 
 		float threshold = 1f / (1f + scaled.Z);
 		float radius = FastMath.Sqrt0(sample.x);
-		float theta = sample.y < threshold ? sample.y / threshold : 1f + (sample.y - threshold) / (1f - threshold);
+		float theta = sample.y < threshold ? sample.y / threshold
+			: 1f + (sample.y - threshold) / (1f - threshold);
 
 		FastMath.SinCos(theta * Scalars.Pi, out float sin, out float cos);
 

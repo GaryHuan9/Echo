@@ -1,7 +1,6 @@
 ﻿using System;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Textures;
@@ -31,14 +30,27 @@ public sealed class Dielectric : Material
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
 		RGB128 roughness = Sample(Roughness, contact);
-		float roughnessU = FastMath.Clamp01(roughness.R);
-		float roughnessV = FastMath.Clamp01(roughness.G);
+		float alphaX = IMicrofacet.GetAlpha(roughness.R, out bool isSpecularX);
+		float alphaY = IMicrofacet.GetAlpha(roughness.G, out bool isSpecularY);
 
 		float index = Sample(RefractiveIndex, contact).R;
 
-		if (!FastMath.AlmostZero(roughnessU) || !FastMath.AlmostZero(roughnessV))
+		if (!isSpecularX || !isSpecularY)
 		{
-			throw new NotImplementedException();
+			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
+			var fresnel = new RealFresnel(1f, index);
+
+			// bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
+			// (
+			// 	microfacet,
+			// 	fresnel
+			// );
+
+			bsdf.Add<GlossyTransmission<TrowbridgeReitzMicrofacet>>(allocator).Reset
+			(
+				microfacet,
+				1f, index
+			);
 		}
 		else bsdf.Add<SpecularFresnel>(allocator).Reset(1f, index);
 

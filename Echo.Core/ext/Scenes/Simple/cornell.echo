@@ -8,6 +8,9 @@
 	:cullable = new OneSided { .Base = link white }
 	:light = new Emissive { .Albedo = new Pure("0xFFFAF4") }
 
+	:glass0 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = new Pure("hdr(1.2 0 0)") }
+	:glass1 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = new Pure("hdr(1.7 0 0)") }
+
 	:wallSize = "10 10"
 	:wallSize5 = "5 5"
 	:boxSize0 = "3 3 3"
@@ -22,8 +25,11 @@
 	.Add(new PlaneEntity { .Material = link red .Size = link wallSize .Position = "-5 5 0" .Rotation = "0 0 -90" })      # Left
 	.Add(new PlaneEntity { .Material = link light .Size = link wallSize5 .Position = "0 9.99 0" .Rotation = "180 0 0" }) # Light
 
-	.Add(new BoxEntity { .Material = link white .Size = link boxSize0 .Position = "2 1.5 -2" .Rotation = "0 21 0"})
-	.Add(new BoxEntity { .Material = link white .Size = link boxSize1 .Position = "-2 3 2" .Rotation = "0 -21 0" })
+	# .Add(new BoxEntity { .Material = link white .Size = link boxSize0 .Position = "2 1.5 -2" .Rotation = "0 21 0" })
+	# .Add(new BoxEntity { .Material = link white .Size = link boxSize1 .Position = "-2 3 2" .Rotation = "0 -21 0" })
+
+	.Add(new SphereEntity { .Material = link glass0 .Radius = "2" .Position = "2 2 -2" })
+	.Add(new SphereEntity { .Material = link glass1 .Radius = "2" .Position = "-2 2 2" })
 
 	# Camera position adjusted to fit entire FOV into the box
 	# float radian = Scalars.ToRadians(camera.FieldOfView / 2f)
@@ -31,12 +37,24 @@
 	.Add(new Camera("42") { .Position = "0 5 -18.025444" })
 }
 
-:profile = new EvaluationProfile
+:debug = new EvaluationProfile
 {
 	.Evaluator = new PathTracedEvaluator
 	.Distribution = new StratifiedDistribution { .Extend = "16" }
 	.Buffer = new RenderBuffer("512 512")
 	.Pattern = new HilbertCurvePattern
+	.NoiseThreshold = "0.05"
 	.MinEpoch = "1"
 	.MaxEpoch = "20"
+}
+
+:clear = new EvaluationProfile
+{
+	.Evaluator = new PathTracedEvaluator
+	.Distribution = new StratifiedDistribution { .Extend = "256" }
+	.Buffer = new RenderBuffer("1024 1024")
+	.Pattern = new HilbertCurvePattern
+	.NoiseThreshold = "0.0004"
+	.MinEpoch = "4"
+	.MaxEpoch = "5000"
 }
