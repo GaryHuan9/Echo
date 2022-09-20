@@ -59,15 +59,9 @@ public class SpecularTransmission : BxDF
 		return (new RGB128(evaluated), 1f);
 	}
 
-	public static Float3 Transmit(in Float3 outgoing, float cosI, float cosT, float eta) => Transmit
-	(
-		outgoing, Normal(outgoing),
-		cosI, cosT, eta
-	);
-
-	public static Float3 Transmit(in Float3 outgoing, in Float3 normal, float cosI, float cosT, float eta)
+	public static Float3 Transmit(in Float3 outgoing, float cosI, float cosT, float eta)
 	{
-		Float3 incident = normal;
+		Float3 incident = Normal(outgoing);
 		incident *= eta * cosI - cosT;
 		incident -= eta * outgoing;
 		return incident;

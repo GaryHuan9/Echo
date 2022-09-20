@@ -82,9 +82,9 @@ public class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofa
 
 		if (FastMath.AlmostZero(cosO) || FastMath.AlmostZero(cosI)) return RGB128.Black;
 
-		float eta = cosO > 0f ? fresnel.etaBelow / fresnel.etaAbove : fresnel.etaAbove / fresnel.etaBelow;
+		float eta = cosO > 0f ? fresnel.etaAbove / fresnel.etaBelow : fresnel.etaBelow / fresnel.etaAbove;
 
-		Float3 normal = (outgoing + incident * eta).Normalized;
+		Float3 normal = (outgoing - incident * eta).Normalized;
 		if (normal.Z < 0f) normal = -normal;
 
 		float dotO = outgoing.Dot(normal);
@@ -114,12 +114,11 @@ public class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofa
 	// 	return (Evaluate(outgoing, incident), ProbabilityDensity(outgoing, incident));
 	// }
 
-
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
 		if (SameHemisphere(outgoing, incident)) return 0f;
 
-		float eta = CosineP(outgoing) > 0f ? fresnel.etaBelow / fresnel.etaAbove : fresnel.etaAbove / fresnel.etaBelow;
+		float eta = CosineP(outgoing) > 0f ? fresnel.etaAbove / fresnel.etaBelow : fresnel.etaBelow / fresnel.etaAbove;
 
 		Float3 normal = (outgoing + incident * eta).Normalized;
 
