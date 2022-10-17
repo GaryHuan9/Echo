@@ -217,7 +217,7 @@ partial class EchoChronicleHierarchyObjects
 		{
 			public bool Continue(char value) => ('a' <= value) & (value <= 'z') ||
 												('A' <= value) & (value <= 'Z') ||
-												('0' <= value) & (value <= '9');
+												('0' <= value) & (value <= '9') || value == '_';
 		}
 	}
 

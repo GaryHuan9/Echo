@@ -175,10 +175,13 @@ public class DispatcherUI : AreaUI
 
 		static T ConstructFirst<T>(EchoChronicleHierarchyObjects objects, string label) where T : class
 		{
+			ReadOnlySpan<char> match = label.AsSpan(0, label.LastIndexOf('[')).Trim();
+			Ensure.IsFalse(match.IsEmpty);
+
 			for (int i = 0; i < objects.Length; i++)
 			{
 				EchoChronicleHierarchyObjects.Entry entry = objects[i];
-				if (!label.AsSpan().StartsWith(entry.Identifier)) continue;
+				if (!match.SequenceEqual(entry.Identifier)) continue;
 
 				T constructed = entry.Construct<T>();
 				Ensure.IsNotNull(constructed);
