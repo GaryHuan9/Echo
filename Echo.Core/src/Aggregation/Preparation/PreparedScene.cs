@@ -155,7 +155,7 @@ public sealed class PreparedScene : PreparedPack
 		}
 
 		PreparedPack pack = this;
-		float pdf = 1f;
+		float pdf = 1f - infiniteLightsThreshold;
 
 		foreach (EntityToken token in light.Instances)
 		{
@@ -254,11 +254,11 @@ public sealed class PreparedScene : PreparedPack
 		return ref instance;
 	}
 
-	static ImmutableArray<InfiniteLight> FilterLights(IEnumerable<InfiniteLight> lights, in PreparedInstance rootInstance)
+	static ImmutableArray<InfiniteLight> FilterLights(IEnumerable<InfiniteLight> infiniteLights, in PreparedInstance rootInstance)
 	{
 		var builder = ImmutableArray.CreateBuilder<InfiniteLight>();
 
-		foreach (InfiniteLight light in lights)
+		foreach (InfiniteLight light in infiniteLights)
 		{
 			light.Prepare((PreparedScene)rootInstance.pack);
 			if (!FastMath.Positive(light.Power)) continue;
