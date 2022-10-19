@@ -179,14 +179,14 @@ partial class EchoChronicleHierarchyObjects
 
 		static LiteralNode()
 		{
-			AddTryParser<int>(Parsers.TryParse);
-			AddTryParser<float>(Parsers.TryParse);
-			AddTryParser<Float2>(Parsers.TryParse);
-			AddTryParser<Float3>(Parsers.TryParse);
-			AddTryParser<Float4>(Parsers.TryParse);
-			AddTryParser<Int2>(Parsers.TryParse);
-			AddTryParser<Int3>(Parsers.TryParse);
-			AddTryParser<Int4>(Parsers.TryParse);
+			AddTryParser<int>(InvariantFormat.TryParse);
+			AddTryParser<float>(InvariantFormat.TryParse);
+			AddTryParser<Float2>(InvariantFormat.TryParse);
+			AddTryParser<Float3>(InvariantFormat.TryParse);
+			AddTryParser<Float4>(InvariantFormat.TryParse);
+			AddTryParser<Int2>(InvariantFormat.TryParse);
+			AddTryParser<Int3>(InvariantFormat.TryParse);
+			AddTryParser<Int4>(InvariantFormat.TryParse);
 			AddTryParser<RGBA128>(RGBA128.TryParse);
 			AddTryParser<RGB128>(RGBA128.TryParse);
 			AddPathTryParser<Texture>(path => TextureGrid.Load<RGB128>(path));
