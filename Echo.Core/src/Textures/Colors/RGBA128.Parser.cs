@@ -1,5 +1,6 @@
 ﻿using System;
 using Echo.Core.Common.Diagnostics;
+using Echo.Core.InOut;
 
 namespace Echo.Core.Textures.Colors;
 
@@ -80,11 +81,11 @@ partial struct RGBA128
 
 		public bool Execute(out RGBA128 result) => type switch
 		{
-			Type.Hex   => ParseHex(out result),
-			Type.RGB   => ParseRGB(out result),
-			Type.HDR   => ParseHDR(out result),
+			Type.Hex => ParseHex(out result),
+			Type.RGB => ParseRGB(out result),
+			Type.HDR => ParseHDR(out result),
 			Type.Error => YieldError(out result),
-			_          => throw ExceptionHelper.Invalid(nameof(type), type, InvalidType.unexpected)
+			_ => throw ExceptionHelper.Invalid(nameof(type), type, InvalidType.unexpected)
 		};
 
 		bool ParseHex(out RGBA128 result)
@@ -216,7 +217,7 @@ partial struct RGBA128
 					return false;
 				}
 
-				bool parsed = int.TryParse(source[head..tail], out result);
+				bool parsed = InvariantFormat.TryParse(source[head..tail], out result);
 				head = tail;
 				return parsed;
 			}
@@ -283,7 +284,7 @@ partial struct RGBA128
 					return false;
 				}
 
-				bool parsed = float.TryParse(source[head..tail], out result);
+				bool parsed = InvariantFormat.TryParse(source[head..tail], out result);
 				head = tail;
 				return parsed;
 			}
@@ -322,7 +323,7 @@ partial struct RGBA128
 				>= '0' and <= '9' => digit - '0',
 				>= 'A' and <= 'F' => digit - 'A' + 10,
 				>= 'a' and <= 'f' => digit - 'a' + 10,
-				_                 => -1
+				_ => -1
 			};
 
 			if (value >= 0) return true;

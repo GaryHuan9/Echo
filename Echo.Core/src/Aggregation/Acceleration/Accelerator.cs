@@ -17,7 +17,7 @@ public abstract class Accelerator
 
 	protected readonly GeometryCollection geometries;
 
-	protected const MethodImplOptions ImplementationOptions = MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining;
+	protected const MethodImplOptions ImplementationOptions = MethodImplOptions.AggressiveInlining;
 
 	BoxBound? _boxBound;
 	SphereBound? _sphereBound;

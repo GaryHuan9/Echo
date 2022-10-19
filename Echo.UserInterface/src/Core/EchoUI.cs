@@ -114,10 +114,10 @@ public sealed class EchoUI : IApplication
 	static void ConfigureColors(ImGuiStylePtr style)
 	{
 		//Signature Color:
-		//0.0250 0.1416 0.3736 (Linear)
-		//0.1581 0.3763 0.6112 (Gamma)
-		//40.319 95.956 155.86 (Gamma RGB)
-		//#28609C              (Gamma Hex)
+		//0.0344 0.3012 0.8701 (Linear)
+		//0.1856 0.5488 0.9328 (Gamma)
+		//47.319 139.95 237.86 (Gamma RGB)
+		//#2F8CEE              (Gamma Hex)
 
 		var colors = style.Colors;
 
@@ -126,7 +126,7 @@ public sealed class EchoUI : IApplication
 			0 or 1 => new RGB128(0.1581f, 0.6112f, 0.3763f), //Green
 			2 or 3 => (RGB128)RGBA128.Parse("#FA983A"),      //Orange
 			4      => (RGB128)RGBA128.Parse("#DD444C"),      //REDO
-			_      => new RGB128(0.1581f, 0.3763f, 0.6112f)  //Signature
+			_      => new RGB128(0.1856f, 0.5488f, 0.9328f)  //Signature
 		};
 
 		const float Alpha0 = 0.33f;
