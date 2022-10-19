@@ -6,7 +6,7 @@ namespace Echo.Core.Common.Memory;
 
 /// <summary>
 /// Similar to a regular <see cref="Array"/> with type <typeparamref name="T"/>,
-/// but everything nicely aligns with the cache line and are always pinned.
+/// but everything nicely aligns with the cache line and is always pinned.
 /// </summary>
 /// <typeparam name="T">The unmanaged type to contain.</typeparam>
 public sealed unsafe class AlignedArray<T> : IDisposable where T : unmanaged
@@ -29,6 +29,13 @@ public sealed unsafe class AlignedArray<T> : IDisposable where T : unmanaged
 		Length = length;
 		if (clear && length > 0) Clear();
 	}
+
+	/// <summary>
+	/// Constructs a new <see cref="AlignedArray{T}"/> from a <see cref="ReadOnlySpan{T}"/>.
+	/// </summary>
+	/// <param name="source">The original memory to be copied to this new <see cref="AlignedArray{T}"/>.</param>
+	/// <exception cref="ArgumentException">Thrown if <typeparamref name="T"/> cannot be nicely aligned with the cache line.</exception>
+	public AlignedArray(ReadOnlySpan<T> source) : this(source.Length, false) => source.CopyTo(new Span<T>(Pointer, Length));
 
 	/// <summary>
 	/// The width of the cache line in bytes. This value is basically always 64 bytes for any modern computers.

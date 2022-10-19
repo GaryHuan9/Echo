@@ -7,6 +7,7 @@ using Echo.Core.Common.Compute.Statistics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -55,7 +56,7 @@ public class OperationUI : AreaUI
 
 			foreach (Operation operation in operations)
 			{
-				string creation = operation.creationTime.ToStringDefault();
+				string creation = operation.creationTime.ToInvariant();
 				operationLabels.Add($"{operation.GetType().Name} ({creation})");
 			}
 
@@ -86,15 +87,15 @@ public class OperationUI : AreaUI
 	{
 		if (!ImGuiCustom.BeginProperties("Main")) return;
 
-		ImGuiCustom.Property("Progress", progress.ToStringPercentage());
+		ImGuiCustom.Property("Progress", progress.ToInvariantPercent());
 		ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
-		ImGuiCustom.Property("Creation Time", operation.creationTime.ToStringDefault());
-		ImGuiCustom.Property("Total Workload", operation.totalProcedureCount.ToStringDefault());
+		ImGuiCustom.Property("Creation Time", operation.creationTime.ToInvariant());
+		ImGuiCustom.Property("Total Workload", operation.totalProcedureCount.ToInvariant());
 
 		ImGui.NewLine();
 
-		ImGuiCustom.Property("Time Spent", time.ToStringDefault());
-		ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToStringDefault());
+		ImGuiCustom.Property("Time Spent", time.ToInvariant());
+		ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
 
 		if (progress.AlmostEquals() || progress.AlmostEquals(1d))
 		{
@@ -106,8 +107,8 @@ public class OperationUI : AreaUI
 			TimeSpan timeRemain = time / progress - time;
 			DateTime timeFinish = DateTime.Now + timeRemain;
 
-			ImGuiCustom.Property("Estimated Time Remain", timeRemain.ToStringDefault());
-			ImGuiCustom.Property("Estimated Completion Time", timeFinish.ToStringDefault());
+			ImGuiCustom.Property("Estimated Time Remain", timeRemain.ToInvariant());
+			ImGuiCustom.Property("Estimated Completion Time", timeFinish.ToInvariant());
 		}
 
 		ImGuiCustom.EndProperties();
@@ -146,7 +147,7 @@ public class OperationUI : AreaUI
 		foreach ((string label, ulong count) in fill.Filled)
 		{
 			ImGuiCustom.TableItem(label);
-			ImGuiCustom.TableItem(count.ToStringDefault());
+			ImGuiCustom.TableItem(count.ToInvariant());
 
 			if (divideByZero)
 			{
@@ -155,8 +156,8 @@ public class OperationUI : AreaUI
 			}
 			else
 			{
-				ImGuiCustom.TableItem(((float)(count * timeR)).ToStringDefault());
-				ImGuiCustom.TableItem(((ulong)(count * progressR)).ToStringDefault());
+				ImGuiCustom.TableItem(((float)(count * timeR)).ToInvariant());
+				ImGuiCustom.TableItem(((ulong)(count * progressR)).ToInvariant());
 			}
 		}
 
@@ -191,10 +192,10 @@ public class OperationUI : AreaUI
 		{
 			(Guid guid, TimeSpan time, Procedure procedure) = workerData[i];
 
-			ImGuiCustom.TableItem(guid.ToStringShort());
-			ImGuiCustom.TableItem(time.ToStringDefault());
-			ImGuiCustom.TableItem(procedure.index.ToStringDefault());
-			ImGuiCustom.TableItem(procedure.Progress.ToStringPercentage());
+			ImGuiCustom.TableItem(guid.ToInvariantShort());
+			ImGuiCustom.TableItem(time.ToInvariant());
+			ImGuiCustom.TableItem(procedure.index.ToInvariant());
+			ImGuiCustom.TableItem(procedure.Progress.ToInvariantPercent());
 		}
 
 		ImGuiCustom.EndProperties();
