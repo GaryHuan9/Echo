@@ -10,6 +10,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Operation;
+using Echo.Core.InOut;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
 using Echo.UserInterface.Backend;
@@ -330,9 +331,9 @@ public class TilesUI : PlaneUI
 				color = (color - compareTexture[uv]).Absoluted;
 			}
 
-			ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {color:N4}");
+			ImGui.TextUnformatted($"Pixel: {position.ToInvariant()} Tile: {tilePosition.ToInvariant()} RGBA: {color.ToInvariant()}");
 		}
-		else ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition}");
+		else ImGui.TextUnformatted($"Pixel: {position.ToInvariant()} Tile: {tilePosition.ToInvariant()}");
 	}
 
 	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)

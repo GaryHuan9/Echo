@@ -11,11 +11,13 @@ using CharSpan = ReadOnlySpan<char>;
 
 public static class InvariantFormat
 {
-	public const string FloatingFormat = "N2";
-	public const string IntegerFormat = "N0";
+	const string DefaultPattern = "N2";
+	const string IntegerPattern = "N0";
 
-	public static bool TryParse(CharSpan span, out float result) => float.TryParse(span, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
-	public static bool TryParse(CharSpan span, out int result) => int.TryParse(span, NumberStyles.Integer, CultureInfo.InvariantCulture, out result);
+	static CultureInfo Culture => CultureInfo.InvariantCulture;
+
+	public static bool TryParse(CharSpan span, out float result) => float.TryParse(span, NumberStyles.Float, Culture, out result);
+	public static bool TryParse(CharSpan span, out int result) => int.TryParse(span, NumberStyles.Integer, Culture, out result);
 
 	public static bool TryParse(CharSpan span, out Float2 result) => TryParseFloat(span, out result);
 	public static bool TryParse(CharSpan span, out Float3 result) => TryParseFloat(span, out result);
@@ -25,15 +27,23 @@ public static class InvariantFormat
 	public static bool TryParse(CharSpan span, out Int3 result) => TryParseInt(span, out result);
 	public static bool TryParse(CharSpan span, out Int4 result) => TryParseInt(span, out result);
 
-	public static string ToInvariant(this float value) => value.ToString(FloatingFormat);
-	public static string ToInvariant(this double value) => value.ToString(FloatingFormat);
-	public static string ToInvariant(this int value) => value.ToString(IntegerFormat);
-	public static string ToInvariant(this long value) => value.ToString(IntegerFormat);
-	public static string ToInvariant(this uint value) => value.ToString(IntegerFormat);
-	public static string ToInvariant(this ulong value) => value.ToString(IntegerFormat);
+	public static string ToInvariant(this float value) => value.ToString(DefaultPattern, Culture);
+	public static string ToInvariant(this double value) => value.ToString(DefaultPattern, Culture);
+	public static string ToInvariant(this int value) => value.ToString(IntegerPattern, Culture);
+	public static string ToInvariant(this long value) => value.ToString(IntegerPattern, Culture);
+	public static string ToInvariant(this uint value) => value.ToString(IntegerPattern, Culture);
+	public static string ToInvariant(this ulong value) => value.ToString(IntegerPattern, Culture);
 
-	public static string ToInvariant(this TimeSpan value) => value.ToString(@"hh\:mm\:ss\.ff");
-	public static string ToInvariant(this DateTime value) => value.ToString("HH:mm:ss");
+	public static string ToInvariant(this Float2 value) => value.ToString(DefaultPattern, Culture);
+	public static string ToInvariant(this in Float3 value) => value.ToString(DefaultPattern, Culture);
+	public static string ToInvariant(this in Float4 value) => value.ToString(DefaultPattern, Culture);
+
+	public static string ToInvariant(this Int2 value) => value.ToString(IntegerPattern, Culture);
+	public static string ToInvariant(this in Int3 value) => value.ToString(IntegerPattern, Culture);
+	public static string ToInvariant(this in Int4 value) => value.ToString(IntegerPattern, Culture);
+
+	public static string ToInvariant(this TimeSpan value) => value.ToString(@"hh\:mm\:ss\.ff", Culture);
+	public static string ToInvariant(this DateTime value) => value.ToString("HH:mm:ss", Culture);
 
 	public static string ToInvariant(this in Guid guid)
 	{
@@ -48,72 +58,39 @@ public static class InvariantFormat
 		return new string(upper);
 	}
 
-	public static string ToInvariantPercent(this float value) => value.ToString("P1");
-	public static string ToInvariantPercent(this double value) => value.ToString("P2");
+	public static string ToInvariant<T>(this /* in */ T value) where T : struct, IFormattable => value.ToString(DefaultPattern, Culture);
 
-	public static string ToInvariantData(this uint value) => value.ToInvariantMetric() + 'B';
-	public static string ToInvariantData(this ulong value) => value.ToInvariantMetric() + 'B';
+	public static string ToInvariantPercent(this float value) => value.ToString("P1", Culture);
+	public static string ToInvariantPercent(this double value) => value.ToString("P2", Culture);
+
+	public static string ToInvariantData(this uint value) => ToInvariantData((ulong)value);
+
+	public static string ToInvariantData(this ulong value)
+	{
+		//Our internal method requires a size of 7 or larger
+		Span<char> span = stackalloc char[7];
+		int length = ToInvariantMetricInternal(span, value);
+
+		span[length] = 'B';
+		return span[..(length + 1)].ToString();
+	}
 
 	public static string ToInvariantShort(this in Guid guid) => $"0x{guid.GetHashCode():X8}";
+
+	/// <inheritdoc cref="ToInvariantMetric(ulong)"/>
+	public static string ToInvariantMetric(this uint value) => ToInvariantMetric((ulong)value);
 
 	/// <summary>
 	/// Formats <paramref name="value"/> to its abbreviations using metric prefixes.
 	/// </summary>
 	/// <returns>The formatted <see cref="string"/> (eg. 123.4K, 12.34M, or 1.234G).</returns>
 	/// <remarks>The returned <see cref="string"/> will also have a <see cref="string.Length"/> of 6 or shorter.</remarks>
-	public static string ToInvariantMetric(this uint value, IFormatProvider provider = null)
+	public static string ToInvariantMetric(this ulong value)
 	{
-		const uint L3 = (uint)1E9;
-		const uint L2 = (uint)1E6;
-		const uint L1 = (uint)1E3;
-
-		return value switch
-		{
-			>= L3 => Format(L3, 'G'),
-			>= L2 => Format(L2, 'M'),
-			>= L1 => Format(L1, 'K'),
-			_ => value.ToString()
-		};
-
-		string Format(uint level, char suffix)
-		{
-			//Calculate the two parts
-			uint head = value / level;                        //The integer part
-			uint tail = value / (level / 1000) - head * 1000; //The decimal part
-
-			return MergeMetricParts(head, tail, suffix);
-		}
-	}
-
-	/// <inheritdoc cref="ToInvariantMetric"/>
-	public static string ToInvariantMetric(this ulong value, IFormatProvider provider = null)
-	{
-		const ulong L6 = (ulong)1E18;
-		const ulong L5 = (ulong)1E15;
-		const ulong L4 = (ulong)1E12;
-		const ulong L3 = (ulong)1E9;
-		const ulong L2 = (ulong)1E6;
-		const ulong L1 = (ulong)1E3;
-
-		return value switch
-		{
-			>= L6 => Format(L6, 'E'),
-			>= L5 => Format(L5, 'P'),
-			>= L4 => Format(L4, 'T'),
-			>= L3 => Format(L3, 'G'),
-			>= L2 => Format(L2, 'M'),
-			>= L1 => Format(L1, 'K'),
-			_ => value.ToString()
-		};
-
-		string Format(ulong level, char suffix)
-		{
-			//Calculate the two parts
-			ulong head = value / level;                        //The integer part
-			ulong tail = value / (level / 1000) - head * 1000; //The decimal part
-
-			return MergeMetricParts((uint)head, (uint)tail, suffix);
-		}
+		//Our internal method requires a size of 7 or larger
+		Span<char> span = stackalloc char[7];
+		int length = ToInvariantMetricInternal(span, value);
+		return span[..length].ToString();
 	}
 
 	static bool TryParseFloat<T>(CharSpan span, out T result) where T : unmanaged
@@ -170,31 +147,62 @@ public static class InvariantFormat
 		return index;
 	}
 
-	static string MergeMetricParts(uint head, uint tail, char suffix)
+	static int ToInvariantMetricInternal(Span<char> span, ulong value)
 	{
-		//Create buffer, 123.456X is the maximum length
-		Span<char> span = stackalloc char[8];
-		int length = MergeMetricParts(span, head, tail, suffix);
-		return new string(span[..length]);
-	}
+		Ensure.IsTrue(span.Length >= 7);
 
-	static int MergeMetricParts(Span<char> span, uint head, uint tail, char suffix)
-	{
-		Ensure.IsTrue(head < 1000);
-		Ensure.IsTrue(tail < 1000);
+		const ulong L6 = (ulong)1E18;
+		const ulong L5 = (ulong)1E15;
+		const ulong L4 = (ulong)1E12;
+		const ulong L3 = (ulong)1E9;
+		const ulong L2 = (ulong)1E6;
+		const ulong L1 = (ulong)1E3;
 
-		//Format into span
-		bool formatted = head.TryFormat(span, /*            */ out int length0)
-					   & tail.TryFormat(span[(length0 + 1)..], out int length1, "D3");
+		return value switch
+		{
+			>= L6 => Format(span, value, L6, 'E'),
+			>= L5 => Format(span, value, L5, 'P'),
+			>= L4 => Format(span, value, L4, 'T'),
+			>= L3 => Format(span, value, L3, 'G'),
+			>= L2 => Format(span, value, L2, 'M'),
+			>= L1 => Format(span, value, L1, 'K'),
+			_ => FormatDefault(span, value)
+		};
 
-		Ensure.IsTrue(formatted);
+		static int Format(Span<char> span, ulong value, ulong level, char suffix)
+		{
+			//Calculate the two parts
+			ulong head = value / level;                        //The integer part
+			ulong tail = value / (level / 1000) - head * 1000; //The decimal part
 
-		//Add the separator and the suffix
-		int length = Math.Min(length0 + 1 + length1 + 1, 6);
+			Ensure.IsTrue(head < 1000);
+			Ensure.IsTrue(tail < 1000);
 
-		span[length0] = '.';
-		span[length - 1] = suffix;
+			span = span[..7]; //Our first two formats to spawn should only be 2x 3 characters with a 1 gap in between
 
-		return length;
+			//Format into span
+			bool formatted = head.TryFormat(span, /*            */ out int length0, default, Culture)
+						   & tail.TryFormat(span[(length0 + 1)..], out int length1, "D3", Culture);
+
+			Ensure.IsTrue(formatted);
+
+			//Restricts length to be <= 6, everything beyond that will be ignored
+			int length = Math.Min(length0 + 1 + length1 + 1, 6);
+
+			//Add the separator and the suffix
+			span[length0] = '.';
+			span[length - 1] = suffix;
+
+			return length;
+		}
+
+		static int FormatDefault(Span<char> span, ulong value)
+		{
+			bool formatted = value.TryFormat(span, out int length, default, Culture);
+
+			Ensure.IsTrue(formatted);
+			Ensure.IsTrue(length <= 3);
+			return length;
+		}
 	}
 }
