@@ -63,23 +63,23 @@ public readonly struct Sample2D
 	{
 		get
 		{
-			Float2 xy = this;
+			float xValue = FastMath.FMA(x, 2f, -1f);
+			float yValue = FastMath.FMA(y, 2f, -1f);
 
-			if (xy.EqualsExact(Float2.Half)) return Float2.Zero;
-			xy = xy * 2f - Float2.One;
+			if (FastMath.AlmostZero(xValue) && FastMath.AlmostZero(yValue)) return Float2.Zero;
 
 			float radius;
 			float angle;
 
-			if (FastMath.Abs(xy.X) > FastMath.Abs(xy.Y))
+			if (FastMath.Abs(xValue) > FastMath.Abs(yValue))
 			{
-				radius = xy.X;
-				angle = Scalars.Pi / 4f * xy.Y / xy.X;
+				radius = xValue;
+				angle = Scalars.Pi / 4f * yValue / xValue;
 			}
 			else
 			{
-				radius = xy.Y;
-				angle = Scalars.Pi / 2f * FastMath.FMA(xy.X / xy.Y, -0.5f, 1f);
+				radius = yValue;
+				angle = FastMath.FMA(xValue / yValue, Scalars.Pi / -4f, Scalars.Pi / 2f);
 			}
 
 			return ProjectDisk(radius, angle);

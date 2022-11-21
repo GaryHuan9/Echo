@@ -33,7 +33,7 @@ public class SpecularTransmission : BxDF
 {
 	public SpecularTransmission() : base(FunctionType.Specular | FunctionType.Transmissive) { }
 
-	public void Reset(float newEtaAbove, float newEtaBelow) => fresnel = new RealFresnel(newEtaAbove, newEtaBelow);
+	public void Reset(RealFresnel newFresnel) => fresnel = newFresnel;
 
 	RealFresnel fresnel;
 
