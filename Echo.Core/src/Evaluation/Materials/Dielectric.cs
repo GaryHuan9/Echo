@@ -1,5 +1,4 @@
-﻿using System;
-using Echo.Core.Aggregation.Primitives;
+﻿using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Scattering;
@@ -49,7 +48,7 @@ public sealed class Dielectric : Material
 			bsdf.Add<GlossyTransmission<TrowbridgeReitzMicrofacet>>(allocator).Reset
 			(
 				microfacet,
-				1f, index
+				fresnel
 			);
 		}
 		else bsdf.Add<SpecularFresnel>(allocator).Reset(1f, index);

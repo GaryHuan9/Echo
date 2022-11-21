@@ -17,24 +17,39 @@
 
 	:material6 = new Dielectric
 	{
-		.Albedo = new Pure("0xF")
-		.Roughness = new Pure("hdr(0 0 0)")
-		.RefractiveIndex = new Pure("hdr(1.2 0 0)")
+		.Roughness = new Pure("hdr(0.7 0.7 0)")
+		.RefractiveIndex = new Pure("hdr(1.5 0 0)")
 	}
 
-	.Add(new SphereEntity { .Material = link material6 .Radius = "1" })
+	:material7 = new Conductor
+	{
+		.Roughness = new Pure("hdr(0.7 0.7 0)")
+	}
+
+	.Add(new SphereEntity { .Material = link material5 .Radius = "1" })
 
 	.Add(new AmbientLight { .Texture = new Pure("0xF") })
-	.Add(new Camera("80") { .Position = "0 0 -4.5" })
+	.Add(new Camera("45") { .Position = "-4.5 0 0" .Rotation = "0 90 0" })
 }
 
 :profile = new EvaluationProfile
 {
-	.Evaluator = new PathTracedEvaluator
+	.Evaluator = new BruteForcedEvaluator
 	.Distribution = new StratifiedDistribution { .Extend = "64" }
 	.Buffer = new RenderBuffer("512 512")
 	.Pattern = new HilbertCurvePattern
 	.NoiseThreshold = "0.006"
 	.MinEpoch = "1"
 	.MaxEpoch = "20"
+}
+
+:clear = new EvaluationProfile
+{
+	.Evaluator = new PathTracedEvaluator
+	.Distribution = new StratifiedDistribution { .Extend = "64" }
+	.Buffer = new RenderBuffer("512 512")
+	.Pattern = new HilbertCurvePattern
+	.NoiseThreshold = "0.001"
+	.MinEpoch = "1"
+	.MaxEpoch = "120"
 }

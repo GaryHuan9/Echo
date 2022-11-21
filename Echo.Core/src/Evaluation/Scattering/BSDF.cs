@@ -178,7 +178,7 @@ public class BSDF
 		{
 			//Specular functions are Dirac delta distributions
 			Ensure.AreEqual(sampled.pdf, 1f);
-			return (sampled, 1f / matched);
+			return (albedo * sampled, 1f / matched);
 		}
 
 		//Sample the other matching functions
