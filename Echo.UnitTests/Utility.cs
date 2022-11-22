@@ -12,8 +12,11 @@ public static class Utility
 	public static Prng NewRandom() => new SquirrelPrng(TestContext.CurrentContext.Random.NextUInt());
 
 	/// <inheritdoc cref="EqualConstraint.Ulps"/>
-	public static EqualConstraint Roughly(this EqualConstraint constraint, int ulps = 3) => constraint.Within(ulps).Ulps;
+	public static EqualConstraint Roughly(this EqualConstraint constraint, int ulps = 10) => constraint.Within(ulps).Ulps;
 
 	/// <inheritdoc cref="EqualConstraint.Percent"/>
 	public static EqualConstraint Roughly(this EqualConstraint constraint, float percent) => constraint.Within(percent).Percent;
+
+	/// <inheritdoc cref="EqualConstraint.Percent"/>
+	public static ComparisonConstraint Roughly(this ComparisonConstraint constraint, float percent = 0.01f) => constraint.Within(percent).Percent;
 }

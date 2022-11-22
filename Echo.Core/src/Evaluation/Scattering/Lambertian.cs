@@ -18,7 +18,7 @@ public sealed class LambertianReflection : BxDF
 		FunctionType.Diffuse
 	) { }
 
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => new(Scalars.PiR);
+	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => SameHemisphere(outgoing, incident) ? new RGB128(Scalars.PiR) : RGB128.Black;
 
 	public override RGB128 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples) => RGB128.White;
 	public override RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1) => RGB128.White;

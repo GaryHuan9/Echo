@@ -178,5 +178,5 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns whether the local directions <paramref name="local0"/> and <paramref name="local1"/> are in the same hemisphere.
 	/// </summary>
-	public static bool SameHemisphere(in Float3 local0, in Float3 local1) => local0.Z * local1.Z > 0f;
+	public static bool SameHemisphere(in Float3 local0, in Float3 local1) => FastMath.Positive(local0.Z * local1.Z);
 }

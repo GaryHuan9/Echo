@@ -25,7 +25,7 @@ public sealed class Diffuse : Material
 		float roughness = FastMath.Clamp01(Sample(Roughness, contact).R);
 
 		if (FastMath.AlmostZero(roughness)) bsdf.Add<LambertianReflection>(allocator);
-		else bsdf.Add<OrenNayar>(allocator).Reset(Scalars.ToRadians(roughness * 90f));
+		else bsdf.Add<OrenNayar>(allocator).Reset(roughness);
 
 		return bsdf;
 	}

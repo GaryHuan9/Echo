@@ -1,4 +1,5 @@
-﻿using Echo.Core.Common.Mathematics;
+﻿using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
@@ -84,7 +85,10 @@ public readonly struct ComplexFresnel : IFresnel
 {
 	public ComplexFresnel(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 extinction)
 	{
-		Float4 etaAboveR = 1f / (Float4)etaAbove;
+		Ensure.IsFalse(etaAbove.IsZero);
+		Ensure.IsFalse(etaBelow.IsZero);
+
+		Float4 etaAboveR = RGB128.White / etaAbove;
 
 		eta2 = etaBelow * etaAboveR;
 		etaK2 = extinction * etaAboveR;

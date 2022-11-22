@@ -171,13 +171,6 @@ public static class FastMath
 	public static float FMA(float value, float multiplier, float adder) => MathF.FusedMultiplyAdd(value, multiplier, adder);
 
 	/// <summary>
-	/// Computes and returns <paramref name="value"/> squared + <paramref name="adder"/> in one instruction.
-	/// NOTE: this is only a shortcut for <see cref="FMA"/> and uses it internally to perform the operation.
-	/// </summary>
-	[MethodImpl(Options)]
-	public static float F2A(float value, float adder) => FMA(value, value, adder);
-
-	/// <summary>
 	/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
 	/// </summary>
 	[MethodImpl(Options)]
@@ -195,7 +188,7 @@ public static class FastMath
 	/// Returns whether <paramref name="value"/> is positive based on <paramref name="epsilon"/>.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static bool Positive(float value, float epsilon = Epsilon) => value > epsilon;
+	public static bool Positive(float value, float epsilon = Epsilon) => epsilon <= value;
 
 	/// <summary>
 	/// Returns whether <paramref name="value"/> is almost zero based on <paramref name="epsilon"/>.

@@ -6,7 +6,7 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Scattering;
 
-public class SpecularReflection<TFresnel> : BxDF where TFresnel : IFresnel
+public sealed class SpecularReflection<TFresnel> : BxDF where TFresnel : IFresnel
 {
 	public SpecularReflection() : base(FunctionType.Specular | FunctionType.Reflective) { }
 
@@ -29,7 +29,7 @@ public class SpecularReflection<TFresnel> : BxDF where TFresnel : IFresnel
 	public static Float3 Reflect(in Float3 outgoing) => new(-outgoing.X, -outgoing.Y, outgoing.Z);
 }
 
-public class SpecularTransmission : BxDF
+public sealed class SpecularTransmission : BxDF
 {
 	public SpecularTransmission() : base(FunctionType.Specular | FunctionType.Transmissive) { }
 
@@ -68,11 +68,11 @@ public class SpecularTransmission : BxDF
 	}
 }
 
-public class SpecularFresnel : BxDF
+public sealed class SpecularFresnel : BxDF
 {
 	public SpecularFresnel() : base(FunctionType.Specular | FunctionType.Reflective | FunctionType.Transmissive) { }
 
-	public void Reset(float newEtaAbove, float newEtaBelow) => fresnel = new RealFresnel(newEtaAbove, newEtaBelow);
+	public void Reset(RealFresnel newFresnel) => fresnel = newFresnel;
 
 	RealFresnel fresnel;
 
