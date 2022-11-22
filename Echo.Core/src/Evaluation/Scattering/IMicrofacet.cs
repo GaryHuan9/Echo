@@ -1,4 +1,5 @@
-﻿using Echo.Core.Common.Mathematics;
+﻿using System;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -143,5 +144,88 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 			transformed.Y * alpha.Y,
 			FastMath.Max(transformed.Z, FastMath.Epsilon)
 		).Normalized;
+	}
+}
+
+public readonly struct PBRTv4TrowbridgeReitzMicrofacet : IMicrofacet
+{
+	public PBRTv4TrowbridgeReitzMicrofacet(float alphaX, float alphaY) => alpha = new Float2(alphaX, alphaY);
+
+	readonly Float2 alpha;
+
+	static float Sqr(float value) => value * value;
+
+	/// <inheritdoc/>
+	public float ProjectedArea(in Float3 normal)
+	{
+		float tan2Theta = TangentP2(normal);
+		if (float.IsInfinity(tan2Theta))
+			return 0;
+		float cos4Theta = Sqr(CosineP2(normal));
+		if (cos4Theta < 1e-16f)
+			return 0;
+		float e = tan2Theta * (Sqr(CosineT(normal) / alpha.X) + Sqr(SineT(normal) / alpha.Y));
+		return 1 / (Scalars.Pi * alpha.X * alpha.Y * cos4Theta * Sqr(1 + e));
+	}
+
+	/// <inheritdoc/>
+	public float ShadowingRatio(in Float3 direction)
+	{
+		float tan2Theta = TangentP2(direction);
+		if (float.IsInfinity(tan2Theta))
+			return 0;
+		float alpha2 = Sqr(CosineT(direction) * alpha.X) + Sqr(SineT(direction) * alpha.Y);
+		return (MathF.Sqrt(1 + alpha2 * tan2Theta) - 1) / 2;
+	}
+
+	/// <inheritdoc/>
+	/// Implementation based on
+	/// A Simpler and Exact Sampling Routine for the GGX Distribution of Visible Normals [Heitz 2017].
+	public Float3 Sample(in Float3 outgoing, Sample2D sample)
+	{
+		// Transform _w_ to hemispherical configuration
+		Float3 wh = new Float3(alpha.X * outgoing.X, alpha.Y * outgoing.Y, outgoing.Z).Normalized;
+		if (wh.Z < 0)
+			wh = -wh;
+
+		// Find orthonormal basis for visible normal sampling
+		Float3 T1 = (wh.Z < 0.99999f) ? Cross(new Float3(0, 0, 1), wh).Normalized
+			: new Float3(1, 0, 0);
+		Float3 T2 = Cross(wh, T1);
+
+		// Generate uniformly distributed points on the unit disk
+		Float2 p = SampleUniformDiskPolar(sample);
+
+		// Warp hemispherical projection for visible normal sampling
+		float h = MathF.Sqrt(1 - p.X * p.X);
+		p = new Float2(p.X, Scalars.Lerp((1 + wh.Z) / 2, h, p.Y));
+
+		// Reproject to hemisphere and transform normal to ellipsoid configuration
+		float pz = MathF.Sqrt(Math.Max(0, 1 - p.SquaredMagnitude));
+		Float3 nh = p.X * T1 + p.Y * T2 + pz * wh;
+		return new Float3(alpha.X * nh.X, alpha.Y * nh.Y, Math.Max(1e-6f, nh.Z)).Normalized;
+
+		static float DifferenceOfProducts(float a, float b, float c, float d)
+		{
+			float cd = c * d;
+			float differenceOfProducts = MathF.FusedMultiplyAdd(a, b, -cd);
+			float error = MathF.FusedMultiplyAdd(-c, d, cd);
+			return differenceOfProducts + error;
+		}
+
+		static Float3 Cross(Float3 v, Float3 w)
+		{
+			return new Float3(
+				DifferenceOfProducts(v.Y, w.Z, v.Z, w.Y),
+				DifferenceOfProducts(v.Z, w.X, v.X, w.Z),
+				DifferenceOfProducts(v.X, w.Y, v.Y, w.X));
+		}
+
+		static Float2 SampleUniformDiskPolar(Sample2D sample)
+		{
+			float r = MathF.Sqrt(sample.x);
+			float theta = 2 * Scalars.Pi * sample.y;
+			return new Float2(r * MathF.Cos(theta), r * MathF.Sin(theta));
+		}
 	}
 }

@@ -104,9 +104,9 @@ public sealed class Conductor : Material
 
 		if (!isSpecularX || !isSpecularY)
 		{
-			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
+			var microfacet = new PBRTv4TrowbridgeReitzMicrofacet(alphaX, alphaY);
 
-			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset(microfacet, fresnel);
+			bsdf.Add<GlossyReflection<PBRTv4TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset(microfacet, fresnel);
 		}
 		else bsdf.Add<SpecularReflection<ComplexFresnel>>(allocator).Reset(fresnel);
 

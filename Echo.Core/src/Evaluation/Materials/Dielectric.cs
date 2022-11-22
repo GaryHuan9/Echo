@@ -39,11 +39,11 @@ public sealed class Dielectric : Material
 		{
 			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
 
-			// bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
-			// (
-			// 	microfacet,
-			// 	fresnel
-			// );
+			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
+			(
+				microfacet,
+				fresnel
+			);
 
 			bsdf.Add<GlossyTransmission<TrowbridgeReitzMicrofacet>>(allocator).Reset
 			(
