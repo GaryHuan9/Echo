@@ -39,4 +39,6 @@ public readonly struct Probable<T>
 		_content = content;
 		_pdf = pdf;
 	}
+
+	public override string ToString() => $"{nameof(content)}: {content}, {nameof(pdf)}: {pdf}";
 }

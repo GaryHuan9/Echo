@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using Echo.Core.Common.Mathematics.Randomization;
+using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using NUnit.Framework;
 
@@ -7,8 +10,7 @@ namespace Echo.UnitTests.Evaluation;
 [TestFixture]
 public class DiscreteDistribution1Tests
 {
-	[SetUp]
-	public void SetUp()
+	static DiscreteDistribution1Tests()
 	{
 		constant = new DiscreteDistribution1D(stackalloc[] { 1f, 1f, 1f, 1f, 1f });
 		singular = new DiscreteDistribution1D(stackalloc[] { 4f });
@@ -18,16 +20,28 @@ public class DiscreteDistribution1Tests
 		oneZeros = new DiscreteDistribution1D(stackalloc[] { 1f, 0f, 0f, 0f });
 
 		array = new[] { constant, singular, sequence, allZeros, zerosOne, oneZeros };
+
+		var distribution = new StratifiedDistribution
+		{
+			Extend = samples.Length,
+			Prng = new SystemPrng(1)
+		};
+
+		distribution.BeginSeries(Int2.Zero);
+		distribution.BeginSession();
+
+		foreach (ref Sample1D sample in samples.AsSpan()) sample = distribution.Next1D();
 	}
 
-	DiscreteDistribution1D constant;
-	DiscreteDistribution1D singular;
-	DiscreteDistribution1D sequence;
-	DiscreteDistribution1D allZeros;
-	DiscreteDistribution1D zerosOne;
-	DiscreteDistribution1D oneZeros;
+	static readonly DiscreteDistribution1D constant;
+	static readonly DiscreteDistribution1D singular;
+	static readonly DiscreteDistribution1D sequence;
+	static readonly DiscreteDistribution1D allZeros;
+	static readonly DiscreteDistribution1D zerosOne;
+	static readonly DiscreteDistribution1D oneZeros;
 
-	DiscreteDistribution1D[] array;
+	static readonly DiscreteDistribution1D[] array;
+	static readonly Sample1D[] samples = new Sample1D[1000];
 
 	[Test]
 	public void Sum()
@@ -63,21 +77,15 @@ public class DiscreteDistribution1Tests
 	}
 
 	[Test]
-	public void Probability([Random(0f, 1f, 1000)] float random)
+	public void Probability([ValueSource(nameof(array))] DiscreteDistribution1D distribution)
 	{
-		Sample1D sample = (Sample1D)random;
-
-		foreach (DiscreteDistribution1D distribution in array) ProbabilitySingle(distribution, sample);
+		foreach (Sample1D sample in samples) ProbabilitySingle(distribution, sample);
 	}
 
 	[Test]
-	public void ProbabilityBoundaries()
+	public void ProbabilityBoundaries([ValueSource(nameof(array))] DiscreteDistribution1D distribution)
 	{
-		foreach (DiscreteDistribution1D distribution in array)
-		foreach (Sample1D sample in Uniform(distribution.Count))
-		{
-			ProbabilitySingle(distribution, sample);
-		}
+		foreach (Sample1D sample in Uniform(distribution.Count)) ProbabilitySingle(distribution, sample);
 	}
 
 	static void ProbabilitySingle(DiscreteDistribution1D distribution, Sample1D sample)

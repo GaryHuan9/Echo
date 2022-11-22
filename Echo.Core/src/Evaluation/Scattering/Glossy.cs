@@ -6,8 +6,8 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Scattering;
 
-public class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrofacet : IMicrofacet
-															where TFresnel : IFresnel
+public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrofacet : IMicrofacet
+																   where TFresnel : IFresnel
 {
 	public GlossyReflection() : base(FunctionType.Glossy | FunctionType.Reflective) { }
 
@@ -61,7 +61,7 @@ public class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrofacet : 
 	}
 }
 
-public class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofacet
+public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofacet
 {
 	public GlossyTransmission() : base(FunctionType.Glossy | FunctionType.Transmissive) { }
 

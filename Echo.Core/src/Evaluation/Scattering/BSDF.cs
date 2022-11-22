@@ -173,13 +173,8 @@ public class BSDF
 		if (matched == 1) return (albedo * sampled, sampled.pdf);
 		Ensure.IsTrue(matched > 1);
 
-		//If the selected function is specular, we are also finished
-		if (selected.type.Any(FunctionType.Specular))
-		{
-			//Specular functions are Dirac delta distributions
-			Ensure.AreEqual(sampled.pdf, 1f);
-			return (albedo * sampled, 1f / matched);
-		}
+		//If the selected function is specular, we are also finished, since they are are Dirac delta distributions
+		if (selected.type.Any(FunctionType.Specular)) return (albedo * sampled, sampled.pdf / matched);
 
 		//Sample the other matching functions
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);

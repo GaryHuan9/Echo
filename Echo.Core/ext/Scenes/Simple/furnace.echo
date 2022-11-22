@@ -3,7 +3,7 @@
 	:blue = new Pure("hdr(0.0250 0.1416 0.3736)")
 	:gray = new Pure("hdr(0.75 0.75 0.75)")
 
-	:material0 = new Diffuse { .Albedo = new Pure("hdr(1 0.68 0.16)") .Roughness = new Pure("hdr(0.7 0 0)") }
+	:material0 = new Diffuse { .Albedo = new Pure("hdr(1 1 1)") .Roughness = new Pure("hdr(1 0 0)") }
 	:material1 = new Diffuse { .Albedo = link gray }
 	:material2 = new Emissive
 	:material3 = new Mirror
@@ -11,7 +11,7 @@
 
 	:material5 = new Conductor
 	{
-		.Roughness = new Pure("hdr(0.05 0.25 0)")
+		.Roughness = new Pure("hdr(1 1 0)")
 		.MainColor = new Pure("rgb(255 255 255)") .EdgeColor = new Pure("rgb(255 255 255)")
 	}
 
@@ -26,10 +26,10 @@
 		.Roughness = new Pure("hdr(0.7 0.7 0)")
 	}
 
-	.Add(new SphereEntity { .Material = link material5 .Radius = "1" })
+	.Add(new SphereEntity { .Material = link material6 .Radius = "1" })
 
 	.Add(new AmbientLight { .Texture = new Pure("0xF") })
-	.Add(new Camera("45") { .Position = "-4.5 0 0" .Rotation = "0 90 0" })
+	.Add(new Camera("45") { .Position = "0 0 -4.5" })
 }
 
 :profile = new EvaluationProfile

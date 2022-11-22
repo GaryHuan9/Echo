@@ -85,7 +85,7 @@ partial record ScenePreparer
 			(from entity in source.LoopChildren(true)
 			 let camera = entity as Camera
 			 where camera != null
-			 select camera).Single()
+			 select camera).SingleOrDefault()
 		);
 
 		ImmutableArray<PreparedInstance> CreatePreparedInstances(ScenePreparer preparer)

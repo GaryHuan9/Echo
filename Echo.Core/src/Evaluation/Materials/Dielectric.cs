@@ -33,11 +33,11 @@ public sealed class Dielectric : Material
 		float alphaY = IMicrofacet.GetAlpha(roughness.G, out bool isSpecularY);
 
 		float index = Sample(RefractiveIndex, contact).R;
+		var fresnel = new RealFresnel(1f, index);
 
 		if (!isSpecularX || !isSpecularY)
 		{
 			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
-			var fresnel = new RealFresnel(1f, index);
 
 			// bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
 			// (
@@ -51,7 +51,7 @@ public sealed class Dielectric : Material
 				fresnel
 			);
 		}
-		else bsdf.Add<SpecularFresnel>(allocator).Reset(1f, index);
+		else bsdf.Add<SpecularFresnel>(allocator).Reset(fresnel);
 
 		return bsdf;
 	}

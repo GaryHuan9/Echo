@@ -1,6 +1,4 @@
-﻿using System.Net.NetworkInformation;
-using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Mathematics;
+﻿using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -76,7 +74,7 @@ public interface IMicrofacet
 }
 
 /// <summary>
-/// A microfacet distribution model first proposed by
+/// The GGX microfacet distribution model first proposed by
 /// Average irregularity representation of a rough surface for ray reflection [Trowbridge and Reitz 1975].
 /// </summary>
 public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet

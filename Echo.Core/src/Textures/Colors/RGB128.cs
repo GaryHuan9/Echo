@@ -40,7 +40,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	public bool IsZero
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => d <= new Float4
+		get => d < new Float4
 		(
 			EpsilonWeight / RadianceWeightR,
 			EpsilonWeight / RadianceWeightG,
@@ -62,6 +62,19 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 
 	/// <inheritdoc/>
 	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
+
+	/// <summary>
+	/// Increases <paramref name="value"/> slightly if needed so it is not zero.
+	/// </summary>
+	/// <remarks><see cref="IsZero"/> will be false on the returned value.</remarks>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static RGB128 MaxEpsilon(in RGB128 value) => new(value.d.Max(new Float4
+	(
+		EpsilonWeight / RadianceWeightR,
+		EpsilonWeight / RadianceWeightG,
+		EpsilonWeight / RadianceWeightB,
+		0f
+	)));
 
 	public static implicit operator Float4(in RGB128 value) => value.d;
 	public static explicit operator RGB128(in Float4 value) => new(Check(value.XYZ_));

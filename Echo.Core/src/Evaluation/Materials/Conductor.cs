@@ -100,7 +100,7 @@ public sealed class Conductor : Material
 			extinction = Sample(Extinction, contact);
 		}
 
-		ComplexFresnel fresnel = new ComplexFresnel(RGB128.White, index, extinction);
+		ComplexFresnel fresnel = new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(index), extinction);
 
 		if (!isSpecularX || !isSpecularY)
 		{
