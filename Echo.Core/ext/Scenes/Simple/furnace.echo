@@ -23,10 +23,10 @@
 
 	:material7 = new Conductor
 	{
-		.Roughness = new Pure("hdr(0.7 0.7 0)")
+		.Roughness = new Pure("hdr(1 1 0)")
 	}
 
-	.Add(new SphereEntity { .Material = link material6 .Radius = "1" })
+	.Add(new SphereEntity { .Material = link material7 .Radius = "1" })
 
 	.Add(new AmbientLight { .Texture = new Pure("0xF") })
 	.Add(new Camera("45") { .Position = "0 0 -4.5" })

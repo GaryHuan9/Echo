@@ -57,7 +57,15 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		incident = Float3.Reflect(outgoing, normal);
 
 		if (!SameHemisphere(outgoing, incident)) return Probable<RGB128>.Impossible;
-		return (Evaluate(outgoing, incident), ProbabilityDensity(outgoing, incident));
+
+		float cosO = CosineP(outgoing);
+		float cosI = CosineP(incident);
+
+		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(incident.Dot(normal))) / (4f * cosO * cosI);
+		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
+		float pdf = microfacet.ProbabilityDensity(outgoing, normal) / outgoing.Dot(normal) / 4f;
+
+		return (evaluated * ratio, pdf);
 	}
 }
 
