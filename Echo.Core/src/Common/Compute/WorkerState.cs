@@ -2,7 +2,7 @@
 using System.Numerics;
 using Echo.Core.Common.Diagnostics;
 
-namespace Echo.Common.Compute;
+namespace Echo.Core.Common.Compute;
 
 /// <summary>
 /// Different states of a <see cref="Worker"/>.
