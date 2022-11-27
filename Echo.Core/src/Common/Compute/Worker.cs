@@ -37,20 +37,6 @@ public interface IWorker
 	sealed string DisplayLabel => $"Worker {Guid:D}";
 
 	/// <summary>
-	/// Invoked when this <see cref="IWorker"/> either begins or stops being idle.
-	/// </summary>
-	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
-	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	event Action<IWorker, bool> OnIdleChangedEvent;
-
-	/// <summary>
-	/// Invoked when this <see cref="IWorker"/> either begins or stops being awaiting for resumption (ie. paused).
-	/// </summary>
-	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
-	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	event Action<IWorker, bool> OnAwaitChangedEvent;
-
-	/// <summary>
 	/// Checks if there are any schedule changes.
 	/// </summary>
 	/// <remarks>Should only be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
@@ -161,14 +147,19 @@ sealed class Worker : IWorker, IDisposable
 		}
 	}
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Invoked when this <see cref="IWorker"/> either begins or stops being idle.
+	/// </summary>
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
 	public event Action<IWorker, bool> OnIdleChangedEvent;
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Invoked when this <see cref="IWorker"/> either begins or stops being awaiting for resumption (ie. paused).
+	/// </summary>
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
 	public event Action<IWorker, bool> OnAwaitChangedEvent;
-
-	/// <inheritdoc/>
-	public int? ThreadId => thread?.ManagedThreadId;
 
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
