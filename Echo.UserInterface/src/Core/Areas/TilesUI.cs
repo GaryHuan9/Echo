@@ -123,7 +123,7 @@ public class TilesUI : PlaneUI
 	IEvaluationReadTile RequestUpdateTile(EvaluationOperation operation)
 	{
 		//Enqueue indices to explore
-		while (indexQueue.Count < operation.WorkerCount && nextExploreIndex < operation.totalProcedureCount)
+		while (indexQueue.Count < operation.WorkerCount && nextExploreIndex < operation.TotalProcedureCount)
 		{
 			indexQueue.Enqueue(nextExploreIndex++);
 		}

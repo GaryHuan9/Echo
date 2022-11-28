@@ -23,7 +23,7 @@ public abstract class Operation : IDisposable
 	{
 		int count = workers.Length;
 
-		this.totalProcedureCount = totalProcedureCount;
+		TotalProcedureCount = totalProcedureCount;
 		workerData = new AlignedArray<WorkerData>(count);
 
 		for (int i = 0; i < count; i++) workerData[i] = new WorkerData(workers[i].Guid);
@@ -34,7 +34,7 @@ public abstract class Operation : IDisposable
 	/// <summary>
 	/// The total number of steps in this <see cref="Operation"/>.
 	/// </summary>
-	public readonly uint totalProcedureCount;
+	public uint TotalProcedureCount { get; private set; }
 
 	/// <summary>
 	/// The <see cref="DateTime"/> when this <see cref="Operation"/> was created.
@@ -71,7 +71,7 @@ public abstract class Operation : IDisposable
 	/// <summary>
 	/// Whether this operation has been fully completed.
 	/// </summary>
-	public bool IsCompleted => CompletedProcedureCount == totalProcedureCount;
+	public bool IsCompleted => CompletedProcedureCount == TotalProcedureCount;
 
 	/// <summary>
 	/// The number of <see cref="IWorker"/>s working on completing this <see cref="Operation"/>.
@@ -92,13 +92,13 @@ public abstract class Operation : IDisposable
 		get
 		{
 			using var _ = procedureLocker.Fetch();
-			if (completedCount == totalProcedureCount) return 1d; //Fully completed
+			if (completedCount == TotalProcedureCount) return 1d; //Fully completed
 
 			double progress = 0d;
 
 			foreach (ref readonly WorkerData data in workerData.AsSpan()) progress += data.procedure.Progress;
 
-			return (progress + completedCount) / totalProcedureCount;
+			return (progress + completedCount) / TotalProcedureCount;
 		}
 	}
 
@@ -141,7 +141,7 @@ public abstract class Operation : IDisposable
 	public bool Execute(IWorker worker)
 	{
 		uint index = Interlocked.Increment(ref nextProcedure) - 1;
-		if (index >= totalProcedureCount) return false;
+		if (index >= TotalProcedureCount) return false;
 
 		//Fetch data and execute
 		ref WorkerData data = ref workerData[worker.Index];

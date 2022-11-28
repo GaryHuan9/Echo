@@ -37,6 +37,18 @@ public interface IWorker
 	sealed string DisplayLabel => $"Worker {Guid:D}";
 
 	/// <summary>
+	/// If possible, pauses the <see cref="Operation"/> this <see cref="Worker"/> is currently performing as soon as possible.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
+	void Pause();
+
+	/// <summary>
+	/// If possible, resumes the <see cref="Operation"/> this <see cref="Worker"/> was performing prior to pausing.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
+	void Resume();
+
+	/// <summary>
 	/// Checks if there are any schedule changes.
 	/// </summary>
 	/// <remarks>Should only be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
@@ -134,50 +146,6 @@ sealed class Worker : IWorker, IDisposable
 	}
 
 	/// <summary>
-	/// If possible, pauses the <see cref="Operation"/> this <see cref="Worker"/> is currently performing as soon as possible.
-	/// </summary>
-	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
-	public void Pause()
-	{
-		using var _ = locker.Fetch();
-
-		switch (State)
-		{
-			case WorkerState.Running: break;
-			case WorkerState.Idle:
-			case WorkerState.Pausing:
-			case WorkerState.Aborting:
-			case WorkerState.Awaiting: return;
-			case WorkerState.Disposed: throw new InvalidOperationException();
-			default:                   throw new ArgumentOutOfRangeException();
-		}
-
-		State = WorkerState.Pausing;
-	}
-
-	/// <summary>
-	/// If possible, resumes the <see cref="Operation"/> this <see cref="Worker"/> was performing prior to pausing.
-	/// </summary>
-	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
-	public void Resume()
-	{
-		using var _ = locker.Fetch();
-
-		switch (State)
-		{
-			case WorkerState.Pausing:
-			case WorkerState.Awaiting: break;
-			case WorkerState.Idle:
-			case WorkerState.Running:
-			case WorkerState.Aborting: return;
-			case WorkerState.Disposed: throw new InvalidOperationException();
-			default:                   throw new ArgumentOutOfRangeException();
-		}
-
-		State = WorkerState.Running;
-	}
-
-	/// <summary>
 	/// If necessary, aborts the <see cref="Operation"/> this <see cref="Worker"/> is currently performing as soon as possible.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
@@ -197,6 +165,44 @@ sealed class Worker : IWorker, IDisposable
 		}
 
 		State = WorkerState.Aborting;
+	}
+
+	/// <inheritdoc/>
+	public void Pause()
+	{
+		using var _ = locker.Fetch();
+
+		switch (State)
+		{
+			case WorkerState.Running: break;
+			case WorkerState.Idle:
+			case WorkerState.Pausing:
+			case WorkerState.Aborting:
+			case WorkerState.Awaiting: return;
+			case WorkerState.Disposed: throw new InvalidOperationException();
+			default:                   throw new ArgumentOutOfRangeException();
+		}
+
+		State = WorkerState.Pausing;
+	}
+
+	/// <inheritdoc/>
+	public void Resume()
+	{
+		using var _ = locker.Fetch();
+
+		switch (State)
+		{
+			case WorkerState.Pausing:
+			case WorkerState.Awaiting: break;
+			case WorkerState.Idle:
+			case WorkerState.Running:
+			case WorkerState.Aborting: return;
+			case WorkerState.Disposed: throw new InvalidOperationException();
+			default:                   throw new ArgumentOutOfRangeException();
+		}
+
+		State = WorkerState.Running;
 	}
 
 	public void Dispose()
