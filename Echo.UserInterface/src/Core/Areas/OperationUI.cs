@@ -90,7 +90,7 @@ public class OperationUI : AreaUI
 		ImGuiCustom.Property("Progress", progress.ToInvariantPercent());
 		ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
 		ImGuiCustom.Property("Creation Time", operation.creationTime.ToInvariant());
-		ImGuiCustom.Property("Total Workload", operation.totalProcedureCount.ToInvariant());
+		ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
 
 		ImGui.NewLine();
 
