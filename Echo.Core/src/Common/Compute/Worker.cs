@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
 
@@ -51,7 +50,7 @@ public interface IWorker
 	/// <summary>
 	/// Checks if there are any schedule changes.
 	/// </summary>
-	/// <remarks>Should only be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
+	/// <remarks>Should be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
 	void CheckSchedule();
 }
 
@@ -77,7 +76,7 @@ sealed class Worker : IWorker, IDisposable
 	/// <inheritdoc/>
 	public Guid Guid { get; }
 
-	uint _state = (uint)WorkerState.Idle;
+	uint _state = (uint)WorkerState.Unassigned;
 
 	/// <inheritdoc/>
 	public WorkerState State
@@ -100,31 +99,31 @@ sealed class Worker : IWorker, IDisposable
 	}
 
 	/// <summary>
-	/// Invoked when this <see cref="IWorker"/> either begins or stops being idle.
+	/// Invoked when this <see cref="IWorker"/> either begins or stops being dispatched to work on an <see cref="Operation"/>.
 	/// </summary>
 	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
 	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	public event Action<IWorker, bool> OnIdleChangedEvent;
+	public event Action<IWorker, bool> OnDispatchChangedEvent;
 
 	/// <summary>
-	/// Invoked when this <see cref="IWorker"/> either begins or stops being awaiting for resumption (ie. paused).
+	/// Invoked when this <see cref="IWorker"/> either begins or stops not using any computational resources. 
 	/// </summary>
 	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
 	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	public event Action<IWorker, bool> OnAwaitChangedEvent;
+	public event Action<IWorker, bool> OnIdlenessChangedEvent;
 
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
 	/// </summary>
 	/// <param name="operation">The <see cref="Operation"/> to dispatch</param>
-	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is not <see cref="WorkerState.Idle"/>.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is not <see cref="WorkerState.Unassigned"/>.</exception>
 	public void Dispatch(Operation operation)
 	{
 		using var _ = locker.Fetch();
 
 		lock (locker)
 		{
-			if (State != WorkerState.Idle) throw new InvalidOperationException();
+			if (State != WorkerState.Unassigned) throw new InvalidOperationException();
 
 			//Assign operation
 			Volatile.Write(ref nextOperation, operation);
@@ -145,28 +144,6 @@ sealed class Worker : IWorker, IDisposable
 		}
 	}
 
-	/// <summary>
-	/// If necessary, aborts the <see cref="Operation"/> this <see cref="Worker"/> is currently performing as soon as possible.
-	/// </summary>
-	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
-	public void Abort()
-	{
-		using var _ = locker.Fetch();
-
-		switch (State)
-		{
-			case WorkerState.Running:
-			case WorkerState.Pausing:
-			case WorkerState.Awaiting: break;
-			case WorkerState.Idle:
-			case WorkerState.Aborting: return;
-			case WorkerState.Disposed: throw new InvalidOperationException();
-			default:                   throw new ArgumentOutOfRangeException();
-		}
-
-		State = WorkerState.Aborting;
-	}
-
 	/// <inheritdoc/>
 	public void Pause()
 	{
@@ -175,10 +152,10 @@ sealed class Worker : IWorker, IDisposable
 		switch (State)
 		{
 			case WorkerState.Running: break;
-			case WorkerState.Idle:
+			case WorkerState.Unassigned:
 			case WorkerState.Pausing:
-			case WorkerState.Aborting:
-			case WorkerState.Awaiting: return;
+			case WorkerState.Awaiting:
+			case WorkerState.Aborting: return;
 			case WorkerState.Disposed: throw new InvalidOperationException();
 			default:                   throw new ArgumentOutOfRangeException();
 		}
@@ -195,7 +172,7 @@ sealed class Worker : IWorker, IDisposable
 		{
 			case WorkerState.Pausing:
 			case WorkerState.Awaiting: break;
-			case WorkerState.Idle:
+			case WorkerState.Unassigned:
 			case WorkerState.Running:
 			case WorkerState.Aborting: return;
 			case WorkerState.Disposed: throw new InvalidOperationException();
@@ -205,6 +182,28 @@ sealed class Worker : IWorker, IDisposable
 		State = WorkerState.Running;
 	}
 
+	/// <summary>
+	/// If necessary, aborts the <see cref="Operation"/> this <see cref="Worker"/> is currently performing as soon as possible.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
+	public void Abort()
+	{
+		using var _ = locker.Fetch();
+
+		switch (State)
+		{
+			case WorkerState.Running:
+			case WorkerState.Pausing:
+			case WorkerState.Awaiting: break;
+			case WorkerState.Unassigned:
+			case WorkerState.Aborting: return;
+			case WorkerState.Disposed: throw new InvalidOperationException();
+			default:                   throw new ArgumentOutOfRangeException();
+		}
+
+		State = WorkerState.Aborting;
+	}
+
 	public void Dispose()
 	{
 		lock (locker)
@@ -212,7 +211,7 @@ sealed class Worker : IWorker, IDisposable
 			if (State == WorkerState.Disposed) return;
 
 			Abort();
-			AwaitStatus(WorkerState.Idle);
+			AwaitAny(WorkerState.Unassigned);
 			State = WorkerState.Disposed;
 
 			locker.Signaling = false;
@@ -224,6 +223,8 @@ sealed class Worker : IWorker, IDisposable
 	/// <inheritdoc/>
 	void IWorker.CheckSchedule()
 	{
+		Ensure.AreEqual(thread, Thread.CurrentThread);
+
 		CheckForAbortion();
 		if (State != WorkerState.Pausing) return;
 
@@ -233,23 +234,27 @@ sealed class Worker : IWorker, IDisposable
 			State = WorkerState.Awaiting;
 		}
 
-		OnAwaitChangedEvent?.Invoke(this, true);
-		AwaitStatus(WorkerState.Running | WorkerState.Aborting);
-		OnAwaitChangedEvent?.Invoke(this, false);
+		OnIdlenessChangedEvent?.Invoke(this, true);
+		AwaitAny(WorkerState.Running | WorkerState.Aborting);
+		OnIdlenessChangedEvent?.Invoke(this, false);
 
 		CheckForAbortion();
+
+		void CheckForAbortion()
+		{
+			if (State != WorkerState.Aborting) return;
+			throw new Operation.AbortException();
+		}
 	}
 
 	void Main()
 	{
-		while (State != WorkerState.Disposed)
+		while (AwaitAny(WorkerState.Running) != WorkerState.Disposed)
 		{
-			if (!AwaitStatus(WorkerState.Running)) break; //Disposed
-
 			Operation operation = Interlocked.Exchange(ref nextOperation, null);
 			if (operation == null) throw new InvalidAsynchronousStateException();
 
-			OnIdleChangedEvent?.Invoke(this, false);
+			OnDispatchChangedEvent?.Invoke(this, true);
 			bool running;
 
 			do
@@ -266,34 +271,26 @@ sealed class Worker : IWorker, IDisposable
 			}
 			while (running);
 
-			State = WorkerState.Idle;
-			OnIdleChangedEvent?.Invoke(this, true);
+			State = WorkerState.Unassigned;
+			OnDispatchChangedEvent?.Invoke(this, false);
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool AwaitStatus(WorkerState status)
+	WorkerState AwaitAny(WorkerState states)
 	{
-		status |= WorkerState.Disposed;
+		states |= WorkerState.Disposed;
 
 		lock (locker)
 		{
-			WorkerState state = State;
+			WorkerState current = State;
 
-			while ((state | status) != status)
+			while ((current | states) != states)
 			{
 				locker.Wait();
-				state = State;
+				current = State;
 			}
 
-			return state != WorkerState.Disposed;
+			return current;
 		}
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	void CheckForAbortion()
-	{
-		if (State != WorkerState.Aborting) return;
-		throw new Operation.AbortException();
 	}
 }

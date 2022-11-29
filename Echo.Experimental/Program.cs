@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using Echo.Core.Common.Compute;
+using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
@@ -9,8 +12,23 @@ namespace Echo.Experimental;
 
 public class Program
 {
+	static async ComputeTask Run(AsyncOperation operation)
+	{
+		Console.WriteLine("Run enter");
+		await operation.Schedule(_ => Thread.Sleep(1000), 10);
+		Console.WriteLine("Run exit");
+	}
+
 	static void Main()
 	{
+		Console.WriteLine("Main enter");
+		Device device = Device.CreateOrGet();
+
+		device.Dispatch(AsyncOperation.New(Run));
+
+
+		Console.WriteLine("Main exit");
+
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();

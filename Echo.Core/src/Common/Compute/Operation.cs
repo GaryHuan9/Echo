@@ -138,7 +138,7 @@ public abstract class Operation : IDisposable
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> to use.</param>
 	/// <returns>Whether this execution performed any work.</returns>
-	public bool Execute(IWorker worker)
+	public virtual bool Execute(IWorker worker)
 	{
 		uint index = Interlocked.Increment(ref nextProcedure) - 1;
 		if (index >= TotalProcedureCount) return false;
@@ -162,13 +162,13 @@ public abstract class Operation : IDisposable
 	}
 
 	/// <summary>
-	/// Should be invoked when a <see cref="IWorker"/> is either starting or stopping to execute this <see cref="Operation"/>.
+	/// Should be invoked when a <see cref="IWorker"/> either begins or stops actively working on this <see cref="Operation"/>.
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> that is changing its idle state.</param>
 	/// <param name="idle">True if the <see cref="IWorker"/> is stopping its execution, false otherwise.</param>
-	/// <remarks>This method should be invoked directly through <see cref="Worker.OnIdleChangedEvent"/>
-	/// and <see cref="Worker.OnAwaitChangedEvent"/>, otherwise the behavior is undefined.</remarks>
-	public void ChangeWorkerState(IWorker worker, bool idle)
+	/// <remarks>This method should be invoked directly through <see cref="Worker.OnDispatchChangedEvent"/>
+	/// and <see cref="Worker.OnIdlenessChangedEvent"/>, otherwise the behavior is undefined.</remarks>
+	public void ChangeWorkerIdleness(IWorker worker, bool idle)
 	{
 		TimeSpan time = stopwatch.Elapsed;
 		Ensure.AreNotEqual(time, default);
