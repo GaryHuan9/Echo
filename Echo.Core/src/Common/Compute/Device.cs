@@ -20,8 +20,8 @@ public sealed class Device : IDisposable
 		{
 			Worker worker = new Worker(i);
 
-			worker.OnIdleChangedEvent += OnIdleChanged;
-			worker.OnAwaitChangedEvent += OnAwaitChanged;
+			worker.OnDispatchChangedEvent += OnDispatchChanged;
+			worker.OnIdlenessChangedEvent += OnIdlenessChanged;
 
 			builder.Add(worker);
 		}
@@ -136,11 +136,17 @@ public sealed class Device : IDisposable
 	}
 
 	/// <summary>
+	/// Blocks the calling thread until this <see cref="Device"/> idles.
+	/// </summary>
+	/// <seealso cref="IsIdle"/>
+	public void AwaitIdle() => AwaitIdleness(true);
+
+	/// <summary>
 	/// Begins the execution of a new <see cref="Operation"/>.
 	/// </summary>
 	/// <param name="factory">The <see cref="IOperationFactory"/> used to create a new <see cref="Operation"/> to execute.</param>
 	/// <remarks>If <see cref="LatestOperation"/> is not null, its execution will be prematurely aborted.</remarks>
-	public void Dispatch(IOperationFactory factory)
+	public void Dispatch<TFactory>(TFactory factory) where TFactory : IOperationFactory
 	{
 		ThrowIfDisposed();
 
@@ -153,7 +159,7 @@ public sealed class Device : IDisposable
 			if (!IsIdle)
 			{
 				Abort();
-				AwaitIdle();
+				AwaitIdleness(true);
 			}
 
 			//Add to operation history
@@ -172,7 +178,7 @@ public sealed class Device : IDisposable
 		}
 
 		//Blocks until when at least one worker started working
-		AwaitState(false);
+		AwaitIdleness(false);
 	}
 
 	/// <summary>
@@ -206,12 +212,6 @@ public sealed class Device : IDisposable
 		AbortImpl();
 	}
 
-	/// <summary>
-	/// Blocks the calling thread until this <see cref="Device"/> idles.
-	/// </summary>
-	/// <seealso cref="IsIdle"/>
-	public void AwaitIdle() => AwaitState(true);
-
 	public void Dispose()
 	{
 		if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
@@ -235,7 +235,7 @@ public sealed class Device : IDisposable
 		operationLocker.EnterWriteLock();
 		try
 		{
-			foreach (Operation operation in operations) operation.Dispose();
+			for (int i = 0; i < operations.Count; i++) operations[i].Dispose();
 		}
 		finally
 		{
@@ -252,45 +252,44 @@ public sealed class Device : IDisposable
 		foreach (var worker in workers) worker.Abort();
 	}
 
-	void AwaitState(bool idle)
+	void AwaitIdleness(bool idle)
 	{
 		using var _ = signalLocker.Fetch();
 
 		while (idle == runningCount > 0 && !Disposed) signalLocker.Wait();
 	}
 
-	void OnIdleChanged(IWorker worker, bool entered)
+	void OnDispatchChanged(IWorker worker, bool entered)
 	{
-		LatestOperation.ChangeWorkerState(worker, entered);
+		LatestOperation.ChangeWorkerIdleness(worker, !entered);
 
 		if (entered)
-		{
-			//Just stopped running
-			using var _ = signalLocker.Fetch();
-			Ensure.IsFalse(runningCount <= 0);
-			--runningCount;
-
-			//Signal if all workers are idle
-			if (runningCount == 0) signalLocker.Signal();
-		}
-		else
 		{
 			//Just started running
 			using var _ = signalLocker.Fetch();
 			Ensure.IsFalse(runningCount >= workers.Length);
 			++runningCount;
 
-			//Signal if not all workers are idle
+			//Signal if some work is running
 			if (runningCount == 1) signalLocker.Signal();
+		}
+		else
+		{
+			//Just stopped running
+			using var _ = signalLocker.Fetch();
+			Ensure.IsFalse(runningCount <= 0);
+			--runningCount;
+
+			//Signal if no worker is running
+			if (runningCount == 0) signalLocker.Signal();
 		}
 	}
 
-	void OnAwaitChanged(IWorker worker, bool entered) => LatestOperation.ChangeWorkerState(worker, entered);
+	void OnIdlenessChanged(IWorker worker, bool entered) => LatestOperation.ChangeWorkerIdleness(worker, entered);
 
 	void ThrowIfDisposed()
 	{
-		if (!Disposed) return;
-		throw new ObjectDisposedException(nameof(Device));
+		if (Disposed) throw new ObjectDisposedException(nameof(Device));
 	}
 
 	/// <summary>

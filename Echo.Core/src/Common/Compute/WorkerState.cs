@@ -5,41 +5,41 @@ using Echo.Core.Common.Diagnostics;
 namespace Echo.Core.Common.Compute;
 
 /// <summary>
-/// Different states of a <see cref="Worker"/>.
+/// Different states of a <see cref="IWorker"/>.
 /// </summary>
-/// <remarks>Almost always, the value of enum should be one-hot (eg. <see cref="Idle"/> and <see cref="Pausing"/>
+/// <remarks>Almost always, the value of enum should be one-hot (eg. <see cref="Unassigned"/> and <see cref="Pausing"/>
 /// should not be present at the same time). The <see cref="FlagsAttribute"/> is only there for the convenience of
-/// some implementation details in <see cref="Worker.AwaitStatus"/>.</remarks>
+/// providing multiple states together in the same variable.</remarks>
 [Flags]
 public enum WorkerState : uint
 {
 	/// <summary>
-	/// The <see cref="Worker"/> is has no assigned <see cref="Operation"/>.
+	/// The <see cref="IWorker"/> is has no assigned <see cref="Operation"/>.
 	/// </summary>
-	Idle = 1 << 0,
+	Unassigned = 1 << 0,
 
 	/// <summary>
-	/// The <see cref="Worker"/> is currently executing an <see cref="Operation"/>.
+	/// The <see cref="IWorker"/> is currently executing an <see cref="Operation"/>.
 	/// </summary>
 	Running = 1 << 1,
 
 	/// <summary>
-	/// The <see cref="Worker"/> is executing an <see cref="Operation"/> but will pause at its earliest convenience.
+	/// The <see cref="IWorker"/> is executing an <see cref="Operation"/> but will pause at its earliest convenience.
 	/// </summary>
 	Pausing = 1 << 2,
 
 	/// <summary>
-	/// The <see cref="Worker"/> is executing an <see cref="Operation"/> but will abort as soon as possible.
+	/// The <see cref="IWorker"/> is explicitly paused or awaiting for some signal. It is not using any computational resources.
 	/// </summary>
-	Aborting = 1 << 3,
+	Awaiting = 1 << 3,
 
 	/// <summary>
-	/// The <see cref="Worker"/> is paused and is not utilizing any computational resources.
+	/// The <see cref="IWorker"/> is executing an <see cref="Operation"/> but will abort as soon as possible.
 	/// </summary>
-	Awaiting = 1 << 4,
+	Aborting = 1 << 4,
 
 	/// <summary>
-	/// The <see cref="Worker"/> is disposed and should no longer be used.
+	/// The <see cref="IWorker"/> is disposed and should no longer be used.
 	/// </summary>
 	Disposed = 1 << 5
 }

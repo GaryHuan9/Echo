@@ -27,9 +27,9 @@ public sealed class AsyncOperation : Operation
 	// 	throw new NotImplementedException();
 	// }
 
-	protected override void Execute(ref Procedure procedure, IWorker worker)
+	public override bool Execute(IWorker worker)
 	{
-		procedure.Begin(1);
+		//TODO procedure
 
 		var spinner = new SpinWait();
 
@@ -37,11 +37,30 @@ public sealed class AsyncOperation : Operation
 		{
 			if (TaskContext.TryPeekExecute(queue))
 			{
-				procedure.Advance();
-				return;
+				return true;
 			}
 
 			spinner.SpinOnce();
 		}
+
+		worker.Pause();
+
+		return false;
+	}
+
+	protected override void Execute(ref Procedure procedure, IWorker worker)
+	{
+		procedure.Begin(1);
+	}
+
+	public static Factory New(Func<AsyncOperation, ComputeTask> action) => new(action);
+
+	public readonly struct Factory : IOperationFactory
+	{
+		public Factory(Func<AsyncOperation, ComputeTask> root) => this.root = root;
+
+		readonly Func<AsyncOperation, ComputeTask> root;
+
+		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new AsyncOperation(workers, root);
 	}
 }
