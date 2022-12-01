@@ -29,19 +29,24 @@ public enum WorkerState : uint
 	Pausing = 1 << 2,
 
 	/// <summary>
-	/// The <see cref="IWorker"/> is explicitly paused or awaiting for some signal. It is not using any computational resources.
+	/// The <see cref="IWorker"/> is paused and is not using any computational resources.
 	/// </summary>
-	Awaiting = 1 << 3,
+	Paused = 1 << 3,
+
+	/// <summary>
+	/// The <see cref="IWorker"/> is awaiting for an internal synchronization signal to continue and is not using any computational resources.
+	/// </summary>
+	Awaiting = 1 << 4,
 
 	/// <summary>
 	/// The <see cref="IWorker"/> is executing an <see cref="Operation"/> but will abort as soon as possible.
 	/// </summary>
-	Aborting = 1 << 4,
+	Aborting = 1 << 5,
 
 	/// <summary>
 	/// The <see cref="IWorker"/> is disposed and should no longer be used.
 	/// </summary>
-	Disposed = 1 << 5
+	Disposed = 1 << 6
 }
 
 public static class WorkerStateExtensions

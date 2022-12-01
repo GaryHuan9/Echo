@@ -9,7 +9,8 @@ public sealed class AsyncOperation : Operation
 {
 	AsyncOperation(ImmutableArray<IWorker> workers, Func<AsyncOperation, ComputeTask> root) : base(workers, 1) { }
 
-	readonly ConcurrentQueue<TaskContext> queue;
+	readonly ConcurrentQueue<TaskContext> queue = new();
+	readonly ManualResetEventSlim resetEvent = new();
 
 	public ComputeTask Schedule(Action action) => Schedule(_ => action(), 1);
 
@@ -17,6 +18,7 @@ public sealed class AsyncOperation : Operation
 	{
 		var context = new TaskContext(action, count);
 
+		resetEvent.Set();
 		queue.Enqueue(context);
 
 		return new ComputeTask(context);
