@@ -41,7 +41,7 @@ public abstract class Operation : IDisposable
 	/// </summary>
 	public readonly DateTime creationTime;
 
-	AlignedArray<WorkerData> workerData;
+	protected AlignedArray<WorkerData> workerData;
 
 	uint nextProcedure;
 	uint completedCount;
@@ -277,13 +277,8 @@ public abstract class Operation : IDisposable
 		workerData = null;
 	}
 
-	/// <summary>
-	/// Exception thrown by <see cref="IWorker"/> during an <see cref="Operation"/> abortion.
-	/// </summary>
-	internal sealed class AbortException : Exception { }
-
 	[StructLayout(LayoutKind.Sequential, Size = 64)]
-	struct WorkerData
+	protected struct WorkerData
 	{
 		public WorkerData(Guid workerGuid)
 		{

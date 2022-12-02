@@ -70,14 +70,8 @@ public sealed class Device : IDisposable
 		get
 		{
 			operationLocker.EnterReadLock();
-			try
-			{
-				return operations.Count == 0 ? null : operations[^1];
-			}
-			finally
-			{
-				operationLocker.ExitReadLock();
-			}
+			try { return operations.Count == 0 ? null : operations[^1]; }
+			finally { operationLocker.ExitReadLock(); }
 		}
 	}
 
@@ -89,14 +83,8 @@ public sealed class Device : IDisposable
 		get
 		{
 			operationLocker.EnterReadLock();
-			try
-			{
-				return CollectionsMarshal.AsSpan(operations);
-			}
-			finally
-			{
-				operationLocker.ExitReadLock();
-			}
+			try { return CollectionsMarshal.AsSpan(operations); }
+			finally { operationLocker.ExitReadLock(); }
 		}
 	}
 
@@ -237,10 +225,7 @@ public sealed class Device : IDisposable
 		{
 			for (int i = 0; i < operations.Count; i++) operations[i].Dispose();
 		}
-		finally
-		{
-			operationLocker.ExitWriteLock();
-		}
+		finally { operationLocker.ExitWriteLock(); }
 
 		operationLocker?.Dispose();
 		operationLocker = null;
