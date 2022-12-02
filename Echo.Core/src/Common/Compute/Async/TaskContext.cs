@@ -14,55 +14,69 @@ class TaskContext
 		totalCount = count;
 	}
 
+	public readonly uint totalCount;
 	readonly Locker locker = new();
 	readonly Action<uint> taskAction;
-	readonly uint totalCount;
 
 	Action continuationAction;
 
 	uint launchedCount;
 	uint finishedCount;
 
-	public bool IsCompleted => InterlockedHelper.Read(ref finishedCount) == totalCount;
+	public bool IsLaunched => InterlockedHelper.Read(ref launchedCount) >= totalCount;
+	public bool IsFinished => InterlockedHelper.Read(ref finishedCount) == totalCount;
+
+	static readonly Action emptyAction = () => { };
 
 	public void Register(Action continuation)
 	{
 		using var _ = locker.Fetch();
 
-		if (IsCompleted) continuation();
-		else continuationAction = continuation;
-	}
-
-	bool Launch(out uint index)
-	{
-		index = Interlocked.Increment(ref launchedCount);
-		return index <= totalCount;
-	}
-
-	void Execute(uint index)
-	{
-		taskAction(index - 1);
-
-		if (Interlocked.Increment(ref finishedCount) == totalCount)
+		if (IsFinished)
 		{
-			using var _ = locker.Fetch();
-			continuationAction?.Invoke();
+			continuation();
+			continuationAction = emptyAction; //Ensure no double registration
+		}
+		else
+		{
+			Ensure.IsNull(continuationAction);
+			continuationAction = continuation;
 		}
 	}
 
-	public static bool TryPeekExecute(ConcurrentQueue<TaskContext> queue)
+	public void TryLaunch(ref uint count, out uint start)
 	{
-		if (!queue.TryPeek(out TaskContext context)) return false;
-		if (!context.Launch(out uint index)) return false;
+		Ensure.IsTrue(count > 0);
 
-		if (index == context.totalCount)
+		if (IsLaunched)
 		{
-			bool success = queue.TryDequeue(out TaskContext item);
-			Ensure.IsTrue(success);
-			Ensure.AreEqual(context, item);
+			count = 0;
+			start = default;
+			return;
 		}
 
-		context.Execute(index);
-		return true;
+		start = Interlocked.Add(ref launchedCount, count) - count;
+		count = start < totalCount ? Math.Min(count, totalCount - start) : 0;
+	}
+
+	public void Execute(uint start, uint count, ref Procedure procedure)
+	{
+		Ensure.IsTrue(count > 0);
+		Ensure.IsTrue(start + count <= totalCount);
+
+		procedure.Begin(count);
+
+		for (uint i = start; i < start + count; i++)
+		{
+			taskAction(i);
+			procedure.Advance();
+		}
+
+		uint finished = Interlocked.Add(ref finishedCount, count);
+		Ensure.IsTrue(finished <= totalCount);
+		if (finished < totalCount) return;
+
+		using var _ = locker.Fetch();
+		continuationAction?.Invoke();
 	}
 }

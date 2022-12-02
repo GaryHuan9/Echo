@@ -38,11 +38,11 @@ public interface IWorker
 	/// <summary>
 	/// Invoked on this <see cref="IWorker"/> thread to block until a signal is issued.
 	/// </summary>
-	/// <param name="resetEvent">The <see cref="ManualResetEventSlim"/> used to issue the signal.</param>
+	/// <param name="resetEvent">The <see cref="ManualResetEventSlim"/> used to set the signal.</param>
 	void Await(ManualResetEventSlim resetEvent);
 
 	/// <summary>
-	/// Checks if there are any schedule changes.
+	/// Invoked on this <see cref="IWorker"/> thread to check if there are any scheduling changes.
 	/// </summary>
 	/// <remarks>Should be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
 	void CheckSchedule();
@@ -92,7 +92,7 @@ sealed class Worker : IWorker, IDisposable
 		}
 	}
 
-	volatile CancellationTokenSource awaitCancellationOwner = new();
+	volatile CancellationTokenSource abortTokenOwner = new();
 
 	/// <summary>
 	/// Invoked when this <see cref="IWorker"/> either begins or stops being dispatched to work on an <see cref="Operation"/>.
@@ -146,26 +146,21 @@ sealed class Worker : IWorker, IDisposable
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
 	public void Pause()
 	{
-		WorkerState state;
+		using var _ = locker.Fetch();
 
-		lock (locker)
+		switch (State)
 		{
-			switch (state = State)
-			{
-				case WorkerState.Running:
-				case WorkerState.Awaiting: break;
-				case WorkerState.Unassigned:
-				case WorkerState.Pausing:
-				case WorkerState.Paused:
-				case WorkerState.Aborting: return;
-				case WorkerState.Disposed: throw new InvalidOperationException();
-				default:                   throw new ArgumentOutOfRangeException();
-			}
-
-			State = WorkerState.Pausing;
+			case WorkerState.Running:
+			case WorkerState.Awaiting: break;
+			case WorkerState.Unassigned:
+			case WorkerState.Pausing:
+			case WorkerState.Paused:
+			case WorkerState.Aborting: return;
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
 		}
 
-		if (state == WorkerState.Awaiting) CancelAwaitToken();
+		State = WorkerState.Pausing;
 	}
 
 	/// <summary>
@@ -184,8 +179,8 @@ sealed class Worker : IWorker, IDisposable
 			case WorkerState.Running:
 			case WorkerState.Awaiting:
 			case WorkerState.Aborting: return;
-			case WorkerState.Disposed: throw new InvalidOperationException();
-			default:                   throw new ArgumentOutOfRangeException();
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
 		}
 
 		State = WorkerState.Running;
@@ -197,26 +192,22 @@ sealed class Worker : IWorker, IDisposable
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is <see cref="WorkerState.Disposed"/>.</exception>
 	public void Abort()
 	{
-		WorkerState state;
+		using var _ = locker.Fetch();
 
-		lock (locker)
+		switch (State)
 		{
-			switch (state = State)
-			{
-				case WorkerState.Running:
-				case WorkerState.Pausing:
-				case WorkerState.Paused:
-				case WorkerState.Awaiting: break;
-				case WorkerState.Unassigned:
-				case WorkerState.Aborting: return;
-				case WorkerState.Disposed: throw new InvalidOperationException();
-				default:                   throw new ArgumentOutOfRangeException();
-			}
-
-			State = WorkerState.Aborting;
+			case WorkerState.Running:
+			case WorkerState.Pausing:
+			case WorkerState.Paused:
+			case WorkerState.Awaiting: break;
+			case WorkerState.Unassigned:
+			case WorkerState.Aborting: return;
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
 		}
 
-		if (state == WorkerState.Awaiting) CancelAwaitToken();
+		abortTokenOwner.Cancel();
+		State = WorkerState.Aborting;
 	}
 
 	public void Dispose()
@@ -233,50 +224,85 @@ sealed class Worker : IWorker, IDisposable
 		}
 
 		thread?.Join();
-		awaitCancellationOwner.Dispose();
+		abortTokenOwner.Dispose();
 	}
 
+	/// <inheritdoc/>
 	void IWorker.Await(ManualResetEventSlim resetEvent)
 	{
 		Ensure.AreEqual(thread, Thread.CurrentThread);
+
+		switch (State)
+		{
+			case WorkerState.Running:
+			case WorkerState.Pausing:
+			case WorkerState.Aborting: break;
+			case WorkerState.Unassigned:
+			case WorkerState.Paused:
+			case WorkerState.Awaiting:
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
+		}
+
 		if (resetEvent.IsSet) return;
+
+		var token = abortTokenOwner.Token;
+		token.ThrowIfCancellationRequested();
 
 		OnIdlenessChangedEvent?.Invoke(this, true);
 
-		lock (locker)
-		{
-			//TODO
-
-			if (State == WorkerState.Pausing)
-			{
-				State = WorkerState.Paused;
-			}
-		}
-
-		OnIdlenessChangedEvent?.Invoke(this, false);
-
+		//Pause if requested
 		while (true)
 		{
-			try
+			lock (locker)
 			{
-				CancellationToken token = awaitCancellationOwner.Token;
-
-				lock (locker)
+				if (token.IsCancellationRequested)
 				{
-					if (State == WorkerState.Disposed) return;
-
-					Abort();
-					AwaitAny(WorkerState.Unassigned);
-					State = WorkerState.Disposed;
-
-					locker.Signaling = false;
+					OnIdlenessChangedEvent?.Invoke(this, false);
+					token.ThrowIfCancellationRequested();
 				}
 
-				ThrowIfAborted();
-				resetEvent.Wait(token);
+				WorkerState state = State;
+
+				if (state == WorkerState.Running)
+				{
+					State = WorkerState.Awaiting;
+					break;
+				}
+
+				if (state == WorkerState.Pausing) State = WorkerState.Paused;
+				else throw new InvalidOperationException("Should be unreachable!"); //OPTIMIZE: switch to UnreachableException when upgraded to dotnet 7
 			}
-			catch (OperationCanceledException) { }
+
+			AwaitAny(WorkerState.Running | WorkerState.Aborting);
 		}
+
+		//Begin awaiting for event
+		try { resetEvent.Wait(token); }
+		catch (OperationCanceledException)
+		{
+			OnIdlenessChangedEvent?.Invoke(this, false);
+			Ensure.AreEqual(State, WorkerState.Aborting);
+			throw;
+		}
+
+		//Change state after await finishes
+		bool pause;
+
+		lock (locker)
+		{
+			WorkerState state = State;
+
+			pause = state == WorkerState.Pausing;
+			if (pause) State = WorkerState.Paused;
+			else if (state == WorkerState.Awaiting) State = WorkerState.Running;
+		}
+
+		//Optionally pause again if requested during await
+		if (pause) AwaitAny(WorkerState.Running | WorkerState.Aborting);
+
+		OnIdlenessChangedEvent?.Invoke(this, false);
+		token.ThrowIfCancellationRequested();
 	}
 
 	/// <inheritdoc/>
@@ -284,8 +310,20 @@ sealed class Worker : IWorker, IDisposable
 	{
 		Ensure.AreEqual(thread, Thread.CurrentThread);
 
-		ThrowIfAborted();
-		if (State != WorkerState.Pausing) return;
+		switch (State)
+		{
+			case WorkerState.Pausing:
+			case WorkerState.Aborting: break;
+			case WorkerState.Running: return;
+			case WorkerState.Unassigned:
+			case WorkerState.Paused:
+			case WorkerState.Awaiting:
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
+		}
+
+		var token = abortTokenOwner.Token;
+		token.ThrowIfCancellationRequested();
 
 		lock (locker)
 		{
@@ -297,7 +335,7 @@ sealed class Worker : IWorker, IDisposable
 		AwaitAny(WorkerState.Running | WorkerState.Aborting);
 		OnIdlenessChangedEvent?.Invoke(this, false);
 
-		ThrowIfAborted();
+		token.ThrowIfCancellationRequested();
 	}
 
 	void Main()
@@ -317,14 +355,23 @@ sealed class Worker : IWorker, IDisposable
 					running = operation.Execute(this);
 					((IWorker)this).CheckSchedule();
 				}
-				catch (Operation.AbortException)
-				{
-					break;
-				}
+				catch (OperationCanceledException) { break; }
 			}
 			while (running);
 
-			State = WorkerState.Unassigned;
+			lock (locker)
+			{
+				State = WorkerState.Unassigned;
+
+				if (!abortTokenOwner.TryReset())
+				{
+					//Reset abort cancellation token
+					CancellationTokenSource old = abortTokenOwner;
+					abortTokenOwner = new CancellationTokenSource();
+					old.Dispose();
+				}
+			}
+
 			OnDispatchChangedEvent?.Invoke(this, false);
 		}
 	}
@@ -345,20 +392,5 @@ sealed class Worker : IWorker, IDisposable
 
 			return current;
 		}
-	}
-
-	void CancelAwaitToken()
-	{
-		CancellationTokenSource owner = awaitCancellationOwner;
-		awaitCancellationOwner = new CancellationTokenSource();
-
-		owner.Cancel();
-		owner.Dispose();
-	}
-
-	void ThrowIfAborted()
-	{
-		if (State != WorkerState.Aborting) return;
-		throw new Operation.AbortException();
 	}
 }

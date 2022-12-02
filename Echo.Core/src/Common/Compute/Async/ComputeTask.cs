@@ -10,7 +10,7 @@ public readonly struct ComputeTask : ICriticalNotifyCompletion
 
 	readonly TaskContext context;
 
-	public bool IsCompleted => context?.IsCompleted != false;
+	public bool IsCompleted => context?.IsFinished != false;
 
 	public ComputeTask GetAwaiter() => this;
 
