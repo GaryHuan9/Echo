@@ -1,9 +1,13 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Common.Compute.Async;
 
+/// <summary>
+/// A custom <see cref="Task"/> like struct used by the <see cref="AsyncOperation"/> for the asynchronous compute system.
+/// </summary>
 [AsyncMethodBuilder(typeof(ComputeTaskAsyncMethodBuilder))]
 public readonly struct ComputeTask : ICriticalNotifyCompletion
 {
@@ -21,10 +25,13 @@ public readonly struct ComputeTask : ICriticalNotifyCompletion
 		Ensure.IsTrue(IsCompleted);
 	}
 
-	public void OnCompleted(Action continuation) => context.Register(continuation);
-	public void UnsafeOnCompleted(Action continuation) => context.Register(continuation);
+	void INotifyCompletion.OnCompleted(Action continuation) => context.Register(continuation);
+	void ICriticalNotifyCompletion.UnsafeOnCompleted(Action continuation) => context.Register(continuation);
 }
 
+/// <summary>
+/// A custom <see cref="Task{T}"/> like struct used by the <see cref="AsyncOperation"/> for the asynchronous compute system.
+/// </summary>
 [AsyncMethodBuilder(typeof(ComputeTaskAsyncMethodBuilder<>))]
 public readonly struct ComputeTask<T> : ICriticalNotifyCompletion
 {
@@ -43,6 +50,8 @@ public readonly struct ComputeTask<T> : ICriticalNotifyCompletion
 		return context.GetResult();
 	}
 
-	public void OnCompleted(Action continuation) => context.Register(continuation);
-	public void UnsafeOnCompleted(Action continuation) => context.Register(continuation);
+	void INotifyCompletion.OnCompleted(Action continuation) => context.Register(continuation);
+	void ICriticalNotifyCompletion.UnsafeOnCompleted(Action continuation) => context.Register(continuation);
+
+	public static implicit operator ComputeTask(ComputeTask<T> task) => new(task.context);
 }

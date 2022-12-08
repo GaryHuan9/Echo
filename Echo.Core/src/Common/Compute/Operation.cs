@@ -40,7 +40,7 @@ public abstract class Operation : IDisposable
 	protected AlignedArray<WorkerData> workerData;
 
 	protected uint nextProcedure;
-	protected uint totalProcedure;
+	uint totalProcedure;
 	uint completedCount;
 
 	TimeSpan totalRecordedTime;
@@ -273,6 +273,15 @@ public abstract class Operation : IDisposable
 		uint total = TotalProcedureCount;
 		Ensure.IsTrue(completed <= total);
 		return completed < total;
+	}
+
+	/// <summary>
+	/// Increases <see cref="TotalProcedureCount"/> as more potential <see cref="Procedure"/> is discovered.
+	/// </summary>
+	protected void IncreaseTotalProcedure(uint amount)
+	{
+		uint result = Interlocked.Add(ref totalProcedure, amount);
+		Ensure.IsTrue(result > result - amount); //Total should only grow
 	}
 
 	/// <summary>
