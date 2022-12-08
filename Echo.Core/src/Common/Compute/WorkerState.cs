@@ -29,12 +29,12 @@ public enum WorkerState : uint
 	Pausing = 1 << 2,
 
 	/// <summary>
-	/// The <see cref="IWorker"/> is paused and is not using any computational resources.
+	/// The <see cref="IWorker"/> is explicitly paused and is not using any computational resources.
 	/// </summary>
 	Paused = 1 << 3,
 
 	/// <summary>
-	/// The <see cref="IWorker"/> is awaiting for an internal synchronization signal to continue and is not using any computational resources.
+	/// The <see cref="IWorker"/> is awaiting for some internal signal and is not using any computational resources.
 	/// </summary>
 	Awaiting = 1 << 4,
 

@@ -6,6 +6,7 @@ using System.Threading;
 using Echo.Core.Common.Compute.Statistics;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Threading;
 
 namespace Echo.Core.Common.Compute;
 
@@ -23,7 +24,7 @@ public abstract class Operation : IDisposable
 	{
 		int count = workers.Length;
 
-		TotalProcedureCount = totalProcedureCount;
+		totalProcedure = totalProcedureCount;
 		workerData = new AlignedArray<WorkerData>(count);
 
 		for (int i = 0; i < count; i++) workerData[i] = new WorkerData(workers[i].Guid);
@@ -32,18 +33,14 @@ public abstract class Operation : IDisposable
 	}
 
 	/// <summary>
-	/// The total number of steps in this <see cref="Operation"/>.
-	/// </summary>
-	public uint TotalProcedureCount { get; private set; }
-
-	/// <summary>
 	/// The <see cref="DateTime"/> when this <see cref="Operation"/> was created.
 	/// </summary>
 	public readonly DateTime creationTime;
 
 	protected AlignedArray<WorkerData> workerData;
 
-	uint nextProcedure;
+	protected uint nextProcedure;
+	protected uint totalProcedure;
 	uint completedCount;
 
 	TimeSpan totalRecordedTime;
@@ -52,6 +49,12 @@ public abstract class Operation : IDisposable
 	readonly Locker totalTimeLocker = new();
 
 	static readonly Stopwatch stopwatch = Stopwatch.StartNew();
+
+	/// <summary>
+	/// The total number of steps in this <see cref="Operation"/>.
+	/// </summary>
+	/// <remarks>In some <see cref="Operation"/>, this value might increase, but it will never decrease!</remarks>
+	public uint TotalProcedureCount => InterlockedHelper.Read(ref totalProcedure);
 
 	/// <summary>
 	/// The number of steps already completed.
@@ -137,7 +140,7 @@ public abstract class Operation : IDisposable
 	/// Joins the execution of this <see cref="Operation"/> once.
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> to use.</param>
-	/// <returns>Whether this execution performed any work.</returns>
+	/// <returns>Whether the <see cref="IWorker"/> should invoke this method one more time.</returns>
 	public virtual bool Execute(IWorker worker)
 	{
 		uint index = Interlocked.Increment(ref nextProcedure) - 1;
@@ -145,20 +148,12 @@ public abstract class Operation : IDisposable
 
 		//Fetch data and execute
 		ref WorkerData data = ref workerData[worker.Index];
-		ref Procedure procedure = ref data.procedure;
 		data.ThrowIfInconsistent(worker.Guid);
-
-		procedure = new Procedure(index);
-		Execute(ref procedure, worker);
+		data.procedure = new Procedure(index);
+		Execute(ref data.procedure, worker);
 
 		//Update progress
-		lock (procedureLocker)
-		{
-			++completedCount;
-			procedure = default;
-		}
-
-		return true;
+		return CompleteProcedure(ref data);
 	}
 
 	/// <summary>
@@ -264,6 +259,21 @@ public abstract class Operation : IDisposable
 	/// <param name="procedure">The step to execute.</param>
 	/// <param name="worker">The <see cref="IWorker"/> that is executing this step.</param>
 	protected abstract void Execute(ref Procedure procedure, IWorker worker);
+
+	/// <summary>
+	/// Completes the current <see cref="Procedure"/> in a <see cref="WorkerData"/>.
+	/// </summary>
+	/// <returns>Whether there are more <see cref="Procedure"/> to work on.</returns>
+	protected bool CompleteProcedure(ref WorkerData data)
+	{
+		using var _ = procedureLocker.Fetch();
+		data.procedure = default;
+
+		uint completed = ++completedCount;
+		uint total = TotalProcedureCount;
+		Ensure.IsTrue(completed <= total);
+		return completed < total;
+	}
 
 	/// <summary>
 	/// Releases the resources owned by this <see cref="Operation"/>.

@@ -8,25 +8,32 @@ namespace Echo.Core.Common.Compute.Async;
 
 class TaskContext
 {
-	public TaskContext(Action<uint> action, uint count)
+	public TaskContext(Action<uint> taskAction, uint repeatCount, uint workerCount)
 	{
-		taskAction = action;
-		totalCount = count;
+		Ensure.IsTrue(repeatCount > 0);
+		Ensure.IsTrue(workerCount > 0);
+
+		this.taskAction = taskAction;
+		this.repeatCount = repeatCount;
+
+		partitionCount = Math.Min(repeatCount, workerCount);
+		partitionSize = (repeatCount - 1) / partitionCount + 1;
 	}
 
-	public readonly uint totalCount;
-	readonly Locker locker = new();
+	public readonly uint partitionCount;
 	readonly Action<uint> taskAction;
-
-	Action continuationAction;
+	readonly uint repeatCount;
+	readonly uint partitionSize;
 
 	uint launchedCount;
 	uint finishedCount;
 
-	public bool IsLaunched => InterlockedHelper.Read(ref launchedCount) >= totalCount;
-	public bool IsFinished => InterlockedHelper.Read(ref finishedCount) == totalCount;
+	readonly Locker locker = new();
+	Action continuationAction = emptyAction;
 
 	static readonly Action emptyAction = () => { };
+
+	public bool IsFinished => InterlockedHelper.Read(ref finishedCount) == partitionCount;
 
 	public void Register(Action continuation)
 	{
@@ -44,37 +51,26 @@ class TaskContext
 		}
 	}
 
-	public void TryLaunch(ref uint count, out uint start)
+	public void Execute(ref Procedure procedure)
 	{
-		Ensure.IsTrue(count > 0);
+		uint launched = Interlocked.Increment(ref launchedCount) - 1;
+		Ensure.IsTrue(launched < partitionCount);
 
-		if (IsLaunched)
-		{
-			count = 0;
-			start = default;
-			return;
-		}
+		uint start = partitionSize * launched;
+		uint end = Math.Min(repeatCount, start + partitionSize);
 
-		start = Interlocked.Add(ref launchedCount, count) - count;
-		count = start < totalCount ? Math.Min(count, totalCount - start) : 0;
-	}
+		Ensure.IsTrue(start < end);
+		procedure.Begin(end - start);
 
-	public void Execute(uint start, uint count, ref Procedure procedure)
-	{
-		Ensure.IsTrue(count > 0);
-		Ensure.IsTrue(start + count <= totalCount);
-
-		procedure.Begin(count);
-
-		for (uint i = start; i < start + count; i++)
+		for (uint i = start; i < end; i++)
 		{
 			taskAction(i);
 			procedure.Advance();
 		}
 
-		uint finished = Interlocked.Add(ref finishedCount, count);
-		Ensure.IsTrue(finished <= totalCount);
-		if (finished < totalCount) return;
+		uint finished = Interlocked.Increment(ref finishedCount) - 1;
+		Ensure.IsTrue(finished < partitionCount);
+		if (finished + 1 < partitionCount) return;
 
 		using var _ = locker.Fetch();
 		continuationAction?.Invoke();
