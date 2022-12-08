@@ -8,9 +8,14 @@ namespace Echo.Core.Common.Compute.Async;
 
 public sealed class AsyncOperation : Operation
 {
-	AsyncOperation(ImmutableArray<IWorker> workers, Func<AsyncOperation, ComputeTask> root) : base(workers, 0) => Schedule(() => root(this));
+	AsyncOperation(ImmutableArray<IWorker> workers, Func<AsyncOperation, ComputeTask> root) : base(workers, 0)
+	{
+		Schedule((Action)(() => rootTask = root(this)));
+	}
 
 	BlockingCollection<TaskContext> partitions = new(new ConcurrentBag<TaskContext>());
+
+	ComputeTask rootTask;
 
 	public ComputeTask Schedule(Action action) => Schedule(_ => action(), 1);
 
@@ -23,10 +28,15 @@ public sealed class AsyncOperation : Operation
 		return new ComputeTask(context);
 	}
 
-	// public ComputeTask<T> Schedule<T>(Func<T> action)
-	// {
-	// 	throw new NotImplementedException();
-	// }
+	public ComputeTask<T> Schedule<T>(Func<T> action)
+	{
+		var context = new TaskContext<T>(action);
+		Ensure.AreEqual(context.partitionCount, 1u);
+		Interlocked.Increment(ref totalProcedure);
+
+		partitions.Add(context);
+		return new ComputeTask<T>(context);
+	}
 
 	public override bool Execute(IWorker worker)
 	{
@@ -58,6 +68,7 @@ public sealed class AsyncOperation : Operation
 		//Note that if any task still has the potential of scheduling more, then we would not be here since totalProcedure would be higher.
 
 		partitions.CompleteAdding();
+		rootTask.GetResult();
 		return false;
 	}
 

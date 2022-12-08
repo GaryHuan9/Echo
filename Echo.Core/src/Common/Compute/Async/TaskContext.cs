@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Concurrent;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Threading;
@@ -8,28 +8,38 @@ namespace Echo.Core.Common.Compute.Async;
 
 class TaskContext
 {
-	public TaskContext(Action<uint> taskAction, uint repeatCount, uint workerCount)
+	public TaskContext(Action<uint> taskAction, uint repeatCount, uint workerCount) : this(repeatCount, workerCount)
+	{
+		Ensure.IsNotNull(taskAction);
+		this.taskAction = taskAction;
+	}
+
+	public TaskContext() : this(1) { }
+
+	protected TaskContext(uint repeatCount, uint workerCount = 1)
 	{
 		Ensure.IsTrue(repeatCount > 0);
 		Ensure.IsTrue(workerCount > 0);
 
-		this.taskAction = taskAction;
-		this.repeatCount = repeatCount;
-
 		partitionCount = Math.Min(repeatCount, workerCount);
-		partitionSize = (repeatCount - 1) / partitionCount + 1;
+		partitionSize = repeatCount / partitionCount;
+		bigPartitions = repeatCount - partitionSize * partitionCount;
+
+		Ensure.IsTrue(bigPartitions < workerCount);
 	}
 
 	public readonly uint partitionCount;
-	readonly Action<uint> taskAction;
-	readonly uint repeatCount;
 	readonly uint partitionSize;
+	readonly uint bigPartitions;
+
+	protected Action<uint> taskAction;
 
 	uint launchedCount;
 	uint finishedCount;
 
-	readonly Locker locker = new();
-	Action continuationAction = emptyAction;
+	protected readonly Locker locker = new();
+	Action continuationAction;
+	Exception innerException;
 
 	static readonly Action emptyAction = () => { };
 
@@ -38,28 +48,43 @@ class TaskContext
 	public void Register(Action continuation)
 	{
 		using var _ = locker.Fetch();
+		Ensure.IsNull(continuationAction);
 
-		if (IsFinished)
+		if (IsFinished || innerException != null)
 		{
 			continuation();
 			continuationAction = emptyAction; //Ensure no double registration
 		}
-		else
-		{
-			Ensure.IsNull(continuationAction);
-			continuationAction = continuation;
-		}
+		else continuationAction = continuation;
+	}
+
+	public void SetException(Exception exception)
+	{
+		using var _ = locker.Fetch();
+		if (innerException != null) return; //Only capture the first exception for now
+
+		innerException = exception;
+		continuationAction?.Invoke();
+	}
+
+	public void ThrowIfExceptionOccured()
+	{
+		using var _ = locker.Fetch();
+		if (innerException == null) return;
+		ExceptionDispatchInfo.Throw(innerException);
 	}
 
 	public void Execute(ref Procedure procedure)
 	{
-		uint launched = Interlocked.Increment(ref launchedCount) - 1;
-		Ensure.IsTrue(launched < partitionCount);
+		uint partition = Interlocked.Increment(ref launchedCount) - 1;
 
-		uint start = partitionSize * launched;
-		uint end = Math.Min(repeatCount, start + partitionSize);
+		Ensure.IsTrue(partition < partitionCount);
+		Ensure.IsNotNull(taskAction); //Ensure not created as a signal
 
-		Ensure.IsTrue(start < end);
+		uint start = partitionSize * partition;
+		uint end = start + partitionSize;
+		if (partition < bigPartitions) ++end;
+
 		procedure.Begin(end - start);
 
 		for (uint i = start; i < end; i++)
@@ -68,11 +93,45 @@ class TaskContext
 			procedure.Advance();
 		}
 
+		FinishOnce();
+	}
+
+	public void FinishOnce()
+	{
 		uint finished = Interlocked.Increment(ref finishedCount) - 1;
 		Ensure.IsTrue(finished < partitionCount);
 		if (finished + 1 < partitionCount) return;
+		lock (locker) continuationAction?.Invoke();
+	}
+}
 
-		using var _ = locker.Fetch();
-		continuationAction?.Invoke();
+class TaskContext<T> : TaskContext
+{
+	public TaskContext(Func<T> taskAction) : base(1)
+	{
+		Ensure.IsNotNull(taskAction);
+
+		this.taskAction = _ =>
+		{
+			T item = taskAction();
+			lock (locker) result = item;
+		};
+	}
+
+	public TaskContext() { }
+
+	T result;
+
+	public T GetResult()
+	{
+		Ensure.IsTrue(IsFinished);
+		lock (locker) return result;
+	}
+
+	public void FinishOnce(T item)
+	{
+		Ensure.IsFalse(IsFinished);
+		lock (locker) result = item;
+		FinishOnce();
 	}
 }
