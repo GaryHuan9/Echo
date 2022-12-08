@@ -6,39 +6,60 @@ using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Common.Compute.Async;
 
-public sealed class AsyncOperation : Operation
+/// <summary>
+/// An asynchronous <see cref="Operation"/> that integrates with the compute system.
+/// </summary>
+/// <remarks>
+/// Using <see cref="ComputeTask"/>, the <see cref="AsyncOperation"/> works with the
+/// C# async and await syntax for convenient divergent asynchronous programming.
+/// </remarks>
+public abstract class AsyncOperation : Operation
 {
-	AsyncOperation(ImmutableArray<IWorker> workers, Func<AsyncOperation, ComputeTask> root) : base(workers, 0)
+	protected AsyncOperation(ImmutableArray<IWorker> workers) : base(workers, 0)
 	{
-		Schedule((Action)(() => rootTask = root(this)));
+		Schedule((Action)(() => rootTask = Execute()));
 	}
 
 	BlockingCollection<TaskContext> partitions = new(new ConcurrentBag<TaskContext>());
 
 	ComputeTask rootTask;
 
+	/// <summary>
+	/// Schedules an <see cref="Action"/> to be executed on the <see cref="Device"/>.
+	/// </summary>
+	/// <returns>A <see cref="ComputeTask"/> that will only complete once the scheduled item finishes entirely.</returns>
 	public ComputeTask Schedule(Action action) => Schedule(_ => action(), 1);
 
+	/// <summary>
+	/// Schedules an <see cref="Action"/> to be executed many times on the <see cref="Device"/>.
+	/// </summary>
+	/// <returns>A <see cref="ComputeTask"/> that will only complete once the scheduled item finishes entirely.</returns>
 	public ComputeTask Schedule(Action<uint> action, uint count)
 	{
 		var context = new TaskContext(action, count, (uint)WorkerCount);
-		Interlocked.Add(ref totalProcedure, context.partitionCount);
+
+		IncreaseTotalProcedure(context.partitionCount);
 		for (int i = 0; i < context.partitionCount; i++) partitions.Add(context);
 
 		return new ComputeTask(context);
 	}
 
+	/// <summary>
+	/// Schedules an <see cref="Func{TResult}"/> to be executed on the <see cref="Device"/>.
+	/// </summary>
+	/// <returns>A <see cref="ComputeTask{T}"/> that will only complete once the scheduled item finishes entirely.</returns>
 	public ComputeTask<T> Schedule<T>(Func<T> action)
 	{
 		var context = new TaskContext<T>(action);
 		Ensure.AreEqual(context.partitionCount, 1u);
-		Interlocked.Increment(ref totalProcedure);
 
+		IncreaseTotalProcedure(1);
 		partitions.Add(context);
+
 		return new ComputeTask<T>(context);
 	}
 
-	public override bool Execute(IWorker worker)
+	public sealed override bool Execute(IWorker worker)
 	{
 		//Try get one task context partition
 		if (!partitions.TryTake(out TaskContext partition))
@@ -72,9 +93,15 @@ public sealed class AsyncOperation : Operation
 		return false;
 	}
 
-	protected override void Execute(ref Procedure procedure, IWorker worker) => throw new NotSupportedException();
+	/// <summary>
+	/// This is the entry of the <see cref="AsyncOperation"/>.
+	/// </summary>
+	/// <remarks>This will be invoked once on an <see cref="IWorker"/> thread, and it should call the different <see cref="Schedule(Action)"/> methods
+	/// to subsequently distribute work for the entire <see cref="Device"/>. Note that async <see cref="ComputeTask"/> methods can only await on other
+	/// <see cref="ComputeTask"/> objects, anything else is not allowed.</remarks>
+	protected abstract ComputeTask Execute();
 
-	public static Factory New(Func<AsyncOperation, ComputeTask> action) => new(action);
+	protected sealed override void Execute(ref Procedure procedure, IWorker worker) => throw new NotSupportedException();
 
 	protected override void Dispose(bool disposing)
 	{
@@ -83,12 +110,29 @@ public sealed class AsyncOperation : Operation
 		partitions = null;
 	}
 
-	public readonly struct Factory : IOperationFactory
+	/// <summary>
+	/// Creates a new <see cref="IOperationFactory"/> for an <see cref="AsyncOperation"/> from a delegate.
+	/// </summary>
+	public static FactoryFromDelegate New(Func<AsyncOperation, ComputeTask> action) => new(action);
+
+	/// <summary>
+	/// An <see cref="IOperationFactory"/> implementation for <see cref="New"/>.
+	/// </summary>
+	public readonly struct FactoryFromDelegate : IOperationFactory
 	{
-		public Factory(Func<AsyncOperation, ComputeTask> root) => this.root = root;
+		public FactoryFromDelegate(Func<AsyncOperation, ComputeTask> root) => this.root = root;
 
 		readonly Func<AsyncOperation, ComputeTask> root;
 
-		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new AsyncOperation(workers, root);
+		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new Impl(workers, root);
+
+		sealed class Impl : AsyncOperation
+		{
+			public Impl(ImmutableArray<IWorker> workers, Func<AsyncOperation, ComputeTask> root) : base(workers) => this.root = root;
+
+			readonly Func<AsyncOperation, ComputeTask> root;
+
+			protected override ComputeTask Execute() => root(this);
+		}
 	}
 }

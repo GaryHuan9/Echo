@@ -14,6 +14,10 @@ class TaskContext
 		this.taskAction = taskAction;
 	}
 
+	/// <summary>
+	/// Create this <see cref="TaskContext"/> as a signal.
+	/// Can be set immediately using <see cref="FinishOnce"/>.
+	/// </summary>
 	public TaskContext() : this(1) { }
 
 	protected TaskContext(uint repeatCount, uint workerCount = 1)
@@ -118,6 +122,10 @@ class TaskContext<T> : TaskContext
 		};
 	}
 
+	/// <summary>
+	/// Create this <see cref="TaskContext{T}"/> as a signal.
+	/// Can be set immediately using <see cref="FinishOnce"/>.
+	/// </summary>
 	public TaskContext() { }
 
 	T result;
