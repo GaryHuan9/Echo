@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Echo.Core.Common.Compute;
@@ -13,10 +12,21 @@ namespace Echo.Experimental;
 
 public class Program
 {
+	static async ComputeTask<int> GetR(AsyncOperation operation)
+	{
+		await operation.Schedule(() => Thread.Sleep(1000));
+
+		return 42;
+	}
+
 	static async ComputeTask Run(AsyncOperation operation)
 	{
 		Console.WriteLine("Run enter");
-		await operation.Schedule(_ => Thread.Sleep(1000), 25);
+		await operation.Schedule(_ => Thread.Sleep(1000), 50);
+		Console.WriteLine("Run mid");
+
+		Console.WriteLine(await GetR(operation));
+
 		Console.WriteLine("Run exit");
 	}
 
