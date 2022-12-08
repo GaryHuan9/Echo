@@ -8,23 +8,18 @@ namespace Echo.Core.Common.Compute.Async;
 
 public sealed class AsyncOperation : Operation
 {
-	AsyncOperation(ImmutableArray<IWorker> workers, Func<AsyncOperation, ComputeTask> root) : base(workers, 1) { }
+	AsyncOperation(ImmutableArray<IWorker> workers, Func<AsyncOperation, ComputeTask> root) : base(workers, 0) => Schedule(() => root(this));
 
-	readonly ConcurrentQueue<TaskContext> queue = new();
-	readonly ManualResetEventSlim resetEvent = new();
-
-	uint queueSize;
+	BlockingCollection<TaskContext> partitions = new(new ConcurrentBag<TaskContext>());
 
 	public ComputeTask Schedule(Action action) => Schedule(_ => action(), 1);
 
 	public ComputeTask Schedule(Action<uint> action, uint count)
 	{
-		var context = new TaskContext(action, count);
-		uint size = Interlocked.Increment(ref queueSize);
+		var context = new TaskContext(action, count, (uint)WorkerCount);
+		Interlocked.Add(ref totalProcedure, context.partitionCount);
+		for (int i = 0; i < context.partitionCount; i++) partitions.Add(context);
 
-		queue.Enqueue(context);
-
-		if (size == 1) resetEvent.Set();
 		return new ComputeTask(context);
 	}
 
@@ -35,58 +30,47 @@ public sealed class AsyncOperation : Operation
 
 	public override bool Execute(IWorker worker)
 	{
-		TaskContext context = null;
-		uint count = 0;
-		uint start = 0;
-
-		var spinner = new SpinWait();
-		bool empty = queue.IsEmpty;
-
-		while (!empty)
+		//Try get one task context partition
+		if (!partitions.TryTake(out TaskContext partition))
 		{
-			if (queue.TryPeek(out context))
+			//Block and wait for one to become available
+			if (!worker.Await(partitions, out partition))
 			{
-				//Try launch a partition of the task for this worker
-				count = (context.totalCount - 1) / (uint)WorkerCount + 1;
-				context.TryLaunch(ref count, out start);
-
-				if (count > 0) break;
+				Ensure.IsTrue(partitions.IsCompleted);
+				return false;
 			}
 
-			//Try again later
-			spinner.SpinOnce();
-			empty = queue.IsEmpty;
+			Ensure.IsNotNull(partition);
 		}
 
-		if (empty)
-		{
-			//TODO
-		}
-
-		if (context.totalCount == start + count)
-		{
-			//Just launched the last iteration of this task, remove it from queue
-			bool success = queue.TryDequeue(out TaskContext dequeued);
-			Ensure.IsTrue(success);
-			Ensure.AreEqual(dequeued, context);
-
-			uint size = Interlocked.Decrement(ref queueSize);
-			if (size == 0) resetEvent.Reset();
-		}
-
-		//Execute the task
+		//Execute a partition of the task as a procedure
+		uint index = Interlocked.Increment(ref nextProcedure) - 1;
 		ref WorkerData data = ref workerData[worker.Index];
+
 		data.ThrowIfInconsistent(worker.Guid);
+		data.procedure = new Procedure(index);
+		partition.Execute(ref data.procedure);
 
-		data.procedure = new Procedure(default); //TODO procedure index
-		context.Execute(start, count, ref data.procedure);
+		//Update progress
+		if (CompleteProcedure(ref data)) return true;
 
-		return true;
+		//All procedures (task partitions) are done and there is no way for us to schedule more, then the entire operation is finished.
+		//Note that if any task still has the potential of scheduling more, then we would not be here since totalProcedure would be higher.
+
+		partitions.CompleteAdding();
+		return false;
 	}
 
 	protected override void Execute(ref Procedure procedure, IWorker worker) => throw new NotSupportedException();
 
 	public static Factory New(Func<AsyncOperation, ComputeTask> action) => new(action);
+
+	protected override void Dispose(bool disposing)
+	{
+		base.Dispose(disposing);
+		if (!disposing) return;
+		partitions = null;
+	}
 
 	public readonly struct Factory : IOperationFactory
 	{

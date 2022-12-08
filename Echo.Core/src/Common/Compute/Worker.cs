@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Numerics;
 using System.Threading;
@@ -36,10 +37,10 @@ public interface IWorker
 	sealed string DisplayLabel => $"Worker {Guid:D}";
 
 	/// <summary>
-	/// Invoked on this <see cref="IWorker"/> thread to block until a signal is issued.
+	/// Invoked on this <see cref="IWorker"/> thread to block until an item is retrieved from the <see cref="BlockingCollection{T}"/>.
 	/// </summary>
-	/// <param name="resetEvent">The <see cref="ManualResetEventSlim"/> used to set the signal.</param>
-	void Await(ManualResetEventSlim resetEvent);
+	/// <remarks>If <see cref="BlockingCollection{T}.IsCompleted"/> is true, this method returns false immediately.</remarks>
+	bool Await<T>(BlockingCollection<T> collection, out T item);
 
 	/// <summary>
 	/// Invoked on this <see cref="IWorker"/> thread to check if there are any scheduling changes.
@@ -228,7 +229,7 @@ sealed class Worker : IWorker, IDisposable
 	}
 
 	/// <inheritdoc/>
-	void IWorker.Await(ManualResetEventSlim resetEvent)
+	bool IWorker.Await<T>(BlockingCollection<T> collection, out T item)
 	{
 		Ensure.AreEqual(thread, Thread.CurrentThread);
 
@@ -244,7 +245,7 @@ sealed class Worker : IWorker, IDisposable
 			default: throw new InvalidOperationException();
 		}
 
-		if (resetEvent.IsSet) return;
+		if (collection.TryTake(out item)) return true;
 
 		var token = abortTokenOwner.Token;
 		token.ThrowIfCancellationRequested();
@@ -277,8 +278,10 @@ sealed class Worker : IWorker, IDisposable
 			AwaitAny(WorkerState.Running | WorkerState.Aborting);
 		}
 
-		//Begin awaiting for event
-		try { resetEvent.Wait(token); }
+		//Begin awaiting for item
+		bool result;
+
+		try { result = collection.TryTake(out item, Timeout.Infinite, token); }
 		catch (OperationCanceledException)
 		{
 			OnIdlenessChangedEvent?.Invoke(this, false);
@@ -303,6 +306,8 @@ sealed class Worker : IWorker, IDisposable
 
 		OnIdlenessChangedEvent?.Invoke(this, false);
 		token.ThrowIfCancellationRequested();
+
+		return result;
 	}
 
 	/// <inheritdoc/>

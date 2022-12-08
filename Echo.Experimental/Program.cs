@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Echo.Core.Common.Compute;
@@ -15,7 +16,7 @@ public class Program
 	static async ComputeTask Run(AsyncOperation operation)
 	{
 		Console.WriteLine("Run enter");
-		await operation.Schedule(_ => Thread.Sleep(1000), 10);
+		await operation.Schedule(_ => Thread.Sleep(1000), 25);
 		Console.WriteLine("Run exit");
 	}
 
@@ -25,7 +26,7 @@ public class Program
 		Device device = Device.CreateOrGet();
 
 		device.Dispatch(AsyncOperation.New(Run));
-
+		device.AwaitIdle();
 
 		Console.WriteLine("Main exit");
 
