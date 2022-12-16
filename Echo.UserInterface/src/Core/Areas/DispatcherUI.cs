@@ -153,7 +153,7 @@ public class DispatcherUI : AreaUI
 				NextProfile = profile
 			};
 
-			device.Dispatch(operation);
+			device.Schedule(operation);
 		});
 
 		static T ConstructFirst<T>(EchoChronicleHierarchyObjects objects, string label) where T : class

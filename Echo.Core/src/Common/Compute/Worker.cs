@@ -100,14 +100,14 @@ sealed class Worker : IWorker, IDisposable
 	/// </summary>
 	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
 	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	public event Action<IWorker, bool> OnDispatchChangedEvent;
+	public event Action<Worker, bool> OnDispatchChangedEvent;
 
 	/// <summary>
 	/// Invoked when this <see cref="IWorker"/> either begins or stops not using any computational resources. 
 	/// </summary>
 	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
 	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	public event Action<IWorker, bool> OnIdlenessChangedEvent;
+	public event Action<Worker, bool> OnIdlenessChangedEvent;
 
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
@@ -351,6 +351,8 @@ sealed class Worker : IWorker, IDisposable
 			if (operation == null) throw new InvalidAsynchronousStateException();
 
 			OnDispatchChangedEvent?.Invoke(this, true);
+			OnIdlenessChangedEvent?.Invoke(this, false);
+
 			bool running;
 
 			do
@@ -377,6 +379,7 @@ sealed class Worker : IWorker, IDisposable
 				}
 			}
 
+			OnIdlenessChangedEvent?.Invoke(this, true);
 			OnDispatchChangedEvent?.Invoke(this, false);
 		}
 	}

@@ -19,6 +19,8 @@ public class OperationUI : AreaUI
 	public OperationUI() : base("Operation") { }
 
 	int operationIndex;
+	bool selectLatest = true;
+
 	Operation lastOperation;
 
 	EventRow[] eventRows;
@@ -31,8 +33,8 @@ public class OperationUI : AreaUI
 		{
 			var device = Device.Instance;
 			if (device == null) return null;
-			var operations = device.PastOperations;
-			if (operations.Length == 0) return null;
+			var operations = device.Operations;
+			if (operations.Count == 0) return null;
 			return operations[operationIndex];
 		}
 	}
@@ -40,27 +42,31 @@ public class OperationUI : AreaUI
 	protected override void Update(in Moment moment)
 	{
 		var device = Device.Instance;
-		var operations = device == null ? ReadOnlySpan<Operation>.Empty : device.PastOperations;
 
-		if (operations.Length == 0)
+		if (device == null || device.Operations.Count == 0)
 		{
 			operationIndex = 0;
 			lastOperation = null;
 			return;
 		}
 
+		ImGui.Checkbox("Select Latest", ref selectLatest);
+
+		var operations = device.Operations;
+
 		//Populate operation labels
-		if (operations.Length != operationLabels.Count)
+		if (operations.Count != operationLabels.Count)
 		{
 			operationLabels.Clear();
 
-			foreach (Operation operation in operations)
+			for (int i = 0; i < operations.Count; i++)
 			{
+				Operation operation = operations[i];
 				string creation = operation.creationTime.ToInvariant();
 				operationLabels.Add($"{operation.GetType().Name} ({creation})");
 			}
 
-			operationIndex = operations.Length - 1;
+			operationIndex = operations.Count - 1;
 		}
 
 		//Draw operation selector
