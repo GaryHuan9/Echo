@@ -13,7 +13,7 @@ public class OperationReportTI : ReportTI
 
 	protected override void Paint(in Canvas canvas, Brush brush, Device device)
 	{
-		Operation operation = device.LatestOperation;
+		Operation operation = device.Operations.Latest;
 
 		if (operation == null)
 		{
