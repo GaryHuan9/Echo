@@ -149,7 +149,7 @@ public class SystemUI : AreaUI
 	static void DrawDevice(Device device)
 	{
 		//Buttons
-		ImGui.BeginDisabled(device.IsIdle);
+		ImGui.BeginDisabled(!device.IsDispatched);
 
 		if (ImGui.Button("Pause"))
 		{
@@ -176,15 +176,13 @@ public class SystemUI : AreaUI
 		//Status
 		if (ImGuiCustom.BeginProperties("Main"))
 		{
-			ImGuiCustom.Property("State", device.IsIdle ? "Idle" : "Running");
+			ImGuiCustom.Property("State", device.IsDispatched ? "Running" : "Idle");
 			ImGuiCustom.Property("Population", device.Population.ToInvariant());
 
-			var operations = device.PastOperations;
-
-			if (operations.Length > 0)
+			if (device.Operations.Count > 0)
 			{
-				ImGuiCustom.Property("Latest Dispatch", operations[^1].creationTime.ToInvariant());
-				ImGuiCustom.Property("Past Operation Count", operations.Length.ToInvariant());
+				ImGuiCustom.Property("Latest Dispatch", device.Operations[^1].creationTime.ToInvariant());
+				ImGuiCustom.Property("Past Operation Count", device.Operations.Count.ToInvariant());
 			}
 			else
 			{
