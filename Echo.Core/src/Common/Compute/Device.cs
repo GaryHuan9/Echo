@@ -86,7 +86,7 @@ public sealed class Device : IDisposable
 		}
 		private set
 		{
-			Ensure.IsTrue(Monitor.IsEntered(instanceLocker));
+			Ensure.IsTrue(instanceLocker.IsEntered);
 			_instance = value;
 		}
 	}
@@ -105,8 +105,12 @@ public sealed class Device : IDisposable
 		//Create new operation to be scheduled
 		Operation operation = factory.CreateOperation(Workers);
 
-		//Add to operations queue
-		if (operations.Enqueue(operation)) Dispatch(operation);
+		if (operations.Enqueue(operation))
+		{
+			//Add to operations queue
+			using var _ = locker.Fetch();
+			Dispatch(operation);
+		}
 
 		return operation;
 	}
@@ -116,6 +120,7 @@ public sealed class Device : IDisposable
 	/// </summary>
 	public void Pause()
 	{
+		using var _ = locker.Fetch();
 		ThrowIfDisposed();
 		foreach (var worker in workers) worker.Pause();
 	}
@@ -125,6 +130,7 @@ public sealed class Device : IDisposable
 	/// </summary>
 	public void Resume()
 	{
+		using var _ = locker.Fetch();
 		ThrowIfDisposed();
 		foreach (var worker in workers) worker.Resume();
 	}
@@ -134,12 +140,31 @@ public sealed class Device : IDisposable
 	/// </summary>
 	public void Abort()
 	{
+		using var _ = locker.Fetch();
 		ThrowIfDisposed();
+		foreach (var worker in workers) worker.Abort();
+	}
+
+	/// <summary>
+	/// Aborts or skips an <see cref="Operation"/> scheduled on this device.
+	/// </summary>
+	/// <param name="operation">The <see cref="Operation"/> to abort or skip.</param>
+	/// <exception cref="ArgumentOutOfRangeException">Argument is not an <see cref="Operation"/> scheduled to this <see cref="Device"/>.</exception>
+	public void Abort(Operation operation)
+	{
+		int index = operations.IndexOf(operation);
+		if (index < 0) throw new ArgumentOutOfRangeException(nameof(operation), $"Not an {nameof(Operation)} scheduled to this {nameof(Device)}.");
+
+		using var _ = locker.Fetch();
+		ThrowIfDisposed();
+
+		if (!operations.Skip(index)) return;
 		foreach (var worker in workers) worker.Abort();
 	}
 
 	public void Dispose()
 	{
+		using var _ = locker.Fetch();
 		if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
 
 		//Unregister from active instance
@@ -156,13 +181,6 @@ public sealed class Device : IDisposable
 		operations.Dispose();
 	}
 
-	void Dispatch(Operation operation)
-	{
-		Ensure.AreEqual(Volatile.Read(ref dispatchPositives), 0u);
-		Ensure.AreEqual(Volatile.Read(ref dispatchNegatives), 0u);
-		foreach (var worker in workers) worker.Dispatch(operation);
-	}
-
 	void OnDispatchChanged(Worker worker, bool entered)
 	{
 		if (entered)
@@ -175,13 +193,15 @@ public sealed class Device : IDisposable
 			uint count = Interlocked.Increment(ref dispatchNegatives);
 			Ensure.IsTrue(count <= Volatile.Read(ref dispatchPositives));
 
-			if (count == Population)
-			{
-				Volatile.Write(ref dispatchPositives, 0);
-				Volatile.Write(ref dispatchNegatives, 0);
+			if (count != Population) return;
 
-				if (operations.Advance(out Operation next)) Dispatch(next);
-			}
+			Volatile.Write(ref dispatchPositives, 0);
+			Volatile.Write(ref dispatchNegatives, 0);
+
+			if (Disposed) return;
+
+			using var _ = locker.Fetch();
+			if (operations.Advance(out Operation next)) Dispatch(next);
 		}
 	}
 
@@ -190,6 +210,16 @@ public sealed class Device : IDisposable
 	void ThrowIfDisposed()
 	{
 		if (Disposed) throw new ObjectDisposedException(nameof(Device));
+	}
+
+	void Dispatch(Operation operation)
+	{
+		Ensure.AreEqual(Volatile.Read(ref dispatchPositives), 0u);
+		Ensure.AreEqual(Volatile.Read(ref dispatchNegatives), 0u);
+		Ensure.IsTrue(locker.IsEntered);
+
+		ThrowIfDisposed();
+		foreach (var worker in workers) worker.Dispatch(operation);
 	}
 
 	/// <summary>
@@ -256,7 +286,7 @@ public sealed class Device : IDisposable
 		/// </summary>
 		/// <param name="operation">The <see cref="Operation"/> to await for.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Argument is not an <see cref="Operation"/> scheduled to this <see cref="Device"/>.</exception>
-		void AwaitDone(Operation operation);
+		void Await(Operation operation);
 	}
 
 	sealed class OperationsQueue : IOperations
@@ -267,6 +297,7 @@ public sealed class Device : IDisposable
 		int currentIndex;
 
 		readonly List<Operation> list = new();
+		readonly HashSet<int> skipIndices = new();
 		readonly ReaderWriterLockSlim locker = new();
 		readonly Locker awaitLocker = new();
 
@@ -344,7 +375,11 @@ public sealed class Device : IDisposable
 			locker.EnterWriteLock();
 			try
 			{
-				int index = ++currentIndex;
+				int index;
+
+				//Find next non-skipped index
+				do index = ++currentIndex;
+				while (skipIndices.Remove(index));
 
 				if (index == list.Count)
 				{
@@ -352,6 +387,7 @@ public sealed class Device : IDisposable
 					return false;
 				}
 
+				//Get the operation from index and return true
 				Ensure.IsTrue(currentIndex < list.Count);
 				next = list[currentIndex];
 				return true;
@@ -359,7 +395,7 @@ public sealed class Device : IDisposable
 			finally
 			{
 				locker.ExitWriteLock();
-				awaitLocker.Signal();
+				awaitLocker.Signal(); //Signal for operation completion
 			}
 		}
 
@@ -372,7 +408,7 @@ public sealed class Device : IDisposable
 		}
 
 		/// <inheritdoc/>
-		public void AwaitDone(Operation operation)
+		public void Await(Operation operation)
 		{
 			int index = IndexOf(operation);
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(operation), $"Not an {nameof(Operation)} scheduled to this {nameof(Device)}.");
@@ -393,6 +429,30 @@ public sealed class Device : IDisposable
 			}
 		}
 
+		/// <summary>
+		/// Skips the execution of an <see cref="Operation"/>.
+		/// </summary>
+		/// <param name="index">The index of the <see cref="Operation"/> to skip.</param>
+		/// <returns>Whether the <see cref="Device"/> need to skip the current <see cref="Operation"/>.</returns>
+		public bool Skip(int index)
+		{
+			Ensure.IsTrue(index >= 0);
+
+			locker.EnterWriteLock();
+			try
+			{
+				if (index < currentIndex) return false; //Operation already done
+				if (index == currentIndex) return true;
+
+				skipIndices.Add(index);
+				return false;
+			}
+			finally
+			{
+				locker.ExitWriteLock();
+			}
+		}
+
 		public void Dispose()
 		{
 			awaitLocker.Signaling = false;
@@ -401,7 +461,9 @@ public sealed class Device : IDisposable
 			try
 			{
 				for (int i = 0; i < list.Count; i++) list[i].Dispose();
+
 				list.Clear();
+				skipIndices.Clear();
 			}
 			finally { locker.ExitWriteLock(); }
 
