@@ -154,14 +154,21 @@ public class SystemUI : AreaUI
 		if (ImGui.Button("Pause"))
 		{
 			device.Pause();
-			LogList.Add("Pausing compute device.");
+			LogList.Add("Pausing dispatched operation on compute device.");
 		}
 
 		ImGui.SameLine();
 		if (ImGui.Button("Resume"))
 		{
 			device.Resume();
-			LogList.Add("Resuming compute device.");
+			LogList.Add("Resuming dispatched operation on compute device.");
+		}
+
+		ImGui.SameLine();
+		if (ImGui.Button("Abort"))
+		{
+			device.Abort();
+			LogList.Add("Aborting dispatched operation on compute device.");
 		}
 
 		ImGui.EndDisabled();

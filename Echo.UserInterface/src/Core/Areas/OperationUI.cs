@@ -21,8 +21,6 @@ public class OperationUI : AreaUI
 	int operationIndex;
 	bool selectLatest = true;
 
-	Operation lastOperation;
-
 	EventRow[] eventRows;
 	readonly List<string> operationLabels = new();
 	readonly WorkerData workerData = new();
@@ -42,51 +40,41 @@ public class OperationUI : AreaUI
 	protected override void Update(in Moment moment)
 	{
 		var device = Device.Instance;
+		if (device == null) return;
 
-		if (device == null || device.Operations.Count == 0)
-		{
-			operationIndex = 0;
-			lastOperation = null;
-			return;
-		}
+		int count = device.Operations.Count;
+		if (count == 0) return;
 
 		ImGui.Checkbox("Select Latest", ref selectLatest);
-
-		var operations = device.Operations;
+		if (selectLatest) operationIndex = count - 1;
 
 		//Populate operation labels
-		if (operations.Count != operationLabels.Count)
-		{
-			operationLabels.Clear();
-
-			for (int i = 0; i < operations.Count; i++)
-			{
-				Operation operation = operations[i];
-				string creation = operation.creationTime.ToInvariant();
-				operationLabels.Add($"{operation.GetType().Name} ({creation})");
-			}
-
-			operationIndex = operations.Count - 1;
-		}
+		if (count != operationLabels.Count) RepopulateOperationLabels(device);
 
 		//Draw operation selector
-		ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(operationLabels), ref operationIndex);
-
-		Operation selected = operations[operationIndex];
-
-		if (lastOperation != selected)
-		{
-			LogList.Add($"Changed selected operation in {nameof(OperationUI)}.");
-			lastOperation = selected;
-		}
+		if (ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(operationLabels), ref operationIndex)) selectLatest = false;
 
 		//Draw properties
+		Operation selected = SelectedOperation;
 		double progress = selected.Progress;
 		TimeSpan time = selected.Time;
 
 		DrawMain(progress, selected, time);
 		DrawEventRows(selected, time, progress);
 		DrawWorkers(selected);
+	}
+
+	void RepopulateOperationLabels(Device device)
+	{
+		var operations = device.Operations;
+		operationLabels.Clear();
+
+		for (int i = 0; i < operations.Count; i++)
+		{
+			Operation operation = operations[i];
+			string creation = operation.creationTime.ToInvariant();
+			operationLabels.Add($"{operation.GetType().Name} ({creation})");
+		}
 	}
 
 	void DrawMain(double progress, Operation operation, TimeSpan time)
@@ -204,7 +192,7 @@ public class OperationUI : AreaUI
 			ImGuiCustom.TableItem(procedure.Progress.ToInvariantPercent());
 		}
 
-		ImGuiCustom.EndProperties();
+		ImGui.EndTable();
 	}
 
 	class WorkerData
