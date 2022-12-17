@@ -41,7 +41,11 @@ public record PathTracedEvaluator : Evaluator
 		var path = new Path(ray);
 
 		//Quick exit with ambient light if no intersection
-		if (!path.Advance(scene, allocator)) return EvaluateInfinite(scene, path, ref statistics);
+		if (!path.Advance(scene, allocator))
+		{
+			statistics.Report("Light/Evaluated Infinite");
+			return EvaluateInfinite(scene, path);
+		}
 
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
@@ -86,7 +90,7 @@ public record PathTracedEvaluator : Evaluator
 				if (mis)
 				{
 					//We have both an area light a non-delta BSDF, begin MIS
-					GeometryPoint oldOrigin = path.contact.point;
+					GeometryPoint oldPoint = path.contact.point;
 					statistics.Report("Bounce/Multiple Importance");
 
 					//Advance path and perform MIS
@@ -94,10 +98,10 @@ public record PathTracedEvaluator : Evaluator
 					{
 						//Attempt to do MIS on the newly contacted surface
 						ref readonly var light = ref path.contact.token;
-						float pmf = scene.ProbabilityMass(light, oldOrigin);
+						float pmf = scene.ProbabilityMass(light, oldPoint);
 						if (!FastMath.Positive(pmf)) continue;
 
-						float pdf = scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
+						float pdf = scene.ProbabilityDensity(light, oldPoint, path.CurrentDirection);
 						if (!FastMath.Positive(pdf)) continue;
 
 						//Contribute emission with MIS and continue to the next bounce
@@ -114,8 +118,8 @@ public record PathTracedEvaluator : Evaluator
 						InfiniteLight light = scene.infiniteLights[i];
 						hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
 
-						float pdf = scene.ProbabilityMass(hierarchy, oldOrigin) *
-									light.ProbabilityDensity(oldOrigin, direction);
+						float pdf = scene.ProbabilityMass(hierarchy, oldPoint) *
+									light.ProbabilityDensity(oldPoint, direction);
 						if (!FastMath.Positive(pdf)) continue;
 
 						float weight = PowerHeuristic(bounce.scatterPdf, pdf);
@@ -133,7 +137,8 @@ public record PathTracedEvaluator : Evaluator
 			if (!path.Advance(scene, allocator))
 			{
 				//No further intersection with scene is found, accumulate infinite lights and exit
-				path.Contribute(EvaluateInfinite(scene, path, ref statistics));
+				statistics.Report("Light/Evaluated Infinite");
+				path.Contribute(EvaluateInfinite(scene, path));
 				break;
 			}
 
@@ -149,14 +154,9 @@ public record PathTracedEvaluator : Evaluator
 	/// </summary>
 	/// <param name="scene">The <see cref="PreparedScene"/> from which the <see cref="InfiniteLight"/>s should be evaluated.</param>
 	/// <param name="path">The current <see cref="Path"/> that escaped the <see cref="PreparedScene"/>.</param>
-	/// <param name="statistics">An <see cref="EvaluationStatistics"/> used during this operation.</param>
 	/// <returns>The evaluated <see cref="RGB128"/> value.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static RGB128 EvaluateInfinite(PreparedScene scene, in Path path, ref EvaluationStatistics statistics)
-	{
-		statistics.Report("Light/Evaluated Infinite");
-		return scene.EvaluateInfinite(path.CurrentDirection);
-	}
+	static RGB128 EvaluateInfinite(PreparedScene scene, in Path path) => scene.EvaluateInfinite(path.CurrentDirection);
 
 	/// <summary>
 	/// Importance samples a the radiant in a <see cref="PreparedScene"/>.
