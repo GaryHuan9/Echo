@@ -7,7 +7,7 @@ namespace Echo.Core.Textures;
 /// <summary>
 /// A readonly pure-color <see cref="Texture"/> and <see cref="IDirectionalTexture"/>.
 /// </summary>
-public class Pure : Texture, IDirectionalTexture
+public sealed class Pure : Texture, IDirectionalTexture
 {
 	public Pure(in RGBA128 color)
 	{

@@ -197,8 +197,8 @@ public readonly struct PBRTv4TrowbridgeReitzMicrofacet : IMicrofacet
 		Float2 p = SampleUniformDiskPolar(sample);
 
 		// Warp hemispherical projection for visible normal sampling
-		float h = MathF.Sqrt(1 - p.X * p.X);
-		p = new Float2(p.X, Scalars.Lerp((1 + wh.Z) / 2, h, p.Y));
+		float h = MathF.Sqrt(1 - Sqr(p.X));
+		p = new Float2(p.X, Scalars.Lerp(h, p.Y, (1 + wh.Z) / 2));
 
 		// Reproject to hemisphere and transform normal to ellipsoid configuration
 		float pz = MathF.Sqrt(Math.Max(0, 1 - p.SquaredMagnitude));

@@ -1,4 +1,5 @@
-﻿using Echo.Core.Common.Mathematics;
+﻿using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -25,17 +26,18 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
 
-		if (FastMath.AlmostZero(cosO) || FastMath.AlmostZero(cosI)) return RGB128.Black;
+		if (!SameHemisphere(outgoing, incident)) return RGB128.Black;
 
 		Float3 normal = outgoing + incident;
 		float length2 = normal.SquaredMagnitude;
 
 		if (FastMath.AlmostZero(length2)) return RGB128.Black;
 		normal *= FastMath.SqrtR0(length2); //Normalize
+		if (normal.Z < 0f) normal = -normal;
 
+		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(incident.Dot(normal))) / (4f * cosO * cosI);
 		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
-		RGB128 evaluated = fresnel.Evaluate(incident.Dot(normal.Z > 0f ? normal : -normal));
-		return evaluated * ratio / FastMath.Abs(cosO * cosI) / 4f;
+		return evaluated * ratio;
 	}
 
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
@@ -56,6 +58,9 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		Float3 normal = microfacet.Sample(outgoing, sample);
 		incident = Float3.Reflect(outgoing, normal);
 
+		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
+		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
+
 		if (!SameHemisphere(outgoing, incident)) return Probable<RGB128>.Impossible;
 
 		float cosO = CosineP(outgoing);
@@ -63,7 +68,7 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 
 		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(incident.Dot(normal))) / (4f * cosO * cosI);
 		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
-		float pdf = microfacet.ProbabilityDensity(outgoing, normal) / outgoing.Dot(normal) / 4f;
+		float pdf = microfacet.ProbabilityDensity(outgoing, normal) / FastMath.Abs(outgoing.Dot(normal) * 4f);
 
 		return (evaluated * ratio, pdf);
 	}

@@ -29,23 +29,23 @@ public sealed class Dielectric : Material
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
 		RGB128 roughness = Sample(Roughness, contact);
-		float alphaX = IMicrofacet.GetAlpha(roughness.R, out bool isSpecularX);
-		float alphaY = IMicrofacet.GetAlpha(roughness.G, out bool isSpecularY);
+		float alphaX = IMicrofacet.GetAlpha(roughness.R, out bool specularX);
+		float alphaY = IMicrofacet.GetAlpha(roughness.G, out bool specularY);
 
 		float index = Sample(RefractiveIndex, contact).R;
 		var fresnel = new RealFresnel(1f, index);
 
-		if (!isSpecularX || !isSpecularY)
+		if (!specularX || !specularY)
 		{
-			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
+			var microfacet = new PBRTv4TrowbridgeReitzMicrofacet(alphaX, alphaY);
 
-			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
+			bsdf.Add<GlossyReflection<PBRTv4TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
 			(
 				microfacet,
 				fresnel
 			);
 
-			bsdf.Add<GlossyTransmission<TrowbridgeReitzMicrofacet>>(allocator).Reset
+			bsdf.Add<GlossyTransmission<PBRTv4TrowbridgeReitzMicrofacet>>(allocator).Reset
 			(
 				microfacet,
 				fresnel
