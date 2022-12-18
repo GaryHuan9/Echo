@@ -32,10 +32,21 @@
 	.Add(new Camera("45") { .Position = "0 0 -4.5" })
 }
 
-:profile = new EvaluationProfile
+:path = new EvaluationProfile
+{
+	.Evaluator = new PathTracedEvaluator
+	.Distribution = new StratifiedDistribution { .Extend = "16" }
+	.Buffer = new RenderBuffer("512 512")
+	.Pattern = new HilbertCurvePattern
+	.NoiseThreshold = "0.006"
+	.MinEpoch = "1"
+	.MaxEpoch = "20"
+}
+
+:naive = new EvaluationProfile
 {
 	.Evaluator = new BruteForcedEvaluator
-	.Distribution = new StratifiedDistribution { .Extend = "64" }
+	.Distribution = new StratifiedDistribution { .Extend = "16" }
 	.Buffer = new RenderBuffer("512 512")
 	.Pattern = new HilbertCurvePattern
 	.NoiseThreshold = "0.006"
@@ -49,7 +60,7 @@
 	.Distribution = new StratifiedDistribution { .Extend = "64" }
 	.Buffer = new RenderBuffer("512 512")
 	.Pattern = new HilbertCurvePattern
-	.NoiseThreshold = "0.001"
+	.NoiseThreshold = "0.0003"
 	.MinEpoch = "1"
-	.MaxEpoch = "120"
+	.MaxEpoch = "1000"
 }

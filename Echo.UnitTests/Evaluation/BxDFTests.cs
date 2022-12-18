@@ -48,6 +48,7 @@ public class BxDFTests
 		(false, MakeFunction<SpecularReflection<RealFresnel>>(bxdf => bxdf.Reset(new RealFresnel(1.7f, 1.1f)))),
 		(false, MakeFunction<SpecularReflection<ComplexFresnel>>(bxdf => bxdf.Reset(new ComplexFresnel(new RGB128(0.9f, 1.1f, 1.2f), new RGB128(0.27105f, 0.67693f, 1.31640f), new RGB128(3.60920f, 2.62480f, 2.29210f))))), //Copper
 		(false, MakeFunction<SpecularReflection<ComplexFresnel>>(bxdf => bxdf.Reset(new ComplexFresnel(new RGB128(1.3f, 1.0f, 0.8f), new RGB128(2.74070f, 2.54180f, 2.26700f), new RGB128(3.81430f, 3.43450f, 3.03850f))))), //Titanium
+		(false, MakeFunction<SpecularReflection<ComplexFresnel>>(bxdf => bxdf.Reset(new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(RGB128.Black), RGB128.Black)))),                                                      //White
 		(false, MakeFunction<SpecularTransmission>(bxdf => bxdf.Reset(new RealFresnel(1.1f, 1.7f)))),
 		(false, MakeFunction<SpecularTransmission>(bxdf => bxdf.Reset(new RealFresnel(1.7f, 1.1f)))),
 		(true, MakeFunction<SpecularFresnel>(bxdf => bxdf.Reset(new RealFresnel(1.1f, 1.7f)))),
@@ -56,6 +57,7 @@ public class BxDFTests
 		(false, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new RealFresnel(1.7f, 1.1f)))),
 		(false, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new ComplexFresnel(new RGB128(0.9f, 1.1f, 1.2f), new RGB128(0.27105f, 0.67693f, 1.31640f), new RGB128(3.60920f, 2.62480f, 2.29210f))))), //Copper
 		(false, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new ComplexFresnel(new RGB128(1.3f, 1.0f, 0.8f), new RGB128(2.74070f, 2.54180f, 2.26700f), new RGB128(3.81430f, 3.43450f, 3.03850f))))), //Titanium
+		(false, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1.0f, 1.0f), new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(RGB128.Black), RGB128.Black)))),                                                      //White
 		(false, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new RealFresnel(1.1f, 1.7f)))),
 		(false, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new RealFresnel(1.7f, 1.1f))))
 	};

@@ -56,18 +56,13 @@ public record PathTracedEvaluator : Evaluator
 			var bounce = new Bounce(path.contact, distribution.Next2D());
 			statistics.Report("Bounce/Created");
 
-			if (bounce.IsZero)
-			{
-				statistics.Report("Bounce/Rejected");
-				break;
-			}
-
 			//Prefetch all samples so the order of them in subsequent bounces do not get messed up
 			Sample1D survivalSample = distribution.Next1D();
 			Sample1D lightSample = distribution.Next1D();
 			Sample2D radiantSample = distribution.Next2D();
 
-			if (bounce.IsSpecular)
+			//First check if the bounce is specular (Dirac delta)
+			if (bounce.function == null || bounce.function.type.Any(FunctionType.Specular))
 			{
 				//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 				statistics.Report("Bounce/Specular");
@@ -179,8 +174,6 @@ public record PathTracedEvaluator : Evaluator
 			return RGB128.Black;
 		}
 
-		statistics.Report("Light/Picked");
-
 		//Sample the selected light
 		(RGB128 radiant, float radiantPdf) = scene.Sample
 		(
@@ -191,7 +184,7 @@ public record PathTracedEvaluator : Evaluator
 		float pdf = lightPdf * radiantPdf;
 		mis = light.TopToken.IsAreaLight();
 
-		if (!FastMath.Positive(pdf) | radiant.IsZero) return RGB128.Black;
+		if (!FastMath.Positive(pdf) || radiant.IsZero) return RGB128.Black;
 
 		statistics.Report("Light/Sampled");
 
@@ -298,24 +291,15 @@ public record PathTracedEvaluator : Evaluator
 		/// <seealso cref="Survivability"/>
 		public bool Continue(in Bounce bounce, float survivability, Sample1D sample)
 		{
+			if (!FastMath.Positive(bounce.scatterPdf)) return false;
+
 			energy *= bounce.scatter / bounce.scatterPdf;
 
 			//Conditional path termination with Russian Roulette
-			bool survived = RussianRoulette(ref energy, survivability, sample);
+			bool survived = RussianRoulette(survivability, sample);
 			if (survived) query = query.SpawnTrace(bounce.incident);
 
 			return survived;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static bool RussianRoulette(ref RGB128 energy, float survivability, Sample1D sample)
-			{
-				float rate = FastMath.Clamp01(survivability * energy.Luminance);
-
-				if (sample >= rate) return false;
-
-				energy /= rate;
-				return true;
-			}
 		}
 
 		/// <summary>
@@ -334,6 +318,15 @@ public record PathTracedEvaluator : Evaluator
 			if (!FastMath.Positive(emissive.Power)) return;
 
 			Contribute(emissive.Emit(contact.point, contact.outgoing) * weight);
+		}
+
+		bool RussianRoulette(float survivability, Sample1D sample)
+		{
+			float rate = FastMath.Clamp01(survivability * energy.Luminance);
+			if (sample >= rate) return false;
+
+			energy /= rate;
+			return true;
 		}
 	}
 
@@ -368,17 +361,10 @@ public record PathTracedEvaluator : Evaluator
 		/// </summary>
 		public readonly float scatterPdf;
 
-		readonly BxDF function;
-
 		/// <summary>
-		/// Whether this <see cref="Bounce"/> will have zero contribution to the <see cref="Path"/>.
+		/// The <see cref="BxDF"/> function that was sampled for this <see cref="Bounce"/>.
 		/// </summary>
-		public bool IsZero => !FastMath.Positive(scatterPdf) | scatter.IsZero;
-
-		/// <summary>
-		/// Whether the <see cref="Marshal"/> that this <see cref="Bounce"/> occured on is specular.
-		/// </summary>
-		public bool IsSpecular => function.type.Any(FunctionType.Specular);
+		public readonly BxDF function;
 
 		/// <summary>
 		/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.Specular"/>.
