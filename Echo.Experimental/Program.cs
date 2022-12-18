@@ -1,20 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Mathematics;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
-using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
-using Echo.Core.Evaluation.Materials;
-using Echo.Core.Evaluation.Sampling;
-using Echo.Core.Evaluation.Scattering;
-using Echo.Core.Scenic.Geometries;
-using Echo.Core.Scenic.Hierarchies;
-using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures;
-using Echo.Core.Textures.Colors;
 
 namespace Echo.Experimental;
 
@@ -22,105 +10,6 @@ public class Program
 {
 	static void Main()
 	{
-		var material0 = new Conductor { Roughness = new Pure(new RGBA128(0.0f)) };
-		var material1 = new Conductor { Roughness = new Pure(new RGBA128(1.0f)) };
-
-		var scene = new ScenePreparer(new Scene { new SphereEntity() }).Prepare();
-
-		Float3 origin = new Float3(0f, 0f, -4.5f);
-
-		Float4 last = Float4.Zero;
-
-		for (int i = -110; i <= 0; i++)
-		{
-			Float3 target = new Float3(i / 100f, 0f, 0f);
-			var query = new TraceQuery(new Ray(origin, (target - origin).Normalized));
-
-			if (!scene.Trace(ref query)) continue;
-
-			Contact contact = scene.Interact(query);
-			Allocator allocator = new Allocator();
-
-			allocator.Begin();
-
-			BSDF bsdf = material1.Scatter(contact, allocator, RGB128.White);
-
-			var distribution = new StratifiedDistribution
-			{
-				Extend = 1,
-				Prng = new SystemPrng(1)
-			};
-
-			distribution.BeginSeries(Int2.Zero);
-			distribution.BeginSession();
-
-			Summation total = Summation.Zero;
-			int count = 0;
-
-			for (int j = 0; j < distribution.Extend; j++)
-			{
-				var sample = distribution.Next2D();
-				// var sample = new Sample2D((Sample1D)0.1234f, (Sample1D)0.562345f);
-
-				var sampled = bsdf.Sample(Float3.Backward, sample, out Float3 incident, out _);
-
-				if (!sampled.NotPossible)
-				{
-					total += sampled.content / sampled.pdf * incident.Dot(contact.point.normal);
-					count++;
-				}
-			}
-
-			Float4 current = total.Result / count;
-			if (count > 0) DebugHelper.Log(i, current - last);
-			last = current;
-		}
-
-		// Float3 target0 = new Float3(-1f, 0f, 0f);
-		// Float3 target1 = new Float3(0f, 0f, 0f);
-		//
-		// var query0 = new TraceQuery(new Ray(origin, (target0 - origin).Normalized));
-		// var query1 = new TraceQuery(new Ray(origin, (target1 - origin).Normalized));
-		//
-		// DebugHelper.Log(scene.Trace(ref query0), query0.distance);
-		// DebugHelper.Log(scene.Trace(ref query1), query1.distance);
-		//
-		// Contact contact0 = scene.Interact(query0);
-		// Contact contact1 = scene.Interact(query1);
-		// Allocator allocator = new Allocator();
-		//
-		// DebugHelper.Log(contact0.point.normal, contact1.point.normal);
-		//
-		// allocator.Begin();
-		//
-		// BSDF bsdf0 = conductor1.Scatter(contact0, allocator, RGB128.White);
-		// BSDF bsdf1 = conductor1.Scatter(contact1, allocator, RGB128.White);
-		//
-		// // DebugHelper.Log(bsdf0.Evaluate(Float3.Backward, contact0.point.normal));
-		// // DebugHelper.Log(bsdf1.Evaluate(Float3.Backward, contact1.point.normal));
-		//
-		// var distribution = new StratifiedDistribution
-		// {
-		// 	Extend = 1024,
-		// 	Prng = new SystemPrng(1)
-		// };
-		//
-		// distribution.BeginSeries(Int2.Zero);
-		// distribution.BeginSession();
-		//
-		// int count0 = 0;
-		// int count1 = 0;
-		//
-		// for (int i = 0; i < distribution.Extend; i++)
-		// {
-		// 	var sample = distribution.Next2D();
-		//
-		// 	if (bsdf0.Sample(Float3.Backward, sample, out Float3 incident0, out _).NotPossible) count0++;
-		// 	if (bsdf1.Sample(Float3.Backward, sample, out Float3 incident1, out _).NotPossible) count1++;
-		// }
-		//
-		// DebugHelper.Log(count0, count1);
-
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
