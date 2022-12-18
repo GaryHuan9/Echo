@@ -7,6 +7,7 @@ using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Operation;
@@ -218,13 +219,13 @@ public class TilesUI : PlaneUI
 					Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
 				}
 
-				bool wasComparing = compareTexture != null;
+				bool isComparing = compareTexture != null;
 
-				if (ImGui.MenuItem(wasComparing ? "End Comparison" : "Compare with File"))
+				if (ImGui.MenuItem(isComparing ? "End Comparison" : "Compare with File"))
 				{
 					compareTexture = null;
 
-					if (!wasComparing)
+					if (!isComparing)
 					{
 						foreach (string path in ImagePaths)
 						{
@@ -237,6 +238,26 @@ public class TilesUI : PlaneUI
 					}
 
 					RestartTextureUpdate();
+				}
+
+				if (isComparing && ImGui.MenuItem("Print Average"))
+				{
+					Float2 sizeR = 1f / textureSize;
+					Summation total = Summation.Zero;
+
+					for (int y = 0; y < textureSize.Y; y++)
+					for (int x = 0; x < textureSize.X; x++)
+					{
+						//We use uv to index both textures because the integer indexer is only available to typed textures
+						//This is a little bit dumb but it works for now and this is just a temporary handy tool
+
+						Float2 uv = new Float2(x + 0.5f, y + 0.5f) * sizeR;
+						Float4 color = ((TextureGrid)layer)[uv];
+						total += color - compareTexture![uv];
+					}
+
+					Float4 average = total.Result / textureSize.Product;
+					LogList.Add($"Average color difference versus reference: {average:N4}.");
 				}
 
 				ImGui.EndMenu();
