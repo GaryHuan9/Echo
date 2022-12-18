@@ -11,7 +11,8 @@ using Echo.Core.Evaluation.Sampling;
 namespace Echo.Core.Aggregation.Selection;
 
 /// <summary>
-/// An implementation of <see cref="LightPicker"/>.
+/// An implementation of <see cref="LightPicker"/> based on
+/// Importance Sampling of Many Lights with Adaptive Tree Splitting [Estevez and Kulla 2018].
 /// </summary>
 /// <remarks>This class is currently awfully unoptimized and messy. However it is functional, and we
 /// are running out of time for the deadline. Thus optimization is delayed until the future. </remarks>
