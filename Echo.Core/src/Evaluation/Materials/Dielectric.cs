@@ -37,15 +37,15 @@ public sealed class Dielectric : Material
 
 		if (!specularX || !specularY)
 		{
-			var microfacet = new PBRTv4TrowbridgeReitzMicrofacet(alphaX, alphaY);
+			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
 
-			bsdf.Add<GlossyReflection<PBRTv4TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
+			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(allocator).Reset
 			(
 				microfacet,
 				fresnel
 			);
 
-			bsdf.Add<GlossyTransmission<PBRTv4TrowbridgeReitzMicrofacet>>(allocator).Reset
+			bsdf.Add<GlossyTransmission<TrowbridgeReitzMicrofacet>>(allocator).Reset
 			(
 				microfacet,
 				fresnel

@@ -100,13 +100,13 @@ public sealed class Conductor : Material
 			extinction = Sample(Extinction, contact);
 		}
 
-		ComplexFresnel fresnel = new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(index), extinction);
+		var fresnel = new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(index), extinction);
 
 		if (!specularX || !specularY)
 		{
-			var microfacet = new PBRTv4TrowbridgeReitzMicrofacet(alphaX, alphaY);
+			var microfacet = new TrowbridgeReitzMicrofacet(alphaX, alphaY);
 
-			bsdf.Add<GlossyReflection<PBRTv4TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset(microfacet, fresnel);
+			bsdf.Add<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(allocator).Reset(microfacet, fresnel);
 		}
 		else bsdf.Add<SpecularReflection<ComplexFresnel>>(allocator).Reset(fresnel);
 

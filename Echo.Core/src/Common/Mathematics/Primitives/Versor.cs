@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Common.Mathematics.Primitives;
@@ -17,19 +18,32 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	/// <summary>
 	/// Creates a <see cref="Versor"/> from three angles (degrees) in the ZXY rotation order.
 	/// </summary>
-	public Versor(Float3 angles) : this(Sin(angles *= Scalars.ToRadians(0.5f)), Cos(angles)) { }
+	public Versor(in Float3 angles)
+	{
+		Float3 halfRadians = angles * Scalars.ToRadians(0.5f);
+		FastMath.SinCos(halfRadians.X, out float sinX, out float cosX);
+		FastMath.SinCos(halfRadians.Y, out float sinY, out float cosY);
+		FastMath.SinCos(halfRadians.Z, out float sinZ, out float cosZ);
+
+		d = new Float4
+		(
+			sinX * cosY * cosZ + cosX * sinY * sinZ,
+			cosX * sinY * cosZ - sinX * cosY * sinZ,
+			cosX * cosY * sinZ - sinX * sinY * cosZ,
+			cosX * cosY * cosZ + sinX * sinY * sinZ
+		);
+	}
 
 	/// <summary>
 	/// Creates a <see cref="Versor"/> from an <paramref name="axis"/> and an <paramref name="angle"/> (degrees).
 	/// </summary>
-	public Versor(Float3 axis, float angle)
+	public Versor(in Float3 axis, float angle)
 	{
+		Ensure.AreEqual(axis.SquaredMagnitude, 1f);
 		float radians = Scalars.ToRadians(angle / 2f);
 
 		float sin = (float)Math.Sin(radians);
 		float cos = (float)Math.Cos(radians);
-
-		axis = axis.Normalized;
 
 		d = new Float4
 		(
@@ -41,26 +55,36 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	}
 
 	/// <summary>
-	/// Creates a <see cref="Versor"/> in the ZXY rotation order based on XYZ sin and cos values.
+	/// Creates a <see cref="Versor"/> that rotates from <paramref name="value0"/> to <see cref="value1"/>.
 	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal Versor(in Float3 sin, in Float3 cos) : this
-	(
-		sin.X * cos.Y * cos.Z + cos.X * sin.Y * sin.Z,
-		cos.X * sin.Y * cos.Z - sin.X * cos.Y * sin.Z,
-		cos.X * cos.Y * sin.Z - sin.X * sin.Y * cos.Z,
-		cos.X * cos.Y * cos.Z + sin.X * sin.Y * sin.Z
-	) { }
+	public Versor(in Float3 value0, in Float3 value1)
+	{
+		Ensure.AreEqual(value0.SquaredMagnitude, 1f);
+		Ensure.AreEqual(value1.SquaredMagnitude, 1f);
+
+		float dot = Float3.Dot(value0, value1);
+
+		if (FastMath.Abs(dot) < 1f - FastMath.Epsilon)
+		{
+			Float3 axis = Float3.Cross(value0, value1);
+			d = new Float4(axis.X, axis.Y, axis.Z, 1f + dot).Normalized;
+		}
+		else if (dot < 0f)
+		{
+			Float3 axis = FastMath.Abs(value0.X) > 0.9f
+							  ? Float3.Cross(Float3.Forward, value0)
+							  : Float3.Cross(Float3.Right, value0);
+			d = new Float4(axis.X, axis.Y, axis.Z, 0f).Normalized;
+		}
+		else this = Identity;
+	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	internal Versor(in Float4 d) => this.d = d;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	Versor(float x, float y, float z, float w) : this(new Float4(x, y, z, w)) { }
-
 	internal readonly Float4 d;
 
-	public Versor Conjugate => new(-d.X, -d.Y, -d.Z, d.W);
+	public Versor Conjugate => new(new Float4(-d.X, -d.Y, -d.Z, d.W));
 	public Versor Inverse => Conjugate;
 
 	public Float3 Angles
@@ -121,8 +145,6 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 
 	public string ToString(string format, IFormatProvider provider = null) => d.ToString(format, provider);
 
-	public static float Dot(in Float4 value, in Float4 other) => value.Dot(other);
-
 	/// <summary>
 	/// Returns the smallest angle between this <see cref="Versor"/> and <paramref name="other"/>.
 	/// </summary>
@@ -145,11 +167,11 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		return new Versor(result);
 	}
 
-	public static Versor operator *(in Versor first, in Versor second) => Apply(first, second, false);
-	public static Versor operator /(in Versor first, in Versor second) => Apply(first, second, true);
+	public static Versor operator *(in Versor first, in Versor second) => Join(first, second, false);
+	public static Versor operator /(in Versor first, in Versor second) => Join(first, second, true);
 
-	public static Float3 operator *(in Versor first, in Float3 second) => Apply(first, second, false);
-	public static Float3 operator /(in Versor first, in Float3 second) => Apply(first, second, true);
+	public static Float3 operator *(in Versor first, in Float3 second) => Join(first, second, false);
+	public static Float3 operator /(in Versor first, in Float3 second) => Join(first, second, true);
 
 	public static bool operator ==(in Versor left, in Versor right) => left.Equals(right);
 	public static bool operator !=(in Versor left, in Versor right) => !left.Equals(right);
@@ -176,11 +198,8 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		);
 	}
 
-	static Float3 Sin(in Float3 radians) => new((float)Math.Sin(radians.X), (float)Math.Sin(radians.Y), (float)Math.Sin(radians.Z));
-	static Float3 Cos(in Float3 radians) => new((float)Math.Cos(radians.X), (float)Math.Cos(radians.Y), (float)Math.Cos(radians.Z));
-
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Versor Apply(in Versor first, in Versor second, bool conjugate)
+	static Versor Join(in Versor first, in Versor second, bool conjugate)
 	{
 		Float3 xyz0 = first.d.XYZ;
 		Float3 xyz1 = second.d.XYZ;
@@ -191,18 +210,19 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		float w1 = second.d.W;
 
 		Float3 cross = xyz0.Cross(xyz1);
-
-		return new Versor
+		Float4 result = new Float4
 		(
 			w0 * xyz1.X + w1 * xyz0.X + cross.X,
 			w0 * xyz1.Y + w1 * xyz0.Y + cross.Y,
 			w0 * xyz1.Z + w1 * xyz0.Z + cross.Z,
 			w0 * w1 - xyz0.Dot(xyz1)
 		);
+
+		return new Versor(result);
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float3 Apply(in Versor first, in Float3 second, bool conjugate)
+	static Float3 Join(in Versor first, in Float3 second, bool conjugate)
 	{
 		ref readonly Float4 d = ref first.d;
 
