@@ -184,7 +184,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 
 		//Transform and returns point
 		var transform = new OrthonormalTransform(offset / length);
-		return (GetPoint(transform.LocalToWorld(normal)), pdf);
+		return (GetPoint(transform.ApplyForward(normal)), pdf);
 	}
 
 	/// <inheritdoc/>

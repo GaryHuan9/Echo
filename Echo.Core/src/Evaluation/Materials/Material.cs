@@ -84,7 +84,7 @@ public abstract class Material
 
 		//Create transform to move local direction to world-space
 		var transform = new OrthonormalTransform(normal);
-		Float3 delta = transform.LocalToWorld(local.XYZ);
+		Float3 delta = transform.ApplyForward(local.XYZ);
 
 		normal = (normal - delta).Normalized;
 		return true;

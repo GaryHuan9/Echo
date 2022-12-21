@@ -4,45 +4,64 @@ using Echo.Core.Common.Packed;
 namespace Echo.Core.Common.Mathematics.Primitives;
 
 /// <summary>
-/// A transform defined by three unit vectors that are orthogonal to each other.
-/// Can be used to transform a direction between local and world-space.
+/// A transform defined by three orthogonal unit vectors. Bidirectionally map directions from the canonical
+/// vector space to the vector space defined by the three axes in this <see cref="OrthonormalTransform"/>.
 /// </summary>
 public readonly struct OrthonormalTransform
 {
-	public OrthonormalTransform(in Float3 normal)
+	public OrthonormalTransform(in Float3 axisZ)
 	{
-		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
+		Ensure.AreEqual(axisZ.SquaredMagnitude, 1f);
 
-		this.normal = normal;
+		this.axisZ = axisZ;
 
-		tangent = FastMath.Abs(normal.X) > 0.9f ?
-			new Float3(normal.Y, -normal.X, 0f) :
-			new Float3(0f, normal.Z, -normal.Y);
+		if (!FastMath.AlmostZero(axisZ.X) || !FastMath.AlmostZero(axisZ.Y))
+		{
+			axisX = new Float3(axisZ.Y, -axisZ.X, 0f).Normalized; //Equivalent to Float3.Cross(axisZ, Float3.Forward)
+			axisY = Float3.Cross(axisZ, axisX);
+		}
+		else
+		{
+			axisX = Float3.Right;
+			axisY = new Float3(0f, axisZ.Z, -axisZ.Y).Normalized; //Equivalent to Float3.Cross(axisZ, axisX);
+		}
 
-		tangent = tangent.Normalized;
-		binormal = Float3.Cross(normal, tangent);
-
-		Ensure.AreEqual(tangent.SquaredMagnitude, 1f);
-		Ensure.AreEqual(binormal.SquaredMagnitude, 1f);
+		Ensure.AreEqual(axisX.SquaredMagnitude, 1f);
+		Ensure.AreEqual(axisY.SquaredMagnitude, 1f);
 	}
 
-	public readonly Float3 normal;
+	public OrthonormalTransform(in Float3 axisZ, in Float3 axisX)
+	{
+		Ensure.AreEqual(axisZ.SquaredMagnitude, 1f);
+		Ensure.AreEqual(axisX.SquaredMagnitude, 1f);
+		Ensure.IsTrue(FastMath.AlmostZero(Float3.Dot(axisX, axisZ)));
 
-	readonly Float3 tangent;
-	readonly Float3 binormal;
+		this.axisZ = axisZ;
+		this.axisX = axisX;
+		axisY = Float3.Cross(axisZ, axisX);
+	}
+
+	public readonly Float3 axisX;
+	public readonly Float3 axisY;
+	public readonly Float3 axisZ;
 
 	/// <summary>
-	/// Transforms a <paramref name="direction"/> from world-space to local-space using this <see cref="OrthonormalTransform"/>.
+	/// Transforms a <see cref="Float3"/> vector along this <see cref="OrthonormalTransform"/>.
 	/// </summary>
-	public Float3 WorldToLocal(in Float3 direction) => new(direction.Dot(tangent), direction.Dot(binormal), direction.Dot(normal));
-
-	/// <summary>
-	/// Transforms a <paramref name="direction"/> from local-space to world-space using this <see cref="OrthonormalTransform"/>.
-	/// </summary>
-	public Float3 LocalToWorld(in Float3 direction) => new
+	public Float3 ApplyForward(in Float3 direction) => new
 	(
-		tangent.X * direction.X + binormal.X * direction.Y + normal.X * direction.Z,
-		tangent.Y * direction.X + binormal.Y * direction.Y + normal.Y * direction.Z,
-		tangent.Z * direction.X + binormal.Z * direction.Y + normal.Z * direction.Z
+		axisX.X * direction.X + axisY.X * direction.Y + axisZ.X * direction.Z,
+		axisX.Y * direction.X + axisY.Y * direction.Y + axisZ.Y * direction.Z,
+		axisX.Z * direction.X + axisY.Z * direction.Y + axisZ.Z * direction.Z
+	);
+
+	/// <summary>
+	/// Transforms a <see cref="Float3"/> vector against this <see cref="OrthonormalTransform"/>.
+	/// </summary>
+	public Float3 ApplyInverse(in Float3 direction) => new
+	(
+		axisX.X * direction.X + axisX.Y * direction.Y + axisX.Z * direction.Z,
+		axisY.X * direction.X + axisY.Y * direction.Y + axisY.Z * direction.Z,
+		axisZ.X * direction.X + axisZ.Y * direction.Y + axisZ.Z * direction.Z
 	);
 }

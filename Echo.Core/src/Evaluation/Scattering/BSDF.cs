@@ -93,8 +93,8 @@ public class BSDF
 		Ensure.AreEqual(outgoingWorld.SquaredMagnitude, 1f);
 		Ensure.AreEqual(incidentWorld.SquaredMagnitude, 1f);
 
-		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Float3 incident = transform.WorldToLocal(incidentWorld);
+		Float3 outgoing = transform.ApplyInverse(outgoingWorld);
+		Float3 incident = transform.ApplyInverse(incidentWorld);
 
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
 		var total = RGB128.Black;
@@ -118,8 +118,8 @@ public class BSDF
 		Ensure.AreEqual(outgoingWorld.SquaredMagnitude, 1f);
 		Ensure.AreEqual(incidentWorld.SquaredMagnitude, 1f);
 
-		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-		Float3 incident = transform.WorldToLocal(incidentWorld);
+		Float3 outgoing = transform.ApplyInverse(outgoingWorld);
+		Float3 incident = transform.ApplyInverse(incidentWorld);
 
 		int matched = 0;
 		float pdf = 0f;
@@ -157,7 +157,7 @@ public class BSDF
 		selected = functions[index];
 
 		//Sample the selected function
-		Float3 outgoing = transform.WorldToLocal(outgoingWorld);
+		Float3 outgoing = transform.ApplyInverse(outgoingWorld);
 		var sampled = selected.Sample(sample, outgoing, out Float3 incident);
 
 		if (sampled.NotPossible || sampled.content.IsZero)
@@ -167,7 +167,7 @@ public class BSDF
 		}
 
 		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
-		incidentWorld = transform.LocalToWorld(incident);
+		incidentWorld = transform.ApplyForward(incident);
 
 		//If there is only one function, we have finished
 		if (matched == 1) return (albedo * sampled, sampled.pdf);
