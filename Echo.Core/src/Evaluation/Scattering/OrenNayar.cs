@@ -31,7 +31,7 @@ public sealed class OrenNayar : BxDF
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
-		if (!SameHemisphere(outgoing, incident)) return RGB128.Black;
+		if (FlatOrOppositeHemisphere(outgoing, incident)) return RGB128.Black;
 
 		float cosO = FastMath.Abs(CosineP(outgoing));
 		float cosI = FastMath.Abs(CosineP(incident));

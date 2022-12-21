@@ -38,7 +38,7 @@ public abstract class BxDF
 	/// <seealso cref="Sample"/>
 	public virtual float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
-		if (!SameHemisphere(outgoing, incident)) return 0f;
+		if (FlatOrOppositeHemisphere(outgoing, incident)) return 0f;
 		return FastMath.Abs(CosineP(incident)) * Scalars.PiR;
 	}
 
@@ -176,7 +176,14 @@ public abstract class BxDF
 	}
 
 	/// <summary>
-	/// Returns whether the local directions <paramref name="direction0"/> and <paramref name="direction1"/> are in the same hemisphere.
+	/// Returns whether either of the local directions <paramref name="direction0"/> and <paramref name="direction1"/> are
+	/// flat against the local normal (dot = 0 with <see cref="Float3.Forward"/>) or if they are in the same hemisphere.
 	/// </summary>
-	public static bool SameHemisphere(in Float3 direction0, in Float3 direction1) => FastMath.Positive(direction0.Z * direction1.Z);
+	public static bool FlatOrSameHemisphere(in Float3 direction0, in Float3 direction1) => !FastMath.Positive(-CosineP(direction0) * CosineP(direction1));
+	
+	/// <summary>
+	/// Returns whether either of the local directions <paramref name="direction0"/> and <paramref name="direction1"/> are
+	/// flat against the local normal (dot = 0 with <see cref="Float3.Forward"/>) or if they are in opposite hemispheres.
+	/// </summary>
+	public static bool FlatOrOppositeHemisphere(in Float3 direction0, in Float3 direction1) => !FastMath.Positive(CosineP(direction0) * CosineP(direction1));
 }
