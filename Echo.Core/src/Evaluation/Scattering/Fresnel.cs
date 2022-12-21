@@ -7,7 +7,7 @@ namespace Echo.Core.Evaluation.Scattering;
 
 public interface IFresnel
 {
-	RGB128 Evaluate(float cosI);
+	RGB128 Evaluate(float cosO);
 }
 
 public readonly struct RealFresnel : IFresnel
@@ -21,58 +21,66 @@ public readonly struct RealFresnel : IFresnel
 	public readonly float etaAbove;
 	public readonly float etaBelow;
 
-	public RGB128 Evaluate(float cosI) => new(Evaluate(ref cosI, out _, out _));
+	public RGB128 Evaluate(float cosO) => new(Evaluate(ref cosO, out _, out _));
 
-	public float Evaluate(ref float cosI, out float cosT, out float eta)
+	public float Evaluate(ref float cosO, out float cosI, out float eta)
 	{
 		//Get the indices of reflection
-		GetIndices(ref cosI, out float etaI, out float etaT);
+		GetIndices(cosO, out float etaO, out float etaI);
+		cosO = FastMath.Clamp01(FastMath.Abs(cosO));
 
 		//Apply Snell's law
-		eta = etaI / etaT;
-		if (GetCosineTransmittance(cosI, eta, out cosT)) return 1f;
+		eta = etaO / etaI;
+		if (GetCosineTransmittance(cosO, eta, out cosI)) return 1f;
 
 		//Fresnel equation
-		return Apply(cosI, cosT, etaI, etaT);
+		return Apply(cosO, cosI, etaO, etaI);
 	}
 
-	void GetIndices(ref float cosI, out float etaI, out float etaT)
+	/// <summary>
+	/// Gets index of refraction values from an outgoing direction.
+	/// </summary>
+	/// <param name="cosO">The cosine phi value of the outgoing direction.</param>
+	/// <param name="etaO">The index of refraction of the outgoing material.</param>
+	/// <param name="etaI">The index of refraction of the incident material..</param>
+	public void GetIndices(float cosO, out float etaO, out float etaI)
 	{
-		etaI = etaAbove;
-		etaT = etaBelow;
-		cosI = FastMath.Clamp11(cosI);
-
-		//Swap indices of refraction if needed
-		if (cosI >= 0f) return;
-
-		etaI = etaBelow;
-		etaT = etaAbove;
-		cosI = -cosI;
+		if (cosO >= 0f)
+		{
+			etaO = etaAbove;
+			etaI = etaBelow;
+		}
+		else
+		{
+			//Swap indices of refraction for when outgoing is below
+			etaO = etaBelow;
+			etaI = etaAbove;
+		}
 	}
 
-	static bool GetCosineTransmittance(float cosI, float eta, out float cosT)
+	static bool GetCosineTransmittance(float cosO, float eta, out float cosI)
 	{
-		float sinI2 = FastMath.OneMinus2(cosI);
-		float sinT2 = eta * eta * sinI2;
+		float sinO2 = FastMath.OneMinus2(cosO);
+		float sinI2 = eta * eta * sinO2;
 
-		if (sinT2 >= 1f)
+		if (sinI2 >= 1f)
 		{
 			//Total internal reflection
-			cosT = 0f;
+			cosI = 0f;
 			return true;
 		}
 
-		cosT = FastMath.Sqrt0(1f - sinT2);
+		cosI = FastMath.Sqrt0(1f - sinI2);
 		return false;
 	}
 
-	static float Apply(float cosI, float cosT, float etaI, float etaT)
+	static float Apply(float cosO, float cosI, float etaO, float etaI)
 	{
-		float para0 = etaT * cosI;
-		float para1 = etaI * cosT;
+		float para0 = etaI * cosO;
+		float para1 = etaO * cosI;
 
-		float perp0 = etaI * cosI;
-		float perp1 = etaT * cosT;
+		float perp0 = etaO * cosO;
+		float perp1 = etaI * cosI;
 
 		float para = (para0 - para1) / (para0 + para1);
 		float perp = (perp0 - perp1) / (perp0 + perp1);
@@ -100,23 +108,23 @@ public readonly struct ComplexFresnel : IFresnel
 	readonly Float4 eta2;  //(etaBelow   / etaAbove)^2
 	readonly Float4 etaK2; //(extinction / etaAbove)^2
 
-	public RGB128 Evaluate(float cosI) //https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
+	public RGB128 Evaluate(float cosO) //https://seblagarde.wordpress.com/2013/04/29/memo-on-fresnel-equations/
 	{
-		cosI = FastMath.Clamp01(FastMath.Abs(cosI));
+		cosO = FastMath.Clamp01(FastMath.Abs(cosO));
 
-		float cosI2 = cosI * cosI;
-		float sinI2 = 1f - cosI2;
+		float cosO2 = cosO * cosO;
+		float sinO2 = 1f - cosO2;
 
-		Float4 term = eta2 - etaK2 - (Float4)sinI2;
+		Float4 term = eta2 - etaK2 - (Float4)sinO2;
 		Float4 a2b2 = Sqrt(term * term + 4f * eta2 * etaK2);
 
 		//Parallel terms
-		Float4 para0 = a2b2 + (Float4)cosI2;
-		Float4 para1 = cosI * Scalars.Root2 * Sqrt(a2b2 + term);
+		Float4 para0 = a2b2 + (Float4)cosO2;
+		Float4 para1 = cosO * Scalars.Root2 * Sqrt(a2b2 + term);
 
 		//Perpendicular terms
-		Float4 perp0 = cosI2 * a2b2 + (Float4)(sinI2 * sinI2);
-		Float4 perp1 = para1 * sinI2;
+		Float4 perp0 = cosO2 * a2b2 + (Float4)(sinO2 * sinO2);
+		Float4 perp1 = para1 * sinO2;
 
 		//Combine the two terms
 		Float4 para = (para0 - para1) / (para0 + para1);
@@ -131,5 +139,5 @@ public readonly struct ComplexFresnel : IFresnel
 
 public readonly struct PassthroughFresnel : IFresnel
 {
-	public RGB128 Evaluate(float cosI) => RGB128.White;
+	public RGB128 Evaluate(float cosO) => RGB128.White;
 }

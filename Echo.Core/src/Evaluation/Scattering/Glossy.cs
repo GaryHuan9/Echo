@@ -23,32 +23,21 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
+		if (FlatOrOppositeHemisphere(outgoing, incident)) return RGB128.Black;
+		if (!FindNormal(outgoing, incident, out Float3 normal)) return RGB128.Black;
+		
 		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
 
-		if (!SameHemisphere(outgoing, incident)) return RGB128.Black;
-
-		Float3 normal = outgoing + incident;
-		float length2 = normal.SquaredMagnitude;
-
-		if (FastMath.AlmostZero(length2)) return RGB128.Black;
-		normal *= FastMath.SqrtR0(length2); //Normalize
-		if (normal.Z < 0f) normal = -normal;
-
-		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(incident.Dot(normal))) / (4f * cosO * cosI);
+		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(outgoing.Dot(normal))) / (4f * cosO * cosI);
 		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
 		return evaluated * ratio;
 	}
 
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
-		if (!SameHemisphere(outgoing, incident)) return 0f;
-
-		Float3 normal = outgoing + incident;
-		float length2 = normal.SquaredMagnitude;
-
-		if (FastMath.AlmostZero(length2)) return 0f;
-		normal *= FastMath.SqrtR0(length2); //Normalize
+		if (FlatOrOppositeHemisphere(outgoing, incident)) return 0f;
+		if (!FindNormal(outgoing, incident, out Float3 normal)) return 0f;
 
 		return microfacet.ProbabilityDensity(outgoing, normal) / outgoing.Dot(normal) / 4f;
 	}
@@ -61,16 +50,28 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
 		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
 
-		if (!SameHemisphere(outgoing, incident)) return Probable<RGB128>.Impossible;
+		if (FlatOrOppositeHemisphere(outgoing, incident)) return Probable<RGB128>.Impossible;
 
 		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
 
-		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(incident.Dot(normal))) / (4f * cosO * cosI);
+		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(outgoing.Dot(normal))) / (4f * cosO * cosI);
 		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
 		float pdf = microfacet.ProbabilityDensity(outgoing, normal) / FastMath.Abs(outgoing.Dot(normal) * 4f);
 
 		return (evaluated * ratio, pdf);
+	}
+
+	static bool FindNormal(in Float3 outgoing, in Float3 incident, out Float3 normal)
+	{
+		normal = outgoing + incident;
+		float length2 = normal.SquaredMagnitude;
+
+		if (!FastMath.Positive(length2)) return false;
+		normal *= FastMath.SqrtR0(length2); //Normalize
+		if (normal.Z < 0f) normal = -normal;
+
+		return true;
 	}
 }
 
@@ -89,17 +90,15 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
-		if (SameHemisphere(outgoing, incident)) return RGB128.Black;
+		if (FlatOrSameHemisphere(outgoing, incident)) return RGB128.Black;
 
 		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
+		
+		fresnel.GetIndices(cosI, out float etaI, out float etaT);
+		float eta = etaI / etaT;
 
-		if (FastMath.AlmostZero(cosO) || FastMath.AlmostZero(cosI)) return RGB128.Black;
-
-		float eta = cosO > 0f ? fresnel.etaBelow / fresnel.etaAbove : fresnel.etaAbove / fresnel.etaBelow;
-
-		Float3 normal = (outgoing + incident * eta).Normalized;
-		if (normal.Z < 0f) normal = -normal;
+		Float3 normal = FindNormal(outgoing, incident, eta);
 
 		float dotO = outgoing.Dot(normal);
 		float dotI = incident.Dot(normal);
@@ -117,11 +116,11 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
-		if (SameHemisphere(outgoing, incident)) return 0f;
+		if (FlatOrSameHemisphere(outgoing, incident)) return 0f;
 
 		float eta = CosineP(outgoing) > 0f ? fresnel.etaBelow / fresnel.etaAbove : fresnel.etaAbove / fresnel.etaBelow;
 
-		Float3 normal = (outgoing + incident * eta).Normalized;
+		Float3 normal = FindNormal(outgoing, incident, eta);
 
 		float dotO = outgoing.Dot(normal);
 		float dotI = incident.Dot(normal);
@@ -159,7 +158,13 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 		return (Evaluate(outgoing, incident), ProbabilityDensity(outgoing, incident));
 	}
 
-	static bool Refract(in Float3 outgoing, in Float3 normal, float eta, out Float3 incident)
+	public static Float3 FindNormal(in Float3 incident, in Float3 transmit, float eta)
+	{
+		Float3 normal = (incident + transmit * eta).Normalized;
+		return normal.Z < 0f ? -normal : normal;
+	}
+
+	public static bool Refract(in Float3 outgoing, in Float3 normal, float eta, out Float3 incident)
 	{
 		float cosThetaI = normal.Dot(outgoing);
 		float sin2ThetaI = FastMath.Max0(1f - cosThetaI * cosThetaI);

@@ -20,9 +20,11 @@ public sealed class SpecularReflection<TFresnel> : BxDF where TFresnel : IFresne
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
 		incident = Reflect(outgoing);
+		
+		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
 
-		RGB128 evaluated = fresnel.Evaluate(cosI);
+		RGB128 evaluated = fresnel.Evaluate(cosO);
 		return (evaluated / FastMath.Abs(cosI), 1f);
 	}
 
@@ -42,27 +44,27 @@ public sealed class SpecularTransmission : BxDF
 
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
-		float cosI = CosineP(outgoing);
-		float evaluated = fresnel.Evaluate(ref cosI, out float cosT, out float eta);
+		float cosO = CosineP(outgoing);
+		float evaluated = fresnel.Evaluate(ref cosO, out float cosI, out float eta);
 
 		evaluated = 1f - evaluated;
 
 		if (FastMath.AlmostZero(evaluated))
 		{
-			incident = Normal(outgoing);
+			incident = default;
 			return (RGB128.Black, 1f);
 		}
 
-		incident = Transmit(outgoing, cosI, cosT, eta);
+		incident = Refract(outgoing, cosO, cosI, eta);
 		evaluated /= FastMath.Abs(CosineP(incident));
 
 		return (new RGB128(evaluated), 1f);
 	}
 
-	public static Float3 Transmit(in Float3 outgoing, float cosI, float cosT, float eta)
+	public static Float3 Refract(in Float3 outgoing, float cosO, float cosI, float eta)
 	{
 		Float3 incident = Normal(outgoing);
-		incident *= eta * cosI - cosT;
+		incident *= eta * cosO - cosI;
 		incident -= eta * outgoing;
 		return incident;
 	}
@@ -81,19 +83,21 @@ public sealed class SpecularFresnel : BxDF
 
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
-		float cosI = CosineP(outgoing);
-		float evaluated = fresnel.Evaluate(ref cosI, out float cosT, out float eta);
+		float cosO = CosineP(outgoing);
+		float evaluated = fresnel.Evaluate(ref cosO, out float cosI, out float eta);
 
 		if (sample.x < evaluated)
 		{
 			//Perform specular reflection
 			incident = SpecularReflection<RealFresnel>.Reflect(outgoing);
-			return (new RGB128(evaluated) / FastMath.Abs(CosineP(incident)), evaluated);
+		}
+		else
+		{
+			//Perform specular transmission
+			evaluated = 1f - evaluated;
+			incident = SpecularTransmission.Refract(outgoing, cosO, cosI, eta);
 		}
 
-		//Perform specular transmission
-		evaluated = 1f - evaluated;
-		incident = SpecularTransmission.Transmit(outgoing, cosI, cosT, eta);
 		return (new RGB128(evaluated) / FastMath.Abs(CosineP(incident)), evaluated);
 	}
 }
