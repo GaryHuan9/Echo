@@ -45,7 +45,7 @@ public record BruteForcedEvaluator : Evaluator
 			{
 				var emission = RGB128.Black;
 
-				if (material is IEmissive emissive) emission += emissive.Emit(contact.point, contact.outgoing);
+				if (material is Emissive emissive) emission += emissive.Emit(contact.point, contact.outgoing);
 
 				var scatterSample = distribution.Next2D();
 				Probable<RGB128> sample = contact.bsdf.Sample

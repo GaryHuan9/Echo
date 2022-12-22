@@ -1,4 +1,6 @@
-﻿namespace Echo.Core.Common.Mathematics.Primitives;
+﻿using Echo.Core.Common.Diagnostics;
+
+namespace Echo.Core.Common.Mathematics.Primitives;
 
 /// <summary>
 /// Represents something of type <typeparamref name="T"/> with a particular probability density function (pdf) value associated with it.
@@ -7,6 +9,8 @@ public readonly struct Probable<T>
 {
 	public Probable(in T content, float pdf)
 	{
+		Ensure.IsTrue(FastMath.AlmostZero(pdf) || FastMath.Positive(pdf));
+
 		this.content = content;
 		this.pdf = pdf;
 	}
@@ -39,4 +43,6 @@ public readonly struct Probable<T>
 		_content = content;
 		_pdf = pdf;
 	}
+
+	public override string ToString() => $"{nameof(content)}: {content}, {nameof(pdf)}: {pdf}";
 }

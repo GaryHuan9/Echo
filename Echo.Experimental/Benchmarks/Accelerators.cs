@@ -23,7 +23,7 @@ public class Accelerators
 
 		//This is some really temporary benchmarking code
 		Mesh mesh = new("ext/Scenes/Assets/Models/BlenderBMW/BlenderBMW.obj");
-		scene.Add(new MeshEntity { Mesh = mesh, Material = new Matte() });
+		scene.Add(new MeshEntity { Mesh = mesh, Material = new Diffuse() });
 
 		const int Length = 65536;
 
@@ -62,7 +62,7 @@ public class Accelerators
 
 		if (true)
 		{
-			scene.Add(new PlaneEntity { Material = new Matte { Albedo = Pure.white }, Size = new Float2(32f, 24f) });
+			scene.Add(new PlaneEntity { Material = new Diffuse(), Size = new Float2(32f, 24f) });
 
 			Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(BoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }.Prepare(), "NoDivRegular"));
 			Types.Add(new Pair(new ScenePreparer(scene) { AcceleratorCreator = new AcceleratorCreator { AcceleratorType = typeof(QuadBoundingVolumeHierarchy) }, FragmentationMaxIteration = 0 }.Prepare(), "NoDivQuad"));
