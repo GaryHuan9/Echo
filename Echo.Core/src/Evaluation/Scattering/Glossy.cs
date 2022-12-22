@@ -24,7 +24,7 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
 		if (FlatOrOppositeHemisphere(outgoing, incident)) return RGB128.Black;
-		if (!GlossyFresnel<TMicrofacet>.FindNormal(outgoing, incident, out Float3 normal)) return RGB128.Black;
+		if (!FindNormal(outgoing, incident, out Float3 normal)) return RGB128.Black;
 
 		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
@@ -37,7 +37,7 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
 	{
 		if (FlatOrOppositeHemisphere(outgoing, incident)) return 0f;
-		if (!GlossyFresnel<TMicrofacet>.FindNormal(outgoing, incident, out Float3 normal)) return 0f;
+		if (!FindNormal(outgoing, incident, out Float3 normal)) return 0f;
 		return microfacet.ProbabilityDensity(outgoing, normal) / FastMath.Abs(outgoing.Dot(normal) * 4f);
 	}
 
@@ -60,6 +60,18 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 
 		return (evaluated * ratio, pdf);
 	}
+
+	public static bool FindNormal(in Float3 outgoing, in Float3 incident, out Float3 normal)
+	{
+		normal = outgoing + incident;
+		float length2 = normal.SquaredMagnitude;
+
+		if (!FastMath.Positive(length2)) return false;
+		normal *= FastMath.SqrtR0(length2); //Normalize
+		if (normal.Z < 0f) normal = -normal;
+
+		return true;
+	}
 }
 
 public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : IMicrofacet
@@ -81,8 +93,8 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 
 		var packet = fresnel.CreateIncomplete(CosineP(outgoing));
 		float etaR = packet.etaIncident / packet.etaOutgoing;
-		
-		if (!GlossyFresnel<TMicrofacet>.FindNormal(outgoing, incident * etaR, out Float3 normal)) return RGB128.Black;
+
+		if (!FindNormal(outgoing, incident, etaR, out Float3 normal)) return RGB128.Black;
 
 		float dotO = outgoing.Dot(normal);
 		float dotI = incident.Dot(normal);
@@ -106,7 +118,7 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 		var packet = fresnel.CreateIncomplete(CosineP(outgoing));
 		float etaR = packet.etaIncident / packet.etaOutgoing;
 
-		if (!GlossyFresnel<TMicrofacet>.FindNormal(outgoing, incident * etaR, out Float3 normal)) return 0f;
+		if (!FindNormal(outgoing, incident, etaR, out Float3 normal)) return 0f;
 
 		float dotO = outgoing.Dot(normal);
 		float dotI = incident.Dot(normal);
@@ -123,7 +135,6 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 	{
 		Float3 normal = microfacet.Sample(outgoing, sample);
 		float dotO = outgoing.Dot(normal);
-		Ensure.IsTrue(normal.Z >= 0f);
 
 		var packet = fresnel.CreateIncomplete(dotO).Complete;
 
@@ -149,27 +160,7 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 
 		return (new RGB128(1f - packet.Value) * FastMath.Abs(evaluated) * ratio, pdf);
 	}
-}
 
-public sealed class GlossyFresnel<TMicrofacet> : BxDF where TMicrofacet : IMicrofacet
-{
-	public GlossyFresnel(FunctionType type) : base(type) { }
-	
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => throw new System.NotImplementedException();
-
-	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => throw new System.NotImplementedException();
-	
-	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident) => throw new System.NotImplementedException();
-	
-	public static bool FindNormal(in Float3 outgoing, in Float3 incident, out Float3 normal)
-	{
-		normal = outgoing + incident;
-		float length2 = normal.SquaredMagnitude;
-
-		if (!FastMath.Positive(length2)) return false;
-		normal *= FastMath.SqrtR0(length2); //Normalize
-		if (normal.Z < 0f) normal = -normal;
-
-		return true;
-	}
+	static bool FindNormal(in Float3 outgoing, in Float3 incident, float etaR, out Float3 normal) =>
+		GlossyReflection<TMicrofacet, RealFresnel>.FindNormal(outgoing, incident * etaR, out normal);
 }

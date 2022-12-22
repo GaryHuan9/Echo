@@ -6,7 +6,7 @@
 	:material0 = new Diffuse { .Albedo = new Pure("hdr(1 0.68 0.16)") .Roughness = new Pure("hdr(0.7 0 0)") }
 	:material1 = new Diffuse { .Albedo = link gray }
 	:material2 = new Emissive
-	:material3 = new Mirror { .Albedo = link gray }
+	:material3 = new Conductor { .Albedo = link gray }
 	:material4 = new Dielectric { .Albedo = link gray .RefractiveIndex = new Pure("hdr(1.5 0 0)") }
 
 	:material5 = new Conductor
@@ -18,8 +18,8 @@
 
 	:material6 = new Dielectric
 	{
-		.Roughness = new Pure("hdr(0.7 0.7 0)")
-		.RefractiveIndex = new Pure("hdr(1.2 0 0)")
+		.Roughness = new Pure("hdr(0 0 0)")
+		.RefractiveIndex = new Pure("hdr(1.5 0 0)")
 	}
 
 	.Add(new PlaneEntity { .Material = link material1 .Size = "32 24" })
@@ -27,7 +27,7 @@
 	.Add(new AmbientLight { .Texture = new CylindricalTexture { .Texture = "UlmerMuenster.jpg" } })
 
 #	.Add(new MeshEntity { .Mesh = "bunny.obj" .Material = link material0 .Position = "0 0 -3" .Rotation = "0 180 0" .Scale = "2.5" })
-	.Add(new SphereEntity { .Radius = "1" .Material = link material5 .Position = "0 1 -3" })
+	.Add(new SphereEntity { .Radius = "1" .Material = link material6 .Position = "0 1 -3" })
 
 	.Add(new SphereEntity { .Material = link material3 .Radius = "1" .Position = "-3 1 -2" })
 

@@ -34,6 +34,9 @@ public readonly struct RealFresnel : IFresnel
 		return new RGB128(packet.Value);
 	}
 
+	/// <summary>
+	/// Creates a new incomplete <see cref="Packet"/> from the cosine of an outgoing direction.
+	/// </summary>
 	public Packet CreateIncomplete(float cosOutgoing) =>
 		cosOutgoing > 0f //Swap indices of refraction for when outgoing is below
 			? new Packet(etaAbove, etaBelow, cosOutgoing)
@@ -54,12 +57,13 @@ public readonly struct RealFresnel : IFresnel
 		{
 			Ensure.IsTrue(etaOutgoing > 0f);
 			Ensure.IsTrue(etaIncident > 0f);
-			Ensure.IsTrue(cosOutgoing is >= -1f and <= 1f);
+			Ensure.IsTrue(FastMath.Abs(cosOutgoing) <= 1.00001f);
+			Ensure.IsTrue(FastMath.Abs(cosIncident) <= 1.00001f || float.IsNaN(cosIncident));
 
 			this.etaOutgoing = etaOutgoing;
 			this.etaIncident = etaIncident;
-			this.cosOutgoing = cosOutgoing;
-			this.cosIncident = cosIncident;
+			this.cosOutgoing = FastMath.Clamp11(cosOutgoing);
+			this.cosIncident = FastMath.Clamp11(cosIncident);
 		}
 
 		public readonly float etaOutgoing;
@@ -67,19 +71,22 @@ public readonly struct RealFresnel : IFresnel
 		public readonly float cosOutgoing;
 		public readonly float cosIncident;
 
+		/// <summary>
+		/// Returns a new <see cref="Packet"/> that is the completed version of this <see cref="Packet"/>.
+		/// </summary>
+		/// <remarks>The completed <see cref="Packet"/> will have a correct <see cref="cosIncident"/> value.</remarks>
 		public Packet Complete
 		{
 			get
 			{
 				Ensure.IsTrue(IsIncomplete);
-
-				float cosI = CalculateCosineIncident();
-				Ensure.IsTrue(cosI is >= -1f and <= 1f);
-
-				return new Packet(etaOutgoing, etaIncident, cosOutgoing, cosI);
+				return new Packet(etaOutgoing, etaIncident, cosOutgoing, CalculateCosineIncident());
 			}
 		}
 
+		/// <summary>
+		/// Whether this is a total internal reflection.
+		/// </summary>
 		public bool TotalInternalReflection
 		{
 			get
@@ -89,6 +96,9 @@ public readonly struct RealFresnel : IFresnel
 			}
 		}
 
+		/// <summary>
+		/// Evaluate the actual fresnel value.
+		/// </summary>
 		public float Value
 		{
 			get
@@ -114,6 +124,9 @@ public readonly struct RealFresnel : IFresnel
 
 		bool IsIncomplete => float.IsNaN(cosIncident);
 
+		/// <summary>
+		/// Refracts an outgoing direction using this <see cref="Packet"/> to get the incident direction.
+		/// </summary>
 		public Float3 Refract(in Float3 outgoing, in Float3 normal)
 		{
 			Ensure.IsFalse(IsIncomplete);
@@ -183,9 +196,4 @@ public readonly struct ComplexFresnel : IFresnel
 		//OPTIMIZE:
 		static Float4 Sqrt(in Float4 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z), 1f);
 	}
-}
-
-public readonly struct PassthroughFresnel : IFresnel
-{
-	public RGB128 Evaluate(float cosO) => RGB128.White;
 }
