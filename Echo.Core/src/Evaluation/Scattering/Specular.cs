@@ -20,7 +20,7 @@ public sealed class SpecularReflection<TFresnel> : BxDF where TFresnel : IFresne
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
 		incident = Reflect(outgoing);
-		
+
 		float cosO = CosineP(outgoing);
 		float cosI = CosineP(incident);
 
@@ -44,29 +44,20 @@ public sealed class SpecularTransmission : BxDF
 
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
-		float cosO = CosineP(outgoing);
-		float evaluated = fresnel.Evaluate(ref cosO, out float cosI, out float eta);
+		var packet = fresnel.CreateIncomplete(CosineP(outgoing)).Complete;
 
-		evaluated = 1f - evaluated;
-
-		if (FastMath.AlmostZero(evaluated))
+		if (packet.TotalInternalReflection)
 		{
 			incident = default;
-			return (RGB128.Black, 1f);
+			return Probable<RGB128>.Impossible;
 		}
 
-		incident = Refract(outgoing, cosO, cosI, eta);
+		float evaluated = 1f - packet.Value;
+
+		incident = packet.Refract(outgoing, Float3.Forward);
 		evaluated /= FastMath.Abs(CosineP(incident));
 
 		return (new RGB128(evaluated), 1f);
-	}
-
-	public static Float3 Refract(in Float3 outgoing, float cosO, float cosI, float eta)
-	{
-		Float3 incident = Normal(outgoing);
-		incident *= eta * cosO - cosI;
-		incident -= eta * outgoing;
-		return incident;
 	}
 }
 
@@ -83,8 +74,9 @@ public sealed class SpecularFresnel : BxDF
 
 	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
 	{
-		float cosO = CosineP(outgoing);
-		float evaluated = fresnel.Evaluate(ref cosO, out float cosI, out float eta);
+		var packet = fresnel.CreateIncomplete(CosineP(outgoing)).Complete;
+
+		float evaluated = packet.Value;
 
 		if (sample.x < evaluated)
 		{
@@ -95,7 +87,7 @@ public sealed class SpecularFresnel : BxDF
 		{
 			//Perform specular transmission
 			evaluated = 1f - evaluated;
-			incident = SpecularTransmission.Refract(outgoing, cosO, cosI, eta);
+			incident = packet.Refract(outgoing, Float3.Forward);
 		}
 
 		return (new RGB128(evaluated) / FastMath.Abs(CosineP(incident)), evaluated);
