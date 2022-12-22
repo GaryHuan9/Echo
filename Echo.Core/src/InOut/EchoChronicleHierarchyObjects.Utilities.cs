@@ -201,7 +201,7 @@ partial class EchoChronicleHierarchyObjects
 
 		interface IGrabPredicate
 		{
-			bool Continue(char value);
+			public bool Continue(char value);
 		}
 
 		readonly struct MatchPredicate : IGrabPredicate

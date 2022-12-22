@@ -255,38 +255,38 @@ public sealed class Device : IDisposable
 		/// <summary>
 		/// The total number of <see cref="Operation"/> that has ever been scheduled to this <see cref="Device"/>.
 		/// </summary>
-		int Count { get; }
+		public int Count { get; }
 
 		/// <summary>
 		/// The index of the current executing <see cref="Operation"/> or if nothing
 		/// is executing, the latest <see cref="Operation"/> that finished executing.
 		/// </summary>
-		int LatestIndex { get; }
+		public int LatestIndex { get; }
 
 		/// <summary>
 		/// Short hand for using <see cref="LatestIndex"/> on the indexer <see cref="this"/>.
 		/// </summary>
-		sealed Operation Latest => this[LatestIndex];
+		public sealed Operation Latest => this[LatestIndex];
 
 		/// <summary>
 		/// Retrieves an <see cref="Operation"/>. 
 		/// </summary>
 		/// <param name="index">The index to retrieve, must be greater than or equals zero and less than <see cref="Count"/>.</param>
-		Operation this[int index] { get; }
+		public Operation this[int index] { get; }
 
 		/// <summary>
 		/// Returns the index of an <see cref="Operation"/> scheduled to this <see cref="Device"/>.
 		/// </summary>
 		/// <param name="operation">The <see cref="Operation"/> to look for.</param>
 		/// <returns>The index if found, otherwise a negative number.</returns>
-		int IndexOf(Operation operation);
+		public int IndexOf(Operation operation);
 
 		/// <summary>
 		/// Blocks the calling thread until this <see cref="Device"/> completes or aborts <paramref name="operation"/>.
 		/// </summary>
 		/// <param name="operation">The <see cref="Operation"/> to await for.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Argument is not an <see cref="Operation"/> scheduled to this <see cref="Device"/>.</exception>
-		void Await(Operation operation);
+		public void Await(Operation operation);
 	}
 
 	sealed class OperationsQueue : IOperations

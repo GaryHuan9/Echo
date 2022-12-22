@@ -13,7 +13,7 @@ public interface ITilePattern
 	/// <summary>
 	/// Returns a series of tile positions from (0, 0) (inclusive) to <paramref name="size"/> (exclusive).
 	/// </summary>
-	Int2[] CreateSequence(Int2 size);
+	public Int2[] CreateSequence(Int2 size);
 }
 
 public class OrderedPattern : ITilePattern

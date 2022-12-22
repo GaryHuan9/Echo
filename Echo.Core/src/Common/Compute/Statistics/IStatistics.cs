@@ -14,14 +14,14 @@ public interface IStatistics< /*should not be made as covariant!*/ T> where T : 
 	/// <summary>
 	/// The number of different events tracked by this <see cref="IStatistics{T}"/>.
 	/// </summary>
-	int Count { get; } //OPTIMIZE: convert to static property when we upgrade to dotnet 7
+	public int Count { get; } //OPTIMIZE: convert to static property when we upgrade to dotnet 7
 
 	/// <summary>
 	/// Retrieves recorded information about a event.
 	/// </summary>
 	/// <param name="index">The numerical number of the target event. Must be
 	/// between 0 (inclusive) and <see cref="Count"/> (exclusive). </param>
-	EventRow this[int index] { get; }
+	public EventRow this[int index] { get; }
 
 	/// <summary>
 	/// Notes down the occurrence of an event.
@@ -34,7 +34,7 @@ public interface IStatistics< /*should not be made as covariant!*/ T> where T : 
 	/// passed directly. (2) Invocations can only occur within the main <see cref="Echo"/> project. (3) The invocation
 	/// expression is in the form <c>stats.Report("item");</c> (ie. <c>array[0].Report("item");</c> is not allowed)</para>
 	/// Otherwise, this method might not work properly.</remarks>
-	void Report(string label, ulong count = 1);
+	public void Report(string label, ulong count = 1);
 
 	/// <summary>
 	/// Sums a number of <see cref="IStatistics{T}"/>.
@@ -42,5 +42,5 @@ public interface IStatistics< /*should not be made as covariant!*/ T> where T : 
 	/// <param name="source">A pointer to the series of <see cref="IStatistics{T}"/> to be summed together..</param>
 	/// <param name="length">The number of <see cref="IStatistics{T}"/> to add together; must be positive.</param>
 	/// <returns>A new <see cref="IStatistics{T}"/> containing the sum.</returns>
-	unsafe T Sum(T* source, int length); //OPTIMIZE: convert to static method when we upgrade to dotnet 7
+	public unsafe T Sum(T* source, int length); //OPTIMIZE: convert to static method when we upgrade to dotnet 7
 }
