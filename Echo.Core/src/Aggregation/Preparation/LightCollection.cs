@@ -49,7 +49,7 @@ public sealed class LightCollection
 
 	public readonly ImmutableArray<PreparedPointLight> points;
 
-	readonly GeometryCollection geometries;
+	public readonly GeometryCollection geometries;
 
 	public View<Tokenized<LightBound>> CreateBounds()
 	{

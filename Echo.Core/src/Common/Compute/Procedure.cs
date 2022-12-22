@@ -13,7 +13,7 @@ public struct Procedure
 	}
 
 	/// <summary>
-	/// A value between 0 (inclusive) and <see cref="Operation.totalProcedureCount"/>
+	/// A value between 0 (inclusive) and <see cref="Operation.TotalProcedureCount"/>
 	/// (exclusive), indicating the specific step in an <see cref="Operation"/>.
 	/// </summary>
 	/// <remarks>This value will gradually increase as an <see cref="Operation"/> gets completed.</remarks>

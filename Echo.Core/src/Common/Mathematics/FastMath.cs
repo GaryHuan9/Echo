@@ -35,7 +35,7 @@ public static class FastMath
 	/// </summary>
 	public const float OneMinusEpsilon = 0.99999994f;
 
-	const MethodImplOptions Options = MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization;
+	const MethodImplOptions Options = MethodImplOptions.AggressiveInlining;
 
 	//NOTE: some methods in this class is not necessarily "fast" yet, however fast alternatives can be implemented later on if needed.
 

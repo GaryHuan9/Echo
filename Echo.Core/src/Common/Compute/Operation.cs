@@ -6,6 +6,7 @@ using System.Threading;
 using Echo.Core.Common.Compute.Statistics;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
+using Echo.Core.Common.Threading;
 
 namespace Echo.Core.Common.Compute;
 
@@ -23,7 +24,7 @@ public abstract class Operation : IDisposable
 	{
 		int count = workers.Length;
 
-		this.totalProcedureCount = totalProcedureCount;
+		totalProcedure = totalProcedureCount;
 		workerData = new AlignedArray<WorkerData>(count);
 
 		for (int i = 0; i < count; i++) workerData[i] = new WorkerData(workers[i].Guid);
@@ -32,18 +33,14 @@ public abstract class Operation : IDisposable
 	}
 
 	/// <summary>
-	/// The total number of steps in this <see cref="Operation"/>.
-	/// </summary>
-	public readonly uint totalProcedureCount;
-
-	/// <summary>
 	/// The <see cref="DateTime"/> when this <see cref="Operation"/> was created.
 	/// </summary>
 	public readonly DateTime creationTime;
 
-	AlignedArray<WorkerData> workerData;
+	protected AlignedArray<WorkerData> workerData;
 
-	uint nextProcedure;
+	protected uint nextProcedure;
+	uint totalProcedure;
 	uint completedCount;
 
 	TimeSpan totalRecordedTime;
@@ -52,6 +49,12 @@ public abstract class Operation : IDisposable
 	readonly Locker totalTimeLocker = new();
 
 	static readonly Stopwatch stopwatch = Stopwatch.StartNew();
+
+	/// <summary>
+	/// The total number of steps in this <see cref="Operation"/>.
+	/// </summary>
+	/// <remarks>In some <see cref="Operation"/>, this value might increase, but it will never decrease!</remarks>
+	public uint TotalProcedureCount => InterlockedHelper.Read(ref totalProcedure);
 
 	/// <summary>
 	/// The number of steps already completed.
@@ -71,7 +74,7 @@ public abstract class Operation : IDisposable
 	/// <summary>
 	/// Whether this operation has been fully completed.
 	/// </summary>
-	public bool IsCompleted => CompletedProcedureCount == totalProcedureCount;
+	public bool IsCompleted => CompletedProcedureCount == TotalProcedureCount;
 
 	/// <summary>
 	/// The number of <see cref="IWorker"/>s working on completing this <see cref="Operation"/>.
@@ -92,13 +95,13 @@ public abstract class Operation : IDisposable
 		get
 		{
 			using var _ = procedureLocker.Fetch();
-			if (completedCount == totalProcedureCount) return 1d; //Fully completed
+			if (completedCount == TotalProcedureCount) return 1d; //Fully completed
 
 			double progress = 0d;
 
 			foreach (ref readonly WorkerData data in workerData.AsSpan()) progress += data.procedure.Progress;
 
-			return (progress + completedCount) / totalProcedureCount;
+			return (progress + completedCount) / TotalProcedureCount;
 		}
 	}
 
@@ -137,38 +140,30 @@ public abstract class Operation : IDisposable
 	/// Joins the execution of this <see cref="Operation"/> once.
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> to use.</param>
-	/// <returns>Whether this execution performed any work.</returns>
-	public bool Execute(IWorker worker)
+	/// <returns>Whether the <see cref="IWorker"/> should invoke this method one more time.</returns>
+	public virtual bool Execute(IWorker worker)
 	{
 		uint index = Interlocked.Increment(ref nextProcedure) - 1;
-		if (index >= totalProcedureCount) return false;
+		if (index >= TotalProcedureCount) return false;
 
 		//Fetch data and execute
 		ref WorkerData data = ref workerData[worker.Index];
-		ref Procedure procedure = ref data.procedure;
 		data.ThrowIfInconsistent(worker.Guid);
-
-		procedure = new Procedure(index);
-		Execute(ref procedure, worker);
+		data.procedure = new Procedure(index);
+		Execute(ref data.procedure, worker);
 
 		//Update progress
-		lock (procedureLocker)
-		{
-			++completedCount;
-			procedure = default;
-		}
-
-		return true;
+		return CompleteProcedure(ref data);
 	}
 
 	/// <summary>
-	/// Should be invoked when a <see cref="IWorker"/> is either starting or stopping to execute this <see cref="Operation"/>.
+	/// Should be invoked when a <see cref="IWorker"/> either begins or stops actively working on this <see cref="Operation"/>.
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> that is changing its idle state.</param>
 	/// <param name="idle">True if the <see cref="IWorker"/> is stopping its execution, false otherwise.</param>
-	/// <remarks>This method should be invoked directly through <see cref="IWorker.OnIdleChangedEvent"/>
-	/// and <see cref="IWorker.OnAwaitChangedEvent"/>, otherwise the behavior is undefined.</remarks>
-	public void ChangeWorkerState(IWorker worker, bool idle)
+	/// <remarks>This method should be invoked directly through <see cref="Worker.OnDispatchChangedEvent"/>
+	/// and <see cref="Worker.OnIdlenessChangedEvent"/>, otherwise the behavior is undefined.</remarks>
+	public void ChangeWorkerIdleness(IWorker worker, bool idle)
 	{
 		TimeSpan time = stopwatch.Elapsed;
 		Ensure.AreNotEqual(time, default);
@@ -266,6 +261,30 @@ public abstract class Operation : IDisposable
 	protected abstract void Execute(ref Procedure procedure, IWorker worker);
 
 	/// <summary>
+	/// Completes the current <see cref="Procedure"/> in a <see cref="WorkerData"/>.
+	/// </summary>
+	/// <returns>Whether there are more <see cref="Procedure"/> to work on.</returns>
+	protected bool CompleteProcedure(ref WorkerData data)
+	{
+		using var _ = procedureLocker.Fetch();
+		data.procedure = default;
+
+		uint completed = ++completedCount;
+		uint total = TotalProcedureCount;
+		Ensure.IsTrue(completed <= total);
+		return completed < total;
+	}
+
+	/// <summary>
+	/// Increases <see cref="TotalProcedureCount"/> as more potential <see cref="Procedure"/> is discovered.
+	/// </summary>
+	protected void IncreaseTotalProcedure(uint amount)
+	{
+		uint result = Interlocked.Add(ref totalProcedure, amount);
+		Ensure.IsTrue(result > result - amount); //Total should only grow
+	}
+
+	/// <summary>
 	/// Releases the resources owned by this <see cref="Operation"/>.
 	/// </summary>
 	/// <param name="disposing">If true, this is invoked by the <see cref="IDisposable.Dispose"/> method, otherwise it is invoked by the finalizer.</param>
@@ -277,13 +296,8 @@ public abstract class Operation : IDisposable
 		workerData = null;
 	}
 
-	/// <summary>
-	/// Exception thrown by <see cref="IWorker"/> during an <see cref="Operation"/> abortion.
-	/// </summary>
-	internal sealed class AbortException : Exception { }
-
 	[StructLayout(LayoutKind.Sequential, Size = 64)]
-	struct WorkerData
+	protected struct WorkerData
 	{
 		public WorkerData(Guid workerGuid)
 		{

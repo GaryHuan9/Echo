@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Preparation;
-using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Scenic.Geometries;
@@ -122,7 +121,7 @@ public struct TraceQuery
 	public readonly void EnsureHit()
 	{
 #if DEBUG
-		Ensure.IsTrue(Hit);
+		Common.Diagnostics.Ensure.IsTrue(Hit);
 #endif
 	}
 }

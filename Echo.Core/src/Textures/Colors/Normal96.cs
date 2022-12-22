@@ -5,7 +5,6 @@ namespace Echo.Core.Textures.Colors;
 
 public readonly struct Normal96 : IColor<Normal96>, IFormattable
 {
-
 	Normal96(in Float3 value) => d = value;
 
 	readonly Float3 d;
@@ -15,7 +14,9 @@ public readonly struct Normal96 : IColor<Normal96>, IFormattable
 	public Float4 ToFloat4() => (Float4)d;
 	public Normal96 FromFloat4(in Float4 value) => (Normal96)(Float3)value;
 
+	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => d.ToString(format, provider);
+	
 	public static explicit operator Normal96(in Float3 value) => new(value.Normalized);
 	public static explicit operator Float3(in Normal96 value) => value.d;
 }

@@ -34,6 +34,11 @@ public sealed class Locker
 	}
 
 	/// <summary>
+	/// Whether this <see cref="Locker"/> is currently entered.
+	/// </summary>
+	public bool IsEntered => Monitor.IsEntered(this);
+
+	/// <summary>
 	/// Enters the lock which can be exited by invoking <see cref="IDisposable.Dispose"/> on the returned <see cref="ReleaseHandle"/>.
 	/// </summary>
 	/// <remarks>This method should be used directly with the C# 'using' statements.</remarks>
