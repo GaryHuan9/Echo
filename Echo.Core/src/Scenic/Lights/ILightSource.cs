@@ -12,5 +12,5 @@ public interface ILightSource { }
 /// that this <see cref="ILightSource{T}"/> can produce.</typeparam>
 public interface ILightSource<out T> : ILightSource where T : IPreparedLight
 {
-	T Extract();
+	public T Extract();
 }

@@ -7,7 +7,7 @@ namespace Echo.Core.Evaluation.Scattering;
 
 public interface IFresnel
 {
-	RGB128 Evaluate(float cosO);
+	public RGB128 Evaluate(float cosO);
 }
 
 public readonly struct RealFresnel : IFresnel

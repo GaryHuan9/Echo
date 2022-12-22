@@ -19,7 +19,7 @@ public interface IGeometrySource<out T> : IGeometrySource where T : IPreparedGeo
 	/// <summary>
 	/// The exact number of prepared geometry the <see cref="Extract"/> will yield. 
 	/// </summary>
-	uint Count { get; }
+	public uint Count { get; }
 
 	/// <summary>
 	/// Extracts all of the prepared geometry of type <typeparamref name="T"/> from this <see cref="IGeometrySource{T}"/>.
@@ -27,5 +27,5 @@ public interface IGeometrySource<out T> : IGeometrySource where T : IPreparedGeo
 	/// <param name="extractor">The <see cref="SwatchExtractor"/> use to extract the
 	/// <see cref="MaterialIndex"/> from the corresponding <see cref="Material"/>.</param>
 	/// <returns>An <see cref="IEnumerable{T}"/> that enables enumeration through the extracted values.</returns>
-	IEnumerable<T> Extract(SwatchExtractor extractor);
+	public IEnumerable<T> Extract(SwatchExtractor extractor);
 }

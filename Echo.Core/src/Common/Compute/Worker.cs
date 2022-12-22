@@ -17,36 +17,36 @@ public interface IWorker
 	/// same <see cref="Operation"/> at the same time. Additionally, the value of this property
 	/// will start at zero and continues on for different <see cref="IWorker"/>.
 	/// </summary>
-	int Index { get; }
+	public int Index { get; }
 
 	/// <summary>
 	/// A globally unique identifier (<see cref="Guid"/>) for this <see cref="IWorker"/>.
 	/// </summary>
 	/// <remarks>The uniqueness of this value transcends different <see cref="Device"/>, while the
 	/// uniqueness of <see cref="Index"/> does not; they are used for different purposes.</remarks>
-	Guid Guid { get; }
+	public Guid Guid { get; }
 
 	/// <summary>
 	/// The current <see cref="WorkerState"/> of this <see cref="IWorker"/>.
 	/// </summary>
-	WorkerState State { get; }
+	public WorkerState State { get; }
 
 	/// <summary>
 	/// The <see cref="string"/> label of this <see cref="IWorker"/> to be displayed.
 	/// </summary>
-	sealed string DisplayLabel => $"Worker {Guid:D}";
+	public sealed string DisplayLabel => $"Worker {Guid:D}";
 
 	/// <summary>
 	/// Invoked on this <see cref="IWorker"/> thread to block until an item is retrieved from the <see cref="BlockingCollection{T}"/>.
 	/// </summary>
 	/// <remarks>If <see cref="BlockingCollection{T}.IsCompleted"/> is true, this method returns false immediately.</remarks>
-	bool Await<T>(BlockingCollection<T> collection, out T item);
+	public bool Await<T>(BlockingCollection<T> collection, out T item);
 
 	/// <summary>
 	/// Invoked on this <see cref="IWorker"/> thread to check if there are any scheduling changes.
 	/// </summary>
 	/// <remarks>Should be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
-	void CheckSchedule();
+	public void CheckSchedule();
 }
 
 /// <summary>

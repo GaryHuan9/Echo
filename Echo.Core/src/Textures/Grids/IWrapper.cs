@@ -19,13 +19,13 @@ public interface IWrapper
 	/// <summary>
 	/// Wraps the integer texture <paramref name="position"/> to be within the bounds of <paramref name="texture"/>.
 	/// </summary>
-	void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T>;
+	public void Wrap<T>(TextureGrid<T> texture, ref Int2 position) where T : unmanaged, IColor<T>;
 
 	/// <summary>
 	/// Wraps the packed integer texture coordinates from <paramref name="x"/> and
 	/// <paramref name="y"/> to be within the bounds of <paramref name="texture"/>.
 	/// </summary>
-	void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>;
+	public void Wrap<T>(TextureGrid<T> texture, ref Vector128<int> x, ref Vector128<int> y) where T : unmanaged, IColor<T>;
 
 	private class Clamp : IWrapper
 	{

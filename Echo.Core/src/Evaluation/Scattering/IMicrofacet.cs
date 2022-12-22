@@ -24,16 +24,16 @@ public interface IMicrofacet
 	/// </summary>
 	/// <param name="direction">The direction towards which the projected face areas are calculated from.</param>
 	/// <returns>The area of the shadowed microfacet (blocked by others) over the area of the visible microfacet.</returns>
-	float ShadowingRatio(in Float3 direction);
+	public float ShadowingRatio(in Float3 direction);
 
-	Float3 Sample(in Float3 outgoing, Sample2D sample);
+	public Float3 Sample(in Float3 outgoing, Sample2D sample);
 
 	/// <summary>
 	/// Calculates the fraction of visible microfacet faces over all microfacet faces from a direction.
 	/// </summary>
 	/// <param name="direction">The direction towards which the visibility is calculated.</param>
 	/// <returns>The calculated fraction, between 0 and 1.</returns>
-	sealed float Visibility(in Float3 direction) => 1f / (1f + ShadowingRatio(direction));
+	public sealed float Visibility(in Float3 direction) => 1f / (1f + ShadowingRatio(direction));
 
 	/// <summary>
 	/// Calculates the fraction of visible microfacet faces from two directions.
@@ -41,7 +41,7 @@ public interface IMicrofacet
 	/// <param name="outgoing">The first direction towards which the visibility is calculated.</param>
 	/// <param name="incident">The second direction towards which the visibility is calculated.</param>
 	/// <returns>The calculated fraction, between 0 and 1.</returns>
-	sealed float Visibility(in Float3 outgoing, in Float3 incident) => 1f / (1f + ShadowingRatio(outgoing) + ShadowingRatio(incident));
+	public sealed float Visibility(in Float3 outgoing, in Float3 incident) => 1f / (1f + ShadowingRatio(outgoing) + ShadowingRatio(incident));
 
 	/// <summary>
 	/// Calculates the pdf of selecting <paramref name="normal"/> from <see cref="outgoing"/> with <see cref="Sample"/>.
@@ -50,7 +50,7 @@ public interface IMicrofacet
 	/// <param name="normal">The unit local normal direction that was probabilistically selected to be sampled.</param>
 	/// <returns>The probability density function (pdf) value of this selection.</returns>
 	/// <seealso cref="Sample"/>
-	sealed float ProbabilityDensity(in Float3 outgoing, in Float3 normal)
+	public sealed float ProbabilityDensity(in Float3 outgoing, in Float3 normal)
 	{
 		float fraction = ProjectedArea(normal) * Visibility(outgoing);
 		return fraction * FastMath.Abs(outgoing.Dot(normal) / CosineP(outgoing));
