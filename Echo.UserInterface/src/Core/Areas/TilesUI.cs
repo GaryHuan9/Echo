@@ -263,6 +263,26 @@ public class TilesUI : PlaneUI
 					LogList.Add($"Average color difference versus reference: {average:N4}.");
 				}
 
+				if (isComparing && ImGui.MenuItem("Print Average"))
+				{
+					Float2 sizeR = 1f / textureSize;
+					Summation total = Summation.Zero;
+
+					for (int y = 0; y < textureSize.Y; y++)
+					for (int x = 0; x < textureSize.X; x++)
+					{
+						//We use uv to index both textures because the integer indexer is only available to typed textures
+						//This is a little bit dumb but it works for now and this is just a temporary handy tool
+
+						Float2 uv = new Float2(x + 0.5f, y + 0.5f) * sizeR;
+						Float4 color = ((TextureGrid)layer)[uv];
+						total += color - compareTexture![uv];
+					}
+
+					Float4 average = total.Result / textureSize.Product;
+					LogList.Add($"Average color difference versus reference: {average:N4}.");
+				}
+
 				ImGui.EndMenu();
 			}
 
@@ -351,7 +371,7 @@ public class TilesUI : PlaneUI
 			if (compareTexture != null)
 			{
 				uv = (position + Float2.Half) / textureSize;
-				color = (color - compareTexture[uv]).Absoluted;
+				color -= compareTexture[uv];
 			}
 
 			ImGui.TextUnformatted($"Pixel: {position.ToInvariant()} Tile: {tilePosition.ToInvariant()} RGBA: {color.ToInvariant()}");

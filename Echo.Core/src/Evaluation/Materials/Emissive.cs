@@ -4,37 +4,22 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
+using Echo.Core.Evaluation.Scattering;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
 /// <summary>
-/// An interface that should be added to any <see cref="Material"/> that can directly create emission.
+/// A <see cref="Material"/> that is emissive, meaning that any surface it is applied to will contribute photons to the scene.
+/// The color is determined by the total average of <see cref="Material.Albedo"/>; currently textured area light is not supported.
 /// </summary>
-public interface IEmissive
+public sealed class Emissive : Material
 {
 	/// <summary>
-	/// Returns the approximated emitted power of this <see cref="IEmissive"/> per unit area.
+	/// Returns the approximated emitted power of this <see cref="Emissive"/> per unit area.
 	/// If this property returns a non-positive value, this entire interface can be ignored.
 	/// </summary>
-	float Power { get; }
-
-	/// <summary>
-	/// Returns the emission of this <see cref="IEmissive"/>.
-	/// </summary>
-	/// <param name="point">A <see cref="GeometryPoint"/> on this <see cref="IEmissive"/> surface.</param>
-	/// <param name="outgoing">A direction leaving this <see cref="IEmissive"/> surface from <paramref name="point"/>.</param>
-	RGB128 Emit(in GeometryPoint point, in Float3 outgoing);
-}
-
-/// <summary>
-/// A <see cref="Material"/> that is emissive, meaning that any surface it is applied to will contribute photons to the scene.
-/// The tint is determined by the total average of <see cref="Material.Albedo"/>; currently textured area light is not supported.
-/// </summary>
-public class Emissive : Material, IEmissive
-{
-	/// <inheritdoc/>
 	public float Power { get; private set; }
 
 	RGB128 emission;
@@ -63,15 +48,16 @@ public class Emissive : Material, IEmissive
 
 		//Calculate emission and power from total sum
 		emission = (RGB128)total.Result / size.Product;
-		Power = emission.Luminance * Scalars.Tau; //NOTE: multiply by 2 Pi here because we still assume that an emissive surface is two sided
+		Power = emission.Luminance * Scalars.Pi;
 	}
 
-	public override void Scatter(ref Contact contact, Allocator allocator)
-	{
-		//Empty bsdf for zero scattering
-		_ = new MakeBSDF(ref contact, allocator);
-	}
+	public override void Scatter(ref Contact contact, Allocator allocator) => contact.bsdf = NewBSDF(contact, allocator, RGB128.Black);
+	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new System.NotSupportedException();
 
-	/// <inheritdoc/>
+	/// <summary>
+	/// Returns the emission of this <see cref="Emissive"/>.
+	/// </summary>
+	/// <param name="point">A <see cref="GeometryPoint"/> on this <see cref="Emissive"/> surface.</param>
+	/// <param name="outgoing">A direction leaving this <see cref="Emissive"/> surface from <paramref name="point"/>.</param>
 	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing) => outgoing.Dot(point.normal) > 0f ? emission : RGB128.Black;
 }

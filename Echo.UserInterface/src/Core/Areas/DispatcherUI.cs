@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Echo.Core.Common.Compute;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Evaluation.Operation;
 using Echo.Core.InOut;
 using Echo.Core.Scenic.Hierarchies;
@@ -46,7 +47,16 @@ public class DispatcherUI : AreaUI
 
 		if (arguments.Length > 1)
 		{
-			filePath = Path.GetRelativePath(Environment.CurrentDirectory, arguments[1]);
+			filePath = arguments[1];
+
+			if (arguments.Length > 2 && arguments[2] == "build-path")
+			{
+				const string ProjectPath = "../../../../Echo.Core/";
+				filePath = Path.Combine(ProjectPath, filePath);
+			}
+
+			filePath = Path.GetFullPath(filePath, Environment.CurrentDirectory);
+			filePath = Path.GetRelativePath(Environment.CurrentDirectory, filePath);
 
 			ReadFile();
 			Dispatch(Device.CreateOrGet());
@@ -129,16 +139,23 @@ public class DispatcherUI : AreaUI
 		PopulateLabels<EvaluationProfile>(read, profileLabels);
 
 		objects = read;
+		sceneIndex = 0;
+		profileIndex = 0;
 	}
 
 	void Dispatch(Device device)
 	{
 		if (objects == null) return;
 
-		string sceneLabel = sceneLabels.Count == 0 ? default : sceneLabels[sceneIndex];
-		string profileLabel = profileLabels.Count == 0 ? default : profileLabels[profileIndex];
+		string sceneLabel;
+		string profileLabel;
 
-		if (sceneLabel == null || profileLabel == null)
+		try
+		{
+			sceneLabel = sceneLabels[sceneIndex];
+			profileLabel = profileLabels[profileIndex];
+		}
+		catch (IndexOutOfRangeException)
 		{
 			LogList.AddError($"Missing specified {nameof(Scene)} or {nameof(EvaluationProfile)} to dispatch.");
 			return;
@@ -163,11 +180,17 @@ public class DispatcherUI : AreaUI
 
 		static T ConstructFirst<T>(EchoChronicleHierarchyObjects objects, string label) where T : class
 		{
+			ReadOnlySpan<char> match = label.AsSpan(0, label.LastIndexOf('[')).Trim();
+			Ensure.IsFalse(match.IsEmpty);
+
 			for (int i = 0; i < objects.Length; i++)
 			{
 				EchoChronicleHierarchyObjects.Entry entry = objects[i];
-				if (!label.AsSpan().StartsWith(entry.Identifier)) continue;
-				return objects.ConstructFirst<T>();
+				if (!match.SequenceEqual(entry.Identifier)) continue;
+
+				T constructed = entry.Construct<T>();
+				Ensure.IsNotNull(constructed);
+				return constructed;
 			}
 
 			return null;

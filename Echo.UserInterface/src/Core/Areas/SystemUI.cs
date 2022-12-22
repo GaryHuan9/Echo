@@ -49,6 +49,12 @@ public class SystemUI : AreaUI
 		}
 	}
 
+	protected override void Dispose(bool disposing)
+	{
+		base.Dispose(disposing);
+		if (disposing) Device.Instance?.Dispose();
+	}
+
 	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
 
 	void DrawGeneral(in Moment moment)

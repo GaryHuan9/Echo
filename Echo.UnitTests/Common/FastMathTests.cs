@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using Echo.Core.Common.Mathematics;
 using NUnit.Framework;
 
@@ -9,8 +10,8 @@ public class FastMathTests
 {
 	static readonly float[] floatValues =
 	{
-		0f, -0f, 1f, -1f, 2f, -3f, 11f, -16f, 101f, 3E5f, -7E4f, 0.6f, 1E-8f, 7f, -0.5f, -1E-8f, Scalars.Phi,
-		float.NaN, float.Epsilon, float.PositiveInfinity, float.NegativeInfinity, float.MaxValue, float.MinValue
+		0f, -0f, 1f, -1f, 2f, -3f, 11f, -16f, 101f, 3E5f, -7E4f, 0.6f, 1E-8f, 7f, -0.5f, -1E-8f, Scalars.Phi, float.NaN,
+		float.Epsilon, float.PositiveInfinity, float.NegativeInfinity, float.MaxValue, float.MinValue, FastMath.Epsilon
 	};
 
 	[Test]
@@ -76,17 +77,9 @@ public class FastMathTests
 	public void FMA([ValueSource(nameof(floatValues))] float value,
 					[ValueSource(nameof(floatValues))] float multiplier)
 	{
-		float adder = value * -Scalars.Phi;
+		float adder = MathF.Sin(BitOperations.RotateRight((uint)value.GetHashCode(), 7) ^ multiplier.GetHashCode()); //Basically just a random number
 		float expected = (float)((double)value * multiplier + adder);
 		Assert.That(FastMath.FMA(value, multiplier, adder), Is.EqualTo(expected).Roughly());
-	}
-
-	[Test]
-	public void F2A([ValueSource(nameof(floatValues))] float value,
-					[ValueSource(nameof(floatValues))] float adder)
-	{
-		float expected = (float)((double)value * value + adder);
-		Assert.That(FastMath.F2A(value, adder), Is.EqualTo(expected).Roughly());
 	}
 
 	[Test]
@@ -100,7 +93,7 @@ public class FastMathTests
 	[Test]
 	public void Positive([ValueSource(nameof(floatValues))] float value)
 	{
-		Assert.That(FastMath.Positive(value), Is.EqualTo(value > FastMath.Epsilon));
+		Assert.That(FastMath.Positive(value), Is.EqualTo(FastMath.Epsilon <= value));
 	}
 
 	[Test]

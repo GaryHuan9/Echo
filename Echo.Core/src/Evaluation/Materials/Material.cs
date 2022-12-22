@@ -12,12 +12,15 @@ namespace Echo.Core.Evaluation.Materials;
 
 public abstract class Material
 {
-	NotNull<Texture> _albedo = Pure.black;
+	NotNull<Texture> _albedo = Pure.white;
 	NotNull<Texture> _normal = Pure.normal;
 
 	/// <summary>
 	/// The primary color of this <see cref="Material"/>.
 	/// </summary>
+	/// <remarks>This <see cref="Texture"/> is applied universally to all <see cref="Material"/>s by a simple multiplication,
+	/// essentially tinting their output. Thus, some <see cref="Material"/> might not be physical if this property is assigned
+	/// to something other than <see cref="Pure.white"/>.</remarks>
 	public Texture Albedo
 	{
 		get => _albedo;
@@ -50,7 +53,19 @@ public abstract class Material
 	/// Determines the scattering properties of this material at <paramref name="contact"/>
 	/// and potentially initializes the appropriate properties in <paramref name="contact"/>.
 	/// </summary>
-	public abstract void Scatter(ref Contact contact, Allocator allocator);
+	public virtual void Scatter(ref Contact contact, Allocator allocator)
+	{
+		RGBA128 sampled = SampleAlbedo(contact);
+		if (sampled.Alpha < 0.5f) return;
+
+		var albedo = (RGB128)sampled;
+		contact.bsdf = albedo.IsZero ?
+			NewBSDF(contact, allocator, RGB128.Black) :
+			Scatter(contact, allocator, albedo);
+	}
+
+	/// <inheritdoc cref="Scatter(ref Contact, Allocator"/>
+	public abstract BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo);
 
 	/// <summary>
 	/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
@@ -68,16 +83,18 @@ public abstract class Material
 		if (local == Float4.Zero) return false;
 
 		//Create transform to move local direction to world-space
-		NormalTransform transform = new NormalTransform(normal);
-		Float3 delta = transform.LocalToWorld(local.XYZ);
+		var transform = new OrthonormalTransform(normal);
+		Float3 delta = transform.ApplyForward(local.XYZ);
 
 		normal = (normal - delta).Normalized;
 		return true;
 	}
 
 	/// <summary>
-	/// Samples <see cref="Albedo"/> at <paramref name="contact"/> and returns the resulting <see cref="RGBA128"/>.
+	/// Samples the <see cref="Albedo"/>.
 	/// </summary>
+	/// <param name="contact">The <see cref="Contact"/> at which we should sample the <see cref="Albedo"/>.</param>
+	/// <returns>The sampled result.</returns>
 	public RGBA128 SampleAlbedo(in Contact contact) => Albedo[contact.shade.Texcoord];
 
 	/// <summary>
@@ -86,31 +103,12 @@ public abstract class Material
 	protected static RGB128 Sample(Texture texture, in Contact contact) => (RGB128)texture[contact.shade.Texcoord];
 
 	/// <summary>
-	/// A wrapper struct used to easily create <see cref="BSDF"/> and add <see cref="BxDF"/> to it.
+	/// Creates a new <see cref="BSDF"/>
 	/// </summary>
-	protected readonly ref struct MakeBSDF
+	protected static BSDF NewBSDF(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
-		public MakeBSDF(ref Contact contact, Allocator allocator)
-		{
-			this.allocator = allocator;
-			bsdf = allocator.New<BSDF>();
-
-			contact.bsdf = bsdf;
-			bsdf.Reset(contact);
-		}
-
-		readonly Allocator allocator;
-		readonly BSDF bsdf;
-
-		/// <summary>
-		/// Adds a new <see cref="BxDF"/> of type <typeparamref name="T"/> to <see cref="Contact.bsdf"/> and returns it.
-		/// </summary>
-		public T Add<T>() where T : BxDF, new()
-		{
-			T function = allocator.New<T>();
-
-			bsdf.Add(function);
-			return function;
-		}
+		var bsdf = allocator.New<BSDF>();
+		bsdf.Reset(contact, albedo);
+		return bsdf;
 	}
 }
