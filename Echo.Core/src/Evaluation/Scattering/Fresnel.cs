@@ -14,78 +14,126 @@ public readonly struct RealFresnel : IFresnel
 {
 	public RealFresnel(float etaAbove, float etaBelow)
 	{
+		Ensure.IsTrue(etaAbove > 0f);
+		Ensure.IsTrue(etaBelow > 0f);
+
 		this.etaAbove = etaAbove;
 		this.etaBelow = etaBelow;
 	}
 
-	public readonly float etaAbove;
-	public readonly float etaBelow;
+	readonly float etaAbove;
+	readonly float etaBelow;
 
-	public RGB128 Evaluate(float cosO) => new(Evaluate(ref cosO, out _, out _));
-
-	public float Evaluate(ref float cosO, out float cosI, out float eta)
+	public RGB128 Evaluate(float cosO)
 	{
 		//Get the indices of reflection
-		GetIndices(cosO, out float etaO, out float etaI);
-		cosO = FastMath.Clamp01(FastMath.Abs(cosO));
+		var packet = CreateIncomplete(cosO);
 
-		//Apply Snell's law
-		eta = etaO / etaI;
-		if (GetCosineTransmittance(cosO, eta, out cosI)) return 1f;
-
-		//Fresnel equation
-		return Apply(cosO, cosI, etaO, etaI);
+		//Apply Snell's law & the Fresnel equation
+		packet = packet.Complete;
+		return new RGB128(packet.Value);
 	}
 
-	/// <summary>
-	/// Gets index of refraction values from an outgoing direction.
-	/// </summary>
-	/// <param name="cosO">The cosine phi value of the outgoing direction.</param>
-	/// <param name="etaO">The index of refraction of the outgoing material.</param>
-	/// <param name="etaI">The index of refraction of the incident material..</param>
-	public void GetIndices(float cosO, out float etaO, out float etaI)
-	{
-		if (cosO >= 0f)
-		{
-			etaO = etaAbove;
-			etaI = etaBelow;
-		}
-		else
-		{
-			//Swap indices of refraction for when outgoing is below
-			etaO = etaBelow;
-			etaI = etaAbove;
-		}
-	}
+	public Packet CreateIncomplete(float cosOutgoing) =>
+		cosOutgoing > 0f //Swap indices of refraction for when outgoing is below
+			? new Packet(etaAbove, etaBelow, cosOutgoing)
+			: new Packet(etaBelow, etaAbove, cosOutgoing);
 
-	static bool GetCosineTransmittance(float cosO, float eta, out float cosI)
+	public readonly struct Packet
 	{
-		float sinO2 = FastMath.OneMinus2(cosO);
-		float sinI2 = eta * eta * sinO2;
+		/// <summary>
+		/// Creates a new incomplete <see cref="Packet"/>.
+		/// </summary>
+		/// <remarks>The <see cref="cosIncident"/> of an incomplete <see cref="Packet"/> is <see cref="float.NaN"/>.</remarks>
+		public Packet(float etaOutgoing, float etaIncident, float cosOutgoing) : this
+		(
+			etaOutgoing, etaIncident, cosOutgoing, float.NaN
+		) { }
 
-		if (sinI2 >= 1f)
+		Packet(float etaOutgoing, float etaIncident, float cosOutgoing, float cosIncident)
 		{
-			//Total internal reflection
-			cosI = 0f;
-			return true;
+			Ensure.IsTrue(etaOutgoing > 0f);
+			Ensure.IsTrue(etaIncident > 0f);
+			Ensure.IsTrue(cosOutgoing is >= -1f and <= 1f);
+
+			this.etaOutgoing = etaOutgoing;
+			this.etaIncident = etaIncident;
+			this.cosOutgoing = cosOutgoing;
+			this.cosIncident = cosIncident;
 		}
 
-		cosI = FastMath.Sqrt0(1f - sinI2);
-		return false;
-	}
+		public readonly float etaOutgoing;
+		public readonly float etaIncident;
+		public readonly float cosOutgoing;
+		public readonly float cosIncident;
 
-	static float Apply(float cosO, float cosI, float etaO, float etaI)
-	{
-		float para0 = etaI * cosO;
-		float para1 = etaO * cosI;
+		public Packet Complete
+		{
+			get
+			{
+				Ensure.IsTrue(IsIncomplete);
 
-		float perp0 = etaO * cosO;
-		float perp1 = etaI * cosI;
+				float cosI = CalculateCosineIncident();
+				Ensure.IsTrue(cosI is >= -1f and <= 1f);
 
-		float para = (para0 - para1) / (para0 + para1);
-		float perp = (perp0 - perp1) / (perp0 + perp1);
+				return new Packet(etaOutgoing, etaIncident, cosOutgoing, cosI);
+			}
+		}
 
-		return (para * para + perp * perp) / 2f;
+		public bool TotalInternalReflection
+		{
+			get
+			{
+				Ensure.IsFalse(IsIncomplete);
+				return FastMath.AlmostZero(cosIncident);
+			}
+		}
+
+		public float Value
+		{
+			get
+			{
+				Ensure.IsFalse(IsIncomplete);
+				if (TotalInternalReflection) return 1f;
+
+				float cosO = FastMath.Abs(cosOutgoing);
+				float cosI = FastMath.Abs(cosIncident);
+
+				float para0 = etaIncident * cosO;
+				float para1 = etaOutgoing * cosI;
+
+				float perp0 = etaOutgoing * cosO;
+				float perp1 = etaIncident * cosI;
+
+				float para = (para0 - para1) / (para0 + para1);
+				float perp = (perp0 - perp1) / (perp0 + perp1);
+
+				return (para * para + perp * perp) / 2f;
+			}
+		}
+
+		bool IsIncomplete => float.IsNaN(cosIncident);
+
+		public Float3 Refract(in Float3 outgoing, in Float3 normal)
+		{
+			Ensure.IsFalse(IsIncomplete);
+			Ensure.IsFalse(TotalInternalReflection);
+			Ensure.AreEqual(outgoing.Dot(normal), cosOutgoing);
+
+			float eta = etaOutgoing / etaIncident;
+			float cosI = cosOutgoing < 0f ? cosIncident : -cosIncident;
+			return (normal * (eta * cosOutgoing + cosI) - eta * outgoing).Normalized;
+		}
+
+		float CalculateCosineIncident()
+		{
+			float eta = etaOutgoing / etaIncident;
+			float sinOutgoing2 = FastMath.OneMinus2(cosOutgoing);
+			float sinIncident2 = eta * eta * sinOutgoing2;
+
+			if (sinIncident2 >= 1f) return 0f;
+			return FastMath.Sqrt0(1f - sinIncident2);
+		}
 	}
 }
 
