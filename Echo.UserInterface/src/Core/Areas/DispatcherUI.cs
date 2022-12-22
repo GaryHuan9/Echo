@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Evaluation.Operation;
@@ -29,6 +30,8 @@ public class DispatcherUI : AreaUI
 
 	int sceneIndex;
 	int profileIndex;
+
+	Operation dispatchedOperation;
 
 	static readonly EnumerationOptions enumerationOptions = new()
 	{
@@ -164,13 +167,15 @@ public class DispatcherUI : AreaUI
 		ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
 		{
 			var preparer = new ScenePreparer(scene);
-			var operation = new EvaluationOperation.Factory
+			var factory = new EvaluationOperation.Factory
 			{
 				NextScene = preparer.Prepare(),
 				NextProfile = profile
 			};
 
-			device.Dispatch(operation);
+			var operation = device.Schedule(factory);
+			var old = Interlocked.Exchange(ref dispatchedOperation, operation);
+			if (device.Operations.IndexOf(old) >= 0) device.Abort(old);
 		});
 
 		static T ConstructFirst<T>(EchoChronicleHierarchyObjects objects, string label) where T : class

@@ -11,6 +11,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Operation;
+using Echo.Core.InOut;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
 using Echo.UserInterface.Backend;
@@ -35,14 +36,15 @@ public class TilesUI : PlaneUI
 	OperationUI operationUI;
 	Procedure[] procedures;
 
-	IntPtr texture;
-	Int2 textureSize;
-	Float2 textureExtend;
-	TextureGrid compareTexture;
+	IntPtr display;
+	Float2 displayExtend;
 
-	EvaluationOperation lastOperation;
 	readonly Queue<uint> indexQueue = new();
 	uint nextExploreIndex;
+
+	Int2 textureSize;
+	TextureGrid compareTexture;
+	EvaluationOperation lastOperation;
 
 	static ReadOnlySpan<string> ImagePaths => new[] { "render.fpi", "render.png" };
 
@@ -58,13 +60,13 @@ public class TilesUI : PlaneUI
 		if (layerSize != textureSize)
 		{
 			textureSize = layerSize;
-			Root.Backend.DestroyTexture(ref texture);
-			texture = Root.Backend.CreateTexture(layerSize, true);
+			Root.Backend.DestroyTexture(ref display);
+			display = Root.Backend.CreateTexture(layerSize, true);
 		}
 
 		if (operation != lastOperation)
 		{
-			RestartTextureUpdate();
+			RestartDisplayUpdate();
 			lastOperation = operation;
 		}
 
@@ -88,7 +90,7 @@ public class TilesUI : PlaneUI
 
 		uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
 		drawList.AddRectFilled(content.MinVector2, content.MaxVector2, 0xFF000000u);
-		drawList.AddImage(texture, content.MinVector2, content.MaxVector2);
+		drawList.AddImage(display, content.MinVector2, content.MaxVector2);
 		drawList.AddRect(content.MinVector2, content.MaxVector2, borderColor);
 
 		DrawCurrentTiles(lastOperation, drawList, content);
@@ -96,19 +98,20 @@ public class TilesUI : PlaneUI
 
 	protected override void Dispose(bool disposing)
 	{
-		ReleaseUnmanagedResources();
+		Root.Backend.DestroyTexture(ref display);
 		base.Dispose(disposing);
 	}
 
-	void RestartTextureUpdate()
+	void RestartDisplayUpdate()
 	{
 		//Clear queue
 		indexQueue.Clear();
 		nextExploreIndex = 0;
+		compareTexture = null;
 
-		//Clear texture
-		SDL_LockTexture(texture, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
-		SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
+		//Clear display
+		SDL_LockTexture(display, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
+		SDL_SetTextureBlendMode(display, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
 
 		unsafe
 		{
@@ -116,13 +119,13 @@ public class TilesUI : PlaneUI
 			else throw new InvalidOperationException("Fill assumption of contiguous memory from SDL2 is violated!");
 		}
 
-		SDL_UnlockTexture(texture);
+		SDL_UnlockTexture(display);
 	}
 
 	IEvaluationReadTile RequestUpdateTile(EvaluationOperation operation)
 	{
 		//Enqueue indices to explore
-		while (indexQueue.Count < operation.WorkerCount && nextExploreIndex < operation.totalProcedureCount)
+		while (indexQueue.Count < operation.WorkerCount && nextExploreIndex < operation.TotalProcedureCount)
 		{
 			indexQueue.Enqueue(nextExploreIndex++);
 		}
@@ -156,7 +159,7 @@ public class TilesUI : PlaneUI
 		Float2 textureSizeR = 1f / textureSize;
 
 		SDL_Rect rect = new SDL_Rect { x = min.X, y = invertY, w = tileSize.X, h = tileSize.Y };
-		SDL_LockTexture(texture, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
+		SDL_LockTexture(display, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
 
 		int stride = pitch / sizeof(uint);
 		uint* pixels = (uint*)pointer - min.X + stride * (tileSize.Y - 1);
@@ -194,7 +197,7 @@ public class TilesUI : PlaneUI
 			static Float4 ApproximateSqrt(in Float4 value) => new(Sse.Reciprocal(Sse.ReciprocalSqrt(value.v)));
 		}
 
-		SDL_UnlockTexture(texture);
+		SDL_UnlockTexture(display);
 	}
 
 	void DrawMenuBar(IEvaluationLayer layer)
@@ -237,7 +240,27 @@ public class TilesUI : PlaneUI
 						if (compareTexture == null) LogList.AddError($"Unable to find reference texture file at '{Environment.CurrentDirectory}'.");
 					}
 
-					RestartTextureUpdate();
+					RestartDisplayUpdate();
+				}
+
+				if (isComparing && ImGui.MenuItem("Print Average"))
+				{
+					Float2 sizeR = 1f / textureSize;
+					Summation total = Summation.Zero;
+
+					for (int y = 0; y < textureSize.Y; y++)
+					for (int x = 0; x < textureSize.X; x++)
+					{
+						//We use uv to index both textures because the integer indexer is only available to typed textures
+						//This is a little bit dumb but it works for now and this is just a temporary handy tool
+
+						Float2 uv = new Float2(x + 0.5f, y + 0.5f) * sizeR;
+						Float4 color = ((TextureGrid)layer)[uv];
+						total += color - compareTexture![uv];
+					}
+
+					Float4 average = total.Result / textureSize.Product;
+					LogList.Add($"Average color difference versus reference: {average:N4}.");
 				}
 
 				if (isComparing && ImGui.MenuItem("Print Average"))
@@ -266,7 +289,7 @@ public class TilesUI : PlaneUI
 			if (ImGui.BeginMenu("View"))
 			{
 				if (ImGui.MenuItem("Recenter")) Recenter();
-				if (ImGui.MenuItem("Refresh")) RestartTextureUpdate();
+				if (ImGui.MenuItem("Refresh")) RestartDisplayUpdate();
 
 				ImGui.EndMenu();
 			}
@@ -288,15 +311,15 @@ public class TilesUI : PlaneUI
 		if (aspect > regionAspect)
 		{
 			float width = region.extend.X;
-			textureExtend = new Float2(width, width / aspect);
+			displayExtend = new Float2(width, width / aspect);
 		}
 		else
 		{
 			float height = region.extend.Y;
-			textureExtend = new Float2(height * aspect, height);
+			displayExtend = new Float2(height * aspect, height);
 		}
 
-		content = new Bounds(region.center + PlaneCenter, textureExtend * PlaneScale);
+		content = new Bounds(region.center + PlaneCenter, displayExtend * PlaneScale);
 	}
 
 	void DrawCurrentTiles(EvaluationOperation operation, ImDrawListPtr drawList, in Bounds content)
@@ -328,7 +351,7 @@ public class TilesUI : PlaneUI
 	void DrawMousePixelInformation(IEvaluationLayer layer)
 	{
 		Float2 cursorPosition = CursorPosition ?? Float2.NegativeInfinity;
-		Float2 uv = cursorPosition / textureExtend;
+		Float2 uv = cursorPosition / displayExtend;
 		uv = new Float2(-uv.X, uv.Y) / 2f + Float2.Half;
 
 		if (!(Float2.Zero <= uv) || !(uv < Float2.One))
@@ -351,9 +374,9 @@ public class TilesUI : PlaneUI
 				color -= compareTexture[uv];
 			}
 
-			ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition} RGBA: {color:N4}");
+			ImGui.TextUnformatted($"Pixel: {position.ToInvariant()} Tile: {tilePosition.ToInvariant()} RGBA: {color.ToInvariant()}");
 		}
-		else ImGui.TextUnformatted($"Pixel: {position} Tile: {tilePosition}");
+		else ImGui.TextUnformatted($"Pixel: {position.ToInvariant()} Tile: {tilePosition.ToInvariant()}");
 	}
 
 	ReadOnlySpan<Procedure> GatherValidProcedures(Operation operation)
@@ -367,13 +390,11 @@ public class TilesUI : PlaneUI
 
 		foreach (ref readonly Procedure procedure in fill.Filled)
 		{
-			if (procedure.Progress > 0d || procedure.index != 0) result.Add(procedure);
+			if (procedure.Progress > 0d) result.Add(procedure);
 		}
 
 		return result.Filled;
 	}
-
-	void ReleaseUnmanagedResources() => Root.Backend.DestroyTexture(ref texture);
 
 	~TilesUI() => Dispose(false);
 }

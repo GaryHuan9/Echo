@@ -11,7 +11,7 @@ public class DeviceReportTI : ReportTI
 		//Write device status
 		ImmutableArray<IWorker> workers = device.Workers;
 
-		canvas.WriteLine(ref brush, $"CPU compute device {(device.IsIdle ? "idle" : "running")}");
+		canvas.WriteLine(ref brush, $"CPU compute device {(device.IsDispatched ? "running" : "idle")}");
 		canvas.WriteLine(ref brush, $"Population {device.Population}");
 		canvas.FillLine(ref brush);
 

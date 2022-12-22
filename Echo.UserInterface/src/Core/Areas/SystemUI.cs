@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Echo.Core.Common.Compute;
+using Echo.Core.InOut;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -70,7 +71,7 @@ public class SystemUI : AreaUI
 			{
 				float rate = 1f / (float)moment.delta.TotalSeconds;
 				frameTime = moment.delta.ToString("s\\.ffff");
-				frameRate = rate.ToStringDefault();
+				frameRate = rate.ToInvariant();
 				lastUpdateTime = moment.elapsed;
 			}
 
@@ -113,13 +114,13 @@ public class SystemUI : AreaUI
 			ImGuiCustom.Property("GC Concurrent", info.Concurrent.ToString());
 			ImGuiCustom.Property("GC Generation", info.Generation.ToString());
 
-			ImGuiCustom.Property("Mapped Memory", ((ulong)Environment.WorkingSet).ToStringData());
-			ImGuiCustom.Property("Heap Size", ((ulong)info.HeapSizeBytes).ToStringData());
-			ImGuiCustom.Property("Available Memory", ((ulong)info.TotalAvailableMemoryBytes).ToStringData());
+			ImGuiCustom.Property("Mapped Memory", ((ulong)Environment.WorkingSet).ToInvariantData());
+			ImGuiCustom.Property("Heap Size", ((ulong)info.HeapSizeBytes).ToInvariantData());
+			ImGuiCustom.Property("Available Memory", ((ulong)info.TotalAvailableMemoryBytes).ToInvariantData());
 			ImGuiCustom.Property("Pinned Object Count", info.PinnedObjectsCount.ToString());
-			ImGuiCustom.Property("Promoted Memory", ((ulong)info.PromotedBytes).ToStringData());
-			ImGuiCustom.Property("GC Block Percentage", info.PauseTimePercentage.ToStringPercentage());
-			ImGuiCustom.Property("GC Fragmentation", ((ulong)info.FragmentedBytes).ToStringData());
+			ImGuiCustom.Property("Promoted Memory", ((ulong)info.PromotedBytes).ToInvariantData());
+			ImGuiCustom.Property("GC Block Percentage", info.PauseTimePercentage.ToInvariantPercent());
+			ImGuiCustom.Property("GC Fragmentation", ((ulong)info.FragmentedBytes).ToInvariantData());
 
 			ImGuiCustom.EndProperties();
 		}
@@ -141,10 +142,10 @@ public class SystemUI : AreaUI
 				ref readonly GCGenerationInfo generation = ref generations[i];
 
 				ImGuiCustom.TableItem((i + 1).ToString());
-				ImGuiCustom.TableItem(((ulong)generation.SizeBeforeBytes).ToStringData());
-				ImGuiCustom.TableItem(((ulong)generation.SizeAfterBytes).ToStringData());
-				ImGuiCustom.TableItem(((ulong)generation.FragmentationBeforeBytes).ToStringData());
-				ImGuiCustom.TableItem(((ulong)generation.FragmentationAfterBytes).ToStringData());
+				ImGuiCustom.TableItem(((ulong)generation.SizeBeforeBytes).ToInvariantData());
+				ImGuiCustom.TableItem(((ulong)generation.SizeAfterBytes).ToInvariantData());
+				ImGuiCustom.TableItem(((ulong)generation.FragmentationBeforeBytes).ToInvariantData());
+				ImGuiCustom.TableItem(((ulong)generation.FragmentationAfterBytes).ToInvariantData());
 			}
 
 			ImGui.EndTable();
@@ -154,19 +155,26 @@ public class SystemUI : AreaUI
 	static void DrawDevice(Device device)
 	{
 		//Buttons
-		ImGui.BeginDisabled(device.IsIdle);
+		ImGui.BeginDisabled(!device.IsDispatched);
 
 		if (ImGui.Button("Pause"))
 		{
 			device.Pause();
-			LogList.Add("Pausing compute device.");
+			LogList.Add("Pausing dispatched operation on compute device.");
 		}
 
 		ImGui.SameLine();
 		if (ImGui.Button("Resume"))
 		{
 			device.Resume();
-			LogList.Add("Resuming compute device.");
+			LogList.Add("Resuming dispatched operation on compute device.");
+		}
+
+		ImGui.SameLine();
+		if (ImGui.Button("Abort"))
+		{
+			device.Abort();
+			LogList.Add("Aborting dispatched operation on compute device.");
 		}
 
 		ImGui.EndDisabled();
@@ -181,15 +189,13 @@ public class SystemUI : AreaUI
 		//Status
 		if (ImGuiCustom.BeginProperties("Main"))
 		{
-			ImGuiCustom.Property("State", device.IsIdle ? "Idle" : "Running");
-			ImGuiCustom.Property("Population", device.Population.ToStringDefault());
+			ImGuiCustom.Property("State", device.IsDispatched ? "Running" : "Idle");
+			ImGuiCustom.Property("Population", device.Population.ToInvariant());
 
-			var operations = device.PastOperations;
-
-			if (operations.Length > 0)
+			if (device.Operations.Count > 0)
 			{
-				ImGuiCustom.Property("Latest Dispatch", operations[^1].creationTime.ToStringDefault());
-				ImGuiCustom.Property("Past Operation Count", operations.Length.ToStringDefault());
+				ImGuiCustom.Property("Latest Dispatch", device.Operations[^1].creationTime.ToInvariant());
+				ImGuiCustom.Property("Past Operation Count", device.Operations.Count.ToInvariant());
 			}
 			else
 			{
@@ -215,7 +221,7 @@ public class SystemUI : AreaUI
 			{
 				ImGuiCustom.TableItem($"0x{worker.Index:X4}");
 				ImGuiCustom.TableItem(worker.State.ToDisplayString());
-				ImGuiCustom.TableItem(worker.Guid.ToStringShort());
+				ImGuiCustom.TableItem(worker.Guid.ToInvariantShort());
 			}
 
 			ImGui.EndTable();

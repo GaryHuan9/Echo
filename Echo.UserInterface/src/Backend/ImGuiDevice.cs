@@ -124,18 +124,19 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		SDL_RenderClear(renderer).ThrowOnError();
 
 		//Setup clip information
-		Float4 clipSize = Widen(data.FramebufferScale * data.DisplaySize);
+		Vector2 scale = data.FramebufferScale;
+		Float4 clipSize = Widen(scale * data.DisplaySize);
 		if (clipSize.X <= 0f || clipSize.Y <= 0f) return;
 
-		Float4 clipOffset = Widen(data.DisplayPos);
-		Float4 clipScale = Widen(data.FramebufferScale);
-
 		//Render
+		SDL_RenderSetScale(renderer, scale.X, scale.Y).ThrowOnError();
 		SDL_RenderSetViewport(renderer, IntPtr.Zero).ThrowOnError();
 		SDL_RenderSetClipRect(renderer, IntPtr.Zero).ThrowOnError();
 
+		Float4 clipOffset = Widen(data.DisplayPos);
 		var lists = data.CmdListsRange;
-		for (int i = 0; i < lists.Count; i++) ExecuteCommandList(lists[i], clipOffset, clipScale, clipSize);
+
+		for (int i = 0; i < lists.Count; i++) ExecuteCommandList(lists[i], clipOffset, clipSize);
 
 		SDL_RenderPresent(renderer);
 
@@ -355,20 +356,19 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		else _ = SDL_ShowCursor((int)SDL_bool.SDL_FALSE);
 	}
 
-	void ExecuteCommandList(ImDrawListPtr list, in Float4 clipOffset, in Float4 clipScale, in Float4 clipSize)
+	void ExecuteCommandList(ImDrawListPtr list, in Float4 clipOffset, in Float4 clipSize)
 	{
 		ImPtrVector<ImDrawCmdPtr> buffer = list.CmdBuffer;
 		var vertices = (ImDrawVert*)list.VtxBuffer.Data;
 		var indices = (ushort*)list.IdxBuffer.Data;
 
-		for (int j = 0; j < buffer.Size; j++)
+		for (int i = 0; i < buffer.Size; i++)
 		{
-			ImDrawCmdPtr command = buffer[j];
+			ImDrawCmdPtr command = buffer[i];
 
 			if (command.UserCallback == IntPtr.Zero)
 			{
-				var clipRect = new Float4(command.ClipRect.AsVector128());
-				clipRect = (clipRect - clipOffset) * clipScale;
+				var clipRect = new Float4(command.ClipRect.AsVector128()) - clipOffset;
 
 				Float4 clipMin = clipRect.Max(Float4.Zero); //(minX, minY, ____, ____).Max(zero)
 				Float4 clipMax = clipRect.Min(clipSize);    //(____, ____, maxX, maxY).Min(size)

@@ -53,7 +53,7 @@ public class EchoTI : RootTI
 			NextProfile = profile
 		};
 
-		device.Dispatch(operation);
+		device.Schedule(operation);
 	}
 
 	// public override void Update(in Moment moment)
