@@ -17,6 +17,11 @@ public readonly struct ComputeTask : ICriticalNotifyCompletion
 
 	public bool IsCompleted => context.IsFinished;
 
+	/// <summary>
+	/// Similar to <see cref="Task.CompletedTask"/>; gets a <see cref="CompletedTask"/> that is already completed.
+	/// </summary>
+	public static ComputeTask CompletedTask => new(TaskContext.completedContext);
+
 	public ComputeTask GetAwaiter() => this;
 
 	public void GetResult()

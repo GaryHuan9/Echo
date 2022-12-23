@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
@@ -32,6 +33,12 @@ class TaskContext
 		Ensure.IsTrue(bigPartitions < workerCount);
 	}
 
+	static TaskContext()
+	{
+		completedContext = new TaskContext();
+		completedContext.FinishOnce();
+	}
+
 	public readonly uint partitionCount;
 	readonly uint partitionSize;
 	readonly uint bigPartitions;
@@ -42,33 +49,28 @@ class TaskContext
 	uint finishedCount;
 
 	protected readonly Locker locker = new();
-	Action continuationAction;
+	readonly List<Action> continuations = new();
 	Exception innerException;
 
-	static readonly Action emptyAction = () => { };
+	public static readonly TaskContext completedContext;
 
 	public bool IsFinished => InterlockedHelper.Read(ref finishedCount) == partitionCount;
 
 	public void Register(Action continuation)
 	{
 		using var _ = locker.Fetch();
-		Ensure.IsNull(continuationAction);
 
-		if (IsFinished || innerException != null)
-		{
-			continuation();
-			continuationAction = emptyAction; //Ensure no double registration
-		}
-		else continuationAction = continuation;
+		if (IsFinished || innerException != null) continuation();
+		else continuations.Add(continuation);
 	}
 
 	public void SetException(Exception exception)
 	{
 		using var _ = locker.Fetch();
-		if (innerException != null) return; //Only capture the first exception for now
+		if (innerException != null) return; //Only capture the first exception
 
 		innerException = exception;
-		continuationAction?.Invoke();
+		for (int i = 0; i < continuations.Count; i++) continuations[i]();
 	}
 
 	public void ThrowIfExceptionOccured()
@@ -105,7 +107,10 @@ class TaskContext
 		uint finished = Interlocked.Increment(ref finishedCount) - 1;
 		Ensure.IsTrue(finished < partitionCount);
 		if (finished + 1 < partitionCount) return;
-		lock (locker) continuationAction?.Invoke();
+		
+		using var _ = locker.Fetch();
+		Ensure.IsNull(innerException);
+		for (int i = 0; i < continuations.Count; i++) continuations[i]();
 	}
 }
 
