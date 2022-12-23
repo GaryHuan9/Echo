@@ -12,7 +12,7 @@ public record Bloom : ICompositionLayer
 	public float Intensity { get; set; } = 0.88f;
 	public float Threshold { get; set; } = 0.95f;
 
-	public async ComputeTask ExecuteAsync(ExecuteContext context)
+	public async ComputeTask ExecuteAsync(CompositeContext context)
 	{
 		if (!context.TryGetBuffer(BufferLabel, out SettableGrid<RGB128> sourceBuffer)) return;
 		using var _ = context.FetchTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);

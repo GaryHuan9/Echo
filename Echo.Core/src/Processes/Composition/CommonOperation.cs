@@ -11,7 +11,7 @@ namespace Echo.Core.Processes.Composition;
 
 public static class CommonOperation
 {
-	public static async ComputeTask<float> GrabLuminance(ExecuteContext context, TextureGrid<RGB128> sourceBuffer)
+	public static async ComputeTask<float> GrabLuminance(CompositeContext context, TextureGrid<RGB128> sourceBuffer)
 	{
 		var locker = new SpinLock();
 		var total = Summation.Zero;
@@ -40,7 +40,7 @@ public static class CommonOperation
 		}
 	}
 
-	public static async ComputeTask GaussianBlur(ExecuteContext context, SettableGrid<RGB128> sourceBuffer, float deviation = 1f, int quality = 4)
+	public static async ComputeTask GaussianBlur(CompositeContext context, SettableGrid<RGB128> sourceBuffer, float deviation = 1f, int quality = 4)
 	{
 		Int2 size = sourceBuffer.size;
 		int[] radii = new int[quality];

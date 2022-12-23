@@ -13,7 +13,7 @@ public record Vignette : ICompositionLayer
 	public float Intensity { get; init; } = 0.57f;
 	public float FilmGrain { get; init; } = 0.01f; //A little bit of film grain helps with the color banding
 
-	public ComputeTask ExecuteAsync(ExecuteContext context)
+	public ComputeTask ExecuteAsync(CompositeContext context)
 	{
 		if (!context.TryGetBuffer(BufferLabel, out SettableGrid<RGB128> buffer)) return ComputeTask.CompletedTask;
 		
