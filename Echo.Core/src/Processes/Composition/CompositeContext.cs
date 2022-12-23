@@ -9,9 +9,9 @@ using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
-public class ExecuteContext
+public class CompositeContext
 {
-	public ExecuteContext(RenderBuffer renderBuffer, AsyncOperation operation)
+	public CompositeContext(RenderBuffer renderBuffer, AsyncOperation operation)
 	{
 		this.renderBuffer = renderBuffer;
 		this.operation = operation;
@@ -99,13 +99,13 @@ public class ExecuteContext
 
 	public readonly struct PoolReleaseHandle : IDisposable
 	{
-		internal PoolReleaseHandle(ExecuteContext context, ArrayGrid<RGB128> buffer)
+		internal PoolReleaseHandle(CompositeContext context, ArrayGrid<RGB128> buffer)
 		{
 			this.context = context;
 			this.buffer = buffer;
 		}
 
-		readonly ExecuteContext context;
+		readonly CompositeContext context;
 		readonly ArrayGrid<RGB128> buffer;
 
 		void IDisposable.Dispose()

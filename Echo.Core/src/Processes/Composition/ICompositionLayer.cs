@@ -4,5 +4,5 @@ namespace Echo.Core.Processes.Composition;
 
 public interface ICompositionLayer
 {
-	public ComputeTask ExecuteAsync(ExecuteContext context);
+	public ComputeTask ExecuteAsync(CompositeContext context);
 }
