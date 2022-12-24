@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Echo.Core.Common;
-using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures;
@@ -31,10 +31,11 @@ partial class EchoChronicleHierarchyObjects
 
 			return next.ToString() switch //OPTIMIZE: use https://github.com/dotnet/csharplang/issues/1881 when we switch to dotnet 7 
 			{
-				"\""   => LiteralNode.Create(reader),
-				"new"  => TypedNode.Create(reader, stack),
+				"\"" => LiteralNode.Create(reader),
+				"new" => TypedNode.Create(reader, stack),
 				"link" => FindLink(reader, stack),
-				_      => throw reader.UnexpectedTokenException(next)
+				"[" => ArrayNode.Create(reader, stack),
+				_ => throw reader.UnexpectedTokenException(next)
 			};
 
 			static ArgumentNode FindLink(SegmentReader reader, ScopeStack stack)
@@ -109,6 +110,7 @@ partial class EchoChronicleHierarchyObjects
 				if (i < arguments.Count)
 				{
 					Type type = parameters[i].ParameterType;
+					if (type.IsByRef) type = type.GetElementType();
 					argument = arguments[i].Construct(main, type);
 				}
 				else argument = Type.Missing; //For optional parameters
@@ -145,7 +147,7 @@ partial class EchoChronicleHierarchyObjects
 			return null;
 		}
 
-		public static ParametersNode Create(SegmentReader reader, ScopeStack scope)
+		public static ParametersNode Create(SegmentReader reader, ScopeStack stack)
 		{
 			CharSpan next = reader.PeekNext();
 
@@ -155,17 +157,23 @@ partial class EchoChronicleHierarchyObjects
 				return empty;
 			}
 
-			ParametersNode node = new();
+			using var _ = stack.Advance();
+			var node = new ParametersNode();
 
-			while (true)
+			do
 			{
-				node.arguments.Add(ArgumentNode.Create(reader, scope));
+				if (EqualsSingle(next, ':'))
+				{
+					reader.ThrowIfNextMismatch(':');
+					stack.AddNext(reader);
+				}
+				else node.arguments.Add(ArgumentNode.Create(reader, stack));
 
-				next = reader.ReadNext();
-
-				if (EqualsSingle(next, ')')) break;
-				reader.ThrowIfTokenMismatch(',', next);
+				next = reader.PeekNext();
 			}
+			while (!EqualsSingle(next, ')'));
+
+			reader.ThrowIfNextMismatch(')');
 
 			return node;
 		}
@@ -173,10 +181,15 @@ partial class EchoChronicleHierarchyObjects
 
 	sealed class LiteralNode : ArgumentNode
 	{
-		LiteralNode(CharSpan content) => this.content = new string(content);
+		LiteralNode(CharSpan content, int lineNumber)
+		{
+			this.content = new string(content);
+			this.lineNumber = lineNumber;
+		}
 
 		static LiteralNode()
 		{
+			AddTryParser<bool>(bool.TryParse);
 			AddTryParser<int>(InvariantFormat.TryParse);
 			AddTryParser<float>(InvariantFormat.TryParse);
 			AddTryParser<Float2>(InvariantFormat.TryParse);
@@ -191,12 +204,14 @@ partial class EchoChronicleHierarchyObjects
 			AddPathTryParser(path => new Mesh(path));
 			AddParser(span => span);
 
-			void AddTryParser<T>(TryParser<T> source) => parsers.Add(typeof(T), (TryParser<object>)((CharSpan span, out object result) =>
-			{
-				bool success = source(span, out T original);
-				result = original;
-				return success;
-			}));
+			void AddTryParser<T>(TryParser<T> source) => parsers.Add(
+				typeof(T), (TryParser<object>)((CharSpan span, out object result) =>
+												  {
+													  bool success = source(span, out T original);
+													  result = original;
+													  return success;
+												  })
+			);
 
 			void AddPathTryParser<T>(Func<string, T> source) => parsers.Add(typeof(T), (PathParser<object>)(path => source(Path.GetFullPath(path))));
 
@@ -204,6 +219,7 @@ partial class EchoChronicleHierarchyObjects
 		}
 
 		readonly string content;
+		readonly int lineNumber;
 		object constructed;
 
 		static readonly Dictionary<Type, object> parsers = new();
@@ -212,7 +228,6 @@ partial class EchoChronicleHierarchyObjects
 
 		public override object Construct(EchoChronicleHierarchyObjects main, Type targetType)
 		{
-			if (targetType.HasElementType) targetType = targetType.GetElementType()!;
 			if (constructed != null && targetType.IsInstanceOfType(constructed)) return constructed;
 
 			bool success;
@@ -236,15 +251,19 @@ partial class EchoChronicleHierarchyObjects
 					success = true;
 					break;
 				}
-				default: throw new FormatException($"No parser found for literal type '{targetType}'.");
+				default: throw new FormatException($"No parser found for literal type '{targetType}' on line {lineNumber}.");
 			}
 
-			if (!success) throw new FormatException($"Unable to parse literal string '{content}' to destination type '{targetType}'.");
+			if (!success) throw new FormatException($"Unable to parse literal string '{content}' to type '{targetType}' on line {lineNumber}.");
 
 			return constructed;
 		}
 
-		public static LiteralNode Create(SegmentReader reader) => new(reader.ReadUntil('"'));
+		public static LiteralNode Create(SegmentReader reader)
+		{
+			int lineNumber = reader.CurrentLine;
+			return new LiteralNode(reader.ReadUntil('"'), lineNumber);
+		}
 
 		// ReSharper disable TypeParameterCanBeVariant
 
@@ -260,7 +279,7 @@ partial class EchoChronicleHierarchyObjects
 		TypedNode(Identified<ParametersNode> constructor) => this.constructor = constructor;
 
 		readonly Identified<ParametersNode> constructor;
-		readonly List<Identified<Node>> children = new();
+		readonly List<Identified<Node>> members = new();
 		object constructed;
 
 		Type _type;
@@ -272,8 +291,8 @@ partial class EchoChronicleHierarchyObjects
 		public override object Construct(EchoChronicleHierarchyObjects main, Type targetType)
 		{
 			object result = Construct(main);
-			Ensure.IsTrue(targetType.IsInstanceOfType(result));
-			return result;
+			if (targetType.IsInstanceOfType(result)) return result;
+			throw new FormatException($"Cannot assign an object of type '{TypeString}' to type '{targetType}'.");
 		}
 
 		public object Construct(EchoChronicleHierarchyObjects main)
@@ -289,7 +308,7 @@ partial class EchoChronicleHierarchyObjects
 
 			constructed = matched.Invoke(constructor.node.Construct(main, matched));
 
-			foreach ((string identifier, Node node) in children)
+			foreach ((string identifier, Node node) in members)
 			{
 				switch (node)
 				{
@@ -323,7 +342,7 @@ partial class EchoChronicleHierarchyObjects
 
 						break;
 					}
-					default: throw new NotSupportedException();
+					default: throw new NotSupportedException(); //OPTIMIZE use UnreachableException
 				}
 			}
 
@@ -366,19 +385,70 @@ partial class EchoChronicleHierarchyObjects
 					else if (EqualsSingle(next, '(')) child = ParametersNode.Create(reader, stack);
 					else throw reader.UnexpectedTokenException(next);
 
-					node.children.Add(new Identified<Node>(identifier, child));
+					node.members.Add(new Identified<Node>(identifier, child));
 				}
-				else if (EqualsSingle(next, ':'))
-				{
-					string identifier = reader.ReadIdentifier();
-					reader.ThrowIfNextMismatch('=');
-
-					stack.Add(new Identified<ArgumentNode>(identifier, ArgumentNode.Create(reader, stack)));
-				}
+				else if (EqualsSingle(next, ':')) stack.AddNext(reader);
 				else throw reader.UnexpectedTokenException(next);
 
 				next = reader.ReadNext();
 			}
+
+			return node;
+		}
+	}
+
+	sealed class ArrayNode : ArgumentNode
+	{
+		ArrayNode(int lineNumber) => this.lineNumber = lineNumber;
+
+		readonly List<ArgumentNode> items = new();
+		readonly int lineNumber;
+
+		object constructed; //An ImmutableArray<> of some type
+
+		public override Type GetType(EchoChronicleHierarchyObjects main) => null;
+
+		public override object Construct(EchoChronicleHierarchyObjects main, Type targetType)
+		{
+			if (constructed?.GetType() == targetType) return constructed;
+			Type elementType = GetElementType(targetType);
+
+			var array = Array.CreateInstance(elementType, items.Count);
+			const BindingFlags Binding = BindingFlags.NonPublic | BindingFlags.Instance;
+
+			for (int i = 0; i < items.Count; i++) array.SetValue(items[i].Construct(main, elementType), i);
+			var constructor = targetType.GetConstructor(Binding, new[] { elementType.MakeArrayType() });
+
+			constructed = constructor!.Invoke(new[] { (object)array });
+			return constructed;
+		}
+
+		Type GetElementType(Type targetType)
+		{
+			if (targetType.GetGenericTypeDefinition() == typeof(ImmutableArray<>)) return targetType.GetGenericArguments()[0];
+			throw new FormatException($"Cannot assign an {typeof(ImmutableArray<>)} to type '{targetType}' on line {lineNumber}.");
+		}
+
+		new public static ArrayNode Create(SegmentReader reader, ScopeStack stack)
+		{
+			var node = new ArrayNode(reader.CurrentLine);
+
+			using var _ = stack.Advance();
+			CharSpan next = reader.PeekNext();
+
+			while (!EqualsSingle(next, ']'))
+			{
+				if (EqualsSingle(next, ':'))
+				{
+					reader.ThrowIfNextMismatch(':');
+					stack.AddNext(reader);
+				}
+				else node.items.Add(ArgumentNode.Create(reader, stack));
+
+				next = reader.PeekNext();
+			}
+
+			reader.ThrowIfNextMismatch(']');
 
 			return node;
 		}
