@@ -260,6 +260,14 @@ partial class EchoChronicleHierarchyObjects
 			return null;
 		}
 
+		public void AddNext(SegmentReader reader)
+		{
+			string identifier = reader.ReadIdentifier();
+			reader.ThrowIfNextMismatch('=');
+
+			Add(new Identified<ArgumentNode>(identifier, ArgumentNode.Create(reader, this)));
+		}
+
 		public struct ReleaseHandle : IDisposable
 		{
 			public ReleaseHandle(List<Dictionary<string, ArgumentNode>> stack)
