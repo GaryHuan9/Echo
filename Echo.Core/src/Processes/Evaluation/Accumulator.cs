@@ -3,7 +3,7 @@ using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 
-namespace Echo.Core.Evaluation.Operation;
+namespace Echo.Core.Processes.Evaluation;
 
 /// <summary>
 /// Mutable struct that stores the accumulating evaluated samples of one pixel.

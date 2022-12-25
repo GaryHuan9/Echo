@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using Echo.Core.Common.Packed;
-using Echo.Core.Evaluation.Operation;
+using Echo.Core.Processes.Evaluation;
 using NUnit.Framework;
 
-namespace Echo.UnitTests.Evaluation;
+namespace Echo.UnitTests.Processes;
 
 [TestFixtureSource(nameof(patternSource))]
 public class TilePatternTests

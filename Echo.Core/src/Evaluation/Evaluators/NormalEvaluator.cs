@@ -2,7 +2,6 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
@@ -11,9 +10,9 @@ namespace Echo.Core.Evaluation.Evaluators;
 
 public record NormalEvaluator : Evaluator
 {
-	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<Normal96>(buffer, "normal");
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer, string label) => CreateOrClearLayer<Normal96>(buffer, label);
 
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
 		var query = new TraceQuery(ray);
 

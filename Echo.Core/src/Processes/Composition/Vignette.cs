@@ -8,14 +8,14 @@ namespace Echo.Core.Processes.Composition;
 
 public record Vignette : ICompositionLayer
 {
-	public string BufferLabel { get; init; } = "main";
+	public string TargetLayer { get; init; } = "main";
 	
 	public float Intensity { get; init; } = 0.57f;
 	public float FilmGrain { get; init; } = 0.01f; //A little bit of film grain helps with the color banding
 
-	public ComputeTask ExecuteAsync(CompositeContext context)
+	public ComputeTask ExecuteAsync(CompositionContext context)
 	{
-		if (!context.TryGetBuffer(BufferLabel, out SettableGrid<RGB128> buffer)) return ComputeTask.CompletedTask;
+		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> buffer)) return ComputeTask.CompletedTask;
 		
 		return context.RunAsync(MainPass, buffer.size.Y);
 

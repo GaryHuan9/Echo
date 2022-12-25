@@ -17,12 +17,12 @@ namespace Echo.Core.Scenic.Lights;
 /// </summary>
 public class AmbientLight : InfiniteLight
 {
-	NotNull<object> _texture = Pure.black;
+	NotNull<object> _texture = Pure.white;
 
 	/// <summary>
 	/// The <see cref="IDirectionalTexture"/> applied to this <see cref="AmbientLight"/>.
-	/// Defaults to <see cref="Pure.black"/>.
 	/// </summary>
+	/// <remarks>The defaults is <see cref="Pure.white"/>.</remarks>
 	public IDirectionalTexture Texture
 	{
 		get => (IDirectionalTexture)_texture.Value;

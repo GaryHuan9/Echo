@@ -8,15 +8,15 @@ namespace Echo.Core.Processes.Composition;
 
 public record ToneMapper : ICompositionLayer
 {
-	public string BufferLabel { get; init; } = "main";
+	public string TargetLayer { get; init; } = "main";
 
 	public ILuminanceAdjuster Mode { get; init; } = new Reinhard();
 
-	public async ComputeTask ExecuteAsync(CompositeContext context)
+	public async ComputeTask ExecuteAsync(CompositionContext context)
 	{
-		if (!context.TryGetBuffer(BufferLabel, out SettableGrid<RGB128> sourceBuffer)) return;
+		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return;
 
-		float luminanceSource = await CommonOperation.GrabLuminance(context, sourceBuffer);
+		float luminanceSource = await context.GrabLuminance(sourceBuffer);
 		if (FastMath.AlmostZero(luminanceSource)) return;
 		
 		float luminanceForward = 9.6f * luminanceSource;

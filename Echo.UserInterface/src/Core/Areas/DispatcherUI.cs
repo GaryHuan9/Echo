@@ -4,13 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System.Threading;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.InOut;
-using Echo.Core.Scenic.Hierarchies;
-using Echo.Core.Scenic.Preparation;
+using Echo.Core.Processes;
+using Echo.Core.Processes.Evaluation;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -25,13 +23,10 @@ public class DispatcherUI : AreaUI
 	readonly List<string> pathCandidates = new();
 
 	EchoChronicleHierarchyObjects objects;
-	readonly List<string> sceneLabels = new();
 	readonly List<string> profileLabels = new();
-
-	int sceneIndex;
 	int profileIndex;
 
-	Operation dispatchedOperation;
+	ScheduledRender scheduledRender;
 
 	static readonly EnumerationOptions enumerationOptions = new()
 	{
@@ -97,7 +92,6 @@ public class DispatcherUI : AreaUI
 			return;
 		}
 
-		ImGuiCustom.Selector("Scene", CollectionsMarshal.AsSpan(sceneLabels), ref sceneIndex);
 		ImGuiCustom.Selector("Profile", CollectionsMarshal.AsSpan(profileLabels), ref profileIndex);
 
 		Vector2 buttonSize = new Vector2(ImGui.CalcItemWidth(), 0f);
@@ -124,10 +118,14 @@ public class DispatcherUI : AreaUI
 		if (!Directory.Exists(parent)) return;
 		string current = Path.GetFileName(filePath);
 
-		pathCandidates.AddRange(from path in Directory.EnumerateFiles(parent, $"{current}*.echo", enumerationOptions)
-								select Path.GetFileName(path));
-		pathCandidates.AddRange(from path in Directory.EnumerateDirectories(parent, $"{current}*", enumerationOptions)
-								select $"{Path.GetFileName(path)}/");
+		pathCandidates.AddRange(
+			from path in Directory.EnumerateFiles(parent, $"{current}*.echo", enumerationOptions)
+			select Path.GetFileName(path)
+		);
+		pathCandidates.AddRange(
+			from path in Directory.EnumerateDirectories(parent, $"{current}*", enumerationOptions)
+			select $"{Path.GetFileName(path)}/"
+		);
 	}
 
 	void ReadFile()
@@ -135,11 +133,9 @@ public class DispatcherUI : AreaUI
 		var read = ReadFile(filePath);
 		if (read == null) return;
 
-		PopulateLabels<Scene>(read, sceneLabels);
 		PopulateLabels<EvaluationProfile>(read, profileLabels);
 
 		objects = read;
-		sceneIndex = 0;
 		profileIndex = 0;
 	}
 
@@ -147,36 +143,16 @@ public class DispatcherUI : AreaUI
 	{
 		if (objects == null) return;
 
-		string sceneLabel;
-		string profileLabel;
-
-		try
+		if (profileIndex >= profileLabels.Count)
 		{
-			sceneLabel = sceneLabels[sceneIndex];
-			profileLabel = profileLabels[profileIndex];
-		}
-		catch (IndexOutOfRangeException)
-		{
-			LogList.AddError($"Missing specified {nameof(Scene)} or {nameof(EvaluationProfile)} to dispatch.");
+			LogList.AddError($"Missing specified {nameof(RenderProfile)} to dispatch.");
 			return;
 		}
 
-		var scene = ConstructFirst<Scene>(objects, sceneLabel);
-		var profile = ConstructFirst<EvaluationProfile>(objects, profileLabel);
+		var profile = ConstructFirst<RenderProfile>(objects, profileLabels[profileIndex]);
 
-		ActionQueue.Enqueue("Evaluation Operation Dispatch", () =>
-		{
-			var preparer = new ScenePreparer(scene);
-			var factory = new EvaluationOperation.Factory
-			{
-				NextScene = preparer.Prepare(),
-				NextProfile = profile
-			};
-
-			var operation = device.Schedule(factory);
-			var old = Interlocked.Exchange(ref dispatchedOperation, operation);
-			if (device.Operations.IndexOf(old) >= 0) device.Abort(old);
-		});
+		scheduledRender?.Abort();
+		scheduledRender = profile.ScheduleTo(device);
 
 		static T ConstructFirst<T>(EchoChronicleHierarchyObjects objects, string label) where T : class
 		{

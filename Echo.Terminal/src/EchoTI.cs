@@ -1,8 +1,6 @@
 ﻿using Echo.Core.Common.Compute;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.InOut;
-using Echo.Core.Scenic.Hierarchies;
-using Echo.Core.Scenic.Preparation;
+using Echo.Core.Processes;
 using Echo.Terminal.Application;
 using Echo.Terminal.Application.Report;
 using Echo.Terminal.Core.Interface;
@@ -42,18 +40,9 @@ public class EchoTI : RootTI
 		base.ProcessArguments(arguments);
 
 		var objects = new EchoChronicleHierarchyObjects("ext/Scenes/SingleBunny/bunny.echo");
+		var profile = objects.ConstructFirst<RenderProfile>();
 
-		var scene = objects.ConstructFirst<Scene>();
-		var preparer = new ScenePreparer(scene);
-		var profile = objects.ConstructFirst<EvaluationProfile>();
-
-		var operation = new EvaluationOperation.Factory
-		{
-			NextScene = preparer.Prepare(),
-			NextProfile = profile
-		};
-
-		device.Schedule(operation);
+		profile.ScheduleTo(device);
 	}
 
 	// public override void Update(in Moment moment)

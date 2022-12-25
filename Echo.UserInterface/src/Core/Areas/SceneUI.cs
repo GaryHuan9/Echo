@@ -1,4 +1,4 @@
-﻿using Echo.Core.Evaluation.Operation;
+﻿using Echo.Core.Aggregation.Preparation;
 using Echo.Core.InOut;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
@@ -19,8 +19,10 @@ public class SceneUI : AreaUI
 
 	protected override void Update(in Moment moment)
 	{
-		if (operationUI.SelectedOperation is not EvaluationOperation { scene: { } scene }) return;
+		// if (operationUI.SelectedOperation is not EvaluationOperation { boxedScene: { } scene }) return;
 
+		PreparedScene scene = null;
+		
 		// var info = scene.info;
 		// var lights = scene.lights;
 
