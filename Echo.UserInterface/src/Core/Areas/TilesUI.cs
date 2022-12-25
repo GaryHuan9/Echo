@@ -10,8 +10,8 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.InOut;
+using Echo.Core.Processes.Evaluation;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
 using Echo.UserInterface.Backend;
@@ -107,7 +107,6 @@ public class TilesUI : PlaneUI
 		//Clear queue
 		indexQueue.Clear();
 		nextExploreIndex = 0;
-		compareTexture = null;
 
 		//Clear display
 		SDL_LockTexture(display, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();

@@ -7,14 +7,14 @@ namespace Echo.Core.Processes.Composition;
 
 public record Bloom : ICompositionLayer
 {
-	public string BufferLabel { get; init; } = "main";
+	public string TargetLayer { get; init; } = "main";
 
 	public float Intensity { get; set; } = 0.88f;
 	public float Threshold { get; set; } = 0.95f;
 
-	public async ComputeTask ExecuteAsync(CompositeContext context)
+	public async ComputeTask ExecuteAsync(CompositionContext context)
 	{
-		if (!context.TryGetBuffer(BufferLabel, out SettableGrid<RGB128> sourceBuffer)) return;
+		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return;
 		using var _ = context.FetchTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);
 
 		//Fill filtered color values to workerBuffer
@@ -22,7 +22,7 @@ public record Bloom : ICompositionLayer
 
 		//Run Gaussian blur on workerBuffer
 		float deviation = sourceBuffer.LogSize / 64f;
-		await CommonOperation.GaussianBlur(context, workerBuffer, deviation);
+		await context.GaussianBlur(workerBuffer, deviation);
 
 		//Combine blurred workerBuffer with renderBuffer
 		await context.RunAsync(CombinePass);
@@ -40,7 +40,7 @@ public record Bloom : ICompositionLayer
 
 			float excess = luminance - Threshold;
 			RGB128 normal = source / luminance;
-			
+
 			workerBuffer.Set(position, normal * excess * Intensity);
 			sourceBuffer.Set(position, normal * Threshold);
 		}

@@ -6,7 +6,7 @@ using Echo.Core.Common.Mathematics.Enumeration;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
 
-namespace Echo.Core.Evaluation.Operation;
+namespace Echo.Core.Processes.Evaluation;
 
 public interface ITilePattern
 {
@@ -16,7 +16,7 @@ public interface ITilePattern
 	public Int2[] CreateSequence(Int2 size);
 }
 
-public class OrderedPattern : ITilePattern
+public record OrderedPattern : ITilePattern
 {
 	public OrderedPattern(bool horizontal = true) => this.horizontal = horizontal;
 
@@ -28,7 +28,7 @@ public class OrderedPattern : ITilePattern
 		size.YX.Loop().Select(position => position.YX)).ToArray();
 }
 
-public class ScrambledPattern : OrderedPattern
+public record ScrambledPattern : OrderedPattern
 {
 	public override Int2[] CreateSequence(Int2 size)
 	{
@@ -38,7 +38,7 @@ public class ScrambledPattern : OrderedPattern
 	}
 }
 
-public class SpiralPattern : ITilePattern
+public record SpiralPattern : ITilePattern
 {
 	/// <inheritdoc/>
 	public virtual Int2[] CreateSequence(Int2 size)
@@ -52,7 +52,7 @@ public class SpiralPattern : ITilePattern
 	}
 }
 
-public class CheckerboardPattern : SpiralPattern
+public record CheckerboardPattern : SpiralPattern
 {
 	public override Int2[] CreateSequence(Int2 size)
 	{
@@ -63,8 +63,9 @@ public class CheckerboardPattern : SpiralPattern
 	}
 }
 
-public class HilbertCurvePattern : ITilePattern
+public record HilbertCurvePattern : ITilePattern
 {
+	/// <inheritdoc/>
 	public Int2[] CreateSequence(Int2 size)
 	{
 		if (size == Int2.One) return new[] { Int2.Zero };

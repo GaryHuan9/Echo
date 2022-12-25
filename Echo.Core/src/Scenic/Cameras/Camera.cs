@@ -2,7 +2,6 @@
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Hierarchies;
 

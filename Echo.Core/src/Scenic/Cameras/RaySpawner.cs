@@ -2,8 +2,9 @@
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Evaluation;
+using Echo.Core.Textures.Grids;
 
-namespace Echo.Core.Evaluation.Operation;
+namespace Echo.Core.Scenic.Cameras;
 
 /// <summary>
 /// A container that stores information necessary to spawning a <see cref="Ray"/> from a <see cref="RenderBuffer"/>.
@@ -13,13 +14,15 @@ public readonly struct RaySpawner
 	/// <summary>
 	/// Constructs a new <see cref="RaySpawner"/>.
 	/// </summary>
-	/// <param name="buffer">The <see cref="RenderBuffer"/> that this <see cref="RaySpawner"/> is based off of.</param>
-	/// <param name="position">The location on the <see cref="RenderBuffer"/> this <see cref="RaySpawner"/> originates</param>
-	public RaySpawner(RenderBuffer buffer, Int2 position)
+	/// <param name="layer">The destination <see cref="IEvaluationLayer"/>; this object must also be a <see cref="TextureGrid"/>.</param>
+	/// <param name="position">The location on the <see cref="IEvaluationLayer"/> this <see cref="RaySpawner"/> originates.</param>
+	public RaySpawner(IEvaluationLayer layer, Int2 position)
 	{
+		var texture = (TextureGrid)layer;
+		
+		sizeR = texture.sizeR;
+		offsets = texture.aspects / -2f;
 		this.position = position;
-		sizeR = buffer.sizeR;
-		offsets = buffer.aspects / -2f;
 	}
 
 	public readonly Int2 position;
