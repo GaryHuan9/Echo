@@ -6,31 +6,31 @@ using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
-public record ToneMapper : ICompositionLayer
+public record ToneMapper : ICompositeLayer
 {
+	/// <summary>
+	/// The label of the layer to operate on.
+	/// </summary>
 	public string TargetLayer { get; init; } = "main";
 
-	public ILuminanceAdjuster Mode { get; init; } = new Reinhard();
+	/// <summary>
+	/// The mode to use.
+	/// </summary>
+	public ILuminanceAdjuster Mode { get; init; } = new BasicShoulder();
 
-	public async ComputeTask ExecuteAsync(CompositionContext context)
+	public async ComputeTask ExecuteAsync(CompositeContext context)
 	{
 		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return;
 
-		float luminanceSource = await context.GrabLuminance(sourceBuffer);
-		if (FastMath.AlmostZero(luminanceSource)) return;
-		
-		float luminanceForward = 9.6f * luminanceSource;
-		float luminanceInverse = 1f / luminanceForward;
-
 		await context.RunAsync(MainPass);
-		
+
 		void MainPass(Int2 position)
 		{
 			RGB128 source = sourceBuffer[position];
 			float luminance = source.Luminance;
+			if (FastMath.AlmostZero(luminance)) return;
 
-			float mapped = Mode.Adjust(luminance * luminanceInverse) * luminanceForward;
-			float multiplier = FastMath.AlmostZero(luminance) ? 0f : mapped / luminance;
+			float multiplier = Mode.Adjust(luminance) / luminance;
 			sourceBuffer.Set(position, source * multiplier);
 		}
 	}
@@ -52,7 +52,7 @@ public record ACES : ToneMapper.ILuminanceAdjuster
 		float fma0 = FastMath.FMA(2.51f, luminance, 0.03f);
 		float fma1 = FastMath.FMA(2.43f, luminance, 0.59f);
 
-		return (luminance * fma0 / (luminance * fma1 + 0.14f)).Clamp();
+		return FastMath.Min(luminance * fma0 / (luminance * fma1 + 0.14f), 1f);
 	}
 }
 
@@ -103,6 +103,6 @@ public class Reinhard : ToneMapper.ILuminanceAdjuster
 		float numerator = 1f + luminance * whitePoint2R;
 		float denominator = 1f + luminance;
 
-		return luminance * numerator / denominator;
+		return FastMath.Min(luminance * numerator / denominator, 1f);
 	}
 }

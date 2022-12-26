@@ -54,7 +54,7 @@ class TaskContext
 
 	public static readonly TaskContext completedContext;
 
-	public bool IsFinished => InterlockedHelper.Read(ref finishedCount) == partitionCount;
+	public bool IsFinished => Volatile.Read(ref finishedCount) == partitionCount;
 
 	public void Register(Action continuation)
 	{
@@ -89,7 +89,14 @@ class TaskContext
 
 		uint start = partitionSize * partition;
 		uint end = start + partitionSize;
-		if (partition < bigPartitions) ++end;
+
+		long isBig = (long)partition - (partitionCount - bigPartitions);
+		
+		if (isBig >= 0)
+		{
+			start += (uint)isBig;
+			end += (uint)isBig + 1;
+		}
 
 		procedure.Begin(end - start);
 

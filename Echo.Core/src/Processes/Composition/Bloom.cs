@@ -5,14 +5,24 @@ using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
-public record Bloom : ICompositionLayer
+public record Bloom : ICompositeLayer
 {
+	/// <summary>
+	/// The label of the layer to operate on.
+	/// </summary>
 	public string TargetLayer { get; init; } = "main";
 
-	public float Intensity { get; set; } = 0.88f;
-	public float Threshold { get; set; } = 0.95f;
+	/// <summary>
+	/// The amount of excess luminance distributed to neighboring pixels. 
+	/// </summary>
+	public float Intensity { get; set; } = 0.55f;
+	
+	/// <summary>
+	/// Pixels with a luminance higher than this value will cause bloom.
+	/// </summary>
+	public float Threshold { get; set; } = 0.98f;
 
-	public async ComputeTask ExecuteAsync(CompositionContext context)
+	public async ComputeTask ExecuteAsync(CompositeContext context)
 	{
 		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return;
 		using var _ = context.FetchTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);
