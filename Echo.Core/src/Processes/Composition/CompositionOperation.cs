@@ -5,25 +5,25 @@ using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Processes.Composition;
 
-using CompositionLayers = ImmutableArray<ICompositionLayer>;
+using CompositionLayers = ImmutableArray<ICompositeLayer>;
 
 /// <summary>
-/// An <see cref="Operation{T}"/> that applies a series of <see cref="ICompositionLayer"/> onto a <see cref="RenderBuffer"/>.
+/// An <see cref="Operation{T}"/> that applies a series of <see cref="ICompositeLayer"/> onto a <see cref="RenderBuffer"/>.
 /// </summary>
 public sealed class CompositionOperation : AsyncOperation
 {
 	CompositionOperation(ImmutableArray<IWorker> workers, RenderBuffer renderBuffer, CompositionLayers layers) : base(workers)
 	{
-		context = new CompositionContext(renderBuffer, this);
+		context = new CompositeContext(renderBuffer, this);
 		this.layers = layers;
 	}
 
-	readonly CompositionContext context;
+	readonly CompositeContext context;
 	readonly CompositionLayers layers;
 
 	protected override async ComputeTask Execute()
 	{
-		foreach (ICompositionLayer layer in layers) await layer.ExecuteAsync(context);
+		foreach (ICompositeLayer layer in layers) await layer.ExecuteAsync(context);
 	}
 
 	/// <summary>

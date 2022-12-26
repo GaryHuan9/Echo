@@ -39,12 +39,12 @@ public record RenderProfile
 	public ImmutableArray<EvaluationProfile> EvaluationProfiles { get; init; } = ImmutableArray.Create(new EvaluationProfile());
 
 	/// <summary>
-	/// A list of <see cref="ICompositionLayer"/>s to be applied as post processing layers after the main evaluations are completed.
+	/// A list of <see cref="ICompositeLayer"/>s to be applied as post processing layers after the main evaluations are completed.
 	/// </summary>
 	/// <remarks>
 	/// The chronological order of the processing steps is the same as their order in this list. This list can be empty.
 	/// </remarks>
-	public ImmutableArray<ICompositionLayer> CompositionLayers { get; init; } = ImmutableArray<ICompositionLayer>.Empty;
+	public ImmutableArray<ICompositeLayer> CompositionLayers { get; init; } = ImmutableArray<ICompositeLayer>.Empty;
 
 	/// <summary>
 	/// To be invoked to authenticate the validity of this <see cref="RenderProfile"/>.

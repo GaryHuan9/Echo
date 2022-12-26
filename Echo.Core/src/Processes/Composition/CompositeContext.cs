@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
@@ -12,9 +11,9 @@ using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
-public class CompositionContext
+public class CompositeContext
 {
-	public CompositionContext(RenderBuffer renderBuffer, AsyncOperation operation)
+	public CompositeContext(RenderBuffer renderBuffer, AsyncOperation operation)
 	{
 		this.renderBuffer = renderBuffer;
 		this.operation = operation;
@@ -97,42 +96,14 @@ public class CompositionContext
 		return handle;
 	}
 
-	public async ComputeTask<float> GrabLuminance(TextureGrid<RGB128> sourceBuffer)
-	{
-		var locker = new SpinLock();
-		var total = Summation.Zero;
-
-		await RunAsync(MainPass, sourceBuffer.size.Y);
-
-		return ((RGB128)total.Result).Luminance / sourceBuffer.size.Product;
-
-		void MainPass(uint y)
-		{
-			var row = Summation.Zero;
-
-			for (int x = 0; x < sourceBuffer.size.X; x++) row += sourceBuffer[new Int2(x, (int)y)];
-
-			bool lockTaken = false;
-
-			try
-			{
-				locker.Enter(ref lockTaken);
-				total += row;
-			}
-			finally
-			{
-				if (lockTaken) locker.Exit();
-			}
-		}
-	}
-
-	public async ComputeTask GaussianBlur(SettableGrid<RGB128> sourceBuffer, float deviation = 1f, int quality = 5)
+	public async ComputeTask<float> GaussianBlur(SettableGrid<RGB128> sourceBuffer, float deviation = 1f, int quality = 5)
 	{
 		Int2 size = sourceBuffer.size;
 		int[] radii = new int[quality];
 		FillGaussianRadii(deviation, radii, out float actual);
 
 		using var _ = FetchTemporaryBuffer(out var workerBuffer, size);
+		Ensure.AreEqual(size, workerBuffer.size);
 
 		int radius;
 		float diameterR;
@@ -145,6 +116,8 @@ public class CompositionContext
 			await RunAsync(BlurPassX, size.X); //Write to workerBuffer
 			await RunAsync(BlurPassY, size.Y); //Write to sourceBuffer
 		}
+
+		return actual;
 
 		void BlurPassX(uint x)
 		{
@@ -214,13 +187,13 @@ public class CompositionContext
 
 	public readonly struct PoolReleaseHandle : IDisposable
 	{
-		internal PoolReleaseHandle(CompositionContext context, ArrayGrid<RGB128> buffer)
+		internal PoolReleaseHandle(CompositeContext context, ArrayGrid<RGB128> buffer)
 		{
 			this.context = context;
 			this.buffer = buffer;
 		}
 
-		readonly CompositionContext context;
+		readonly CompositeContext context;
 		readonly ArrayGrid<RGB128> buffer;
 
 		void IDisposable.Dispose()

@@ -160,6 +160,18 @@ public abstract class TextureGrid : Texture
 	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
 
 	/// <summary>
+	/// Returns a normalized value (between 0 to 1) that is the squared distance to the center.
+	/// </summary>
+	/// <param name="position">The <see cref="Int2"/> position to measure from.</param>
+	/// <returns>The normalized squared distance</returns>
+	/// <remarks>This distance is independent from the <see cref="aspects"/>.</remarks>
+	public float SquaredCenterDistance(Int2 position)
+	{
+		Float2 uv = ToUV(position) - Float2.Half;
+		return uv.SquaredMagnitude * 2f;
+	}
+
+	/// <summary>
 	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid"/>.
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
