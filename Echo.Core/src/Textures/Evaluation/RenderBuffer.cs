@@ -95,7 +95,7 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
 	/// <param name="layer">The layer to add.</param>
-	public void AddLayer<T>(string label, Texture layer)
+	public void AddLayer(string label, Texture layer)
 	{
 		if (layers.TryAdd(label, layer)) Interlocked.CompareExchange(ref mainTexture, layer, null);
 		else throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);

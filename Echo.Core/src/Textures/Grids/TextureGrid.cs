@@ -182,16 +182,16 @@ public abstract class TextureGrid : Texture
 	/// Performs a <see cref="Load{T}"/> operation asynchronously.
 	/// </summary>
 	/// <see cref="Load{T}"/>
-	public static Task<ArrayGrid<T>> LoadAsync<T>(string path, Serializer serializer = null)
+	public static Task<SettableGrid<T>> LoadAsync<T>(string path, Serializer serializer = null)
 		where T : unmanaged, IColor<T> => Task.Run(() => Load<T>(path, serializer));
 
 	/// <summary>
-	/// Loads a <see cref="ArrayGrid{T}"/> from a file.
+	/// Loads a <see cref="SettableGrid{T}"/> from a file.
 	/// </summary>
 	/// <param name="path">The source <see cref="string"/> path to load from.</param>
 	/// <param name="serializer">The <see cref="Serializer"/> to use. An automatic attempt will be made to
 	/// find the best <see cref="Serializer"/> from <paramref name="path"/> if this value is null.</param>
-	public static ArrayGrid<T> Load<T>(string path, Serializer serializer = null) where T : unmanaged, IColor<T>
+	public static SettableGrid<T> Load<T>(string path, Serializer serializer = null) where T : unmanaged, IColor<T>
 	{
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");

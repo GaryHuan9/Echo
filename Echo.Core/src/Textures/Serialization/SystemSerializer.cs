@@ -60,47 +60,21 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 		nuint Offset(Int2 position) => (uint)(position.X + (texture.oneLess.Y - position.Y) * size.X);
 	}
 
-	public override unsafe ArrayGrid<T> Deserialize<T>(Stream stream)
+	public override unsafe SettableGrid<T> Deserialize<T>(Stream stream)
 	{
 		using var bitmap = new Bitmap(stream, true);
-		PixelFormat format = bitmap.PixelFormat;
-
 		var size = new Int2(bitmap.Width, bitmap.Height);
 		var rectangle = new Rectangle(0, 0, size.X, size.Y);
 
-		BitmapData data = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, format);
+		BitmapData data = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+		Ensure.AreEqual(data.PixelFormat, PixelFormat.Format32bppArgb);
 
 		var texture = new ArrayGrid<T>(size);
 		byte* origin = (byte*)data.Scan0;
-
-		switch (Image.GetPixelFormatSize(format))
-		{
-			case 24:
-			{
-				texture.ForEach(LoadRGB);
-				break;
-			}
-			case 32:
-			{
-				texture.ForEach(LoadARGB);
-				break;
-			}
-			default: throw ExceptionHelper.Invalid(nameof(format), format, "is not an acceptable format!");
-		}
+		texture.ForEach(LoadARGB);
 
 		bitmap.UnlockBits(data);
 		return texture;
-
-		void LoadRGB(Int2 position)
-		{
-			byte* ptr = origin + Offset(position) * 3;
-			var color = new Color32(ptr[2], ptr[1], ptr[0]);
-
-			var source = (RGBA128)(Float4)color;
-			if (sRGB) InverseGammaCorrect(ref source);
-
-			texture.Set(position, source.As<T>());
-		}
 
 		void LoadARGB(Int2 position)
 		{
