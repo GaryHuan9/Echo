@@ -62,7 +62,7 @@ public record ACES : ToneMapper.ILuminanceAdjuster
 /// </summary>
 public record BasicShoulder : ToneMapper.ILuminanceAdjuster
 {
-	public float Smoothness { get; init; } = 0.5f;
+	public float Smoothness { get; init; } = 0.4f;
 
 	public float Adjust(float luminance)
 	{
