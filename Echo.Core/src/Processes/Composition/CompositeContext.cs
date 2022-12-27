@@ -129,7 +129,7 @@ public class CompositeContext
 			{
 				accumulator += Get(y + radius);
 
-				workerBuffer.Set(new Int2((int)x, y), (RGB128)(accumulator.Result * diameterR));
+				workerBuffer.Set(new Int2((int)x, y), (RGB128)Float4.Max(accumulator.Result * diameterR, Float4.Zero));
 
 				accumulator -= Get(y - radius);
 			}
@@ -147,7 +147,7 @@ public class CompositeContext
 			{
 				accumulator += Get(x + radius);
 
-				sourceBuffer.Set(new Int2(x, (int)y), (RGB128)(accumulator.Result * diameterR));
+				sourceBuffer.Set(new Int2(x, (int)y), (RGB128)Float4.Max(accumulator.Result * diameterR, Float4.Zero));
 
 				accumulator -= Get(x - radius);
 			}

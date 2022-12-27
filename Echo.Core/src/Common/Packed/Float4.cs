@@ -395,10 +395,14 @@ public readonly partial struct Float4 : IEquatable<Float4>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Float4 Lerp(in Float4 other, in Float4 value)
 	{
-		Float4 length = other - this;
+		if (Fma.IsSupported)
+		{
+			Vector128<float> fma = Fma.MultiplyAddNegated(value.v, v, v);
+			return new Float4(Fma.MultiplyAdd(value.v, other.v, fma));
+		}
 
-		if (!Fma.IsSupported) return length * value + this;
-		return new Float4(Fma.MultiplyAdd(length.v, value.v, v));
+		Float4 length = other - this;
+		return length * value + this;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Lerp(in Float4 other, float value) => Lerp(other, (Float4)value);

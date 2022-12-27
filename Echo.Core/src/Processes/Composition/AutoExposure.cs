@@ -46,14 +46,15 @@ public record AutoExposure : ICompositeLayer
 
 		(float min, float max) = await GrabLuminanceRange(context, sourceBuffer);
 
-		float logMin = MathF.Log(min);
-		float logMax = MathF.Log(max);
+		float logMin = GetLog(min);
+		float logMax = GetLog(max);
 		float logStep = (logMax - logMin) / (BinCount - 1); //Amount of log luminance corresponding to each bin
 
 		float[] bins = await MakeLuminanceHistogram(context, sourceBuffer, logMin, logStep);
-		float averageIndex = GetIndexAverage(bins, PercentLowerBound, PercentUpperBound);
-		float average = MathF.Exp(logMin + averageIndex * logStep);
+		float averageIndex = GetIndexAverage(bins, PercentLowerBound, 1f - PercentUpperBound);
+		float average = GetExp(logMin + averageIndex * logStep);
 
+		if (!FastMath.Positive(average)) return;
 		float exposure = AverageLuminance / average;
 		await context.RunAsync(MainPass);
 
@@ -65,6 +66,7 @@ public record AutoExposure : ICompositeLayer
 		var bins = new float[BinCount];
 		var locker = new SpinLock();
 		float logStepR = 1f / logStep;
+		if (FastMath.AlmostZero(logStep)) logStepR = 0f;
 
 		await context.RunAsync(MainPass, sourceBuffer.size.Y);
 
@@ -77,9 +79,10 @@ public record AutoExposure : ICompositeLayer
 			for (int x = 0; x < sourceBuffer.size.X; x++)
 			{
 				Int2 position = new Int2(x, (int)y);
-				float distance = 1f - sourceBuffer.SquaredCenterDistance(position);
-				float weight = CurveHelper.Sigmoid(distance) * CenterWeight + 1f;
-				float logLuminance = MathF.Log(sourceBuffer[position].Luminance);
+				
+				float distance = Float2.Distance(sourceBuffer.ToUV(position), Float2.Half) * 2f;
+				float weight = (1f - Curves.EaseOutSmooth(distance)) * CenterWeight + 1f;
+				float logLuminance = GetLog(sourceBuffer[position].Luminance);
 
 				//Split the luminance into the two bins that are the closest
 				float bin = (logLuminance - logMin) * logStepR;
@@ -152,17 +155,17 @@ public record AutoExposure : ICompositeLayer
 	/// Returns the average index based on a list of weights.
 	/// </summary>
 	/// <param name="weights">The list of weights; an index containing a higher value means the average will lean more towards that index.</param>
-	/// <param name="skipMinimum">The normalized percentage (0 to 1) of the smaller indices to ignore.</param>
-	/// <param name="skipMaximum">The normalized percentage (0 to 1) of the bigger indices to ignore.</param>
-	static float GetIndexAverage(ReadOnlySpan<float> weights, float skipMinimum, float skipMaximum)
+	/// <param name="lowerBound">The normalized (0 to 1) threshold of when to begin considering the indices.</param>
+	/// <param name="upperBound">The normalized (0 to 1) limit of when to stop considering the indices.</param>
+	static float GetIndexAverage(ReadOnlySpan<float> weights, float lowerBound, float upperBound)
 	{
-		Ensure.IsTrue(skipMinimum < skipMaximum);
+		Ensure.IsTrue(lowerBound < upperBound);
 
 		float totalWeight = 0f;
 		foreach (float weight in weights) totalWeight += weight;
 
-		float skipHead = skipMinimum * totalWeight;
-		float skipTail = (1f - skipMaximum) * totalWeight;
+		float skipHead = lowerBound * totalWeight;
+		float skipTail = upperBound * totalWeight;
 
 		float current = 0f;
 		float indexed = 0f;
@@ -188,4 +191,7 @@ public record AutoExposure : ICompositeLayer
 
 		return indexed / included;
 	}
+
+	static float GetLog(float value) => MathF.Log(value + FastMath.Epsilon);
+	static float GetExp(float value) => MathF.Exp(value) - FastMath.Epsilon;
 }
