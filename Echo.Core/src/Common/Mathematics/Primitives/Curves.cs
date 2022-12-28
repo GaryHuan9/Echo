@@ -3,7 +3,7 @@
 namespace Echo.Core.Common.Mathematics.Primitives;
 
 /// <summary>
-/// A collection of strictly increasing curves that map from [0, 1] to [0, 1] (the normal range).
+/// A collection of increasing curves that map from [0, 1] to [0, 1] (the normal range).
 /// </summary>
 /// <remarks>
 /// If the input is outside of the normal range, it is clamped.
@@ -19,7 +19,7 @@ public static class Curves
 		input = FastMath.Clamp01(input);
 		
 		//The following is a manipulated version of the canonical 3x^2-2x^3 smooth step function
-		//It is carefully adjusted and tested to fully satisfy the strictly increasing requirement
+		//It is carefully adjusted and tested to fully satisfy the never decreasing requirement
 		
 		float input2 = input * input;
 		float fma = MathF.FusedMultiplyAdd(-2f, input2, input);
