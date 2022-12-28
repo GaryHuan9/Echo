@@ -16,7 +16,7 @@ public class CurvesTests
 	static readonly float[] outputRangeInput = { 0f, 0.4f, 1f, float.Epsilon, FastMath.OneMinusEpsilon, float.NegativeInfinity, float.PositiveInfinity };
 
 	[Test]
-	public void StrictlyIncreasing([ValueSource(nameof(curves))] Func<float, float> curve)
+	public void NeverDecreasing([ValueSource(nameof(curves))] Func<float, float> curve)
 	{
 		float lastOutput = 0f;
 
