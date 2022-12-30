@@ -14,6 +14,7 @@ using Echo.Core.InOut;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
+using Echo.Core.Textures.Serialization;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -180,19 +181,9 @@ public class TilesUI : PlaneUI
 
 			color = ApproximateSqrt(color.Max(Float4.Zero));
 			color = color.Min(Float4.One) * byte.MaxValue;
+			pixels[x] = SystemSerializer.GatherBytes(Sse2.ConvertToVector128Int32(color.v).AsUInt32());
 
-			// 000000WW 000000ZZ 000000YY 000000XX               original
-			//       00 0000WW00 0000ZZ00 0000YY000000XX         shift by 3 bytes
-			// 000000WW 0000WWZZ 0000ZZYY 0000YYXX               or with original
-			//              0000 00WW0000 WWZZ0000ZZYY0000YYXX   shift by 6 bytes
-			// 000000WW 0000WWZZ 00WWZZYY WWZZYYXX               or with original
-
-			Vector128<uint> pixel = Sse2.ConvertToVector128Int32(color.v).AsUInt32();
-			pixel = Sse2.Or(pixel, Sse2.ShiftRightLogical128BitLane(pixel, 3));
-			pixel = Sse2.Or(pixel, Sse2.ShiftRightLogical128BitLane(pixel, 6));
-
-			pixels[x] = pixel.ToScalar();
-
+			//Although less accurate, this way of approximating the square root correctly handles zero (unlike x * 1/sqrt x)
 			static Float4 ApproximateSqrt(in Float4 value) => new(Sse.Reciprocal(Sse.ReciprocalSqrt(value.v)));
 		}
 
@@ -207,10 +198,12 @@ public class TilesUI : PlaneUI
 			{
 				if (ImGui.MenuItem("Save to Disk"))
 				{
-					ActionQueue.Enqueue("Serialize Evaluation Layer", () =>
-					{
-						foreach (string path in ImagePaths) ((TextureGrid)layer).Save(path);
-					});
+					ActionQueue.Enqueue(
+						"Serialize Evaluation Layer", () =>
+						{
+							foreach (string path in ImagePaths) ((TextureGrid)layer).Save(path);
+						}
+					);
 				}
 
 				if (ImGui.MenuItem("Show Directory"))
