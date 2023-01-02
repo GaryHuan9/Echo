@@ -87,8 +87,7 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// Returns the average of the two <see cref="size"/> axes.
-	/// We use an logarithmic equation since the average is nicer.
+	/// Returns the logarithmic average of the two <see cref="size"/> axes.
 	/// </summary>
 	public float LogSize
 	{
