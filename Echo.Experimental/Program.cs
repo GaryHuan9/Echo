@@ -1,9 +1,17 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
+using Echo.Core.Processes.Composition;
+using Echo.Core.Textures.Colors;
+using Echo.Core.Textures.Evaluation;
+using Echo.Core.Textures.Grids;
+using Echo.Core.Textures.Serialization;
 using JitBuddy;
+using OpenImageDenoisePrecompiled;
 
 namespace Echo.Experimental;
 
@@ -11,6 +19,31 @@ public class Program
 {
 	static void Main()
 	{
+		OidnPrecompiled.TryLoad();
+		using Device device = Device.Create();
+
+		SettableGrid<RGB128> texture = TextureGrid.Load<RGB128>("render.fpi");
+
+		RenderBuffer renderBuffer = new RenderBuffer(texture.size);
+		renderBuffer.AddLayer("main", texture);
+
+		var builder = ImmutableArray.CreateBuilder<ICompositeLayer>();
+
+		builder.Add(new OidnDenoise());
+		builder.Add(new AutoExposure());
+		builder.Add(new Bloom());
+		builder.Add(new DepthOfField());
+		builder.Add(new Vignette());
+		builder.Add(new ToneMapper());
+		builder.Add(new Watermark());
+
+		var operation = (CompositionOperation)device.Schedule(new CompositionOperation.Factory(renderBuffer, builder.ToImmutable()));
+
+		device.Operations.Await(operation);
+		renderBuffer.Save("render_composite.png");
+		
+		DebugHelper.Log(operation.ErrorMessages.ToArray());
+
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
