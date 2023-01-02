@@ -28,8 +28,8 @@ public sealed class ScheduledRender
 	public readonly RenderProfile profile;
 	public readonly RenderBuffer renderBuffer;
 
-	public readonly Operation preparationOperation;
-	public readonly Operation compositionOperation;
+	public readonly AsyncOperation preparationOperation;
+	public readonly CompositionOperation compositionOperation;
 	public readonly ImmutableArray<EvaluationOperation> evaluationOperations;
 
 	readonly StrongBox<PreparedScene> boxedScene = new();
@@ -95,9 +95,9 @@ public sealed class ScheduledRender
 		return builder.MoveToImmutable();
 	}
 
-	static AsyncOperation ScheduleCompositionOperation(Device device, ScheduledRender render)
+	static CompositionOperation ScheduleCompositionOperation(Device device, ScheduledRender render)
 	{
 		var factory = new CompositionOperation.Factory(render.renderBuffer, render.profile.CompositionLayers);
-		return (AsyncOperation)device.Schedule(factory);
+		return (CompositionOperation)device.Schedule(factory);
 	}
 }

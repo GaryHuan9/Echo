@@ -22,9 +22,9 @@ public record Bloom : ICompositeLayer
 	/// </summary>
 	public float Threshold { get; set; } = 0.98f;
 
-	public async ComputeTask ExecuteAsync(CompositeContext context)
+	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return;
+		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
 		using var _ = context.FetchTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);
 
 		//Fill filtered color values to workerBuffer
@@ -32,7 +32,7 @@ public record Bloom : ICompositeLayer
 
 		//Run Gaussian blur on workerBuffer
 		float deviation = sourceBuffer.LogSize / 64f;
-		await context.GaussianBlur(workerBuffer, deviation);
+		await context.GaussianBlurAsync(workerBuffer, deviation);
 
 		//Combine blurred workerBuffer with renderBuffer
 		await context.RunAsync(CombinePass);

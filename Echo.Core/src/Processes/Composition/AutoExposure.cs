@@ -40,10 +40,9 @@ public record AutoExposure : ICompositeLayer
 
 	const int BinCount = 128;
 
-	public async ComputeTask ExecuteAsync(CompositeContext context)
+	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return;
-
+		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
 		(float min, float max) = await GrabLuminanceRange(context, sourceBuffer);
 
 		float logMin = GetLog(min);
@@ -61,7 +60,7 @@ public record AutoExposure : ICompositeLayer
 		void MainPass(Int2 position) => sourceBuffer.Set(position, sourceBuffer[position] * exposure);
 	}
 
-	async ComputeTask<float[]> MakeLuminanceHistogram(CompositeContext context, TextureGrid<RGB128> sourceBuffer, float logMin, float logStep)
+	async ComputeTask<float[]> MakeLuminanceHistogram(ICompositeContext context, TextureGrid<RGB128> sourceBuffer, float logMin, float logStep)
 	{
 		var bins = new float[BinCount];
 		var locker = new SpinLock();
@@ -113,7 +112,7 @@ public record AutoExposure : ICompositeLayer
 		}
 	}
 
-	static async ComputeTask<(float min, float max)> GrabLuminanceRange(CompositeContext context, TextureGrid<RGB128> sourceBuffer)
+	static async ComputeTask<(float min, float max)> GrabLuminanceRange(ICompositeContext context, TextureGrid<RGB128> sourceBuffer)
 	{
 		var locker = new SpinLock();
 

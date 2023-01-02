@@ -18,11 +18,11 @@ public record ToneMapper : ICompositeLayer
 	/// </summary>
 	public ILuminanceAdjuster Mode { get; init; } = new BasicShoulder();
 
-	public async ComputeTask ExecuteAsync(CompositeContext context)
+	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return;
+		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
 
-		await context.RunAsync(MainPass);
+		return context.RunAsync(MainPass);
 
 		void MainPass(Int2 position)
 		{
@@ -30,8 +30,8 @@ public record ToneMapper : ICompositeLayer
 			float luminance = source.Luminance;
 			if (FastMath.AlmostZero(luminance)) return;
 
-			float multiplier = Mode.Adjust(luminance) / luminance;
-			sourceBuffer.Set(position, source * multiplier);
+			RGB128 adjusted = source / luminance * Mode.Adjust(luminance);
+			sourceBuffer.Set(position, (RGB128)Float4.Min(adjusted, Float4.One));
 		}
 	}
 

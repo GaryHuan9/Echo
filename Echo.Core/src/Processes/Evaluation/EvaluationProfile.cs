@@ -18,7 +18,7 @@ public record EvaluationProfile
 	/// <summary>
 	/// The label of the layer in the <see cref="RenderBuffer"/> to write to.
 	/// </summary>
-	public string TargetLayer { get; init; } = "main";
+	public string TargetLayer { get; init; } = "path";
 
 	/// <summary>
 	/// The <see cref="ContinuousDistribution"/> used for this evaluation.
