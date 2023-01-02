@@ -29,7 +29,7 @@ public record AlbedoEvaluator : Evaluator
 			else return (RGB128)material.SampleAlbedo(contact);
 		}
 
-		//Sample ambient
+		//Sample infinite lights
 		return scene.EvaluateInfinite(query.ray.direction);
 	}
 }

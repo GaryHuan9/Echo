@@ -10,7 +10,7 @@ namespace Echo.Core.Processes.Composition;
 /// <summary>
 /// Post processing depth of field effect. Faster than path traced depth of field.
 /// </summary>
-public class DepthOfField : ICompositeLayer
+public record DepthOfField : ICompositeLayer
 {
 	/// <summary>
 	/// The label of the layer to operate on.
@@ -20,7 +20,7 @@ public class DepthOfField : ICompositeLayer
 	/// <summary>
 	/// The label of the <see cref="NormalDepth128"/> layer to read from.
 	/// </summary>
-	public string DepthLayer { get; init; } = "depth";
+	public string DepthLayer { get; init; } = "normal-depth";
 
 	/// <summary>
 	/// The strength of the confusion.
@@ -49,26 +49,26 @@ public class DepthOfField : ICompositeLayer
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		var sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
-		var depthBuffer = context.GetReadTexture<NormalDepth128>(DepthLayer);
-		using var _ = context.FetchTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		var depthTexture = context.GetReadTexture<NormalDepth128>(DepthLayer);
+		using var _ = context.FetchTemporaryTexture(out ArrayGrid<RGB128> workerTexture);
 
-		await context.CopyAsync(sourceBuffer, workerBuffer);
-		float deviation = sourceBuffer.LogSize / 64f * Intensity;
-		await context.GaussianBlurAsync(workerBuffer, deviation);
+		await context.CopyAsync(sourceTexture, workerTexture);
+		float deviation = sourceTexture.LogSize / 64f * Intensity;
+		await context.GaussianBlurAsync(workerTexture, deviation);
 		await context.RunAsync(MainPass);
 
 		void MainPass(Int2 position)
 		{
-			float depth = depthBuffer[position].depth;
+			float depth = depthTexture[position].depth;
 			float near = FastMath.Clamp01(Scalars.InverseLerp(NearEnd, NearStart, depth));
 			float far = FastMath.Clamp01(Scalars.InverseLerp(FarEnd, FarStart, depth));
 
-			RGB128 source = sourceBuffer[position];
-			RGB128 blurred = workerBuffer[position];
+			RGB128 source = sourceTexture[position];
+			RGB128 blurred = workerTexture[position];
 			float clearness = Curves.Sigmoid(near - far);
 			
-			sourceBuffer.Set(position, (RGB128)Float4.Lerp(blurred, source, clearness));
+			sourceTexture.Set(position, (RGB128)Float4.Lerp(blurred, source, clearness));
 		}
 	}
 }

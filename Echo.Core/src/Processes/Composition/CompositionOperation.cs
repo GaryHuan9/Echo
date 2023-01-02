@@ -56,7 +56,7 @@ public sealed class CompositionOperation : AsyncOperation
 		for (int i = 0; i < layers.Length; i++)
 		{
 			try { await layers[i].ExecuteAsync(context); }
-			catch (ICompositeContext.TextureNotFoundException exception)
+			catch (ICompositeLayer.CompositeException exception)
 			{
 				Volatile.Write(ref _errorMessages[i], exception.Message);
 			}
@@ -121,22 +121,22 @@ public sealed class CompositionOperation : AsyncOperation
 		public ComputeTask RunAsync(ICompositeContext.Pass1D pass, int size) => operation.Schedule(new Action<uint>(pass), (uint)size);
 
 		/// <inheritdoc/>
-		public ICompositeContext.PoolReleaseHandle FetchTemporaryBuffer(out ArrayGrid<RGB128> buffer)
+		public ICompositeContext.PoolReleaseHandle FetchTemporaryTexture(out ArrayGrid<RGB128> texture)
 		{
-			buffer = null;
+			texture = null;
 			List<ArrayGrid<RGB128>> pool = temporaryBufferPool;
 
 			lock (pool)
 			{
 				if (pool.Count > 0)
 				{
-					buffer = pool[^1];
+					texture = pool[^1];
 					pool.RemoveAt(pool.Count - 1);
 				}
 			}
 
-			buffer ??= new ArrayGrid<RGB128>(RenderSize);
-			return new ICompositeContext.PoolReleaseHandle(pool, buffer);
+			texture ??= new ArrayGrid<RGB128>(RenderSize);
+			return new ICompositeContext.PoolReleaseHandle(pool, texture);
 		}
 	}
 }

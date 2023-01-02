@@ -42,14 +42,14 @@ public record AutoExposure : ICompositeLayer
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
-		(float min, float max) = await GrabLuminanceRange(context, sourceBuffer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		(float min, float max) = await GrabLuminanceRange(context, sourceTexture);
 
 		float logMin = GetLog(min);
 		float logMax = GetLog(max);
 		float logStep = (logMax - logMin) / (BinCount - 1); //Amount of log luminance corresponding to each bin
 
-		float[] bins = await MakeLuminanceHistogram(context, sourceBuffer, logMin, logStep);
+		float[] bins = await MakeLuminanceHistogram(context, sourceTexture, logMin, logStep);
 		float averageIndex = GetIndexAverage(bins, PercentLowerBound, 1f - PercentUpperBound);
 		float average = GetExp(logMin + averageIndex * logStep);
 
@@ -57,17 +57,17 @@ public record AutoExposure : ICompositeLayer
 		float exposure = AverageLuminance / average;
 		await context.RunAsync(MainPass);
 
-		void MainPass(Int2 position) => sourceBuffer.Set(position, sourceBuffer[position] * exposure);
+		void MainPass(Int2 position) => sourceTexture.Set(position, sourceTexture[position] * exposure);
 	}
 
-	async ComputeTask<float[]> MakeLuminanceHistogram(ICompositeContext context, TextureGrid<RGB128> sourceBuffer, float logMin, float logStep)
+	async ComputeTask<float[]> MakeLuminanceHistogram(ICompositeContext context, TextureGrid<RGB128> sourceTexture, float logMin, float logStep)
 	{
 		var bins = new float[BinCount];
 		var locker = new SpinLock();
 		float logStepR = 1f / logStep;
 		if (FastMath.AlmostZero(logStep)) logStepR = 0f;
 
-		await context.RunAsync(MainPass, sourceBuffer.size.Y);
+		await context.RunAsync(MainPass, sourceTexture.size.Y);
 
 		return bins;
 
@@ -75,13 +75,13 @@ public record AutoExposure : ICompositeLayer
 		{
 			Span<float> rowBins = stackalloc float[BinCount];
 
-			for (int x = 0; x < sourceBuffer.size.X; x++)
+			for (int x = 0; x < sourceTexture.size.X; x++)
 			{
 				Int2 position = new Int2(x, (int)y);
 				
-				float distance = Float2.Distance(sourceBuffer.ToUV(position), Float2.Half) * 2f;
+				float distance = Float2.Distance(sourceTexture.ToUV(position), Float2.Half) * 2f;
 				float weight = (1f - Curves.EaseOutSmooth(distance)) * CenterWeight + 1f;
-				float logLuminance = GetLog(sourceBuffer[position].Luminance);
+				float logLuminance = GetLog(sourceTexture[position].Luminance);
 
 				//Split the luminance into the two bins that are the closest
 				float bin = (logLuminance - logMin) * logStepR;
