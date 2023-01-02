@@ -8,13 +8,14 @@ using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
-public record NormalEvaluator : Evaluator
+public record NormalDepthEvaluator : Evaluator
 {
-	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer, string label) => CreateOrClearLayer<Normal96>(buffer, label);
+	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer, string label) => CreateOrClearLayer<NormalDepth128>(buffer, label);
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
 		var query = new TraceQuery(ray);
+		float distance = 0f;
 
 		allocator.Restart();
 
@@ -23,12 +24,18 @@ public record NormalEvaluator : Evaluator
 		{
 			Contact contact = scene.Interact(query);
 			contact.shade.material.Scatter(ref contact, allocator);
+			distance += query.distance;
 
-			if (contact.bsdf == null) query = query.SpawnTrace();
-			else return ((Normal96)contact.shade.Normal).ToFloat4();
+			if (contact.bsdf == null)
+			{
+				query = query.SpawnTrace();
+				continue;
+			}
+
+			return new NormalDepth128(contact.shade.Normal, distance).ToFloat4();
 		}
 
-		//Return negative direction for escaped rays
-		return -(Float4)ray.direction;
+		//Use negative direction and scene diameter for escaped rays
+		return new NormalDepth128(-ray.direction, scene.accelerator.SphereBound.radius * 2f).ToFloat4();
 	}
 }
