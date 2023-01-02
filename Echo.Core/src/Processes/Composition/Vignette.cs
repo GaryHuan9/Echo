@@ -19,9 +19,9 @@ public record Vignette : ICompositeLayer
 	/// </summary>
 	public float Intensity { get; init; } = 0.22f;
 
-	public ComputeTask ExecuteAsync(CompositeContext context)
+	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		if (!context.TryGetBuffer(TargetLayer, out SettableGrid<RGB128> sourceBuffer)) return ComputeTask.CompletedTask;
+		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
 
 		return context.RunAsync(MainPass, sourceBuffer.size);
 

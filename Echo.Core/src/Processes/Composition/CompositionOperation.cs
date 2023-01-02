@@ -1,29 +1,68 @@
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Threading;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Async;
+using Echo.Core.Common.Packed;
+using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
+using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
-
-using CompositionLayers = ImmutableArray<ICompositeLayer>;
 
 /// <summary>
 /// An <see cref="Operation{T}"/> that applies a series of <see cref="ICompositeLayer"/> onto a <see cref="RenderBuffer"/>.
 /// </summary>
 public sealed class CompositionOperation : AsyncOperation
 {
-	CompositionOperation(ImmutableArray<IWorker> workers, RenderBuffer renderBuffer, CompositionLayers layers) : base(workers)
+	CompositionOperation(ImmutableArray<IWorker> workers, RenderBuffer renderBuffer, ImmutableArray<ICompositeLayer> layers) : base(workers)
 	{
-		context = new CompositeContext(renderBuffer, this);
+		this.renderBuffer = renderBuffer;
 		this.layers = layers;
+		_errorMessages = new string[layers.Length];
 	}
 
-	readonly CompositeContext context;
-	readonly CompositionLayers layers;
+	/// <summary>
+	/// The <see cref="ICompositeContext"/> regarded by this <see cref="CompositionOperation"/>, in the order of execution.
+	/// </summary>
+	public readonly ImmutableArray<ICompositeLayer> layers;
+
+	readonly RenderBuffer renderBuffer;
+
+	uint _completedCount;
+
+	/// <summary>
+	/// The number of completed <see cref="ICompositeLayer"/>s.
+	/// </summary>
+	/// <remarks>Because the <see cref="layers"/> run sequentially, all <see cref="ICompositeLayer"/>
+	/// from index zero to one less than the number of this property has completed.</remarks>
+	public uint CompletedCount => Volatile.Read(ref _completedCount);
+
+	readonly string[] _errorMessages;
+
+	/// <summary>
+	/// Errors reported from <see cref="layers"/>.
+	/// </summary>
+	/// <remarks>The <see cref="string"/> at each index is the error reported from a <see cref="ICompositeLayer"/> at the same index
+	/// in <see cref="layers"/>, if any. If a <see cref="ICompositeLayer"/> is completed (see <see cref="CompletedCount"/>) and its
+	/// corresponding message is null, then the <see cref="ICompositeLayer"/> ran successfully.</remarks>
+	public ReadOnlySpan<string> ErrorMessages => _errorMessages;
 
 	protected override async ComputeTask Execute()
 	{
-		foreach (ICompositeLayer layer in layers) await layer.ExecuteAsync(context);
+		var context = new Context(renderBuffer, this);
+
+		for (int i = 0; i < layers.Length; i++)
+		{
+			try { await layers[i].ExecuteAsync(context); }
+			catch (ICompositeContext.TextureNotFoundException exception)
+			{
+				Volatile.Write(ref _errorMessages[i], exception.Message);
+			}
+
+			Volatile.Write(ref _completedCount, (uint)i);
+		}
 	}
 
 	/// <summary>
@@ -31,15 +70,73 @@ public sealed class CompositionOperation : AsyncOperation
 	/// </summary>
 	public readonly struct Factory : IOperationFactory
 	{
-		public Factory(RenderBuffer renderBuffer, CompositionLayers layers)
+		public Factory(RenderBuffer renderBuffer, ImmutableArray<ICompositeLayer> layers)
 		{
 			this.renderBuffer = renderBuffer;
 			this.layers = layers;
 		}
 
 		readonly RenderBuffer renderBuffer;
-		readonly CompositionLayers layers;
+		readonly ImmutableArray<ICompositeLayer> layers;
 
 		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new CompositionOperation(workers, renderBuffer, layers);
+	}
+
+	class Context : ICompositeContext
+	{
+		public Context(RenderBuffer renderBuffer, AsyncOperation operation)
+		{
+			this.renderBuffer = renderBuffer;
+			this.operation = operation;
+		}
+
+		readonly RenderBuffer renderBuffer;
+		readonly AsyncOperation operation;
+
+		readonly List<ArrayGrid<RGB128>> temporaryBufferPool = new();
+
+		/// <inheritdoc/>
+		public Int2 RenderSize => renderBuffer.size;
+
+		/// <inheritdoc/>
+		public bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T> =>
+			renderBuffer.TryGetTexture<T, TextureGrid<T>>(label, out texture);
+
+		/// <inheritdoc/>
+		public bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T> =>
+			renderBuffer.TryGetTexture<T, SettableGrid<T>>(label, out texture);
+
+		/// <inheritdoc/>
+		public ComputeTask RunAsync(ICompositeContext.Pass2D pass, Int2 size)
+		{
+			return operation.Schedule(EveryY, (uint)size.Y);
+
+			void EveryY(uint y)
+			{
+				for (int x = 0; x < size.X; x++) pass(new Int2(x, (int)y));
+			}
+		}
+
+		/// <inheritdoc/>
+		public ComputeTask RunAsync(ICompositeContext.Pass1D pass, int size) => operation.Schedule(new Action<uint>(pass), (uint)size);
+
+		/// <inheritdoc/>
+		public ICompositeContext.PoolReleaseHandle FetchTemporaryBuffer(out ArrayGrid<RGB128> buffer)
+		{
+			buffer = null;
+			List<ArrayGrid<RGB128>> pool = temporaryBufferPool;
+
+			lock (pool)
+			{
+				if (pool.Count > 0)
+				{
+					buffer = pool[^1];
+					pool.RemoveAt(pool.Count - 1);
+				}
+			}
+
+			buffer ??= new ArrayGrid<RGB128>(RenderSize);
+			return new ICompositeContext.PoolReleaseHandle(pool, buffer);
+		}
 	}
 }
