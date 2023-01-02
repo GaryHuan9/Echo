@@ -20,18 +20,18 @@ public record ToneMapper : ICompositeLayer
 
 	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
 
 		return context.RunAsync(MainPass);
 
 		void MainPass(Int2 position)
 		{
-			RGB128 source = sourceBuffer[position];
+			RGB128 source = sourceTexture[position];
 			float luminance = source.Luminance;
 			if (FastMath.AlmostZero(luminance)) return;
 
 			RGB128 adjusted = source / luminance * Mode.Adjust(luminance);
-			sourceBuffer.Set(position, (RGB128)Float4.Min(adjusted, Float4.One));
+			sourceTexture.Set(position, (RGB128)Float4.Min(adjusted, Float4.One));
 		}
 	}
 

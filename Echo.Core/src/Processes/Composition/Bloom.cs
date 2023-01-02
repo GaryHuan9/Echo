@@ -24,42 +24,42 @@ public record Bloom : ICompositeLayer
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
-		using var _ = context.FetchTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);
+		SettableGrid<RGB128> sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		using var _ = context.FetchTemporaryTexture(out ArrayGrid<RGB128> workerTexture);
 
-		//Fill filtered color values to workerBuffer
+		//Fill filtered color values to workerTexture
 		await context.RunAsync(FilterPass);
 
-		//Run Gaussian blur on workerBuffer
-		float deviation = sourceBuffer.LogSize / 64f;
-		await context.GaussianBlurAsync(workerBuffer, deviation);
+		//Run Gaussian blur on workerTexture
+		float deviation = sourceTexture.LogSize / 64f;
+		await context.GaussianBlurAsync(workerTexture, deviation);
 
-		//Combine blurred workerBuffer with renderBuffer
+		//Combine blurred workerTexture with sourceTexture
 		await context.RunAsync(CombinePass);
 
 		void FilterPass(Int2 position)
 		{
-			RGB128 source = sourceBuffer[position];
+			RGB128 source = sourceTexture[position];
 			float luminance = source.Luminance;
 
 			if (luminance <= Threshold)
 			{
-				workerBuffer.Set(position, RGB128.Black);
+				workerTexture.Set(position, RGB128.Black);
 				return;
 			}
 
 			float excess = luminance - Threshold;
 			RGB128 normal = source / luminance;
 
-			workerBuffer.Set(position, normal * excess * Intensity);
-			sourceBuffer.Set(position, normal * Threshold);
+			workerTexture.Set(position, normal * excess * Intensity);
+			sourceTexture.Set(position, normal * Threshold);
 		}
 
 		void CombinePass(Int2 position)
 		{
-			RGB128 source = workerBuffer[position];
-			RGB128 target = sourceBuffer[position];
-			sourceBuffer.Set(position, target + source);
+			RGB128 source = workerTexture[position];
+			RGB128 target = sourceTexture[position];
+			sourceTexture.Set(position, target + source);
 		}
 	}
 }

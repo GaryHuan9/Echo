@@ -21,14 +21,14 @@ public record Vignette : ICompositeLayer
 
 	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		SettableGrid<RGB128> sourceBuffer = context.GetWriteTexture<RGB128>(TargetLayer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
 
-		return context.RunAsync(MainPass, sourceBuffer.size);
+		return context.RunAsync(MainPass, sourceTexture.size);
 
 		void MainPass(Int2 position)
 		{
-			float distance = Float2.Distance(sourceBuffer.ToUV(position), Float2.Half) * Scalars.Root2;
-			sourceBuffer.Set(position, sourceBuffer[position] * (1f - Curves.Sigmoid(distance) * Intensity));
+			float distance = Float2.Distance(sourceTexture.ToUV(position), Float2.Half) * Scalars.Root2;
+			sourceTexture.Set(position, sourceTexture[position] * (1f - Curves.Sigmoid(distance) * Intensity));
 		}
 	}
 }

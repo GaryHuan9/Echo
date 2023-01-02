@@ -68,20 +68,20 @@ public interface ICompositeContext
 	/// Fetches a temporary <see cref="ArrayGrid{T}"/> buffer of the same size as <see cref="RenderSize"/>.
 	/// Returns a handle to that buffer to be used with the `using` syntax to release the memory when done.
 	/// </summary>
-	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="buffer"/>.</remarks>
-	public PoolReleaseHandle FetchTemporaryBuffer(out ArrayGrid<RGB128> buffer);
+	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="texture"/>.</remarks>
+	public PoolReleaseHandle FetchTemporaryTexture(out ArrayGrid<RGB128> texture);
 
 	/// <summary>
 	/// Fetches a temporary <see cref="SettableGrid{T}"/> buffer of the same size as <paramref name="size"/>.
 	/// Returns a handle to that buffer to be used with the `using` syntax to release the memory when done.
 	/// </summary>
-	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="buffer"/>.</remarks>
-	public sealed PoolReleaseHandle FetchTemporaryBuffer(out SettableGrid<RGB128> buffer, Int2 size)
+	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="texture"/>.</remarks>
+	public sealed PoolReleaseHandle FetchTemporaryTexture(out SettableGrid<RGB128> texture, Int2 size)
 	{
-		var handle = FetchTemporaryBuffer(out ArrayGrid<RGB128> fetched);
+		var handle = FetchTemporaryTexture(out ArrayGrid<RGB128> fetched);
 
-		if (size == fetched.size) buffer = fetched;
-		else buffer = fetched.Crop(Int2.Zero, size);
+		if (size == fetched.size) texture = fetched;
+		else texture = fetched.Crop(Int2.Zero, size);
 
 		return handle;
 	}
@@ -89,14 +89,14 @@ public interface ICompositeContext
 	/// <summary>
 	/// Asynchronously runs a Gaussian blur on a <see cref="SettableGrid{T}"/>.
 	/// </summary>
-	public sealed async ComputeTask<float> GaussianBlurAsync(SettableGrid<RGB128> sourceBuffer, float deviation = 1f, int quality = 5)
+	public sealed async ComputeTask<float> GaussianBlurAsync(SettableGrid<RGB128> sourceTexture, float deviation = 1f, int quality = 5)
 	{
-		Int2 size = sourceBuffer.size;
+		Int2 size = sourceTexture.size;
 		int[] radii = new int[quality];
 		FillGaussianRadii(deviation, radii, out float actual);
 
-		using var _ = FetchTemporaryBuffer(out var workerBuffer, size);
-		Ensure.AreEqual(size, workerBuffer.size);
+		using var _ = FetchTemporaryTexture(out var workerTexture, size);
+		Ensure.AreEqual(size, workerTexture.size);
 
 		int radius;
 		float diameterR;
@@ -106,8 +106,8 @@ public interface ICompositeContext
 			radius = radii[i];
 			diameterR = 1f / (radius * 2 + 1);
 
-			await RunAsync(BlurPassX, size.X); //Write to workerBuffer
-			await RunAsync(BlurPassY, size.Y); //Write to sourceBuffer
+			await RunAsync(BlurPassX, size.X); //Write to workerTexture
+			await RunAsync(BlurPassY, size.Y); //Write to sourceTexture
 		}
 
 		return actual;
@@ -122,12 +122,12 @@ public interface ICompositeContext
 			{
 				accumulator += Get(y + radius);
 
-				workerBuffer.Set(new Int2((int)x, y), (RGB128)Float4.Max(accumulator.Result * diameterR, Float4.Zero));
+				workerTexture.Set(new Int2((int)x, y), (RGB128)Float4.Max(accumulator.Result * diameterR, Float4.Zero));
 
 				accumulator -= Get(y - radius);
 			}
 
-			RGB128 Get(int y) => sourceBuffer[new Int2((int)x, y.Clamp(0, size.Y - 1))];
+			RGB128 Get(int y) => sourceTexture[new Int2((int)x, y.Clamp(0, size.Y - 1))];
 		}
 
 		void BlurPassY(uint y)
@@ -140,12 +140,12 @@ public interface ICompositeContext
 			{
 				accumulator += Get(x + radius);
 
-				sourceBuffer.Set(new Int2(x, (int)y), (RGB128)Float4.Max(accumulator.Result * diameterR, Float4.Zero));
+				sourceTexture.Set(new Int2(x, (int)y), (RGB128)Float4.Max(accumulator.Result * diameterR, Float4.Zero));
 
 				accumulator -= Get(x - radius);
 			}
 
-			RGB128 Get(int x) => workerBuffer[new Int2(x.Clamp(0, size.X - 1), (int)y)];
+			RGB128 Get(int x) => workerTexture[new Int2(x.Clamp(0, size.X - 1), (int)y)];
 		}
 
 		static void FillGaussianRadii(float deviation, Span<int> radii, out float actual)
@@ -189,23 +189,23 @@ public interface ICompositeContext
 		readonly List<ArrayGrid<RGB128>> pool;
 		readonly ArrayGrid<RGB128> buffer;
 
-		const int BufferPoolMaxCount = 8;
+		const int TexturePoolMaxCount = 8;
 
 		void IDisposable.Dispose()
 		{
 			lock (pool)
 			{
 				Ensure.IsFalse(pool.Contains(buffer));
-				if (pool.Count < BufferPoolMaxCount) pool.Add(buffer);
+				if (pool.Count < TexturePoolMaxCount) pool.Add(buffer);
 			}
 		}
 	}
 
-	public sealed class TextureNotFoundException : Exception
+	sealed class TextureNotFoundException : ICompositeLayer.CompositeException
 	{
 		public TextureNotFoundException(string label, bool write, Type type) : base(GetMessage(label, write, type)) { }
 
 		static string GetMessage(string label, bool write, Type type) =>
-			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>))} of type {type} in {nameof(RenderBuffer)} labeled as {label}.";
+			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>))} of type `{type}` in {nameof(RenderBuffer)} labeled as `{label}`.";
 	}
 }
