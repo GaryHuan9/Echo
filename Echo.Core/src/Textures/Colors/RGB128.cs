@@ -55,6 +55,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	public override int GetHashCode() => d.GetHashCode();
 	public override string ToString() => ToString(default);
 
+	/// <inheritdoc/>
 	public string ToString(string format, IFormatProvider provider = null) => d.XYZ.ToString(format, provider);
 
 	/// <inheritdoc/>

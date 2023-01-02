@@ -56,7 +56,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// <inheritdoc/>
 	public RGBA128 FromRGBA128(in RGBA128 value) => value;
 
-	/// <inheritdoc cref="ToString()"/>
+	/// <inheritdoc/>
 	public string ToString(string format, IFormatProvider provider = null) => d.ToString(format, provider);
 
 	/// <summary>
