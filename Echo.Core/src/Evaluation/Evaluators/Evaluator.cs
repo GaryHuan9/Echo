@@ -16,12 +16,12 @@ public abstract record Evaluator
 	/// <summary>
 	/// Creates or cleans an <see cref="IEvaluationLayer"/> for a new evaluation session.
 	/// </summary>
-	/// <param name="buffer">The destination containing <see cref="RenderBuffer"/>.</param>
+	/// <param name="texture">The destination containing <see cref="RenderTexture"/>.</param>
 	/// <param name="label">The <see cref="string"/> used to identify the layer.</param>
 	/// <returns>The <see cref="IEvaluationLayer"/> for this new evaluation session.</returns>
 	/// <remarks> A simple invocation to static method <see cref="CreateOrClearLayer{T}"/> with a specified type
 	/// parameter is sufficient for most implementations that require a custom <see cref="IColor{T}"/> type. </remarks>
-	public virtual IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer, string label) => CreateOrClearLayer<RGB128>(buffer, label);
+	public virtual IEvaluationLayer CreateOrClearLayer(RenderTexture texture, string label) => CreateOrClearLayer<RGB128>(texture, label);
 
 	/// <summary>
 	/// Evaluates a <see cref="PreparedScene"/> using this <see cref="Evaluator"/>.
@@ -37,14 +37,14 @@ public abstract record Evaluator
 	/// <summary>
 	/// Default implementation for <see cref="CreateOrClearLayer"/>.
 	/// </summary>
-	/// <param name="buffer">The destination <see cref="RenderBuffer"/>.</param>
+	/// <param name="texture">The destination <see cref="RenderTexture"/>.</param>
 	/// <param name="label">The <see cref="string"/> used to identify the layer.</param>
 	/// <typeparam name="T">The <see cref="IColor{T}"/> type for this layer.</typeparam>
 	/// <returns>The <see cref="IEvaluationLayer"/> that was found or created.</returns>
-	protected static IEvaluationLayer CreateOrClearLayer<T>(RenderBuffer buffer, string label) where T : unmanaged, IColor<T>
+	protected static IEvaluationLayer CreateOrClearLayer<T>(RenderTexture texture, string label) where T : unmanaged, IColor<T>
 	{
-		bool found = buffer.TryGetTexture<T, EvaluationLayer<T>>(label, out var layer);
-		if (!found) return buffer.CreateLayer<T>(label);
+		bool found = texture.TryGetTexture<T, EvaluationLayer<T>>(label, out var layer);
+		if (!found) return texture.CreateLayer<T>(label);
 
 		layer.Clear();
 		return layer;

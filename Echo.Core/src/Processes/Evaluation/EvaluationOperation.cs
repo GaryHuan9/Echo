@@ -118,26 +118,26 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 	/// </summary>
 	public readonly struct Factory : IOperationFactory
 	{
-		public Factory(PreparedScene scene, RenderBuffer renderBuffer, EvaluationProfile profile) :
-			this(new StrongBox<PreparedScene>(scene), renderBuffer, profile) { }
+		public Factory(PreparedScene scene, RenderTexture renderTexture, EvaluationProfile profile) :
+			this(new StrongBox<PreparedScene>(scene), renderTexture, profile) { }
 
-		public Factory(StrongBox<PreparedScene> boxedScene, RenderBuffer renderBuffer, EvaluationProfile profile)
+		public Factory(StrongBox<PreparedScene> boxedScene, RenderTexture renderTexture, EvaluationProfile profile)
 		{
 			profile.Validate();
 			this.boxedScene = boxedScene;
-			this.renderBuffer = renderBuffer;
+			this.renderTexture = renderTexture;
 			this.profile = profile;
 		}
 
 		readonly StrongBox<PreparedScene> boxedScene;
-		readonly RenderBuffer renderBuffer;
+		readonly RenderTexture renderTexture;
 		readonly EvaluationProfile profile;
 
 		/// <inheritdoc/>
 		public Operation CreateOperation(ImmutableArray<IWorker> workers)
 		{
-			IEvaluationLayer destination = profile.Evaluator.CreateOrClearLayer(renderBuffer, profile.TargetLayer);
-			var tilePositions = profile.Pattern.CreateSequence(renderBuffer.size.CeiledDivide(renderBuffer.tileSize));
+			IEvaluationLayer destination = profile.Evaluator.CreateOrClearLayer(renderTexture, profile.TargetLayer);
+			var tilePositions = profile.Pattern.CreateSequence(renderTexture.size.CeiledDivide(renderTexture.tileSize));
 			return new EvaluationOperation(workers, tilePositions.ToImmutableArray(), destination, boxedScene, profile);
 		}
 	}

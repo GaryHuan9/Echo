@@ -16,7 +16,7 @@ public record EvaluationProfile
 	public Evaluator Evaluator { get; init; } = new PathTracedEvaluator();
 
 	/// <summary>
-	/// The label of the layer in the <see cref="RenderBuffer"/> to write to.
+	/// The label of the layer in the <see cref="RenderTexture"/> to write to.
 	/// </summary>
 	public string TargetLayer { get; init; } = "path";
 

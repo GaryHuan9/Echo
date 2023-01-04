@@ -20,7 +20,7 @@ public record DepthOfField : ICompositeLayer
 	/// <summary>
 	/// The label of the <see cref="NormalDepth128"/> layer to read from.
 	/// </summary>
-	public string DepthLayer { get; init; } = "normal-depth";
+	public string DepthLayer { get; init; } = "normal_depth";
 
 	/// <summary>
 	/// The strength of the confusion.
@@ -31,7 +31,7 @@ public record DepthOfField : ICompositeLayer
 	/// The nearer distance from which the blur begins to fade.
 	/// </summary>
 	public float NearStart { get; set; } = 0f;
-	
+
 	/// <summary>
 	/// The nearer distance border when depth of field stops.
 	/// </summary>
@@ -41,7 +41,7 @@ public record DepthOfField : ICompositeLayer
 	/// The farther distance border until where there is no depth of field.
 	/// </summary>
 	public float FarStart { get; set; } = 15f;
-	
+
 	/// <summary>
 	/// The farther distance at which the blur is at its fullest.
 	/// </summary>
@@ -67,7 +67,7 @@ public record DepthOfField : ICompositeLayer
 			RGB128 source = sourceTexture[position];
 			RGB128 blurred = workerTexture[position];
 			float clearness = Curves.Sigmoid(near - far);
-			
+
 			sourceTexture.Set(position, (RGB128)Float4.Lerp(blurred, source, clearness));
 		}
 	}

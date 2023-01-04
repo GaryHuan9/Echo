@@ -18,15 +18,14 @@ public sealed class ScheduledRender
 		this.profile = profile;
 		this.device = device;
 
-		renderBuffer = new RenderBuffer(profile.Resolution, profile.TileSize);
-
+		texture = new RenderTexture(profile.Resolution, profile.TileSize);
 		preparationOperation = SchedulePreparationOperation(device, this);
 		evaluationOperations = ScheduleEvaluationOperations(device, this);
 		compositionOperation = ScheduleCompositionOperation(device, this);
 	}
 
 	public readonly RenderProfile profile;
-	public readonly RenderBuffer renderBuffer;
+	public readonly RenderTexture texture;
 
 	public readonly AsyncOperation preparationOperation;
 	public readonly CompositionOperation compositionOperation;
@@ -88,7 +87,7 @@ public sealed class ScheduledRender
 
 		foreach (EvaluationProfile profile in render.profile.EvaluationProfiles)
 		{
-			var factory = new EvaluationOperation.Factory(render.boxedScene, render.renderBuffer, profile);
+			var factory = new EvaluationOperation.Factory(render.boxedScene, render.texture, profile);
 			builder.Add((EvaluationOperation)device.Schedule(factory));
 		}
 
@@ -97,7 +96,7 @@ public sealed class ScheduledRender
 
 	static CompositionOperation ScheduleCompositionOperation(Device device, ScheduledRender render)
 	{
-		var factory = new CompositionOperation.Factory(render.renderBuffer, render.profile.CompositionLayers);
+		var factory = new CompositionOperation.Factory(render.texture, render.profile.CompositionLayers);
 		return (CompositionOperation)device.Schedule(factory);
 	}
 }

@@ -12,13 +12,13 @@ using Echo.Core.Textures.Grids;
 namespace Echo.Core.Processes.Composition;
 
 /// <summary>
-/// An <see cref="Operation{T}"/> that applies a series of <see cref="ICompositeLayer"/> onto a <see cref="RenderBuffer"/>.
+/// An <see cref="Operation{T}"/> that applies a series of <see cref="ICompositeLayer"/> onto a <see cref="RenderTexture"/>.
 /// </summary>
 public sealed class CompositionOperation : AsyncOperation
 {
-	CompositionOperation(ImmutableArray<IWorker> workers, RenderBuffer renderBuffer, ImmutableArray<ICompositeLayer> layers) : base(workers)
+	CompositionOperation(ImmutableArray<IWorker> workers, RenderTexture renderTexture, ImmutableArray<ICompositeLayer> layers) : base(workers)
 	{
-		this.renderBuffer = renderBuffer;
+		this.renderTexture = renderTexture;
 		this.layers = layers;
 		_errorMessages = new string[layers.Length];
 	}
@@ -28,7 +28,7 @@ public sealed class CompositionOperation : AsyncOperation
 	/// </summary>
 	public readonly ImmutableArray<ICompositeLayer> layers;
 
-	readonly RenderBuffer renderBuffer;
+	readonly RenderTexture renderTexture;
 
 	uint _completedCount;
 
@@ -51,7 +51,7 @@ public sealed class CompositionOperation : AsyncOperation
 
 	protected override async ComputeTask Execute()
 	{
-		var context = new Context(renderBuffer, this);
+		var context = new Context(renderTexture, this);
 
 		for (int i = 0; i < layers.Length; i++)
 		{
@@ -70,41 +70,41 @@ public sealed class CompositionOperation : AsyncOperation
 	/// </summary>
 	public readonly struct Factory : IOperationFactory
 	{
-		public Factory(RenderBuffer renderBuffer, ImmutableArray<ICompositeLayer> layers)
+		public Factory(RenderTexture renderTexture, ImmutableArray<ICompositeLayer> layers)
 		{
-			this.renderBuffer = renderBuffer;
+			this.renderTexture = renderTexture;
 			this.layers = layers;
 		}
 
-		readonly RenderBuffer renderBuffer;
+		readonly RenderTexture renderTexture;
 		readonly ImmutableArray<ICompositeLayer> layers;
 
-		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new CompositionOperation(workers, renderBuffer, layers);
+		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new CompositionOperation(workers, renderTexture, layers);
 	}
 
 	class Context : ICompositeContext
 	{
-		public Context(RenderBuffer renderBuffer, AsyncOperation operation)
+		public Context(RenderTexture renderTexture, AsyncOperation operation)
 		{
-			this.renderBuffer = renderBuffer;
+			this.renderTexture = renderTexture;
 			this.operation = operation;
 		}
 
-		readonly RenderBuffer renderBuffer;
+		readonly RenderTexture renderTexture;
 		readonly AsyncOperation operation;
 
 		readonly List<ArrayGrid<RGB128>> temporaryBufferPool = new();
 
 		/// <inheritdoc/>
-		public Int2 RenderSize => renderBuffer.size;
+		public Int2 RenderSize => renderTexture.size;
 
 		/// <inheritdoc/>
 		public bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T> =>
-			renderBuffer.TryGetTexture<T, TextureGrid<T>>(label, out texture);
+			renderTexture.TryGetTexture<T, TextureGrid<T>>(label, out texture);
 
 		/// <inheritdoc/>
 		public bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T> =>
-			renderBuffer.TryGetTexture<T, SettableGrid<T>>(label, out texture);
+			renderTexture.TryGetTexture<T, SettableGrid<T>>(label, out texture);
 
 		/// <inheritdoc/>
 		public ComputeTask RunAsync(ICompositeContext.Pass2D pass, Int2 size)

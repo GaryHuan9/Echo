@@ -18,6 +18,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.0" />
+      <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.1" />
     </ItemGroup>
 </Project>

@@ -17,7 +17,7 @@ public record Vignette : ICompositeLayer
 	/// <summary>
 	/// The strength of the darkening near the edge of the image.
 	/// </summary>
-	public float Intensity { get; init; } = 0.22f;
+	public float Intensity { get; init; } = 0.25f;
 
 	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{

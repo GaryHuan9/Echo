@@ -28,7 +28,7 @@ public record OidnDenoise : ICompositeLayer
 	/// <summary>
 	/// The label of the clear <see cref="NormalDepth128"/> layer to read from.
 	/// </summary>
-	public string NormalLayer { get; init; } = "normal-depth";
+	public string NormalLayer { get; init; } = "normal_depth";
 
 	/// <summary>
 	/// Whether to denoise auxiliary input (the albedo and normal).

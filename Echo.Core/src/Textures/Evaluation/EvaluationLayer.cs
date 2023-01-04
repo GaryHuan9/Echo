@@ -10,7 +10,7 @@ using Echo.Core.Textures.Grids;
 namespace Echo.Core.Textures.Evaluation;
 
 /// <summary>
-/// A tile-based evaluation destination; usually retrieved from and stored in a <see cref="RenderBuffer"/>.
+/// A tile-based evaluation destination; usually retrieved from and stored in a <see cref="RenderTexture"/>.
 /// Allows read and write access to the content of this layer through <see cref="IEvaluationTile"/>s.
 /// </summary>
 public interface IEvaluationLayer

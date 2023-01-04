@@ -9,12 +9,12 @@ using Echo.Core.Textures.Grids;
 namespace Echo.Core.Textures.Evaluation;
 
 /// <summary>
-/// A slower <see cref="RenderBuffer"/> that is designed to be rendered on
+/// A slower <see cref="RenderTexture"/> that is designed to be rendered on
 /// progressively and can be easily displayed through a serialization byte array.
 /// </summary>
-public class ProgressiveRenderBuffer : ArrayGrid<RGB128>
+public class ProgressiveRenderTexture : ArrayGrid<RGB128>
 {
-	public ProgressiveRenderBuffer(Int2 size) : base(size)
+	public ProgressiveRenderTexture(Int2 size) : base(size)
 	{
 		bytes = new byte[size.Product * 4];
 		ClearSerializedByteArray();
@@ -96,7 +96,7 @@ public class ProgressiveRenderBuffer : ArrayGrid<RGB128>
 	{
 		base.CopyFrom(texture);
 
-		if (texture is not ProgressiveRenderBuffer buffer) return;
+		if (texture is not ProgressiveRenderTexture buffer) return;
 
 		Array.Copy(buffer.bytes, bytes, bytes.Length);
 		Array.Copy(buffer.flags, flags, flags.Length);

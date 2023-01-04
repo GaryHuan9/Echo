@@ -15,8 +15,8 @@ public record Bloom : ICompositeLayer
 	/// <summary>
 	/// The amount of excess luminance distributed to neighboring pixels. 
 	/// </summary>
-	public float Intensity { get; set; } = 0.55f;
-	
+	public float Intensity { get; set; } = 0.25f;
+
 	/// <summary>
 	/// Pixels with a luminance higher than this value will cause bloom.
 	/// </summary>
