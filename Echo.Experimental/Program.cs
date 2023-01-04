@@ -44,7 +44,6 @@ public class Program
 
 		builder.Add(new OidnDenoise());
 		builder.Add(new AutoExposure());
-		// builder.Add(new DepthOfField());
 		builder.Add(new Vignette());
 		builder.Add(new Bloom());
 		builder.Add(new ToneMapper());
