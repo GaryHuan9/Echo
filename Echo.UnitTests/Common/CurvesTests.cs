@@ -31,7 +31,7 @@ public class CurvesTests
 				TestContext.WriteLine(input.ToString("F10"));
 				Assert.GreaterOrEqual(output, lastOutput);
 			}
-			
+
 			lastOutput = output;
 		}
 

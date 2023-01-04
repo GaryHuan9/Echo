@@ -150,7 +150,7 @@ public static class Scalars
 	/// Returns whether <paramref name="value"/> and <paramref name="other"/> are almost equal based on <paramref name="epsilon"/>.
 	/// Uses relative comparison to compute the distance. This method is approximately four to five times slower than regular ==.
 	/// </summary>
-	public static bool AlmostEquals(this float value, float other = 0f, float epsilon = 1e-5f)
+	public static bool AlmostEquals(this float value, float other = 0f, float epsilon = 1E-5f)
 	{
 		if (value == other) return true;                 //Handles absolute equals and degenerate cases
 		const float Normal = (1L << 23) * float.Epsilon; //The smallest positive (non-zero) normal value that can be stored in a float
@@ -169,7 +169,7 @@ public static class Scalars
 	/// Returns whether <paramref name="value"/> and <paramref name="other"/> are almost equal based on <paramref name="epsilon"/>.
 	/// Uses relative comparison to compute the distance. This method is approximately four to five times slower than regular ==.
 	/// </summary>
-	public static bool AlmostEquals(this double value, double other = 0d, double epsilon = 1e-10d)
+	public static bool AlmostEquals(this double value, double other = 0d, double epsilon = 1E-10d)
 	{
 		if (value == other) return true;                   //Handles absolute equals and degenerate cases
 		const double Normal = (1L << 52) * double.Epsilon; //The smallest positive (non-zero) normal value that can be stored in a double

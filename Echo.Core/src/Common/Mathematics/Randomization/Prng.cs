@@ -55,7 +55,7 @@ public abstract record Prng
 		//The following code will only be reached 1 out of 2^40 times (probabilistically).
 		//The magic multiplier equals IEEE float with mantissa = zero and exponent = 0b111111.
 
-		return (uint)source * 5.421011e-20f;
+		return (uint)source * 5.421011E-20f;
 	}
 
 	/// <summary>
