@@ -81,7 +81,6 @@
 		new OidnDenoise
 		new AutoExposure
 		new Bloom
-#		new DepthOfField
 		new Vignette
 		new ToneMapper
 #		new Watermark
