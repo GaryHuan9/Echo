@@ -51,6 +51,12 @@ public sealed class LightCollection
 
 	public readonly GeometryCollection geometries;
 
+	/// <summary>
+	/// A multiplier applied to the travel distance returned by <see cref="Sample"/> to
+	/// avoid the <see cref="OccludeQuery"/> intersecting with the actual light geometry.
+	/// </summary>
+	const float TravelMultiplier = 1f - 2E-5f;
+
 	public View<Tokenized<LightBound>> CreateBounds()
 	{
 		var list = new SmallList<Tokenized<LightBound>>();
@@ -144,7 +150,7 @@ public sealed class LightCollection
 			travel = FastMath.Sqrt0(travel2);
 			incident = delta * (1f / travel);
 
-			travel = FastMath.Max0(travel - FastMath.Epsilon);
+			travel *= TravelMultiplier;
 			return (material.Emit(point, -incident), pdf);
 		}
 

@@ -56,7 +56,7 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 
 				for (int x = 0; x < size.X; x++)
 				{
-					Float4 source = texture[new Int2(x, y)].ToRGBA128();
+					Float4 source = Float4.Clamp(texture[new Int2(x, y)].ToRGBA128());
 					Float4 attempt = Float4.Clamp(source + error.Result);
 					if (sRGB) attempt = LinearToGamma(attempt);
 
@@ -110,7 +110,7 @@ public record SystemSerializer(ImageFormat Format) : Serializer
 		bitmap.UnlockBits(data);
 		return texture;
 	}
-	
+
 	/// <summary>
 	/// Converts a <see cref="Float4"/> from linear space into sRGB.
 	/// </summary>

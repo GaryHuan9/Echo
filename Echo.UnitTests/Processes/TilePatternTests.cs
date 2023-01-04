@@ -5,6 +5,7 @@ using NUnit.Framework;
 
 namespace Echo.UnitTests.Processes;
 
+[TestFixture]
 [TestFixtureSource(nameof(patternSource))]
 public class TilePatternTests
 {

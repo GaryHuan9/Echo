@@ -22,9 +22,12 @@ public class BxDFTests
 		};
 
 		distribution.BeginSeries(Int2.Zero);
-		distribution.BeginSession();
 
-		foreach (ref Float3 direction in outgoings.AsSpan()) direction = distribution.Next2D().UniformSphere;
+		foreach (ref Float3 direction in outgoings.AsSpan())
+		{
+			distribution.BeginSession();
+			direction = distribution.Next2D().UniformSphere;
+		}
 
 		distribution = new StratifiedDistribution
 		{
@@ -33,9 +36,12 @@ public class BxDFTests
 		};
 
 		distribution.BeginSeries(Int2.Zero);
-		distribution.BeginSession();
 
-		foreach (ref Sample2D sample in samples.AsSpan()) sample = distribution.Next2D();
+		foreach (ref Sample2D sample in samples.AsSpan())
+		{
+			distribution.BeginSession();
+			sample = distribution.Next2D();
+		}
 	}
 
 	static readonly (bool conservative, BxDF function)[] pairs =
