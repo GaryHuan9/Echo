@@ -31,8 +31,17 @@ public sealed partial class EchoChronicleHierarchyObjects
 		}
 	}
 
+	/// <summary>
+	/// Constructs the first defined object of type <typeparamref name="T"/>.
+	/// </summary>
+	/// <returns>The constructed object of type <typeparamref name="T"/> if found, null otherwise.</returns>
 	public T ConstructFirst<T>() where T : class => ConstructFirst<T>(out _);
 
+	/// <summary>
+	/// Constructs the first defined object of type <typeparamref name="T"/>.
+	/// </summary>
+	/// <param name="identifier">Outputs the <see cref="string"/> identifier of the constructed object.</param>
+	/// <returns>The constructed object of type <typeparamref name="T"/> if found, null otherwise.</returns>
 	public T ConstructFirst<T>(out string identifier) where T : class
 	{
 		for (int i = 0; i < Length; i++)
@@ -46,6 +55,26 @@ public sealed partial class EchoChronicleHierarchyObjects
 		}
 
 		identifier = default;
+		return null;
+	}
+
+	/// <summary>
+	/// Constructs a labeled symbol of type <typeparamref name="T"/>.
+	/// </summary>
+	/// <param name="identifier">A <see cref="string"/> identifier specifying the object to construct.</param>
+	/// <returns>The constructed object of type <typeparamref name="T"/> if found, null otherwise.</returns>
+	public T Construct<T>(string identifier) where T : class
+	{
+		for (int i = 0; i < Length; i++)
+		{
+			Entry entry = this[i];
+			if (entry.Identifier != identifier) continue;
+
+			T constructed = entry.Construct<T>();
+			if (constructed == null) continue;
+			return constructed;
+		}
+
 		return null;
 	}
 

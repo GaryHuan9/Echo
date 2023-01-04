@@ -14,11 +14,11 @@ namespace Echo.Core.Textures.Evaluation;
 /// A collection of layers of <see cref="TextureGrid{T}"/> used as a rendering source or destination.
 /// Allows for optional auxiliary evaluation layers (such as normal) to support later reconstruction.
 /// </summary>
-public sealed class RenderBuffer : TextureGrid<RGB128>
+public sealed class RenderTexture : TextureGrid<RGB128>
 {
-	public RenderBuffer(Int2 size, int tileSize = 16) : this(size, (Int2)tileSize) { }
+	public RenderTexture(Int2 size, int tileSize = 16) : this(size, (Int2)tileSize) { }
 
-	public RenderBuffer(Int2 size, Int2 tileSize) : base(size)
+	public RenderTexture(Int2 size, Int2 tileSize) : base(size)
 	{
 		if (!BitOperations.IsPow2(tileSize.X) || !BitOperations.IsPow2(tileSize.Y)) throw new ArgumentOutOfRangeException(nameof(tileSize));
 
@@ -44,7 +44,7 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 	}
 
 	/// <summary>
-	/// Tries to get a layer from this <see cref="RenderBuffer"/>.
+	/// Tries to get a layer from this <see cref="RenderTexture"/>.
 	/// </summary>
 	/// <param name="label">The label of the layer to find.</param>
 	/// <param name="layer">Outputs the layer if found.</param>
@@ -72,7 +72,7 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 	}
 
 	/// <summary>
-	/// Creates a new layer to this <see cref="RenderBuffer"/>.
+	/// Creates a new layer to this <see cref="RenderTexture"/>.
 	/// </summary>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
@@ -90,7 +90,7 @@ public sealed class RenderBuffer : TextureGrid<RGB128>
 	}
 
 	/// <summary>
-	/// Adds a new layer to this <see cref="RenderBuffer"/>.
+	/// Adds a new layer to this <see cref="RenderTexture"/>.
 	/// </summary>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>

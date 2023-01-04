@@ -55,7 +55,7 @@ public record Watermark : ICompositeLayer
 		float width = sourceTexture.LogSize * Scale;
 		Float2 margin = (Float2)MarginSize * width;
 		Float2 size = new Float2(width, width * logoTexture.aspects.Y);
-		Float2 center = new Float2(sourceTexture.size.X - size.X);
+		// Float2 center = new Float2(sourceTexture.size.X - size.X);
 
 		// Float2 size = new Float2(logoTexture.aspects.X * width, width) + margin;
 		// Float2 position = sourceTexture.size.X_ + (size / 2f + margin) * new Float2(-1f, 1f);
@@ -88,5 +88,5 @@ public record Watermark : ICompositeLayer
 		// font.Draw(renderBuffer, Label, position, style);
 	}
 
-	void TintPass(Int2 position) => cropTarget[position] = cropWorker[position] * tint;
+	// void TintPass(Int2 position) => cropTarget[position] = cropWorker[position] * tint;
 }

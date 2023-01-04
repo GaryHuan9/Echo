@@ -17,7 +17,7 @@ namespace Echo.Core.Processes.Composition;
 public interface ICompositeContext
 {
 	/// <summary>
-	/// The size of the <see cref="RenderBuffer"/>.
+	/// The size of the <see cref="RenderTexture"/>.
 	/// </summary>
 	public Int2 RenderSize { get; }
 
@@ -35,10 +35,10 @@ public interface ICompositeContext
 		TryGetTexture(label, out SettableGrid<T> texture) ? texture :
 			throw new TextureNotFoundException(label, true, typeof(T));
 
-	/// <inheritdoc cref="RenderBuffer.TryGetTexture{T, U}"/>
+	/// <inheritdoc cref="RenderTexture.TryGetTexture{T, U}"/>
 	public bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T>;
 
-	/// <inheritdoc cref="RenderBuffer.TryGetTexture{T, U}"/>
+	/// <inheritdoc cref="RenderTexture.TryGetTexture{T, U}"/>
 	public bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T>;
 
 	/// <summary>
@@ -206,6 +206,6 @@ public interface ICompositeContext
 		public TextureNotFoundException(string label, bool write, Type type) : base(GetMessage(label, write, type)) { }
 
 		static string GetMessage(string label, bool write, Type type) =>
-			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>))} of type `{type}` in {nameof(RenderBuffer)} labeled as `{label}`.";
+			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>))} of type `{type}` in {nameof(RenderTexture)} labeled as `{label}`.";
 	}
 }

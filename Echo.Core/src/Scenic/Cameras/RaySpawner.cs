@@ -7,7 +7,7 @@ using Echo.Core.Textures.Grids;
 namespace Echo.Core.Scenic.Cameras;
 
 /// <summary>
-/// A container that stores information necessary to spawning a <see cref="Ray"/> from a <see cref="RenderBuffer"/>.
+/// A container that stores information necessary to spawning a <see cref="Ray"/> from a <see cref="RenderTexture"/>.
 /// </summary>
 public readonly struct RaySpawner
 {

@@ -21,7 +21,7 @@ public record RenderProfile
 	public Scene Scene { get; init; }
 
 	/// <summary>
-	/// The size of the destination <see cref="RenderBuffer"/> to render to. 
+	/// The size of the destination <see cref="RenderTexture"/> to render to. 
 	/// </summary>
 	public Int2 Resolution { get; init; } = new(960, 540);
 

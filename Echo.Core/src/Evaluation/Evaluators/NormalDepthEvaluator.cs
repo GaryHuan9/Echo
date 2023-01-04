@@ -10,7 +10,7 @@ namespace Echo.Core.Evaluation.Evaluators;
 
 public record NormalDepthEvaluator : Evaluator
 {
-	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer, string label) => CreateOrClearLayer<NormalDepth128>(buffer, label);
+	public override IEvaluationLayer CreateOrClearLayer(RenderTexture texture, string label) => CreateOrClearLayer<NormalDepth128>(texture, label);
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
