@@ -5,6 +5,7 @@ using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
@@ -59,10 +60,13 @@ public interface ICompositeContext
 	/// <summary>
 	/// Copies the content of a readable <see cref="TextureGrid{T}"/> to a writeable <see cref="SettableGrid{T}"/>.
 	/// </summary>
-	public sealed ComputeTask CopyAsync<T>(TextureGrid<T> source, SettableGrid<T> destination) where T : unmanaged, IColor<T> =>
-		source.size == destination.size
-			? RunAsync(position => destination.Set(position, source[position]))
-			: throw new ArgumentException("Copy source and destination sizes mismatch.");
+	public sealed ComputeTask CopyAsync<T>(Texture source, SettableGrid<T> destination) where T : unmanaged, IColor<T> => RunAsync
+	(
+		source is TextureGrid<T> grid && destination.size == grid.size
+			? position => destination.Set(position, grid[position])
+			: position => destination.Set(position, source[destination.ToUV(position)].As<T>()),
+		destination.size
+	);
 
 	/// <summary>
 	/// Fetches a temporary <see cref="ArrayGrid{T}"/> buffer of the same size as <see cref="RenderSize"/>.
@@ -153,25 +157,21 @@ public interface ICompositeContext
 			//Calculate Gaussian approximation convolution square size
 			//Based on: http://blog.ivank.net/fastest-gaussian-blur.html
 
-			float alpha = deviation * deviation;
+			float deviation2 = deviation * deviation;
 			int quality = radii.Length;
 
-			int beta = (int)MathF.Sqrt(12f * alpha / quality + 1f);
-			if (beta % 2 == 0) beta--;
+			int ideal = (int)MathF.Sqrt(12f * deviation2 / quality + 1f);
+			if (ideal % 2 == 0) ideal--;
 
-			float gamma = quality * beta * beta - 4f * quality * beta - 3f * quality;
-			int threshold = ((12f * alpha - gamma) / (-4f * beta - 4f)).Round();
+			float sub = quality * ideal * ideal + 4f * quality * ideal + 3f * quality;
+			int threshold = ((12f * deviation2 - sub) / (-4f * ideal - 4f)).Round();
 
 			//Record radii
-			for (int i = 0; i < quality; i++)
-			{
-				int size = i < threshold ? beta : beta + 2;
-				radii[i] = (size - 1) / 2;
-			}
+			for (int i = 0; i < quality; i++) radii[i] = (i < threshold ? ideal - 1 : ideal + 1) / 2;
 
 			//Calculate actual deviation
-			actual = (quality - threshold) * (beta + 2) * (beta + 2) - quality;
-			actual = MathF.Sqrt((threshold * beta * beta + actual) / 12f);
+			actual = (quality - threshold) * (ideal + 2) * (ideal + 2) - quality;
+			actual = MathF.Sqrt((threshold * ideal * ideal + actual) / 12f);
 		}
 	}
 

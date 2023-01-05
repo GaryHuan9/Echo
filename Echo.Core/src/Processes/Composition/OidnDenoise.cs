@@ -49,17 +49,17 @@ public record OidnDenoise : ICompositeLayer
 			bool hasAlbedo = context.TryGetTexture(AlbedoLayer, out TextureGrid<RGB128> albedoTexture);
 			bool hasNormal = context.TryGetTexture(NormalLayer, out TextureGrid<NormalDepth128> normalTexture);
 
-			float[] colorBuffer = await CopyToBufferAsync(sourceTexture);
-			float[] albedoBuffer = hasAlbedo ? await CopyToBufferAsync(albedoTexture) : null;
-			float[] normalBuffer = hasNormal ? await CopyToBufferAsync(normalTexture) : null;
+			float[] colorBuffer = await CopyToBuffer(sourceTexture);
+			float[] albedoBuffer = hasAlbedo ? await CopyToBuffer(albedoTexture) : null;
+			float[] normalBuffer = hasNormal ? await CopyToBuffer(normalTexture) : null;
 
 			//Denoise and copy result back to texture
 			Denoise(size, colorBuffer, albedoBuffer, normalBuffer);
-			await CopyFromBufferAsync(colorBuffer, sourceTexture);
+			await CopyFromBuffer(colorBuffer, sourceTexture);
 		}
 		catch (DllNotFoundException) { throw new OidnException("Precompiled Oidn binaries not found."); }
 
-		async ComputeTask<float[]> CopyToBufferAsync<T>(TextureGrid<T> sourceTexture) where T : unmanaged, IColor<T>
+		async ComputeTask<float[]> CopyToBuffer<T>(TextureGrid<T> sourceTexture) where T : unmanaged, IColor<T>
 		{
 			Ensure.AreEqual(sourceTexture.size, size);
 			float[] buffer = GC.AllocateUninitializedArray<float>(size.Product * 3);
@@ -78,7 +78,7 @@ public record OidnDenoise : ICompositeLayer
 			}
 		}
 
-		ComputeTask CopyFromBufferAsync(float[] buffer, SettableGrid<RGB128> targetTexture)
+		ComputeTask CopyFromBuffer(float[] buffer, SettableGrid<RGB128> targetTexture)
 		{
 			Ensure.AreEqual(targetTexture.size, size);
 			return context.RunAsync(MainPass, size);
