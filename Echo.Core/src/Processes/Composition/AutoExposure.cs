@@ -78,7 +78,7 @@ public record AutoExposure : ICompositeLayer
 			for (int x = 0; x < sourceTexture.size.X; x++)
 			{
 				Int2 position = new Int2(x, (int)y);
-				
+
 				float distance = Float2.Distance(sourceTexture.ToUV(position), Float2.Half) * 2f;
 				float weight = (1f - Curves.EaseOutSmooth(distance)) * CenterWeight + 1f;
 				float logLuminance = GetLog(sourceTexture[position].Luminance);
