@@ -98,7 +98,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public IEvaluationWriteTile CreateTile(Int2 tilePosition)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 		GetTileBounds(tilePosition, out Int2 min, out Int2 max);
 		return new WriteTile(tilePosition, min, max);
 	}
@@ -106,7 +106,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public IEvaluationReadTile RequestTile(Int2 tilePosition)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 		return tiles[GetTileIndex(tilePosition)];
 	}
 
@@ -135,7 +135,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 
 		min = tilePosition * tileSize;
 		max = size.Min(min + tileSize);
@@ -146,7 +146,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public Int2 GetTilePosition(Int2 position)
 	{
-		EnsureValidPosition(position);
+		AssertValidPosition(position);
 
 		return new Int2
 		(
@@ -157,7 +157,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 
 	int GetTileIndex(Int2 tilePosition)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 		return tilePosition.Y * tileRange.X + tilePosition.X;
 	}
 
@@ -167,7 +167,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		Int2 size = max - min;
 		position -= min;
 
-		EnsureValidPosition(position, size);
+		AssertValidPosition(position, size);
 		return position.Y * size.X + position.X;
 	}
 

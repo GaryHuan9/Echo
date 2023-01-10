@@ -47,7 +47,7 @@ public class Program
 		builder.Add(new Vignette());
 		builder.Add(new Bloom());
 		builder.Add(new ToneMapper());
-		// builder.Add(new Watermark());
+		builder.Add(new Watermark());
 
 		var operation = (CompositionOperation)device.Schedule(new CompositionOperation.Factory(renderTexture, builder.ToImmutable()));
 

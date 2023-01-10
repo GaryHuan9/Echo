@@ -32,6 +32,16 @@ public readonly struct ComputeTask : ICriticalNotifyCompletion
 
 	void INotifyCompletion.OnCompleted(Action continuation) => context.Register(continuation);
 	void ICriticalNotifyCompletion.UnsafeOnCompleted(Action continuation) => context.Register(continuation);
+
+	/// <summary>
+	/// Returns a new <see cref="ComputeTask{T}"/> that <see cref="ComputeTask{T}.IsCompleted"/> with a <paramref name="result"/>.
+	/// </summary>
+	/// <param name="result">The result of type <typeparamref name="T"/> to contain.</param>
+	public static async ComputeTask<T> FromResult<T>(T result)
+	{
+		await CompletedTask;
+		return result;
+	}
 }
 
 /// <summary>

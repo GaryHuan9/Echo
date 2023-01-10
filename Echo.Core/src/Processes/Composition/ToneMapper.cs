@@ -21,8 +21,7 @@ public record ToneMapper : ICompositeLayer
 	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
 		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
-
-		return context.RunAsync(MainPass);
+		return context.RunAsync(MainPass, sourceTexture.size);
 
 		void MainPass(Int2 position)
 		{

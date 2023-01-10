@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Threading;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Async;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
@@ -93,7 +94,9 @@ public sealed class CompositionOperation : AsyncOperation
 		readonly RenderTexture renderTexture;
 		readonly AsyncOperation operation;
 
-		readonly List<ArrayGrid<RGB128>> temporaryBufferPool = new();
+		readonly List<ArrayGrid<RGB128>> temporaryTexturePool = new();
+
+		const int TexturePoolMaxCount = 8;
 
 		/// <inheritdoc/>
 		public Int2 RenderSize => renderTexture.size;
@@ -120,23 +123,31 @@ public sealed class CompositionOperation : AsyncOperation
 		/// <inheritdoc/>
 		public ComputeTask RunAsync(ICompositeContext.Pass1D pass, int size) => operation.Schedule(new Action<uint>(pass), (uint)size);
 
-		/// <inheritdoc/>
-		public ICompositeContext.PoolReleaseHandle FetchTemporaryTexture(out ArrayGrid<RGB128> texture)
+		public ArrayGrid<RGB128> RetrieveTemporaryTexture()
 		{
-			texture = null;
-			List<ArrayGrid<RGB128>> pool = temporaryBufferPool;
+			ArrayGrid<RGB128> texture = null;
 
-			lock (pool)
+			lock (temporaryTexturePool)
 			{
-				if (pool.Count > 0)
+				if (temporaryTexturePool.Count > 0)
 				{
-					texture = pool[^1];
-					pool.RemoveAt(pool.Count - 1);
+					int end = temporaryTexturePool.Count - 1;
+					texture = temporaryTexturePool[end];
+					temporaryTexturePool.RemoveAt(end);
 				}
 			}
 
-			texture ??= new ArrayGrid<RGB128>(RenderSize);
-			return new ICompositeContext.PoolReleaseHandle(pool, texture);
+			return texture ?? new ArrayGrid<RGB128>(RenderSize);
+		}
+
+		public void ReleaseTemporaryTexture(ArrayGrid<RGB128> texture)
+		{
+			lock (temporaryTexturePool)
+			{
+				Ensure.IsFalse(temporaryTexturePool.Contains(texture));
+				if (temporaryTexturePool.Count >= TexturePoolMaxCount) return;
+				temporaryTexturePool.Add(texture);
+			}
 		}
 	}
 }

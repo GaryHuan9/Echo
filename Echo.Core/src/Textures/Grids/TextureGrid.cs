@@ -175,7 +175,7 @@ public abstract class TextureGrid : Texture
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
 	[Conditional("DEBUG")]
-	protected void EnsureValidPosition(Int2 position) => EnsureValidPosition(position, size);
+	protected void AssertValidPosition(Int2 position) => AssertValidPosition(position, size);
 
 	/// <summary>
 	/// Performs a <see cref="Load{T}"/> operation asynchronously.
@@ -200,12 +200,11 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// Ensures an <see cref="Int2"/> is between zero (inclusive) and a certain <paramref name="size"/> (exclusive).
+	/// Asserts an <see cref="Int2"/> is between zero (inclusive) and a certain <paramref name="size"/> (exclusive).
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
 	/// <param name="size">The upper limit of the bounds (exclusive).</param>
-	[Conditional("DEBUG")]
-	protected static void EnsureValidPosition(Int2 position, Int2 size)
+	protected static void AssertValidPosition(Int2 position, Int2 size)
 	{
 		Ensure.IsTrue(Int2.Zero <= position);
 		Ensure.IsTrue(position < size);
@@ -229,7 +228,10 @@ public abstract class TextureGrid : Texture
 /// preferred over the non-generic version. Only use the non-generic version when a common base class ie needed.</remarks>
 public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T>
 {
-	protected TextureGrid(Int2 size) : base(size) { }
+	protected TextureGrid(Int2 size) : base(size)
+	{
+		if (size.MinComponent <= 0) throw new ArgumentOutOfRangeException(nameof(size));
+	}
 
 	/// <summary>
 	/// Gets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
@@ -249,9 +251,35 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 
 	public sealed override TextureGrid Load(string path, Serializer serializer = null) => Load<T>(path, serializer);
 
+	/// <summary>
+	/// Slices this <see cref="TextureGrid{T}"/> by cropping.
+	/// </summary>
+	/// <returns>A new <see cref="TextureGrid{T}"/> that is a view of this <see cref="TextureGrid{T}"/>
+	/// from <paramref name="min"/> (inclusive) to <paramref name="max"/> (exclusive).</returns>
+	public virtual TextureGrid<T> Crop(Int2 min, Int2 max) => new CropGrid(this, min, max);
+
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
 		Ensure.IsTrue(float.IsFinite(uv.Sum));
 		return Filter.Evaluate(this, uv);
+	}
+
+	class CropGrid : TextureGrid<T>
+	{
+		public CropGrid(TextureGrid<T> texture, Int2 min, Int2 max) : base(max - min)
+		{
+			if (!(Int2.Zero <= min) || !(max <= texture.size) || !(min < max)) throw new ArgumentException($"Invalid {nameof(min)} or {nameof(max)}: {min} and {max}.");
+
+			source = texture;
+			this.min = min;
+
+			Wrapper = texture.Wrapper;
+			Filter = texture.Filter;
+		}
+
+		readonly TextureGrid<T> source;
+		readonly Int2 min;
+
+		public override T this[Int2 position] => source[min + position];
 	}
 }

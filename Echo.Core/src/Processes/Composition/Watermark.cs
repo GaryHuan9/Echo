@@ -1,6 +1,10 @@
 ﻿using System.Threading;
 using Echo.Core.Common.Compute.Async;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
@@ -19,17 +23,13 @@ public record Watermark : ICompositeLayer
 	/// <summary>
 	/// The size of the watermark.
 	/// </summary>
-	public float Scale { get; init; } = 0.15f;
-	
-	CropGrid<RGB128> cropWorker;
-	CropGrid<RGB128> cropTarget;
+	public float Scale { get; init; } = 0.25f;
 
-	float tint;
-
-	const float MarginSize = 0.14f;
-	const float BlurDeviation = 0.38f;
-	const float BackgroundTint = 0.2f;
-	const float LuminanceThreshold = 0.35f;
+	const float MarginScale = 0.06f;
+	const float DeviationIntensity = 4.5f;
+	const float LuminanceThreshold = 0.2f;
+	const float BlurTint = 0.12f;
+	const float ShadowTint = 0.5f;
 
 	static TextureGrid<RGBA128> _logoTexture;
 
@@ -39,7 +39,7 @@ public record Watermark : ICompositeLayer
 		{
 			var texture = Volatile.Read(ref _logoTexture);
 			if (texture != null) return texture;
-			
+
 			texture = TextureGrid.Load<RGBA128>("ext/Logo/logo-white.png");
 			Volatile.Write(ref _logoTexture, texture);
 			return texture;
@@ -49,44 +49,124 @@ public record Watermark : ICompositeLayer
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
 		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
-		TextureGrid<RGBA128> logoTexture = LogoTexture;
-		
+
 		//Find size and position
 		float width = sourceTexture.LogSize * Scale;
-		Float2 margin = (Float2)MarginSize * width;
-		Float2 size = new Float2(width, width * logoTexture.aspects.Y);
-		// Float2 center = new Float2(sourceTexture.size.X - size.X);
+		int margin = (MarginScale * width).Round();
+		Int2 size = FindPlacementSize(width);
 
-		// Float2 size = new Float2(logoTexture.aspects.X * width, width) + margin;
-		// Float2 position = sourceTexture.size.X_ + (size / 2f + margin) * new Float2(-1f, 1f);
-		//
-		// Int2 min = (position - size / 2f).Floored;
-		// Int2 max = (position + size / 2f).Ceiled + Int2.One;
-		//
-		// //Allocate resources for full resolution Gaussian blur
-		// float deviation = width * BlurDeviation;
-		//
-		// using var handle = CopyTemporaryBuffer(out ArrayGrid<RGB128> workerBuffer);
-		// using var blur = new GaussianBlur(this, workerBuffer, deviation);
-		//
-		// //Start watermark stamping passes
-		// cropWorker = workerBuffer.Crop(min, max);
-		// cropTarget = renderBuffer.Crop(min, max);
-		//
-		// using var grab = new LuminanceGrab(this, cropWorker);
-		//
-		// blur.Run(); //Run Gaussian blur
-		// grab.Run(); //Run luminance grab
-		//
-		// bool lightMode = grab.Luminance > LuminanceThreshold;
-		// tint = lightMode ? 1f + BackgroundTint : 1f - BackgroundTint;
-		//
-		// RunPass(TintPass, cropWorker); //Copies buffer
-		//
-		// //Write label
-		// style = style with { Color = new RGBA128(lightMode ? 0f : 1f) };
-		// font.Draw(renderBuffer, Label, position, style);
+		Int2 borderMin = new Int2(sourceTexture.size.X - size.X - margin * 2, 0);
+		Int2 borderMax = new Int2(sourceTexture.size.X, size.Y + margin * 2);
+		Int2 strictMin = new Int2(sourceTexture.size.X - margin - size.X, margin);
+		Int2 strictMax = new Int2(sourceTexture.size.X - margin, margin + size.Y);
+
+		//Crop out the target region and fetch needed buffers
+		using var _0 = context.FetchTemporaryTexture(out var workerTexture);
+		var sourceCrop = sourceTexture.Crop(borderMin, borderMax);
+		var workerCrop = workerTexture.Crop(borderMin, borderMax);
+		var fetchTask = FetchResizedLogo(context, sourceCrop.size, strictMax - strictMin, out var logoTexture);
+
+		//Perform blur and determine tint
+		var grabTask = GrabLuminance(context, sourceCrop);
+		await context.CopyAsync(sourceCrop, workerCrop);
+		await context.GaussianBlurAsync(workerCrop, DeviationIntensity);
+		float tintDirection = await grabTask > LuminanceThreshold ? -1f : 1f;
+
+		//Stamp logo using the blurred texture and add shadow to create depth
+		using var _1 = await fetchTask;
+		await context.RunAsync(StampPass, sourceCrop.size);
+		await context.CopyAsync(logoTexture, workerCrop);
+		await context.GaussianBlurAsync(workerCrop, DeviationIntensity);
+		await context.RunAsync(ShadowPass, sourceCrop.size);
+
+		void StampPass(Int2 position)
+		{
+			float intensity = logoTexture[position].Luminance;
+			Float4 source = sourceCrop[position];
+			Float4 blurred = workerCrop[position] * (1f + tintDirection * BlurTint);
+			sourceCrop.Set(position, (RGB128)Float4.Lerp(source, blurred, intensity));
+		}
+
+		void ShadowPass(Int2 position)
+		{
+			float intensity = logoTexture[position].Luminance * tintDirection * ShadowTint;
+			float multiplier = 1f + intensity * (1f - workerCrop[position].Luminance);
+			sourceCrop.Set(position, sourceCrop[position] * multiplier);
+		}
 	}
 
-	// void TintPass(Int2 position) => cropTarget[position] = cropWorker[position] * tint;
+	static Int2 FindPlacementSize(float width)
+	{
+		Int2 logo = LogoTexture.size;
+		Ensure.IsTrue(logo.X >= logo.Y);
+		float aspect = (float)logo.Y / logo.X;
+
+		int x = (int)width;
+		int y;
+
+		do y = (++x * aspect).Round();
+		while (y * logo.X != x * logo.Y);
+
+		return new Int2(x, y);
+	}
+
+	static async ComputeTask<float> GrabLuminance(ICompositeContext context, TextureGrid<RGB128> sourceTexture)
+	{
+		var locker = new SpinLock();
+		Int2 size = sourceTexture.size;
+		Summation total = Summation.Zero;
+
+		await context.RunAsync(MainPass, size.Y);
+		return ((RGB128)total.Result).Luminance / size.Product;
+
+		void MainPass(uint y)
+		{
+			Summation rowTotal = Summation.Zero;
+
+			for (int x = 0; x < size.X; x++) rowTotal += sourceTexture[new Int2(x, (int)y)];
+
+			bool lockTaken = false;
+
+			try
+			{
+				locker.Enter(ref lockTaken);
+				total += rowTotal;
+			}
+			finally
+			{
+				if (lockTaken) locker.Exit();
+			}
+		}
+	}
+
+	static ComputeTask<ICompositeContext.PoolReleaseHandle> FetchResizedLogo(ICompositeContext context, Int2 borderSize,
+																			 Int2 strictSize, out SettableGrid<RGB128> logoTexture)
+	{
+		Int2 margin = (borderSize - strictSize) / 2;
+		Ensure.IsTrue(margin.X > 0 && margin.Y > 0);
+		Ensure.AreEqual(margin * 2, borderSize - strictSize);
+
+		var handle = context.FetchTemporaryTexture(out logoTexture, borderSize);
+
+		var logoBorder = logoTexture;
+		var logoStrict = logoBorder.Crop(margin, borderSize - margin);
+		Ensure.AreEqual(logoStrict.size, strictSize);
+
+		return Convert();
+
+		async ComputeTask<ICompositeContext.PoolReleaseHandle> Convert()
+		{
+			var logoAlpha = new ArrayGrid<RGBA128>(logoStrict.size);
+			var copyTask0 = context.CopyAsync(Pure.black, logoBorder);
+			var copyTask1 = context.CopyAsync(LogoTexture, logoAlpha);
+
+			await copyTask0;
+			await copyTask1;
+			await context.RunAsync(MainPass, logoStrict.size);
+
+			return handle;
+
+			void MainPass(Int2 position) => logoStrict.Set(position, (RGB128)logoAlpha[position].AlphaMultiply);
+		}
+	}
 }

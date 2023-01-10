@@ -92,16 +92,6 @@ public class ProgressiveRenderTexture : ArrayGrid<RGB128>
 		}
 	}
 
-	public override void CopyFrom(Texture texture)
-	{
-		base.CopyFrom(texture);
-
-		if (texture is not ProgressiveRenderTexture buffer) return;
-
-		Array.Copy(buffer.bytes, bytes, bytes.Length);
-		Array.Copy(buffer.flags, flags, flags.Length);
-	}
-
 	public override void Clear()
 	{
 		base.Clear();

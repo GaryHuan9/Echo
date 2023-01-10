@@ -27,15 +27,9 @@ public record Bloom : ICompositeLayer
 		SettableGrid<RGB128> sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
 		using var _ = context.FetchTemporaryTexture(out ArrayGrid<RGB128> workerTexture);
 
-		//Fill filtered color values to workerTexture
-		await context.RunAsync(FilterPass);
-
-		//Run Gaussian blur on workerTexture
-		float deviation = sourceTexture.LogSize / 64f;
-		await context.GaussianBlurAsync(workerTexture, deviation);
-
-		//Combine blurred workerTexture with sourceTexture
-		await context.RunAsync(CombinePass);
+		await context.RunAsync(FilterPass, sourceTexture.size);  //Fill filtered color values to workerTexture
+		await context.GaussianBlurAsync(workerTexture, 4f);      //Run Gaussian blur on workerTexture
+		await context.RunAsync(CombinePass, sourceTexture.size); //Combine blurred workerTexture with sourceTexture
 
 		void FilterPass(Int2 position)
 		{
