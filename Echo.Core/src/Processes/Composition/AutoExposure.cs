@@ -55,7 +55,7 @@ public record AutoExposure : ICompositeLayer
 
 		if (!FastMath.Positive(average)) return;
 		float exposure = AverageLuminance / average;
-		await context.RunAsync(MainPass);
+		await context.RunAsync(MainPass, sourceTexture.size);
 
 		void MainPass(Int2 position) => sourceTexture.Set(position, sourceTexture[position] * exposure);
 	}
@@ -68,7 +68,6 @@ public record AutoExposure : ICompositeLayer
 		if (FastMath.AlmostZero(logStep)) logStepR = 0f;
 
 		await context.RunAsync(MainPass, sourceTexture.size.Y);
-
 		return bins;
 
 		void MainPass(uint y)

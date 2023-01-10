@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
@@ -43,11 +42,6 @@ public interface ICompositeContext
 	public bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T>;
 
 	/// <summary>
-	/// Runs a <see cref="Pass2D"/> on every position within <see cref="RenderSize"/>.
-	/// </summary>
-	public sealed ComputeTask RunAsync(Pass2D pass) => RunAsync(pass, RenderSize);
-
-	/// <summary>
 	/// Runs a <see cref="Pass2D"/> on every position within <paramref name="size"/>.
 	/// </summary>
 	public ComputeTask RunAsync(Pass2D pass, Int2 size);
@@ -58,46 +52,57 @@ public interface ICompositeContext
 	public ComputeTask RunAsync(Pass1D pass, int size);
 
 	/// <summary>
+	/// Copies the content of a <see cref="Texture"/> to a writeable <see cref="SettableGrid{T}"/>.
+	/// </summary>
+	public sealed ComputeTask CopyAsync<T>(Texture source, SettableGrid<T> destination) where T : unmanaged, IColor<T> =>
+		RunAsync(position => destination.Set(position, source[destination.ToUV(position)].As<T>()), destination.size);
+
+	/// <summary>
 	/// Copies the content of a readable <see cref="TextureGrid{T}"/> to a writeable <see cref="SettableGrid{T}"/>.
 	/// </summary>
-	public sealed ComputeTask CopyAsync<T>(Texture source, SettableGrid<T> destination) where T : unmanaged, IColor<T> => RunAsync
-	(
-		source is TextureGrid<T> grid && destination.size == grid.size
-			? position => destination.Set(position, grid[position])
-			: position => destination.Set(position, source[destination.ToUV(position)].As<T>()),
-		destination.size
-	);
-
-	/// <summary>
-	/// Fetches a temporary <see cref="ArrayGrid{T}"/> buffer of the same size as <see cref="RenderSize"/>.
-	/// Returns a handle to that buffer to be used with the `using` syntax to release the memory when done.
-	/// </summary>
-	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="texture"/>.</remarks>
-	public PoolReleaseHandle FetchTemporaryTexture(out ArrayGrid<RGB128> texture);
-
-	/// <summary>
-	/// Fetches a temporary <see cref="SettableGrid{T}"/> buffer of the same size as <paramref name="size"/>.
-	/// Returns a handle to that buffer to be used with the `using` syntax to release the memory when done.
-	/// </summary>
-	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="texture"/>.</remarks>
-	public sealed PoolReleaseHandle FetchTemporaryTexture(out SettableGrid<RGB128> texture, Int2 size)
+	/// <remarks>If the type parameter of <paramref name="source"/> and <see cref="destination"/> are the same,
+	/// but their <see cref="TextureGrid.size"/> is different, a resampling is performed for the best result.</remarks>
+	public sealed ComputeTask CopyAsync<T>(TextureGrid<T> source, SettableGrid<T> destination) where T : unmanaged, IColor<T>
 	{
-		var handle = FetchTemporaryTexture(out ArrayGrid<RGB128> fetched);
+		return RunAsync(source.size == destination.size
+			? position => destination.Set(position, source[position])
+			: ResamplePass, destination.size);
 
-		if (size == fetched.size) texture = fetched;
-		else texture = fetched.Crop(Int2.Zero, size);
+		void ResamplePass(Int2 position) //Performs a resampling of source from destination
+		{
+			Float2 uv = destination.ToUV(position);
+			Float2 uvHalf = destination.ToUV(Int2.Zero);
+			Float2 sourceMin = source.size * (uv - uvHalf);
+			Float2 sourceMax = source.size * (uv + uvHalf);
+			Int2 sourceBound = Int2.Min(source.size, sourceMax.Ceiled);
 
-		return handle;
+			Summation totalValue = Summation.Zero;
+			Summation totalArea = Summation.Zero;
+
+			for (int y = (int)sourceMin.Y; y < sourceBound.Y; y++)
+			for (int x = (int)sourceMin.X; x < sourceBound.X; x++)
+			{
+				Int2 current = new Int2(x, y);
+				Float2 min = Float2.Max(sourceMin, current);
+				Float2 max = Float2.Min(sourceMax, current + Float2.One);
+				float area = (max - min).Product;
+
+				totalValue += source[current].ToFloat4() * area;
+				totalArea += Float4.One * area;
+			}
+
+			destination.Set(position, default(T).FromFloat4(totalValue.Result / totalArea.Result));
+		}
 	}
 
 	/// <summary>
 	/// Asynchronously runs a Gaussian blur on a <see cref="SettableGrid{T}"/>.
 	/// </summary>
-	public sealed async ComputeTask<float> GaussianBlurAsync(SettableGrid<RGB128> sourceTexture, float deviation = 1f, int quality = 5)
+	public sealed async ComputeTask<float> GaussianBlurAsync(SettableGrid<RGB128> sourceTexture, float intensity = 1f, int quality = 5)
 	{
 		Int2 size = sourceTexture.size;
 		int[] radii = new int[quality];
-		FillGaussianRadii(deviation, radii, out float actual);
+		FillGaussianRadii(sourceTexture.LogSize * intensity / 256f, radii, out float actual);
 
 		using var _ = FetchTemporaryTexture(out var workerTexture, size);
 		Ensure.AreEqual(size, workerTexture.size);
@@ -175,30 +180,57 @@ public interface ICompositeContext
 		}
 	}
 
+	/// <summary>
+	/// Gets a temporary texture of the same size as <see cref="RenderSize"/>.
+	/// </summary>
+	/// <remarks>Used to implement <see cref="FetchTemporaryTexture(out ArrayGrid{RGB128})"/>.</remarks>
+	public ArrayGrid<RGB128> RetrieveTemporaryTexture();
+
+	/// <summary>
+	/// Releases a temporary texture returned by <see cref="RetrieveTemporaryTexture"/>.
+	/// </summary>
+	/// <remarks>Used to implement <see cref="FetchTemporaryTexture(out ArrayGrid{RGB128})"/>.</remarks>
+	public void ReleaseTemporaryTexture(ArrayGrid<RGB128> texture);
+
+	/// <summary>
+	/// Fetches a temporary <see cref="ArrayGrid{T}"/> buffer of the same size as <see cref="RenderSize"/>.
+	/// Returns a handle to that buffer to be used with the `using` syntax to release the memory when done.
+	/// </summary>
+	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="texture"/>.</remarks>
+	public sealed PoolReleaseHandle FetchTemporaryTexture(out ArrayGrid<RGB128> texture)
+	{
+		texture = RetrieveTemporaryTexture();
+		return new PoolReleaseHandle(this, texture);
+	}
+
+	/// <summary>
+	/// Fetches a temporary <see cref="SettableGrid{T}"/> buffer of the same size as <paramref name="size"/>.
+	/// Returns a handle to that buffer to be used with the `using` syntax to release the memory when done.
+	/// </summary>
+	/// <remarks>This method does not make any guarantee to the initial content of the <paramref name="texture"/>.</remarks>
+	public sealed PoolReleaseHandle FetchTemporaryTexture(out SettableGrid<RGB128> texture, Int2 size)
+	{
+		PoolReleaseHandle handle = FetchTemporaryTexture(out ArrayGrid<RGB128> fetched);
+		texture = size == fetched.size ? fetched : fetched.Crop(Int2.Zero, size);
+
+		return handle;
+	}
+
 	public delegate void Pass2D(Int2 position);
 	public delegate void Pass1D(uint position);
 
 	public readonly struct PoolReleaseHandle : IDisposable
 	{
-		internal PoolReleaseHandle(List<ArrayGrid<RGB128>> pool, ArrayGrid<RGB128> buffer)
+		internal PoolReleaseHandle(ICompositeContext context, ArrayGrid<RGB128> texture)
 		{
-			this.pool = pool;
-			this.buffer = buffer;
+			this.texture = texture;
+			this.context = context;
 		}
 
-		readonly List<ArrayGrid<RGB128>> pool;
-		readonly ArrayGrid<RGB128> buffer;
+		readonly ICompositeContext context;
+		readonly ArrayGrid<RGB128> texture;
 
-		const int TexturePoolMaxCount = 8;
-
-		void IDisposable.Dispose()
-		{
-			lock (pool)
-			{
-				Ensure.IsFalse(pool.Contains(buffer));
-				if (pool.Count < TexturePoolMaxCount) pool.Add(buffer);
-			}
-		}
+		void IDisposable.Dispose() => context.ReleaseTemporaryTexture(texture);
 	}
 
 	sealed class TextureNotFoundException : ICompositeLayer.CompositeException
