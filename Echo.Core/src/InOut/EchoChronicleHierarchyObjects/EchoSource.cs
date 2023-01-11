@@ -1,25 +1,26 @@
 ﻿using System;
 using System.IO;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.EchoChronicleHierarchyObjects;
 
-public sealed partial class EchoChronicleHierarchyObjects
+public sealed class EchoSource
 {
-	public EchoChronicleHierarchyObjects(string path)
-	{
-		directory = Path.GetDirectoryName(path);
-		typeMap = TypeMap.Instance;
+	public EchoSource(Stream stream) : this(stream, Environment.CurrentDirectory) { }
 
-		using SegmentReader reader = new(File.OpenRead(path));
+	public EchoSource(string path) : this(File.OpenRead(path), Path.GetDirectoryName(path)) { }
+
+	public EchoSource(Stream stream, string currentDirectory)
+	{
+		this.currentDirectory = currentDirectory;
+		using SegmentReader reader = new(stream);
 
 		root = RootNode.Create(reader);
 		Length = root.Children.Length;
 	}
 
-	readonly string directory;
-	readonly TypeMap typeMap;
-	readonly RootNode root;
+	public readonly string currentDirectory;
 
+	readonly RootNode root;
 	public int Length { get; }
 
 	public Entry this[int index]
@@ -78,22 +79,20 @@ public sealed partial class EchoChronicleHierarchyObjects
 		return null;
 	}
 
-	static bool EqualsSingle(ReadOnlySpan<char> span, char target) => span.Length == 1 && span[0] == target;
-
 	public readonly ref struct Entry
 	{
-		internal Entry(EchoChronicleHierarchyObjects objects, int index)
+		internal Entry(EchoSource objects, int index)
 		{
 			this.objects = objects;
 			identifiedNode = objects.root.Children[index];
 		}
 
-		readonly EchoChronicleHierarchyObjects objects;
+		readonly EchoSource objects;
 		readonly Identified<TypedNode> identifiedNode;
 
 		public string Identifier => identifiedNode.identifier;
 
-		public Type Type => identifiedNode.node.GetType(objects);
+		public Type Type => identifiedNode.node.GetConstructType();
 
 		public T Construct<T>() where T : class
 		{

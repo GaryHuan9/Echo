@@ -78,11 +78,12 @@
 	.EvaluationProfiles = [ link path_clear link albedo link normal_depth ]
 	.CompositionLayers = 
 	[
+		new TexturesCopy { .TargetLayers = [ "path" ] .NewLabels = [ "main" ] }
 		new OidnDenoise
 		new AutoExposure
-		new Bloom
 		new Vignette
+		new Bloom
 		new ToneMapper
-#		new Watermark
+		new Watermark
 	]
 }

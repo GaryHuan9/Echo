@@ -1,5 +1,6 @@
 ﻿using Echo.Core.Common.Compute;
 using Echo.Core.InOut;
+using Echo.Core.InOut.EchoChronicleHierarchyObjects;
 using Echo.Core.Processes;
 using Echo.Terminal.Application;
 using Echo.Terminal.Application.Report;
@@ -39,7 +40,7 @@ public class EchoTI : RootTI
 	{
 		base.ProcessArguments(arguments);
 
-		var objects = new EchoChronicleHierarchyObjects("ext/Scenes/SingleBunny/bunny.echo");
+		var objects = new EchoSource("ext/Scenes/SingleBunny/bunny.echo");
 		var profile = objects.ConstructFirst<RenderProfile>();
 
 		profile.ScheduleTo(device);
