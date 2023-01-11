@@ -35,11 +35,21 @@ public interface ICompositeContext
 		TryGetTexture(label, out SettableGrid<T> texture) ? texture :
 			throw new TextureNotFoundException(label, true, typeof(T));
 
-	/// <inheritdoc cref="RenderTexture.TryGetTexture{T, U}"/>
-	public bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T>;
+	/// <inheritdoc cref="RenderTexture.TryGetLayer{T,U}"/>
+	public bool TryGetTexture<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
+															   where U : TextureGrid<T>;
 
-	/// <inheritdoc cref="RenderTexture.TryGetTexture{T, U}"/>
-	public bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T>;
+	/// <inheritdoc cref="RenderTexture.TryGetLayer{T,U}"/>
+	public sealed bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T> =>
+		TryGetTexture<T, TextureGrid<T>>(label, out texture);
+
+	/// <inheritdoc cref="RenderTexture.TryGetLayer{T,U}"/>
+	public sealed bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T> =>
+		TryGetTexture<T, SettableGrid<T>>(label, out texture);
+
+
+	/// <inheritdoc cref="RenderTexture.TryAddLayer"/>
+	public bool TryAddTexture(string label, Texture texture);
 
 	/// <summary>
 	/// Runs a <see cref="Pass2D"/> on every position within <paramref name="size"/>.
@@ -233,7 +243,7 @@ public interface ICompositeContext
 		void IDisposable.Dispose() => context.ReleaseTemporaryTexture(texture);
 	}
 
-	sealed class TextureNotFoundException : ICompositeLayer.CompositeException
+	sealed class TextureNotFoundException : CompositeException
 	{
 		public TextureNotFoundException(string label, bool write, Type type) : base(GetMessage(label, write, type)) { }
 

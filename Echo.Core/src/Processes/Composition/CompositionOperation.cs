@@ -6,6 +6,7 @@ using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
+using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
@@ -57,7 +58,7 @@ public sealed class CompositionOperation : AsyncOperation
 		for (int i = 0; i < layers.Length; i++)
 		{
 			try { await layers[i].ExecuteAsync(context); }
-			catch (ICompositeLayer.CompositeException exception)
+			catch (CompositeException exception)
 			{
 				Volatile.Write(ref _errorMessages[i], exception.Message);
 			}
@@ -102,12 +103,12 @@ public sealed class CompositionOperation : AsyncOperation
 		public Int2 RenderSize => renderTexture.size;
 
 		/// <inheritdoc/>
-		public bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T> =>
-			renderTexture.TryGetTexture<T, TextureGrid<T>>(label, out texture);
+		public bool TryGetTexture<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
+																   where U : TextureGrid<T> =>
+			renderTexture.TryGetLayer<T, U>(label, out layer);
 
 		/// <inheritdoc/>
-		public bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T> =>
-			renderTexture.TryGetTexture<T, SettableGrid<T>>(label, out texture);
+		public bool TryAddTexture(string label, Texture texture) => renderTexture.TryAddLayer(label, texture);
 
 		/// <inheritdoc/>
 		public ComputeTask RunAsync(ICompositeContext.Pass2D pass, Int2 size)

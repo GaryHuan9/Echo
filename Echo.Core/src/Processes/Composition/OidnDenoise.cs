@@ -57,7 +57,7 @@ public record OidnDenoise : ICompositeLayer
 			Denoise(size, colorBuffer, albedoBuffer, normalBuffer);
 			await CopyFromBuffer(colorBuffer, sourceTexture);
 		}
-		catch (DllNotFoundException) { throw new OidnException("Precompiled Oidn binaries not found."); }
+		catch (DllNotFoundException) { throw new CompositeException("Precompiled Oidn binaries not found."); }
 
 		async ComputeTask<float[]> CopyToBuffer<T>(TextureGrid<T> sourceTexture) where T : unmanaged, IColor<T>
 		{
@@ -162,7 +162,7 @@ public record OidnDenoise : ICompositeLayer
 		public void Dispose() => oidnReleaseDevice(this);
 
 		[DoesNotReturn]
-		static void ProcessError(IntPtr userPtr, OidnError code, string message) => throw new OidnException($"{nameof(OidnDenoise)} error: {message} ({code}).");
+		static void ProcessError(IntPtr userPtr, OidnError code, string message) => throw new CompositeException($"Oidn error: {message} ({code}).");
 
 		[DllImport(DllPath)]
 		static extern OidnDevice oidnNewDevice(int type);
@@ -272,10 +272,5 @@ public record OidnDenoise : ICompositeLayer
 		OutOfMemory = 4,
 		UnsupportedHardware = 5,
 		Cancelled = 6
-	}
-
-	sealed class OidnException : ICompositeLayer.CompositeException
-	{
-		public OidnException(string message) : base(message) { }
 	}
 }

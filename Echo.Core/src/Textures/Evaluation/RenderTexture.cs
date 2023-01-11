@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Numerics;
 using System.Threading;
 using Echo.Core.Common;
-using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
@@ -49,10 +48,10 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <param name="label">The label of the layer to find.</param>
 	/// <param name="layer">Outputs the layer if found.</param>
 	/// <returns>Whether a matching texture is found.</returns>
-	public bool TryGetTexture<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
-															   where U : TextureGrid<T>
+	public bool TryGetLayer<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
+															 where U : TextureGrid<T>
 	{
-		if (TryGetTexture(label, out Texture candidate))
+		if (TryGetLayer(label, out Texture candidate))
 		{
 			layer = candidate as U;
 			return layer != null;
@@ -62,10 +61,10 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 		return false;
 	}
 
-	/// <inheritdoc cref="TryGetTexture{T, U}"/>
+	/// <inheritdoc cref="TryGetLayer{T,U}"/>
 	/// <remarks>Since the second parameter of this method outputs a <see cref="Texture"/>,
 	/// this method will always find a <see cref="Texture"/> if its label exist.</remarks>
-	public bool TryGetTexture(string label, out Texture layer)
+	public bool TryGetLayer(string label, out Texture layer)
 	{
 		layer = layers.TryGetValue(label);
 		return layer != null;
@@ -77,16 +76,16 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
 	/// <returns>The new <see cref="EvaluationLayer{T}"/> that was created.</returns>
+	/// <exception cref="ArgumentException">Thrown if a layer named <paramref name="label"/> already exists.</exception>
 	public EvaluationLayer<T> CreateLayer<T>(string label) where T : unmanaged, IColor<T>
 	{
 		if (!layers.ContainsKey(label))
 		{
 			var layer = new EvaluationLayer<T>(size, tileSize);
-			Interlocked.CompareExchange(ref mainTexture, layer, null);
-			if (layers.TryAdd(label, layer)) return layer;
+			if (TryAddLayer(label, layer)) return layer;
 		}
 
-		throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
+		throw new ArgumentException($"A layer named '{label}' already exists.");
 	}
 
 	/// <summary>
@@ -95,9 +94,11 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <param name="label">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
 	/// <param name="layer">The layer to add.</param>
-	public void AddLayer(string label, Texture layer)
+	/// <returns>Whether a new layer was added.</returns>
+	public bool TryAddLayer(string label, Texture layer)
 	{
-		if (layers.TryAdd(label, layer)) Interlocked.CompareExchange(ref mainTexture, layer, null);
-		else throw ExceptionHelper.Invalid(nameof(label), label, InvalidType.foundDuplicate);
+		if (!layers.TryAdd(label, layer)) return false;
+		Interlocked.CompareExchange(ref mainTexture, layer, null);
+		return true;
 	}
 }
