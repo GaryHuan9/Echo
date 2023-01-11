@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -61,7 +60,7 @@ public abstract class TextureGrid : Texture
 	/// <summary>
 	/// If the <see cref="size"/> of this <see cref="TextureGrid"/> is a power of two on any axis, then the
 	/// respective component of this field will be that power, otherwise the component will be a negative number.
-	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where N is a positive number.
+	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where -N is a positive number.
 	/// </summary>
 	public readonly Int2 power;
 
@@ -121,12 +120,6 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// Performs a <see cref="Save"/> operation asynchronously.
-	/// </summary>
-	/// <see cref="Save"/>
-	public Task SaveAsync(string path, Serializer serializer = null) => Task.Run(() => Save(path, serializer));
-
-	/// <summary>
 	/// Saves this <see cref="TextureGrid"/> to a file.
 	/// </summary>
 	/// <param name="path">The destination <see cref="string"/> path to use.</param>
@@ -159,30 +152,10 @@ public abstract class TextureGrid : Texture
 	public Float2 ToUV(Int2 position) => (position + Float2.Half) * sizeR;
 
 	/// <summary>
-	/// Returns a normalized value (between 0 to 1) that is the squared distance to the center.
-	/// </summary>
-	/// <param name="position">The <see cref="Int2"/> position to measure from.</param>
-	/// <returns>The normalized squared distance</returns>
-	/// <remarks>This distance is independent from the <see cref="aspects"/>.</remarks>
-	public float SquaredCenterDistance(Int2 position)
-	{
-		Float2 uv = ToUV(position) - Float2.Half;
-		return uv.SquaredMagnitude * 2f;
-	}
-
-	/// <summary>
 	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid"/>.
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
-	[Conditional("DEBUG")]
 	protected void AssertValidPosition(Int2 position) => AssertValidPosition(position, size);
-
-	/// <summary>
-	/// Performs a <see cref="Load{T}"/> operation asynchronously.
-	/// </summary>
-	/// <see cref="Load{T}"/>
-	public static Task<SettableGrid<T>> LoadAsync<T>(string path, Serializer serializer = null)
-		where T : unmanaged, IColor<T> => Task.Run(() => Load<T>(path, serializer));
 
 	/// <summary>
 	/// Loads a <see cref="SettableGrid{T}"/> from a file.

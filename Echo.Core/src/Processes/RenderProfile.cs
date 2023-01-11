@@ -3,6 +3,7 @@ using System.Numerics;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes.Composition;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Scenic.Hierarchies;
@@ -13,21 +14,25 @@ namespace Echo.Core.Processes;
 /// <summary>
 /// A collection of parameters to configure and define a full render sequence.
 /// </summary>
+[EchoSourceUsable]
 public record RenderProfile
 {
 	/// <summary>
 	/// The <see cref="Scene"/> to render.
 	/// </summary>
+	[EchoSourceUsable]
 	public Scene Scene { get; init; }
 
 	/// <summary>
 	/// The size of the destination <see cref="RenderTexture"/> to render to. 
 	/// </summary>
+	[EchoSourceUsable]
 	public Int2 Resolution { get; init; } = new(960, 540);
 
 	/// <summary>
 	/// The size of each rendering tile. Each component must be a power of two.
 	/// </summary>
+	[EchoSourceUsable]
 	public Int2 TileSize { get; init; } = new(16, 16);
 
 	/// <summary>
@@ -36,6 +41,7 @@ public record RenderProfile
 	/// <remarks>
 	/// The chronological order of the evaluations is the same as their order in this list. This list must not be empty.
 	/// </remarks>
+	[EchoSourceUsable]
 	public ImmutableArray<EvaluationProfile> EvaluationProfiles { get; init; } = ImmutableArray.Create(new EvaluationProfile());
 
 	/// <summary>
@@ -44,6 +50,7 @@ public record RenderProfile
 	/// <remarks>
 	/// The chronological order of the processing steps is the same as their order in this list. This list can be empty.
 	/// </remarks>
+	[EchoSourceUsable]
 	public ImmutableArray<ICompositeLayer> CompositionLayers { get; init; } = ImmutableArray<ICompositeLayer>.Empty;
 
 	/// <summary>

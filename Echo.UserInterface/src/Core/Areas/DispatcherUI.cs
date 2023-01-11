@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.InOut.EchoChronicleHierarchyObjects;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
 using Echo.Core.Processes.Evaluation;
 using Echo.UserInterface.Backend;

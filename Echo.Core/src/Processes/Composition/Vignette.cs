@@ -2,21 +2,24 @@
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
+[EchoSourceUsable]
 public record Vignette : ICompositeLayer
 {
 	/// <summary>
 	/// The label of the layer to operate on.
 	/// </summary>
+	[EchoSourceUsable]
 	public string TargetLayer { get; init; } = "main";
 
 	/// <summary>
 	/// The strength of the darkening near the edge of the image.
 	/// </summary>
+	[EchoSourceUsable]
 	public float Intensity { get; init; } = 0.25f;
 
 	public ComputeTask ExecuteAsync(ICompositeContext context)

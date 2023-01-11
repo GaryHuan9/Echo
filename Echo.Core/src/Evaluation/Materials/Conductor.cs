@@ -5,15 +5,18 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
+[EchoSourceUsable]
 public sealed class Conductor : Material
 {
 	NotNull<Texture> _roughness = Pure.black;
 
+	[EchoSourceUsable]
 	public Texture Roughness
 	{
 		get => _roughness;
@@ -26,17 +29,20 @@ public sealed class Conductor : Material
 	/// <remarks>If this is true, <see cref="MainColor"/> and <see cref="EdgeColor"/> are used by
 	/// this <see cref="Conductor"/> while <see cref="RefractiveIndex"/> and <see cref="Extinction"/>
 	/// are entirely ignored. If this property is false, the opposite behavior will occur.</remarks>
+	[EchoSourceUsable]
 	public bool Artistic { get; set; } = true;
 
 	NotNull<Texture> _mainColor = Pure.white;
 	NotNull<Texture> _edgeColor = Pure.white;
 
+	[EchoSourceUsable]
 	public Texture MainColor
 	{
 		get => _mainColor;
 		set => _mainColor = value;
 	}
 
+	[EchoSourceUsable]
 	public Texture EdgeColor
 	{
 		get => _edgeColor;
@@ -46,12 +52,14 @@ public sealed class Conductor : Material
 	NotNull<Texture> _refractiveIndex = Pure.white;
 	NotNull<Texture> _extinction = Pure.white;
 
+	[EchoSourceUsable]
 	public Texture RefractiveIndex
 	{
 		get => _refractiveIndex;
 		set => _refractiveIndex = value;
 	}
 
+	[EchoSourceUsable]
 	public Texture Extinction
 	{
 		get => _extinction;

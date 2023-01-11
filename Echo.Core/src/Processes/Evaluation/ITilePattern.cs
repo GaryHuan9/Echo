@@ -5,6 +5,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Enumeration;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Processes.Evaluation;
 
@@ -16,6 +17,7 @@ public interface ITilePattern
 	public Int2[] CreateSequence(Int2 size);
 }
 
+[EchoSourceUsable]
 public record OrderedPattern : ITilePattern
 {
 	public OrderedPattern(bool horizontal = true) => this.horizontal = horizontal;
@@ -28,6 +30,7 @@ public record OrderedPattern : ITilePattern
 		size.YX.Loop().Select(position => position.YX)).ToArray();
 }
 
+[EchoSourceUsable]
 public record ScrambledPattern : OrderedPattern
 {
 	public override Int2[] CreateSequence(Int2 size)
@@ -38,6 +41,7 @@ public record ScrambledPattern : OrderedPattern
 	}
 }
 
+[EchoSourceUsable]
 public record SpiralPattern : ITilePattern
 {
 	/// <inheritdoc/>
@@ -52,6 +56,7 @@ public record SpiralPattern : ITilePattern
 	}
 }
 
+[EchoSourceUsable]
 public record CheckerboardPattern : SpiralPattern
 {
 	public override Int2[] CreateSequence(Int2 size)
@@ -63,6 +68,7 @@ public record CheckerboardPattern : SpiralPattern
 	}
 }
 
+[EchoSourceUsable]
 public record HilbertCurvePattern : ITilePattern
 {
 	/// <inheritdoc/>

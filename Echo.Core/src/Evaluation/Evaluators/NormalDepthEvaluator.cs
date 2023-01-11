@@ -3,11 +3,13 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
+[EchoSourceUsable]
 public record NormalDepthEvaluator : Evaluator
 {
 	public override IEvaluationLayer CreateOrClearLayer(RenderTexture texture, string label) => CreateOrClearLayer<NormalDepth128>(texture, label);

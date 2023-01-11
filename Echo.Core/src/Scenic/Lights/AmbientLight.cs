@@ -5,6 +5,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
@@ -15,6 +16,7 @@ namespace Echo.Core.Scenic.Lights;
 /// <summary>
 /// A directional <see cref="InfiniteLight"/> that surrounds the entirety of a <see cref="Scene"/>.
 /// </summary>
+[EchoSourceUsable]
 public class AmbientLight : InfiniteLight
 {
 	NotNull<object> _texture = Pure.white;
@@ -23,6 +25,7 @@ public class AmbientLight : InfiniteLight
 	/// The <see cref="IDirectionalTexture"/> applied to this <see cref="AmbientLight"/>.
 	/// </summary>
 	/// <remarks>The defaults is <see cref="Pure.white"/>.</remarks>
+	[EchoSourceUsable]
 	public IDirectionalTexture Texture
 	{
 		get => (IDirectionalTexture)_texture.Value;

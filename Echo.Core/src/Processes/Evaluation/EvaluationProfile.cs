@@ -1,6 +1,7 @@
 ﻿using Echo.Core.Common.Diagnostics;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Processes.Evaluation;
@@ -8,16 +9,19 @@ namespace Echo.Core.Processes.Evaluation;
 /// <summary>
 /// A collection of parameters to configure and define an <see cref="EvaluationOperation"/>.
 /// </summary>
+[EchoSourceUsable]
 public record EvaluationProfile
 {
 	/// <summary>
 	/// The fundamental evaluation method used.
 	/// </summary>
+	[EchoSourceUsable]
 	public Evaluator Evaluator { get; init; } = new PathTracedEvaluator();
 
 	/// <summary>
 	/// The label of the layer in the <see cref="RenderTexture"/> to write to.
 	/// </summary>
+	[EchoSourceUsable]
 	public string TargetLayer { get; init; } = "path";
 
 	/// <summary>
@@ -28,26 +32,31 @@ public record EvaluationProfile
 	/// This instance of the <see cref="ContinuousDistribution"/> should not be directly used; it is to only provide
 	/// a template to clone new distributions for each worker using the C# record `with` syntax.
 	/// </remarks>
+	[EchoSourceUsable]
 	public ContinuousDistribution Distribution { get; init; } = new StratifiedDistribution();
 
 	/// <summary>
 	/// The minimum number of epochs that must be performed before adaptive sampling begins.
 	/// </summary>
+	[EchoSourceUsable]
 	public int MinEpoch { get; init; } = 1;
 
 	/// <summary>
 	/// The maximum possible number of epochs that can be performed.
 	/// </summary>
+	[EchoSourceUsable]
 	public int MaxEpoch { get; init; } = 20;
 
 	/// <summary>
 	/// Evaluation is completed after noise is under this threshold.
 	/// </summary>
+	[EchoSourceUsable]
 	public float NoiseThreshold { get; init; } = 0.03f;
 
 	/// <summary>
 	/// The <see cref="ITilePattern"/> used to determine the sequence of the tiles.
 	/// </summary>
+	[EchoSourceUsable]
 	public ITilePattern Pattern { get; init; } = new HilbertCurvePattern();
 
 	/// <summary>

@@ -11,7 +11,7 @@ using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
-namespace Echo.Core.InOut.EchoChronicleHierarchyObjects;
+namespace Echo.Core.InOut.EchoDescription;
 
 using CharSpan = ReadOnlySpan<char>;
 
@@ -121,10 +121,12 @@ sealed class ParametersNode : Node
 	{
 		foreach (T method in methods)
 		{
-			if (method.GetCustomAttribute<EchoSourceMethodAttribute>() == null) continue;
-
 			ParameterInfo[] parameters = method.GetParameters();
-			if (parameters.Length < arguments.Count) goto next;
+			if (parameters.Length < arguments.Count) continue;
+
+			bool needAttribute = !method.IsConstructor || parameters.Length > 0; //Parameterless constructor are always included
+			// if (parameters.Length == 1 && parameters[0].ParameterType.IsAssignableFrom())
+			if (needAttribute && method.GetCustomAttribute<EchoSourceUsableAttribute>() == null) continue;
 
 			for (int i = 0; i < parameters.Length; i++)
 			{
@@ -332,7 +334,7 @@ sealed class TypedNode : ArgumentNode
 				{
 					//Property assignment
 					PropertyInfo property = type.GetProperty(identifier);
-					if (property?.GetCustomAttribute<EchoSourcePropertyAttribute>() == null) property = null;
+					if (property?.GetCustomAttribute<EchoSourceUsableAttribute>() == null) property = null;
 
 					MethodInfo setter = property?.GetSetMethod();
 

@@ -4,6 +4,7 @@ using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
@@ -13,16 +14,19 @@ namespace Echo.Core.Processes.Composition;
 /// <summary>
 /// Stamps the <see cref="Echo"/> logo on the bottom right corner of the image.
 /// </summary>
+[EchoSourceUsable]
 public record Watermark : ICompositeLayer
 {
 	/// <summary>
 	/// The label of the layer to operate on.
 	/// </summary>
+	[EchoSourceUsable]
 	public string TargetLayer { get; init; } = "main";
 
 	/// <summary>
 	/// The size of the watermark.
 	/// </summary>
+	[EchoSourceUsable]
 	public float Scale { get; init; } = 0.25f;
 
 	const float MarginScale = 0.06f;

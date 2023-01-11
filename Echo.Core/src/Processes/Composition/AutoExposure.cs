@@ -5,37 +5,44 @@ using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
+[EchoSourceUsable]
 public record AutoExposure : ICompositeLayer
 {
 	/// <summary>
 	/// The label of the layer to operate on.
 	/// </summary>
+	[EchoSourceUsable]
 	public string TargetLayer { get; init; } = "main";
 
 	/// <summary>
 	/// Additional weight given to center pixels.
 	/// </summary>
 	/// <remarks>Zero means all pixels will be weighted equally.</remarks>
+	[EchoSourceUsable]
 	public float CenterWeight { get; init; } = 1f;
 
 	/// <summary>
 	/// The normalized (0 to 1) percent of darker pixels to discard when calculating the exposure.
 	/// </summary>
+	[EchoSourceUsable]
 	public float PercentLowerBound { get; init; } = 0.55f;
 
 	/// <summary>
 	/// The normalized (0 to 1) percent of brighter pixels to discard when calculating the exposure.
 	/// </summary>
+	[EchoSourceUsable]
 	public float PercentUpperBound { get; init; } = 0.03f;
 
 	/// <summary>
 	/// The luminance that the 'average' should align to.
 	/// </summary>
+	[EchoSourceUsable]
 	public float AverageLuminance { get; init; } = 0.5f;
 
 	const int BinCount = 128;

@@ -8,6 +8,7 @@ using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
@@ -18,18 +19,21 @@ namespace Echo.Core.Evaluation.Evaluators;
 /// A unidirectional <see cref="Evaluator"/> able to simulate complex
 /// light effects such as global illumination and ambient occlusion.
 /// </summary>
+[EchoSourceUsable]
 public record PathTracedEvaluator : Evaluator
 {
 	/// <summary>
 	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
 	/// If such occurrence appears, the sample becomes biased and this property should be increased.
 	/// </summary>
+	[EchoSourceUsable]
 	public int BounceLimit { get; init; } = 128;
 
 	/// <summary>
 	/// The survivability of a path during unbiased path termination. As this value goes up, the amount of variance decreases, and 
 	/// the time we spend on each path increases. This value should be relatively high for interior scenes while low for outdoors.
 	/// </summary>
+	[EchoSourceUsable]
 	public float Survivability { get; init; } = 2.5f;
 
 	[SkipLocalsInit]
