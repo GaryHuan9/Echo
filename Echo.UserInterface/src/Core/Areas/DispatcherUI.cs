@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.InOut;
+using Echo.Core.InOut.EchoChronicleHierarchyObjects;
 using Echo.Core.Processes;
 using Echo.Core.Processes.Evaluation;
 using Echo.UserInterface.Backend;
@@ -22,7 +22,7 @@ public class DispatcherUI : AreaUI
 	string filePath = "ext/Scenes/";
 	readonly List<string> pathCandidates = new();
 
-	EchoChronicleHierarchyObjects objects;
+	EchoSource objects;
 	readonly List<string> profileLabels = new();
 	int profileIndex;
 
@@ -154,14 +154,14 @@ public class DispatcherUI : AreaUI
 		scheduledRender?.Abort();
 		scheduledRender = profile.ScheduleTo(device);
 
-		static T ConstructFirst<T>(EchoChronicleHierarchyObjects objects, string label) where T : class
+		static T ConstructFirst<T>(EchoSource objects, string label) where T : class
 		{
 			ReadOnlySpan<char> match = label.AsSpan(0, label.LastIndexOf('[')).Trim();
 			Ensure.IsFalse(match.IsEmpty);
 
 			for (int i = 0; i < objects.Length; i++)
 			{
-				EchoChronicleHierarchyObjects.Entry entry = objects[i];
+				EchoSource.Entry entry = objects[i];
 				if (!match.SequenceEqual(entry.Identifier)) continue;
 
 				T constructed = entry.Construct<T>();
@@ -173,7 +173,7 @@ public class DispatcherUI : AreaUI
 		}
 	}
 
-	static EchoChronicleHierarchyObjects ReadFile(string path)
+	static EchoSource ReadFile(string path)
 	{
 		if (!File.Exists(path))
 		{
@@ -185,7 +185,7 @@ public class DispatcherUI : AreaUI
 
 		try
 		{
-			return new EchoChronicleHierarchyObjects(path);
+			return new EchoSource(path);
 		}
 		catch (FormatException exception)
 		{
@@ -194,13 +194,13 @@ public class DispatcherUI : AreaUI
 		}
 	}
 
-	static void PopulateLabels<T>(EchoChronicleHierarchyObjects objects, List<string> labels)
+	static void PopulateLabels<T>(EchoSource objects, List<string> labels)
 	{
 		labels.Clear();
 
 		for (int i = 0; i < objects.Length; i++)
 		{
-			EchoChronicleHierarchyObjects.Entry entry = objects[i];
+			EchoSource.Entry entry = objects[i];
 			if (!entry.Type.IsAssignableTo(typeof(T))) continue;
 			labels.Add($"{entry.Identifier} [{entry.Type.Name}]");
 		}
