@@ -13,13 +13,13 @@ public interface ICompositeLayer
 	/// </summary>
 	/// <exception cref="CompositeException">Can be throw if an error occurs.</exception>
 	public ComputeTask ExecuteAsync(ICompositeContext context);
+}
 
-	/// <summary>
-	/// <see cref="Exception"/> thrown when a <see cref="ICompositeLayer"/> cannot complete its task.
-	/// </summary>
-	/// <remarks>Caught by <see cref="CompositionOperation"/> as error messages.</remarks>
-	public class CompositeException : Exception
-	{
-		public CompositeException(string message) : base(message) { }
-	}
+/// <summary>
+/// <see cref="Exception"/> thrown when a <see cref="ICompositeLayer"/> cannot complete its task.
+/// </summary>
+/// <remarks>Caught by <see cref="CompositionOperation"/> as error messages.</remarks>
+public class CompositeException : Exception
+{
+	public CompositeException(string message) : base(message) { }
 }

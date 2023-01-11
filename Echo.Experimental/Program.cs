@@ -36,12 +36,13 @@ public class Program
 		SettableGrid<RGB128> main = TextureGrid.Load<RGB128>("render_path.fpi");
 
 		RenderTexture renderTexture = new RenderTexture(main.size);
-		renderTexture.AddLayer("main", main);
-		renderTexture.AddLayer("albedo", TextureGrid.Load<RGB128>("render_albedo.fpi"));
-		renderTexture.AddLayer("normal_depth", TextureGrid.Load<NormalDepth128>("render_normal_depth.fpi"));
+		renderTexture.TryAddLayer("path", main);
+		renderTexture.TryAddLayer("albedo", TextureGrid.Load<RGB128>("render_albedo.fpi"));
+		renderTexture.TryAddLayer("normal_depth", TextureGrid.Load<NormalDepth128>("render_normal_depth.fpi"));
 
 		var builder = ImmutableArray.CreateBuilder<ICompositeLayer>();
 
+		builder.Add(new TexturesCopy { TargetLayers = ImmutableArray.Create("path"), NewLabels = ImmutableArray.Create("main") });
 		builder.Add(new OidnDenoise());
 		builder.Add(new AutoExposure());
 		builder.Add(new Vignette());
@@ -52,7 +53,8 @@ public class Program
 		var operation = (CompositionOperation)device.Schedule(new CompositionOperation.Factory(renderTexture, builder.ToImmutable()));
 
 		device.Operations.Await(operation);
-		renderTexture.Save("render_composite.png");
+		renderTexture.TryGetLayer<RGB128, SettableGrid<RGB128>>("main", out SettableGrid<RGB128> result);
+		result.Save("render_composite.png");
 
 		DebugHelper.Log(operation.ErrorMessages.ToArray());
 

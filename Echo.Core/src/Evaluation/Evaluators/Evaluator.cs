@@ -43,7 +43,7 @@ public abstract record Evaluator
 	/// <returns>The <see cref="IEvaluationLayer"/> that was found or created.</returns>
 	protected static IEvaluationLayer CreateOrClearLayer<T>(RenderTexture texture, string label) where T : unmanaged, IColor<T>
 	{
-		bool found = texture.TryGetTexture<T, EvaluationLayer<T>>(label, out var layer);
+		bool found = texture.TryGetLayer<T, EvaluationLayer<T>>(label, out var layer);
 		if (!found) return texture.CreateLayer<T>(label);
 
 		layer.Clear();
