@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
 
-namespace Echo.Core.InOut.EchoChronicleHierarchyObjects;
+namespace Echo.Core.InOut.EchoDescription;
 
 using CharSpan = ReadOnlySpan<char>;
 
@@ -294,9 +293,9 @@ static class TypeMap
 		foreach (Type type in typeof(TypeMap).Assembly.GetExportedTypes())
 		{
 			if (type.IsValueType || type.IsAbstract || type.IsNotPublic) continue;
-			if (type.GetCustomAttribute<EchoSourceTypeAttribute>() == null) continue;
+			if (type.GetCustomAttribute<EchoSourceUsableAttribute>() == null) continue;
 
-			if (!map.TryAdd(type.Name, type)) Console.Error.WriteLine($"Multiple types with {nameof(EchoSourceTypeAttribute)} have the same name '{type.Name}'.");
+			if (!map.TryAdd(type.Name, type)) Console.Error.WriteLine($"Multiple types with {nameof(EchoSourceUsableAttribute)} have the same name '{type.Name}'.");
 		}
 	}
 

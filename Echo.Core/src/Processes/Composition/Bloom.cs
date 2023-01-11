@@ -1,25 +1,30 @@
 ﻿using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
+[EchoSourceUsable]
 public record Bloom : ICompositeLayer
 {
 	/// <summary>
 	/// The label of the layer to operate on.
 	/// </summary>
+	[EchoSourceUsable]
 	public string TargetLayer { get; init; } = "main";
 
 	/// <summary>
 	/// The amount of excess luminance distributed to neighboring pixels. 
 	/// </summary>
+	[EchoSourceUsable]
 	public float Intensity { get; set; } = 0.25f;
 
 	/// <summary>
 	/// Pixels with a luminance higher than this value will cause bloom.
 	/// </summary>
+	[EchoSourceUsable]
 	public float Threshold { get; set; } = 0.98f;
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)

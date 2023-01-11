@@ -8,6 +8,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 
@@ -16,6 +17,7 @@ namespace Echo.Core.Scenic.Geometries;
 /// <summary>
 /// A geometric uniform sphere.
 /// </summary>
+[EchoSourceUsable]
 public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 {
 	float _radius = 1f;
@@ -24,6 +26,7 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 	/// The radius of this <see cref="SphereEntity"/>.
 	/// </summary>
 	/// <exception cref="SceneException">Thrown if the provided value is negative.</exception>
+	[EchoSourceUsable]
 	public float Radius
 	{
 		get => _radius;

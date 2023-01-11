@@ -1,8 +1,14 @@
 ﻿using System;
 using System.IO;
 
-namespace Echo.Core.InOut.EchoChronicleHierarchyObjects;
+namespace Echo.Core.InOut.EchoDescription;
 
+/// <summary>
+/// A Echo Chronicle Hierarchy Objects (ECHO) source. Yes I am very smart.
+/// </summary>
+/// <remarks>
+/// All of the 'Echo' under this namespace (including the namespace name) refers to the acronym.
+/// </remarks>
 public sealed class EchoSource
 {
 	public EchoSource(Stream stream) : this(stream, Environment.CurrentDirectory) { }
@@ -18,6 +24,9 @@ public sealed class EchoSource
 		Length = root.Children.Length;
 	}
 
+	/// <summary>
+	/// The directory at which paths will be referenced from.
+	/// </summary>
 	public readonly string currentDirectory;
 
 	readonly RootNode root;

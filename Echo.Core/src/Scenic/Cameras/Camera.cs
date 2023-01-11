@@ -3,6 +3,7 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Cameras;
@@ -11,9 +12,11 @@ namespace Echo.Core.Scenic.Cameras;
 /// A sensor through which a <see cref="Scene"/> can be evaluated.
 /// </summary>
 /// <remarks>The origin of <see cref="Ray"/>s.</remarks>
+[EchoSourceUsable]
 public class Camera : Entity
 {
-	public Camera(float fieldOfView) => FieldOfView = fieldOfView;
+	[EchoSourceUsable]
+	public Camera(float fieldOfView = 60f) => FieldOfView = fieldOfView;
 
 	float fieldOfView;
 	float forwardLength;
@@ -21,6 +24,7 @@ public class Camera : Entity
 	/// <summary>
 	/// Horizontal field of view in degrees.
 	/// </summary>
+	[EchoSourceUsable]
 	public float FieldOfView
 	{
 		get => fieldOfView;

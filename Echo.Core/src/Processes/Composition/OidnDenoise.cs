@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
@@ -13,27 +14,32 @@ namespace Echo.Core.Processes.Composition;
 /// Denoiser using Intel's Open Image Denoise.
 /// https://www.openimagedenoise.org
 /// </summary>
+[EchoSourceUsable]
 public record OidnDenoise : ICompositeLayer
 {
 	/// <summary>
 	/// The label of the layer to operate on.
 	/// </summary>
+	[EchoSourceUsable]
 	public string TargetLayer { get; init; } = "main";
 
 	/// <summary>
 	/// The label of the clear albedo layer to read from.
 	/// </summary>
+	[EchoSourceUsable]
 	public string AlbedoLayer { get; init; } = "albedo";
 
 	/// <summary>
 	/// The label of the clear <see cref="NormalDepth128"/> layer to read from.
 	/// </summary>
+	[EchoSourceUsable]
 	public string NormalLayer { get; init; } = "normal_depth";
 
 	/// <summary>
 	/// Whether to denoise auxiliary input (the albedo and normal).
 	/// </summary>
 	/// <remarks>This can result in better denoising at the cost of longer execution times.</remarks>
+	[EchoSourceUsable]
 	public bool PrefilterAuxiliary { get; init; } = true;
 
 	const string DllPath = "OpenImageDenoise";

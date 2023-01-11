@@ -1,21 +1,25 @@
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 
+[EchoSourceUsable]
 public record ToneMapper : ICompositeLayer
 {
 	/// <summary>
 	/// The label of the layer to operate on.
 	/// </summary>
+	[EchoSourceUsable]
 	public string TargetLayer { get; init; } = "main";
 
 	/// <summary>
 	/// The mode to use.
 	/// </summary>
+	[EchoSourceUsable]
 	public ILuminanceAdjuster Mode { get; init; } = new BasicShoulder();
 
 	public ComputeTask ExecuteAsync(ICompositeContext context)
@@ -44,6 +48,7 @@ public record ToneMapper : ICompositeLayer
 /// The ACES filmic luminance curve for <see cref="ToneMapper"/>.
 /// Implementation based on https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
 /// </summary>
+[EchoSourceUsable]
 public record ACES : ToneMapper.ILuminanceAdjuster
 {
 	public float Adjust(float luminance)
@@ -59,6 +64,7 @@ public record ACES : ToneMapper.ILuminanceAdjuster
 /// A basic smooth shoulder luminance curve for <see cref="ToneMapper"/>.
 /// Implementation based on https://www.desmos.com/calculator/nngw01x7om
 /// </summary>
+[EchoSourceUsable]
 public record BasicShoulder : ToneMapper.ILuminanceAdjuster
 {
 	public float Smoothness { get; init; } = 0.4f;
@@ -77,6 +83,7 @@ public record BasicShoulder : ToneMapper.ILuminanceAdjuster
 /// Implementation based on Photographic Tone Reproduction for Digital Images [Reinhard et al. 2002].
 /// https://www.cs.utah.edu/docs/techreports/2002/pdf/UUCS-02-001.pdf
 /// </summary>
+[EchoSourceUsable]
 public class Reinhard : ToneMapper.ILuminanceAdjuster
 {
 	public Reinhard() => WhitePoint = 1.5f;

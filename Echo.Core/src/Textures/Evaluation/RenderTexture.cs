@@ -13,6 +13,8 @@ namespace Echo.Core.Textures.Evaluation;
 /// A collection of layers of <see cref="TextureGrid{T}"/> used as a rendering source or destination.
 /// Allows for optional auxiliary evaluation layers (such as normal) to support later reconstruction.
 /// </summary>
+/// <remarks>The content of this texture will be <see cref="RGB128.Black"/> unless it contains a layer named
+/// 'main', then the content of that layer is forwarded through this <see cref="RenderTexture"/>.</remarks>
 public sealed class RenderTexture : TextureGrid<RGB128>
 {
 	public RenderTexture(Int2 size, int tileSize = 16) : this(size, (Int2)tileSize) { }
@@ -29,9 +31,12 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// </summary>
 	public readonly Int2 tileSize;
 
+	/// <summary>
+	/// The texture labeled 'main', null if there is none.
+	/// </summary>
 	Texture mainTexture;
 
-	readonly ConcurrentDictionary<string, Texture> layers = new(StringComparer.OrdinalIgnoreCase);
+	readonly ConcurrentDictionary<string, TextureGrid> layers = new(StringComparer.OrdinalIgnoreCase);
 
 	public override RGB128 this[Int2 position]
 	{
@@ -51,7 +56,7 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	public bool TryGetLayer<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
 															 where U : TextureGrid<T>
 	{
-		if (TryGetLayer(label, out Texture candidate))
+		if (TryGetLayer(label, out TextureGrid candidate))
 		{
 			layer = candidate as U;
 			return layer != null;
@@ -64,7 +69,7 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <inheritdoc cref="TryGetLayer{T,U}"/>
 	/// <remarks>Since the second parameter of this method outputs a <see cref="Texture"/>,
 	/// this method will always find a <see cref="Texture"/> if its label exist.</remarks>
-	public bool TryGetLayer(string label, out Texture layer)
+	public bool TryGetLayer(string label, out TextureGrid layer)
 	{
 		layer = layers.TryGetValue(label);
 		return layer != null;
@@ -95,10 +100,12 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// layer. This <see cref="string"/> is case insensitive.</param>
 	/// <param name="layer">The layer to add.</param>
 	/// <returns>Whether a new layer was added.</returns>
-	public bool TryAddLayer(string label, Texture layer)
+	public bool TryAddLayer(string label, TextureGrid layer)
 	{
+		if (layer.size != size) throw new ArgumentException($"Mismatched size '{layer.size}' with this {nameof(RenderTexture)}.", nameof(layer));
+
 		if (!layers.TryAdd(label, layer)) return false;
-		Interlocked.CompareExchange(ref mainTexture, layer, null);
+		if (label == "main") Volatile.Write(ref mainTexture, layer);
 		return true;
 	}
 }

@@ -4,11 +4,13 @@ using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
+[EchoSourceUsable]
 public record AlbedoEvaluator : Evaluator
 {
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)

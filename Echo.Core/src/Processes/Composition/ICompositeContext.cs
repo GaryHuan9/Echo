@@ -49,7 +49,7 @@ public interface ICompositeContext
 
 
 	/// <inheritdoc cref="RenderTexture.TryAddLayer"/>
-	public bool TryAddTexture(string label, Texture texture);
+	public bool TryAddTexture(string label, TextureGrid texture);
 
 	/// <summary>
 	/// Runs a <see cref="Pass2D"/> on every position within <paramref name="size"/>.
