@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Echo.Core.Common;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures;
@@ -189,42 +188,9 @@ sealed class LiteralNode : ArgumentNode
 		this.lineNumber = lineNumber;
 	}
 
-	static LiteralNode()
-	{
-		AddTryParser<bool>(bool.TryParse);
-		AddTryParser<int>(InvariantFormat.TryParse);
-		AddTryParser<float>(InvariantFormat.TryParse);
-		AddTryParser<Float2>(InvariantFormat.TryParse);
-		AddTryParser<Float3>(InvariantFormat.TryParse);
-		AddTryParser<Float4>(InvariantFormat.TryParse);
-		AddTryParser<Int2>(InvariantFormat.TryParse);
-		AddTryParser<Int3>(InvariantFormat.TryParse);
-		AddTryParser<Int4>(InvariantFormat.TryParse);
-		AddTryParser<RGBA128>(RGBA128.TryParse);
-		AddTryParser<RGB128>(RGBA128.TryParse);
-		AddPathTryParser<Texture>(path => TextureGrid.Load<RGB128>(path));
-		AddPathTryParser(path => new Mesh(path));
-		AddParser(span => span);
-
-		void AddTryParser<T>(TryParser<T> source) => parsers.Add(
-			typeof(T), (TryParser<object>)((CharSpan span, out object result) =>
-			{
-				bool success = source(span, out T original);
-				result = original;
-				return success;
-			})
-		);
-
-		void AddPathTryParser<T>(Func<string, T> source) => parsers.Add(typeof(T), (PathParser<object>)(path => source(Path.GetFullPath(path))));
-
-		void AddParser<T>(Parser<T> source) => parsers.Add(typeof(T), (Parser<object>)(span => source(span)));
-	}
-
 	readonly string content;
 	readonly int lineNumber;
 	object constructed;
-
-	static readonly Dictionary<Type, object> parsers = new();
 
 	public override Type GetConstructType() => null;
 
@@ -234,20 +200,20 @@ sealed class LiteralNode : ArgumentNode
 
 		bool success;
 
-		switch (parsers.TryGetValue(targetType))
+		switch (LiteralParser.TryGetParser(targetType))
 		{
-			case TryParser<object> parser:
+			case LiteralParser.TryParser<object> parser:
 			{
 				success = parser(content, out constructed);
 				break;
 			}
-			case PathParser<object> parser:
+			case LiteralParser.PathParser<object> parser:
 			{
 				constructed = parser(Path.Join(main.currentDirectory, content));
 				success = true;
 				break;
 			}
-			case Parser<object> parser:
+			case LiteralParser.Parser<object> parser:
 			{
 				constructed = parser(content);
 				success = true;
@@ -266,14 +232,6 @@ sealed class LiteralNode : ArgumentNode
 		int lineNumber = reader.CurrentLine;
 		return new LiteralNode(reader.ReadUntil('"'), lineNumber);
 	}
-
-	// ReSharper disable TypeParameterCanBeVariant
-
-	delegate bool TryParser<T>(CharSpan span, out T result);
-	delegate T PathParser<T>(string path);
-	delegate T Parser<T>(string span);
-
-	// ReSharper restore TypeParameterCanBeVariant
 }
 
 sealed class TypedNode : ArgumentNode

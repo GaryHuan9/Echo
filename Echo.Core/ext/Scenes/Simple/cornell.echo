@@ -37,24 +37,12 @@
 	.Add(new Camera("42") { .Position = "0 5 -18.025444" })
 }
 
-:debug = new EvaluationProfile
+:raw = new RenderProfile
 {
-	.Evaluator = new PathTracedEvaluator
-	.Distribution = new StratifiedDistribution { .Extend = "16" }
-	.Buffer = new RenderBuffer("512 512")
-	.Pattern = new HilbertCurvePattern
-	.NoiseThreshold = "0.05"
-	.MinEpoch = "1"
-	.MaxEpoch = "20"
+	.Scene = link scene
+	.Resolution = "512 512"
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .TargetLayer = "path" }  ]
 }
 
-:clear = new EvaluationProfile
-{
-	.Evaluator = new PathTracedEvaluator
-	.Distribution = new StratifiedDistribution { .Extend = "256" }
-	.Buffer = new RenderBuffer("1024 1024")
-	.Pattern = new HilbertCurvePattern
-	.NoiseThreshold = "0.0004"
-	.MinEpoch = "4"
-	.MaxEpoch = "5000"
-}
+:standard = new StandardPathTracedProfile(link scene) { .Resolution = "512 512" }
+:final = new StandardPathTracedProfile(link scene "100") { .Resolution = "1024 1024" }

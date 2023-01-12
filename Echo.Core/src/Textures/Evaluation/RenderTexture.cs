@@ -13,8 +13,7 @@ namespace Echo.Core.Textures.Evaluation;
 /// A collection of layers of <see cref="TextureGrid{T}"/> used as a rendering source or destination.
 /// Allows for optional auxiliary evaluation layers (such as normal) to support later reconstruction.
 /// </summary>
-/// <remarks>The content of this texture will be <see cref="RGB128.Black"/> unless it contains a layer named
-/// 'main', then the content of that layer is forwarded through this <see cref="RenderTexture"/>.</remarks>
+/// <remarks>The content of this texture will be forwarded from the first <see cref="TextureGrid"/> that was added, or a layer named 'main' if it exists.</remarks>
 public sealed class RenderTexture : TextureGrid<RGB128>
 {
 	public RenderTexture(Int2 size, int tileSize = 16) : this(size, (Int2)tileSize) { }
@@ -32,7 +31,7 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	public readonly Int2 tileSize;
 
 	/// <summary>
-	/// The texture labeled 'main', null if there is none.
+	/// The first texture that was added, or a layer named 'main'.
 	/// </summary>
 	Texture mainTexture;
 
@@ -42,8 +41,9 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	{
 		get
 		{
-			if (mainTexture == null) return RGB128.Black;
-			return mainTexture[ToUV(position)].As<RGB128>();
+			var main = mainTexture; //Non volatile read for better performance, probably won't be a problem
+			if (main == null) return RGB128.Black;
+			return main[ToUV(position)].As<RGB128>();
 		}
 	}
 
@@ -106,6 +106,8 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 
 		if (!layers.TryAdd(label, layer)) return false;
 		if (label == "main") Volatile.Write(ref mainTexture, layer);
+		else Interlocked.CompareExchange(ref mainTexture, layer, null);
+
 		return true;
 	}
 }

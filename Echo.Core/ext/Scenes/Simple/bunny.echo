@@ -41,49 +41,11 @@
 	.Add(new Camera("110") { .Position = "0 3 -6" .Rotation = "30 0 0" })
 }
 
-:path = new EvaluationProfile
-
-:path_clear = new EvaluationProfile
-{
-	.Distribution = new StratifiedDistribution { .Extend = "64" }
-	.MaxEpoch = "120"
-	.NoiseThreshold = "0.004"
-}
-
-:albedo = new EvaluationProfile
-{
-	.Evaluator = new AlbedoEvaluator
-	.TargetLayer = "albedo"
-	.Distribution = new StratifiedDistribution { .Extend = "64" }
-	.NoiseThreshold = "0.001"
-}
-
-:normal_depth = new EvaluationProfile
-{
-	.Evaluator = new NormalDepthEvaluator
-	.TargetLayer = "normal_depth"
-	.Distribution = new StratifiedDistribution { .Extend = "64" }
-	.NoiseThreshold = "0.001"
-}
-
 :raw = new RenderProfile
 {
 	.Scene = link scene
-	.EvaluationProfiles = [ link path ]
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .TargetLayer = "path" }  ]
 }
 
-:clear = new RenderProfile
-{
-	.Scene = link scene
-	.EvaluationProfiles = [ link path_clear link albedo link normal_depth ]
-	.CompositionLayers = 
-	[
-		new TexturesCopy { .TargetLayers = [ "path" ] .NewLabels = [ "main" ] }
-		new OidnDenoise
-		new AutoExposure
-		new Vignette
-		new Bloom
-		new ToneMapper
-		new Watermark
-	]
-}
+:standard = new StandardPathTracedProfile(link scene)
+:final = new StandardPathTracedProfile(link scene "100")

@@ -46,6 +46,40 @@ public sealed class ScheduledRender
 	/// </summary>
 	public bool IsCompleted => compositionOperation.IsCompleted;
 
+	/// <summary>
+	/// A very rough estimate of the overall progress.
+	/// </summary>
+	/// <remarks>For more accuracy, use <see cref="Operation.Progress"/> on the individual operations.</remarks>
+	public float Progress
+	{
+		get
+		{
+			if (IsCompleted) return 1f;
+
+			float result = 0f;
+
+			result += 0.04f * (float)preparationOperation.Progress;
+			result += 0.06f * (float)compositionOperation.Progress;
+
+			float percent = 0.9f / evaluationOperations.Length;
+			foreach (var operation in evaluationOperations) result += percent * (float)operation.Progress;
+
+			return result;
+		}
+	}
+
+	/// <summary>
+	/// Blocks the calling thread until <see cref="IsCompleted"/> is true or if this <see cref="ScheduledRender"/> is aborted.
+	/// </summary>
+	public void Await()
+	{
+		if (device.Disposed) return;
+		device.Operations.Await(compositionOperation);
+	}
+
+	/// <summary>
+	/// Stops this <see cref="ScheduledRender"/> as soon as possible.
+	/// </summary>
 	public void Abort()
 	{
 		if (device.Disposed) return;
@@ -53,12 +87,6 @@ public sealed class ScheduledRender
 		device.Abort(compositionOperation);
 
 		foreach (var operation in evaluationOperations) device.Abort(operation);
-	}
-
-	public void Await()
-	{
-		if (device.Disposed) return;
-		device.Operations.Await(compositionOperation);
 	}
 
 	/// <summary>

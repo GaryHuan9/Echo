@@ -105,7 +105,7 @@ public sealed class EchoSource
 
 		public T Construct<T>() where T : class
 		{
-			if (!Type.IsAssignableFrom(typeof(T))) return null;
+			if (!Type.IsAssignableTo(typeof(T))) return null;
 			return (T)identifiedNode.node.Construct(objects);
 		}
 	}
