@@ -32,35 +32,29 @@
 	.Add(new Camera("45") { .Position = "0 0 -4.5" })
 }
 
-:path = new EvaluationProfile
+:path = new RenderProfile
 {
-	.Evaluator = new PathTracedEvaluator
-	.Distribution = new StratifiedDistribution { .Extend = "16" }
-	.Buffer = new RenderBuffer("512 512")
-	.Pattern = new HilbertCurvePattern
-	.NoiseThreshold = "0.006"
-	.MinEpoch = "1"
-	.MaxEpoch = "20"
+	.Scene = link scene
+	.Resolution = "512 512"
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .NoiseThreshold = "0.006" .TargetLayer = "path" }  ]
 }
 
-:naive = new EvaluationProfile
+:naive = new RenderProfile
 {
-	.Evaluator = new BruteForcedEvaluator
-	.Distribution = new StratifiedDistribution { .Extend = "16" }
-	.Buffer = new RenderBuffer("512 512")
-	.Pattern = new HilbertCurvePattern
-	.NoiseThreshold = "0.006"
-	.MinEpoch = "1"
-	.MaxEpoch = "20"
+	.Scene = link scene
+	.Resolution = "512 512"
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new BruteForcedEvaluator .NoiseThreshold = "0.006" .TargetLayer = "naive" }  ]
 }
 
-:clear = new EvaluationProfile
+:clear = new RenderProfile
 {
-	.Evaluator = new PathTracedEvaluator
-	.Distribution = new StratifiedDistribution { .Extend = "64" }
-	.Buffer = new RenderBuffer("512 512")
-	.Pattern = new HilbertCurvePattern
-	.NoiseThreshold = "0.0003"
-	.MinEpoch = "1"
-	.MaxEpoch = "1000"
+	.Scene = link scene
+	.Resolution = "512 512"
+	.EvaluationProfiles = [ new EvaluationProfile
+	{
+		.NoiseThreshold = "0.0003"
+		.Distribution = new StratifiedDistribution { .Extend = "64" }
+		.Evaluator = new PathTracedEvaluator
+		.TargetLayer = "path" 
+	} ]
 }

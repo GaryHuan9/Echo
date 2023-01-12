@@ -1,19 +1,9 @@
 ﻿using System;
-using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
-using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
-using Echo.Core.Evaluation.Sampling;
-using Echo.Core.InOut.EchoDescription;
-using Echo.Core.Processes;
-using Echo.Core.Processes.Composition;
-using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Evaluation;
-using Echo.Core.Textures.Grids;
 using JitBuddy;
-using OpenImageDenoisePrecompiled;
 
 namespace Echo.Experimental;
 
@@ -21,43 +11,6 @@ public class Program
 {
 	static void Main()
 	{
-		using Device device = Device.Create();
-
-		var source = new EchoSource("ext/Scenes/Simple/bunny.echo");
-		var profile = source.Construct<RenderProfile>("clear");
-		var render = profile.ScheduleTo(device);
-
-		render.Await();
-		render.texture.Save("render2.png");
-
-		// OidnPrecompiled.TryLoad();
-		// using Device device = Device.Create();
-		//
-		// SettableGrid<RGB128> main = TextureGrid.Load<RGB128>("render_path.fpi");
-		//
-		// RenderTexture renderTexture = new RenderTexture(main.size);
-		// renderTexture.TryAddLayer("path", main);
-		// renderTexture.TryAddLayer("albedo", TextureGrid.Load<RGB128>("render_albedo.fpi"));
-		// renderTexture.TryAddLayer("normal_depth", TextureGrid.Load<NormalDepth128>("render_normal_depth.fpi"));
-		//
-		// var builder = ImmutableArray.CreateBuilder<ICompositeLayer>();
-		//
-		// builder.Add(new TexturesCopy { TargetLayers = ImmutableArray.Create("path"), NewLabels = ImmutableArray.Create("main") });
-		// builder.Add(new OidnDenoise());
-		// builder.Add(new AutoExposure());
-		// builder.Add(new Vignette());
-		// builder.Add(new Bloom());
-		// builder.Add(new ToneMapper());
-		// builder.Add(new Watermark());
-		//
-		// var operation = (CompositionOperation)device.Schedule(new CompositionOperation.Factory(renderTexture, builder.ToImmutable()));
-		//
-		// device.Operations.Await(operation);
-		// renderTexture.TryGetLayer<RGB128, SettableGrid<RGB128>>("main", out SettableGrid<RGB128> result);
-		// result.Save("render_composite.png");
-		//
-		// DebugHelper.Log(operation.ErrorMessages.ToArray());
-
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();

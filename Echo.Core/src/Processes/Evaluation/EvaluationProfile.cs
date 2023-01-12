@@ -16,13 +16,13 @@ public record EvaluationProfile
 	/// The fundamental evaluation method used.
 	/// </summary>
 	[EchoSourceUsable]
-	public Evaluator Evaluator { get; init; } = new PathTracedEvaluator();
+	public Evaluator Evaluator { get; init; }
 
 	/// <summary>
 	/// The label of the layer in the <see cref="RenderTexture"/> to write to.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; } = "path";
+	public string TargetLayer { get; init; }
 
 	/// <summary>
 	/// The <see cref="ContinuousDistribution"/> used for this evaluation.
@@ -51,7 +51,7 @@ public record EvaluationProfile
 	/// Evaluation is completed after noise is under this threshold.
 	/// </summary>
 	[EchoSourceUsable]
-	public float NoiseThreshold { get; init; } = 0.03f;
+	public float NoiseThreshold { get; init; } = 0.045f;
 
 	/// <summary>
 	/// The <see cref="ITilePattern"/> used to determine the sequence of the tiles.

@@ -18,6 +18,7 @@ public static class InvariantFormat
 
 	public static bool TryParse(CharSpan span, out float result) => float.TryParse(span, NumberStyles.Float, Culture, out result);
 	public static bool TryParse(CharSpan span, out int result) => int.TryParse(span, NumberStyles.Integer, Culture, out result);
+	public static bool TryParse(CharSpan span, out uint result) => uint.TryParse(span, NumberStyles.Integer, Culture, out result);
 
 	public static bool TryParse(CharSpan span, out Float2 result) => TryParseFloat(span, out result);
 	public static bool TryParse(CharSpan span, out Float3 result) => TryParseFloat(span, out result);

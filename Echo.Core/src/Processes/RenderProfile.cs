@@ -42,7 +42,7 @@ public record RenderProfile
 	/// The chronological order of the evaluations is the same as their order in this list. This list must not be empty.
 	/// </remarks>
 	[EchoSourceUsable]
-	public ImmutableArray<EvaluationProfile> EvaluationProfiles { get; init; } = ImmutableArray.Create(new EvaluationProfile());
+	public ImmutableArray<EvaluationProfile> EvaluationProfiles { get; init; }
 
 	/// <summary>
 	/// A list of <see cref="ICompositeLayer"/>s to be applied as post processing layers after the main evaluations are completed.
