@@ -14,9 +14,11 @@ using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public class OperationUI : AreaUI
+public sealed class OperationUI : AreaUI
 {
-	public OperationUI() : base("Operation") { }
+	public OperationUI(EchoUI root) : base(root) { }
+
+	SystemUI system;
 
 	int operationIndex;
 	bool selectLatest = true;
@@ -25,11 +27,14 @@ public class OperationUI : AreaUI
 	readonly List<string> operationLabels = new();
 	readonly WorkerData workerData = new();
 
+	protected override string Name => "Operation";
+
 	public Operation SelectedOperation
 	{
 		get
 		{
-			var device = Device.Instance;
+			Device device = system.Device;
+
 			if (device == null) return null;
 			var operations = device.Operations;
 			if (operations.Count == 0) return null;
@@ -37,10 +42,15 @@ public class OperationUI : AreaUI
 		}
 	}
 
+	public override void Initialize()
+	{
+		base.Initialize();
+		system = root.Find<SystemUI>();
+	}
+
 	protected override void Update(in Moment moment)
 	{
-		var device = Device.Instance;
-		if (device == null) return;
+		Device device = system.Device;
 
 		int count = device.Operations.Count;
 		if (count == 0) return;

@@ -8,7 +8,5 @@ public interface IApplication : IDisposable
 
 	public TimeSpan UpdateDelay { get; }
 
-	public void Initialize(ImGuiDevice backend);
-
 	public void NewFrame(in Moment moment);
 }

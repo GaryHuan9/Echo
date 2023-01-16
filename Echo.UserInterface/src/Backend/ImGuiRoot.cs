@@ -6,10 +6,12 @@ using static SDL2.SDL;
 
 namespace Echo.UserInterface.Backend;
 
-public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
+public sealed class ImGuiRoot : IDisposable
 {
-	public ImGuiRoot()
+	public ImGuiRoot(Func<ImGuiDevice, IApplication> creator)
 	{
+		this.creator = creator;
+
 		SDL_Init(SDL_INIT_EVERYTHING).ThrowOnError();
 
 		const SDL_WindowFlags WindowFlags = SDL_WindowFlags.SDL_WINDOW_RESIZABLE |
@@ -24,6 +26,7 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 		if (renderer == IntPtr.Zero) throw new BackendException();
 	}
 
+	readonly Func<ImGuiDevice, IApplication> creator;
 	readonly IntPtr window;
 	readonly IntPtr renderer;
 
@@ -46,9 +49,8 @@ public sealed class ImGuiRoot<T> : IDisposable where T : IApplication, new()
 	void MainLoop(Stopwatch stopwatch)
 	{
 		using var device = new ImGuiDevice(window, renderer);
-		using var application = new T();
+		using var application = creator(device);
 
-		application.Initialize(device);
 		device.Initialize();
 
 		SDL_SetWindowTitle(window, application.Label);

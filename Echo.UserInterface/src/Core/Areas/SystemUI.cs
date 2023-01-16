@@ -8,20 +8,27 @@ using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public class SystemUI : AreaUI
+public sealed class SystemUI : AreaUI
 {
-	public SystemUI() : base("System") { }
+	public SystemUI(EchoUI root) : base(root) { }
+
+	/// <summary>
+	/// The main <see cref="Device"/> for this <see cref="EchoUI"/> instance.
+	/// </summary>
+	/// <remarks>This property is never null, however the instance might change.</remarks>
+	public Device Device { get; private set; } = Device.Create();
+
+	string frameRate;
+	TimeSpan lastUpdateTime;
+	int updateFrequency = 100;
+
+	protected override string Name => "System";
 
 	public override void Initialize()
 	{
 		base.Initialize();
 		AssignUpdateFrequency();
 	}
-
-	string frameTime;
-	string frameRate;
-	TimeSpan lastUpdateTime;
-	int updateFrequency = 100;
 
 	protected override void Update(in Moment moment)
 	{
@@ -34,28 +41,18 @@ public class SystemUI : AreaUI
 		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
 		if (ImGui.CollapsingHeader("Device and Workers"))
 		{
-			var device = Device.Instance;
-
-			if (device == null)
-			{
-				if (ImGui.Button("Create")) Device.CreateOrGet();
-				ImGui.TextWrapped("Create a compute device to begin!");
-			}
-			else
-			{
-				DrawDevice(device);
-				DrawWorkers(device);
-			}
+			DrawDevice();
+			DrawWorkers();
 		}
 	}
 
 	protected override void Dispose(bool disposing)
 	{
 		base.Dispose(disposing);
-		if (disposing) Device.Instance?.Dispose();
+		if (disposing) Device.Dispose();
 	}
 
-	void AssignUpdateFrequency() => Root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
+	void AssignUpdateFrequency() => root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
 
 	void DrawGeneral(in Moment moment)
 	{
@@ -70,34 +67,31 @@ public class SystemUI : AreaUI
 			if (moment.elapsed - lastUpdateTime > TimeSpan.FromSeconds(0.5f))
 			{
 				float rate = 1f / (float)moment.delta.TotalSeconds;
-				frameTime = moment.delta.ToString("s\\.ffff");
 				frameRate = rate.ToInvariant();
 				lastUpdateTime = moment.elapsed;
 			}
 
-			ImGuiCustom.Property("Frame Time", frameTime);
 			ImGuiCustom.Property("Frame Rate", frameRate);
-
 			ImGuiCustom.EndProperties();
 		}
 
 		int oldUpdateFrequency = updateFrequency;
 		ImGui.SliderInt("Refresh Frequency", ref updateFrequency, 1, 120);
 		if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
-	}
 
-	static string GetCompilerMode()
-	{
+		static string GetCompilerMode()
+		{
 #if DEBUG
-		return "DEBUG";
+			return "DEBUG";
 #elif RELEASE
-		return "RELEASE";
+			return "RELEASE";
 #else
-		return "Unknown";
+			return "UNKNOWN";
 #endif
+		}
 	}
 
-	static void DrawGarbageCollector()
+	void DrawGarbageCollector()
 	{
 		var info = GC.GetGCMemoryInfo();
 
@@ -152,50 +146,50 @@ public class SystemUI : AreaUI
 		}
 	}
 
-	static void DrawDevice(Device device)
+	void DrawDevice()
 	{
 		//Buttons
-		ImGui.BeginDisabled(!device.IsDispatched);
+		ImGui.BeginDisabled(!Device.IsDispatched);
 
 		if (ImGui.Button("Pause"))
 		{
-			device.Pause();
+			Device.Pause();
 			LogList.Add("Pausing dispatched operation on compute device.");
 		}
 
 		ImGui.SameLine();
 		if (ImGui.Button("Resume"))
 		{
-			device.Resume();
+			Device.Resume();
 			LogList.Add("Resuming dispatched operation on compute device.");
 		}
 
 		ImGui.SameLine();
 		if (ImGui.Button("Abort"))
 		{
-			device.Abort();
+			Device.Abort();
 			LogList.Add("Aborting dispatched operation on compute device.");
 		}
 
 		ImGui.EndDisabled();
 		ImGui.SameLine();
 
-		if (ImGui.Button("Dispose"))
+		if (ImGui.Button("Recreate"))
 		{
-			ActionQueue.Enqueue("Device Dispose", device.Dispose);
-			return;
+			ActionQueue.Enqueue("Device Dispose", Device.Dispose);
+			Device = Device.Create();
 		}
 
 		//Status
 		if (ImGuiCustom.BeginProperties("Main"))
 		{
-			ImGuiCustom.Property("State", device.IsDispatched ? "Running" : "Idle");
-			ImGuiCustom.Property("Population", device.Population.ToInvariant());
+			ImGuiCustom.Property("State", Device.IsDispatched ? "Running" : "Idle");
+			ImGuiCustom.Property("Population", Device.Population.ToInvariant());
 
-			if (device.Operations.Count > 0)
+			if (Device.Operations.Count > 0)
 			{
-				ImGuiCustom.Property("Latest Dispatch", device.Operations[^1].creationTime.ToInvariant());
-				ImGuiCustom.Property("Past Operation Count", device.Operations.Count.ToInvariant());
+				ImGuiCustom.Property("Latest Dispatch", Device.Operations[^1].creationTime.ToInvariant());
+				ImGuiCustom.Property("Past Operation Count", Device.Operations.Count.ToInvariant());
 			}
 			else
 			{
@@ -207,7 +201,7 @@ public class SystemUI : AreaUI
 		}
 	}
 
-	static void DrawWorkers(Device device)
+	void DrawWorkers()
 	{
 		//Worker table
 		if (ImGui.BeginTable("State", 3, ImGuiCustom.DefaultTableFlags))
@@ -217,7 +211,7 @@ public class SystemUI : AreaUI
 			ImGui.TableSetupColumn("Guid");
 			ImGui.TableHeadersRow();
 
-			foreach (IWorker worker in device.Workers)
+			foreach (IWorker worker in Device.Workers)
 			{
 				ImGuiCustom.TableItem($"0x{worker.Index:X4}");
 				ImGuiCustom.TableItem(worker.State.ToDisplayString());
@@ -227,4 +221,6 @@ public class SystemUI : AreaUI
 			ImGui.EndTable();
 		}
 	}
+
+
 }

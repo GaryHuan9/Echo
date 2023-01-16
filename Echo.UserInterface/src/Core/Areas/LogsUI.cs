@@ -5,9 +5,11 @@ using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public class LogsUI : AreaUI
+public sealed class LogsUI : AreaUI
 {
-	public LogsUI() : base("Logs") { }
+	public LogsUI(EchoUI root) : base(root) { }
+
+	protected override string Name => "Logs";
 
 	public override void Initialize()
 	{
