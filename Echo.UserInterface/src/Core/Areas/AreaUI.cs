@@ -6,11 +6,11 @@ namespace Echo.UserInterface.Core.Areas;
 
 public abstract class AreaUI : IDisposable
 {
-	protected AreaUI(string name) => this.name = name;
+	protected AreaUI(EchoUI root) => this.root = root;
 
-	readonly string name;
+	protected readonly EchoUI root;
 
-	public EchoUI Root { get; init; }
+	protected abstract string Name { get; }
 
 	protected virtual bool HasMenuBar => false;
 
@@ -18,7 +18,7 @@ public abstract class AreaUI : IDisposable
 
 	public virtual void NewFrame(in Moment moment)
 	{
-		if (ImGui.Begin(name, HasMenuBar ? ImGuiWindowFlags.MenuBar : ImGuiWindowFlags.None)) Update(moment);
+		if (ImGui.Begin(Name, HasMenuBar ? ImGuiWindowFlags.MenuBar : ImGuiWindowFlags.None)) Update(moment);
 		ImGui.End();
 	}
 

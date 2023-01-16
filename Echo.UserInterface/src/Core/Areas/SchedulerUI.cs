@@ -15,9 +15,11 @@ using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public class DispatcherUI : AreaUI
+public sealed class SchedulerUI : AreaUI
 {
-	public DispatcherUI() : base("Dispatcher") { }
+	public SchedulerUI(EchoUI root) : base(root) { }
+
+	SystemUI system;
 
 	string filePath = "ext/Scenes/";
 	readonly List<string> pathCandidates = new();
@@ -34,35 +36,36 @@ public class DispatcherUI : AreaUI
 		RecurseSubdirectories = false
 	};
 
+	protected override string Name => "Scheduler";
+
 	public override void Initialize()
 	{
 		base.Initialize();
 
+		system = root.Find<SystemUI>();
+
 		string[] arguments = Environment.GetCommandLineArgs();
 
-		if (arguments.Length > 1)
-		{
-			filePath = arguments[1];
-
-			if (arguments.Length > 2 && arguments[2] == "build-path")
-			{
-				const string ProjectPath = "../../../../Echo.Core/";
-				filePath = Path.Combine(ProjectPath, filePath);
-			}
-
-			filePath = Path.GetFullPath(filePath, Environment.CurrentDirectory);
-			filePath = Path.GetRelativePath(Environment.CurrentDirectory, filePath);
-
-			ReadFile();
-			Dispatch(Device.CreateOrGet());
-		}
+		// if (arguments.Length > 1)
+		// {
+		// 	filePath = arguments[1];
+		//
+		// 	if (arguments.Length > 2 && arguments[2] == "build-path")
+		// 	{
+		// 		const string ProjectPath = "../../../../Echo.Core/";
+		// 		filePath = Path.Combine(ProjectPath, filePath);
+		// 	}
+		//
+		// 	filePath = Path.GetFullPath(filePath, Environment.CurrentDirectory);
+		// 	filePath = Path.GetRelativePath(Environment.CurrentDirectory, filePath);
+		//
+		// 	ReadFile();
+		// 	Dispatch(Device.CreateOrGet());
+		// }
 	}
 
 	protected override unsafe void Update(in Moment moment)
 	{
-		var device = Device.Instance;
-		if (device == null) return;
-
 		//Show path input box
 		if (ImGui.InputText("##Path", ref filePath, 128, ImGuiInputTextFlags.CallbackCompletion, CompletionCallback)) PopulatePathCandidates();
 		if (ImGui.IsItemClicked()) PopulatePathCandidates();
@@ -80,10 +83,10 @@ public class DispatcherUI : AreaUI
 		if (ImGui.Button("Load")) ReadFile();
 
 		ImGui.SameLine();
-		if (ImGui.Button("Load and Dispatch"))
+		if (ImGui.Button("Load and Schedule"))
 		{
 			ReadFile();
-			Dispatch(device);
+			Dispatch(system.Device);
 		}
 
 		if (objects == null)
@@ -95,7 +98,7 @@ public class DispatcherUI : AreaUI
 		ImGuiCustom.Selector("Profile", CollectionsMarshal.AsSpan(profileLabels), ref profileIndex);
 
 		Vector2 buttonSize = new Vector2(ImGui.CalcItemWidth(), 0f);
-		if (ImGui.Button("Dispatch to Active Device", buttonSize)) Dispatch(device);
+		if (ImGui.Button("Schedule to Active Device", buttonSize)) Dispatch(system.Device);
 	}
 
 	unsafe int CompletionCallback(ImGuiInputTextCallbackData* pointer)
@@ -133,7 +136,7 @@ public class DispatcherUI : AreaUI
 		var read = ReadFile(filePath);
 		if (read == null) return;
 
-		PopulateLabels<EvaluationProfile>(read, profileLabels);
+		PopulateLabels<RenderProfile>(read, profileLabels);
 
 		objects = read;
 		profileIndex = 0;
@@ -153,6 +156,8 @@ public class DispatcherUI : AreaUI
 
 		scheduledRender?.Abort();
 		scheduledRender = profile.ScheduleTo(device);
+
+		root.Find<ViewerUI>().Track(scheduledRender.evaluationOperations[0]);
 
 		static T ConstructFirst<T>(EchoSource objects, string label) where T : class
 		{

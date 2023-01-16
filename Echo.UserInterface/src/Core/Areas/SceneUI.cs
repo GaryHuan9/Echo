@@ -7,12 +7,14 @@ namespace Echo.UserInterface.Core.Areas;
 
 public class SceneUI : AreaUI
 {
-	public SceneUI() : base("Scene") { }
+	public SceneUI(EchoUI root) : base(root) { }
+
+	protected override string Name => "Scene";
 
 	public override void Initialize()
 	{
 		base.Initialize();
-		operationUI = Root.Find<OperationUI>();
+		operationUI = root.Find<OperationUI>();
 	}
 
 	OperationUI operationUI;
