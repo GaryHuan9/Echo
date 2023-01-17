@@ -43,7 +43,7 @@ public class LightTree : LightPicker
 	public override ConeBound ConeBound => root.bound.cone;
 	public override float Power => root == null ? default : root.bound.power;
 
-	public override BoxBound GetTransformedBounds(in Float4x4 transform) => new(stackalloc BoxBound[1] { root.bound.box }, transform);
+	public override BoxBound GetTransformedBound(in Float4x4 transform) => new(stackalloc BoxBound[1] { root.bound.box }, transform);
 
 	public override Probable<EntityToken> Pick(in GeometryPoint origin, ref Sample1D sample) => Pick(origin, ref sample, root, 1f);
 
@@ -77,7 +77,7 @@ public class LightTree : LightPicker
 
 		for (int i = length - 2; i >= 0; i--)
 		{
-			costs[i + 1] = lightBound.Area;
+			costs[i + 1] = lightBound.RelativeArea;
 			lightBound = lightBound.Encapsulate(bounds[i].content);
 		}
 
@@ -88,7 +88,7 @@ public class LightTree : LightPicker
 
 		for (int i = 1; i < length; i++)
 		{
-			float cost = costs[i] + lightBound.Area;
+			float cost = costs[i] + lightBound.RelativeArea;
 
 			if (cost < minCost)
 			{

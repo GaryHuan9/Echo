@@ -24,9 +24,9 @@ public static class ImGuiCustom
 		else ImGui.TextUnformatted(value);
 	}
 
-	public static bool BeginProperties(string name)
+	public static bool BeginProperties(string label = "Properties")
 	{
-		if (!ImGui.BeginTable(name, 2, PropertiesTableFlags)) return false;
+		if (!ImGui.BeginTable(label, 2, PropertiesTableFlags)) return false;
 
 		ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.None, 2f);
 		ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None, 3f);
@@ -40,7 +40,21 @@ public static class ImGuiCustom
 		TableItem(value);
 	}
 
+	public static void PropertySeparator()
+	{
+		ImGui.TableNextColumn();
+		ImGui.Separator();
+		ImGui.TableNextColumn();
+		ImGui.Separator();
+	}
+
 	public static void EndProperties() => ImGui.EndTable();
+
+	public static bool OpenHeader(string label)
+	{
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		return ImGui.CollapsingHeader(label);
+	}
 
 	public static bool Selector(string label, ReadOnlySpan<string> items, ref int currentIndex)
 	{

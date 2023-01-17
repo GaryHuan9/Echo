@@ -14,7 +14,7 @@ public static class InvariantFormat
 	const string DefaultPattern = "N2";
 	const string IntegerPattern = "N0";
 
-	static CultureInfo Culture => CultureInfo.InvariantCulture;
+	public static CultureInfo Culture => CultureInfo.InvariantCulture;
 
 	public static bool TryParse(CharSpan span, out float result) => float.TryParse(span, NumberStyles.Float, Culture, out result);
 	public static bool TryParse(CharSpan span, out int result) => int.TryParse(span, NumberStyles.Integer, Culture, out result);
@@ -61,7 +61,7 @@ public static class InvariantFormat
 
 	public static string ToInvariant<T>(this /* in */ T value) where T : struct, IFormattable => value.ToString(DefaultPattern, Culture);
 
-	public static string ToInvariantPercent(this float value) => value.ToString("P1", Culture);
+	public static string ToInvariantPercent(this float value) => value.ToString("P2", Culture);
 	public static string ToInvariantPercent(this double value) => value.ToString("P2", Culture);
 
 	public static string ToInvariantData(this uint value) => ToInvariantData((ulong)value);

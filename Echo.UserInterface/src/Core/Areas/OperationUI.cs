@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using Echo.Core.Common;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Statistics;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
@@ -239,10 +240,9 @@ public sealed class OperationUI : AreaUI
 			operation.FillWorkerTimes(ref timesFill);
 			operation.FillWorkerProcedures(ref proceduresFill);
 
-			Int3 lengths = new Int3(guidsFill.Count, timesFill.Count, proceduresFill.Count);
-			if (lengths.Sum != lengths.X * 3) throw new InvalidOperationException("Internal.");
-
-			Length = lengths.X;
+			Length = proceduresFill.Count;
+			Ensure.AreEqual(Length, guidsFill.Count);
+			Ensure.AreEqual(Length, timesFill.Count);
 		}
 	}
 }

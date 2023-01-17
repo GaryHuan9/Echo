@@ -8,7 +8,6 @@ using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
-using Echo.Core.Processes.Evaluation;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -46,22 +45,22 @@ public sealed class SchedulerUI : AreaUI
 
 		string[] arguments = Environment.GetCommandLineArgs();
 
-		// if (arguments.Length > 1)
-		// {
-		// 	filePath = arguments[1];
-		//
-		// 	if (arguments.Length > 2 && arguments[2] == "build-path")
-		// 	{
-		// 		const string ProjectPath = "../../../../Echo.Core/";
-		// 		filePath = Path.Combine(ProjectPath, filePath);
-		// 	}
-		//
-		// 	filePath = Path.GetFullPath(filePath, Environment.CurrentDirectory);
-		// 	filePath = Path.GetRelativePath(Environment.CurrentDirectory, filePath);
-		//
-		// 	ReadFile();
-		// 	Dispatch(Device.CreateOrGet());
-		// }
+		if (arguments.Length > 1)
+		{
+			filePath = arguments[1];
+
+			if (arguments.Length > 2 && arguments[2] == "build-path")
+			{
+				const string ProjectPath = "../../../../Echo.Core/";
+				filePath = Path.Combine(ProjectPath, filePath);
+			}
+
+			filePath = Path.GetFullPath(filePath, Environment.CurrentDirectory);
+			filePath = Path.GetRelativePath(Environment.CurrentDirectory, filePath);
+
+			ReadFile();
+			Dispatch(Device.CreateOrGet());
+		}
 	}
 
 	protected override unsafe void Update(in Moment moment)
@@ -158,6 +157,7 @@ public sealed class SchedulerUI : AreaUI
 		scheduledRender = profile.ScheduleTo(device);
 
 		root.Find<ViewerUI>().Track(scheduledRender.evaluationOperations[0]);
+		root.Find<RenderUI>().AddRender(scheduledRender);
 
 		static T ConstructFirst<T>(EchoSource objects, string label) where T : class
 		{

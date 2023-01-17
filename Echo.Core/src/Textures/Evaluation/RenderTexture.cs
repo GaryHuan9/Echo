@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading;
 using Echo.Core.Common;
@@ -36,6 +37,11 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	Texture mainTexture;
 
 	readonly ConcurrentDictionary<string, TextureGrid> layers = new(StringComparer.OrdinalIgnoreCase);
+
+	/// <summary>
+	/// Returns an enumerable through all layers of this <see cref="RenderTexture"/>. 
+	/// </summary>
+	public IReadOnlyDictionary<string, TextureGrid> Layers => layers;
 
 	public override RGB128 this[Int2 position]
 	{

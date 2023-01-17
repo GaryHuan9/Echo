@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Echo.Core.Common.Compute;
+using Echo.Core.Common.Memory;
 using Echo.Core.InOut;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
@@ -22,6 +23,8 @@ public sealed class SystemUI : AreaUI
 	TimeSpan lastUpdateTime;
 	int updateFrequency = 100;
 
+	readonly WorkersReport workersReport = new();
+
 	protected override string Name => "System";
 
 	public override void Initialize()
@@ -32,14 +35,11 @@ public sealed class SystemUI : AreaUI
 
 	protected override void Update(in Moment moment)
 	{
-		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-		if (ImGui.CollapsingHeader("General")) DrawGeneral(moment);
+		if (ImGuiCustom.OpenHeader("General")) DrawGeneral(moment);
 
-		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-		if (ImGui.CollapsingHeader("Garbage Collector")) DrawGarbageCollector();
+		if (ImGuiCustom.OpenHeader("Garbage Collector")) DrawGarbageCollector();
 
-		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-		if (ImGui.CollapsingHeader("Device and Workers"))
+		if (ImGuiCustom.OpenHeader("Device and Workers"))
 		{
 			DrawDevice();
 			DrawWorkers();
@@ -62,7 +62,7 @@ public sealed class SystemUI : AreaUI
 			ImGuiCustom.Property("Debugger", Debugger.IsAttached ? "Present" : "Not Attached");
 			ImGuiCustom.Property("Compiler Mode", GetCompilerMode());
 
-			ImGui.NewLine();
+			ImGuiCustom.PropertySeparator();
 
 			if (moment.elapsed - lastUpdateTime > TimeSpan.FromSeconds(0.5f))
 			{
@@ -102,11 +102,13 @@ public sealed class SystemUI : AreaUI
 		}
 
 		//Main table
-		if (ImGuiCustom.BeginProperties("Main"))
+		if (ImGuiCustom.BeginProperties())
 		{
 			ImGuiCustom.Property("GC Compacted", info.Compacted.ToString());
 			ImGuiCustom.Property("GC Concurrent", info.Concurrent.ToString());
 			ImGuiCustom.Property("GC Generation", info.Generation.ToString());
+
+			ImGuiCustom.PropertySeparator();
 
 			ImGuiCustom.Property("Mapped Memory", ((ulong)Environment.WorkingSet).ToInvariantData());
 			ImGuiCustom.Property("Heap Size", ((ulong)info.HeapSizeBytes).ToInvariantData());
@@ -181,7 +183,7 @@ public sealed class SystemUI : AreaUI
 		}
 
 		//Status
-		if (ImGuiCustom.BeginProperties("Main"))
+		if (ImGuiCustom.BeginProperties())
 		{
 			ImGuiCustom.Property("State", Device.IsDispatched ? "Running" : "Idle");
 			ImGuiCustom.Property("Population", Device.Population.ToInvariant());
@@ -203,24 +205,70 @@ public sealed class SystemUI : AreaUI
 
 	void DrawWorkers()
 	{
-		//Worker table
-		if (ImGui.BeginTable("State", 3, ImGuiCustom.DefaultTableFlags))
+		Operation operation = Device.Operations.Latest;
+		if (!Device.IsDispatched) operation = null;
+
+		if (!ImGui.BeginTable("Workers Table", operation == null ? 2 : 5, ImGuiCustom.DefaultTableFlags)) return;
+
+		ImGui.TableSetupColumn("Guid");
+		ImGui.TableSetupColumn("State");
+
+		if (operation != null)
 		{
+			workersReport.Update(operation);
+			ImGui.TableSetupColumn("Time Active");
 			ImGui.TableSetupColumn("Index");
-			ImGui.TableSetupColumn("State");
-			ImGui.TableSetupColumn("Guid");
-			ImGui.TableHeadersRow();
-
-			foreach (IWorker worker in Device.Workers)
-			{
-				ImGuiCustom.TableItem($"0x{worker.Index:X4}");
-				ImGuiCustom.TableItem(worker.State.ToDisplayString());
-				ImGuiCustom.TableItem(worker.Guid.ToInvariantShort());
-			}
-
-			ImGui.EndTable();
+			ImGui.TableSetupColumn("Progress");
 		}
+
+		ImGui.TableHeadersRow();
+
+		foreach (IWorker worker in Device.Workers)
+		{
+			ImGuiCustom.TableItem(worker.Guid.ToInvariantShort());
+			ImGuiCustom.TableItem(worker.State.ToDisplayString());
+
+			if (operation != null)
+			{
+				(TimeSpan activeTime, Procedure procedure) = workersReport[worker.Index];
+
+				ImGuiCustom.TableItem(activeTime.ToInvariant());
+				ImGuiCustom.TableItem(procedure.index.ToInvariant());
+				ImGuiCustom.TableItem(procedure.Progress.ToInvariantPercent());
+			}
+		}
+
+		ImGui.EndTable();
 	}
 
+	class WorkersReport
+	{
+		int capacity;
+		TimeSpan[] activeTimes = Array.Empty<TimeSpan>();
+		Procedure[] procedures = Array.Empty<Procedure>();
 
+		public (TimeSpan time, Procedure procedure) this[int index] => (activeTimes[index], procedures[index]);
+
+		public void Update(Operation operation)
+		{
+			EnsureCapacity(operation.WorkerCount);
+
+			var activeTimesFill = activeTimes.AsFill();
+			var proceduresFill = procedures.AsFill();
+
+			operation.FillWorkerTimes(ref activeTimesFill);
+			operation.FillWorkerProcedures(ref proceduresFill);
+		}
+
+		void EnsureCapacity(int value)
+		{
+			if (value < capacity) return;
+
+			capacity = Math.Max(capacity, 16);
+			while (capacity < value) capacity *= 2;
+
+			activeTimes = new TimeSpan[capacity];
+			procedures = new Procedure[capacity];
+		}
+	}
 }
