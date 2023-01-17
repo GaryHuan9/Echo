@@ -20,7 +20,7 @@ public sealed class EchoUI : IApplication
 		areas = ImmutableArray.Create<AreaUI>
 		(
 			new SystemUI(this),
-			new OperationUI(this),
+			new RenderUI(this),
 			new ViewerUI(this),
 			new LogsUI(this),
 			new SchedulerUI(this)
@@ -80,7 +80,7 @@ public sealed class EchoUI : IApplication
 	static void ConfigureStyle(ImGuiStylePtr style)
 	{
 		style.WindowPadding = new Vector2(8f, 8f);
-		style.FramePadding = new Vector2(4f, 2f);
+		style.FramePadding = new Vector2(8f, 2f);
 		style.CellPadding = new Vector2(4f, 2f);
 		style.ItemSpacing = new Vector2(8f, 4f);
 		style.ItemInnerSpacing = new Vector2(4f, 4f);

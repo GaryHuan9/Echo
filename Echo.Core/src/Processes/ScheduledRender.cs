@@ -5,6 +5,7 @@ using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Processes.Composition;
 using Echo.Core.Processes.Evaluation;
+using Echo.Core.Processes.Preparation;
 using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
 
@@ -22,14 +23,44 @@ public sealed class ScheduledRender
 		preparationOperation = SchedulePreparationOperation(device, this);
 		evaluationOperations = ScheduleEvaluationOperations(device, this);
 		compositionOperation = ScheduleCompositionOperation(device, this);
+
+		var builder = ImmutableArray.CreateBuilder<Operation>();
+		builder.Add(preparationOperation);
+		builder.AddRange(evaluationOperations);
+		builder.Add(compositionOperation);
+		operations = builder.ToImmutable();
 	}
 
+	/// <summary>
+	/// The <see cref="RenderProfile"/> that defines this <see cref="ScheduledRender"/>.
+	/// </summary>
 	public readonly RenderProfile profile;
+
+	/// <summary>
+	/// The destination <see cref="RenderTexture"/> for this <see cref="ScheduledRender"/>.
+	/// </summary>
 	public readonly RenderTexture texture;
 
-	public readonly AsyncOperation preparationOperation;
-	public readonly CompositionOperation compositionOperation;
+	/// <summary>
+	/// The first <see cref="Operation"/> to be completed to prepare for the render.
+	/// </summary>
+	public readonly PreparationOperation preparationOperation;
+
+	/// <summary>
+	/// The main <see cref="Operation"/>s of the render, consists of a series of evaluations on the <see cref="PreparedScene"/>. 
+	/// </summary>
 	public readonly ImmutableArray<EvaluationOperation> evaluationOperations;
+
+	/// <summary>
+	/// The final <see cref="Operation"/> of the render which combines the evaluations together into a final image.
+	/// </summary>
+	public readonly CompositionOperation compositionOperation;
+
+	/// <summary>
+	/// A list of <see cref="Operation"/> for this <see cref="ScheduledRender"/> in their execution order.
+	/// </summary>
+	/// <remarks>This is simply an aggregate of <see cref="preparationOperation"/>, <see cref="evaluationOperations"/>, and <see cref="compositionOperation"/>.</remarks>
+	public readonly ImmutableArray<Operation> operations;
 
 	readonly StrongBox<PreparedScene> boxedScene = new();
 
@@ -45,6 +76,22 @@ public sealed class ScheduledRender
 	/// Whether the entire render is completed.
 	/// </summary>
 	public bool IsCompleted => compositionOperation.IsCompleted;
+
+	int _currentIndex;
+
+	/// <summary>
+	/// An index in <see cref="operations"/> that is the currently executing <see cref="Operation"/>.
+	/// </summary>
+	/// <remarks> If all <see cref="operations"/> are completed, this returns the length of
+	/// <see cref="operations"/>. If no <see cref="Operation"/> has started, this returns zero.</remarks>
+	public int CurrentIndex
+	{
+		get
+		{
+			while (_currentIndex < operations.Length && operations[_currentIndex].IsCompleted) ++_currentIndex;
+			return _currentIndex;
+		}
+	}
 
 	/// <summary>
 	/// A very rough estimate of the overall progress.
@@ -83,10 +130,7 @@ public sealed class ScheduledRender
 	public void Abort()
 	{
 		if (device.Disposed) return;
-		device.Abort(preparationOperation);
-		device.Abort(compositionOperation);
-
-		foreach (var operation in evaluationOperations) device.Abort(operation);
+		foreach (Operation operation in operations) device.Abort(operation);
 	}
 
 	/// <summary>
@@ -97,16 +141,10 @@ public sealed class ScheduledRender
 	/// <returns>A <see cref="ScheduledRender"/> that encapsulates objects related to the render.</returns>
 	public static ScheduledRender Create(Device device, RenderProfile profile) => new(device, profile);
 
-	static AsyncOperation SchedulePreparationOperation(Device device, ScheduledRender render)
+	static PreparationOperation SchedulePreparationOperation(Device device, ScheduledRender render)
 	{
-		return (AsyncOperation)device.Schedule(AsyncOperation.New(Prepare));
-
-		ComputeTask Prepare(AsyncOperation operation)
-		{
-			var preparer = new ScenePreparer(render.profile.Scene);
-			render.boxedScene.Value = preparer.Prepare();
-			return ComputeTask.CompletedTask;
-		}
+		var factory = new PreparationOperation.Factory(render.profile.Scene, render.boxedScene);
+		return (PreparationOperation)device.Schedule(factory);
 	}
 
 	static ImmutableArray<EvaluationOperation> ScheduleEvaluationOperations(Device device, ScheduledRender render)

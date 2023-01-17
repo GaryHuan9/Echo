@@ -32,7 +32,9 @@ public sealed class PreparedScene : PreparedPack
 		this.camera = camera;
 		rootInstance = new PreparedInstance(this, geometries.swatch, Float4x4.identity);
 		this.infiniteLights = FilterLights(infiniteLights, rootInstance);
-		infiniteLightsThreshold = CalculateThreshold(this.infiniteLights, rootInstance.Power);
+		infiniteLightsPower = SumInfiniteLightsPower(this.infiniteLights);
+
+		infiniteLightsThreshold = CalculateThreshold(infiniteLightsPower, rootInstance.Power);
 		infiniteLightsPdf = infiniteLightsThreshold / this.infiniteLights.Length;
 	}
 
@@ -45,6 +47,11 @@ public sealed class PreparedScene : PreparedPack
 	/// All of the <see cref="InfiniteLight"/> in this <see cref="PreparedScene"/>.
 	/// </summary>
 	public readonly ImmutableArray<InfiniteLight> infiniteLights;
+
+	/// <summary>
+	/// The total <see cref="InfiniteLight.Power"/> of <see cref="infiniteLights"/>.
+	/// </summary>
+	public readonly float infiniteLightsPower;
 
 	readonly PreparedInstance rootInstance;
 	readonly float infiniteLightsThreshold;
@@ -283,14 +290,21 @@ public sealed class PreparedScene : PreparedPack
 		return builder.ToImmutableArray();
 	}
 
-	static float CalculateThreshold(ImmutableArray<InfiniteLight> infiniteLights, float instancePower)
+	static float SumInfiniteLightsPower(ImmutableArray<InfiniteLight> infiniteLights)
+	{
+		float power = 0f;
+
+		foreach (InfiniteLight light in infiniteLights) power += light.Power;
+
+		return power;
+	}
+
+	static float CalculateThreshold(float infiniteLightsPower, float instancePower)
 	{
 		//We induce a multiplier to favor sampling the instance lights over the infinite lights because infinite
 		//lights can easily dominate over the scene and they are specially sampled when a ray escapes the scene
 
 		const float InstanceBias = Scalars.Phi * Scalars.Phi;
-
-		float infiniteLightsPower = infiniteLights.Sum(light => light.Power);
 		float sum = infiniteLightsPower + instancePower * InstanceBias;
 		return FastMath.Positive(sum) ? infiniteLightsPower / sum : 1f;
 	}

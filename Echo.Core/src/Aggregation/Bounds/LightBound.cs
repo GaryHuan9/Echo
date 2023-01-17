@@ -17,7 +17,7 @@ public readonly struct LightBound
 	public readonly ConeBound cone;
 	public readonly float power;
 
-	public float Area => box.HalfArea * cone.Area * power; //relative
+	public float RelativeArea => box.HalfArea * cone.RelativeArea * power;
 
 	public LightBound Encapsulate(in LightBound other) => new
 	(

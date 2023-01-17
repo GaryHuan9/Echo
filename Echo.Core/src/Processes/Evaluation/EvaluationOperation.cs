@@ -20,13 +20,13 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 {
 	EvaluationOperation(ImmutableArray<IWorker> workers,
 						ImmutableArray<Int2> tilePositions, IEvaluationLayer destination,
-						StrongBox<PreparedScene> boxedScene, EvaluationProfile profile) :
+						EvaluationProfile profile, StrongBox<PreparedScene> boxedScene) :
 		base(workers, (uint)tilePositions.Length)
 	{
 		this.tilePositions = tilePositions;
 		this.destination = destination;
-		this.boxedScene = boxedScene;
 		this.profile = profile;
+		this.boxedScene = boxedScene;
 
 		distributions = new ContinuousDistribution[workers.Length];
 		allocators = new Allocator[workers.Length];
@@ -40,9 +40,9 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 
 	public readonly ImmutableArray<Int2> tilePositions;
 	public readonly IEvaluationLayer destination;
-	readonly StrongBox<PreparedScene> boxedScene;
-	readonly EvaluationProfile profile;
+	public readonly EvaluationProfile profile;
 
+	readonly StrongBox<PreparedScene> boxedScene;
 	readonly ContinuousDistribution[] distributions;
 	readonly Allocator[] allocators;
 
@@ -138,7 +138,7 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 		{
 			IEvaluationLayer destination = profile.Evaluator.CreateOrClearLayer(renderTexture, profile.TargetLayer);
 			var tilePositions = profile.Pattern.CreateSequence(renderTexture.size.CeiledDivide(renderTexture.tileSize));
-			return new EvaluationOperation(workers, tilePositions.ToImmutableArray(), destination, boxedScene, profile);
+			return new EvaluationOperation(workers, tilePositions.ToImmutableArray(), destination, profile, boxedScene);
 		}
 	}
 }

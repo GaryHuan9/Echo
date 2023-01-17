@@ -2,6 +2,7 @@
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Sampling;
 
 namespace Echo.Core.Aggregation.Selection;
@@ -11,10 +12,24 @@ namespace Echo.Core.Aggregation.Selection;
 /// </summary>
 public abstract class LightPicker
 {
+	BoxBound? _boxBound;
+
 	/// <summary>
 	/// The <see cref="Bounds.ConeBound"/> that bounds all of the directions of this <see cref="LightPicker"/>.
 	/// </summary>
 	public abstract ConeBound ConeBound { get; }
+
+	/// <summary>
+	/// The <see cref="Bounds.BoxBound"/> that bounds all light in this <see cref="LightPicker"/>.
+	/// </summary>
+	public BoxBound BoxBound
+	{
+		get
+		{
+			_boxBound ??= GetTransformedBound(Float4x4.identity);
+			return _boxBound.Value;
+		}
+	}
 
 	/// <summary>
 	/// The total emissive power of this <see cref="LightPicker"/>.
@@ -25,7 +40,7 @@ public abstract class LightPicker
 	/// Calculates a <see cref="BoxBound"/> that bounds this <see cref="LightPicker"/> while transformed.
 	/// </summary>
 	/// <param name="transform">The <see cref="Float4x4"/> used to transform this <see cref="LightPicker"/>.</param>
-	public abstract BoxBound GetTransformedBounds(in Float4x4 transform);
+	public abstract BoxBound GetTransformedBound(in Float4x4 transform);
 
 	/// <summary>
 	/// Selects a light using this <see cref="LightPicker"/>.
