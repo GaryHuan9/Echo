@@ -80,7 +80,7 @@ public sealed class ImGuiRoot : IDisposable
 			device.Render(ImGui.GetDrawData());
 
 			//Sleep for delay
-			var remain = moment.elapsed - stopwatch.Elapsed + application.UpdateDelay;
+			var remain = moment.elapsed - stopwatch.Elapsed + application.FrameDelay;
 			if (remain > TimeSpan.Zero) Thread.Sleep(remain);
 		}
 	}

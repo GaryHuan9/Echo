@@ -32,14 +32,14 @@ public sealed class CompositionOperation : AsyncOperation
 
 	readonly RenderTexture renderTexture;
 
-	uint _completedCount;
+	uint _completedLayerCount;
 
 	/// <summary>
 	/// The number of completed <see cref="ICompositeLayer"/>s.
 	/// </summary>
 	/// <remarks>Because the <see cref="layers"/> run sequentially, all <see cref="ICompositeLayer"/>
 	/// from index zero to one less than the number of this property has completed.</remarks>
-	public uint CompletedCount => Volatile.Read(ref _completedCount);
+	public uint CompletedLayerCount => Volatile.Read(ref _completedLayerCount);
 
 	readonly string[] _errorMessages;
 
@@ -47,7 +47,7 @@ public sealed class CompositionOperation : AsyncOperation
 	/// Errors reported from <see cref="layers"/>.
 	/// </summary>
 	/// <remarks>The <see cref="string"/> at each index is the error reported from a <see cref="ICompositeLayer"/> at the same index
-	/// in <see cref="layers"/>, if any. If a <see cref="ICompositeLayer"/> is completed (see <see cref="CompletedCount"/>) and its
+	/// in <see cref="layers"/>, if any. If a <see cref="ICompositeLayer"/> is completed (see <see cref="CompletedLayerCount"/>) and its
 	/// corresponding message is null, then the <see cref="ICompositeLayer"/> ran successfully.</remarks>
 	public ReadOnlySpan<string> ErrorMessages => _errorMessages;
 
@@ -63,7 +63,7 @@ public sealed class CompositionOperation : AsyncOperation
 				Volatile.Write(ref _errorMessages[i], exception.Message);
 			}
 
-			Volatile.Write(ref _completedCount, (uint)i);
+			Volatile.Write(ref _completedLayerCount, (uint)i + 1);
 		}
 	}
 

@@ -33,7 +33,15 @@ public sealed class RenderUI : AreaUI
 	bool trackLatest = true;
 	EventRow[] eventRows;
 
-	protected override string Name => "Render";
+	ViewerUI viewer;
+
+	public override string Name => "Render";
+
+	public override void Initialize()
+	{
+		base.Initialize();
+		viewer = root.Find<ViewerUI>();
+	}
 
 	public void AddRender(ScheduledRender render)
 	{
@@ -47,7 +55,7 @@ public sealed class RenderUI : AreaUI
 		renderLabels.Clear();
 	}
 
-	protected override void Update(in Moment moment)
+	public override void NewFrame(in Moment moment)
 	{
 		if (renders.Count == 0)
 		{
@@ -56,12 +64,20 @@ public sealed class RenderUI : AreaUI
 		}
 
 		if (ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(renderLabels), ref currentIndex)) trackLatest = false;
-		ImGui.Checkbox("Track Latest", ref trackLatest);
+		ImGui.Checkbox("Track Latest Update", ref trackLatest);
 		if (trackLatest) currentIndex = renders.Count - 1;
+		ScheduledRender render = renders[currentIndex];
+
+		if (!render.IsCompleted)
+		{
+			ImGui.SameLine();
+			ImGui.Spacing();
+			ImGui.SameLine();
+			if (ImGui.Button("Abort Render")) render.Abort();
+		}
 
 		ImGui.Separator();
 
-		ScheduledRender render = renders[currentIndex];
 		DrawRenderOverview(render);
 
 		if (ImGui.BeginTabBar("Operations", ImGuiTabBarFlags.TabListPopupButton))
@@ -87,8 +103,8 @@ public sealed class RenderUI : AreaUI
 		{
 			if (ImGuiCustom.BeginProperties())
 			{
-				ImGuiCustom.Property("Completed", render.IsCompleted.ToString());
 				ImGuiCustom.Property("Progress", render.Progress.ToInvariantPercent());
+				ImGuiCustom.Property("Completed", render.IsCompleted.ToString());
 				ImGuiCustom.Property("Creation Time", render.preparationOperation.creationTime.ToInvariant());
 				ImGuiCustom.Property("Operations", render.operations.Length.ToInvariant());
 				ImGuiCustom.Property("Current Operation", render.CurrentIndex.ToInvariant());
@@ -328,7 +344,7 @@ public sealed class RenderUI : AreaUI
 				ImGui.SameLine();
 				ImGui.Spacing();
 				ImGui.SameLine();
-				if (ImGui.SmallButton("View Layer")) root.Find<ViewerUI>().Track(operation);
+				if (ImGui.SmallButton("View Layer")) viewer.Track(operation);
 
 				ImGuiCustom.PropertySeparator();
 
@@ -345,7 +361,7 @@ public sealed class RenderUI : AreaUI
 
 		if (operation.EventRowCount > 0 && ImGuiCustom.BeginSection("Events"))
 		{
-			if (ImGui.BeginTable("Events Table", 4, ImGuiCustom.DefaultTableFlags))
+			if (ImGui.BeginTable("Table", 4, ImGuiCustom.DefaultTableFlags))
 			{
 				double timeR = 1d / time.TotalSeconds;
 				double progressR = 1d / progress;
@@ -387,15 +403,7 @@ public sealed class RenderUI : AreaUI
 		{
 			if (ImGuiCustom.BeginProperties())
 			{
-				ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
-				ImGuiCustom.Property("Progress", operation.Progress.ToInvariantPercent());
-				ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
-
-				ImGuiCustom.PropertySeparator();
-
-				ImGuiCustom.Property("Time Spent", operation.Time.ToInvariant());
-				ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
-
+				DrawOperationOverviewProperties(operation);
 				ImGuiCustom.EndProperties();
 			}
 
@@ -404,11 +412,20 @@ public sealed class RenderUI : AreaUI
 
 		if (ImGuiCustom.BeginSection("Layers"))
 		{
-			if (ImGui.BeginTable("Layers", 1, ImGuiCustom.DefaultTableFlags))
+			if (ImGui.BeginTable("Table", 3, ImGuiCustom.DefaultTableFlags))
 			{
+				ImGui.TableSetupColumn("Order");
+				ImGui.TableSetupColumn("Name");
+				ImGui.TableSetupColumn("Status");
+				ImGui.TableHeadersRow();
+
 				for (int i = 0; i < operation.layers.Length; i++)
 				{
+					ImGuiCustom.TableItem(i.ToInvariant());
 					ImGuiCustom.TableItem(operation.layers[i].GetType().Name);
+
+					if (i >= operation.CompletedLayerCount) ImGuiCustom.TableItem("Awaiting");
+					else ImGuiCustom.TableItem(operation.ErrorMessages[i] ?? "Done", true);
 				}
 
 				ImGui.EndTable();
@@ -416,5 +433,18 @@ public sealed class RenderUI : AreaUI
 
 			ImGuiCustom.EndSection();
 		}
+	}
+
+	static void DrawOperationOverviewProperties(Operation operation)
+	{
+		ImGuiCustom.Property("Progress", operation.Progress.ToInvariantPercent());
+		ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
+		ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
+		ImGuiCustom.Property("Completed Work", operation.CompletedProcedureCount.ToInvariant());
+
+		ImGuiCustom.PropertySeparator();
+
+		ImGuiCustom.Property("Time Spent", operation.Time.ToInvariant());
+		ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
 	}
 }

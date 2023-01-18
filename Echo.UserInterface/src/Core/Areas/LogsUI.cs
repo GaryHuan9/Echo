@@ -9,7 +9,9 @@ public sealed class LogsUI : AreaUI
 {
 	public LogsUI(EchoUI root) : base(root) { }
 
-	protected override string Name => "Logs";
+	bool autoScroll = true;
+
+	public override string Name => "Logs";
 
 	public override void Initialize()
 	{
@@ -17,9 +19,7 @@ public sealed class LogsUI : AreaUI
 		DebugHelper.Logger = LogList.Logger;
 	}
 
-	bool autoScroll = true;
-
-	protected override void Update(in Moment moment)
+	public override void NewFrame(in Moment moment)
 	{
 		if (ImGui.Button("Save to Disk")) SaveToFile();
 

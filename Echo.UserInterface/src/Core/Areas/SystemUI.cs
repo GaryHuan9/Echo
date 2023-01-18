@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Numerics;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Memory;
 using Echo.Core.InOut;
@@ -19,21 +20,37 @@ public sealed class SystemUI : AreaUI
 	/// <remarks>This property is never null, however the instance might change.</remarks>
 	public Device Device { get; private set; } = Device.Create();
 
-	string frameRate;
 	TimeSpan lastUpdateTime;
-	int updateFrequency = 100;
+	string frameRateString;
+	string utilizationString;
+	ulong lastFrameCount;
+	TimeSpan lastCpuTime;
 
 	readonly WorkersReport workersReport = new();
+	readonly Process currentProcess = Process.GetCurrentProcess();
 
-	protected override string Name => "System";
+	public override string Name => "System";
+
+	int frameFrequency;
+
+	int FrameFrequency
+	{
+		get => frameFrequency;
+		set
+		{
+			if (frameFrequency == value) return;
+			root.FrameDelay = TimeSpan.FromSeconds(1f / value);
+			frameFrequency = value;
+		}
+	}
 
 	public override void Initialize()
 	{
 		base.Initialize();
-		AssignUpdateFrequency();
+		FrameFrequency = 100;
 	}
 
-	protected override void Update(in Moment moment)
+	public override void NewFrame(in Moment moment)
 	{
 		DrawGeneral(moment);
 		DrawGarbageCollector();
@@ -45,8 +62,6 @@ public sealed class SystemUI : AreaUI
 		base.Dispose(disposing);
 		if (disposing) Device.Dispose();
 	}
-
-	void AssignUpdateFrequency() => root.UpdateDelay = TimeSpan.FromSeconds(1f / updateFrequency);
 
 	void DrawGeneral(in Moment moment)
 	{
@@ -60,20 +75,17 @@ public sealed class SystemUI : AreaUI
 
 			ImGuiCustom.PropertySeparator();
 
-			if (moment.elapsed - lastUpdateTime > TimeSpan.FromSeconds(0.5f))
-			{
-				float rate = 1f / (float)moment.delta.TotalSeconds;
-				frameRate = rate.ToInvariant();
-				lastUpdateTime = moment.elapsed;
-			}
+			UpdateFrameRateAndUtilization(moment.elapsed - lastUpdateTime);
 
-			ImGuiCustom.Property("Frame Rate", frameRate);
+			ImGuiCustom.Property("Interface Frame Rate", frameRateString);
+			ImGuiCustom.Property("Device Utilization", utilizationString);
+
 			ImGuiCustom.EndProperties();
 		}
 
-		int oldUpdateFrequency = updateFrequency;
-		ImGui.SliderInt("Refresh Frequency", ref updateFrequency, 1, 120);
-		if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
+		int frequency = FrameFrequency;
+		ImGui.SliderInt("Update Frequency", ref frequency, 1, 120);
+		FrameFrequency = frequency;
 
 		ImGuiCustom.EndSection();
 
@@ -87,6 +99,27 @@ public sealed class SystemUI : AreaUI
 			return "UNKNOWN";
 #endif
 		}
+	}
+
+	void UpdateFrameRateAndUtilization(TimeSpan elapsed)
+	{
+		const float UpdatePeriod = 0.8f;
+
+		if (elapsed < TimeSpan.FromSeconds(UpdatePeriod)) return;
+
+		ulong frameCount = root.FrameCount;
+		TimeSpan cpuTime = currentProcess.UserProcessorTime;
+
+		float elapsedSeconds = (float)elapsed.TotalSeconds;
+		ulong elapsedFrames = frameCount - lastFrameCount;
+		float elapsedCpuTime = (float)(cpuTime - lastCpuTime).TotalSeconds;
+
+		frameRateString = (elapsedFrames / elapsedSeconds).ToInvariant();
+		utilizationString = (elapsedCpuTime / (elapsedSeconds * Environment.ProcessorCount)).ToInvariantPercent();
+
+		lastFrameCount = frameCount;
+		lastCpuTime = cpuTime;
+		lastUpdateTime += elapsed;
 	}
 
 	void DrawGarbageCollector()

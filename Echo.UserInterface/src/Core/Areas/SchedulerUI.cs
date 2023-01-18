@@ -35,7 +35,7 @@ public sealed class SchedulerUI : AreaUI
 		RecurseSubdirectories = false
 	};
 
-	protected override string Name => "Scheduler";
+	public override string Name => "Scheduler";
 
 	public override void Initialize()
 	{
@@ -63,7 +63,7 @@ public sealed class SchedulerUI : AreaUI
 		}
 	}
 
-	protected override unsafe void Update(in Moment moment)
+	public override unsafe void NewFrame(in Moment moment)
 	{
 		//Show path input box
 		if (ImGui.InputText("##Path", ref filePath, 128, ImGuiInputTextFlags.CallbackCompletion, CompletionCallback)) PopulatePathCandidates();
