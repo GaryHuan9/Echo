@@ -6,7 +6,6 @@ using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Statistics;
-using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
@@ -64,7 +63,6 @@ public sealed class RenderUI : AreaUI
 
 		ScheduledRender render = renders[currentIndex];
 		DrawRenderOverview(render);
-		ImGui.NewLine();
 
 		if (ImGui.BeginTabBar("Operations", ImGuiTabBarFlags.TabListPopupButton))
 		{
@@ -85,24 +83,29 @@ public sealed class RenderUI : AreaUI
 
 	void DrawRenderOverview(ScheduledRender render)
 	{
-		if (ImGuiCustom.OpenHeader("Overview") && ImGuiCustom.BeginProperties())
+		if (ImGuiCustom.BeginSection("Overview"))
 		{
-			ImGuiCustom.Property("Progress", render.Progress.ToInvariantPercent());
-			ImGuiCustom.Property("Completed", render.IsCompleted.ToString());
-			ImGuiCustom.Property("Creation Time", render.preparationOperation.creationTime.ToInvariant());
-			ImGuiCustom.Property("Operations", render.operations.Length.ToInvariant());
-			ImGuiCustom.Property("Current Operation", render.CurrentIndex.ToInvariant());
+			if (ImGuiCustom.BeginProperties())
+			{
+				ImGuiCustom.Property("Completed", render.IsCompleted.ToString());
+				ImGuiCustom.Property("Progress", render.Progress.ToInvariantPercent());
+				ImGuiCustom.Property("Creation Time", render.preparationOperation.creationTime.ToInvariant());
+				ImGuiCustom.Property("Operations", render.operations.Length.ToInvariant());
+				ImGuiCustom.Property("Current Operation", render.CurrentIndex.ToInvariant());
 
-			ImGuiCustom.PropertySeparator();
+				ImGuiCustom.PropertySeparator();
 
-			RenderProfile profile = render.profile;
-			ImGuiCustom.Property("Total Evaluations", profile.EvaluationProfiles.Length.ToInvariant());
-			ImGuiCustom.Property("Total Compositions", profile.CompositionLayers.Length.ToInvariant());
+				RenderProfile profile = render.profile;
+				ImGuiCustom.Property("Total Evaluations", profile.EvaluationProfiles.Length.ToInvariant());
+				ImGuiCustom.Property("Total Compositions", profile.CompositionLayers.Length.ToInvariant());
 
-			ImGuiCustom.EndProperties();
+				ImGuiCustom.EndProperties();
+			}
+
+			ImGuiCustom.EndSection();
 		}
 
-		if (ImGuiCustom.OpenHeader("Destination"))
+		if (ImGuiCustom.BeginSection("Destination"))
 		{
 			RenderTexture texture = render.texture;
 
@@ -138,6 +141,8 @@ public sealed class RenderUI : AreaUI
 
 				ImGui.EndTable();
 			}
+
+			ImGuiCustom.EndSection();
 		}
 	}
 
@@ -197,25 +202,30 @@ public sealed class RenderUI : AreaUI
 			return;
 		}
 
-		if (ImGuiCustom.OpenHeader("Overview") && ImGuiCustom.BeginProperties())
+		if (ImGuiCustom.BeginSection("Overview"))
 		{
-			ImGuiCustom.Property("Total Infinite Light", scene.infiniteLights.Length.ToInvariant());
-			ImGuiCustom.Property("Infinite Lights Power", scene.infiniteLightsPower.ToInvariant());
-			ImGuiCustom.Property("All Lights Power", (scene.infiniteLightsPower + scene.lightPicker.Power).ToInvariant());
+			if (ImGuiCustom.BeginProperties())
+			{
+				ImGuiCustom.Property("Total Infinite Light", scene.infiniteLights.Length.ToInvariant());
+				ImGuiCustom.Property("Infinite Lights Power", scene.infiniteLightsPower.ToInvariant());
+				ImGuiCustom.Property("All Lights Power", (scene.infiniteLightsPower + scene.lightPicker.Power).ToInvariant());
 
-			ImGuiCustom.PropertySeparator();
+				ImGuiCustom.PropertySeparator();
 
-			ImGuiCustom.Property("Camera Position", scene.camera.ContainedPosition.ToInvariant());
-			ImGuiCustom.Property("Camera Forward", (scene.camera.ContainedRotation * Float3.Forward).ToInvariant());
-			ImGuiCustom.Property("Camera Up", (scene.camera.ContainedRotation * Float3.Up).ToInvariant());
-			ImGuiCustom.Property("Camera Field of View", scene.camera.FieldOfView.ToInvariant());
+				ImGuiCustom.Property("Camera Position", scene.camera.ContainedPosition.ToInvariant());
+				ImGuiCustom.Property("Camera Forward", (scene.camera.ContainedRotation * Float3.Forward).ToInvariant());
+				ImGuiCustom.Property("Camera Up", (scene.camera.ContainedRotation * Float3.Up).ToInvariant());
+				ImGuiCustom.Property("Camera Field of View", scene.camera.FieldOfView.ToInvariant());
 
-			ImGuiCustom.EndProperties();
+				ImGuiCustom.EndProperties();
+			}
+
+			ImGuiCustom.EndSection();
 		}
 
 		PreparedPack pack = scene;
 
-		if (ImGuiCustom.OpenHeader("Geometries"))
+		if (ImGuiCustom.BeginSection("Geometries"))
 		{
 			if (ImGuiCustom.BeginProperties())
 			{
@@ -226,7 +236,7 @@ public sealed class RenderUI : AreaUI
 				ImGuiCustom.EndProperties();
 			}
 
-			if (ImGui.BeginTable("Geometries Table", 4, ImGuiCustom.DefaultTableFlags))
+			if (ImGui.BeginTable("Table", 4, ImGuiCustom.DefaultTableFlags))
 			{
 				ImGui.TableSetupColumn("Kind");
 				ImGui.TableSetupColumn("Triangle");
@@ -246,22 +256,29 @@ public sealed class RenderUI : AreaUI
 
 				ImGui.EndTable();
 			}
+
+			ImGuiCustom.EndSection();
 		}
 
-		if (ImGuiCustom.OpenHeader("Lights") && ImGuiCustom.BeginProperties())
+		if (ImGuiCustom.BeginSection("Lights"))
 		{
-			ImGuiCustom.Property("Total Power", pack.lightPicker.Power.ToInvariant());
-			ImGuiCustom.Property("Enclosing Box", pack.lightPicker.BoxBound.ToInvariant());
-			ImGuiCustom.Property("Enclosing Cone", pack.lightPicker.ConeBound.ToInvariant());
+			if (ImGuiCustom.BeginProperties())
+			{
+				ImGuiCustom.Property("Total Power", pack.lightPicker.Power.ToInvariant());
+				ImGuiCustom.Property("Enclosing Box", pack.lightPicker.BoxBound.ToInvariant());
+				ImGuiCustom.Property("Enclosing Cone", pack.lightPicker.ConeBound.ToInvariant());
 
-			ImGuiCustom.PropertySeparator();
+				ImGuiCustom.PropertySeparator();
 
-			ImGuiCustom.Property("Total Point Light", pack.lights.points.Length.ToInvariant());
-			ImGuiCustom.Property("Total Emissive Triangle", pack.lights.emissiveCounts.triangle.ToInvariant());
-			ImGuiCustom.Property("Total Emissive Sphere", pack.lights.emissiveCounts.sphere.ToInvariant());
-			ImGuiCustom.Property("Total Emissive Instances", pack.lights.emissiveCounts.instance.ToInvariant());
+				ImGuiCustom.Property("Total Point Light", pack.lights.points.Length.ToInvariant());
+				ImGuiCustom.Property("Total Emissive Triangle", pack.lights.emissiveCounts.triangle.ToInvariant());
+				ImGuiCustom.Property("Total Emissive Sphere", pack.lights.emissiveCounts.sphere.ToInvariant());
+				ImGuiCustom.Property("Total Emissive Instances", pack.lights.emissiveCounts.instance.ToInvariant());
 
-			ImGuiCustom.EndProperties();
+				ImGuiCustom.EndProperties();
+			}
+
+			ImGuiCustom.EndSection();
 		}
 	}
 
@@ -270,86 +287,134 @@ public sealed class RenderUI : AreaUI
 		double progress = operation.Progress;
 		TimeSpan time = operation.Time;
 
-		if (ImGuiCustom.OpenHeader("Overview") && ImGuiCustom.BeginProperties())
+		if (ImGuiCustom.BeginSection("Overview"))
 		{
-			ImGuiCustom.Property("Progress", progress.ToInvariantPercent());
-			ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
-			ImGuiCustom.Property("Creation Time", operation.creationTime.ToInvariant());
-			ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
-
-			ImGuiCustom.PropertySeparator();
-
-			ImGuiCustom.Property("Time Spent", time.ToInvariant());
-			ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
-
-			if (progress is > 0f and < 1f)
+			if (ImGuiCustom.BeginProperties())
 			{
-				TimeSpan timeRemain = time / progress - time;
-				DateTime timeFinish = DateTime.Now + timeRemain;
+				ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
+				ImGuiCustom.Property("Progress", progress.ToInvariantPercent());
+				ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
 
-				ImGuiCustom.Property("Estimated Time Remain", timeRemain.ToInvariant());
-				ImGuiCustom.Property("Estimated Completion Time", timeFinish.ToInvariant());
-			}
+				ImGuiCustom.PropertySeparator();
 
-			ImGuiCustom.EndProperties();
-		}
+				ImGuiCustom.Property("Time Spent", time.ToInvariant());
+				ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
 
-		if (ImGuiCustom.OpenHeader("Profile") && ImGuiCustom.BeginProperties())
-		{
-			EvaluationProfile profile = operation.profile;
-
-			ImGuiCustom.Property("Evaluator", profile.Evaluator.GetType().Name);
-			ImGuiCustom.Property("Distribution", profile.Distribution.GetType().Name);
-			ImGuiCustom.Property("Destination", profile.TargetLayer);
-
-			ImGui.SameLine();
-			ImGui.Spacing();
-			ImGui.SameLine();
-			if (ImGui.SmallButton("View Layer")) root.Find<ViewerUI>().Track(operation);
-
-			ImGuiCustom.PropertySeparator();
-
-			ImGuiCustom.Property("Epoch Size", profile.Distribution.Extend.ToInvariant());
-			ImGuiCustom.Property("Min Epoch Count", profile.MinEpoch.ToInvariant());
-			ImGuiCustom.Property("Max Epoch Count", profile.MaxEpoch.ToInvariant());
-			ImGuiCustom.Property("Noise Threshold", profile.NoiseThreshold.ToString("E2", InvariantFormat.Culture));
-
-			ImGuiCustom.EndProperties();
-		}
-
-		if (operation.EventRowCount > 0 && ImGuiCustom.OpenHeader("Events") &&
-			ImGui.BeginTable("Events Table", 4, ImGuiCustom.DefaultTableFlags))
-		{
-			double timeR = 1d / time.TotalSeconds;
-			double progressR = 1d / progress;
-			bool divideByZero = time == TimeSpan.Zero || progress.AlmostEquals();
-
-			Utility.EnsureCapacity(ref eventRows, operation.EventRowCount);
-
-			SpanFill<EventRow> fill = eventRows;
-			operation.FillEventRows(ref fill);
-
-			ImGui.TableSetupColumn("Label");
-			ImGui.TableSetupColumn("Total Done");
-			ImGui.TableSetupColumn("Per Second");
-			ImGui.TableSetupColumn("Estimate");
-			ImGui.TableHeadersRow();
-
-			foreach ((string label, ulong count) in fill.Filled)
-			{
-				ImGuiCustom.TableItem(label);
-				ImGuiCustom.TableItem(count.ToInvariant());
-
-				if (!divideByZero)
+				if (progress is > 0f and < 1f)
 				{
-					ImGuiCustom.TableItem(((float)(count * timeR)).ToInvariant());
-					ImGuiCustom.TableItem(((ulong)(count * progressR)).ToInvariant());
+					TimeSpan timeRemain = time / progress - time;
+					DateTime timeFinish = DateTime.Now + timeRemain;
+
+					ImGuiCustom.Property("Estimated Time Remain", timeRemain.ToInvariant());
+					ImGuiCustom.Property("Estimated Completion Time", timeFinish.ToInvariant());
 				}
+
+				ImGuiCustom.EndProperties();
 			}
 
-			ImGui.EndTable();
+			ImGuiCustom.EndSection();
+		}
+
+		if (ImGuiCustom.BeginSection("Profile"))
+		{
+			if (ImGuiCustom.BeginProperties())
+			{
+				EvaluationProfile profile = operation.profile;
+
+				ImGuiCustom.Property("Evaluator", profile.Evaluator.GetType().Name);
+				ImGuiCustom.Property("Distribution", profile.Distribution.GetType().Name);
+				ImGuiCustom.Property("Destination", profile.TargetLayer);
+
+				ImGui.SameLine();
+				ImGui.Spacing();
+				ImGui.SameLine();
+				if (ImGui.SmallButton("View Layer")) root.Find<ViewerUI>().Track(operation);
+
+				ImGuiCustom.PropertySeparator();
+
+				ImGuiCustom.Property("Epoch Size", profile.Distribution.Extend.ToInvariant());
+				ImGuiCustom.Property("Min Epoch Count", profile.MinEpoch.ToInvariant());
+				ImGuiCustom.Property("Max Epoch Count", profile.MaxEpoch.ToInvariant());
+				ImGuiCustom.Property("Noise Threshold", profile.NoiseThreshold.ToString("E2", InvariantFormat.Culture));
+
+				ImGuiCustom.EndProperties();
+			}
+
+			ImGuiCustom.EndSection();
+		}
+
+		if (operation.EventRowCount > 0 && ImGuiCustom.BeginSection("Events"))
+		{
+			if (ImGui.BeginTable("Events Table", 4, ImGuiCustom.DefaultTableFlags))
+			{
+				double timeR = 1d / time.TotalSeconds;
+				double progressR = 1d / progress;
+				bool divideByZero = time == TimeSpan.Zero || progress.AlmostEquals();
+
+				Utility.EnsureCapacity(ref eventRows, operation.EventRowCount);
+
+				SpanFill<EventRow> fill = eventRows;
+				operation.FillEventRows(ref fill);
+
+				ImGui.TableSetupColumn("Label");
+				ImGui.TableSetupColumn("Total Done");
+				ImGui.TableSetupColumn("Per Second");
+				ImGui.TableSetupColumn("Estimate");
+				ImGui.TableHeadersRow();
+
+				foreach ((string label, ulong count) in fill.Filled)
+				{
+					ImGuiCustom.TableItem(label);
+					ImGuiCustom.TableItem(count.ToInvariant());
+
+					if (!divideByZero)
+					{
+						ImGuiCustom.TableItem(((float)(count * timeR)).ToInvariant());
+						ImGuiCustom.TableItem(((ulong)(count * progressR)).ToInvariant());
+					}
+				}
+
+				ImGui.EndTable();
+			}
+
+			ImGuiCustom.EndSection();
 		}
 	}
 
-	void DrawOperation(CompositionOperation operation) { }
+	void DrawOperation(CompositionOperation operation)
+	{
+		if (ImGuiCustom.BeginSection("Overview"))
+		{
+			if (ImGuiCustom.BeginProperties())
+			{
+				ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
+				ImGuiCustom.Property("Progress", operation.Progress.ToInvariantPercent());
+				ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
+
+				ImGuiCustom.PropertySeparator();
+
+				ImGuiCustom.Property("Time Spent", operation.Time.ToInvariant());
+				ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
+
+				ImGuiCustom.EndProperties();
+			}
+
+			ImGuiCustom.EndSection();
+		}
+
+		if (ImGuiCustom.BeginSection("Layers"))
+		{
+			if (ImGui.BeginTable("Layers", 1, ImGuiCustom.DefaultTableFlags))
+			{
+				for (int i = 0; i < operation.layers.Length; i++)
+				{
+					ImGuiCustom.TableItem(operation.layers[i].GetType().Name);
+				}
+
+				ImGui.EndTable();
+			}
+
+			ImGuiCustom.EndSection();
+		}
+	}
 }

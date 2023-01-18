@@ -35,15 +35,9 @@ public sealed class SystemUI : AreaUI
 
 	protected override void Update(in Moment moment)
 	{
-		if (ImGuiCustom.OpenHeader("General")) DrawGeneral(moment);
-
-		if (ImGuiCustom.OpenHeader("Garbage Collector")) DrawGarbageCollector();
-
-		if (ImGuiCustom.OpenHeader("Device and Workers"))
-		{
-			DrawDevice();
-			DrawWorkers();
-		}
+		DrawGeneral(moment);
+		DrawGarbageCollector();
+		DrawDeviceAndWorkers();
 	}
 
 	protected override void Dispose(bool disposing)
@@ -56,7 +50,9 @@ public sealed class SystemUI : AreaUI
 
 	void DrawGeneral(in Moment moment)
 	{
-		if (ImGuiCustom.BeginProperties("Main"))
+		if (!ImGuiCustom.BeginSection("General")) return;
+
+		if (ImGuiCustom.BeginProperties())
 		{
 			ImGuiCustom.Property("Operating System", Environment.OSVersion.VersionString);
 			ImGuiCustom.Property("Debugger", Debugger.IsAttached ? "Present" : "Not Attached");
@@ -79,6 +75,8 @@ public sealed class SystemUI : AreaUI
 		ImGui.SliderInt("Refresh Frequency", ref updateFrequency, 1, 120);
 		if (oldUpdateFrequency != updateFrequency) AssignUpdateFrequency();
 
+		ImGuiCustom.EndSection();
+
 		static string GetCompilerMode()
 		{
 #if DEBUG
@@ -93,6 +91,8 @@ public sealed class SystemUI : AreaUI
 
 	void DrawGarbageCollector()
 	{
+		if (!ImGuiCustom.BeginSection("Garbage Collector")) return;
+
 		var info = GC.GetGCMemoryInfo();
 
 		if (ImGui.Button("Collect All Generations"))
@@ -146,10 +146,14 @@ public sealed class SystemUI : AreaUI
 
 			ImGui.EndTable();
 		}
+
+		ImGuiCustom.EndSection();
 	}
 
-	void DrawDevice()
+	void DrawDeviceAndWorkers()
 	{
+		if (!ImGuiCustom.BeginSection("Device and Workers")) return;
+
 		//Buttons
 		ImGui.BeginDisabled(!Device.IsDispatched);
 
@@ -201,44 +205,45 @@ public sealed class SystemUI : AreaUI
 
 			ImGuiCustom.EndProperties();
 		}
-	}
 
-	void DrawWorkers()
-	{
+		//Workers
 		Operation operation = Device.Operations.Latest;
 		if (!Device.IsDispatched) operation = null;
 
-		if (!ImGui.BeginTable("Workers Table", operation == null ? 2 : 5, ImGuiCustom.DefaultTableFlags)) return;
-
-		ImGui.TableSetupColumn("Guid");
-		ImGui.TableSetupColumn("State");
-
-		if (operation != null)
+		if (ImGui.BeginTable("Workers Table", operation == null ? 2 : 5, ImGuiCustom.DefaultTableFlags))
 		{
-			workersReport.Update(operation);
-			ImGui.TableSetupColumn("Time Active");
-			ImGui.TableSetupColumn("Index");
-			ImGui.TableSetupColumn("Progress");
-		}
-
-		ImGui.TableHeadersRow();
-
-		foreach (IWorker worker in Device.Workers)
-		{
-			ImGuiCustom.TableItem(worker.Guid.ToInvariantShort());
-			ImGuiCustom.TableItem(worker.State.ToDisplayString());
+			ImGui.TableSetupColumn("Worker Guid");
+			ImGui.TableSetupColumn("State");
 
 			if (operation != null)
 			{
-				(TimeSpan activeTime, Procedure procedure) = workersReport[worker.Index];
-
-				ImGuiCustom.TableItem(activeTime.ToInvariant());
-				ImGuiCustom.TableItem(procedure.index.ToInvariant());
-				ImGuiCustom.TableItem(procedure.Progress.ToInvariantPercent());
+				workersReport.Update(operation);
+				ImGui.TableSetupColumn("Time Active");
+				ImGui.TableSetupColumn("Index");
+				ImGui.TableSetupColumn("Progress");
 			}
+
+			ImGui.TableHeadersRow();
+
+			foreach (IWorker worker in Device.Workers)
+			{
+				ImGuiCustom.TableItem(worker.Guid.ToInvariantShort());
+				ImGuiCustom.TableItem(worker.State.ToDisplayString());
+
+				if (operation != null)
+				{
+					(TimeSpan activeTime, Procedure procedure) = workersReport[worker.Index];
+
+					ImGuiCustom.TableItem(activeTime.ToInvariant());
+					ImGuiCustom.TableItem(procedure.index.ToInvariant());
+					ImGuiCustom.TableItem(procedure.Progress.ToInvariantPercent());
+				}
+			}
+
+			ImGui.EndTable();
 		}
 
-		ImGui.EndTable();
+		ImGuiCustom.EndSection();
 	}
 
 	class WorkersReport
