@@ -17,6 +17,8 @@ public static class ImGuiCustom
 	const ImGuiTableFlags PropertiesTableFlags = ImGuiTableFlags.BordersOuter | ImGuiTableFlags.NoSavedSettings |
 												 ImGuiTableFlags.Resizable | ImGuiTableFlags.NoBordersInBodyUntilResize;
 
+	const float SectionPadding = 8f;
+
 	public static void TableItem(string value, bool wrap = false)
 	{
 		ImGui.TableNextColumn();
@@ -50,10 +52,22 @@ public static class ImGuiCustom
 
 	public static void EndProperties() => ImGui.EndTable();
 
-	public static bool OpenHeader(string label)
+	public static bool BeginSection(string label)
 	{
 		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
-		return ImGui.CollapsingHeader(label);
+		if (!ImGui.CollapsingHeader(label)) return false;
+
+		ImGui.PushID(label);
+		ImGui.Indent(SectionPadding);
+
+		return true;
+	}
+
+	public static void EndSection()
+	{
+		ImGui.Unindent(SectionPadding);
+		ImGui.Dummy(new Vector2(0f, SectionPadding));
+		ImGui.PopID();
 	}
 
 	public static bool Selector(string label, ReadOnlySpan<string> items, ref int currentIndex)

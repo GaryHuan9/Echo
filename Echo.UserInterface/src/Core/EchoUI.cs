@@ -82,7 +82,7 @@ public sealed class EchoUI : IApplication
 		style.WindowPadding = new Vector2(8f, 8f);
 		style.FramePadding = new Vector2(8f, 2f);
 		style.CellPadding = new Vector2(4f, 2f);
-		style.ItemSpacing = new Vector2(8f, 4f);
+		style.ItemSpacing = new Vector2(4f, 4f);
 		style.ItemInnerSpacing = new Vector2(4f, 4f);
 		style.TouchExtraPadding = new Vector2(0f, 0f);
 		style.IndentSpacing = 20f;
