@@ -248,6 +248,6 @@ public interface ICompositeContext
 		public TextureNotFoundException(string label, bool write, Type type) : base(GetMessage(label, write, type)) { }
 
 		static string GetMessage(string label, bool write, Type type) =>
-			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>))} of type `{type}` in {nameof(RenderTexture)} labeled as `{label}`.";
+			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>)).Name} of type `{type.Name}` in {nameof(RenderTexture)} labeled as `{label}`.";
 	}
 }

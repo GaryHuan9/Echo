@@ -36,7 +36,7 @@ public partial class ViewerUI : AreaUI
 		}
 	}
 
-	protected override string Name => "Viewer";
+	public override string Name => "Viewer";
 
 	public void Track(EvaluationOperation operation)
 	{
@@ -44,7 +44,7 @@ public partial class ViewerUI : AreaUI
 		currentMode = evaluationOperationMode;
 	}
 
-	protected override void Update(in Moment moment)
+	public override void NewFrame(in Moment moment)
 	{
 		FindImGuiRegion(out Bounds region);
 		UpdateCursorPosition(region);

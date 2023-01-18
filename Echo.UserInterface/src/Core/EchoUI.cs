@@ -32,7 +32,9 @@ public sealed class EchoUI : IApplication
 	public readonly ImGuiDevice backend;
 	readonly ImmutableArray<AreaUI> areas;
 
-	public TimeSpan UpdateDelay { get; set; } = TimeSpan.Zero;
+	public TimeSpan FrameDelay { get; set; } = TimeSpan.Zero;
+
+	public ulong FrameCount { get; private set; }
 	public string Label => "Echo User Interface";
 
 	public void NewFrame(in Moment moment)
@@ -41,7 +43,13 @@ public sealed class EchoUI : IApplication
 
 		ImGui.ShowDemoWindow();
 
-		foreach (AreaUI area in areas) area.NewFrame(moment);
+		foreach (AreaUI area in areas)
+		{
+			if (ImGui.Begin(area.Name, area.WindowFlags)) area.NewFrame(moment);
+			ImGui.End();
+		}
+
+		++FrameCount;
 	}
 
 	public T Find<T>() where T : AreaUI

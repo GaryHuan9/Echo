@@ -27,7 +27,7 @@ public sealed class ScheduledRender
 		var builder = ImmutableArray.CreateBuilder<Operation>();
 		builder.Add(preparationOperation);
 		builder.AddRange(evaluationOperations);
-		builder.Add(compositionOperation);
+		if (compositionOperation != null) builder.Add(compositionOperation);
 		operations = builder.ToImmutable();
 	}
 
@@ -54,6 +54,7 @@ public sealed class ScheduledRender
 	/// <summary>
 	/// The final <see cref="Operation"/> of the render which combines the evaluations together into a final image.
 	/// </summary>
+	/// <remarks>This is null if the <see cref="RenderProfile"/> does not have any <see cref="ICompositeLayer"/>.</remarks>
 	public readonly CompositionOperation compositionOperation;
 
 	/// <summary>
@@ -75,7 +76,7 @@ public sealed class ScheduledRender
 	/// <summary>
 	/// Whether the entire render is completed.
 	/// </summary>
-	public bool IsCompleted => compositionOperation.IsCompleted;
+	public bool IsCompleted => LastOperation.IsCompleted;
 
 	int _currentIndex;
 
@@ -102,18 +103,14 @@ public sealed class ScheduledRender
 		get
 		{
 			if (IsCompleted) return 1f;
+			int index = CurrentIndex;
 
-			float result = 0f;
-
-			result += 0.04f * (float)preparationOperation.Progress;
-			result += 0.06f * (float)compositionOperation.Progress;
-
-			float percent = 0.9f / evaluationOperations.Length;
-			foreach (var operation in evaluationOperations) result += percent * (float)operation.Progress;
-
-			return result;
+			float progress = (float)operations[index].Progress;
+			return (index + progress) / operations.Length;
 		}
 	}
+
+	Operation LastOperation => operations[^1];
 
 	/// <summary>
 	/// Blocks the calling thread until <see cref="IsCompleted"/> is true or if this <see cref="ScheduledRender"/> is aborted.
@@ -121,7 +118,7 @@ public sealed class ScheduledRender
 	public void Await()
 	{
 		if (device.Disposed) return;
-		device.Operations.Await(compositionOperation);
+		device.Operations.Await(LastOperation);
 	}
 
 	/// <summary>
@@ -162,7 +159,9 @@ public sealed class ScheduledRender
 
 	static CompositionOperation ScheduleCompositionOperation(Device device, ScheduledRender render)
 	{
-		var factory = new CompositionOperation.Factory(render.texture, render.profile.CompositionLayers);
+		var layers = render.profile.CompositionLayers;
+		if (layers.IsDefaultOrEmpty) return null;
+		var factory = new CompositionOperation.Factory(render.texture, layers);
 		return (CompositionOperation)device.Schedule(factory);
 	}
 }

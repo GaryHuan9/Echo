@@ -122,8 +122,8 @@ public abstract class Operation : IDisposable
 
 			foreach (ref readonly WorkerData data in workerData.AsSpan())
 			{
-				//A start time of default means that the worker is not running
-				if (data.timeStarted != default) result += time - data.timeStarted;
+				//Add the current running time if worker is running
+				if (data.IsRunning) result += time - data.timeStarted;
 			}
 
 			return result;
@@ -133,8 +133,27 @@ public abstract class Operation : IDisposable
 	/// <summary>
 	/// The duration in realtime that this <see cref="Operation"/> has been worked on.
 	/// </summary>
-	/// <remarks>This is equals to <see cref="TotalTime"/> divided by <see cref="WorkerCount"/>.</remarks>
-	public TimeSpan Time => TotalTime / WorkerCount;
+	/// <remarks>This is the time of the most active <see cref="IWorker"/> spent on this <see cref="Operation"/>.</remarks>
+	public TimeSpan Time
+	{
+		get
+		{
+			TimeSpan time = stopwatch.Elapsed;
+			Ensure.AreNotEqual(time, default);
+
+			using var _ = totalTimeLocker.Fetch();
+			TimeSpan maxTime = TimeSpan.MinValue;
+
+			foreach (ref readonly WorkerData data in workerData.AsSpan())
+			{
+				TimeSpan workerTime = data.recordedTime;
+				if (data.IsRunning) workerTime += time - data.timeStarted;
+				if (workerTime > maxTime) maxTime = workerTime;
+			}
+
+			return maxTime;
+		}
+	}
 
 	/// <summary>
 	/// Joins the execution of this <see cref="Operation"/> once.
@@ -181,6 +200,8 @@ public abstract class Operation : IDisposable
 			totalRecordedTime += elapsed;
 			data.recordedTime += elapsed;
 			data.timeStarted = default;
+
+			Ensure.IsFalse(data.IsRunning);
 		}
 		else
 		{
@@ -220,8 +241,7 @@ public abstract class Operation : IDisposable
 		for (int i = 0; i < length; i++)
 		{
 			ref readonly WorkerData data = ref workerData[i];
-
-			if (data.timeStarted == default) fill.Add(data.recordedTime);
+			if (!data.IsRunning) fill.Add(data.recordedTime);
 			else fill.Add(data.recordedTime + time - data.timeStarted);
 		}
 	}
@@ -304,7 +324,7 @@ public abstract class Operation : IDisposable
 			this.workerGuid = workerGuid;
 
 			recordedTime = TimeSpan.Zero;
-			timeStarted = TimeSpan.Zero;
+			timeStarted = default;
 			procedure = default;
 			monoThread = new MonoThread();
 		}
@@ -316,6 +336,8 @@ public abstract class Operation : IDisposable
 		public Procedure procedure;
 
 		MonoThread monoThread;
+
+		public readonly bool IsRunning => timeStarted != default;
 
 		//The size of this struct should not be larger than 64 bytes
 		//If we really need more room, expand the total to 128 bytes

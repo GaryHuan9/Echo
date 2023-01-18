@@ -28,7 +28,7 @@ public sealed class OperationUI : AreaUI
 	readonly List<string> operationLabels = new();
 	readonly WorkerData workerData = new();
 
-	protected override string Name => "Operation";
+	public override string Name => "Operation";
 
 	public Operation SelectedOperation
 	{
@@ -49,7 +49,7 @@ public sealed class OperationUI : AreaUI
 		system = root.Find<SystemUI>();
 	}
 
-	protected override void Update(in Moment moment)
+	public override void NewFrame(in Moment moment)
 	{
 		Device device = system.Device;
 
