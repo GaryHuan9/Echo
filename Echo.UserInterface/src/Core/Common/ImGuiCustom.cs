@@ -14,6 +14,8 @@ public static class ImGuiCustom
 													 ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Reorderable |
 													 ImGuiTableFlags.BordersOuter;
 
+	public const float UseAvailable = -float.Epsilon;
+	
 	const ImGuiTableFlags PropertiesTableFlags = ImGuiTableFlags.BordersOuter | ImGuiTableFlags.NoSavedSettings |
 												 ImGuiTableFlags.Resizable | ImGuiTableFlags.NoBordersInBodyUntilResize;
 

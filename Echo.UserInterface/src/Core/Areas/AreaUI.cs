@@ -10,19 +10,25 @@ public abstract class AreaUI : IDisposable
 
 	protected readonly EchoUI root;
 
-	public abstract string Name { get; }
+	protected abstract string Name { get; }
 
-	public virtual ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;
+	protected virtual ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;
 
 	public virtual void Initialize() { }
 
-	public abstract void NewFrame(in Moment moment);
+	public virtual void NewFrame(in Moment moment)
+	{
+		if (ImGui.Begin(Name, WindowFlags)) NewFrameWindow(moment);
+		ImGui.End();
+	}
 
 	public void Dispose()
 	{
 		Dispose(true);
 		GC.SuppressFinalize(this);
 	}
+
+	protected abstract void NewFrameWindow(in Moment moment);
 
 	protected virtual void Dispose(bool disposing) { }
 }

@@ -35,7 +35,7 @@ public sealed class RenderUI : AreaUI
 
 	ViewerUI viewer;
 
-	public override string Name => "Render";
+	protected override string Name => "Render";
 
 	public override void Initialize()
 	{
@@ -55,7 +55,7 @@ public sealed class RenderUI : AreaUI
 		renderLabels.Clear();
 	}
 
-	public override void NewFrame(in Moment moment)
+	protected override void NewFrameWindow(in Moment moment)
 	{
 		if (renders.Count == 0)
 		{

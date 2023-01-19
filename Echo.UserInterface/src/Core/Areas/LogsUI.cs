@@ -11,7 +11,7 @@ public sealed class LogsUI : AreaUI
 
 	bool autoScroll = true;
 
-	public override string Name => "Logs";
+	protected override string Name => "Logs";
 
 	public override void Initialize()
 	{
@@ -19,7 +19,7 @@ public sealed class LogsUI : AreaUI
 		DebugHelper.Logger = LogList.Logger;
 	}
 
-	public override void NewFrame(in Moment moment)
+	protected override void NewFrameWindow(in Moment moment)
 	{
 		if (ImGui.Button("Save to Disk")) SaveToFile();
 

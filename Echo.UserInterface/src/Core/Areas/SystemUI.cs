@@ -29,7 +29,7 @@ public sealed class SystemUI : AreaUI
 	readonly WorkersReport workersReport = new();
 	readonly Process currentProcess = Process.GetCurrentProcess();
 
-	public override string Name => "System";
+	protected override string Name => "System";
 
 	int frameFrequency;
 
@@ -50,7 +50,7 @@ public sealed class SystemUI : AreaUI
 		FrameFrequency = 100;
 	}
 
-	public override void NewFrame(in Moment moment)
+	protected override void NewFrameWindow(in Moment moment)
 	{
 		DrawGeneral(moment);
 		DrawGarbageCollector();
