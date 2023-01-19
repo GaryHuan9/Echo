@@ -23,7 +23,8 @@ public sealed class EchoUI : IApplication
 			new RenderUI(this),
 			new ViewerUI(this),
 			new LogsUI(this),
-			new SchedulerUI(this)
+			new SchedulerUI(this),
+			new FileUI(this)
 		);
 
 		Initialize();
@@ -43,11 +44,7 @@ public sealed class EchoUI : IApplication
 
 		ImGui.ShowDemoWindow();
 
-		foreach (AreaUI area in areas)
-		{
-			if (ImGui.Begin(area.Name, area.WindowFlags)) area.NewFrame(moment);
-			ImGui.End();
-		}
+		foreach (AreaUI area in areas) area.NewFrame(moment);
 
 		++FrameCount;
 	}
