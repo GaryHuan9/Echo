@@ -9,6 +9,12 @@ namespace Echo.Core.Processes.Composition;
 public interface ICompositeLayer
 {
 	/// <summary>
+	/// Gets or sets whether this <see cref="ICompositeLayer"/> is active.
+	/// </summary>
+	/// <remarks>Disabled <see cref="ICompositeLayer"/>'s <see cref="ExecuteAsync"/> will not be invoked.</remarks>
+	public bool Enabled { get; init; }
+
+	/// <summary>
 	/// Asynchronously executes this layer; returns a <see cref="ComputeTask"/> for the computation.
 	/// </summary>
 	/// <exception cref="CompositeException">Can be throw if an error occurs.</exception>

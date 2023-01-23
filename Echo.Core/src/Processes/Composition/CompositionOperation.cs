@@ -57,11 +57,13 @@ public sealed class CompositionOperation : AsyncOperation
 
 		for (int i = 0; i < layers.Length; i++)
 		{
-			try { await layers[i].ExecuteAsync(context); }
-			catch (CompositeException exception)
+			try
 			{
-				Volatile.Write(ref _errorMessages[i], exception.Message);
+				ICompositeLayer layer = layers[i];
+				if (!layer.Enabled) continue;
+				await layer.ExecuteAsync(context);
 			}
+			catch (CompositeException exception) { Volatile.Write(ref _errorMessages[i], exception.Message); }
 
 			Volatile.Write(ref _completedLayerCount, (uint)i + 1);
 		}

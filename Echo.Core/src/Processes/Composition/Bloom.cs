@@ -27,6 +27,10 @@ public record Bloom : ICompositeLayer
 	[EchoSourceUsable]
 	public float Threshold { get; set; } = 0.98f;
 
+	/// <inheritdoc/>
+	[EchoSourceUsable]
+	public bool Enabled { get; init; } = true;
+
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
 		SettableGrid<RGB128> sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);

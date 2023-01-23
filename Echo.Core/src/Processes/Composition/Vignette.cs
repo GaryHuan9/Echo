@@ -22,6 +22,10 @@ public record Vignette : ICompositeLayer
 	[EchoSourceUsable]
 	public float Intensity { get; init; } = 0.25f;
 
+	/// <inheritdoc/>
+	[EchoSourceUsable]
+	public bool Enabled { get; init; } = true;
+
 	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
 		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);

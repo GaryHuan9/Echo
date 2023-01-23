@@ -15,7 +15,7 @@ namespace Echo.Core.Processes;
 public record StandardPathTracedProfile : RenderProfile
 {
 	[EchoSourceUsable]
-	public StandardPathTracedProfile(Scene scene, uint quality = 40)
+	public StandardPathTracedProfile(Scene scene, uint quality = 40, bool watermark = true)
 	{
 		Scene = scene;
 		if (quality == 0) quality = 1;
@@ -52,7 +52,7 @@ public record StandardPathTracedProfile : RenderProfile
 		builder1.Add(new Vignette());
 		builder1.Add(new Bloom());
 		builder1.Add(new ToneMapper());
-		builder1.Add(new Watermark());
+		builder1.Add(new Watermark { Enabled = watermark });
 
 		EvaluationProfiles = builder0.ToImmutable();
 		CompositionLayers = builder1.ToImmutable();

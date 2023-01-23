@@ -22,6 +22,10 @@ public record ToneMapper : ICompositeLayer
 	[EchoSourceUsable]
 	public ILuminanceAdjuster Mode { get; init; } = new BasicShoulder();
 
+	/// <inheritdoc/>
+	[EchoSourceUsable]
+	public bool Enabled { get; init; } = true;
+
 	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
 		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
