@@ -264,9 +264,10 @@ public sealed class Device : IDisposable
 		public int LatestIndex { get; }
 
 		/// <summary>
-		/// Short hand for using <see cref="LatestIndex"/> on the indexer <see cref="this"/>.
+		/// Similar to using <see cref="LatestIndex"/> on the indexer <see cref="this"/>,
+		/// except null is returned if <see cref="Count"/> is zero (rather than an exception).
 		/// </summary>
-		public sealed Operation Latest => this[LatestIndex];
+		public sealed Operation Latest => Count == 0 ? null : this[LatestIndex];
 
 		/// <summary>
 		/// Retrieves an <see cref="Operation"/>. 

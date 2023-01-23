@@ -47,48 +47,48 @@ public sealed class EchoSource
 	/// <returns>The constructed object of type <typeparamref name="T"/> if found, null otherwise.</returns>
 	public T ConstructFirst<T>() where T : class => ConstructFirst<T>(out _);
 
-	/// <summary>
-	/// Constructs the first defined object of type <typeparamref name="T"/>.
-	/// </summary>
+	/// <inheritdoc cref="ConstructFirst{T}()"/>
 	/// <param name="identifier">Outputs the <see cref="string"/> identifier of the constructed object.</param>
-	/// <returns>The constructed object of type <typeparamref name="T"/> if found, null otherwise.</returns>
 	public T ConstructFirst<T>(out string identifier) where T : class
 	{
-		for (int i = 0; i < Length; i++)
-		{
-			Entry entry = this[i];
-			T constructed = entry.Construct<T>();
-			if (constructed == null) continue;
-
-			identifier = entry.Identifier;
-			return constructed;
-		}
-
 		identifier = default;
-		return null;
+		int index = IndexOf<T>();
+		if (index < 0) return null;
+
+		Entry entry = this[index];
+		identifier = entry.Identifier;
+		return entry.Construct<T>();
 	}
 
 	/// <summary>
-	/// Constructs a labeled symbol of type <typeparamref name="T"/>.
+	/// Returns the index of the first defined object of type <typeparamref name="T"/>,
+	/// or if no matching object is found, a negative number is returned.
 	/// </summary>
+	public int IndexOf<T>() where T : class
+	{
+		for (int i = 0; i < Length; i++)
+		{
+			if (this[i].CanConstructAs<T>()) return i;
+		}
+
+		return -1;
+	}
+
+	/// <inheritdoc cref="IndexOf{T}()"/>
 	/// <param name="identifier">A <see cref="string"/> identifier specifying the object to construct.</param>
-	/// <returns>The constructed object of type <typeparamref name="T"/> if found, null otherwise.</returns>
-	public T Construct<T>(string identifier) where T : class
+	public int IndexOf<T>(string identifier) where T : class
 	{
 		for (int i = 0; i < Length; i++)
 		{
 			Entry entry = this[i];
 			if (entry.Identifier != identifier) continue;
-
-			T constructed = entry.Construct<T>();
-			if (constructed == null) continue;
-			return constructed;
+			if (entry.CanConstructAs<T>()) return i;
 		}
 
-		return null;
+		return -1;
 	}
 
-	public readonly ref struct Entry
+	public readonly struct Entry
 	{
 		internal Entry(EchoSource objects, int index)
 		{
@@ -103,10 +103,8 @@ public sealed class EchoSource
 
 		public Type Type => identifiedNode.node.GetConstructType();
 
-		public T Construct<T>() where T : class
-		{
-			if (!Type.IsAssignableTo(typeof(T))) return null;
-			return (T)identifiedNode.node.Construct(objects);
-		}
+		public bool CanConstructAs<T>() where T : class => Type.IsAssignableTo(typeof(T));
+
+		public T Construct<T>() where T : class => CanConstructAs<T>() ? (T)identifiedNode.node.Construct(objects) : null;
 	}
 }

@@ -2,11 +2,9 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Compute;
-using Echo.Core.Common.Compute.Async;
 using Echo.Core.Processes.Composition;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Processes.Preparation;
-using Echo.Core.Scenic.Preparation;
 using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Processes;
@@ -110,7 +108,10 @@ public sealed class ScheduledRender
 		}
 	}
 
-	Operation LastOperation => operations[^1];
+	/// <summary>
+	/// The last <see cref="Operation"/> of this <see cref="ScheduledRender"/>.
+	/// </summary>
+	public Operation LastOperation => operations[^1];
 
 	/// <summary>
 	/// Blocks the calling thread until <see cref="IsCompleted"/> is true or if this <see cref="ScheduledRender"/> is aborted.

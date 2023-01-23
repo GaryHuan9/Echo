@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using Echo.Core.Common.Diagnostics;
@@ -14,7 +15,7 @@ public sealed class FileUI : AreaUI
 	public FileUI(EchoUI root) : base(root) { }
 
 	string currentPath;
-	string currentFile;
+	string currentName;
 	bool saveMode;
 	Action<string> openAction;
 
@@ -22,13 +23,25 @@ public sealed class FileUI : AreaUI
 
 	bool IsOpen => openAction != null;
 
+	string CurrentFile => Path.Combine(currentPath, currentName);
+
+	static Vector2 TableSize => new(0f, ImGui.GetWindowSize().Y - ImGui.GetTextLineHeightWithSpacing() * 4f);
+
 	public void Open(string path, bool load, Action<string> action)
 	{
 		Ensure.IsFalse(IsOpen);
 		Ensure.IsNotNull(action);
+		Ensure.IsFalse(string.IsNullOrEmpty(path));
 
 		currentPath = Path.GetFullPath(path);
-		currentFile = Path.GetFileName(path);
+
+		if (!Directory.Exists(currentPath))
+		{
+			currentName = Path.GetFileName(currentPath);
+			currentPath = Path.GetDirectoryName(currentPath);
+		}
+		else currentName = "";
+
 		saveMode = !load;
 		openAction = action;
 	}
@@ -42,8 +55,8 @@ public sealed class FileUI : AreaUI
 		bool open = true;
 
 		var size = ImGui.GetMainViewport().Size;
-		ImGui.SetNextWindowSize(size * 0.3f, ImGuiCond.Appearing);
-		ImGui.SetNextWindowPos(size * 0.35f, ImGuiCond.Appearing);
+		ImGui.SetNextWindowSize(size * 0.4f, ImGuiCond.Appearing);
+		ImGui.SetNextWindowPos(size * 0.3f, ImGuiCond.Appearing);
 		ImGui.BeginPopupModal(name, ref open, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
 		if (!open) CloseDialogue();
@@ -54,59 +67,26 @@ public sealed class FileUI : AreaUI
 
 	protected override void NewFrameWindow(in Moment moment)
 	{
-		DirectoryInfo currentParent = Directory.GetParent(currentPath);
-		ImGui.BeginDisabled(currentParent == null);
-		if (ImGui.Button("^")) currentPath = currentParent!.FullName;
+		DirectoryInfo current = new DirectoryInfo(currentPath);
+
+		DirectoryInfo parent = current.Parent;
+		ImGui.BeginDisabled(parent == null);
+		if (ImGui.Button("^")) currentPath = parent!.FullName;
+		ImGui.EndDisabled();
+
+		bool exists = current.Exists;
+		ImGui.BeginDisabled(!exists);
+		ImGui.SameLine();
+		if (ImGui.Button("+")) OpenFileExplorer(current.FullName);
 		ImGui.EndDisabled();
 
 		ImGui.SameLine();
-		ImGui.TextUnformatted(currentPath);
+		ImGui.TextWrapped(current.FullName);
 
-		var tableSize = new Vector2(0f, ImGui.GetWindowSize().Y - ImGui.GetTextLineHeightWithSpacing() * 4f);
-		if (ImGui.BeginTable("Entries", 4, ImGuiCustom.DefaultTableFlags | ImGuiTableFlags.ScrollY, tableSize))
-		{
-			ImGui.TableSetupColumn("Name");
-			ImGui.TableSetupColumn("Type");
-			ImGui.TableSetupColumn("Size");
-			ImGui.TableSetupColumn("Date Modified");
-			ImGui.TableHeadersRow();
+		if (exists) DrawTable(current);
+		else DrawNoDirectoryTable();
 
-			foreach (string path in Directory.EnumerateDirectories(currentPath))
-			{
-				var info = new DirectoryInfo(path);
-
-				ImGui.TableNextColumn();
-				ImGui.TextDisabled(info.Name);
-				ImGuiCustom.TableItem("Folder");
-				ImGuiCustom.TableItem("---");
-				ImGuiCustom.TableItem(info.LastWriteTime.ToString("G"));
-
-				DrawSelectable($"##{info.Name}", out bool doubleClicked);
-
-				if (doubleClicked) currentPath = info.FullName;
-			}
-
-			foreach (string path in Directory.EnumerateFiles(currentPath))
-			{
-				var info = new FileInfo(path);
-
-				ImGui.TableNextColumn();
-				ImGui.TextUnformatted(info.Name);
-				ImGuiCustom.TableItem(info.Extension);
-				ImGuiCustom.TableItem(info.Length.ToInvariant());
-				ImGuiCustom.TableItem(info.LastWriteTime.ToString("G"));
-
-				if (DrawSelectable($"##{info.Name}", out bool doubleClicked))
-				{
-					currentFile = info.Name;
-					if (doubleClicked) OpenPath();
-				}
-			}
-
-			ImGui.EndTable();
-		}
-
-		bool fileExists = File.Exists(Path.Combine(currentPath, currentFile));
+		bool fileExists = File.Exists(CurrentFile);
 
 		if (!saveMode)
 		{
@@ -122,20 +102,11 @@ public sealed class FileUI : AreaUI
 		ImGui.SameLine();
 		ImGui.PushItemWidth(ImGuiCustom.UseAvailable);
 
-		if (ImGui.InputText("##Path", ref currentFile, 256, ImGuiInputTextFlags.EnterReturnsTrue |
+		if (ImGui.InputText("##Path", ref currentName, 256, ImGuiInputTextFlags.EnterReturnsTrue |
 															ImGuiInputTextFlags.AutoSelectAll) &&
-			File.Exists(Path.Combine(currentPath, currentFile))) OpenPath();
+			File.Exists(CurrentFile)) OpenPath();
 
 		ImGui.PopItemWidth();
-
-		static bool DrawSelectable(string label, out bool doubleClicked)
-		{
-			ImGui.SameLine();
-			bool clicked = ImGui.Selectable(label, false, ImGuiSelectableFlags.SpanAllColumns |
-														  ImGuiSelectableFlags.AllowDoubleClick);
-			doubleClicked = clicked && ImGui.IsMouseDoubleClicked(0);
-			return clicked;
-		}
 	}
 
 	void CloseDialogue()
@@ -147,7 +118,72 @@ public sealed class FileUI : AreaUI
 	void OpenPath()
 	{
 		Ensure.IsTrue(IsOpen);
-		openAction(Path.GetFullPath(Path.Combine(currentPath, currentFile)));
+		openAction(Path.GetFullPath(CurrentFile));
 		CloseDialogue();
+	}
+
+	void DrawTable(DirectoryInfo current)
+	{
+		if (!ImGui.BeginTable("Entries", 4, ImGuiCustom.DefaultTableFlags | ImGuiTableFlags.ScrollY, TableSize)) return;
+
+		ImGui.TableSetupScrollFreeze(0, 1);
+		ImGui.TableSetupColumn("Name");
+		ImGui.TableSetupColumn("Type");
+		ImGui.TableSetupColumn("Size");
+		ImGui.TableSetupColumn("Date Modified");
+		ImGui.TableHeadersRow();
+
+		foreach (DirectoryInfo info in current.EnumerateDirectories())
+		{
+			ImGui.TableNextColumn();
+			ImGui.TextDisabled(info.Name);
+			ImGuiCustom.TableItem("Folder");
+			ImGuiCustom.TableItem("---");
+			ImGuiCustom.TableItem(info.LastWriteTime.ToString("G"));
+
+			DrawSelectable($"##{info.Name}", out bool doubleClicked);
+			if (doubleClicked) currentPath = info.FullName;
+		}
+
+		foreach (FileInfo info in current.EnumerateFiles())
+		{
+			ImGui.TableNextColumn();
+			ImGui.TextUnformatted(info.Name);
+			ImGuiCustom.TableItem(info.Extension);
+			ImGuiCustom.TableItem(info.Length.ToInvariant());
+			ImGuiCustom.TableItem(info.LastWriteTime.ToString("G"));
+
+			if (DrawSelectable($"##{info.Name}", out bool doubleClicked))
+			{
+				currentName = info.Name;
+				if (doubleClicked) OpenPath();
+			}
+		}
+
+		ImGui.EndTable();
+
+		static bool DrawSelectable(string label, out bool doubleClicked)
+		{
+			ImGui.SameLine();
+			bool clicked = ImGui.Selectable(label, false, ImGuiSelectableFlags.SpanAllColumns |
+														  ImGuiSelectableFlags.AllowDoubleClick);
+			doubleClicked = clicked && ImGui.IsMouseDoubleClicked(0);
+			return clicked;
+		}
+	}
+
+	static void OpenFileExplorer(string path)
+	{
+		if (!Path.EndsInDirectorySeparator(path)) path += Path.DirectorySeparatorChar;
+		Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
+	}
+
+	static void DrawNoDirectoryTable()
+	{
+		if (!ImGui.BeginTable("Dummy", 1, ImGuiCustom.DefaultTableFlags, TableSize)) return;
+
+		ImGui.TableNextColumn();
+		ImGui.TextUnformatted("Directory does not exist.");
+		ImGui.EndTable();
 	}
 }

@@ -27,32 +27,32 @@ public sealed class RenderUI : AreaUI
 	public RenderUI(EchoUI root) : base(root) { }
 
 	readonly List<ScheduledRender> renders = new();
-	readonly List<string> renderLabels = new();
+	readonly List<string> renderStrings = new();
 
 	int currentIndex;
 	bool trackLatest = true;
 	EventRow[] eventRows;
 
-	ViewerUI viewer;
+	ViewerUI viewerUI;
 
 	protected override string Name => "Render";
 
 	public override void Initialize()
 	{
 		base.Initialize();
-		viewer = root.Find<ViewerUI>();
+		viewerUI = root.Find<ViewerUI>();
 	}
 
 	public void AddRender(ScheduledRender render)
 	{
 		renders.Add(render);
-		renderLabels.Add($"Scheduled Render - {render.preparationOperation.creationTime.ToInvariant()}");
+		renderStrings.Add($"Scheduled Render - {render.preparationOperation.creationTime.ToInvariant()}");
 	}
 
 	public void ClearRenders()
 	{
 		renders.Clear();
-		renderLabels.Clear();
+		renderStrings.Clear();
 	}
 
 	protected override void NewFrameWindow(in Moment moment)
@@ -63,8 +63,9 @@ public sealed class RenderUI : AreaUI
 			return;
 		}
 
-		if (ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(renderLabels), ref currentIndex)) trackLatest = false;
-		ImGui.Checkbox("Track Latest Update", ref trackLatest);
+		if (ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(renderStrings), ref currentIndex)) trackLatest = false;
+		if (ImGui.Button(trackLatest ? "Stop Automatic Switching" : "Switch Interface to Latest")) trackLatest = !trackLatest;
+
 		if (trackLatest) currentIndex = renders.Count - 1;
 		ScheduledRender render = renders[currentIndex];
 
@@ -181,6 +182,7 @@ public sealed class RenderUI : AreaUI
 				active = BeginTabItem("Evaluation");
 				clicked = ImGui.IsItemClicked();
 				if (active) DrawOperation(casted);
+				if (select) viewerUI.Track(casted);
 				break;
 			}
 			case CompositionOperation casted:
@@ -344,7 +346,7 @@ public sealed class RenderUI : AreaUI
 				ImGui.SameLine();
 				ImGui.Spacing();
 				ImGui.SameLine();
-				if (ImGui.SmallButton("View Layer")) viewer.Track(operation);
+				if (ImGui.SmallButton("View Layer")) viewerUI.Track(operation);
 
 				ImGuiCustom.PropertySeparator();
 
