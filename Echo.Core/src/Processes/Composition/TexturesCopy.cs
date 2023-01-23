@@ -25,6 +25,10 @@ public record TexturesCopy : ICompositeLayer
 	[EchoSourceUsable]
 	public ImmutableArray<string> Targets { get; init; } = ImmutableArray<string>.Empty;
 
+	/// <inheritdoc/>
+	[EchoSourceUsable]
+	public bool Enabled { get; init; } = true;
+
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
 		int length = Sources.Length;

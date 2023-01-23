@@ -43,7 +43,11 @@ public record AutoExposure : ICompositeLayer
 	/// The luminance that the 'average' should align to.
 	/// </summary>
 	[EchoSourceUsable]
-	public float AverageLuminance { get; init; } = 0.5f;
+	public float AverageLuminance { get; init; } = 0.45f;
+
+	/// <inheritdoc/>
+	[EchoSourceUsable]
+	public bool Enabled { get; init; } = true;
 
 	const int BinCount = 128;
 

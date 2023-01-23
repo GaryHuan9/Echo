@@ -42,6 +42,10 @@ public record OidnDenoise : ICompositeLayer
 	[EchoSourceUsable]
 	public bool PrefilterAuxiliary { get; init; } = true;
 
+	/// <inheritdoc/>
+	[EchoSourceUsable]
+	public bool Enabled { get; init; } = true;
+
 	const string DllPath = "OpenImageDenoise";
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)

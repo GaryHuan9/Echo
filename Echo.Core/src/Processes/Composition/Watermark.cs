@@ -29,11 +29,15 @@ public record Watermark : ICompositeLayer
 	[EchoSourceUsable]
 	public float Scale { get; init; } = 0.25f;
 
-	const float MarginScale = 0.06f;
-	const float DeviationIntensity = 4.5f;
+	/// <inheritdoc/>
+	[EchoSourceUsable]
+	public bool Enabled { get; init; } = true;
+
+	const float MarginScale = 0.07f;
+	const float DeviationIntensity = 9.5f;
 	const float LuminanceThreshold = 0.2f;
-	const float BlurTint = 0.12f;
-	const float ShadowTint = 0.5f;
+	const float BlurTint = 0.115f;
+	const float ShadowTint = 0.8f;
 
 	static TextureGrid<RGBA128> _logoTexture;
 
