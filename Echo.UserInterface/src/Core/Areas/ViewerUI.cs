@@ -1,18 +1,26 @@
 using System;
 using System.Numerics;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Processes.Evaluation;
+using Echo.Core.Textures.Grids;
+using Echo.Core.Textures.Serialization;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public partial class ViewerUI : AreaUI
+public sealed partial class ViewerUI : AreaUI
 {
-	public ViewerUI(EchoUI root) : base(root) => evaluationOperationMode = new EvaluationOperationMode(root);
+	public ViewerUI(EchoUI root) : base(root)
+	{
+		evaluationOperationMode = new EvaluationOperationMode(root);
+		staticTextureGridMode = new StaticTextureGridMode(root);
+	}
 
 	Mode currentMode;
 
@@ -21,6 +29,7 @@ public partial class ViewerUI : AreaUI
 	Float2? cursorPosition;
 
 	readonly EvaluationOperationMode evaluationOperationMode;
+	readonly StaticTextureGridMode staticTextureGridMode;
 
 	float _logPlaneScale;
 
@@ -38,10 +47,18 @@ public partial class ViewerUI : AreaUI
 
 	protected override string Name => "Viewer";
 
+	protected override ImGuiWindowFlags WindowFlags => base.WindowFlags | ImGuiWindowFlags.MenuBar;
+
 	public void Track(EvaluationOperation operation)
 	{
 		evaluationOperationMode.Reset(operation);
 		currentMode = evaluationOperationMode;
+	}
+
+	public void Track(TextureGrid texture)
+	{
+		staticTextureGridMode.Reset(texture);
+		currentMode = staticTextureGridMode;
 	}
 
 	protected override void NewFrameWindow(in Moment moment)
@@ -49,19 +66,53 @@ public partial class ViewerUI : AreaUI
 		FindImGuiRegion(out Bounds region);
 		UpdateCursorPosition(region);
 
-		if (currentMode != null) DrawModePlane(region, currentMode);
+		if (currentMode != null && ImGui.BeginMenuBar())
+		{
+			if (ImGui.BeginMenu("View"))
+			{
+				if (ImGui.MenuItem("Recenter"))
+				{
+					planeCenter = Float2.Zero;
+					LogPlaneScale = 0f;
+				}
+
+				if (ImGui.MenuItem("Close")) currentMode = null;
+
+				ImGui.EndMenu();
+			}
+
+			ImGui.EndMenuBar();
+		}
+
+		if (currentMode != null)
+		{
+			DrawMode(region);
+
+			if (ImGui.BeginMenuBar())
+			{
+				currentMode.DrawMenuBar();
+				ImGui.EndMenuBar();
+			}
+		}
 
 		ProcessMouseInput(region);
 	}
 
-	void DrawModePlane(in Bounds region, Mode mode)
+	protected override void Dispose(bool disposing)
 	{
-		Ensure.IsNotNull(mode);
+		base.Dispose(disposing);
+		if (!disposing) return;
 
+		evaluationOperationMode?.Dispose();
+		staticTextureGridMode?.Dispose();
+	}
+
+	void DrawMode(in Bounds region)
+	{
 		ImDrawListPtr drawList = ImGui.GetWindowDrawList();
 		drawList.PushClipRect(region.MinVector2, region.MaxVector2);
 
-		float planeAspect = mode.AspectRatio;
+		float planeAspect = currentMode.AspectRatio;
 		float regionAspect = region.extend.X / region.extend.Y;
 
 		Float2 displayExtend = planeAspect > regionAspect
@@ -70,7 +121,14 @@ public partial class ViewerUI : AreaUI
 
 		Bounds plane = new Bounds(region.center + planeCenter, displayExtend * planeScale);
 
-		currentMode.DrawPlane(drawList, plane);
+		if (cursorPosition.HasValue)
+		{
+			Float2 uv = cursorPosition.Value / displayExtend;
+			uv = new Float2(-uv.X, uv.Y) / 2f + Float2.Half;
+			currentMode.Draw(drawList, plane, Float2.Zero <= uv && uv < Float2.One ? uv : null);
+		}
+		else currentMode.Draw(drawList, plane, null);
+
 		drawList.PopClipRect();
 	}
 
@@ -121,39 +179,55 @@ public partial class ViewerUI : AreaUI
 
 	abstract class Mode : IDisposable
 	{
-		protected Mode(EchoUI root) => backend = root.backend;
+		protected Mode(EchoUI root) => this.root = root;
 
-		readonly ImGuiDevice backend;
+		protected readonly EchoUI root;
 
 		IntPtr _display;
 		Int2 currentSize;
-
-		protected IntPtr Display => _display;
 
 		/// <summary>
 		/// Width over height.
 		/// </summary>
 		public abstract float AspectRatio { get; }
 
-		public abstract void DrawPlane(ImDrawListPtr drawList, in Bounds plane);
+		protected IntPtr Display => _display;
+		ImGuiDevice Backend => root.backend;
+
+		public abstract void Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV);
+
+		public abstract void DrawMenuBar();
 
 		protected void RecreateDisplay(Int2 size)
 		{
 			if (size == currentSize) return;
 			currentSize = size;
 
-			backend.DestroyTexture(ref _display);
+			Backend.DestroyTexture(ref _display);
 			if (currentSize == Int2.Zero) return;
-			_display = backend.CreateTexture(currentSize, true);
+			_display = Backend.CreateTexture(currentSize, true);
 		}
 
 		public void Dispose()
 		{
 			GC.SuppressFinalize(this);
-			backend.DestroyTexture(ref _display);
+			Backend.DestroyTexture(ref _display);
 		}
 
 		~Mode() => Dispose();
+
+		protected static uint ColorToUInt32(Float4 color)
+		{
+			color = ApproximateSqrt(color.Max(Float4.Zero));
+			color = color.Min(Float4.One) * byte.MaxValue;
+			return SystemSerializer.GatherBytes(Sse2.ConvertToVector128Int32(color.v).AsUInt32());
+
+			static Float4 ApproximateSqrt(in Float4 value)
+			{
+				Vector128<float> notZero = Sse.CompareNotEqual(value.v, Vector128<float>.Zero);
+				return new Float4(Sse.And(notZero, Sse.Multiply(Sse.ReciprocalSqrt(value.v), value.v)));
+			}
+		}
 	}
 
 	readonly struct Bounds
