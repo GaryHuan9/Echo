@@ -29,9 +29,6 @@ public sealed record SquirrelPrng : Prng
 		return state;
 	}
 
-	public bool Equals(SquirrelPrng other) => base.Equals(other);
-	public override int GetHashCode() => base.GetHashCode();
-
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	void Mangle(ref uint source)
 	{

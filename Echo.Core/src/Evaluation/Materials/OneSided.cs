@@ -4,6 +4,7 @@ using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
@@ -13,6 +14,7 @@ namespace Echo.Core.Evaluation.Materials;
 /// so on one side of the surface the <see cref="Base"/> material behaves as regular,
 /// but on the opposite side the surface is perceived as completely transparent.
 /// </summary>
+[EchoSourceUsable]
 public sealed class OneSided : Material
 {
 	NotNull<Material> _base = Invisible.instance;
@@ -21,6 +23,7 @@ public sealed class OneSided : Material
 	/// The <see cref="Material"/> that is used on the surfaces that are not culled.
 	/// </summary>
 	/// <remarks>This <see cref="Material"/> cannot be of type <see cref="Emissive"/>.</remarks>
+	[EchoSourceUsable]
 	public Material Base
 	{
 		get => _base;
@@ -35,6 +38,7 @@ public sealed class OneSided : Material
 	/// Whether this <see cref="OneSided"/> culls the backface or the front face.
 	/// The front face is the side that positively aligns with the surface normal.
 	/// </summary>
+	[EchoSourceUsable]
 	public bool Backface { get; set; } = true;
 
 	public override void Prepare()

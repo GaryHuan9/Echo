@@ -25,6 +25,9 @@ public sealed class GeometryCollection
 
 		swatch = swatchExtractor.Prepare();
 		counts = new GeometryCounts(triangles.Length, spheres.Length, instances.Length);
+		countsTotal = counts;
+
+		foreach (ref readonly var instance in instances.AsSpan()) countsTotal += instance.pack.geometries.countsTotal;
 
 		static ImmutableArray<T> Extract<T>(SwatchExtractor swatchExtractor, ReadOnlySpan<IGeometrySource> geometrySources) where T : IPreparedGeometry
 		{
@@ -58,6 +61,7 @@ public sealed class GeometryCollection
 
 	public readonly PreparedSwatch swatch;
 	public readonly GeometryCounts counts;
+	public readonly GeometryCounts countsTotal; //Including instanced
 
 	public View<Tokenized<BoxBound>> CreateBounds()
 	{
@@ -245,8 +249,8 @@ public sealed class GeometryCollection
 		return token.Type switch
 		{
 			TokenType.Triangle => triangles[token.Index].Material,
-			TokenType.Sphere   => spheres[token.Index].Material,
-			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+			TokenType.Sphere => spheres[token.Index].Material,
+			_ => throw new ArgumentOutOfRangeException(nameof(token))
 		};
 	}
 
@@ -258,8 +262,8 @@ public sealed class GeometryCollection
 		return token.Type switch
 		{
 			TokenType.Triangle => triangles[token.Index].Area,
-			TokenType.Sphere   => spheres[token.Index].Area,
-			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+			TokenType.Sphere => spheres[token.Index].Area,
+			_ => throw new ArgumentOutOfRangeException(nameof(token))
 		};
 	}
 
@@ -271,8 +275,8 @@ public sealed class GeometryCollection
 		return token.Type switch
 		{
 			TokenType.Triangle => triangles[token.Index].Sample(origin, sample),
-			TokenType.Sphere   => spheres[token.Index].Sample(origin, sample),
-			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+			TokenType.Sphere => spheres[token.Index].Sample(origin, sample),
+			_ => throw new ArgumentOutOfRangeException(nameof(token))
 		};
 	}
 
@@ -284,8 +288,8 @@ public sealed class GeometryCollection
 		return token.Type switch
 		{
 			TokenType.Triangle => triangles[token.Index].ProbabilityDensity(origin, incident),
-			TokenType.Sphere   => spheres[token.Index].ProbabilityDensity(origin, incident),
-			_                  => throw new ArgumentOutOfRangeException(nameof(token))
+			TokenType.Sphere => spheres[token.Index].ProbabilityDensity(origin, incident),
+			_ => throw new ArgumentOutOfRangeException(nameof(token))
 		};
 	}
 }

@@ -1,4 +1,5 @@
-﻿using Echo.Core.Common.Packed;
+﻿using System;
+using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Grids;
@@ -18,21 +19,34 @@ public abstract class SettableGrid<T> : TextureGrid<T> where T : unmanaged, ICol
 	/// <param name="value">The value of type <see cref="T"/> to set.</param>
 	/// <remarks>The reason that this is a method but not an indexer is because of C#'s
 	/// (pathetic) inability to extend abstract indexers in derived classes.</remarks>
-	/// <!--https://github.com/dotnet/csharplang/issues/1568-->
+	/// <!-- https://github.com/dotnet/csharplang/issues/1568 -->
 	public abstract void Set(Int2 position, in T value);
 
-	/// <summary>
-	/// Copies as much data from <paramref name="texture"/> to this <see cref="Texture"/>.
-	/// </summary>
-	public virtual void CopyFrom(Texture texture) => ForEach
-	(
-		texture is TextureGrid<T> grid && grid.size == size ?
-			position => Set(position, grid[position]) :
-			position => Set(position, texture[ToUV(position)].As<T>())
-	);
+	public override SettableGrid<T> Crop(Int2 min, Int2 max) => new CropGrid(this, min, max);
 
 	/// <summary>
 	/// Fully empties the content of this <see cref="SettableGrid{T}"/>.
 	/// </summary>
 	public virtual void Clear() => ForEach(position => Set(position, default));
+
+	class CropGrid : SettableGrid<T>
+	{
+		public CropGrid(SettableGrid<T> texture, Int2 min, Int2 max) : base(max - min)
+		{
+			if (!(Int2.Zero <= min) || !(max <= texture.size) || !(min < max)) throw new ArgumentException($"Invalid {nameof(min)} or {nameof(max)}: {min} and {max}.");
+
+			source = texture;
+			this.min = min;
+
+			Wrapper = texture.Wrapper;
+			Filter = texture.Filter;
+		}
+
+		readonly SettableGrid<T> source;
+		readonly Int2 min;
+
+		public override T this[Int2 position] => source[min + position];
+
+		public override void Set(Int2 position, in T value) => source.Set(min + position, value);
+	}
 }

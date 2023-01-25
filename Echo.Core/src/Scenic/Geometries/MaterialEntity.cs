@@ -1,5 +1,6 @@
 ﻿using Echo.Core.Common.Diagnostics;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Geometries;
@@ -15,6 +16,7 @@ public abstract class MaterialEntity : Entity
 	/// The <see cref="Echo.Core.Evaluation.Materials.Material"/> applied to this <see cref="MaterialEntity"/>.
 	/// </summary>
 	/// <remarks>This value must not be null.</remarks>
+	[EchoSourceUsable]
 	public Material Material
 	{
 		get => _material;

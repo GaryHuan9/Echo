@@ -14,8 +14,12 @@ public static class ImGuiCustom
 													 ImGuiTableFlags.NoSavedSettings | ImGuiTableFlags.Reorderable |
 													 ImGuiTableFlags.BordersOuter;
 
+	public const float UseAvailable = -float.Epsilon;
+	
 	const ImGuiTableFlags PropertiesTableFlags = ImGuiTableFlags.BordersOuter | ImGuiTableFlags.NoSavedSettings |
 												 ImGuiTableFlags.Resizable | ImGuiTableFlags.NoBordersInBodyUntilResize;
+
+	const float SectionPadding = 8f;
 
 	public static void TableItem(string value, bool wrap = false)
 	{
@@ -24,9 +28,9 @@ public static class ImGuiCustom
 		else ImGui.TextUnformatted(value);
 	}
 
-	public static bool BeginProperties(string name)
+	public static bool BeginProperties(string label = "Properties")
 	{
-		if (!ImGui.BeginTable(name, 2, PropertiesTableFlags)) return false;
+		if (!ImGui.BeginTable(label, 2, PropertiesTableFlags)) return false;
 
 		ImGui.TableSetupColumn("Label", ImGuiTableColumnFlags.None, 2f);
 		ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None, 3f);
@@ -40,7 +44,33 @@ public static class ImGuiCustom
 		TableItem(value);
 	}
 
+	public static void PropertySeparator()
+	{
+		ImGui.TableNextColumn();
+		ImGui.Separator();
+		ImGui.TableNextColumn();
+		ImGui.Separator();
+	}
+
 	public static void EndProperties() => ImGui.EndTable();
+
+	public static bool BeginSection(string label)
+	{
+		ImGui.SetNextItemOpen(true, ImGuiCond.Once);
+		if (!ImGui.CollapsingHeader(label)) return false;
+
+		ImGui.PushID(label);
+		ImGui.Indent(SectionPadding);
+
+		return true;
+	}
+
+	public static void EndSection()
+	{
+		ImGui.Unindent(SectionPadding);
+		ImGui.Dummy(new Vector2(0f, SectionPadding));
+		ImGui.PopID();
+	}
 
 	public static bool Selector(string label, ReadOnlySpan<string> items, ref int currentIndex)
 	{

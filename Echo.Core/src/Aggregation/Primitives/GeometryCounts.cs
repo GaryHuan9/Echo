@@ -2,7 +2,7 @@
 
 public readonly struct GeometryCounts
 {
-	public GeometryCounts(in ulong triangle, in ulong sphere, in ulong instance)
+	public GeometryCounts(ulong triangle = 0, ulong sphere = 0, ulong instance = 0)
 	{
 		this.triangle = triangle;
 		this.sphere = sphere;

@@ -28,9 +28,12 @@ public class DiscreteDistribution1Tests
 		};
 
 		distribution.BeginSeries(Int2.Zero);
-		distribution.BeginSession();
 
-		foreach (ref Sample1D sample in samples.AsSpan()) sample = distribution.Next1D();
+		foreach (ref Sample1D sample in samples.AsSpan())
+		{
+			distribution.BeginSession();
+			sample = distribution.Next1D();
+		}
 	}
 
 	static readonly DiscreteDistribution1D constant;

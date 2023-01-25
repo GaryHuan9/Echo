@@ -23,15 +23,15 @@ public class OrthonormalTransformTests
 	{
 		var transform = new OrthonormalTransform(axisZ);
 		Assert.That(transform.axisZ, Is.EqualTo(axisZ));
-		
+
 		Assert.That(transform.axisX.SquaredMagnitude, Is.EqualTo(1f).Roughly());
 		Assert.That(transform.axisY.SquaredMagnitude, Is.EqualTo(1f).Roughly());
 		Assert.That(transform.axisZ.SquaredMagnitude, Is.EqualTo(1f).Roughly());
-		
+
 		Assert.That(transform.axisX.Dot(transform.axisY), Utility.AlmostZero());
 		Assert.That(transform.axisY.Dot(transform.axisZ), Utility.AlmostZero());
 		Assert.That(transform.axisZ.Dot(transform.axisX), Utility.AlmostZero());
-		
+
 		AssertAlmostEquals(transform.axisX.Cross(transform.axisY), transform.axisZ);
 		AssertAlmostEquals(transform.axisY.Cross(transform.axisZ), transform.axisX);
 		AssertAlmostEquals(transform.axisZ.Cross(transform.axisX), transform.axisY);
@@ -41,7 +41,7 @@ public class OrthonormalTransformTests
 			Float3 newValue = transform.ApplyForward(oldValue);
 			float oldAngle = Float3.Angle(oldValue, Float3.Forward);
 			float newAngle = Float3.Angle(newValue, transform.axisZ);
-			
+
 			Assert.That(oldAngle, Is.EqualTo(newAngle).Roughly());
 			AssertAlmostEquals(transform.ApplyInverse(newValue), oldValue);
 		}

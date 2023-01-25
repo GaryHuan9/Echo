@@ -17,6 +17,11 @@ public readonly struct ComputeTask : ICriticalNotifyCompletion
 
 	public bool IsCompleted => context.IsFinished;
 
+	/// <summary>
+	/// Similar to <see cref="Task.CompletedTask"/>; gets a <see cref="CompletedTask"/> that is already completed.
+	/// </summary>
+	public static ComputeTask CompletedTask => new(TaskContext.completedContext);
+
 	public ComputeTask GetAwaiter() => this;
 
 	public void GetResult()
@@ -27,6 +32,16 @@ public readonly struct ComputeTask : ICriticalNotifyCompletion
 
 	void INotifyCompletion.OnCompleted(Action continuation) => context.Register(continuation);
 	void ICriticalNotifyCompletion.UnsafeOnCompleted(Action continuation) => context.Register(continuation);
+
+	/// <summary>
+	/// Returns a new <see cref="ComputeTask{T}"/> that <see cref="ComputeTask{T}.IsCompleted"/> with a <paramref name="result"/>.
+	/// </summary>
+	/// <param name="result">The result of type <typeparamref name="T"/> to contain.</param>
+	public static async ComputeTask<T> FromResult<T>(T result)
+	{
+		await CompletedTask;
+		return result;
+	}
 }
 
 /// <summary>

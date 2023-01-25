@@ -34,7 +34,7 @@ public readonly struct PreparedInstance
 
 	public LightBound LightBound => new
 	(
-		pack.lightPicker.GetTransformedBounds(inverseTransform),
+		pack.lightPicker.GetTransformedBound(inverseTransform),
 		inverseTransform * pack.lightPicker.ConeBound,
 		Power
 	);

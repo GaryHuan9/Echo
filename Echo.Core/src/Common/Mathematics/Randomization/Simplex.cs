@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using Echo.Core.Common.Packed;
 
@@ -13,17 +14,19 @@ public class Simplex
 	/// Creates a standard simplex gradient noise generator
 	/// </summary>
 	/// <param name="seed">Generators with the same seed will generate the same value at the same location.</param>
-	/// <param name="directionCount">The amount of directions used for generation. Does not majorly affect quality.</param>
-	public Simplex(int seed, int directionCount = 256)
+	/// <param name="directionCount">The amount of directions used for generation. Must be a power of two.</param>
+	public Simplex(uint seed, int directionCount = 256)
 	{
-		Random random = new Random(seed);
+		if (!BitOperations.IsPow2(directionCount)) throw new ArgumentOutOfRangeException(nameof(directionCount));
+
+		var random = new SystemPrng(seed);
 
 		this.directionCount = directionCount;
 		directions = new Float2[directionCount];
 
 		for (int i = 0; i < directionCount; i++)
 		{
-			float angle = (float)random.NextDouble() * 360f;
+			float angle = random.Next1(360f);
 			directions[i] = Float2.Right.Rotate(angle);
 		}
 	}

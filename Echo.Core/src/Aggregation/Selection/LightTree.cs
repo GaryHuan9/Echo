@@ -40,10 +40,16 @@ public class LightTree : LightPicker
 	readonly Node root;
 	readonly Dictionary<EntityToken, ulong> map = new();
 
-	public override ConeBound ConeBound => root.bound.cone;
+	//TODO need to figure out what to return if the tree has no light; maybe just do not create a tree at all
+
+	public override ConeBound ConeBound => root == null ? default : root.bound.cone;
 	public override float Power => root == null ? default : root.bound.power;
 
-	public override BoxBound GetTransformedBounds(in Float4x4 transform) => new(stackalloc BoxBound[1] { root.bound.box }, transform);
+	public override BoxBound GetTransformedBound(in Float4x4 transform)
+	{
+		if (root == null) return default;
+		return new BoxBound(stackalloc BoxBound[1] { root.bound.box }, transform);
+	}
 
 	public override Probable<EntityToken> Pick(in GeometryPoint origin, ref Sample1D sample) => Pick(origin, ref sample, root, 1f);
 
@@ -77,7 +83,7 @@ public class LightTree : LightPicker
 
 		for (int i = length - 2; i >= 0; i--)
 		{
-			costs[i + 1] = lightBound.Area;
+			costs[i + 1] = lightBound.RelativeArea;
 			lightBound = lightBound.Encapsulate(bounds[i].content);
 		}
 
@@ -88,7 +94,7 @@ public class LightTree : LightPicker
 
 		for (int i = 1; i < length; i++)
 		{
-			float cost = costs[i] + lightBound.Area;
+			float cost = costs[i] + lightBound.RelativeArea;
 
 			if (cost < minCost)
 			{

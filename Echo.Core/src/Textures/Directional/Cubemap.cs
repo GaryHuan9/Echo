@@ -4,11 +4,13 @@ using System.Threading.Tasks;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Textures.Directional;
 
+[EchoSourceUsable]
 public class Cubemap : IDirectionalTexture
 {
 	public Cubemap()
@@ -27,17 +29,18 @@ public class Cubemap : IDirectionalTexture
 		for (int i = 0; i < length; i++) this.textures[i] = i < min ? textures[i] : Pure.black;
 	}
 
+	[EchoSourceUsable]
 	public Cubemap(string path)
 	{
 		int length = fileNames.Length;
 
-		var tasks = new Task<ArrayGrid<RGB128>>[length];
+		var tasks = new Task<SettableGrid<RGB128>>[length];
 		textures = new NotNull<Texture>[length];
 
 		for (int i = 0; i < length; i++)
 		{
 			string fullPath = Path.Combine(path, fileNames[i]);
-			tasks[i] = TextureGrid.LoadAsync<RGB128>(fullPath);
+			tasks[i] = Task.Run(() => TextureGrid.Load<RGB128>(fullPath));
 		}
 
 		for (int i = 0; i < length; i++) textures[i] = tasks[i].Result;

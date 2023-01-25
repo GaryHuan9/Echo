@@ -2,6 +2,7 @@
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
@@ -9,11 +10,13 @@ namespace Echo.Core.Scenic.Geometries;
 /// <summary>
 /// A geometric mesh object.
 /// </summary>
+[EchoSourceUsable]
 public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
 	/// <summary>
 	/// The source of the series of triangles.
 	/// </summary>
+	[EchoSourceUsable]
 	public Mesh Mesh { get; set; }
 
 	/// <summary>

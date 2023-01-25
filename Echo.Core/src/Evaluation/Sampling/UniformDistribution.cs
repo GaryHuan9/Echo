@@ -1,10 +1,12 @@
 ﻿using System;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Evaluation.Sampling;
 
 /// <summary>
 /// A uniform <see cref="ContinuousDistribution"/> that returns purely random values.
 /// </summary>
+[EchoSourceUsable]
 public record UniformDistribution : ContinuousDistribution
 {
 	public UniformDistribution() { }

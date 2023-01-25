@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -61,7 +60,7 @@ public abstract class TextureGrid : Texture
 	/// <summary>
 	/// If the <see cref="size"/> of this <see cref="TextureGrid"/> is a power of two on any axis, then the
 	/// respective component of this field will be that power, otherwise the component will be a negative number.
-	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where N is a positive number.
+	/// For example, a <see cref="size"/> of (512, 384) will give (9, -N), where -N is a positive number.
 	/// </summary>
 	public readonly Int2 power;
 
@@ -87,8 +86,7 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// Returns the average of the two <see cref="size"/> axes.
-	/// We use an logarithmic equation since the average is nicer.
+	/// Returns the logarithmic average of the two <see cref="size"/> axes.
 	/// </summary>
 	public float LogSize
 	{
@@ -120,12 +118,6 @@ public abstract class TextureGrid : Texture
 			action(new Int2(x, y));
 		}
 	}
-
-	/// <summary>
-	/// Performs a <see cref="Save"/> operation asynchronously.
-	/// </summary>
-	/// <see cref="Save"/>
-	public Task SaveAsync(string path, Serializer serializer = null) => Task.Run(() => Save(path, serializer));
 
 	/// <summary>
 	/// Saves this <see cref="TextureGrid"/> to a file.
@@ -163,23 +155,15 @@ public abstract class TextureGrid : Texture
 	/// Ensures an <see cref="Int2"/> is within the bounds of this <see cref="TextureGrid"/>.
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
-	[Conditional("DEBUG")]
-	protected void EnsureValidPosition(Int2 position) => EnsureValidPosition(position, size);
+	protected void AssertValidPosition(Int2 position) => AssertValidPosition(position, size);
 
 	/// <summary>
-	/// Performs a <see cref="Load{T}"/> operation asynchronously.
-	/// </summary>
-	/// <see cref="Load{T}"/>
-	public static Task<ArrayGrid<T>> LoadAsync<T>(string path, Serializer serializer = null)
-		where T : unmanaged, IColor<T> => Task.Run(() => Load<T>(path, serializer));
-
-	/// <summary>
-	/// Loads a <see cref="ArrayGrid{T}"/> from a file.
+	/// Loads a <see cref="SettableGrid{T}"/> from a file.
 	/// </summary>
 	/// <param name="path">The source <see cref="string"/> path to load from.</param>
 	/// <param name="serializer">The <see cref="Serializer"/> to use. An automatic attempt will be made to
 	/// find the best <see cref="Serializer"/> from <paramref name="path"/> if this value is null.</param>
-	public static ArrayGrid<T> Load<T>(string path, Serializer serializer = null) where T : unmanaged, IColor<T>
+	public static SettableGrid<T> Load<T>(string path, Serializer serializer = null) where T : unmanaged, IColor<T>
 	{
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
@@ -189,12 +173,11 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
-	/// Ensures an <see cref="Int2"/> is between zero (inclusive) and a certain <paramref name="size"/> (exclusive).
+	/// Asserts an <see cref="Int2"/> is between zero (inclusive) and a certain <paramref name="size"/> (exclusive).
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
 	/// <param name="size">The upper limit of the bounds (exclusive).</param>
-	[Conditional("DEBUG")]
-	protected static void EnsureValidPosition(Int2 position, Int2 size)
+	protected static void AssertValidPosition(Int2 position, Int2 size)
 	{
 		Ensure.IsTrue(Int2.Zero <= position);
 		Ensure.IsTrue(position < size);
@@ -218,7 +201,10 @@ public abstract class TextureGrid : Texture
 /// preferred over the non-generic version. Only use the non-generic version when a common base class ie needed.</remarks>
 public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T>
 {
-	protected TextureGrid(Int2 size) : base(size) { }
+	protected TextureGrid(Int2 size) : base(size)
+	{
+		if (size.MinComponent <= 0) throw new ArgumentOutOfRangeException(nameof(size));
+	}
 
 	/// <summary>
 	/// Gets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
@@ -238,9 +224,35 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 
 	public sealed override TextureGrid Load(string path, Serializer serializer = null) => Load<T>(path, serializer);
 
+	/// <summary>
+	/// Slices this <see cref="TextureGrid{T}"/> by cropping.
+	/// </summary>
+	/// <returns>A new <see cref="TextureGrid{T}"/> that is a view of this <see cref="TextureGrid{T}"/>
+	/// from <paramref name="min"/> (inclusive) to <paramref name="max"/> (exclusive).</returns>
+	public virtual TextureGrid<T> Crop(Int2 min, Int2 max) => new CropGrid(this, min, max);
+
 	protected sealed override RGBA128 Evaluate(Float2 uv)
 	{
 		Ensure.IsTrue(float.IsFinite(uv.Sum));
 		return Filter.Evaluate(this, uv);
+	}
+
+	class CropGrid : TextureGrid<T>
+	{
+		public CropGrid(TextureGrid<T> texture, Int2 min, Int2 max) : base(max - min)
+		{
+			if (!(Int2.Zero <= min) || !(max <= texture.size) || !(min < max)) throw new ArgumentException($"Invalid {nameof(min)} or {nameof(max)}: {min} and {max}.");
+
+			source = texture;
+			this.min = min;
+
+			Wrapper = texture.Wrapper;
+			Filter = texture.Filter;
+		}
+
+		readonly TextureGrid<T> source;
+		readonly Int2 min;
+
+		public override T this[Int2 position] => source[min + position];
 	}
 }
