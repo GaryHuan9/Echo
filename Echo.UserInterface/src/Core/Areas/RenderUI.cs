@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Echo.Core.Aggregation.Preparation;
@@ -31,9 +32,11 @@ public sealed class RenderUI : AreaUI
 
 	int currentIndex;
 	bool trackLatest = true;
+	Operation lastTracked;
 	EventRow[] eventRows;
 
 	ViewerUI viewerUI;
+	FileUI dialogueUI;
 
 	protected override string Name => "Render";
 
@@ -41,6 +44,7 @@ public sealed class RenderUI : AreaUI
 	{
 		base.Initialize();
 		viewerUI = root.Find<ViewerUI>();
+		dialogueUI = root.Find<FileUI>();
 	}
 
 	public void AddRender(ScheduledRender render)
@@ -64,7 +68,7 @@ public sealed class RenderUI : AreaUI
 		}
 
 		if (ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(renderStrings), ref currentIndex)) trackLatest = false;
-		if (ImGui.Button(trackLatest ? "Stop Automatic Switching" : "Switch Interface to Latest")) trackLatest = !trackLatest;
+		ImGui.Checkbox("Track Latest Operation", ref trackLatest);
 
 		if (trackLatest) currentIndex = renders.Count - 1;
 		ScheduledRender render = renders[currentIndex];
@@ -78,8 +82,18 @@ public sealed class RenderUI : AreaUI
 		}
 
 		ImGui.Separator();
-
 		DrawRenderOverview(render);
+		Operation tracking = null;
+
+		if (trackLatest)
+		{
+			if (render.CurrentIndex == render.operations.Length)
+			{
+				//Just finished the final operation in this render, display the result
+				if (lastTracked != null) viewerUI.Track(render.texture);
+			}
+			else tracking = render.operations[render.CurrentIndex];
+		}
 
 		if (ImGui.BeginTabBar("Operations", ImGuiTabBarFlags.TabListPopupButton))
 		{
@@ -87,15 +101,18 @@ public sealed class RenderUI : AreaUI
 			{
 				ImGui.PushID(i);
 
-				bool select = i == Math.Min(render.CurrentIndex, render.operations.Length - 1);
-				bool clicked = DrawOperation(render.operations[i], trackLatest && select);
-				if (clicked && !select) trackLatest = false;
+				Operation operation = render.operations[i];
+				bool track = tracking == operation;
+				bool clicked = DrawOperation(operation, track) && !track;
+				if (clicked && tracking != null) trackLatest = false;
 
 				ImGui.PopID();
 			}
 
 			ImGui.EndTabBar();
 		}
+
+		lastTracked = tracking;
 	}
 
 	void DrawRenderOverview(ScheduledRender render)
@@ -104,7 +121,6 @@ public sealed class RenderUI : AreaUI
 		{
 			if (ImGuiCustom.BeginProperties())
 			{
-				ImGuiCustom.Property("Progress", render.Progress.ToInvariantPercent());
 				ImGuiCustom.Property("Completed", render.IsCompleted.ToString());
 				ImGuiCustom.Property("Creation Time", render.preparationOperation.creationTime.ToInvariant());
 				ImGuiCustom.Property("Operations", render.operations.Length.ToInvariant());
@@ -150,10 +166,13 @@ public sealed class RenderUI : AreaUI
 					ImGuiCustom.TableItem(type.Name);
 					ImGuiCustom.TableItem(type.IsGenericType ? type.GetGenericArguments()[0].Name : "");
 
+					ImGui.PushID(label);
 					ImGui.TableNextColumn();
-					ImGui.SmallButton("View"); //TODO
+					if (ImGui.SmallButton("View")) viewerUI.Track(layer);
+
 					ImGui.SameLine();
-					ImGui.SmallButton("Save"); //TODO
+					if (ImGui.SmallButton("Save")) dialogueUI.Open($"{label}.png", false, path => SaveTexture(path, layer));
+					ImGui.PopID();
 				}
 
 				ImGui.EndTable();
@@ -163,7 +182,7 @@ public sealed class RenderUI : AreaUI
 		}
 	}
 
-	bool DrawOperation(Operation operation, bool select)
+	bool DrawOperation(Operation operation, bool track)
 	{
 		bool active;
 		bool clicked;
@@ -179,10 +198,11 @@ public sealed class RenderUI : AreaUI
 			}
 			case EvaluationOperation casted:
 			{
+				if (track && lastTracked != operation) viewerUI.Track(casted);
+
 				active = BeginTabItem("Evaluation");
 				clicked = ImGui.IsItemClicked();
 				if (active) DrawOperation(casted);
-				if (select) viewerUI.Track(casted);
 				break;
 			}
 			case CompositionOperation casted:
@@ -201,7 +221,7 @@ public sealed class RenderUI : AreaUI
 		unsafe bool BeginTabItem(ReadOnlySpan<char> label)
 		{
 			ImGuiTabItemFlags flags = ImGuiTabItemFlags.None;
-			if (select) flags |= ImGuiTabItemFlags.SetSelected;
+			if (track) flags |= ImGuiTabItemFlags.SetSelected;
 
 			Span<byte> bytes = stackalloc byte[label.Length * 2 + 1];
 			bytes[Encoding.UTF8.GetBytes(label, bytes)] = 0;
@@ -307,17 +327,8 @@ public sealed class RenderUI : AreaUI
 
 		if (ImGuiCustom.BeginSection("Overview"))
 		{
-			if (ImGuiCustom.BeginProperties())
+			if (BeginOperationOverviewProperties(operation))
 			{
-				ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
-				ImGuiCustom.Property("Progress", progress.ToInvariantPercent());
-				ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
-
-				ImGuiCustom.PropertySeparator();
-
-				ImGuiCustom.Property("Time Spent", time.ToInvariant());
-				ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
-
 				if (progress is > 0f and < 1f)
 				{
 					TimeSpan timeRemain = time / progress - time;
@@ -346,14 +357,14 @@ public sealed class RenderUI : AreaUI
 				ImGui.SameLine();
 				ImGui.Spacing();
 				ImGui.SameLine();
-				if (ImGui.SmallButton("View Layer")) viewerUI.Track(operation);
+				if (ImGui.SmallButton("View Evaluation")) viewerUI.Track(operation);
 
 				ImGuiCustom.PropertySeparator();
 
 				ImGuiCustom.Property("Epoch Size", profile.Distribution.Extend.ToInvariant());
 				ImGuiCustom.Property("Min Epoch Count", profile.MinEpoch.ToInvariant());
 				ImGuiCustom.Property("Max Epoch Count", profile.MaxEpoch.ToInvariant());
-				ImGuiCustom.Property("Noise Threshold", profile.NoiseThreshold.ToString("E2", InvariantFormat.Culture));
+				ImGuiCustom.Property("Noise Threshold", profile.NoiseThreshold.ToString("R", InvariantFormat.Culture));
 
 				ImGuiCustom.EndProperties();
 			}
@@ -403,11 +414,7 @@ public sealed class RenderUI : AreaUI
 	{
 		if (ImGuiCustom.BeginSection("Overview"))
 		{
-			if (ImGuiCustom.BeginProperties())
-			{
-				DrawOperationOverviewProperties(operation);
-				ImGuiCustom.EndProperties();
-			}
+			if (BeginOperationOverviewProperties(operation)) ImGuiCustom.EndProperties();
 
 			ImGuiCustom.EndSection();
 		}
@@ -437,9 +444,15 @@ public sealed class RenderUI : AreaUI
 		}
 	}
 
-	static void DrawOperationOverviewProperties(Operation operation)
+	static void SaveTexture(string path, TextureGrid texture) => ActionQueue.Enqueue("Save Texture to Disk", () => texture.Save(path));
+
+	static bool BeginOperationOverviewProperties(Operation operation)
 	{
-		ImGuiCustom.Property("Progress", operation.Progress.ToInvariantPercent());
+		float width = ImGui.GetContentRegionAvail().X;
+		ImGui.ProgressBar((float)operation.Progress, new Vector2(width, 0f));
+
+		if (!ImGuiCustom.BeginProperties()) return false;
+
 		ImGuiCustom.Property("Completed", operation.IsCompleted.ToString());
 		ImGuiCustom.Property("Total Workload", operation.TotalProcedureCount.ToInvariant());
 		ImGuiCustom.Property("Completed Work", operation.CompletedProcedureCount.ToInvariant());
@@ -448,5 +461,7 @@ public sealed class RenderUI : AreaUI
 
 		ImGuiCustom.Property("Time Spent", operation.Time.ToInvariant());
 		ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
+
+		return true;
 	}
 }

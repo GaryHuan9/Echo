@@ -49,10 +49,9 @@ public sealed class SchedulerUI : AreaUI
 		systemUI = root.Find<SystemUI>();
 		dialogueUI = root.Find<FileUI>();
 		renderUI = root.Find<RenderUI>();
-		ChangeCurrentPath("ext/Scenes/");
 
 		string[] arguments = Environment.GetCommandLineArgs();
-		string path = Environment.CurrentDirectory;
+		string path = "ext/Scenes/";
 
 		if (arguments.Length > 1)
 		{

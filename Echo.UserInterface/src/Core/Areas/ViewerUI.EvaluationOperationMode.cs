@@ -1,16 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics;
-using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
-using Echo.Core.Textures.Serialization;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
@@ -18,7 +16,7 @@ using SDL2;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public partial class ViewerUI
+partial class ViewerUI
 {
 	sealed class EvaluationOperationMode : Mode
 	{
@@ -35,13 +33,13 @@ public partial class ViewerUI
 		public void Reset(EvaluationOperation newOperation)
 		{
 			if (newOperation == operation) return;
-			operation = newOperation;
 
+			operation = newOperation;
 			RecreateDisplay(LayerSize);
 			RestartDisplayUpdate();
 		}
 
-		public override void DrawPlane(ImDrawListPtr drawList, in Bounds plane)
+		public override void Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
 		{
 			//Find and update tile from completed procedures
 			while (true)
@@ -58,6 +56,33 @@ public partial class ViewerUI
 			drawList.AddRect(plane.MinVector2, plane.MaxVector2, borderColor);
 
 			DrawCurrentTiles(drawList, plane);
+
+			//Display pixel information
+			if (cursorUV != null)
+			{
+				var layer = operation.destination;
+
+				Int2 position = ((TextureGrid)layer).ToPosition(cursorUV.Value);
+				Int2 tilePosition = layer.GetTilePosition(position);
+				IEvaluationReadTile tile = layer.RequestTile(tilePosition);
+
+				ImGui.BeginTooltip();
+
+				ImGui.TextUnformatted($"Location: {position.ToInvariant()}");
+				ImGui.TextUnformatted($"Tile: {tilePosition.ToInvariant()}");
+				if (tile != null) ImGui.TextUnformatted($"Color: {tile[position].ToInvariant()}");
+
+				ImGui.EndTooltip();
+			}
+		}
+
+		public override void DrawMenuBar()
+		{
+			if (ImGui.BeginMenu("View"))
+			{
+				if (ImGui.MenuItem("Restart")) RestartDisplayUpdate();
+				ImGui.EndMenu();
+			}
 		}
 
 		void RestartDisplayUpdate()
@@ -113,8 +138,6 @@ public partial class ViewerUI
 			Int2 max = tile.Max;
 
 			int invertY = LayerSize.Y - min.Y - tileSize.Y;
-			Float2 textureSizeR = 1f / LayerSize;
-
 			SDL.SDL_Rect rect = new SDL.SDL_Rect { x = min.X, y = invertY, w = tileSize.X, h = tileSize.Y };
 			SDL.SDL_LockTexture(Display, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
 
@@ -127,21 +150,7 @@ public partial class ViewerUI
 			{
 				Int2 position = new Int2(x, y);
 				Float4 color = tile[position];
-
-				// if (compareTexture != null)
-				// {
-				// 	Float2 uv = (position + Float2.Half) * textureSizeR;
-				// 	Float4 reference = compareTexture[uv];
-				// 	color = Float4.Half + color - reference;
-				// 	color += Float4.Ana; //Force alpha to be 1
-				// }
-
-				color = ApproximateSqrt(color.Max(Float4.Zero));
-				color = color.Min(Float4.One) * byte.MaxValue;
-				pixels[x] = SystemSerializer.GatherBytes(Sse2.ConvertToVector128Int32(color.v).AsUInt32());
-
-				//Although less accurate, this way of approximating the square root correctly handles zero (unlike x * 1/sqrt x)
-				static Float4 ApproximateSqrt(in Float4 value) => new(Sse.Reciprocal(Sse.ReciprocalSqrt(value.v)));
+				pixels[x] = ColorToUInt32(color);
 			}
 
 			SDL.SDL_UnlockTexture(Display);
