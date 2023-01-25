@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;

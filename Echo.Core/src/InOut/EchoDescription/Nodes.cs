@@ -5,10 +5,6 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Memory;
-using Echo.Core.Common.Packed;
-using Echo.Core.Textures;
-using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.InOut.EchoDescription;
 

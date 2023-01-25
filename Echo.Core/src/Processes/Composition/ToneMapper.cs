@@ -3,7 +3,6 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Composition;
 

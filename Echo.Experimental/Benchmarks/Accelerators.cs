@@ -11,7 +11,6 @@ using Echo.Core.InOut;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
-using Echo.Core.Textures;
 
 namespace Echo.Experimental.Benchmarks;
 

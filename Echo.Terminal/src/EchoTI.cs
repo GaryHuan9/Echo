@@ -1,5 +1,4 @@
 ﻿using Echo.Core.Common.Compute;
-using Echo.Core.InOut;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
 using Echo.Terminal.Application;

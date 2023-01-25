@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Echo.Core.Aggregation.Acceleration;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;

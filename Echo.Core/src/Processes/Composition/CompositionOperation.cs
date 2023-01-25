@@ -6,7 +6,6 @@ using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
-using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;

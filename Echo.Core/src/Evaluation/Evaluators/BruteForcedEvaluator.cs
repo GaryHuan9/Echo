@@ -7,7 +7,6 @@ using Echo.Core.Evaluation.Materials;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
