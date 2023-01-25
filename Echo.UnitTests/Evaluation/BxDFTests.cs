@@ -17,7 +17,7 @@ public class BxDFTests
 	{
 		var distribution = new StratifiedDistribution
 		{
-			Extend = samples.Length,
+			Extend = outgoings.Length,
 			Prng = new SystemPrng(1)
 		};
 
@@ -31,7 +31,7 @@ public class BxDFTests
 
 		distribution = new StratifiedDistribution
 		{
-			Extend = outgoings.Length,
+			Extend = samples.Length,
 			Prng = new SystemPrng(2)
 		};
 
