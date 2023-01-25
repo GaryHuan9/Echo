@@ -1,8 +1,15 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
+using Echo.Core.Evaluation.Materials;
+using Echo.Core.Evaluation.Sampling;
+using Echo.Core.Scenic.Geometries;
+using Echo.Core.Scenic.Hierarchies;
+using Echo.Core.Scenic.Preparation;
 using JitBuddy;
 
 namespace Echo.Experimental;
@@ -11,6 +18,33 @@ public class Program
 {
 	static void Main()
 	{
+		PreparedScene scene = new ScenePreparer(new Scene { new BoxEntity { Size = Float3.One * 100f, Material = new Emissive() } }).Prepare();
+
+		for (int i = 0; i < scene.geometries.triangles.Length; i++)
+		{
+			DebugHelper.Log(i, scene.geometries.triangles[i].normal0);
+		}
+
+		var distribution = new StratifiedDistribution
+		{
+			Extend = 10,
+			Prng = new SystemPrng(42)
+		};
+
+		distribution.BeginSeries(Int2.Zero);
+		distribution.BeginSession();
+
+		Console.WriteLine();
+
+		for (int i = 0; i < 10; i++)
+		{
+			Sample1D sample = distribution.Next1D();
+
+			var picked = scene.lightPicker.Pick(new GeometryPoint(Float3.Zero, Float3.Up), ref sample);
+
+			DebugHelper.Log(picked.content.Index, picked.pdf);
+		}
+		
 		// TestMonteCarlo();
 		// TestJitter();
 		// TestUnmanaged();
