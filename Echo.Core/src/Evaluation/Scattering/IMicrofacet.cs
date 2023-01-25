@@ -125,7 +125,7 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 		float threshold = 1f / (1f + scaled.Z);
 		float radius = FastMath.Sqrt0(sample.x);
 		float theta = sample.y < threshold ? sample.y / threshold
-						  : 1f + (sample.y - threshold) / (1f - threshold);
+			: 1f + (sample.y - threshold) / (1f - threshold);
 
 		FastMath.SinCos(theta * -Scalars.Pi, out float sin, out float cos);
 

@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Common.Mathematics;
 
@@ -16,7 +17,7 @@ public static class FastMath
 	{
 		uint bits0 = BitConverter.SingleToUInt32Bits(OneMinusEpsilon);
 		uint bits1 = BitConverter.SingleToUInt32Bits(1f) - 1u;
-		Diagnostics.Ensure.AreEqual(bits0, bits1);
+		Ensure.AreEqual(bits0, bits1);
 	}
 #endif
 

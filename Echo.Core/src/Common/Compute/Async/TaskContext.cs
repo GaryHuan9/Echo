@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Threading;
 
 namespace Echo.Core.Common.Compute.Async;
 

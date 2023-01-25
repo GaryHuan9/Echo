@@ -11,7 +11,6 @@ using Echo.Core.Evaluation.Scattering;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 

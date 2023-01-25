@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
@@ -54,7 +55,7 @@ public sealed class Emissive : Material
 	}
 
 	public override void Scatter(ref Contact contact, Allocator allocator) => contact.bsdf = NewBSDF(contact, allocator, RGB128.Black);
-	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new System.NotSupportedException();
+	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
 
 	/// <summary>
 	/// Returns the emission of this <see cref="Emissive"/>.

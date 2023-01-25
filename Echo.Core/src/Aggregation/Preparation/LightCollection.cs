@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;

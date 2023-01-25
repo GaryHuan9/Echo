@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Numerics;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Memory;
 using Echo.Core.InOut;
