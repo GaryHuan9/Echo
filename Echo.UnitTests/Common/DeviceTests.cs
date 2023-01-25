@@ -64,13 +64,13 @@ public class DeviceTests
 	[Test]
 	public void AsyncSimple()
 	{
-		Operation operation = device.Schedule(AsyncOperation.New(MainAsync));
+		Operation operation = device.Schedule(AsyncOperation.New(Main));
 
 		PauseSeries(device);
 		device.Operations.Await(operation);
 		AssertCompleted(operation);
 
-		static async ComputeTask MainAsync(AsyncOperation operation)
+		static async ComputeTask Main(AsyncOperation operation)
 		{
 			Stage stage = new Stage();
 			stage.Next(1);
@@ -89,13 +89,13 @@ public class DeviceTests
 	[Test]
 	public void AsyncComplex()
 	{
-		Operation operation = device.Schedule(AsyncOperation.New(MainAsync));
+		Operation operation = device.Schedule(AsyncOperation.New(Main));
 
 		PauseSeries(device);
 		device.Operations.Await(operation);
 		AssertCompleted(operation);
 
-		static async ComputeTask MainAsync(AsyncOperation operation)
+		static async ComputeTask Main(AsyncOperation operation)
 		{
 			Stage stage = new Stage();
 			stage.Next(1);

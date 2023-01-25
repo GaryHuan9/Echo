@@ -2,22 +2,26 @@
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
+[EchoSourceUsable]
 public sealed class Dielectric : Material
 {
 	NotNull<Texture> _roughness = Pure.black;
 	NotNull<Texture> _refractiveIndex = Pure.white;
 
+	[EchoSourceUsable]
 	public Texture Roughness
 	{
 		get => _roughness;
 		set => _roughness = value;
 	}
 
+	[EchoSourceUsable]
 	public Texture RefractiveIndex
 	{
 		get => _refractiveIndex;

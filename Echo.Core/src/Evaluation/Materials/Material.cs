@@ -5,6 +5,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 
@@ -21,6 +22,7 @@ public abstract class Material
 	/// <remarks>This <see cref="Texture"/> is applied universally to all <see cref="Material"/>s by a simple multiplication,
 	/// essentially tinting their output. Thus, some <see cref="Material"/> might not be physical if this property is assigned
 	/// to something other than <see cref="Pure.white"/>.</remarks>
+	[EchoSourceUsable]
 	public Texture Albedo
 	{
 		get => _albedo;
@@ -30,6 +32,7 @@ public abstract class Material
 	/// <summary>
 	/// The local normal direction deviation of this <see cref="Material"/>.
 	/// </summary>
+	[EchoSourceUsable]
 	public Texture Normal
 	{
 		get => _normal;
@@ -39,6 +42,7 @@ public abstract class Material
 	/// <summary>
 	/// The intensity of <see cref="Normal"/> on this <see cref="Material"/>.
 	/// </summary>
+	[EchoSourceUsable]
 	public float NormalIntensity { get; set; } = 1f;
 
 	bool zeroNormal;

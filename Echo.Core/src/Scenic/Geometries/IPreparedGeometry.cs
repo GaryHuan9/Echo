@@ -47,5 +47,9 @@ public interface IPreparedGeometry
 	/// <param name="origin">The geometry-space point of whose perspective the pdf should be calculated through.</param>
 	/// <param name="incident">The sampled geometry-space unit direction that points from <paramref name="origin"/> towards this <see cref="IPreparedGeometry"/>.</param>
 	/// <returns>The calculated pdf value over solid angles.</returns>
+	/// <remarks>
+	/// Implementation can assume that the input <paramref name="origin"/> and <paramref name="incident"/> are generally actually
+	/// hitting this <see cref="IPreparedGeometry"/>, meaning it can ignore whether the direction actually intersect with our object.
+	/// </remarks>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident);
 }

@@ -5,12 +5,14 @@ using Echo.Core.Common;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Scenic.Hierarchies;
 
 /// <summary>
 /// The base for any object that can exist in a <see cref="Scene"/>.
 /// </summary>
+[EchoSourceUsable]
 public class Entity : IEnumerable<Entity>
 {
 	public Entity() => Root = this as EntityPack;
@@ -37,6 +39,7 @@ public class Entity : IEnumerable<Entity>
 	/// <summary>
 	/// The position of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
 	/// </summary>
+	[EchoSourceUsable]
 	public virtual Float3 Position
 	{
 		get => _position;
@@ -51,6 +54,7 @@ public class Entity : IEnumerable<Entity>
 	/// <summary>
 	/// The rotation (in euler angles) of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
 	/// </summary>
+	[EchoSourceUsable]
 	public virtual Float3 Rotation
 	{
 		get => _rotation;
@@ -66,6 +70,7 @@ public class Entity : IEnumerable<Entity>
 	/// The scale of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
 	/// </summary>
 	/// <exception cref="SceneException">Thrown if the provided value is negative.</exception>
+	[EchoSourceUsable]
 	public virtual float Scale
 	{
 		get => _scale;
@@ -143,6 +148,7 @@ public class Entity : IEnumerable<Entity>
 	/// <param name="child">The <see cref="Entity"/> to add.</param>
 	/// <exception cref="ArgumentException">If <paramref name="child"/> has already been added to a <see cref="Parent"/>.</exception>
 	/// <remarks>Once successfully added, <paramref name="child"/> will inherit the transform of this <see cref="Entity"/>.</remarks>
+	[EchoSourceUsable]
 	public void Add(Entity child)
 	{
 		if (child.Parent == this) throw new SceneException($"Cannot add a child to the same {nameof(Parent)} twice.");

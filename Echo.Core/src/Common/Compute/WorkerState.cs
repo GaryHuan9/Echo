@@ -51,7 +51,7 @@ public enum WorkerState : uint
 
 public static class WorkerStateExtensions
 {
-	static readonly string[] workerStateLabels = Enum.GetNames<WorkerState>();
+	static readonly string[] workerStateStrings = Enum.GetNames<WorkerState>();
 
 	/// <summary>
 	/// Converts a <see cref="WorkerState"/> to be displayed.
@@ -65,6 +65,6 @@ public static class WorkerStateExtensions
 		uint integer = (uint)state;
 		Ensure.AreEqual(BitOperations.PopCount(integer), 1);
 		int index = BitOperations.LeadingZeroCount(integer);
-		return workerStateLabels[31 - index];
+		return workerStateStrings[31 - index];
 	}
 }

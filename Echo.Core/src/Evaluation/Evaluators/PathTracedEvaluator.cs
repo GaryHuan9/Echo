@@ -6,9 +6,9 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
@@ -19,24 +19,25 @@ namespace Echo.Core.Evaluation.Evaluators;
 /// A unidirectional <see cref="Evaluator"/> able to simulate complex
 /// light effects such as global illumination and ambient occlusion.
 /// </summary>
+[EchoSourceUsable]
 public record PathTracedEvaluator : Evaluator
 {
 	/// <summary>
 	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
 	/// If such occurrence appears, the sample becomes biased and this property should be increased.
 	/// </summary>
+	[EchoSourceUsable]
 	public int BounceLimit { get; init; } = 128;
 
 	/// <summary>
 	/// The survivability of a path during unbiased path termination. As this value goes up, the amount of variance decreases, and 
 	/// the time we spend on each path increases. This value should be relatively high for interior scenes while low for outdoors.
 	/// </summary>
+	[EchoSourceUsable]
 	public float Survivability { get; init; } = 2.5f;
 
-	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
-
 	[SkipLocalsInit]
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
 		var path = new Path(ray);
 
@@ -158,12 +159,12 @@ public record PathTracedEvaluator : Evaluator
 	/// </summary>
 	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
 	/// <param name="contact">The <see cref="Contact"/> to sample from.</param>
-	/// <param name="statistics">The <see cref="EvaluationStatistics"/> to report values through.</param>
+	/// <param name="statistics">The <see cref="EvaluatorStatistics"/> to report values through.</param>
 	/// <param name="lightSample">The <see cref="Sample1D"/> value to use to select a light.</param>
 	/// <param name="radiantSample">The <see cref="Sample2D"/> value to use to sample the light.</param>
 	/// <param name="mis">Whether this method used multiple importance sampling.</param>
 	/// <returns>The sampled radiant from the <see cref="PreparedScene"/>.</returns>
-	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, ref EvaluationStatistics statistics, Sample1D lightSample, Sample2D radiantSample, out bool mis)
+	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, ref EvaluatorStatistics statistics, Sample1D lightSample, Sample2D radiantSample, out bool mis)
 	{
 		//Select light from scene
 		(TokenHierarchy light, float lightPdf) = scene.Pick(contact.point, lightSample);

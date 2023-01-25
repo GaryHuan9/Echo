@@ -5,6 +5,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 
@@ -14,6 +15,7 @@ namespace Echo.Core.Evaluation.Materials;
 /// A <see cref="Material"/> that is emissive, meaning that any surface it is applied to will contribute photons to the scene.
 /// The color is determined by the total average of <see cref="Material.Albedo"/>; currently textured area light is not supported.
 /// </summary>
+[EchoSourceUsable]
 public sealed class Emissive : Material
 {
 	/// <summary>

@@ -2,12 +2,14 @@
 using System.Runtime.CompilerServices;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Evaluation.Sampling;
 
 /// <summary>
 /// A stratified <see cref="ContinuousDistribution"/> that partitions the domain to improve the spread of the values drawn.
 /// </summary>
+[EchoSourceUsable]
 public record StratifiedDistribution : HorizontalDistribution
 {
 	public StratifiedDistribution() { }
@@ -17,6 +19,7 @@ public record StratifiedDistribution : HorizontalDistribution
 	/// <summary>
 	/// Returns whether the stratified samples are randomly shifted inside their individual cells.
 	/// </summary>
+	[EchoSourceUsable]
 	public bool Jitter { get; init; } = true;
 
 	public override void BeginSeries(Int2 position)

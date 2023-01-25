@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
@@ -8,31 +9,37 @@ namespace Echo.Core.Scenic.Geometries;
 /// <summary>
 /// A geometric box object.
 /// </summary>
+[EchoSourceUsable]
 public class BoxEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
 	/// <summary>
 	/// The size of the box.
 	/// </summary>
+	[EchoSourceUsable]
 	public Float3 Size { get; set; } = Float3.One;
 
 	/// <summary>
 	/// The texture coordinate of the bottom left of the box.
 	/// </summary>
+	[EchoSourceUsable]
 	public Float2 Texcoord00 { get; set; } = Float2.Zero;
 
 	/// <summary>
 	/// The texture coordinate of the bottom right of the box.
 	/// </summary>
+	[EchoSourceUsable]
 	public Float2 Texcoord01 { get; set; } = Float2.Right;
 
 	/// <summary>
 	/// The texture coordinate of the top left of the box.
 	/// </summary>
+	[EchoSourceUsable]
 	public Float2 Texcoord10 { get; set; } = Float2.Up;
 
 	/// <summary>
 	/// The texture coordinate of the top right of the box.
 	/// </summary>
+	[EchoSourceUsable]
 	public Float2 Texcoord11 { get; set; } = Float2.One;
 
 	/// <inheritdoc/>

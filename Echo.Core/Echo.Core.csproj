@@ -23,21 +23,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="ext/JetBrainsMono/**">
+        <Content Include="ext/**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="ext/Scenes/**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <ContentWithTargetPath Include="ext/Oidn/**">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <TargetPath>%(Filename)%(Extension)</TargetPath>
-        </ContentWithTargetPath>
     </ItemGroup>
 
     <ItemGroup>
         <Compile Remove="src\Scenic\ExamplesOld\**" />
-        <Compile Remove="src\PostProcess\**" />
     </ItemGroup>
 
 </Project>

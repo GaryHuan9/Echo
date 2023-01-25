@@ -9,13 +9,15 @@ namespace Echo.Core.Evaluation.Sampling;
 /// </summary>
 public readonly struct Sample2D
 {
-	Sample2D(Float2 u) : this((Sample1D)u.X, (Sample1D)u.Y) { }
-
 	public Sample2D(Sample1D x, Sample1D y)
 	{
 		this.x = x;
 		this.y = y;
 	}
+
+	public Sample2D(float x, float y) : this((Sample1D)x, (Sample1D)y) { }
+
+	Sample2D(Float2 u) : this((Sample1D)u.X, (Sample1D)u.Y) { }
 
 	public readonly Sample1D x;
 	public readonly Sample1D y;
