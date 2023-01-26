@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 
 namespace Echo.Core.Common.Compute;
 
@@ -11,6 +12,17 @@ namespace Echo.Core.Common.Compute;
 /// </summary>
 public sealed class Device : IDisposable
 {
+	/// <summary>
+	/// Creates a new <see cref="Device"/>.
+	/// </summary>
+	/// <param name="utilization">A normalized number (between 0 and 1) that determines the <see cref="Population"/>.</param>
+	/// <remarks>Usually only one <see cref="Device"/> is needed per program.</remarks>
+	public Device(float utilization = 1f) : this
+	(
+		(utilization * Environment.ProcessorCount)
+	   .Round().Clamp(1, Environment.ProcessorCount)
+	) { }
+
 	Device(int population)
 	{
 		var builder = ImmutableArray.CreateBuilder<Worker>(population);
@@ -63,33 +75,6 @@ public sealed class Device : IDisposable
 	/// Disposed <see cref="Device"/> should not be used.
 	/// </summary>
 	public bool Disposed => _disposed != 0;
-
-	static readonly Locker instanceLocker = new();
-	static Device _instance;
-
-	/// <summary>
-	/// The current valid (non-disposed) <see cref="Device"/> in this <see cref="AppDomain"/>.
-	/// </summary>
-	/// <seealso cref="Create"/>
-	public static Device Instance
-	{
-		get
-		{
-			using var _ = instanceLocker.Fetch();
-
-			Device instance = _instance;
-			if (instance == null) return null;
-			if (!instance.Disposed) return instance;
-
-			_instance = null;
-			return null;
-		}
-		private set
-		{
-			Ensure.IsTrue(instanceLocker.IsEntered);
-			_instance = value;
-		}
-	}
 
 	/// <summary>
 	/// Queues the execution of a new <see cref="Operation"/>.
@@ -167,13 +152,6 @@ public sealed class Device : IDisposable
 		using var _ = locker.Fetch();
 		if (Interlocked.Exchange(ref _disposed, 1) == 1) return;
 
-		//Unregister from active instance
-		lock (instanceLocker)
-		{
-			Ensure.AreEqual(_instance, this);
-			Instance = null;
-		}
-
 		//Dispose workers
 		foreach (var worker in workers) worker.Dispose();
 
@@ -220,34 +198,6 @@ public sealed class Device : IDisposable
 
 		ThrowIfDisposed();
 		foreach (var worker in workers) worker.Dispatch(operation);
-	}
-
-	/// <summary>
-	/// Creates a new <see cref="Device"/>.
-	/// </summary>
-	/// <returns>The <see cref="Device"/> that was created.</returns>
-	/// <exception cref="InvalidOperationException">Thrown if <see cref="Instance"/> is not null.</exception>
-	/// <remarks>Only one non-disposed <see cref="Device"/> can exist within one <see cref="AppDomain"/>. The current
-	/// valid <see cref="Device"/> can be accesses through the <see cref="Instance"/> static property.</remarks>
-	/// <seealso cref="Instance"/>
-	public static Device Create()
-	{
-		using var _ = instanceLocker.Fetch();
-
-		if (Instance == null) return Instance = new Device(Environment.ProcessorCount);
-		throw new InvalidOperationException($"Only one {nameof(Device)} can exist within one {nameof(AppDomain)}.");
-	}
-
-	/// <summary>
-	/// Creates or get a <see cref="Device"/>.
-	/// </summary>
-	/// <returns>The <see cref="Device"/> that was created or retrieved.</returns>
-	/// <remarks>This method is similar to atomically checking whether <see cref="Instance"/> is null
-	/// and then conditional invoking <see cref="Create"/> if <see cref="Instance"/> is null.</remarks>
-	public static Device CreateOrGet()
-	{
-		using var _ = instanceLocker.Fetch();
-		return Instance ?? Create();
 	}
 
 	public interface IOperations : IDisposable

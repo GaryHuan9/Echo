@@ -12,7 +12,7 @@ namespace Echo.UnitTests.Common;
 public class DeviceTests
 {
 	[SetUp]
-	public void SetUp() => device = Device.Create();
+	public void SetUp() => device = new Device();
 
 	[TearDown]
 	public void TearDown()
