@@ -13,7 +13,7 @@ public sealed class EchoSource
 {
 	public EchoSource(Stream stream) : this(stream, Environment.CurrentDirectory) { }
 
-	public EchoSource(string path) : this(File.OpenRead(path), Path.GetDirectoryName(path)) { }
+	public EchoSource(string path) : this(File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite), Path.GetDirectoryName(path)) { }
 
 	public EchoSource(Stream stream, string currentDirectory)
 	{

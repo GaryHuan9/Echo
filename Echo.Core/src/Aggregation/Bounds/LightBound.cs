@@ -1,4 +1,5 @@
-﻿using Echo.Core.Aggregation.Primitives;
+﻿using System;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 
@@ -49,11 +50,12 @@ public readonly struct LightBound
 		float cosFinal = ClampSubtractCos(sinRemain, cosRemain, sinRadius, cosRadius);
 		if (cosFinal <= cone.cosExtend) return 0f;
 
+		//Must take the absolute value here because both normal directions are valid for a surface
 		float cosIncident = FastMath.Abs(origin.normal.Dot(incident));
 		float sinIncident = FastMath.Identity(cosIncident);
 		float cosReflect = ClampSubtractCos(sinIncident, cosIncident, sinRadius, cosRadius);
 
-		//TODO: clamp length2
+		length2 = Math.Max(length2, (box.max - box.min).Magnitude / 2f);
 		return FastMath.Max0(power / length2 * cosFinal * cosReflect);
 	}
 
