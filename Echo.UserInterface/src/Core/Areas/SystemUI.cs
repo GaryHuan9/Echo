@@ -17,7 +17,7 @@ public sealed class SystemUI : AreaUI
 	/// The main <see cref="Device"/> for this <see cref="EchoUI"/> instance.
 	/// </summary>
 	/// <remarks>This property is never null, however the instance might change.</remarks>
-	public Device Device { get; private set; } = Device.Create();
+	public Device Device { get; private set; } = new();
 
 	TimeSpan lastUpdateTime;
 	string frameRateString;
@@ -215,7 +215,7 @@ public sealed class SystemUI : AreaUI
 		if (ImGui.Button("Recreate"))
 		{
 			ActionQueue.Enqueue("Device Dispose", Device.Dispose);
-			Device = Device.Create();
+			Device = new Device();
 		}
 
 		//Status

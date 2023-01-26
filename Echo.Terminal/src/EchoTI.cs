@@ -30,7 +30,7 @@ public class EchoTI : RootTI
 
 		Balance = 0.16f;
 
-		device = Device.Create();
+		device = new Device();
 	}
 
 	readonly Device device;
