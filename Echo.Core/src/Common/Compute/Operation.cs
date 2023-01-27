@@ -82,11 +82,6 @@ public abstract class Operation : IDisposable
 	public int WorkerCount => workerData.Length;
 
 	/// <summary>
-	/// The number of <see cref="EventRow"/> available from <see cref="FillEventRows"/>.
-	/// </summary>
-	public virtual int EventRowCount => 0;
-
-	/// <summary>
 	/// The progress of this <see cref="Operation"/>.
 	/// </summary>
 	/// <remarks>This value is between zero and one (both inclusive).</remarks>
@@ -260,13 +255,6 @@ public abstract class Operation : IDisposable
 		for (int i = 0; i < length; i++) fill.Add(workerData[i].procedure);
 	}
 
-	/// <summary>
-	/// Fills information about the events occured in this <see cref="Operation"/>.
-	/// </summary>
-	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="EventRow"/>s.</param>
-	/// <remarks>The maximum number of available items filled from this method is <see cref="EventRowCount"/>.</remarks>
-	public virtual void FillEventRows(ref SpanFill<EventRow> fill) => Ensure.AreEqual(EventRowCount, 0);
-
 	public void Dispose()
 	{
 		Dispose(true);
@@ -361,13 +349,29 @@ public abstract class Operation<T> : Operation where T : unmanaged, IStatistics<
 
 	readonly AlignedArray<T> statsArray;
 
-	public sealed override int EventRowCount => default(T).Count;
+	/// <summary>
+	/// The number of <see cref="EventRow"/> available from <see cref="FillEventRows"/>.
+	/// </summary>
+	public static int EventRowCount => default(T).Count;
 
-	public override unsafe void FillEventRows(ref SpanFill<EventRow> fill)
+	unsafe T Sum => default(T).Sum(statsArray.Pointer, WorkerCount);
+
+	/// <summary>
+	/// Gets one <see cref="EventRow"/> from the information <see cref="IStatistics{T}"/>.
+	/// </summary>
+	/// <param name="index">The location to get; must be non-negative and smaller than <see cref="EventRowCount"/>.</param>
+	public EventRow GetEventRow(int index) => Sum[index];
+
+	/// <summary>
+	/// Fills information about the events occured in this <see cref="Operation{T}"/>.
+	/// </summary>
+	/// <param name="fill">The destination <see cref="SpanFill{T}"/> to be filled with <see cref="EventRow"/>s.</param>
+	/// <remarks>The maximum number of available items filled from this method is <see cref="EventRowCount"/>.</remarks>
+	public void FillEventRows(ref SpanFill<EventRow> fill)
 	{
 		fill.ThrowIfNotEmpty();
 
-		T sum = default(T).Sum(statsArray.Pointer, WorkerCount);
+		T sum = Sum;
 		int length = Math.Min(fill.Length, EventRowCount);
 		for (int i = 0; i < length; i++) fill.Add(sum[i]);
 	}

@@ -9,6 +9,7 @@ using Echo.Core.Common.Diagnostics;
 using Echo.Core.InOut;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
+using Echo.Core.Processes.Evaluation;
 using Echo.Core.Textures.Grids;
 
 namespace Echo.Terminal;
@@ -220,24 +221,33 @@ class Program
 
 	static void WriteOperationStatus(StringBuilder builder, Operation operation)
 	{
-		Ensure.IsTrue(builder.Length == 0);
-
+		Ensure.AreEqual(builder.Length, 0);
+		TimeSpan time = operation.Time;
 		builder.Append($"{operation.GetType().Name,-30} ");
 
 		if (!operation.IsCompleted)
 		{
-			TimeSpan time = operation.Time;
 			float progress = (float)operation.Progress;
-			builder.Append($"{progress.ToInvariantPercent()} [{time.ToInvariant()}");
+			builder.Append($"{progress.ToInvariantPercent()} - {time.ToInvariant()}");
 
 			if (progress > 0f)
 			{
 				TimeSpan timeRemain = time / progress - time;
-				builder.Append($" / {timeRemain.ToInvariant()}]");
+				builder.Append($" / {timeRemain.ToInvariant()}");
 			}
-			else builder.Append(')');
 		}
-		else builder.Append($"Done [{operation.Time.ToInvariant()}]");
+		else
+		{
+			builder.Append($"Done - {operation.Time.ToInvariant()}");
+
+			if (operation is EvaluationOperation evaluation)
+			{
+				ulong samples = evaluation.TotalSamples;
+				float seconds = (float)time.TotalSeconds;
+				ulong rate = (ulong)(samples / seconds);
+				builder.Append($" @ {rate.ToInvariantMetric()}/s");
+			}
+		}
 
 		Console.CursorLeft = 0;
 		int padding = Console.BufferWidth - 1 - builder.Length;

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Compute;
+using Echo.Core.Common.Compute.Statistics;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
@@ -38,6 +39,22 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 		}
 	}
 
+	static EvaluationOperation()
+	{
+		var statistics = new EvaluatorStatistics();
+		samplesEvaluatedEventRowIndex = -1;
+
+		for (int i = 0; i < EventRowCount; i++)
+		{
+			string label = statistics[i].Label;
+			if (label != SamplesEvaluatedEventRowLabel) continue;
+			samplesEvaluatedEventRowIndex = i;
+			break;
+		}
+
+		Ensure.IsFalse(samplesEvaluatedEventRowIndex < 0);
+	}
+
 	public readonly ImmutableArray<Int2> tilePositions;
 	public readonly IEvaluationLayer destination;
 	public readonly EvaluationProfile profile;
@@ -45,6 +62,22 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 	readonly StrongBox<PreparedScene> boxedScene;
 	readonly ContinuousDistribution[] distributions;
 	readonly Allocator[] allocators;
+
+	const string SamplesEvaluatedEventRowLabel = "Sample/Evaluated";
+	static readonly int samplesEvaluatedEventRowIndex;
+
+	/// <summary>
+	/// The total number of samples used for this <see cref="EvaluationOperation"/>.
+	/// </summary>
+	public ulong TotalSamples
+	{
+		get
+		{
+			EventRow row = GetEventRow(samplesEvaluatedEventRowIndex);
+			Ensure.AreEqual(row.Label, SamplesEvaluatedEventRowLabel);
+			return row.Count;
+		}
+	}
 
 	protected override void Execute(ref Procedure procedure, IWorker worker, ref EvaluatorStatistics statistics)
 	{
