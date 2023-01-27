@@ -372,7 +372,7 @@ public sealed class RenderUI : AreaUI
 			ImGuiCustom.EndSection();
 		}
 
-		if (operation.EventRowCount > 0 && ImGuiCustom.BeginSection("Events"))
+		if (EvaluationOperation.EventRowCount > 0 && ImGuiCustom.BeginSection("Events"))
 		{
 			if (ImGui.BeginTable("Table", 4, ImGuiCustom.DefaultTableFlags))
 			{
@@ -380,7 +380,7 @@ public sealed class RenderUI : AreaUI
 				double progressR = 1d / progress;
 				bool divideByZero = time == TimeSpan.Zero || progress.AlmostEquals();
 
-				Utility.EnsureCapacity(ref eventRows, operation.EventRowCount);
+				Utility.EnsureCapacity(ref eventRows, EvaluationOperation.EventRowCount);
 
 				SpanFill<EventRow> fill = eventRows;
 				operation.FillEventRows(ref fill);
