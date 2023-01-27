@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Mathematics;
 using Echo.Core.InOut;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
@@ -21,8 +20,8 @@ class Program
 		Console.WriteLine();
 		Console.WriteLine
 		(
-			$"Echo Photorealistic Renderer [Version {typeof(Program).Assembly.GetName().Version}]\n" +
-			$"Terminal Render User Interface [Version {typeof(Device).Assembly.GetName().Version}]\n" +
+			$"Echo Photorealistic Renderer [Version {GetVersion(typeof(Program))}]\n" +
+			$"Terminal Render User Interface [Version {GetVersion(typeof(Device))}]\n" +
 			"Copyright (C) 2023 Gary Huang, et al.\n" +
 			"All rights reserved."
 		);
@@ -36,7 +35,6 @@ class Program
 		var utilizationValue = HandleSwitchUtilization(arguments);
 		var profileIdentifier = HandleSwitchProfile(arguments);
 
-
 #if DEBUG
 		Console.WriteLine("Running in DEBUG mode; expect significant reduction in performance.");
 #endif
@@ -49,7 +47,7 @@ class Program
 		if (source == null) return 1;
 		Console.WriteLine($"Parsed {nameof(EchoSource)} file.");
 
-		RenderProfile profile = ConstructProfile(source, profileIdentifier);
+		RenderProfile profile = ConstructProfile(source, ref profileIdentifier);
 		if (profile == null) return 1;
 		Console.WriteLine($"Constructed {nameof(RenderProfile)} '{profileIdentifier}'.");
 		Console.WriteLine();
@@ -67,7 +65,7 @@ class Program
 			{
 				WriteOperationStatus(builder, operation);
 				if (operation.IsCompleted) break;
-				Thread.Sleep(10);
+				Thread.Sleep(16);
 			}
 
 			WriteOperationStatus(builder, operation);
@@ -99,6 +97,8 @@ class Program
 
 		return 0;
 	}
+
+	static Version GetVersion(Type type) => type.Assembly.GetName().Version;
 
 	static bool FindSwitch(ReadOnlySpan<string> arguments, string pattern, out int index)
 	{
@@ -156,6 +156,8 @@ class Program
 
 			if (!string.IsNullOrEmpty(layer) && !string.IsNullOrEmpty(file)) builder.Add((layer, file));
 			else Console.WriteLine($"Invalid output from layer '{layer}' to file '{file}'; skipping.");
+
+			arguments = arguments[(index + 1)..];
 		}
 
 		return builder.ToImmutable();
@@ -174,7 +176,7 @@ class Program
 
 	static string HandleSwitchProfile(ReadOnlySpan<string> arguments)
 	{
-		if (!FindSwitch(arguments, "utilization", out int index)) return null;
+		if (!FindSwitch(arguments, "profile", out int index)) return null;
 		string argument = index < arguments.Length ? arguments[index + 1] : "";
 
 		if (!string.IsNullOrEmpty(argument) && !string.IsNullOrWhiteSpace(argument)) return argument;
@@ -197,13 +199,13 @@ class Program
 		return null;
 	}
 
-	static RenderProfile ConstructProfile(EchoSource source, string profileIdentifier)
+	static RenderProfile ConstructProfile(EchoSource source, ref string profileIdentifier)
 	{
 		try
 		{
 			int index = source.IndexOf<RenderProfile>(profileIdentifier);
 			RenderProfile profile = index < 0 ?
-				source.ConstructFirst<RenderProfile>() :
+				source.ConstructFirst<RenderProfile>(out profileIdentifier) :
 				source[index].Construct<RenderProfile>();
 
 			if (profile != null) return profile;
@@ -220,22 +222,22 @@ class Program
 	{
 		Ensure.IsTrue(builder.Length == 0);
 
-		builder.Append($"[{operation.GetType().Name}] - ");
+		builder.Append($"{operation.GetType().Name,-30} ");
 
 		if (!operation.IsCompleted)
 		{
 			TimeSpan time = operation.Time;
 			float progress = (float)operation.Progress;
-			builder.Append($"{progress.ToInvariantPercent()} (Time Passed {time.ToInvariant()}");
+			builder.Append($"{progress.ToInvariantPercent()} [{time.ToInvariant()}");
 
 			if (progress > 0f)
 			{
 				TimeSpan timeRemain = time / progress - time;
-				builder.Append($" / Remain {timeRemain.ToInvariant()})");
+				builder.Append($" / {timeRemain.ToInvariant()}]");
 			}
-			else builder.Append(")");
+			else builder.Append(')');
 		}
-		else builder.Append("Done");
+		else builder.Append($"Done [{operation.Time.ToInvariant()}]");
 
 		Console.CursorLeft = 0;
 		int padding = Console.BufferWidth - 1 - builder.Length;
