@@ -24,7 +24,7 @@ public abstract record Serializer
 	/// <summary>
 	/// Reads and converts <paramref name="stream"/> into a <see cref="TextureGrid{T}"/>.
 	/// </summary>
-	public abstract ArrayGrid<T> Deserialize<T>(Stream stream) where T : unmanaged, IColor<T>;
+	public abstract SettableGrid<T> Deserialize<T>(Stream stream) where T : unmanaged, IColor<T>;
 
 	/// <summary>
 	/// Tries to find and return the appropriate <see cref="Serializer"/> for a

@@ -31,12 +31,16 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	const float RadianceWeightG = 0.715160f;
 	const float RadianceWeightB = 0.072169f;
 
+	public float R => d.X;
+	public float G => d.Y;
+	public float B => d.Z;
+
 	public float Luminance => d.Dot(new Float4(RadianceWeightR, RadianceWeightG, RadianceWeightB, 0f));
 
 	public bool IsZero
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		get => d <= new Float4
+		get => d < new Float4
 		(
 			EpsilonWeight / RadianceWeightR,
 			EpsilonWeight / RadianceWeightG,
@@ -45,12 +49,13 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 		);
 	}
 
-	public static RGB128 Black => new(new Float4(0f, 0f, 0f, 0f));
+	public static RGB128 Black => new(new Float4(0f, 0f, 0f, 0f)); //We can replace this with `new RGB128()` for smaller JIT asm, however if more collapsing is added to the JIT then this is probably fine
 	public static RGB128 White => new(new Float4(1f, 1f, 1f, 0f));
 
 	public override int GetHashCode() => d.GetHashCode();
 	public override string ToString() => ToString(default);
-	
+
+	/// <inheritdoc/>
 	public string ToString(string format, IFormatProvider provider = null) => d.XYZ.ToString(format, provider);
 
 	/// <inheritdoc/>
@@ -58,7 +63,20 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 
 	/// <inheritdoc/>
 	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
-	
+
+	/// <summary>
+	/// Increases <paramref name="value"/> slightly if needed so it is not zero.
+	/// </summary>
+	/// <remarks><see cref="IsZero"/> will be false on the returned value.</remarks>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static RGB128 MaxEpsilon(in RGB128 value) => new(value.d.Max(new Float4
+	(
+		EpsilonWeight / RadianceWeightR,
+		EpsilonWeight / RadianceWeightG,
+		EpsilonWeight / RadianceWeightB,
+		0f
+	)));
+
 	public static implicit operator Float4(in RGB128 value) => value.d;
 	public static explicit operator RGB128(in Float4 value) => new(Check(value.XYZ_));
 	public static explicit operator RGB128(in RGBA128 value) => new(((Float4)value).XYZ_);

@@ -1,10 +1,12 @@
 ﻿using Echo.Core.Evaluation.Materials;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Scenic.Hierarchies;
 
 /// <summary>
 /// An <see cref="Entity"/> that allows for the instancing of an <see cref="EntityPack"/>.
 /// </summary>
+[EchoSourceUsable]
 public class PackInstance : Entity
 {
 	EntityPack _pack;
@@ -13,6 +15,7 @@ public class PackInstance : Entity
 	/// The <see cref="EntityPack"/> to instance.
 	/// </summary>
 	/// <exception cref="SceneException">Thrown if an <see cref="EntityPack"/> is found to be recursively instanced.</exception>
+	[EchoSourceUsable]
 	public EntityPack Pack
 	{
 		get => _pack;
@@ -39,6 +42,7 @@ public class PackInstance : Entity
 	/// <summary>
 	/// A custom <see cref="MaterialSwatch"/> used to optionally modify the <see cref="Material"/>s applied the instanced <see cref="EntityPack"/>.
 	/// </summary>
+	[EchoSourceUsable]
 	public MaterialSwatch Swatch { get; set; }
 
 	protected override void CheckRoot(EntityPack root)

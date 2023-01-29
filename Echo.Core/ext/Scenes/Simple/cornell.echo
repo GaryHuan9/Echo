@@ -1,12 +1,15 @@
 ﻿:scene = new Scene
 {
-	:green = new Matte { .Albedo = new Pure("0x00CB21") }
-	:red = new Matte { .Albedo = new Pure("0xCB0021") }
-	:blue = new Matte { .Albedo = new Pure("0x0021CB") }
-	:white = new Matte { .Albedo = new Pure("0xEEEEF2") }
+	:green = new Diffuse { .Albedo = new Pure("0x00CB21") }
+	:red = new Diffuse { .Albedo = new Pure("0xCB0021") }
+	:blue = new Diffuse { .Albedo = new Pure("0x0021CB") }
+	:white = new Diffuse { .Albedo = new Pure("0xEEEEF2") }
 
-	:cullable = new Cullable { .Base = link white }
+	:cullable = new OneSided { .Base = link white }
 	:light = new Emissive { .Albedo = new Pure("0xFFFAF4") }
+
+	:glass0 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = new Pure("hdr(1.2 0 0)") }
+	:glass1 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = new Pure("hdr(1.7 0 0)") }
 
 	:wallSize = "10 10"
 	:wallSize5 = "5 5"
@@ -22,8 +25,11 @@
 	.Add(new PlaneEntity { .Material = link red .Size = link wallSize .Position = "-5 5 0" .Rotation = "0 0 -90" })      # Left
 	.Add(new PlaneEntity { .Material = link light .Size = link wallSize5 .Position = "0 9.99 0" .Rotation = "180 0 0" }) # Light
 
-	.Add(new BoxEntity { .Material = link white .Size = link boxSize0 .Position = "2 1.5 -2" .Rotation = "0 21 0"})
+	.Add(new BoxEntity { .Material = link white .Size = link boxSize0 .Position = "2 1.5 -2" .Rotation = "0 21 0" })
 	.Add(new BoxEntity { .Material = link white .Size = link boxSize1 .Position = "-2 3 2" .Rotation = "0 -21 0" })
+
+	# .Add(new SphereEntity { .Material = link glass0 .Radius = "2" .Position = "2 2 -2" })
+	# .Add(new SphereEntity { .Material = link glass1 .Radius = "2" .Position = "-2 2 2" })
 
 	# Camera position adjusted to fit entire FOV into the box
 	# float radian = Scalars.ToRadians(camera.FieldOfView / 2f)
@@ -31,12 +37,12 @@
 	.Add(new Camera("42") { .Position = "0 5 -18.025444" })
 }
 
-:profile = new EvaluationProfile
+:raw = new RenderProfile
 {
-	.Evaluator = new PathTracedEvaluator
-	.Distribution = new StratifiedDistribution { .Extend = "16" }
-	.Buffer = new RenderBuffer("512 512")
-	.Pattern = new HilbertCurvePattern
-	.MinEpoch = "1"
-	.MaxEpoch = "20"
+	.Scene = link scene
+	.Resolution = "512 512"
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .TargetLayer = "path" }  ]
 }
+
+:standard = new StandardPathTracedProfile(link scene) { .Resolution = "512 512" }
+:final = new StandardPathTracedProfile(link scene "100") { .Resolution = "1024 1024" }

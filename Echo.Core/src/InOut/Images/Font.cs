@@ -54,7 +54,7 @@ public class Font
 		}
 	}
 
-	readonly ArrayGrid<RGB128> texture;
+	readonly SettableGrid<RGB128> texture;
 	readonly Glyph[] glyphs;
 
 	readonly float glyphAspect;

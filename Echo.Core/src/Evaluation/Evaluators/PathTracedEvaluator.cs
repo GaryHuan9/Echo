@@ -6,12 +6,11 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Evaluation.Scattering;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Lights;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
@@ -19,29 +18,34 @@ namespace Echo.Core.Evaluation.Evaluators;
 /// A unidirectional <see cref="Evaluator"/> able to simulate complex
 /// light effects such as global illumination and ambient occlusion.
 /// </summary>
+[EchoSourceUsable]
 public record PathTracedEvaluator : Evaluator
 {
 	/// <summary>
 	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
 	/// If such occurrence appears, the sample becomes biased and this property should be increased.
 	/// </summary>
+	[EchoSourceUsable]
 	public int BounceLimit { get; init; } = 128;
 
 	/// <summary>
 	/// The survivability of a path during unbiased path termination. As this value goes up, the amount of variance decreases, and 
 	/// the time we spend on each path increases. This value should be relatively high for interior scenes while low for outdoors.
 	/// </summary>
+	[EchoSourceUsable]
 	public float Survivability { get; init; } = 2.5f;
 
-	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "path");
-
 	[SkipLocalsInit]
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
 		var path = new Path(ray);
 
 		//Quick exit with ambient light if no intersection
-		if (!path.Advance(scene, allocator)) return EvaluateInfinite(scene, path, ref statistics);
+		if (!path.Advance(scene, allocator))
+		{
+			statistics.Report("Light/Evaluated Infinite");
+			return EvaluateInfinite(scene, path);
+		}
 
 		//Add emission for first hit, if available
 		path.ContributeEmissive();
@@ -52,18 +56,13 @@ public record PathTracedEvaluator : Evaluator
 			var bounce = new Bounce(path.contact, distribution.Next2D());
 			statistics.Report("Bounce/Created");
 
-			if (bounce.IsZero)
-			{
-				statistics.Report("Bounce/Rejected");
-				break;
-			}
-
 			//Prefetch all samples so the order of them in subsequent bounces do not get messed up
 			Sample1D survivalSample = distribution.Next1D();
 			Sample1D lightSample = distribution.Next1D();
 			Sample2D radiantSample = distribution.Next2D();
 
-			if (bounce.IsSpecular)
+			//First check if the bounce is specular (Dirac delta)
+			if (bounce.function == null || bounce.function.type.Any(FunctionType.Specular))
 			{
 				//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 				statistics.Report("Bounce/Specular");
@@ -86,7 +85,7 @@ public record PathTracedEvaluator : Evaluator
 				if (mis)
 				{
 					//We have both an area light a non-delta BSDF, begin MIS
-					GeometryPoint oldOrigin = path.contact.point;
+					GeometryPoint oldPoint = path.contact.point;
 					statistics.Report("Bounce/Multiple Importance");
 
 					//Advance path and perform MIS
@@ -94,10 +93,10 @@ public record PathTracedEvaluator : Evaluator
 					{
 						//Attempt to do MIS on the newly contacted surface
 						ref readonly var light = ref path.contact.token;
-						float pmf = scene.ProbabilityMass(light, oldOrigin);
+						float pmf = scene.ProbabilityMass(light, oldPoint);
 						if (!FastMath.Positive(pmf)) continue;
 
-						float pdf = scene.ProbabilityDensity(light, oldOrigin, path.CurrentDirection);
+						float pdf = scene.ProbabilityDensity(light, oldPoint, path.CurrentDirection);
 						if (!FastMath.Positive(pdf)) continue;
 
 						//Contribute emission with MIS and continue to the next bounce
@@ -114,8 +113,8 @@ public record PathTracedEvaluator : Evaluator
 						InfiniteLight light = scene.infiniteLights[i];
 						hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
 
-						float pdf = scene.ProbabilityMass(hierarchy, oldOrigin) *
-									light.ProbabilityDensity(oldOrigin, direction);
+						float pdf = scene.ProbabilityMass(hierarchy, oldPoint) *
+									light.ProbabilityDensity(oldPoint, direction);
 						if (!FastMath.Positive(pdf)) continue;
 
 						float weight = PowerHeuristic(bounce.scatterPdf, pdf);
@@ -133,7 +132,8 @@ public record PathTracedEvaluator : Evaluator
 			if (!path.Advance(scene, allocator))
 			{
 				//No further intersection with scene is found, accumulate infinite lights and exit
-				path.Contribute(EvaluateInfinite(scene, path, ref statistics));
+				statistics.Report("Light/Evaluated Infinite");
+				path.Contribute(EvaluateInfinite(scene, path));
 				break;
 			}
 
@@ -149,26 +149,21 @@ public record PathTracedEvaluator : Evaluator
 	/// </summary>
 	/// <param name="scene">The <see cref="PreparedScene"/> from which the <see cref="InfiniteLight"/>s should be evaluated.</param>
 	/// <param name="path">The current <see cref="Path"/> that escaped the <see cref="PreparedScene"/>.</param>
-	/// <param name="statistics">An <see cref="EvaluationStatistics"/> used during this operation.</param>
 	/// <returns>The evaluated <see cref="RGB128"/> value.</returns>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static RGB128 EvaluateInfinite(PreparedScene scene, in Path path, ref EvaluationStatistics statistics)
-	{
-		statistics.Report("Light/Evaluated Infinite");
-		return scene.EvaluateInfinite(path.CurrentDirection);
-	}
+	static RGB128 EvaluateInfinite(PreparedScene scene, in Path path) => scene.EvaluateInfinite(path.CurrentDirection);
 
 	/// <summary>
 	/// Importance samples a the radiant in a <see cref="PreparedScene"/>.
 	/// </summary>
 	/// <param name="scene">The <see cref="PreparedScene"/> that all of this takes place.</param>
 	/// <param name="contact">The <see cref="Contact"/> to sample from.</param>
-	/// <param name="statistics">The <see cref="EvaluationStatistics"/> to report values through.</param>
+	/// <param name="statistics">The <see cref="EvaluatorStatistics"/> to report values through.</param>
 	/// <param name="lightSample">The <see cref="Sample1D"/> value to use to select a light.</param>
 	/// <param name="radiantSample">The <see cref="Sample2D"/> value to use to sample the light.</param>
 	/// <param name="mis">Whether this method used multiple importance sampling.</param>
 	/// <returns>The sampled radiant from the <see cref="PreparedScene"/>.</returns>
-	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, ref EvaluationStatistics statistics, Sample1D lightSample, Sample2D radiantSample, out bool mis)
+	static RGB128 ImportanceSampleRadiant(PreparedScene scene, in Contact contact, ref EvaluatorStatistics statistics, Sample1D lightSample, Sample2D radiantSample, out bool mis)
 	{
 		//Select light from scene
 		(TokenHierarchy light, float lightPdf) = scene.Pick(contact.point, lightSample);
@@ -178,8 +173,6 @@ public record PathTracedEvaluator : Evaluator
 			mis = false;
 			return RGB128.Black;
 		}
-
-		statistics.Report("Light/Picked");
 
 		//Sample the selected light
 		(RGB128 radiant, float radiantPdf) = scene.Sample
@@ -191,7 +184,7 @@ public record PathTracedEvaluator : Evaluator
 		float pdf = lightPdf * radiantPdf;
 		mis = light.TopToken.IsAreaLight();
 
-		if (!FastMath.Positive(pdf) | radiant.IsZero) return RGB128.Black;
+		if (!FastMath.Positive(pdf) || radiant.IsZero) return RGB128.Black;
 
 		statistics.Report("Light/Sampled");
 
@@ -298,24 +291,15 @@ public record PathTracedEvaluator : Evaluator
 		/// <seealso cref="Survivability"/>
 		public bool Continue(in Bounce bounce, float survivability, Sample1D sample)
 		{
+			if (!FastMath.Positive(bounce.scatterPdf)) return false;
+
 			energy *= bounce.scatter / bounce.scatterPdf;
 
 			//Conditional path termination with Russian Roulette
-			bool survived = RussianRoulette(ref energy, survivability, sample);
+			bool survived = RussianRoulette(survivability, sample);
 			if (survived) query = query.SpawnTrace(bounce.incident);
 
 			return survived;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			static bool RussianRoulette(ref RGB128 energy, float survivability, Sample1D sample)
-			{
-				float rate = FastMath.Clamp01(survivability * energy.Luminance);
-
-				if (sample >= rate) return false;
-
-				energy /= rate;
-				return true;
-			}
 		}
 
 		/// <summary>
@@ -330,10 +314,19 @@ public record PathTracedEvaluator : Evaluator
 		/// <param name="weight">An optionally provided value to scale this contribution.</param>
 		public void ContributeEmissive(float weight = 1f)
 		{
-			if (Material is not IEmissive emissive) return;
+			if (Material is not Emissive emissive) return;
 			if (!FastMath.Positive(emissive.Power)) return;
 
 			Contribute(emissive.Emit(contact.point, contact.outgoing) * weight);
+		}
+
+		bool RussianRoulette(float survivability, Sample1D sample)
+		{
+			float rate = FastMath.Clamp01(survivability * energy.Luminance);
+			if (sample >= rate) return false;
+
+			energy /= rate;
+			return true;
 		}
 	}
 
@@ -368,17 +361,10 @@ public record PathTracedEvaluator : Evaluator
 		/// </summary>
 		public readonly float scatterPdf;
 
-		readonly BxDF function;
-
 		/// <summary>
-		/// Whether this <see cref="Bounce"/> will have zero contribution to the <see cref="Path"/>.
+		/// The <see cref="BxDF"/> function that was sampled for this <see cref="Bounce"/>.
 		/// </summary>
-		public bool IsZero => !FastMath.Positive(scatterPdf) | scatter.IsZero;
-
-		/// <summary>
-		/// Whether the <see cref="Marshal"/> that this <see cref="Bounce"/> occured on is specular.
-		/// </summary>
-		public bool IsSpecular => function.type.Any(FunctionType.Specular);
+		public readonly BxDF function;
 
 		/// <summary>
 		/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.Specular"/>.

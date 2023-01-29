@@ -1,5 +1,8 @@
 ﻿using System.Collections.Generic;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Packed;
+using Echo.Core.InOut;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
@@ -7,6 +10,7 @@ namespace Echo.Core.Scenic.Geometries;
 /// <summary>
 /// A geometric mesh object represented by a bunch of triangles.
 /// </summary>
+[EchoSourceUsable]
 public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
 	/// <summary>

@@ -4,9 +4,9 @@ namespace Echo.Core.Common.Diagnostics;
 
 public interface ILogger
 {
-	void Write(string text);
-	void WriteWarning(string text);
-	void WriteError(string text);
+	public void Write(string text);
+	public void WriteWarning(string text);
+	public void WriteError(string text);
 }
 
 public class ConsoleLogger : ILogger

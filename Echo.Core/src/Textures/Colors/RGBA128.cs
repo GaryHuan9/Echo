@@ -43,6 +43,20 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 		get => new(new Float4(Sse41.Blend(d.v, Vector128.Create(1f), 0b1000)));
 	}
 
+	/// <summary>
+	/// Returns this <see cref="RGBA128"/> with the RGB channels multiplied with the alpha channel.
+	/// </summary>
+	/// <remarks>The alpha channel is left as is.</remarks>
+	public RGBA128 AlphaMultiply
+	{
+		get
+		{
+			Float4 alpha = d.WWWW;
+			Float4 value = d * alpha;
+			return new RGBA128(new Float4(Sse41.Blend(value.v, alpha.v, 0b1000)));
+		}
+	}
+
 	public static RGBA128 Zero => new(Float4.Zero);
 	public static RGBA128 Black => new(Float4.Ana);
 	public static RGBA128 White => new(Float4.One);
@@ -56,7 +70,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// <inheritdoc/>
 	public RGBA128 FromRGBA128(in RGBA128 value) => value;
 
-	/// <inheritdoc cref="ToString()"/>
+	/// <inheritdoc/>
 	public string ToString(string format, IFormatProvider provider = null) => d.ToString(format, provider);
 
 	/// <summary>

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Evaluation.Sampling;
 
@@ -42,11 +43,12 @@ public abstract record ContinuousDistribution
 	MonoThread monoThread;
 
 	readonly int _extend;
-	readonly NotNull<Prng> _prng = new SquirrelPrng();
+	readonly NotNull<Prng> _prng = new SystemPrng();
 
 	/// <summary>
 	/// The maximum number of pixel samples that will be performed for one pixel.
 	/// </summary>
+	[EchoSourceUsable]
 	public int Extend
 	{
 		get => _extend;

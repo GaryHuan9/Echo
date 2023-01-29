@@ -6,7 +6,7 @@ using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Aggregation.Bounds;
 
-public readonly struct ConeBound
+public readonly struct ConeBound : IFormattable
 {
 	ConeBound(in Float3 axis, float cosOffset = 1f, float cosExtend = 0f)
 	{
@@ -23,7 +23,7 @@ public readonly struct ConeBound
 	public readonly float cosOffset;
 	public readonly float cosExtend;
 
-	public float Area //relative
+	public float RelativeArea
 	{
 		get
 		{
@@ -49,6 +49,16 @@ public readonly struct ConeBound
 		Ensure.AreNotEqual(other.axis, default);
 
 		return other.cosOffset > cosOffset ? Union(this, other) : Union(other, this);
+	}
+
+	public override string ToString() => ToString(default);
+
+	public string ToString(string format, IFormatProvider provider = null)
+	{
+		float offset = Scalars.ToDegrees(MathF.Acos(cosOffset));
+		float extend = Scalars.ToDegrees(MathF.Acos(cosExtend));
+
+		return $"{axis.ToString(format, provider)} ± {offset.ToString(format, provider)}° ± {extend.ToString(format, provider)}°";
 	}
 
 	public static ConeBound CreateFullSphere(float cosExtend = 0f /* = cos(pi/2) */) => new(Float3.Up, -1f /* = cos(pi) */, cosExtend);

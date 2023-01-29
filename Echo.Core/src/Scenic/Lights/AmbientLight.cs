@@ -5,6 +5,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
@@ -15,14 +16,16 @@ namespace Echo.Core.Scenic.Lights;
 /// <summary>
 /// A directional <see cref="InfiniteLight"/> that surrounds the entirety of a <see cref="Scene"/>.
 /// </summary>
+[EchoSourceUsable]
 public class AmbientLight : InfiniteLight
 {
-	NotNull<object> _texture = Pure.black;
+	NotNull<object> _texture = Pure.white;
 
 	/// <summary>
 	/// The <see cref="IDirectionalTexture"/> applied to this <see cref="AmbientLight"/>.
-	/// Defaults to <see cref="Pure.black"/>.
 	/// </summary>
+	/// <remarks>The defaults is <see cref="Pure.white"/>.</remarks>
+	[EchoSourceUsable]
 	public IDirectionalTexture Texture
 	{
 		get => (IDirectionalTexture)_texture.Value;
@@ -51,7 +54,7 @@ public class AmbientLight : InfiniteLight
 		_power = multiplier * Texture.Average.Luminance;
 	}
 
-	public override RGB128 Evaluate(in Float3 direction) => Texture.Evaluate(worldToLocal * direction);
+	public override RGB128 Evaluate(in Float3 direction) => Intensity * Texture.Evaluate(worldToLocal * direction);
 
 	public override Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
@@ -60,7 +63,7 @@ public class AmbientLight : InfiniteLight
 		incident = localToWorld * incident;
 		travel = float.PositiveInfinity;
 
-		return value;
+		return (Intensity * value.content, value.pdf);
 	}
 
 	public override float ProbabilityDensity(in GeometryPoint origin, in Float3 incident)

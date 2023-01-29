@@ -18,7 +18,7 @@ public interface IFilter
 	/// </summary>
 	/// <param name="texture">The target texture to retrieve the color from.</param>
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-	RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>;
+	public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>;
 
 	private class Point : IFilter
 	{

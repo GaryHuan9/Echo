@@ -2,6 +2,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using Echo.Core.Common.Diagnostics;
 
 namespace Echo.Core.Common.Mathematics;
 
@@ -16,7 +17,7 @@ public static class FastMath
 	{
 		uint bits0 = BitConverter.SingleToUInt32Bits(OneMinusEpsilon);
 		uint bits1 = BitConverter.SingleToUInt32Bits(1f) - 1u;
-		Diagnostics.Ensure.AreEqual(bits0, bits1);
+		Ensure.AreEqual(bits0, bits1);
 	}
 #endif
 
@@ -31,9 +32,9 @@ public static class FastMath
 	public const float Epsilon = 8E-7f;
 
 	/// <summary>
-	/// This is the largest IEEE-754 float32 value that is smaller than 1f (ie. 1f - 1ulp).
+	/// The largest IEEE-754 float32 value that is smaller than 1f (ie. 1f - 1ulp).
 	/// </summary>
-	const float OneMinusEpsilon = 0.99999994f;
+	public const float OneMinusEpsilon = 0.99999994f;
 
 	const MethodImplOptions Options = MethodImplOptions.AggressiveInlining;
 
@@ -171,13 +172,6 @@ public static class FastMath
 	public static float FMA(float value, float multiplier, float adder) => MathF.FusedMultiplyAdd(value, multiplier, adder);
 
 	/// <summary>
-	/// Computes and returns <paramref name="value"/> squared + <paramref name="adder"/> in one instruction.
-	/// NOTE: this is only a shortcut for <see cref="FMA"/> and uses it internally to perform the operation.
-	/// </summary>
-	[MethodImpl(Options)]
-	public static float F2A(float value, float adder) => FMA(value, value, adder);
-
-	/// <summary>
 	/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
 	/// </summary>
 	[MethodImpl(Options)]
@@ -195,7 +189,7 @@ public static class FastMath
 	/// Returns whether <paramref name="value"/> is positive based on <paramref name="epsilon"/>.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static bool Positive(float value, float epsilon = Epsilon) => value > epsilon;
+	public static bool Positive(float value, float epsilon = Epsilon) => epsilon <= value;
 
 	/// <summary>
 	/// Returns whether <paramref name="value"/> is almost zero based on <paramref name="epsilon"/>.

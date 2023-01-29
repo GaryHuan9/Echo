@@ -19,6 +19,9 @@ public abstract class Accelerator
 
 	protected const MethodImplOptions ImplementationOptions = MethodImplOptions.AggressiveInlining;
 
+	//TODO need to figure out what bound to return if the accelerator has no geometry; maybe just do not create an accelerator at all
+	//TODO handling this with nullables is also not really thread safe, need a better way of calculating these immutable bounds
+
 	BoxBound? _boxBound;
 	SphereBound? _sphereBound;
 
@@ -30,7 +33,7 @@ public abstract class Accelerator
 			{
 				var fill = new SpanFill<BoxBound>(stackalloc BoxBound[2]);
 				FillBounds(1, ref fill); //Only fill at the lowest depth because there is no transform
-				_boxBound = new BoxBound(fill.Filled);
+				_boxBound = fill.IsEmpty ? default : new BoxBound(fill.Filled);
 			}
 
 			return _boxBound.Value;
@@ -53,7 +56,7 @@ public abstract class Accelerator
 				using var _1 = Pool<Float3>.Fetch(bounds.Length * 8, out View<Float3> points);
 				for (int i = 0; i < bounds.Length; i++) bounds[i].FillVertices(points[(i * 8)..]);
 
-				_sphereBound = new SphereBound(points);
+				_sphereBound = fill.IsEmpty ? default : new SphereBound(points);
 			}
 
 			return _sphereBound.Value;

@@ -22,5 +22,5 @@ public interface IGeometrySource<out T> : IGeometrySource where T : IPreparedGeo
 	/// <param name="extractor">The <see cref="SwatchExtractor"/> use to extract the
 	/// <see cref="MaterialIndex"/> from the corresponding <see cref="Material"/>.</param>
 	/// <returns>An <see cref="IEnumerable{T}"/> that enables enumeration through the extracted values.</returns>
-	IEnumerable<T> Extract(SwatchExtractor extractor);
+	public IEnumerable<T> Extract(SwatchExtractor extractor);
 }

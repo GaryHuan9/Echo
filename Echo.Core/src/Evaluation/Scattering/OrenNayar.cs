@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
@@ -6,9 +6,11 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Evaluation.Scattering;
 
 /// <summary>
-/// Microfacet diffuse reflection based on Oren and Nayer (1994)
+/// Microfacet diffuse reflection model originally proposed by
+/// Generalization of Lambert's reflectance model [Oren and Nayar 1994].
+/// Implementation based on: https://mimosa-pudica.net/improved-oren-nayar.html
 /// </summary>
-public class OrenNayar : BxDF
+public sealed class OrenNayar : BxDF
 {
 	public OrenNayar() : base
 	(
@@ -16,54 +18,26 @@ public class OrenNayar : BxDF
 		FunctionType.Diffuse
 	) { }
 
-	public void Reset(in RGB128 newReflectance, float newSigma)
+	public void Reset(float newRoughness)
 	{
-		reflectance = newReflectance;
-		sigma = newSigma;
+		Ensure.IsTrue(newRoughness is >= 0f and <= 1f);
 
-		float sigma2 = sigma * sigma;
-
-		a = 1f - sigma2 / 2f / (sigma2 + 0.33f);
-		b = 0.45f * sigma2 / (sigma2 + 0.09f);
+		a = 1f / FastMath.FMA(Scalars.Pi / 2f - 2f / 3f, newRoughness, Scalars.Pi);
+		b = a * newRoughness;
 	}
-
-	RGB128 reflectance;
-	float sigma;
 
 	float a;
 	float b;
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
-		float sinO = SineP(outgoing);
-		float sinI = SineP(incident);
-
-		float cosMax = 0f;
-
-		if (!FastMath.AlmostZero(sinO) & !FastMath.AlmostZero(sinI))
-		{
-			float cos = CosineT(outgoing) * CosineT(incident);
-			float sin = SineT(outgoing) * SineT(incident);
-			cosMax = Math.Max(cos + sin, 0f);
-		}
+		if (FlatOrOppositeHemisphere(outgoing, incident)) return RGB128.Black;
 
 		float cosO = FastMath.Abs(CosineP(outgoing));
 		float cosI = FastMath.Abs(CosineP(incident));
 
-		float sinA;
-		float tanB;
-
-		if (cosO < cosI)
-		{
-			sinA = sinO;
-			tanB = sinI / cosI;
-		}
-		else
-		{
-			sinA = sinI;
-			tanB = sinO / cosO;
-		}
-
-		return reflectance * (a + b * cosMax * sinA * tanB) * Scalars.PiR;
+		float s = outgoing.Dot(incident) - cosO * cosI;
+		if (FastMath.Positive(s)) s /= FastMath.Max(cosO, cosI);
+		return new RGB128(a + b * s);
 	}
 }

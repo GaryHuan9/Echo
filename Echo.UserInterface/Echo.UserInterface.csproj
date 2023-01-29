@@ -17,8 +17,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ImGui.NET" Version="1.87.3" />
-        <PackageReference Include="ppy.SDL2-CS" Version="1.0.501-alpha" />
+        <PackageReference Include="ImGui.NET" Version="1.89.2" />
+        <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.1" />
+        <PackageReference Include="ppy.SDL2-CS" Version="1.0.630-alpha" />
     </ItemGroup>
 
     <ItemGroup>

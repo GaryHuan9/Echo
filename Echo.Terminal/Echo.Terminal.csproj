@@ -16,4 +16,8 @@
     <ItemGroup>
         <ProjectReference Include="..\Echo.Core\Echo.Core.csproj" />
     </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.1" />
+    </ItemGroup>
 </Project>

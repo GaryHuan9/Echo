@@ -3,18 +3,16 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
-using Echo.Core.Evaluation.Operation;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Evaluation;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
+[EchoSourceUsable]
 public record AlbedoEvaluator : Evaluator
 {
-	public override IEvaluationLayer CreateOrClearLayer(RenderBuffer buffer) => CreateOrClearLayer<RGB128>(buffer, "albedo");
-
-	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluationStatistics statistics)
+	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
 		var query = new TraceQuery(ray);
 
@@ -32,7 +30,7 @@ public record AlbedoEvaluator : Evaluator
 			else return (RGB128)material.SampleAlbedo(contact);
 		}
 
-		//Sample ambient
+		//Sample infinite lights
 		return scene.EvaluateInfinite(query.ray.direction);
 	}
 }

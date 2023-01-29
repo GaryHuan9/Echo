@@ -4,12 +4,14 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Scenic.Hierarchies;
 
 /// <summary>
 /// The root of any <see cref="Entity"/> hierarchy.
 /// </summary>
+[EchoSourceUsable]
 public class EntityPack : Entity
 {
 	readonly Dictionary<EntityPack, ulong> directInstances = new();

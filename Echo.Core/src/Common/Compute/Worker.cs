@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
 
@@ -17,104 +17,36 @@ public interface IWorker
 	/// same <see cref="Operation"/> at the same time. Additionally, the value of this property
 	/// will start at zero and continues on for different <see cref="IWorker"/>.
 	/// </summary>
-	int Index { get; }
+	public int Index { get; }
 
 	/// <summary>
 	/// A globally unique identifier (<see cref="Guid"/>) for this <see cref="IWorker"/>.
 	/// </summary>
 	/// <remarks>The uniqueness of this value transcends different <see cref="Device"/>, while the
 	/// uniqueness of <see cref="Index"/> does not; they are used for different purposes.</remarks>
-	Guid Guid { get; }
+	public Guid Guid { get; }
 
 	/// <summary>
 	/// The current <see cref="WorkerState"/> of this <see cref="IWorker"/>.
 	/// </summary>
-	WorkerState State { get; }
+	public WorkerState State { get; }
 
 	/// <summary>
 	/// The <see cref="string"/> label of this <see cref="IWorker"/> to be displayed.
 	/// </summary>
-	sealed string DisplayLabel => $"Worker {Guid:D}";
+	public sealed string DisplayLabel => $"Worker {Guid:D}";
 
 	/// <summary>
-	/// Invoked when this <see cref="IWorker"/> either begins or stops being idle.
+	/// Invoked on this <see cref="IWorker"/> thread to block until an item is retrieved from the <see cref="BlockingCollection{T}"/>.
 	/// </summary>
-	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
-	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	event Action<IWorker, bool> OnIdleChangedEvent;
+	/// <remarks>If <see cref="BlockingCollection{T}.IsCompleted"/> is true, this method returns false immediately.</remarks>
+	public bool Await<T>(BlockingCollection<T> collection, out T item);
 
 	/// <summary>
-	/// Invoked when this <see cref="IWorker"/> either begins or stops being awaiting for resumption (ie. paused).
+	/// Invoked on this <see cref="IWorker"/> thread to check if there are any scheduling changes.
 	/// </summary>
-	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
-	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
-	event Action<IWorker, bool> OnAwaitChangedEvent;
-
-	/// <summary>
-	/// Checks if there are any schedule changes.
-	/// </summary>
-	/// <remarks>Should only be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
-	void CheckSchedule();
-}
-
-/// <summary>
-/// Different states of a <see cref="Worker"/>.
-/// </summary>
-/// <remarks>Almost always, the value of enum should be one-hot (eg. <see cref="Idle"/> and <see cref="Pausing"/>
-/// should not be present at the same time). The <see cref="FlagsAttribute"/> is only there for the convenience of
-/// some implementation details in <see cref="Worker.AwaitStatus"/>.</remarks>
-[Flags]
-public enum WorkerState : uint
-{
-	/// <summary>
-	/// The <see cref="Worker"/> is has no assigned <see cref="Operation"/>.
-	/// </summary>
-	Idle = 1 << 0,
-
-	/// <summary>
-	/// The <see cref="Worker"/> is currently executing an <see cref="Operation"/>.
-	/// </summary>
-	Running = 1 << 1,
-
-	/// <summary>
-	/// The <see cref="Worker"/> is executing an <see cref="Operation"/> but will pause at its earliest convenience.
-	/// </summary>
-	Pausing = 1 << 2,
-
-	/// <summary>
-	/// The <see cref="Worker"/> is executing an <see cref="Operation"/> but will abort as soon as possible.
-	/// </summary>
-	Aborting = 1 << 3,
-
-	/// <summary>
-	/// The <see cref="Worker"/> is paused and is not utilizing any computational resources.
-	/// </summary>
-	Awaiting = 1 << 4,
-
-	/// <summary>
-	/// The <see cref="Worker"/> is disposed and should no longer be used.
-	/// </summary>
-	Disposed = 1 << 5
-}
-
-public static class WorkerStateExtensions
-{
-	static readonly string[] workerStateLabels = Enum.GetNames<WorkerState>();
-
-	/// <summary>
-	/// Converts a <see cref="WorkerState"/> to be displayed.
-	/// </summary>
-	/// <param name="state">The <see cref="WorkerState"/> to be converted.</param>
-	/// <returns>A display <see cref="string"/> representing the <see cref="WorkerState"/>.</returns>
-	/// <remarks>The <paramref name="state"/> must have only one bit enabled, and it must be one of the named
-	/// values of <see cref="WorkerState"/>, otherwise the behavior of this method is undefined!</remarks>
-	public static string ToDisplayString(this WorkerState state)
-	{
-		uint integer = (uint)state;
-		Ensure.AreEqual(BitOperations.PopCount(integer), 1);
-		int index = BitOperations.LeadingZeroCount(integer);
-		return workerStateLabels[31 - index];
-	}
+	/// <remarks>Should be invoked periodically within the execution of an <see cref="Operation"/>.</remarks>
+	public void CheckSchedule();
 }
 
 /// <summary>
@@ -139,7 +71,7 @@ sealed class Worker : IWorker, IDisposable
 	/// <inheritdoc/>
 	public Guid Guid { get; }
 
-	uint _state = (uint)WorkerState.Idle;
+	uint _state = (uint)WorkerState.Unassigned;
 
 	/// <inheritdoc/>
 	public WorkerState State
@@ -161,27 +93,34 @@ sealed class Worker : IWorker, IDisposable
 		}
 	}
 
-	/// <inheritdoc/>
-	public event Action<IWorker, bool> OnIdleChangedEvent;
+	volatile CancellationTokenSource abortTokenOwner = new();
 
-	/// <inheritdoc/>
-	public event Action<IWorker, bool> OnAwaitChangedEvent;
+	/// <summary>
+	/// Invoked when this <see cref="IWorker"/> either begins or stops being dispatched to work on an <see cref="Operation"/>.
+	/// </summary>
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
+	public event Action<Worker, bool> OnDispatchChangedEvent;
 
-	/// <inheritdoc/>
-	public int? ThreadId => thread?.ManagedThreadId;
+	/// <summary>
+	/// Invoked when this <see cref="IWorker"/> either begins or stops not using any computational resources. 
+	/// </summary>
+	/// <remarks>This is not invoked at the exact time when <see cref="State"/> changed, but rather when 
+	/// the value is changed internally, thus it is more accurate but invoked on a different thread.</remarks>
+	public event Action<Worker, bool> OnIdlenessChangedEvent;
 
 	/// <summary>
 	/// Begins running an <see cref="Operation"/> on this idle <see cref="Worker"/>.
 	/// </summary>
 	/// <param name="operation">The <see cref="Operation"/> to dispatch</param>
-	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is not <see cref="WorkerState.Idle"/>.</exception>
+	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is not <see cref="WorkerState.Unassigned"/>.</exception>
 	public void Dispatch(Operation operation)
 	{
 		using var _ = locker.Fetch();
 
 		lock (locker)
 		{
-			if (State != WorkerState.Idle) throw new InvalidOperationException();
+			if (State != WorkerState.Unassigned) throw new InvalidOperationException();
 
 			//Assign operation
 			Volatile.Write(ref nextOperation, operation);
@@ -212,13 +151,14 @@ sealed class Worker : IWorker, IDisposable
 
 		switch (State)
 		{
-			case WorkerState.Running: break;
-			case WorkerState.Idle:
+			case WorkerState.Running:
+			case WorkerState.Awaiting: break;
+			case WorkerState.Unassigned:
 			case WorkerState.Pausing:
-			case WorkerState.Aborting:
-			case WorkerState.Awaiting: return;
-			case WorkerState.Disposed: throw new InvalidOperationException();
-			default:                   throw new ArgumentOutOfRangeException();
+			case WorkerState.Paused:
+			case WorkerState.Aborting: return;
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
 		}
 
 		State = WorkerState.Pausing;
@@ -235,12 +175,13 @@ sealed class Worker : IWorker, IDisposable
 		switch (State)
 		{
 			case WorkerState.Pausing:
-			case WorkerState.Awaiting: break;
-			case WorkerState.Idle:
+			case WorkerState.Paused: break;
+			case WorkerState.Unassigned:
 			case WorkerState.Running:
+			case WorkerState.Awaiting:
 			case WorkerState.Aborting: return;
-			case WorkerState.Disposed: throw new InvalidOperationException();
-			default:                   throw new ArgumentOutOfRangeException();
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
 		}
 
 		State = WorkerState.Running;
@@ -258,13 +199,15 @@ sealed class Worker : IWorker, IDisposable
 		{
 			case WorkerState.Running:
 			case WorkerState.Pausing:
+			case WorkerState.Paused:
 			case WorkerState.Awaiting: break;
-			case WorkerState.Idle:
+			case WorkerState.Unassigned:
 			case WorkerState.Aborting: return;
-			case WorkerState.Disposed: throw new InvalidOperationException();
-			default:                   throw new ArgumentOutOfRangeException();
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
 		}
 
+		abortTokenOwner.Cancel();
 		State = WorkerState.Aborting;
 	}
 
@@ -275,44 +218,141 @@ sealed class Worker : IWorker, IDisposable
 			if (State == WorkerState.Disposed) return;
 
 			Abort();
-			AwaitStatus(WorkerState.Idle);
+			AwaitAny(WorkerState.Unassigned);
 			State = WorkerState.Disposed;
 
 			locker.Signaling = false;
 		}
 
 		thread?.Join();
+		abortTokenOwner.Dispose();
+	}
+
+	/// <inheritdoc/>
+	bool IWorker.Await<T>(BlockingCollection<T> collection, out T item)
+	{
+		Ensure.AreEqual(thread, Thread.CurrentThread);
+
+		switch (State)
+		{
+			case WorkerState.Running:
+			case WorkerState.Pausing:
+			case WorkerState.Aborting: break;
+			case WorkerState.Unassigned:
+			case WorkerState.Paused:
+			case WorkerState.Awaiting:
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
+		}
+
+		if (collection.TryTake(out item)) return true;
+
+		var token = abortTokenOwner.Token;
+		token.ThrowIfCancellationRequested();
+
+		OnIdlenessChangedEvent?.Invoke(this, true);
+
+		//Pause if requested
+		while (true)
+		{
+			lock (locker)
+			{
+				if (token.IsCancellationRequested)
+				{
+					OnIdlenessChangedEvent?.Invoke(this, false);
+					token.ThrowIfCancellationRequested();
+				}
+
+				WorkerState state = State;
+
+				if (state == WorkerState.Running)
+				{
+					State = WorkerState.Awaiting;
+					break;
+				}
+
+				if (state == WorkerState.Pausing) State = WorkerState.Paused;
+				else throw new InvalidOperationException("Should be unreachable!"); //OPTIMIZE: switch to UnreachableException when upgraded to dotnet 7
+			}
+
+			AwaitAny(WorkerState.Running | WorkerState.Aborting);
+		}
+
+		//Begin awaiting for item
+		bool result;
+
+		try { result = collection.TryTake(out item, Timeout.Infinite, token); }
+		catch (OperationCanceledException)
+		{
+			OnIdlenessChangedEvent?.Invoke(this, false);
+			Ensure.AreEqual(State, WorkerState.Aborting);
+			throw;
+		}
+
+		//Change state after await finishes
+		bool pause;
+
+		lock (locker)
+		{
+			WorkerState state = State;
+
+			pause = state == WorkerState.Pausing;
+			if (pause) State = WorkerState.Paused;
+			else if (state == WorkerState.Awaiting) State = WorkerState.Running;
+		}
+
+		//Optionally pause again if requested during await
+		if (pause) AwaitAny(WorkerState.Running | WorkerState.Aborting);
+
+		OnIdlenessChangedEvent?.Invoke(this, false);
+		token.ThrowIfCancellationRequested();
+
+		return result;
 	}
 
 	/// <inheritdoc/>
 	void IWorker.CheckSchedule()
 	{
-		CheckForAbortion();
-		if (State != WorkerState.Pausing) return;
+		Ensure.AreEqual(thread, Thread.CurrentThread);
+
+		switch (State)
+		{
+			case WorkerState.Pausing:
+			case WorkerState.Aborting: break;
+			case WorkerState.Running: return;
+			case WorkerState.Unassigned:
+			case WorkerState.Paused:
+			case WorkerState.Awaiting:
+			case WorkerState.Disposed:
+			default: throw new InvalidOperationException();
+		}
+
+		var token = abortTokenOwner.Token;
+		token.ThrowIfCancellationRequested();
 
 		lock (locker)
 		{
 			if (State != WorkerState.Pausing) return;
-			State = WorkerState.Awaiting;
+			State = WorkerState.Paused;
 		}
 
-		OnAwaitChangedEvent?.Invoke(this, true);
-		AwaitStatus(WorkerState.Running | WorkerState.Aborting);
-		OnAwaitChangedEvent?.Invoke(this, false);
+		OnIdlenessChangedEvent?.Invoke(this, true);
+		AwaitAny(WorkerState.Running | WorkerState.Aborting);
+		OnIdlenessChangedEvent?.Invoke(this, false);
 
-		CheckForAbortion();
+		token.ThrowIfCancellationRequested();
 	}
 
 	void Main()
 	{
-		while (State != WorkerState.Disposed)
+		while (AwaitAny(WorkerState.Running) != WorkerState.Disposed)
 		{
-			if (!AwaitStatus(WorkerState.Running)) break; //Disposed
-
 			Operation operation = Interlocked.Exchange(ref nextOperation, null);
 			if (operation == null) throw new InvalidAsynchronousStateException();
 
-			OnIdleChangedEvent?.Invoke(this, false);
+			OnDispatchChangedEvent?.Invoke(this, true);
+			OnIdlenessChangedEvent?.Invoke(this, false);
+
 			bool running;
 
 			do
@@ -322,41 +362,43 @@ sealed class Worker : IWorker, IDisposable
 					running = operation.Execute(this);
 					((IWorker)this).CheckSchedule();
 				}
-				catch (Operation.AbortException)
-				{
-					break;
-				}
+				catch (OperationCanceledException) { break; }
 			}
 			while (running);
 
-			State = WorkerState.Idle;
-			OnIdleChangedEvent?.Invoke(this, true);
+			lock (locker)
+			{
+				State = WorkerState.Unassigned;
+
+				if (!abortTokenOwner.TryReset())
+				{
+					//Reset abort cancellation token
+					CancellationTokenSource old = abortTokenOwner;
+					abortTokenOwner = new CancellationTokenSource();
+					old.Dispose();
+				}
+			}
+
+			OnIdlenessChangedEvent?.Invoke(this, true);
+			OnDispatchChangedEvent?.Invoke(this, false);
 		}
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	bool AwaitStatus(WorkerState status)
+	WorkerState AwaitAny(WorkerState states)
 	{
-		status |= WorkerState.Disposed;
+		states |= WorkerState.Disposed;
 
 		lock (locker)
 		{
-			WorkerState state = State;
+			WorkerState current = State;
 
-			while ((state | status) != status)
+			while ((current | states) != states)
 			{
 				locker.Wait();
-				state = State;
+				current = State;
 			}
 
-			return state != WorkerState.Disposed;
+			return current;
 		}
-	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	void CheckForAbortion()
-	{
-		if (State != WorkerState.Aborting) return;
-		throw new Operation.AbortException();
 	}
 }

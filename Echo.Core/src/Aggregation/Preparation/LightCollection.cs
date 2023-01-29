@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Bounds;
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
@@ -27,6 +26,13 @@ public sealed class LightCollection
 
 		this.geometries = geometries;
 
+		emissiveCounts = new GeometryCounts
+		(
+			CountGeometries(geometries.triangles),
+			CountGeometries(geometries.spheres),
+			CountInstances(geometries.instances)
+		);
+
 		static ImmutableArray<T> Extract<T>(ReadOnlySpan<ILightSource> lightSources) where T : IPreparedLight
 		{
 			int length = 0;
@@ -45,59 +51,87 @@ public sealed class LightCollection
 
 			return builder.MoveToImmutable();
 		}
+
+		uint CountGeometries<T>(ImmutableArray<T> array) where T : IPreparedGeometry
+		{
+			uint count = 0;
+
+			foreach (ref readonly T geometry in array.AsSpan())
+			{
+				if (FastMath.Positive(GetGeometryPower(geometry))) ++count;
+			}
+
+			return count;
+		}
+
+		uint CountInstances(ImmutableArray<PreparedInstance> instances)
+		{
+			uint count = 0;
+
+			foreach (ref readonly PreparedInstance instance in instances.AsSpan())
+			{
+				if (FastMath.Positive(instance.Power)) ++count;
+			}
+
+			return count;
+		}
 	}
 
 	public readonly ImmutableArray<PreparedPointLight> points;
 
-	readonly GeometryCollection geometries;
+	public readonly GeometryCollection geometries;
+	public readonly GeometryCounts emissiveCounts;
+
+	/// <summary>
+	/// A multiplier applied to the travel distance returned by <see cref="Sample"/> to
+	/// avoid the <see cref="OccludeQuery"/> intersecting with the actual light geometry.
+	/// </summary>
+	const float TravelMultiplier = 1f - 2E-5f;
 
 	public View<Tokenized<LightBound>> CreateBounds()
 	{
-		var list = new SmallList<Tokenized<LightBound>>();
+		var result = new Tokenized<LightBound>[emissiveCounts.Total + (ulong)points.Length];
+		int index = -1;
 
-		list.Expand(points.Length);
+		AddLights(LightType.Point, points);
 
-		AddLight(LightType.Point, points);
+		AddGeometries(TokenType.Triangle, geometries.triangles);
+		AddGeometries(TokenType.Sphere, geometries.spheres);
+		AddInstances(geometries.instances);
 
-		AddEmissive(TokenType.Triangle, geometries.triangles);
-		AddEmissive(TokenType.Sphere, geometries.spheres);
+		return result;
 
-		for (int i = 0; i < geometries.instances.Length; i++)
-		{
-			ref readonly PreparedInstance instance = ref geometries.instances.ItemRef(i);
-
-			if (!FastMath.Positive(instance.Power)) continue;
-			var token = new EntityToken(TokenType.Instance, i);
-			list.Add((token, instance.LightBound));
-		}
-
-		return list;
-
-		void AddLight<T>(LightType type, ImmutableArray<T> array) where T : IPreparedLight
+		void AddLights<T>(LightType type, ImmutableArray<T> array) where T : IPreparedLight
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
-				var token = new EntityToken(type, i);
-				list.Add((token, array[i].LightBound));
+				EntityToken token = new EntityToken(type, i);
+				result[++index] = (token, array[i].LightBound);
 			}
 		}
 
-		void AddEmissive<T>(TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
+		void AddGeometries<T>(TokenType type, ImmutableArray<T> array) where T : IPreparedGeometry
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
 				ref readonly T geometry = ref array.ItemRef(i);
-
-				if (geometries.swatch[geometry.Material] is not IEmissive emissive) continue;
-
-				float power = emissive.Power * geometry.Area;
+				float power = GetGeometryPower(geometry);
 				if (!FastMath.Positive(power)) continue;
 
-				list.Add
-				((
-					new EntityToken(type, i),
-					new LightBound(geometry.BoxBound, geometry.ConeBound, power)
-				));
+				var lightBound = new LightBound(geometry.BoxBound, geometry.ConeBound, power);
+				result[++index] = (new EntityToken(type, i), lightBound);
+			}
+		}
+
+		void AddInstances(ImmutableArray<PreparedInstance> instances)
+		{
+			for (int i = 0; i < instances.Length; i++)
+			{
+				ref readonly PreparedInstance instance = ref instances.ItemRef(i);
+
+				if (!FastMath.Positive(instance.Power)) continue;
+				var token = new EntityToken(TokenType.Instance, i);
+				result[++index] = (token, instance.LightBound);
 			}
 		}
 	}
@@ -110,13 +144,13 @@ public sealed class LightCollection
 			case TokenType.Triangle:
 			{
 				ref readonly PreparedTriangle triangle = ref geometries.triangles.ItemRef(token.Index);
-				if (geometries.swatch[triangle.Material] is not IEmissive emissive) return Exit(out incident, out travel);
+				if (geometries.swatch[triangle.Material] is not Emissive emissive) return Exit(out incident, out travel);
 				return HandleGeometry(triangle, emissive, origin, sample, out incident, out travel);
 			}
 			case TokenType.Sphere:
 			{
 				ref readonly PreparedSphere sphere = ref geometries.spheres.ItemRef(token.Index);
-				if (geometries.swatch[sphere.Material] is not IEmissive emissive) return Exit(out incident, out travel);
+				if (geometries.swatch[sphere.Material] is not Emissive emissive) return Exit(out incident, out travel);
 				return HandleGeometry(sphere, emissive, origin, sample, out incident, out travel);
 			}
 			case TokenType.Light:
@@ -130,7 +164,7 @@ public sealed class LightCollection
 			default: throw new ArgumentOutOfRangeException(nameof(token));
 		}
 
-		static Probable<RGB128> HandleGeometry<T>(in T geometry, IEmissive material, in GeometryPoint origin,
+		static Probable<RGB128> HandleGeometry<T>(in T geometry, Emissive material, in GeometryPoint origin,
 												  Sample2D sample, out Float3 incident, out float travel) where T : IPreparedGeometry
 		{
 			(GeometryPoint point, float pdf) = geometry.Sample(origin, sample);
@@ -144,7 +178,7 @@ public sealed class LightCollection
 			travel = FastMath.Sqrt0(travel2);
 			incident = delta * (1f / travel);
 
-			travel = FastMath.Max0(travel - FastMath.Epsilon);
+			travel *= TravelMultiplier;
 			return (material.Emit(point, -incident), pdf);
 		}
 
@@ -183,25 +217,6 @@ public sealed class LightCollection
 		}
 	}
 
-	struct SmallList<T>
-	{
-		public SmallList()
-		{
-			array = Array.Empty<T>();
-			length = 0;
-		}
-
-		T[] array;
-		int length;
-
-		public void Add(in T item)
-		{
-			if (array.Length <= length) Expand(1);
-			array[length++] = item;
-		}
-
-		public void Expand(int count) => Utility.EnsureCapacity(ref array, length + count, true);
-
-		public static implicit operator View<T>(SmallList<T> list) => list.array.AsView(0, list.length);
-	}
+	float GetGeometryPower<T>(in T geometry) where T : IPreparedGeometry =>
+		geometries.swatch[geometry.Material] is Emissive emissive ? emissive.Power * geometry.Area : 0f;
 }
