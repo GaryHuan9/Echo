@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
-using Echo.Core.Textures.Serialization;
+using Echo.Core.InOut.Images;
 using NUnit.Framework;
 
 namespace Echo.UnitTests.Textures;

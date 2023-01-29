@@ -24,7 +24,7 @@ public class Accelerators
 			new MeshEntity
 			{
 				Source = new FileTriangleSource("ext/Scenes/Assets/Models/BlenderBMW/BlenderBMW.obj"),
-				Material = new Matte()
+				Material = new Diffuse()
 			}
 		};
 
