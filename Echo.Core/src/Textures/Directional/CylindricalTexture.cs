@@ -7,14 +7,17 @@ using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Textures.Directional;
 
+[EchoSourceUsable]
 public class CylindricalTexture : IDirectionalTexture
 {
 	NotNull<Texture> _texture = Pure.black;
 
+	[EchoSourceUsable]
 	public Texture Texture
 	{
 		get => _texture;

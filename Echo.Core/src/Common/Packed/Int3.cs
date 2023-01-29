@@ -322,7 +322,7 @@ public readonly partial struct Int3 : IEquatable<Int3>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Damp(in Float3 target, ref Float3 velocity, in Float3 smoothTime, float deltaTime) => Float3.Damp(this, target, ref velocity, smoothTime, deltaTime);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Damp(in Float3 target, ref Float3 velocity, float smoothTime, float deltaTime) => Float3.Damp(this, target, ref velocity, smoothTime, deltaTime);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int3 Reflect(in Int3 normal) => -2 * Dot(normal) * normal + this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int3 Reflect(in Int3 normal) => 2 * Dot(normal) * normal - this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float3 Project(in Float3 normal) => normal * (normal.Dot(this) / normal.SquaredMagnitude);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public override bool Equals(object obj) => obj is Int3 other && Equals(other);

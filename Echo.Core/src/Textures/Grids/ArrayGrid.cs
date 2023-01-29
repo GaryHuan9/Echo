@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
@@ -42,25 +41,12 @@ public class ArrayGrid<T> : SettableGrid<T> where T : unmanaged, IColor<T>
 
 	public override void Set(Int2 position, in T value) => pixels[ToIndex(position)] = value;
 
-	public override unsafe void CopyFrom(Texture texture)
-	{
-		if (texture is ArrayGrid<T> array && array.size == size)
-		{
-			fixed (T* source = array)
-			fixed (T* target = this)
-			{
-				Utility.MemoryCopy(source, target, length);
-			}
-		}
-		else base.CopyFrom(texture);
-	}
-
 	/// <summary>
 	/// Converts the integer pixel <paramref name="position"/> to an index [0, <see cref="length"/>)
 	/// </summary>
 	public int ToIndex(Int2 position)
 	{
-		EnsureValidPosition(position);
+		AssertValidPosition(position);
 		return position.X + position.Y * size.X;
 	}
 

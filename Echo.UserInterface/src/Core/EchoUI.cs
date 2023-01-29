@@ -13,45 +13,30 @@ namespace Echo.UserInterface.Core;
 
 public sealed class EchoUI : IApplication
 {
-	public EchoUI()
+	public EchoUI(ImGuiDevice backend)
 	{
-		var builder = ImmutableArray.CreateBuilder<AreaUI>();
+		this.backend = backend;
 
-		builder.Add(new SystemUI { Root = this });
-		builder.Add(new OperationUI { Root = this });
-		builder.Add(new TilesUI { Root = this });
-		builder.Add(new LogsUI { Root = this });
-		// builder.Add(new SceneUI { Root = this });
-		builder.Add(new DispatcherUI { Root = this });
+		areas = ImmutableArray.Create<AreaUI>
+		(
+			new SystemUI(this),
+			new RenderUI(this),
+			new ViewerUI(this),
+			new LogsUI(this),
+			new SchedulerUI(this),
+			new FileUI(this)
+		);
 
-		areas = builder.ToImmutable();
+		Initialize();
 	}
 
+	public readonly ImGuiDevice backend;
 	readonly ImmutableArray<AreaUI> areas;
 
-	public TimeSpan UpdateDelay { get; set; } = TimeSpan.Zero;
+	public TimeSpan FrameDelay { get; set; } = TimeSpan.Zero;
+
+	public ulong FrameCount { get; private set; }
 	public string Label => "Echo User Interface";
-
-	public ImGuiDevice Backend { get; private set; }
-
-	public void Initialize(ImGuiDevice backend)
-	{
-		ImGuiIOPtr io = ImGui.GetIO();
-
-		io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
-		io.ConfigWindowsMoveFromTitleBarOnly = true;
-
-		io.Fonts.AddFontFromFileTTF("ext/JetBrainsMono/JetBrainsMono-Bold.ttf", 16f);
-
-		ImGuiStylePtr style = ImGui.GetStyle();
-
-		ConfigureStyle(style);
-		ConfigureColors(style);
-
-		Backend = backend;
-		foreach (AreaUI area in areas) area.Initialize();
-	}
 
 	public void NewFrame(in Moment moment)
 	{
@@ -60,6 +45,8 @@ public sealed class EchoUI : IApplication
 		ImGui.ShowDemoWindow();
 
 		foreach (AreaUI area in areas) area.NewFrame(moment);
+
+		++FrameCount;
 	}
 
 	public T Find<T>() where T : AreaUI
@@ -77,12 +64,30 @@ public sealed class EchoUI : IApplication
 		foreach (AreaUI area in areas) area.Dispose();
 	}
 
+	void Initialize()
+	{
+		ImGuiIOPtr io = ImGui.GetIO();
+
+		io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
+		io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
+		io.ConfigWindowsMoveFromTitleBarOnly = true;
+
+		io.Fonts.AddFontFromFileTTF("ext/JetBrainsMono/JetBrainsMono-Bold.ttf", 16f);
+
+		ImGuiStylePtr style = ImGui.GetStyle();
+
+		ConfigureStyle(style);
+		ConfigureColors(style);
+
+		foreach (AreaUI area in areas) area.Initialize();
+	}
+
 	static void ConfigureStyle(ImGuiStylePtr style)
 	{
 		style.WindowPadding = new Vector2(8f, 8f);
-		style.FramePadding = new Vector2(4f, 2f);
+		style.FramePadding = new Vector2(8f, 2f);
 		style.CellPadding = new Vector2(4f, 2f);
-		style.ItemSpacing = new Vector2(8f, 4f);
+		style.ItemSpacing = new Vector2(4f, 4f);
 		style.ItemInnerSpacing = new Vector2(4f, 4f);
 		style.TouchExtraPadding = new Vector2(0f, 0f);
 		style.IndentSpacing = 20f;
@@ -125,8 +130,8 @@ public sealed class EchoUI : IApplication
 		{
 			0 or 1 => new RGB128(0.1581f, 0.6112f, 0.3763f), //Green
 			2 or 3 => (RGB128)RGBA128.Parse("#FA983A"),      //Orange
-			4      => (RGB128)RGBA128.Parse("#DD444C"),      //REDO
-			_      => new RGB128(0.1856f, 0.5488f, 0.9328f)  //Signature
+			4 => (RGB128)RGBA128.Parse("#DD444C"),           //REDO
+			_ => new RGB128(0.1856f, 0.5488f, 0.9328f)       //Signature
 		};
 
 		const float Alpha0 = 0.33f;

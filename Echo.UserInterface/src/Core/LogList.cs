@@ -4,7 +4,6 @@ using System.Threading;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Threading;
 using Echo.Core.InOut;
-using Echo.UserInterface.Core.Common;
 
 namespace Echo.UserInterface.Core;
 

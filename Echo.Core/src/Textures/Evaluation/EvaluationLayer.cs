@@ -10,7 +10,7 @@ using Echo.Core.Textures.Grids;
 namespace Echo.Core.Textures.Evaluation;
 
 /// <summary>
-/// A tile-based evaluation destination; usually retrieved from and stored in a <see cref="RenderBuffer"/>.
+/// A tile-based evaluation destination; usually retrieved from and stored in a <see cref="RenderTexture"/>.
 /// Allows read and write access to the content of this layer through <see cref="IEvaluationTile"/>s.
 /// </summary>
 public interface IEvaluationLayer
@@ -20,20 +20,20 @@ public interface IEvaluationLayer
 	/// </summary>
 	/// <param name="tilePosition">The tile position of this new tile.</param>
 	/// <returns>The new <see cref="IEvaluationWriteTile"/> that was created.</returns>
-	IEvaluationWriteTile CreateTile(Int2 tilePosition);
+	public IEvaluationWriteTile CreateTile(Int2 tilePosition);
 
 	/// <summary>
 	/// Requests a <see cref="IEvaluationReadTile"/> to read from.
 	/// </summary>
 	/// <param name="tilePosition">The tile position that we are requesting to read from.</param>
 	/// <returns>The requested <see cref="IEvaluationReadTile"/> if it is available, otherwise null.</returns>
-	IEvaluationReadTile RequestTile(Int2 tilePosition);
+	public IEvaluationReadTile RequestTile(Int2 tilePosition);
 
 	/// <summary>
 	/// Applies the content of an <see cref="IEvaluationWriteTile"/> to this <see cref="IEvaluationLayer"/>.
 	/// </summary>
 	/// <param name="tile">The <see cref="IEvaluationWriteTile"/> to apply.</param>
-	void Apply(IEvaluationWriteTile tile);
+	public void Apply(IEvaluationWriteTile tile);
 
 	/// <summary>
 	/// Gets the tile bounds at a particular tile position.
@@ -41,14 +41,14 @@ public interface IEvaluationLayer
 	/// <param name="tilePosition">The tile position to get the bounds of.</param>
 	/// <param name="min">The minimum pixel position of the tile (inclusive).</param>
 	/// <param name="max">The maximum pixel position of the tile (exclusive).</param>
-	void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max);
+	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max);
 
 	/// <summary>
 	/// Gets the position of the tile that contains a particular pixel position.
 	/// </summary>
 	/// <param name="position">The input pixel position.</param>
 	/// <returns>The position of the tile.</returns>
-	Int2 GetTilePosition(Int2 position);
+	public Int2 GetTilePosition(Int2 position);
 }
 
 /// <summary>
@@ -98,7 +98,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public IEvaluationWriteTile CreateTile(Int2 tilePosition)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 		GetTileBounds(tilePosition, out Int2 min, out Int2 max);
 		return new WriteTile(tilePosition, min, max);
 	}
@@ -106,7 +106,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public IEvaluationReadTile RequestTile(Int2 tilePosition)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 		return tiles[GetTileIndex(tilePosition)];
 	}
 
@@ -135,7 +135,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public void GetTileBounds(Int2 tilePosition, out Int2 min, out Int2 max)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 
 		min = tilePosition * tileSize;
 		max = size.Min(min + tileSize);
@@ -146,7 +146,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	/// <inheritdoc/>
 	public Int2 GetTilePosition(Int2 position)
 	{
-		EnsureValidPosition(position);
+		AssertValidPosition(position);
 
 		return new Int2
 		(
@@ -157,7 +157,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 
 	int GetTileIndex(Int2 tilePosition)
 	{
-		EnsureValidPosition(tilePosition, tileRange);
+		AssertValidPosition(tilePosition, tileRange);
 		return tilePosition.Y * tileRange.X + tilePosition.X;
 	}
 
@@ -167,7 +167,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 		Int2 size = max - min;
 		position -= min;
 
-		EnsureValidPosition(position, size);
+		AssertValidPosition(position, size);
 		return position.Y * size.X + position.X;
 	}
 

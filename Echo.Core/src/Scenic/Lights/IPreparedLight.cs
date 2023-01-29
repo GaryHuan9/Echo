@@ -17,25 +17,25 @@ public interface IPreparedLight
 	/// A <see cref="BoxBound"/> that bounds all of the position
 	/// from which this <see cref="IPreparedLight"/> can emit.
 	/// </summary>
-	BoxBound BoxBound { get; }
+	public BoxBound BoxBound { get; }
 
 	/// <summary>
 	/// A <see cref="ConeBound"/> that bounds all of the direction from which
 	/// this <see cref="IPreparedLight"/> can emit towards, including the falloff.
 	/// </summary>
-	ConeBound ConeBound { get; }
+	public ConeBound ConeBound { get; }
 
 	/// <summary>
 	/// The total emissive power of this <see cref="IPreparedLight"/>.
 	/// </summary>
 	/// <remarks>This value can be approximated.</remarks>
-	float Power { get; }
+	public float Power { get; }
 
 	/// <summary>
 	/// The <see cref="LightBound"/> for this <see cref="IPreparedLight"/>, constructed
 	/// from <see cref="BoxBound"/>, <see cref="ConeBound"/>, and <see cref="Power"/>.
 	/// </summary>
-	sealed LightBound LightBound => new(BoxBound, ConeBound, Power);
+	public sealed LightBound LightBound => new(BoxBound, ConeBound, Power);
 
 	/// <summary>
 	/// Samples the contribution of this <see cref="IPreparedLight"/>.
@@ -45,7 +45,7 @@ public interface IPreparedLight
 	/// <param name="incident">The incident direction pointing from <paramref name="origin"/> towards this <see cref="IPreparedLight"/>.</param>
 	/// <param name="travel">The distance to travel in light-space from <paramref name="origin"/> to this <see cref="IPreparedLight"/>.</param>
 	/// <returns>The sampled <see cref="Probable{T}"/> of type <see cref="RGB128"/>.</returns>
-	Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel);
+	public Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel);
 
 	/// <summary>
 	/// Calculates the probability density function (pdf) value of sampling this <see cref="IPreparedLight"/>.
@@ -54,5 +54,5 @@ public interface IPreparedLight
 	/// <param name="incident">An incoming direction that points from <paramref name="origin"/> towards this <see cref="IPreparedLight"/>.</param>
 	/// <returns>The calculated pdf value for the <paramref name="incident"/> direction occur at <paramref name="origin"/>.</returns>
 	/// <remarks>For <see cref="IPreparedLight"/> that is a singularity (ie. from a single point), this simply returns 1.</remarks>
-	float ProbabilityDensity(in GeometryPoint origin, in Float3 incident);
+	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident);
 }

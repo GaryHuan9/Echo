@@ -5,9 +5,13 @@ using ImGuiNET;
 
 namespace Echo.UserInterface.Core.Areas;
 
-public class LogsUI : AreaUI
+public sealed class LogsUI : AreaUI
 {
-	public LogsUI() : base("Logs") { }
+	public LogsUI(EchoUI root) : base(root) { }
+
+	bool autoScroll = true;
+
+	protected override string Name => "Logs";
 
 	public override void Initialize()
 	{
@@ -15,9 +19,7 @@ public class LogsUI : AreaUI
 		DebugHelper.Logger = LogList.Logger;
 	}
 
-	bool autoScroll = true;
-
-	protected override void Update(in Moment moment)
+	protected override void NewFrameWindow(in Moment moment)
 	{
 		if (ImGui.Button("Save to Disk")) SaveToFile();
 

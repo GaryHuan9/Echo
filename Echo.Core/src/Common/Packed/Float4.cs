@@ -395,10 +395,14 @@ public readonly partial struct Float4 : IEquatable<Float4>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Float4 Lerp(in Float4 other, in Float4 value)
 	{
-		Float4 length = other - this;
+		if (Fma.IsSupported)
+		{
+			Vector128<float> fma = Fma.MultiplyAddNegated(value.v, v, v);
+			return new Float4(Fma.MultiplyAdd(value.v, other.v, fma));
+		}
 
-		if (!Fma.IsSupported) return length * value + this;
-		return new Float4(Fma.MultiplyAdd(length.v, value.v, v));
+		Float4 length = other - this;
+		return length * value + this;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Lerp(in Float4 other, float value) => Lerp(other, (Float4)value);
@@ -441,7 +445,7 @@ public readonly partial struct Float4 : IEquatable<Float4>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Float4 Damp(in Float4 target, ref Float4 velocity, float smoothTime, float deltaTime) => Damp(target, ref velocity, (Float4)smoothTime, deltaTime);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Reflect(in Float4 normal) => -2f * Dot(normal) * normal + this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Reflect(in Float4 normal) => 2f * Dot(normal) * normal - this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Project(in Float4 normal) => normal * (Dot(normal) / normal.SquaredMagnitude);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public bool EqualsExact(in Float4 other) => v.Equals(other.v);

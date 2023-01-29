@@ -5,6 +5,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Lights;
@@ -12,6 +13,7 @@ namespace Echo.Core.Scenic.Lights;
 /// <summary>
 /// A singularity <see cref="LightEntity"/> that emits from only one point.
 /// </summary>
+[EchoSourceUsable]
 public class PointLight : LightEntity, ILightSource<PreparedPointLight>
 {
 	public PreparedPointLight Extract() => new(Intensity, ContainedPosition);
@@ -64,5 +66,5 @@ public readonly struct PreparedPointLight : IPreparedLight
 	}
 
 	/// <inheritdoc/>
-	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 1f;
+	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 0f;
 }

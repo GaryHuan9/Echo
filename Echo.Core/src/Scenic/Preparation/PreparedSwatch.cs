@@ -1,4 +1,5 @@
-﻿using Echo.Core.Evaluation.Materials;
+﻿using Echo.Core.Common.Diagnostics;
+using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Hierarchies;
 
 namespace Echo.Core.Scenic.Preparation;
@@ -11,7 +12,7 @@ public readonly struct PreparedSwatch
 	public PreparedSwatch(Material[] materials)
 	{
 #if DEBUG
-		foreach (Material material in materials) Common.Diagnostics.Ensure.IsNotNull(material);
+		foreach (Material material in materials) Ensure.IsNotNull(material);
 #endif
 		this.materials = materials;
 	}

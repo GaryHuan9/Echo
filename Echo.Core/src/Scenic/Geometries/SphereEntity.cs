@@ -8,6 +8,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 
@@ -16,6 +17,7 @@ namespace Echo.Core.Scenic.Geometries;
 /// <summary>
 /// A geometric uniform sphere.
 /// </summary>
+[EchoSourceUsable]
 public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 {
 	float _radius = 1f;
@@ -24,6 +26,7 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 	/// The radius of this <see cref="SphereEntity"/>.
 	/// </summary>
 	/// <exception cref="SceneException">Thrown if the provided value is negative.</exception>
+	[EchoSourceUsable]
 	public float Radius
 	{
 		get => _radius;
@@ -53,8 +56,8 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		Material = material;
 	}
 
-	readonly Float3 position;
-	readonly float radius;
+	public readonly Float3 position;
+	public readonly float radius;
 
 	/// <inheritdoc/>
 	public MaterialIndex Material { get; }
@@ -73,7 +76,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 	/// we have the option to attempt to find the intersection that is further away. This is used to avoid self
 	/// intersections along with <see cref="TraceQuery.ignore"/> and <see cref="OccludeQuery.ignore"/>.
 	/// </summary>
-	const float DistanceThreshold = 6e-4f;
+	public const float DistanceThreshold = 6E-4f;
 
 	/// <summary>
 	/// Returns the distance of intersection between this <see cref="PreparedSphere"/> and <paramref name="ray"/> without
@@ -92,7 +95,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		float radius2 = radius * radius;
 		float center = -offset.Dot(ray.direction);
 
-		float extend2 = FastMath.F2A(center, radius2 - offset.SquaredMagnitude);
+		float extend2 = FastMath.FMA(center, center, radius2 - offset.SquaredMagnitude);
 
 		if (extend2 < 0f) return Infinity;
 
@@ -129,7 +132,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		Float3 offset = ray.origin - position;
 		float center = -offset.Dot(ray.direction);
 
-		float squared = FastMath.F2A(center, FastMath.F2A(radius, -offset.SquaredMagnitude));
+		float squared = FastMath.FMA(center, center, FastMath.FMA(radius, radius, -offset.SquaredMagnitude));
 
 		if (squared < 0f) return false;
 
@@ -151,7 +154,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		float radius2 = radius * radius;
 		float length2 = offset.SquaredMagnitude;
 
-		if (length2 <= radius2)
+		if (length2 < radius2)
 		{
 			//Sample uniformly if is inside
 			GeometryPoint point = GetPoint(sample.UniformSphere);
@@ -175,18 +178,20 @@ public readonly struct PreparedSphere : IPreparedGeometry
 
 		//Calculate normal and pdf
 		FastMath.SinCos(phi, out float sinP, out float cosP);
-		Float3 normal = new Float3(sinA * cosP, sinA * sinP, cosA);
+		Float3 normal = new Float3(sinA * cosP, sinA * sinP, cosA).Normalized;
 
 		float pdf = ProbabilityDensityCone(cosMaxT);
 
 		//Transform and returns point
-		var transform = new NormalTransform(offset / length);
-		return (GetPoint(transform.LocalToWorld(normal)), pdf);
+		var transform = new OrthonormalTransform(offset / length);
+		return (GetPoint(transform.ApplyForward(normal)), pdf);
 	}
 
 	/// <inheritdoc/>
 	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
 	{
+		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
+
 		//Check whether point is inside this sphere
 		Float3 offset = origin - position;
 		float radius2 = radius * radius;
@@ -196,7 +201,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		{
 			//Find intersection with sphere when is inside
 			float projected = offset.Dot(incident);
-			float extend2 = FastMath.F2A(projected, radius2 - length2);
+			float extend2 = FastMath.FMA(projected, projected, radius2 - length2);
 
 			//Find the un-normalized normal at our point of intersection
 			float distance = FastMath.Sqrt0(extend2) - projected; //The distance to our point on the sphere
@@ -208,10 +213,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 			return distance * distance / FastMath.Abs(cosWeight) * Sample2D.UniformSpherePdf;
 		}
 
-		//Since the point is not inside our sphere, the sampling is based on a cone is not uniform
-		// if (!Intersect(new Ray(origin, incident), float.PositiveInfinity)) return 0f;
-		//TODO: try and see if this line actually does something useful, and if it does, inline the intersection computation
-
+		//Since the point is not inside our sphere, the sampling is based on a cone and is not uniform
 		float sinMaxT2 = radius2 / length2;
 		float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
 		return ProbabilityDensityCone(cosMaxT);
