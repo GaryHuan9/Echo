@@ -16,7 +16,12 @@ namespace Echo.Core.InOut.Models;
 /// </summary>
 public sealed class WavefrontObjectFormatReader : ITriangleStream
 {
-	public WavefrontObjectFormatReader(string path)
+	/// <summary>
+	/// Constructs a <see cref="WavefrontObjectFormatReader"/>.
+	/// </summary>
+	/// <param name="path">The file path to read from.</param>
+	/// <param name="rightHanded">whether to assume the data is encoded in a right-handed coordinate system.</param>
+	public WavefrontObjectFormatReader(string path, bool rightHanded = true)
 	{
 		//These lists will become too large to pool
 		var vertexLines = new List<Line>();
@@ -55,13 +60,13 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 					{
 						'n' => normalLines,
 						't' => texcoordLines,
-						_   => null
+						_ => null
 					},
 					_ => null
 				},
-				'f' when index == 1                 => faceLines,
+				'f' when index == 1 => faceLines,
 				'u' when span.StartsWith("usemtl ") => usemtlLines,
-				_                                   => null
+				_ => null
 			};
 
 			list?.Add(new Line(line, height++, Range.StartAt(index + 1)));
@@ -87,6 +92,7 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 		vertices = new Float3[vertexLines.Count];
 		normals = new Float3[normalLines.Count];
 		texcoords = new Float2[texcoordLines.Count];
+		float xMultiplier = rightHanded ? -1f : 1f;
 
 		Parallel.For(0, vertexLines.Count, LoadVertex);
 		Parallel.For(0, normalLines.Count, LoadNormal);
@@ -96,23 +102,18 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 		{
 			ReadOnlySpan<char> line = vertexLines[index];
 			Span<Range> ranges = stackalloc Range[3];
-
 			Split(line, ' ', ranges);
 
-			//Because .obj files are in a right-handed coordinate system while we have a left-handed coordinate system,
-			//We have to simply negate the x axis to convert all of our vertices into the correct space
-			vertices[index] = new Float3(-ParseSingle(line[ranges[0]]), ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
+			vertices[index] = new Float3(ParseSingle(line[ranges[0]]) * xMultiplier, ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
 		}
 
 		void LoadNormal(int index)
 		{
 			ReadOnlySpan<char> line = normalLines[index];
 			Span<Range> ranges = stackalloc Range[3];
-
 			Split(line, ' ', ranges);
 
-			//Same reason as vertices need to negate the x axis, we also have to negate the y axis
-			normals[index] = new Float3(-ParseSingle(line[ranges[0]]), ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
+			normals[index] = new Float3(ParseSingle(line[ranges[0]]) * xMultiplier, ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
 		}
 
 		void LoadTexcoord(int index)

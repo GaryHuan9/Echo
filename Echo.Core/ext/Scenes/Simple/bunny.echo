@@ -12,7 +12,7 @@
 
 	.Add(new AmbientLight { .Texture = new CylindricalTexture { .Texture = "UlmerMuenster.jpg" } })
 
-	.Add(new MeshEntity { .Source = "bunny.obj" .Material = link material0 .Position = "0 0 -3" .Rotation = "0 180 0" .Scale = "2.5" })
+	.Add(new MeshEntity { .Source = "bunny.ply" .Material = link material0 .Position = "0 0 -3" .Rotation = "0 90 -90" .Scale = "2.5" })
 
 	.Add(new SphereEntity { .Material = link material3 .Radius = "1" .Position = "-3 1 -2" })
 
