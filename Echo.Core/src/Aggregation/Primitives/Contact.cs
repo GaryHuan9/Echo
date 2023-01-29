@@ -18,11 +18,10 @@ public struct Contact
 		query, new GeometryPoint(query.Position, normal)
 	) { }
 
-	public Contact(in TraceQuery query, in Float3 normal, Material material, Float2 texcoord) : this
+	public Contact(in TraceQuery query, in Float3 normal, Material material, in Float3 shadingNormal, Float2 texcoord) : this
 	(
-		query,
-		new GeometryPoint(query.Position, normal),
-		new GeometryShade(material, texcoord, normal)
+		query, new GeometryPoint(query.Position, normal),
+		new GeometryShade(material, shadingNormal, texcoord)
 	) { }
 
 	public Contact(in TraceQuery query, in GeometryPoint point, in GeometryShade shade = default)
@@ -99,15 +98,17 @@ public struct Contact
 	/// </summary>
 	public readonly struct Info
 	{
-		public Info(MaterialIndex material, in Float3 normal, Float2 texcoord)
+		public Info(MaterialIndex material, in Float3 normal, Float3 shadingNormal, Float2 texcoord)
 		{
 			this.material = material;
 			this.normal = normal;
+			this.shadingNormal = shadingNormal;
 			this.texcoord = texcoord;
 		}
 
 		public readonly MaterialIndex material;
 		public readonly Float3 normal;
+		public readonly Float3 shadingNormal;
 		public readonly Float2 texcoord;
 	}
 }

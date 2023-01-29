@@ -9,14 +9,14 @@ namespace Echo.Core.Aggregation.Primitives;
 /// </summary>
 public readonly struct GeometryShade
 {
-	public GeometryShade(Material material, Float2 texcoord, in Float3 normal)
+	public GeometryShade(Material material, Float3 normal, Float2 texcoord)
 	{
 		Ensure.IsNotNull(material);
 		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
 
 		this.material = material;
-		_texcoord = texcoord;
 		_normal = normal;
+		_texcoord = texcoord;
 
 		material.ApplyNormalMapping(texcoord, ref _normal);
 	}
@@ -27,20 +27,8 @@ public readonly struct GeometryShade
 	/// </summary>
 	public readonly Material material;
 
-	readonly Float2 _texcoord;
 	readonly Float3 _normal;
-
-	/// <summary>
-	/// The texture coordinate at this target point.
-	/// </summary>
-	public Float2 Texcoord
-	{
-		get
-		{
-			Ensure.IsNotNull(material);
-			return _texcoord;
-		}
-	}
+	readonly Float2 _texcoord;
 
 	/// <summary>
 	/// The shading normal at this target point.
@@ -51,6 +39,18 @@ public readonly struct GeometryShade
 		{
 			Ensure.IsNotNull(material);
 			return _normal;
+		}
+	}
+
+	/// <summary>
+	/// The texture coordinate at this target point.
+	/// </summary>
+	public Float2 Texcoord
+	{
+		get
+		{
+			Ensure.IsNotNull(material);
+			return _texcoord;
 		}
 	}
 }

@@ -168,17 +168,19 @@ public class BSDF
 
 		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
 		incidentWorld = transform.ApplyForward(incident);
-
-		//If there is only one function, we have finished
-		if (matched == 1) return (albedo * sampled, sampled.pdf);
-		Ensure.IsTrue(matched > 1);
-
-		//If the selected function is specular, we are also finished, since they are are Dirac delta distributions
-		if (selected.type.Any(FunctionType.Specular)) return (albedo * sampled, sampled.pdf / matched);
-
-		//Sample the other matching functions
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
 
+		//If there is only one function, we have finished
+		//If the selected function is specular, we are also finished, since they are are Dirac delta distributions
+		if (matched == 1 || selected.type.Any(FunctionType.Specular))
+		{
+			//Check if shading normal is too extreme and we sampled on the wrong side of the surface
+			bool wrongSide = !selected.type.Any(reflect);
+			if (wrongSide) return Probable<RGB128>.Impossible;
+			return (albedo * sampled, sampled.pdf / matched);
+		}
+
+		//Sample the other matching functions
 		(RGB128 total, float pdf) = sampled;
 
 		for (int i = 0; i < count; i++)

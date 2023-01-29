@@ -4,47 +4,54 @@ using System.IO;
 using System.Text;
 using Echo.Core.Common;
 using Echo.Core.Common.Packed;
+using Echo.Core.Scenic.Geometries;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Models;
 
-public class PolygonFileFormatReader : IDisposable
+/// <summary>
+/// An implementation of an <see cref="ITriangleStream"/> for .ply files based on http://paulbourke.net/dataformats/ply/
+/// </summary>
+public sealed class PolygonFileFormatReader : ITriangleStream
 {
 	/// <summary>
-	/// Initializes a new <see cref="Echo.Core.InOut.PolygonFileFormatReader"/> to stream triangles from the given .ply file
+	/// Initializes a new <see cref="PolygonFileFormatReader"/> to stream triangles from the given .ply file
 	/// </summary>
 	/// <param name="path">path to the .ply file</param>
+	/// <param name="rightHanded">whether to assume the data is encoded in a right-handed coordinate system.</param>
 	/// <exception cref="Exception">When providing a .ply file with custom properties or a format other than binary_little_endian, an exception will be thrown.</exception>
-	public PolygonFileFormatReader(string path)
+	public PolygonFileFormatReader(string path, bool rightHanded = true)
 	{
-		file = new FileStream(path, FileMode.Open);
+		stream = new FileStream(path, FileMode.Open);
 
 		//Check for magic number
-		string line = ReadLine(file, ref buffer);
+		string line = ReadLine(stream, ref buffer);
 		if (line != "ply") throw new Exception($"Error loading {path}");
 
 		//Read the header
-		header = new Header(file, ref buffer);
-		file.Position = header.vertexListStart;
+		xMultiplier = rightHanded ? -1f : 1f;
+		header = new Header(stream, ref buffer);
+		stream.Position = header.vertexListStart;
 
 		// read the vertex data from the file into the vertexData array
 		int vertexDataSize = header.vertexAmount * header.propertyCount * sizeof(float);
 		byte[] vertexDataBytes = new byte[vertexDataSize];
 		vertexData = new float[header.vertexAmount * header.propertyCount];
-		file.Read(vertexDataBytes, 0, vertexDataSize);
+		stream.Read(vertexDataBytes, 0, vertexDataSize);
 		Buffer.BlockCopy(vertexDataBytes, 0, vertexData, 0, vertexDataSize);
 
 		vertex0Data = new float[header.propertyCount];
 		vertex1Data = new float[header.propertyCount];
 		vertex2Data = new float[header.propertyCount];
 
-		file.Position = header.faceListStart;
+		stream.Position = header.faceListStart;
 	}
 
 	readonly byte[] buffer = new byte[8];
-	readonly FileStream file;
-	public readonly Header header;
+	readonly FileStream stream;
+	readonly float xMultiplier;
+	readonly Header header;
 
-	uint[] currentFaceValues = { };
+	uint[] currentFaceValues = Array.Empty<uint>();
 	int currentTriangle; //Since a face can contain multiple triangles, we also need to keep track of the current triangle inside the face
 	int currentFaceTriangleAmount;
 
@@ -54,21 +61,21 @@ public class PolygonFileFormatReader : IDisposable
 	readonly float[] vertex1Data;
 	readonly float[] vertex2Data;
 
-	uint[] readUintBuffer = { };
+	uint[] readUintBuffer = Array.Empty<uint>();
 
-	/// <summary>
-	/// reads the next triangle from the stream.
-	/// </summary>
-	/// <returns>a new triangle containing 3 vertices, 3 normals and 3 texture coordinates</returns>
-	/// <exception cref="Exception">throws an exception when trying to read more triangles than there are in header.<see cref="Header.triangleAmount"/></exception>
-	public Triangle ReadTriangle()
+	/// <inheritdoc/>
+	public bool ReadTriangle(out ITriangleStream.Triangle triangle)
 	{
 		if (currentTriangle >= currentFaceTriangleAmount)
 		{
 			//We've read all triangles in the current face so read the next face
-			int vertexAmount = file.ReadByte();
-			if (vertexAmount == -1)
-				throw new Exception("The file has ended but you are still trying to read more triangles!");
+			int vertexAmount = stream.ReadByte();
+			if (vertexAmount < 0)
+			{
+				triangle = default;
+				return false;
+			}
+
 			if (currentFaceValues.Length < vertexAmount)
 				currentFaceValues = new uint[vertexAmount];
 			ReadBinaryInts(vertexAmount);
@@ -77,49 +84,46 @@ public class PolygonFileFormatReader : IDisposable
 			currentTriangle = 0;
 		}
 
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle] * header.propertyCount, vertex0Data, 0, header.propertyCount * sizeof(float));
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertyCount, vertex1Data, 0, header.propertyCount * sizeof(float));
-		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertyCount, vertex2Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 0] * header.propertyCount * sizeof(float), vertex0Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 1] * header.propertyCount * sizeof(float), vertex1Data, 0, header.propertyCount * sizeof(float));
+		Buffer.BlockCopy(vertexData, (int)currentFaceValues[currentTriangle + 2] * header.propertyCount * sizeof(float), vertex2Data, 0, header.propertyCount * sizeof(float));
 
-		Float3 vertex0 = new Float3(
-			vertex0Data[header.xPos],
-			vertex0Data[header.yPos],
-			vertex0Data[header.zPos]);
-		Float3 vertex1 = new Float3(
-			vertex1Data[header.xPos],
-			vertex1Data[header.yPos],
-			vertex1Data[header.zPos]);
-		Float3 vertex2 = new Float3(
-			vertex2Data[header.xPos],
-			vertex2Data[header.yPos],
-			vertex2Data[header.zPos]);
+		Float3 vertex0 = Float3.Zero;
+		Float3 vertex1 = Float3.Zero;
+		Float3 vertex2 = Float3.Zero;
 
-		Float3 normal0 = new Float3(
-			vertex0Data[header.nxPos],
-			vertex0Data[header.nyPos],
-			vertex0Data[header.nzPos]);
-		Float3 normal1 = new Float3(
-			vertex1Data[header.nxPos],
-			vertex1Data[header.nyPos],
-			vertex1Data[header.nzPos]);
-		Float3 normal2 = new Float3(
-			vertex2Data[header.nxPos],
-			vertex2Data[header.nyPos],
-			vertex2Data[header.nzPos]);
+		Float3 normal0 = Float3.Zero;
+		Float3 normal1 = Float3.Zero;
+		Float3 normal2 = Float3.Zero;
 
-		Float2 texcoord0 = new Float2(
-			vertex0Data[header.sPos],
-			vertex0Data[header.tPos]);
-		Float2 texcoord1 = new Float2(
-			vertex1Data[header.sPos],
-			vertex1Data[header.tPos]);
-		Float2 texcoord2 = new Float2(
-			vertex2Data[header.sPos],
-			vertex2Data[header.tPos]);
+		Float2 texcoord0 = Float2.Zero;
+		Float2 texcoord1 = Float2.Zero;
+		Float2 texcoord2 = Float2.Zero;
+
+		if (header.hasPosition)
+		{
+			vertex0 = new Float3(xMultiplier * vertex0Data[header.xPos], vertex0Data[header.yPos], vertex0Data[header.zPos]);
+			vertex1 = new Float3(xMultiplier * vertex1Data[header.xPos], vertex1Data[header.yPos], vertex1Data[header.zPos]);
+			vertex2 = new Float3(xMultiplier * vertex2Data[header.xPos], vertex2Data[header.yPos], vertex2Data[header.zPos]);
+		}
+
+		if (header.hasNormals)
+		{
+			normal0 = new Float3(xMultiplier * vertex0Data[header.nxPos], vertex0Data[header.nyPos], vertex0Data[header.nzPos]);
+			normal1 = new Float3(xMultiplier * vertex1Data[header.nxPos], vertex1Data[header.nyPos], vertex1Data[header.nzPos]);
+			normal2 = new Float3(xMultiplier * vertex2Data[header.nxPos], vertex2Data[header.nyPos], vertex2Data[header.nzPos]);
+		}
+
+		if (header.hasTexcoords)
+		{
+			texcoord0 = new Float2(vertex0Data[header.sPos], vertex0Data[header.tPos]);
+			texcoord1 = new Float2(vertex1Data[header.sPos], vertex1Data[header.tPos]);
+			texcoord2 = new Float2(vertex2Data[header.sPos], vertex2Data[header.tPos]);
+		}
 
 		currentTriangle++;
-
-		return new Triangle(vertex0, vertex1, vertex2, normal0, normal1, normal2, texcoord0, texcoord1, texcoord2);
+		triangle = new ITriangleStream.Triangle(vertex0, vertex1, vertex2, normal0, normal1, normal2, texcoord0, texcoord1, texcoord2);
+		return true;
 	}
 
 	static string ReadLine(FileStream file, ref byte[] buffer)
@@ -139,14 +143,14 @@ public class PolygonFileFormatReader : IDisposable
 
 	float ReadBinaryFloat()
 	{
-		file.Read(buffer, 0, 4);
+		stream.Read(buffer, 0, 4);
 
 		return BinaryPrimitives.ReadSingleLittleEndian(buffer);
 	}
 
 	uint ReadBinaryUInt()
 	{
-		file.Read(buffer, 0, 4);
+		stream.Read(buffer, 0, 4);
 
 		return BitConverter.ToUInt32(buffer, 0);
 	}
@@ -160,36 +164,15 @@ public class PolygonFileFormatReader : IDisposable
 
 	void ReadBinaryInts(int amount)
 	{
-		if (readUintBuffer.Length < amount)
-			readUintBuffer = new uint[amount];
+		if (readUintBuffer.Length < amount) readUintBuffer = new uint[amount];
+
 		//for (int i = 0; i < amount; i++) readUintBuffer[i] = ReadBinaryUInt();
-		file.Read(buffer, 0, amount * sizeof(uint));
+
+		stream.Read(buffer, 0, amount * sizeof(uint));
 		Buffer.BlockCopy(buffer, 0, readUintBuffer, 0, amount * sizeof(uint));
 	}
 
-	public readonly struct Triangle
-	{
-		public readonly Float3 vertex0, vertex1, vertex2;
-		public readonly Float3 normal0, normal1, normal2;
-		public readonly Float2 texcoord0, texcoord1, texcoord2;
-
-		public Triangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal0, Float3 normal1, Float3 normal2, Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
-		{
-			this.vertex0 = vertex0;
-			this.vertex1 = vertex1;
-			this.vertex2 = vertex2;
-			this.normal0 = normal0;
-			this.normal1 = normal1;
-			this.normal2 = normal2;
-			this.texcoord0 = texcoord0;
-			this.texcoord1 = texcoord1;
-			this.texcoord2 = texcoord2;
-		}
-
-		public override string ToString() => $"v0:{vertex0} v1:{vertex1} v2{vertex2} n0{normal0} n1{normal1} n2{normal2} tex0{texcoord0} tex1{texcoord1} tex2{texcoord2}";
-	}
-
-	public readonly struct Header
+	readonly struct Header
 	{
 		public Header(FileStream file, ref byte[] buffer)
 		{
@@ -197,6 +180,7 @@ public class PolygonFileFormatReader : IDisposable
 			vertexAmount = 0;
 			triangleAmount = 0;
 			faceAmount = 0;
+
 			while (true)
 			{
 				string[] tokens = ReadLine(file, ref buffer).Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -241,41 +225,57 @@ public class PolygonFileFormatReader : IDisposable
 						switch (tokens[2])
 						{
 							case "x":
+							{
 								xPos = propertyIndex++;
-								propertyCount++;
+								hasPosition = true;
 								break;
+							}
 							case "y":
+							{
 								yPos = propertyIndex++;
-								propertyCount++;
+								hasPosition = true;
 								break;
+							}
 							case "z":
+							{
 								zPos = propertyIndex++;
-								propertyCount++;
+								hasPosition = true;
 								break;
+							}
 							case "nx":
+							{
 								nxPos = propertyIndex++;
-								propertyCount++;
+								hasNormals = true;
 								break;
+							}
 							case "ny":
+							{
 								nyPos = propertyIndex++;
-								propertyCount++;
+								hasNormals = true;
 								break;
+							}
 							case "nz":
+							{
 								nzPos = propertyIndex++;
-								propertyCount++;
+								hasNormals = true;
 								break;
+							}
 							case "s":
+							{
 								sPos = propertyIndex++;
-								propertyCount++;
+								hasTexcoords = true;
 								break;
+							}
 							case "t":
+							{
 								tPos = propertyIndex++;
-								propertyCount++;
+								hasTexcoords = true;
 								break;
-							default:
-								throw new Exception($"property {tokens[2]} is not supported yet!");
+							}
+							default: throw new Exception($"property {tokens[2]} is not supported yet!");
 						}
 
+						propertyCount++;
 						break;
 					}
 					case "end_header":
@@ -318,6 +318,10 @@ public class PolygonFileFormatReader : IDisposable
 		public readonly int sPos = 0;
 		public readonly int tPos = 0;
 
+		public readonly bool hasPosition = false;
+		public readonly bool hasNormals = false;
+		public readonly bool hasTexcoords = false;
+
 		public readonly long vertexListStart;
 		public readonly long faceListStart;
 	}
@@ -341,8 +345,5 @@ public class PolygonFileFormatReader : IDisposable
 		S, T
 	}
 
-	public void Dispose()
-	{
-		file?.Dispose();
-	}
+	public void Dispose() => stream?.Dispose();
 }

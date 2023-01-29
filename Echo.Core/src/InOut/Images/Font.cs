@@ -8,7 +8,7 @@ using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Images;
 
 public class Font
 {

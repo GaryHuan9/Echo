@@ -43,9 +43,6 @@ public class BoxEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	public Float2 Texcoord11 { get; set; } = Float2.One;
 
 	/// <inheritdoc/>
-	uint IGeometrySource<PreparedTriangle>.Count => 12;
-
-	/// <inheritdoc/>
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
 		Float3 extend = Size / 2f;

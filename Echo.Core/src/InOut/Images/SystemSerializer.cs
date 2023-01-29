@@ -9,7 +9,7 @@ using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
-namespace Echo.Core.Textures.Serialization;
+namespace Echo.Core.InOut.Images;
 
 /// <summary>
 /// An <see cref="Serializer"/> implemented through classes from the <see cref="System.Drawing.Imaging"/> namespace.

@@ -8,19 +8,17 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.InOut.Images;
 using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
-using Echo.Core.Textures.Serialization;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Models;
 
-public class MaterialLibrary
+public sealed class MaterialLibrary
 {
 	public MaterialLibrary(string path)
 	{
-		path = AssetsUtility.GetAbsolutePath(acceptableFileExtensions, path); //Formulate path
-
 		using StreamReader reader = new StreamReader(File.OpenRead(path));
 
 		materials = new Dictionary<string, Material>();
@@ -94,7 +92,7 @@ public class MaterialLibrary
 			if (!float.TryParse(piece0, NumberStyles.Any, CultureInfo.InvariantCulture, out float float0))
 			{
 				if (bool.TryParse(piece0, out bool boolean)) return boolean;
-				return new TextureLoadOperation(AssetsUtility.GetSiblingPath(path, new string(piece0.Trim('"'))));
+				return new TextureLoadOperation(GetSiblingPath(path, new string(piece0.Trim('"'))));
 			}
 
 			if (!float.TryParse(piece1, NumberStyles.Any, CultureInfo.InvariantCulture, out float float1)) return float0;
@@ -157,6 +155,12 @@ public class MaterialLibrary
 			line = line[index..].Trim();
 			return piece;
 		}
+	}
+
+	static string GetSiblingPath(string path, string sibling)
+	{
+		var directory = Path.GetDirectoryName(path);
+		return Path.Combine(directory ?? "", sibling);
 	}
 
 	class TextureLoadOperation
