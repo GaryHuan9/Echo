@@ -210,18 +210,20 @@ public sealed class GeometryCollection
 				return new Contact.Info
 				(
 					triangle.Material,
-					triangle.GetNormal(uv),
+					triangle.Normal,
+					triangle.GetShadingNormal(uv),
 					triangle.GetTexcoord(uv)
 				);
 			}
 			case TokenType.Sphere:
 			{
 				ref readonly PreparedSphere sphere = ref spheres.ItemRef(token.Index);
+				Float3 normal = PreparedSphere.GetNormal(uv);
 
 				return new Contact.Info
 				(
 					sphere.Material,
-					PreparedSphere.GetNormal(uv),
+					normal, normal,
 					PreparedSphere.GetTexcoord(uv)
 				);
 			}

@@ -79,14 +79,18 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 		if (usemtlLines.Count > 0)
 		{
 			//Construct a sorted divisions list to find the material in log n time
-
 			foreach (Line line in usemtlLines)
 			{
 				materialHeights.Add(line.height);
 				materialNames.Add(line);
 			}
 		}
-		else throw new Exception($"Invalid OBJ file at {path} because it has zero usemtl usage, meaning it does not use any material.");
+		else
+		{
+			//Zero usemtl usage, assign default value
+			materialHeights.Add(0);
+			materialNames.Add("none");
+		}
 
 		//Load supporting attributes (vertex, normal, texcoord)
 		vertices = new Float3[vertexLines.Count];
