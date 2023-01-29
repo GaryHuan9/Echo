@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut;
+using Echo.Core.InOut.Images;
 using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Serialization;
 
 namespace Echo.Core.Textures.Grids;
 
@@ -168,7 +168,7 @@ public abstract class TextureGrid : Texture
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "is unable to be found");
 
-		using Stream stream = File.OpenRead(AssetsUtility.GetAssetPath(path));
+		using Stream stream = File.OpenRead(path);
 		return serializer.Deserialize<T>(stream);
 	}
 
@@ -218,7 +218,7 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 		serializer ??= Serializer.Find(path);
 		if (serializer == null) throw ExceptionHelper.Invalid(nameof(serializer), "cannot be found");
 
-		using Stream stream = File.Open(AssetsUtility.GetAssetPath(path), FileMode.Create);
+		using Stream stream = File.Open(path, FileMode.Create);
 		serializer.Serialize(this, stream);
 	}
 

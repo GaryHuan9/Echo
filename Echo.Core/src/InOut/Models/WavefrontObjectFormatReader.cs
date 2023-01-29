@@ -1,22 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Common.Threading;
+using Echo.Core.Scenic.Geometries;
 
-namespace Echo.Core.InOut;
+namespace Echo.Core.InOut.Models;
 
-public class Mesh
+/// <summary>
+/// An implementation of an <see cref="ITriangleStream"/> for .obj files based on http://paulbourke.net/dataformats/obj/
+/// </summary>
+public sealed class WavefrontObjectFormatReader : ITriangleStream
 {
-	public Mesh(string path) //Loads .obj based on http://paulbourke.net/dataformats/obj/
+	/// <summary>
+	/// Constructs a <see cref="WavefrontObjectFormatReader"/>.
+	/// </summary>
+	/// <param name="path">The file path to read from.</param>
+	/// <param name="rightHanded">whether to assume the data is encoded in a right-handed coordinate system.</param>
+	public WavefrontObjectFormatReader(string path, bool rightHanded = true)
 	{
-		path = AssetsUtility.GetAbsolutePath(acceptableFileExtensions, path);
-
 		//These lists will become too large to pool
 		var vertexLines = new List<Line>();
 		var normalLines = new List<Line>();
@@ -33,7 +39,7 @@ public class Mesh
 		if (Path.GetExtension(path) == ".obj") stream = File.OpenRead(path);
 		else stream = ZipFile.OpenRead(path).Entries[0].Open(); //Unzip zipped obj file
 
-		using StreamReader reader = new StreamReader(stream);
+		using var reader = new StreamReader(stream);
 
 		while (true)
 		{
@@ -54,13 +60,13 @@ public class Mesh
 					{
 						'n' => normalLines,
 						't' => texcoordLines,
-						_   => null
+						_ => null
 					},
 					_ => null
 				},
-				'f' when index == 1                 => faceLines,
+				'f' when index == 1 => faceLines,
 				'u' when span.StartsWith("usemtl ") => usemtlLines,
-				_                                   => null
+				_ => null
 			};
 
 			list?.Add(new Line(line, height++, Range.StartAt(index + 1)));
@@ -73,19 +79,24 @@ public class Mesh
 		if (usemtlLines.Count > 0)
 		{
 			//Construct a sorted divisions list to find the material in log n time
-
 			foreach (Line line in usemtlLines)
 			{
 				materialHeights.Add(line.height);
 				materialNames.Add(line);
 			}
 		}
-		else throw new Exception($"Invalid OBJ file at {path} because it has zero usemtl usage, meaning it does not use any material.");
+		else
+		{
+			//Zero usemtl usage, assign default value
+			materialHeights.Add(0);
+			materialNames.Add("none");
+		}
 
 		//Load supporting attributes (vertex, normal, texcoord)
 		vertices = new Float3[vertexLines.Count];
 		normals = new Float3[normalLines.Count];
 		texcoords = new Float2[texcoordLines.Count];
+		float xMultiplier = rightHanded ? -1f : 1f;
 
 		Parallel.For(0, vertexLines.Count, LoadVertex);
 		Parallel.For(0, normalLines.Count, LoadNormal);
@@ -95,23 +106,18 @@ public class Mesh
 		{
 			ReadOnlySpan<char> line = vertexLines[index];
 			Span<Range> ranges = stackalloc Range[3];
-
 			Split(line, ' ', ranges);
 
-			//Because .obj files are in a right-handed coordinate system while we have a left-handed coordinate system,
-			//We have to simply negate the x axis to convert all of our vertices into the correct space
-			vertices[index] = new Float3(-ParseSingle(line[ranges[0]]), ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
+			vertices[index] = new Float3(ParseSingle(line[ranges[0]]) * xMultiplier, ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
 		}
 
 		void LoadNormal(int index)
 		{
 			ReadOnlySpan<char> line = normalLines[index];
 			Span<Range> ranges = stackalloc Range[3];
-
 			Split(line, ' ', ranges);
 
-			//Same reason as vertices need to negate the x axis, we also have to negate the y axis
-			normals[index] = new Float3(-ParseSingle(line[ranges[0]]), ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
+			normals[index] = new Float3(ParseSingle(line[ranges[0]]) * xMultiplier, ParseSingle(line[ranges[1]]), ParseSingle(line[ranges[2]]));
 		}
 
 		void LoadTexcoord(int index)
@@ -125,13 +131,13 @@ public class Mesh
 		}
 
 		//Load triangles/faces
-		triangles0 = new Triangle[faceLines.Count];
-		triangles1 = new Triangle[faceLines.Count];
+		packs0 = new IndicesPack[faceLines.Count];
+		packs1 = new IndicesPack[faceLines.Count];
 
 		int triangles1Length = 0;
 
 		Parallel.For(0, faceLines.Count, LoadFace);
-		Array.Resize(ref triangles1, InterlockedHelper.Read(ref triangles1Length));
+		Array.Resize(ref packs1, InterlockedHelper.Read(ref triangles1Length));
 
 		void LoadFace(int index)
 		{
@@ -166,7 +172,7 @@ public class Mesh
 			//Each face part consists of vertex index, texture coordinate index, and normal index
 			//.obj uses counter-clockwise winding order while we use clockwise. So we have to reverse it
 
-			triangles0[index] = new Triangle
+			packs0[index] = new IndicesPack
 			(
 				new Int3(indices2[0], indices1[0], indices0[0]),
 				new Int3(indices2[2], indices1[2], indices0[2]),
@@ -177,10 +183,10 @@ public class Mesh
 			if (split3.Length > 0) //If we need to add an extra triangle to support 4-vertex face aka quad
 			{
 				Span<Range> ranges3 = stackalloc Range[3];
-				Split(split3, '/', ranges3);
+				Split(split3, '/', ranges3, false);
 				Int3 indices3 = ParseIndices(split3, ranges3);
 
-				triangles1[Interlocked.Increment(ref triangles1Length) - 1] = new Triangle
+				packs1[Interlocked.Increment(ref triangles1Length) - 1] = new IndicesPack
 				(
 					new Int3(indices0[0], indices3[0], indices2[0]),
 					new Int3(indices0[2], indices3[2], indices2[2]),
@@ -191,43 +197,64 @@ public class Mesh
 		}
 	}
 
-	static readonly ReadOnlyCollection<string> acceptableFileExtensions = new(new[] { ".obj", ".zip" });
+	int currentIndex;
 
-	readonly Triangle[] triangles0; //Triangles are stored in two different arrays to support loading quads
-	readonly Triangle[] triangles1;
+	readonly IndicesPack[] packs0; //Triangles are stored in two different arrays to support loading quads
+	readonly IndicesPack[] packs1;
 
 	readonly Float3[] vertices;
 	readonly Float3[] normals;
 	readonly Float2[] texcoords;
 
-	public int TriangleCount => triangles0.Length + triangles1.Length;
+	int TriangleCount => packs0.Length + packs1.Length;
 
-	public Triangle GetTriangle(int index)
+	/// <inheritdoc/>
+	public bool ReadTriangle(out ITriangleStream.Triangle triangle)
 	{
-		if (index < triangles0.Length) return triangles0[index];
-		index -= triangles0.Length;
+		if (currentIndex == TriangleCount)
+		{
+			triangle = default;
+			return false;
+		}
 
-		if (index < triangles1.Length) return triangles1[index];
-		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
+		ref readonly IndicesPack pack = ref Unsafe.NullRef<IndicesPack>();
+		if (currentIndex < packs0.Length) pack = ref packs0[currentIndex];
+		else pack = ref packs1[currentIndex - packs0.Length];
+
+		if (pack.HasNormal)
+		{
+			triangle = pack.HasTexcoord ?
+				new ITriangleStream.Triangle
+				(
+					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z],
+					normals[pack.normalIndices.X], normals[pack.normalIndices.Y], normals[pack.normalIndices.Z],
+					texcoords[pack.texcoordIndices.X], texcoords[pack.texcoordIndices.Y], texcoords[pack.texcoordIndices.Z]
+				) :
+				new ITriangleStream.Triangle
+				(
+					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z],
+					normals[pack.normalIndices.X], normals[pack.normalIndices.Y], normals[pack.normalIndices.Z]
+				);
+		}
+		else
+		{
+			triangle = pack.HasTexcoord ?
+				new ITriangleStream.Triangle
+				(
+					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z],
+					texcoords[pack.texcoordIndices.X], texcoords[pack.texcoordIndices.Y], texcoords[pack.texcoordIndices.Z]
+				) :
+				new ITriangleStream.Triangle
+				(
+					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z]
+				);
+		}
+
+		++currentIndex;
+		return true;
 	}
 
-	public Float3 GetVertex(int index)
-	{
-		if (index < vertices.Length) return vertices[index];
-		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
-	}
-
-	public Float3 GetNormal(int index)
-	{
-		if (index < normals.Length) return normals[index];
-		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
-	}
-
-	public Float2 GetTexcoord(int index)
-	{
-		if (index < texcoords.Length) return texcoords[index];
-		throw ExceptionHelper.Invalid(nameof(index), index, InvalidType.outOfBounds);
-	}
+	public void Dispose() { }
 
 	static void Split(ReadOnlySpan<char> span, char split, Span<Range> ranges, bool removeEmpties = true)
 	{
@@ -314,20 +341,82 @@ public class Mesh
 
 		return result;
 	}
-}
 
-public readonly struct Triangle
-{
-	public Triangle(Int3 vertexIndices, Int3 normalIndices, Int3 texcoordIndices, string materialName)
+	readonly struct Line
 	{
-		this.vertexIndices = vertexIndices;
-		this.normalIndices = normalIndices;
-		this.texcoordIndices = texcoordIndices;
-		this.materialName = materialName;
+		public Line(string source, int height = -1) : this(source, height, Range.All) { }
+
+		public Line(string source, int height, Range range)
+		{
+			this.height = height;
+			this.source = source;
+
+			(offset, length) = range.GetOffsetAndLength(source.Length);
+		}
+
+		public readonly int height;
+		public readonly int length;
+
+		readonly string source;
+		readonly int offset;
+
+		public bool IsEmpty => length == 0;
+
+		public char this[int value] => source[offset + value];
+
+		public Line this[Range value]
+		{
+			get
+			{
+				(int Offset, int Length) set = value.GetOffsetAndLength(length);
+
+				int start = offset + set.Offset;
+				return new Line(source, height, start..(start + set.Length));
+			}
+		}
+
+		public Line Trim()
+		{
+			int start = 0;
+			int end = length;
+
+			while (char.IsWhiteSpace(this[start])) start++;
+			while (char.IsWhiteSpace(this[end - 1])) end--;
+
+			return this[start..end];
+		}
+
+		public Line Trim(char character)
+		{
+			int start = 0;
+			int end = length;
+
+			while (this[start] == character) start++;
+			while (this[end - 1] == character) end--;
+
+			return this[start..end];
+		}
+
+		public static implicit operator ReadOnlySpan<char>(Line line) => ((ReadOnlySpan<char>)line.source).Slice(line.offset, line.length);
+		public static implicit operator string(Line line) => line.source.Substring(line.offset, line.length);
 	}
 
-	public readonly Int3 vertexIndices;
-	public readonly Int3 normalIndices;
-	public readonly Int3 texcoordIndices;
-	public readonly string materialName;
+	readonly struct IndicesPack
+	{
+		public IndicesPack(in Int3 vertexIndices, in Int3 normalIndices, in Int3 texcoordIndices, string materialName)
+		{
+			this.vertexIndices = vertexIndices;
+			this.normalIndices = normalIndices;
+			this.texcoordIndices = texcoordIndices;
+			this.materialName = materialName;
+		}
+
+		public readonly Int3 vertexIndices;
+		public readonly Int3 normalIndices;
+		public readonly Int3 texcoordIndices;
+		public readonly string materialName;
+
+		public bool HasNormal => normalIndices.X >= 0;
+		public bool HasTexcoord => texcoordIndices.X >= 0;
+	}
 }

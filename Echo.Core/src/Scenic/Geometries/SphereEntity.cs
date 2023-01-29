@@ -34,9 +34,6 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 	}
 
 	/// <inheritdoc/>
-	uint IGeometrySource<PreparedSphere>.Count => 1;
-
-	/// <inheritdoc/>
 	public IEnumerable<PreparedSphere> Extract(SwatchExtractor extractor)
 	{
 		MaterialIndex material = extractor.Register(Material);

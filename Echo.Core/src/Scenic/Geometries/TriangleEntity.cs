@@ -8,6 +8,7 @@ using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Scenic.Geometries;
@@ -15,17 +16,16 @@ namespace Echo.Core.Scenic.Geometries;
 /// <summary>
 /// A geometric triangle.
 /// </summary>
+[EchoSourceUsable]
 public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 {
-	public Float3 Vertex0 { get; set; } = Float3.Zero;
-	public Float3 Vertex1 { get; set; } = Float3.Up;
-	public Float3 Vertex2 { get; set; } = Float3.One;
+	[EchoSourceUsable] public Float3 Vertex0 { get; set; } = Float3.Zero;
+	[EchoSourceUsable] public Float3 Vertex1 { get; set; } = Float3.Up;
+	[EchoSourceUsable] public Float3 Vertex2 { get; set; } = Float3.One;
 
-	public Float3? Normal0 { get; set; }
-	public Float3? Normal1 { get; set; }
-	public Float3? Normal2 { get; set; }
-
-	uint IGeometrySource<PreparedTriangle>.Count => 1;
+	[EchoSourceUsable] public Float3 ShadingNormal0 { get; set; }
+	[EchoSourceUsable] public Float3 ShadingNormal1 { get; set; }
+	[EchoSourceUsable] public Float3 ShadingNormal2 { get; set; }
 
 	public IEnumerable<PreparedTriangle> Extract(SwatchExtractor extractor)
 	{
@@ -33,14 +33,18 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 		Float4x4 transform = InverseTransform;
 
 		Float3 normal = Float3.Cross(Vertex1 - Vertex0, Vertex2 - Vertex0);
-		Float3 normal0 = Normal0 ?? normal;
-		Float3 normal1 = Normal1 ?? normal;
-		Float3 normal2 = Normal2 ?? normal;
+		Float3 normal0 = ShadingNormal0 == Float3.Zero ? normal : ShadingNormal0;
+		Float3 normal1 = ShadingNormal1 == Float3.Zero ? normal : ShadingNormal1;
+		Float3 normal2 = ShadingNormal2 == Float3.Zero ? normal : ShadingNormal2;
 
 		yield return new PreparedTriangle
 		(
-			transform.MultiplyPoint(Vertex0), transform.MultiplyPoint(Vertex1), transform.MultiplyPoint(Vertex2),
-			transform.MultiplyDirection(normal0).Normalized, transform.MultiplyDirection(normal1).Normalized, transform.MultiplyDirection(normal2).Normalized,
+			transform.MultiplyPoint(Vertex0),
+			transform.MultiplyPoint(Vertex1),
+			transform.MultiplyPoint(Vertex2),
+			transform.MultiplyDirection(normal0).Normalized,
+			transform.MultiplyDirection(normal1).Normalized,
+			transform.MultiplyDirection(normal2).Normalized,
 			material
 		);
 	}
@@ -82,28 +86,28 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 	) { }
 
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							in Float3 normal0, in Float3 normal1, in Float3 normal2, MaterialIndex materialIndex) : this
+							in Float3 shadingNormal0, in Float3 shadingNormal1, in Float3 shadingNormal2, MaterialIndex materialIndex) : this
 	(
 		vertex0, vertex1, vertex2,
-		normal0, normal1, normal2,
+		shadingNormal0, shadingNormal1, shadingNormal2,
 		Float2.Zero, Float2.Zero, Float2.Zero, materialIndex
 	) { }
 
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							in Float3 normal0, in Float3 normal1, in Float3 normal2,
+							in Float3 shadingNormal0, in Float3 shadingNormal1, in Float3 shadingNormal2,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material)
 	{
-		Ensure.AreEqual(normal0.SquaredMagnitude, 1f);
-		Ensure.AreEqual(normal1.SquaredMagnitude, 1f);
-		Ensure.AreEqual(normal2.SquaredMagnitude, 1f);
+		Ensure.AreEqual(shadingNormal0.SquaredMagnitude, 1f);
+		Ensure.AreEqual(shadingNormal1.SquaredMagnitude, 1f);
+		Ensure.AreEqual(shadingNormal2.SquaredMagnitude, 1f);
 
 		this.vertex0 = vertex0;
 		edge1 = vertex1 - vertex0;
 		edge2 = vertex2 - vertex0;
 
-		this.normal0 = normal0;
-		this.normal1 = normal1;
-		this.normal2 = normal2;
+		this.shadingNormal0 = shadingNormal0;
+		this.shadingNormal1 = shadingNormal1;
+		this.shadingNormal2 = shadingNormal2;
 
 		this.texcoord0 = texcoord0;
 		this.texcoord1 = texcoord1;
@@ -112,13 +116,13 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 		Material = material;
 	}
 
-	public readonly Float3 vertex0; //NOTE: Vertex one and two are actually not needed for intersection
+	public readonly Float3 vertex0;
 	public readonly Float3 edge1;
 	public readonly Float3 edge2;
 
-	public readonly Float3 normal0;
-	public readonly Float3 normal1;
-	public readonly Float3 normal2;
+	public readonly Float3 shadingNormal0;
+	public readonly Float3 shadingNormal1;
+	public readonly Float3 shadingNormal2;
 
 	public readonly Float2 texcoord0;
 	public readonly Float2 texcoord1;
@@ -127,6 +131,11 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 	public Float3 Vertex1 => vertex0 + edge1;
 	public Float3 Vertex2 => vertex0 + edge2;
 
+	/// <summary>
+	/// The geometric normal of this <see cref="TriangleEntity"/>; calculated from <see cref="edge1"/> and <see cref="edge2"/>.
+	/// </summary>
+	public Float3 Normal => Float3.Cross(edge1, edge2).Normalized;
+
 	/// <inheritdoc/>
 	public MaterialIndex Material { get; }
 
@@ -134,7 +143,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 	public BoxBound BoxBound => new(stackalloc[] { vertex0, Vertex1, Vertex2 });
 
 	/// <inheritdoc/>
-	public ConeBound ConeBound => ConeBound.CreateDirection(Float3.Cross(edge1, edge2).Normalized);
+	public ConeBound ConeBound => ConeBound.CreateDirection(Normal);
 
 	/// <inheritdoc/>
 	public float Area => Float3.Cross(edge1, edge2).Magnitude / 2f;
@@ -159,7 +168,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 	{
 		Float2 uv = sample.UniformTriangle;
 		Float3 position = GetPoint(uv);
-		Float3 normal = GetNormal(uv);
+		Float3 normal = GetShadingNormal(uv);
 
 		GeometryPoint point = new GeometryPoint(position, normal);
 		return (point, point.ProbabilityDensity(origin, Area));
@@ -173,10 +182,10 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
 		if (float.IsPositiveInfinity(distance)) return 0f;
 
-		return distance * distance / FastMath.Abs(GetNormal(uv).Dot(incident) * Area);
+		return distance * distance / FastMath.Abs(GetShadingNormal(uv).Dot(incident) * Area);
 	}
 
-	public Float3 GetNormal(Float2 uv) => ((1f - uv.X - uv.Y) * normal0 + uv.X * normal1 + uv.Y * normal2).Normalized;
+	public Float3 GetShadingNormal(Float2 uv) => ((1f - uv.X - uv.Y) * shadingNormal0 + uv.X * shadingNormal1 + uv.Y * shadingNormal2).Normalized;
 	public Float2 GetTexcoord(Float2 uv) => (1f - uv.X - uv.Y) * texcoord0 + uv.X * texcoord1 + uv.Y * texcoord2;
 
 	public void GetSubdivided(Span<PreparedTriangle> triangles, int iteration)
@@ -186,7 +195,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 		if (triangles.Length == requiredLength)
 		{
 			triangles[0] = this;
-			GetSubdivided(triangles, normal0, normal1, normal2);
+			GetSubdivided(triangles, shadingNormal0, shadingNormal1, shadingNormal2);
 		}
 		else throw ExceptionHelper.Invalid(nameof(triangles), triangles.Length, $"is not long enough! Need at least {requiredLength}!");
 	}

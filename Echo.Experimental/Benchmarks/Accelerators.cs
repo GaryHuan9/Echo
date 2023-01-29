@@ -8,6 +8,7 @@ using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.InOut;
+using Echo.Core.InOut.Models;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
@@ -18,11 +19,14 @@ public class Accelerators
 {
 	public Accelerators()
 	{
-		Scene scene = new Scene();
-
-		//This is some really temporary benchmarking code
-		Mesh mesh = new("ext/Scenes/Assets/Models/BlenderBMW/BlenderBMW.obj");
-		scene.Add(new MeshEntity { Mesh = mesh, Material = new Diffuse() });
+		Scene scene = new Scene
+		{
+			new MeshEntity
+			{
+				Source = new FileTriangleSource("ext/Scenes/Assets/Models/BlenderBMW/BlenderBMW.obj"),
+				Material = new Diffuse()
+			}
+		};
 
 		const int Length = 65536;
 

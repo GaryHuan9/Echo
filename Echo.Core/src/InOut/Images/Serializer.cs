@@ -3,7 +3,7 @@ using System.IO;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 
-namespace Echo.Core.Textures.Serialization;
+namespace Echo.Core.InOut.Images;
 
 /// <summary>
 /// A serialization interface for saving and loading <see cref="TextureGrid{T}"/> into and out of <see cref="Stream"/>.
@@ -38,7 +38,7 @@ public abstract record Serializer
 		Span<char> span = stackalloc char[extension.Length];
 		span = span[..extension[1..].ToLowerInvariant(span)];
 
-		return new string(span) switch
+		return new string(span) switch //OPTIMIZE: switch on Span with dotnet 7
 		{
 			"png"  => SystemSerializer.png,
 			"jpeg" => SystemSerializer.jpeg,

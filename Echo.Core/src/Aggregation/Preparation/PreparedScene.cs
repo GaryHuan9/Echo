@@ -98,7 +98,8 @@ public sealed class PreparedScene : PreparedPack
 		Contact.Info info = instance.pack.geometries.GetContactInfo(query.token.TopToken, query.uv);
 
 		Float3 normal = inverseTransform.MultiplyDirection(info.normal).Normalized;
-		return new Contact(query, normal, instance.swatch[info.material], info.texcoord);
+		Float3 shadingNormal = inverseTransform.MultiplyDirection(info.shadingNormal).Normalized;
+		return new Contact(query, normal, instance.swatch[info.material], shadingNormal, info.texcoord);
 	}
 
 	/// <summary>
