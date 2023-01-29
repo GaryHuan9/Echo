@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using Echo.Core.Common.Mathematics.Primitives;
-using Echo.Core.Common.Packed;
-using Echo.Core.InOut;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Preparation;
 
@@ -16,6 +14,7 @@ public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 	/// <summary>
 	/// The source of the triangles.
 	/// </summary>
+	[EchoSourceUsable]
 	public ITriangleSource Source { get; set; }
 
 	/// <inheritdoc/>
