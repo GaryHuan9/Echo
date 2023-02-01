@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.Intrinsics.X86;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
@@ -21,9 +22,30 @@ public record MagickSerializer : Serializer
 	public static readonly MagickSerializer exr = new(MagickFormat.Exr);
 	public static readonly MagickSerializer hdr = new(MagickFormat.Hdr);
 
-	public override void Serialize<T>(TextureGrid<T> texture, Stream stream)
+	public override unsafe void Serialize<T>(TextureGrid<T> texture, Stream stream)
 	{
-		throw new NotImplementedException();
+		Int2 size = texture.size;
+		using var image = new MagickImage(MagickColors.None, size.X, size.Y);
+		using IUnsafePixelCollection<float> pixels = image.GetPixelsUnsafe();
+		float* pointer = (float*)pixels.GetAreaPointer(0, 0, size.X, size.Y);
+
+		int channels = image.ChannelCount;
+		Ensure.AreEqual(channels, 4);
+
+		nint stride = size.X * channels;
+		pointer += stride * (size.Y - 1);
+		bool gamma = format is not (MagickFormat.Exr or MagickFormat.Hdr) && sRGB;
+
+		for (int y = 0; y < size.Y; y++, pointer -= stride)
+		for (int x = 0; x < size.X; x++)
+		{
+			Float4 color = texture[new Int2(x, y)].ToRGBA128();
+
+			if (gamma) color = ColorConverter.LinearToGamma(Float4.Clamp(color));
+			Sse.Store(pointer + x * channels, (color * ushort.MaxValue).v);
+		}
+
+		image.Write(stream, format);
 	}
 
 	public override unsafe SettableGrid<T> Deserialize<T>(Stream stream)
@@ -42,28 +64,28 @@ public record MagickSerializer : Serializer
 		float* pointer = (float*)pixels.GetAreaPointer(0, 0, size.X, size.Y);
 
 		int channels = image.ChannelCount;
-		bool isGrayScale = channels < 3; //Gray scale images are not tested because I am too lazy to find one
 		nint stride = size.X * channels;
 		pointer += stride * (size.Y - 1);
-		bool isGamma = image.Format is not (MagickFormat.Exr or MagickFormat.Hdr) && sRGB;
+		bool grayscale = channels < 3; //Gray scale images are not tested because I am too lazy to find one
+		bool gamma = image.Format is not (MagickFormat.Exr or MagickFormat.Hdr) && sRGB;
 
 		for (int y = 0; y < size.Y; y++, pointer -= stride)
 		for (int x = 0; x < size.X; x++)
 		{
-			Float4 color = new Float4(Sse.LoadVector128(pointer + x * channels));
+			Float4 value = new Float4(Sse.LoadVector128(pointer + x * channels));
 
 			if (!hasAlpha)
 			{
-				color = ((RGBA128)color).AlphaOne;
-				if (isGrayScale) color = color.XXXW;
+				value = ((RGBA128)value).AlphaOne;
+				if (grayscale) value = value.XXXW;
 			}
-			else if (isGrayScale) color = color.XXXY;
+			else if (grayscale) value = value.XXXY;
 
-			color = Float4.Max(Float4.Zero, color * (1f / ushort.MaxValue));
-			if (!float.IsFinite(color.Sum)) color = Float4.One; //There might be degenerate pixels
+			value = Float4.Max(Float4.Zero, value * (1f / ushort.MaxValue));
+			if (!float.IsFinite(value.Sum)) value = Float4.One; //There might be degenerate pixels
 
-			if (isGamma) color = SystemSerializer.GammaToLinear(color);
-			texture.Set(new Int2(x, y), ((RGBA128)color).As<T>());
+			if (gamma) value = ColorConverter.GammaToLinear(value);
+			texture.Set(new Int2(x, y), ((RGBA128)value).As<T>());
 		}
 
 		return texture;

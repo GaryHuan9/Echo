@@ -220,7 +220,7 @@ public sealed partial class ViewerUI : AreaUI
 		{
 			color = ApproximateSqrt(color.Max(Float4.Zero));
 			color = color.Min(Float4.One) * byte.MaxValue;
-			return SystemSerializer.GatherBytes(Sse2.ConvertToVector128Int32(color.v).AsUInt32());
+			return ColorConverter.GatherBytes(Sse2.ConvertToVector128Int32(color.v).AsUInt32());
 
 			static Float4 ApproximateSqrt(in Float4 value)
 			{
