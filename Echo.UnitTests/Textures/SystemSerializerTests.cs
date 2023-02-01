@@ -29,7 +29,6 @@ public class SystemSerializerTests
 
 	static readonly List<Float4> inputs = new();
 
-
 	[Test]
 	public void LinearToGamma([ValueSource(nameof(inputs))] Float4 input)
 	{
@@ -62,7 +61,7 @@ public class SystemSerializerTests
 
 		Assert.That(output >= Float4.Zero);
 		Assert.That(output <= Float4.One);
-		
+
 		const float Threshold = 0.004f;
 		Assert.That(output.X, FastMath.AlmostZero(expectX) ? Utility.AlmostZero() : Is.EqualTo(expectX).Roughly(Threshold));
 		Assert.That(output.Y, FastMath.AlmostZero(expectY) ? Utility.AlmostZero() : Is.EqualTo(expectY).Roughly(Threshold));
