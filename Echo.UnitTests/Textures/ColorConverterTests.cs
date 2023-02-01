@@ -9,9 +9,9 @@ using NUnit.Framework;
 namespace Echo.UnitTests.Textures;
 
 [TestFixture]
-public class SystemSerializerTests
+public class ColorConverterTests
 {
-	static SystemSerializerTests()
+	static ColorConverterTests()
 	{
 		inputs.Add(Float4.Zero);
 		inputs.Add(Float4.One);
@@ -29,7 +29,6 @@ public class SystemSerializerTests
 
 	static readonly List<Float4> inputs = new();
 
-
 	[Test]
 	public void LinearToGamma([ValueSource(nameof(inputs))] Float4 input)
 	{
@@ -38,7 +37,7 @@ public class SystemSerializerTests
 		float expectZ = LinearToGammaExact(input.Z);
 		float expectW = input.W;
 
-		Float4 output = SystemSerializer.LinearToGamma(input);
+		Float4 output = ColorConverter.LinearToGamma(input);
 
 		Assert.That(output >= Float4.Zero);
 		Assert.That(output <= Float4.One);
@@ -58,11 +57,11 @@ public class SystemSerializerTests
 		float expectZ = GammaToLinearExact(input.Z);
 		float expectW = input.W;
 
-		Float4 output = SystemSerializer.GammaToLinear(input);
+		Float4 output = ColorConverter.GammaToLinear(input);
 
 		Assert.That(output >= Float4.Zero);
 		Assert.That(output <= Float4.One);
-		
+
 		const float Threshold = 0.004f;
 		Assert.That(output.X, FastMath.AlmostZero(expectX) ? Utility.AlmostZero() : Is.EqualTo(expectX).Roughly(Threshold));
 		Assert.That(output.Y, FastMath.AlmostZero(expectY) ? Utility.AlmostZero() : Is.EqualTo(expectY).Roughly(Threshold));

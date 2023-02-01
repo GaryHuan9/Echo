@@ -40,15 +40,14 @@ public abstract record Serializer
 
 		return new string(span) switch //OPTIMIZE: switch on Span with dotnet 7
 		{
-			"png"  => SystemSerializer.png,
-			"jpeg" => SystemSerializer.jpeg,
-			"jpg"  => SystemSerializer.jpeg,
-			"tiff" => SystemSerializer.tiff,
-			"bmp"  => SystemSerializer.bmp,
-			"gif"  => SystemSerializer.gif,
-			"exif" => SystemSerializer.exif,
-			"fpi"  => FpiSerializer.fpi,
-			_      => null
+			"png" => MagickSerializer.png,
+			"jpeg" => MagickSerializer.jpeg,
+			"jpg" => MagickSerializer.jpeg,
+			"tiff" => MagickSerializer.tiff,
+			"exr" => MagickSerializer.exr,
+			"hdr" => MagickSerializer.hdr,
+			"fpi" => FpiSerializer.fpi,
+			_ => null
 		};
 	}
 }

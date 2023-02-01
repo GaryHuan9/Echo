@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Echo.Core.Common;
 using Echo.Core.Common.Packed;
+using Echo.Core.InOut.Images;
 using Echo.Core.InOut.Models;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Textures;
@@ -32,7 +33,7 @@ static class LiteralParser
 		AddTryParser<RGBA128>(RGBA128.TryParse);
 		AddTryParser<RGB128>(RGBA128.TryParse);
 
-		AddPathTryParser<Texture>(path => TextureGrid.Load<RGB128>(path));
+		AddPathTryParser<Texture>(path => TextureGrid.Load<RGBA128>(path));
 		AddPathTryParser<ITriangleSource>(path => new FileTriangleSource(path));
 		AddParser(span => span);
 

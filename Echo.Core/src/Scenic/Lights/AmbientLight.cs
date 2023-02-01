@@ -1,3 +1,4 @@
+using System;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
@@ -49,7 +50,7 @@ public class AmbientLight : InfiniteLight
 		worldToLocal = localToWorld.Inverse;
 
 		//Calculate power
-		float radius = scene.accelerator.SphereBound.radius;
+		float radius = Math.Max(scene.accelerator.SphereBound.radius, 0.1f);
 		float multiplier = Scalars.Pi * radius * radius;
 		_power = multiplier * Texture.Average.Luminance;
 	}
