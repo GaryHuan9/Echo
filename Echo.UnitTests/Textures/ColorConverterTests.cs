@@ -9,9 +9,9 @@ using NUnit.Framework;
 namespace Echo.UnitTests.Textures;
 
 [TestFixture]
-public class SystemSerializerTests
+public class ColorConverterTests
 {
-	static SystemSerializerTests()
+	static ColorConverterTests()
 	{
 		inputs.Add(Float4.Zero);
 		inputs.Add(Float4.One);
@@ -37,7 +37,7 @@ public class SystemSerializerTests
 		float expectZ = LinearToGammaExact(input.Z);
 		float expectW = input.W;
 
-		Float4 output = SystemSerializer.LinearToGamma(input);
+		Float4 output = ColorConverter.LinearToGamma(input);
 
 		Assert.That(output >= Float4.Zero);
 		Assert.That(output <= Float4.One);
@@ -57,7 +57,7 @@ public class SystemSerializerTests
 		float expectZ = GammaToLinearExact(input.Z);
 		float expectW = input.W;
 
-		Float4 output = SystemSerializer.GammaToLinear(input);
+		Float4 output = ColorConverter.GammaToLinear(input);
 
 		Assert.That(output >= Float4.Zero);
 		Assert.That(output <= Float4.One);

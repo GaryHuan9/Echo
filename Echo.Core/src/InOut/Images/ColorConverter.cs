@@ -1,115 +1,15 @@
-﻿using System.Drawing;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Diagnostics;
-using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
-using Echo.Core.Textures.Colors;
-using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.InOut.Images;
 
-/// <summary>
-/// An <see cref="Serializer"/> implemented through classes from the <see cref="System.Drawing.Imaging"/> namespace.
-/// </summary>
-public record SystemSerializer(ImageFormat Format) : Serializer
+public static class ColorConverter
 {
-	/// <summary>
-	/// Whether to use dithering to reduce quantification error when <see cref="Serialize{T}"/>.
-	/// </summary>
-	/// <remarks>The dithering algorithm is aware of the <see cref="Serializer.sRGB"/> parameter.</remarks>
-	public bool Dither { get; init; } = true;
-
-	public static readonly SystemSerializer png = new(ImageFormat.Png);
-	public static readonly SystemSerializer jpeg = new(ImageFormat.Jpeg);
-	public static readonly SystemSerializer tiff = new(ImageFormat.Tiff);
-	public static readonly SystemSerializer bmp = new(ImageFormat.Bmp);
-	public static readonly SystemSerializer gif = new(ImageFormat.Gif);
-	public static readonly SystemSerializer exif = new(ImageFormat.Exif);
-
 	const float LinearToGammaThreshold = 0.0031308f;
 	const float GammaToLinearThreshold = 0.04045f;
 	const float GammaMultiplier = 12.92f;
-
-	const byte BytesShuffleControl = 0b1100_0110;
-
-	public override unsafe void Serialize<T>(TextureGrid<T> texture, Stream stream)
-	{
-		Int2 size = texture.size;
-
-		using var bitmap = new Bitmap(size.X, size.Y);
-		var rectangle = new Rectangle(0, 0, size.X, size.Y);
-
-		BitmapData data = bitmap.LockBits(rectangle, ImageLockMode.WriteOnly, PixelFormat.Format32bppArgb);
-		uint* origin = (uint*)data.Scan0;
-
-		if (Dither)
-		{
-			for (int y = 0; y < size.Y; y++)
-			{
-				//Simply dumps accumulated error onto the pixel to the right
-				//Better algorithms such as Floyd–Steinberg are available
-
-				Summation error = Summation.Zero;
-
-				for (int x = 0; x < size.X; x++)
-				{
-					Float4 source = Float4.Clamp(texture[new Int2(x, y)].ToRGBA128());
-					Float4 attempt = Float4.Clamp(source + error.Result);
-					if (sRGB) attempt = LinearToGamma(attempt);
-
-					var bytes = Float4ToBytes(attempt);
-					attempt = BytesToFloat4(bytes);
-
-					if (sRGB) attempt = GammaToLinear(attempt);
-					error += source - attempt;
-
-					origin![x + (texture.oneLess.Y - y) * size.X] = GatherBytes(Sse2.Shuffle(bytes, BytesShuffleControl));
-				}
-			}
-		}
-		else
-		{
-			for (int y = 0; y < size.Y; y++)
-			for (int x = 0; x < size.X; x++)
-			{
-				Float4 value = Float4.Clamp(texture[new Int2(x, y)].ToRGBA128());
-				if (sRGB) value = LinearToGamma(value);
-				var bytes = Sse2.Shuffle(Float4ToBytes(value), BytesShuffleControl);
-				origin![x + (texture.oneLess.Y - y) * size.X] = GatherBytes(bytes);
-			}
-		}
-
-		bitmap.UnlockBits(data);
-		bitmap.Save(stream, Format);
-	}
-
-	public override unsafe SettableGrid<T> Deserialize<T>(Stream stream)
-	{
-		using var bitmap = new Bitmap(stream, true);
-		var size = new Int2(bitmap.Width, bitmap.Height);
-		var rectangle = new Rectangle(0, 0, size.X, size.Y);
-
-		BitmapData data = bitmap.LockBits(rectangle, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-		Ensure.AreEqual(data.PixelFormat, PixelFormat.Format32bppArgb);
-
-		var texture = new ArrayGrid<T>(size);
-		uint* origin = (uint*)data.Scan0;
-
-		for (int y = 0; y < size.Y; y++)
-		for (int x = 0; x < size.X; x++)
-		{
-			var bytes = ScatterBytes(origin![x + (texture.oneLess.Y - y) * size.X]);
-			Float4 value = BytesToFloat4(Sse2.Shuffle(bytes, BytesShuffleControl));
-			if (sRGB) value = GammaToLinear(value);
-			texture.Set(new Int2(x, y), ((RGBA128)value).As<T>());
-		}
-
-		bitmap.UnlockBits(data);
-		return texture;
-	}
 
 	/// <summary>
 	/// Converts a <see cref="Float4"/> from linear space into sRGB.
