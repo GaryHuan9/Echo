@@ -119,7 +119,7 @@ public sealed class EchoUI : IApplication
 	static void ConfigureColors(ImGuiStylePtr style)
 	{
 		//Signature Color:
-		//0.0344 0.3012 0.8701 (Linear)
+		//0.0288 0.2620 0.8539 (Linear)
 		//0.1856 0.5488 0.9328 (Gamma)
 		//47.319 139.95 237.86 (Gamma RGB)
 		//#2F8CEE              (Gamma Hex)

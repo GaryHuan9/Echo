@@ -11,6 +11,7 @@ using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Textures.Grids;
+using OpenImageDenoisePrecompiled;
 
 namespace Echo.Terminal;
 
@@ -51,29 +52,41 @@ class Program
 		RenderProfile profile = ConstructProfile(source, ref profileIdentifier);
 		if (profile == null) return 1;
 		Console.WriteLine($"Constructed {nameof(RenderProfile)} '{profileIdentifier}'.");
+
+		if (OidnPrecompiled.TryLoad()) Console.WriteLine("Successfully loaded Precompiled Oidn binary libarry.");
+		else Console.WriteLine("Unable to load Precompiled Oidn binaries. Some operations will not be available.");
 		Console.WriteLine();
 
 		//Begin rendering
 		ScheduledRender render = profile.ScheduleTo(device);
 		Console.WriteLine($"Scheduled render to {nameof(Device)} with {render.operations.Length} operations.");
-		Console.CursorVisible = false;
 
-		var builder = new StringBuilder();
-
-		foreach (Operation operation in render.operations)
+		try
 		{
-			while (true)
+			Console.CursorVisible = false;
+
+			var builder = new StringBuilder();
+
+			foreach (Operation operation in render.operations)
 			{
+				while (true)
+				{
+					WriteOperationStatus(builder, operation);
+					if (operation.IsCompleted) break;
+					Thread.Sleep(16);
+				}
+
 				WriteOperationStatus(builder, operation);
-				if (operation.IsCompleted) break;
-				Thread.Sleep(16);
+				Console.WriteLine();
 			}
 
-			WriteOperationStatus(builder, operation);
-			Console.WriteLine();
+			render.Await();
+		}
+		finally
+		{
+			Console.CursorVisible = true;
 		}
 
-		render.Await();
 		Console.WriteLine("Render finished.");
 
 		//Save results
