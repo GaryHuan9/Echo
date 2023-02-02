@@ -17,10 +17,10 @@ public static class Curves
 	public static float Sigmoid(float input)
 	{
 		input = FastMath.Clamp01(input);
-		
+
 		//The following is a manipulated version of the canonical 3x^2-2x^3 smooth step function
 		//It is carefully adjusted and tested to fully satisfy the never decreasing requirement
-		
+
 		float input2 = input * input;
 		float fma = MathF.FusedMultiplyAdd(-2f, input2, input);
 		return MathF.FusedMultiplyAdd(input, fma, 2f * input2);

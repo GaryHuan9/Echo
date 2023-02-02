@@ -143,13 +143,13 @@ public static class FastMath
 	public static float SqrtR0(float value) => value <= 0f ? float.PositiveInfinity : 1f / MathF.Sqrt(value);
 
 	/// <summary>
-	/// Returns one minus <paramref name="value"/> squared using just one FMA instruction.
+	/// Returns one minus <paramref name="value"/> squared.
 	/// </summary>
 	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
 	public static float OneMinus2(float value)
 	{
-		if (!Fma.IsSupported) return MathF.FusedMultiplyAdd(value, -value, 1f);
+		if (!Fma.IsSupported) return 1f - value * value;
 		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
 		Vector128<float> one = Vector128.CreateScalarUnsafe(1f);
 		return Fma.MultiplyAddNegatedScalar(valueV, valueV, one).ToScalar();
@@ -165,11 +165,18 @@ public static class FastMath
 	public static float Identity(float value) => Sqrt0(OneMinus2(value));
 
 	/// <summary>
-	/// Computes and returns <paramref name="value"/> * <paramref name="multiplier"/> + <paramref name="adder"/> in one instruction.
-	/// NOTE: while the performance benefit is nice, the main reason that we perform FMA operations is because of the better precision.
+	/// Computes and returns <paramref name="value"/> * <paramref name="multiplier"/> + <paramref name="adder"/>.
 	/// </summary>
+	/// <remarks>
+	/// This method does not guarantee accuracy, unlike <see cref="MathF.FusedMultiplyAdd"/>; it only promises a potential performance boost.
+	/// If accuracy is important, use <see cref="MathF.FusedMultiplyAdd"/>, otherwise if speed is important, use this method.
+	/// </remarks>
 	[MethodImpl(Options)]
-	public static float FMA(float value, float multiplier, float adder) => MathF.FusedMultiplyAdd(value, multiplier, adder);
+	public static float FMA(float value, float multiplier, float adder)
+	{
+		if (!Fma.IsSupported) return value * multiplier + adder;
+		return MathF.FusedMultiplyAdd(value, multiplier, adder);
+	}
 
 	/// <summary>
 	/// Calculates and outputs both the sine and cosine value of <paramref name="radians"/>.
