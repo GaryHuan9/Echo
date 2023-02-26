@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
@@ -66,13 +68,19 @@ public record MagickSerializer : Serializer
 		int channels = image.ChannelCount;
 		nint stride = size.X * channels;
 		pointer += stride * (size.Y - 1);
+		float* border = pointer + stride;
+			
 		bool grayscale = channels < 3; //Gray scale images are not tested because I am too lazy to find one
 		bool gamma = image.Format is not (MagickFormat.Exr or MagickFormat.Hdr) && sRGB;
 
 		for (int y = 0; y < size.Y; y++, pointer -= stride)
 		for (int x = 0; x < size.X; x++)
 		{
-			Float4 value = new Float4(Sse.LoadVector128(pointer + x * channels));
+			float* address = pointer + x * channels;
+			Unsafe.SkipInit(out Float4 value);
+			
+			if (address + 4 < border) value = new Float4(Sse.LoadVector128(address));
+			else Buffer.MemoryCopy(address, &value, sizeof(Float4), border - address);
 
 			if (!hasAlpha)
 			{

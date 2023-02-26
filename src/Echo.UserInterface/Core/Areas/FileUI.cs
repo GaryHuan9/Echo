@@ -25,8 +25,6 @@ public sealed class FileUI : AreaUI
 
 	string CurrentFile => Path.Combine(currentPath, currentName);
 
-	static Vector2 TableSize => new(0f, ImGui.GetWindowSize().Y - ImGui.GetTextLineHeightWithSpacing() * 4f);
-
 	public void Open(string path, bool load, Action<string> action)
 	{
 		Ensure.IsFalse(IsOpen);
@@ -83,8 +81,10 @@ public sealed class FileUI : AreaUI
 		ImGui.SameLine();
 		ImGui.TextWrapped(current.FullName);
 
-		if (exists) DrawTable(current);
-		else DrawNoDirectoryTable();
+		float tableHeight = ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing();
+		
+		if (exists) DrawTable(tableHeight, current);
+		else DrawNoDirectoryTable(tableHeight);
 
 		bool fileExists = File.Exists(CurrentFile);
 
@@ -122,9 +122,9 @@ public sealed class FileUI : AreaUI
 		CloseDialogue();
 	}
 
-	void DrawTable(DirectoryInfo current)
+	void DrawTable(float tableHeight, DirectoryInfo current)
 	{
-		if (!ImGui.BeginTable("Entries", 4, ImGuiCustom.DefaultTableFlags | ImGuiTableFlags.ScrollY, TableSize)) return;
+		if (!ImGui.BeginTable("Entries", 4, ImGuiCustom.DefaultTableFlags | ImGuiTableFlags.ScrollY, new Vector2(0f, tableHeight))) return;
 
 		ImGui.TableSetupScrollFreeze(0, 1);
 		ImGui.TableSetupColumn("Name");
@@ -178,9 +178,9 @@ public sealed class FileUI : AreaUI
 		Process.Start(new ProcessStartInfo { FileName = path, UseShellExecute = true });
 	}
 
-	static void DrawNoDirectoryTable()
+	static void DrawNoDirectoryTable(float tableHeight)
 	{
-		if (!ImGui.BeginTable("Dummy", 1, ImGuiCustom.DefaultTableFlags, TableSize)) return;
+		if (!ImGui.BeginTable("Dummy", 1, ImGuiCustom.DefaultTableFlags, new Vector2(0f, tableHeight))) return;
 
 		ImGui.TableNextColumn();
 		ImGui.TextUnformatted("Directory does not exist.");

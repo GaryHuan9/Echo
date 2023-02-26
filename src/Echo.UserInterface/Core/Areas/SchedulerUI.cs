@@ -59,7 +59,7 @@ public sealed class SchedulerUI : AreaUI
 
 			if (arguments.Length > 2 && arguments[2] == "build-path")
 			{
-				const string ProjectPath = "../../../../Echo.Core/";
+				const string ProjectPath = "../../../../../";
 				path = Path.Combine(ProjectPath, path);
 			}
 		}
