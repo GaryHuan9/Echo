@@ -1,16 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Core", "Echo.Core\Echo.Core.csproj", "{619F5156-12E9-489E-812D-06EDC7A9FFDA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Core", "src/Echo.Core/Echo.Core.csproj", "{619F5156-12E9-489E-812D-06EDC7A9FFDA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Experimental", "Echo.Experimental\Echo.Experimental.csproj", "{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Experimental", "src/Echo.Experimental/Echo.Experimental.csproj", "{4EF75B6E-AFF7-4F0B-A9DF-641D180E4586}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.UserInterface", "Echo.UserInterface\Echo.UserInterface.csproj", "{C96DB829-6A96-477B-BCAB-FE643AD3FA3E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.UserInterface", "src/Echo.UserInterface/Echo.UserInterface.csproj", "{C96DB829-6A96-477B-BCAB-FE643AD3FA3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.UnitTests", "Echo.UnitTests\Echo.UnitTests.csproj", "{B572EFFB-4119-4069-B99D-49D219987E79}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.UnitTests", "src/Echo.UnitTests/Echo.UnitTests.csproj", "{B572EFFB-4119-4069-B99D-49D219987E79}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Terminal", "Echo.Terminal\Echo.Terminal.csproj", "{BDEEEECA-AB0B-4061-816D-A4604A9248F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Terminal", "src/Echo.Terminal/Echo.Terminal.csproj", "{BDEEEECA-AB0B-4061-816D-A4604A9248F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Generation", "Echo.Generation\Echo.Generation.csproj", "{FC80E6FD-AACD-4121-91C5-81D90CC74EA6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Echo.Generation", "src/Echo.Generation/Echo.Generation.csproj", "{FC80E6FD-AACD-4121-91C5-81D90CC74EA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -25,7 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Echo.Core\Echo.Core.csproj" />
+        <ProjectReference Include="../Echo.Core/Echo.Core.csproj" />
     </ItemGroup>
 
 </Project>
