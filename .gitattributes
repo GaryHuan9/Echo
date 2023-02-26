@@ -1,4 +1,6 @@
-Renders/*.png filter=lfs diff=lfs merge=lfs -text
-*.afdesign filter=lfs diff=lfs merge=lfs -text
-*.dll filter=lfs diff=lfs merge=lfs -text
-*.dylib filter=lfs diff=lfs merge=lfs -text
+* text=auto
+
+Renders/*.png   filter=lfs diff=lfs merge=lfs -text
+*.afdesign      filter=lfs diff=lfs merge=lfs -text
+*.dll           filter=lfs diff=lfs merge=lfs -text
+*.dylib         filter=lfs diff=lfs merge=lfs -text
