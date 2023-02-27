@@ -70,7 +70,7 @@ public sealed class SystemUI : AreaUI
 		{
 			ImGuiCustom.Property("Operating System", Environment.OSVersion.VersionString);
 			ImGuiCustom.Property("Debugger", Debugger.IsAttached ? "Present" : "Not Attached");
-			ImGuiCustom.Property("Compiler Mode", GetCompilerMode());
+			ImGuiCustom.Property("Configuration", GetConfiguration());
 
 			ImGuiCustom.PropertySeparator();
 
@@ -88,7 +88,7 @@ public sealed class SystemUI : AreaUI
 
 		ImGuiCustom.EndSection();
 
-		static string GetCompilerMode()
+		static string GetConfiguration()
 		{
 #if DEBUG
 			return "DEBUG";

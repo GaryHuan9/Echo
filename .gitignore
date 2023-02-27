@@ -376,5 +376,5 @@ MigrationBackup/
 Thumbs.db
 Desktop.ini
 .DS_Store
-Echo.Core/ext/Scenes/*
-!Echo.Core/ext/Scenes/Simple
+ext/Scenes/*
+!ext/Scenes/Simple
