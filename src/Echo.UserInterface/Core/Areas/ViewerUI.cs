@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
@@ -84,15 +85,12 @@ public sealed partial class ViewerUI : AreaUI
 			ImGui.EndMenuBar();
 		}
 
-		if (currentMode != null)
+		if (currentMode != null) DrawMode(region);
+		
+		if (currentMode != null && ImGui.BeginMenuBar())
 		{
-			DrawMode(region);
-
-			if (ImGui.BeginMenuBar())
-			{
-				currentMode.DrawMenuBar();
-				ImGui.EndMenuBar();
-			}
+			currentMode.DrawMenuBar();
+			ImGui.EndMenuBar();
 		}
 
 		ProcessMouseInput(region);
@@ -119,16 +117,18 @@ public sealed partial class ViewerUI : AreaUI
 			? new Float2(region.extend.X, region.extend.X / planeAspect)
 			: new Float2(region.extend.Y * planeAspect, region.extend.Y);
 
-		Bounds plane = new Bounds(region.center + planeCenter, displayExtend * planeScale);
+		Float2? cursorUV = null;
 
 		if (cursorPosition.HasValue)
 		{
 			Float2 uv = cursorPosition.Value / displayExtend;
 			uv = new Float2(-uv.X, uv.Y) / 2f + Float2.Half;
-			currentMode.Draw(drawList, plane, Float2.Zero <= uv && uv < Float2.One ? uv : null);
+			if (Float2.Zero <= uv && uv < Float2.One) cursorUV = uv;
 		}
-		else currentMode.Draw(drawList, plane, null);
 
+		Bounds plane = new Bounds(region.center + planeCenter, displayExtend * planeScale);
+		if (!currentMode.Draw(drawList, plane, cursorUV)) currentMode = null;
+		
 		drawList.PopClipRect();
 	}
 
@@ -194,7 +194,7 @@ public sealed partial class ViewerUI : AreaUI
 		protected IntPtr Display => _display;
 		ImGuiDevice Backend => root.backend;
 
-		public abstract void Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV);
+		public abstract bool Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV);
 
 		public abstract void DrawMenuBar();
 

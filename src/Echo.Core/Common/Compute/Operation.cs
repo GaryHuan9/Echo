@@ -151,6 +151,12 @@ public abstract class Operation : IDisposable
 	}
 
 	/// <summary>
+	/// Whether <see cref="Dispose"/> is invoked on this <see cref="Operation"/>.
+	/// </summary>
+	/// <remarks>If this is true, the behavior of all members are undefined.</remarks>
+	public bool Disposed => workerData == null;
+
+	/// <summary>
 	/// Joins the execution of this <see cref="Operation"/> once.
 	/// </summary>
 	/// <param name="worker">The <see cref="IWorker"/> to use.</param>

@@ -39,8 +39,10 @@ partial class ViewerUI
 			RestartDisplayUpdate();
 		}
 
-		public override void Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
+		public override bool Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
 		{
+			if (operation.Disposed) return false;
+			
 			//Find and update tile from completed procedures
 			while (true)
 			{
@@ -74,6 +76,8 @@ partial class ViewerUI
 
 				ImGui.EndTooltip();
 			}
+
+			return true;
 		}
 
 		public override void DrawMenuBar()

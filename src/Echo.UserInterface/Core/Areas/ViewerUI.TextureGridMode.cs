@@ -35,13 +35,13 @@ partial class ViewerUI
 			UpdateDisplayContent();
 		}
 
-		public override void Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
+		public override bool Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
 		{
 			uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
 			drawList.AddImage(Display, plane.MinVector2, plane.MaxVector2);
 			drawList.AddRect(plane.MinVector2, plane.MaxVector2, borderColor);
 
-			if (cursorUV == null) return;
+			if (cursorUV == null) return true;
 
 			Float2 uv = cursorUV.Value;
 			Int2 position = texture.ToPosition(uv);
@@ -56,6 +56,7 @@ partial class ViewerUI
 				$"Delta: {(color - (Float4)compare[uv]).ToInvariant()}");
 
 			ImGui.EndTooltip();
+			return true;
 		}
 
 		public override void DrawMenuBar()
