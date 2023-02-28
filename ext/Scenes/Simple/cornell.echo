@@ -1,4 +1,8 @@
-﻿:scene = new Scene
+﻿# Echo's version of the Cornell Box testing scene
+# Identical to the CornellBox class in Echo.Core.Scenic
+# An example usage of the .echo description language
+
+:scene = new Scene
 {
 	:green = new Diffuse { .Albedo = new Pure("0x00CB21") }
 	:red = new Diffuse { .Albedo = new Pure("0xCB0021") }
@@ -25,9 +29,11 @@
 	.Add(new PlaneEntity { .Material = link red .Size = link wallSize .Position = "-5 5 0" .Rotation = "0 0 -90" })      # Left
 	.Add(new PlaneEntity { .Material = link light .Size = link wallSize5 .Position = "0 9.99 0" .Rotation = "180 0 0" }) # Light
 
+	# Place two boxes in the scene
 	.Add(new BoxEntity { .Material = link white .Size = link boxSize0 .Position = "2 1.5 -2" .Rotation = "0 21 0" })
 	.Add(new BoxEntity { .Material = link white .Size = link boxSize1 .Position = "-2 3 2" .Rotation = "0 -21 0" })
 
+	# Or alternatively, place two glass sphere in the scene
 	# .Add(new SphereEntity { .Material = link glass0 .Radius = "2" .Position = "2 2 -2" })
 	# .Add(new SphereEntity { .Material = link glass1 .Radius = "2" .Position = "-2 2 2" })
 
