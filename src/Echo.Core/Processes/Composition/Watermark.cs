@@ -63,6 +63,8 @@ public record Watermark : ICompositeLayer
 		int margin = (MarginScale * width).Round();
 		Int2 size = FindPlacementSize(width);
 
+		if (!(size <= sourceTexture.size)) return; //Did not find an appropriate size, source is too small
+
 		Int2 borderMin = new Int2(sourceTexture.size.X - size.X - margin * 2, 0);
 		Int2 borderMax = new Int2(sourceTexture.size.X, size.Y + margin * 2);
 		Int2 strictMin = new Int2(sourceTexture.size.X - margin - size.X, margin);

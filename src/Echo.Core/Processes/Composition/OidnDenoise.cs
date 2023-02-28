@@ -67,7 +67,7 @@ public record OidnDenoise : ICompositeLayer
 			Denoise(size, colorBuffer, albedoBuffer, normalBuffer);
 			await CopyFromBuffer(colorBuffer, sourceTexture);
 		}
-		catch (DllNotFoundException) { throw new CompositeException("Precompiled Oidn binaries not found."); }
+		catch (DllNotFoundException) { throw new CompositeException($"Precompiled Oidn binaries not found at `{DllPath}`."); }
 
 		async ComputeTask<float[]> CopyToBuffer<T>(TextureGrid<T> sourceTexture) where T : unmanaged, IColor<T>
 		{
@@ -156,23 +156,54 @@ public record OidnDenoise : ICompositeLayer
 		public static OidnDevice CreateNew()
 		{
 			OidnDevice device = oidnNewDevice(0);
-			oidnSetDeviceErrorFunction(device, ProcessError, IntPtr.Zero);
-
 			device.Commit();
 			return device;
 		}
 
-		public void Set(string name, bool value) => oidnSetDevice1b(this, name, value);
-		public void Set(string name, int value) => oidnSetDevice1i(this, name, value);
+		public void Set(string name, bool value)
+		{
+			oidnSetDevice1b(this, name, value);
+			ThrowOnNativeError();
+		}
 
-		public bool GetBoolean(string name) => oidnGetDevice1b(this, name);
-		public int GetInt32(string name) => oidnGetDevice1i(this, name);
+		public void Set(string name, int value)
+		{
+			oidnSetDevice1i(this, name, value);
+			ThrowOnNativeError();
+		}
 
-		public void Commit() => oidnCommitDevice(this);
-		public void Dispose() => oidnReleaseDevice(this);
+		public bool GetBoolean(string name)
+		{
+			var result = oidnGetDevice1b(this, name);
+			ThrowOnNativeError();
+			return result;
+		}
 
-		[DoesNotReturn]
-		static void ProcessError(IntPtr userPtr, OidnError code, string message) => throw new CompositeException($"Oidn error: {message} ({code}).");
+		public int GetInt32(string name)
+		{
+			var result = oidnGetDevice1i(this, name);
+			ThrowOnNativeError();
+			return result;
+		}
+
+		public void Commit()
+		{
+			oidnCommitDevice(this);
+			ThrowOnNativeError();
+		}
+
+		public void Dispose()
+		{
+			ThrowOnNativeError();
+			oidnReleaseDevice(this);
+		}
+
+		void ThrowOnNativeError()
+		{
+			OidnError code = oidnGetDeviceError(this, out string message);
+			if (code == OidnError.None) return;
+			throw new CompositeException($"{message} (Oidn {code}).");
+		}
 
 		[DllImport(DllPath)]
 		static extern OidnDevice oidnNewDevice(int type);
@@ -196,9 +227,7 @@ public record OidnDenoise : ICompositeLayer
 		static extern void oidnReleaseDevice(OidnDevice device);
 
 		[DllImport(DllPath)]
-		static extern void oidnSetDeviceErrorFunction(OidnDevice device, ErrorFunction func, IntPtr userPtr);
-
-		delegate void ErrorFunction(IntPtr userPtr, OidnError code, string message);
+		static extern OidnError oidnGetDeviceError(OidnDevice device, out string outMessage);
 	}
 
 	readonly struct OidnFilter : IDisposable
@@ -212,7 +241,7 @@ public record OidnDenoise : ICompositeLayer
 		public unsafe void Set(string name, float* texture, Int2 size)
 		{
 			if (texture == null) oidnRemoveFilterImage(this, name);
-			else oidnSetSharedFilterImage(this, name, new IntPtr(texture), ImageFormat.Float3, size.X, size.Y, 0, 0, 0);
+			else oidnSetSharedFilterImage(this, name, new IntPtr(texture), OidnFormat.Float3, size.X, size.Y, 0, 0, 0);
 		}
 
 		public void Set(string name, bool value) => oidnSetFilter1b(this, name, value);
@@ -234,7 +263,7 @@ public record OidnDenoise : ICompositeLayer
 		static extern void oidnCommitFilter(OidnFilter filter);
 
 		[DllImport(DllPath)]
-		static extern void oidnSetSharedFilterImage(OidnFilter filter, string name, IntPtr ptr, ImageFormat format, int width, int height, int byteOffset, int bytePixelStride, int byteRowStride);
+		static extern void oidnSetSharedFilterImage(OidnFilter filter, string name, IntPtr ptr, OidnFormat format, int width, int height, int byteOffset, int bytePixelStride, int byteRowStride);
 
 		[DllImport(DllPath)]
 		static extern void oidnRemoveFilterImage(OidnFilter filter, string name);
@@ -262,15 +291,15 @@ public record OidnDenoise : ICompositeLayer
 
 		[DllImport(DllPath)]
 		static extern void oidnReleaseFilter(OidnFilter filter);
+	}
 
-		enum ImageFormat
-		{
-			Undefined = 0,
-			Float = 1,
-			Float2 = 2,
-			Float3 = 3,
-			Float4 = 4
-		}
+	enum OidnFormat
+	{
+		Undefined = 0,
+		Float = 1,
+		Float2 = 2,
+		Float3 = 3,
+		Float4 = 4
 	}
 
 	enum OidnError

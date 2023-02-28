@@ -6,6 +6,7 @@ using Echo.Core.InOut;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
+using OpenImageDenoisePrecompiled;
 
 namespace Echo.UserInterface.Core.Areas;
 
@@ -46,7 +47,8 @@ public sealed class SystemUI : AreaUI
 	public override void Initialize()
 	{
 		base.Initialize();
-		FrameFrequency = 100;
+		FrameFrequency = 60;
+		OidnPrecompiled.TryLoad();
 	}
 
 	protected override void NewFrameWindow(in Moment moment)
@@ -83,7 +85,7 @@ public sealed class SystemUI : AreaUI
 		}
 
 		int frequency = FrameFrequency;
-		ImGui.SliderInt("Update Frequency", ref frequency, 1, 120);
+		ImGui.SliderInt("Update Frequency", ref frequency, 1, 60);
 		FrameFrequency = frequency;
 
 		ImGuiCustom.EndSection();
