@@ -11,7 +11,7 @@ using Echo.Core.Scenic.Hierarchies;
 namespace Echo.Core.Processes;
 
 /// <summary>
-/// A easier way of setting up a <see cref="RenderProfile"/> with for a standard path traced render.
+/// A easier way of setting up a <see cref="RenderProfile"/> for a standard path traced render.
 /// </summary>
 [EchoSourceUsable]
 public record StandardPathTracedProfile : RenderProfile

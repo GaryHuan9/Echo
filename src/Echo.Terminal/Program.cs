@@ -2,14 +2,11 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Threading;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.InOut;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
-using Echo.Core.Processes.Evaluation;
 using Echo.Core.Textures.Grids;
 using OpenImageDenoisePrecompiled;
 
@@ -53,40 +50,15 @@ class Program
 		if (profile == null) return 1;
 		Console.WriteLine($"Constructed {nameof(RenderProfile)} '{profileIdentifier}'.");
 
-		if (OidnPrecompiled.TryLoad()) Console.WriteLine("Successfully loaded Precompiled Oidn binary libarry.");
+		if (OidnPrecompiled.TryLoad()) Console.WriteLine("Successfully loaded Precompiled Oidn binary library.");
 		else Console.WriteLine("Unable to load Precompiled Oidn binaries. Some operations will not be available.");
 		Console.WriteLine();
 
 		//Begin rendering
 		ScheduledRender render = profile.ScheduleTo(device);
 		Console.WriteLine($"Scheduled render to {nameof(Device)} with {render.operations.Length} operations.");
-
-		try
-		{
-			Console.CursorVisible = false;
-
-			var builder = new StringBuilder();
-
-			foreach (Operation operation in render.operations)
-			{
-				while (true)
-				{
-					WriteOperationStatus(builder, operation);
-					if (operation.IsCompleted) break;
-					Thread.Sleep(16);
-				}
-
-				WriteOperationStatus(builder, operation);
-				Console.WriteLine();
-			}
-
-			render.Await();
-		}
-		finally
-		{
-			Console.CursorVisible = true;
-		}
-
+		
+		render.Monitor();
 		Console.WriteLine("Render finished.");
 
 		//Save results
@@ -230,42 +202,5 @@ class Program
 		catch (FormatException exception) { Console.WriteLine($"Encountered semantics error during construction: {exception}"); }
 
 		return null;
-	}
-
-	static void WriteOperationStatus(StringBuilder builder, Operation operation)
-	{
-		Ensure.AreEqual(builder.Length, 0);
-		TimeSpan time = operation.Time;
-		builder.Append($"{operation.GetType().Name,-30} ");
-
-		if (!operation.IsCompleted)
-		{
-			float progress = (float)operation.Progress;
-			builder.Append($"{progress.ToInvariantPercent()} - {time.ToInvariant()}");
-
-			if (progress > 0f)
-			{
-				TimeSpan timeRemain = time / progress - time;
-				builder.Append($" / {timeRemain.ToInvariant()}");
-			}
-		}
-		else
-		{
-			builder.Append($"Done - {operation.Time.ToInvariant()}");
-
-			if (operation is EvaluationOperation evaluation)
-			{
-				ulong samples = evaluation.TotalSamples;
-				float seconds = (float)time.TotalSeconds;
-				ulong rate = (ulong)(samples / seconds);
-				builder.Append($" @ {rate.ToInvariantMetric()}/s");
-			}
-		}
-
-		Console.CursorLeft = 0;
-		int padding = Console.BufferWidth - 1 - builder.Length;
-		Console.Write(builder.Append(' ', padding).ToString());
-
-		builder.Clear();
 	}
 }

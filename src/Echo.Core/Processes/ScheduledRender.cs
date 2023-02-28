@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
+using System.Text;
+using System.Threading;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Compute;
+using Echo.Core.Common.Diagnostics;
+using Echo.Core.InOut;
 using Echo.Core.Processes.Composition;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Processes.Preparation;
@@ -122,6 +126,23 @@ public sealed class ScheduledRender
 	}
 
 	/// <summary>
+	/// Similar to <see cref="Await"/>, except information about the render process is also reported through <see cref="Console.WriteLine(string)"/>.
+	/// </summary>
+	public void Monitor()
+	{
+		if (device.Disposed) return;
+		
+		try
+		{
+			Console.CursorVisible = false;
+			PrintRenderProcess(this);
+		}
+		finally { Console.CursorVisible = true; }
+		
+		Await();
+	}
+
+	/// <summary>
 	/// Stops this <see cref="ScheduledRender"/> as soon as possible.
 	/// </summary>
 	public void Abort()
@@ -163,5 +184,60 @@ public sealed class ScheduledRender
 		if (layers.IsDefaultOrEmpty) return null;
 		var factory = new CompositionOperation.Factory(render.texture, layers);
 		return (CompositionOperation)device.Schedule(factory);
+	}
+
+	static void PrintRenderProcess(ScheduledRender render)
+	{
+		var builder = new StringBuilder();
+
+		foreach (Operation operation in render.operations)
+		{
+			while (true)
+			{
+				WriteOperationStatus(builder, operation);
+				if (operation.IsCompleted) break;
+				Thread.Sleep(16);
+			}
+
+			WriteOperationStatus(builder, operation);
+			Console.WriteLine();
+		}
+	}
+	
+	static void WriteOperationStatus(StringBuilder builder, Operation operation)
+	{
+		Ensure.AreEqual(builder.Length, 0);
+		TimeSpan time = operation.Time;
+		builder.Append($"{operation.GetType().Name,-30} ");
+
+		if (!operation.IsCompleted)
+		{
+			float progress = (float)operation.Progress;
+			builder.Append($"{progress.ToInvariantPercent()} - {time.ToInvariant()}");
+
+			if (progress > 0f)
+			{
+				TimeSpan timeRemain = time / progress - time;
+				builder.Append($" / {timeRemain.ToInvariant()}");
+			}
+		}
+		else
+		{
+			builder.Append($"Done - {operation.Time.ToInvariant()}");
+
+			if (operation is EvaluationOperation evaluation)
+			{
+				ulong samples = evaluation.TotalSamples;
+				float seconds = (float)time.TotalSeconds;
+				ulong rate = (ulong)(samples / seconds);
+				builder.Append($" @ {rate.ToInvariantMetric()}/s");
+			}
+		}
+
+		Console.CursorLeft = 0;
+		int padding = Console.BufferWidth - 1 - builder.Length;
+		Console.Write(builder.Append(' ', padding).ToString());
+
+		builder.Clear();
 	}
 }
