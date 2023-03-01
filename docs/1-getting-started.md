@@ -2,6 +2,8 @@
 
 ---
 
+:construction: this page is currently under construction! :construction:
+
 ## Welcome
 Welcome to Echo documentation! Currently, the documentation is divided into three big sections, each detailing a component that can help you understand and use Echo:
 1. If you are just starting and want to get something working, continue reading this [Getting Started](1-getting-started.md) section!
@@ -12,7 +14,7 @@ Welcome to Echo documentation! Currently, the documentation is divided into thre
 
 If you are simply interested in rendering with Echo, and would like to use a nice graphical dashboard do to so (who doesn't), Echo has a convenient user interface (developed in `Echo.UserInterface`) to help you see your renders. This interface also extremely useful when working with code to visualize any error or performance regression.
 
-The interface window is divided into areas, most of which are empty when you first launched the application. The first area that you will interact with is the `Scheduler`, located at the bottom of your screen. 
+You can download the latest version of the user interface in the [Release](https://github.com/GaryHuan9/Echo/releases) tab. Running the universal `Echo.UserInterface.dll` file requires at least [.NET 6](https://dotnet.microsoft.com/en-us/download), or you can directly launch a platform-specific prepackaged version like any other application. The interface window is divided into areas, most of which are empty by default. The first area that you will interact with is the `Scheduler`, located at the bottom of your screen:
 
 ![scheduler-ui](https://user-images.githubusercontent.com/22217952/221464949-ae617534-a3e5-4405-be0f-81a600a89942.png)
 
@@ -23,7 +25,7 @@ Once you are satisfied with the result, click one of the `Save` buttons in the `
 ## Code
 If you are not satisfied with only using the interface and want to tinker with the internals of Echo or use it in your project, this next glob of text will get you started!
 
-When you got the `Echo.Core` package all setup (through NuGet, `git`, or however you desire) and ready to code, 
+When you got the `Echo.Core` package all setup (through NuGet, `git`, or however you desire) and ready to begin, copy and execute the following little snippet of code:
 
 ```csharp
 using Echo.Core.Common.Compute;
@@ -34,11 +36,13 @@ using Echo.Core.Scenic;
 using var device = new Device();
 
 var scene = new CornellBox();
-var profile = new StandardPathTracedProfile(scene) 
-    { Resolution = new Int2(256, 256) };
+var profile = new StandardPathTracedProfile(scene, 15)
+	{ Resolution = new Int2(256, 256) };
 
-var render = profile.ScheduleTo(device);
+var render = ScheduledRender.Create(device, profile);
 
-render.Await();
+render.Monitor();
 render.texture.Save("render.png");
 ```
+
+You should see some stuff being printed to your standard output stream, reporting the progress of operations. If it is taking too long, I would highly suggest changing to `Release` mode (if you know how); it could speedup the rendering by more than 10x! After everything settles and the printing has finished, see if you can  congratulations! you have just 
