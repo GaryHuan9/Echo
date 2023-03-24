@@ -33,7 +33,11 @@ static class LiteralParser
 		AddTryParser<RGBA128>(RGBA128.TryParse);
 		AddTryParser<RGB128>(RGBA128.TryParse);
 
+		//We need a more sophisticated parser for different texture import options based on the string syntax
+		//For now though, TextureGrid uses RGB128 without the alpha since only TextureManage actually use it
 		AddPathTryParser<Texture>(path => TextureGrid.Load<RGBA128>(path));
+		AddPathTryParser<TextureGrid>(path => TextureGrid.Load<RGB128>(path));
+
 		AddPathTryParser<ITriangleSource>(path => new FileTriangleSource(path));
 		AddParser(span => span);
 

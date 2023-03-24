@@ -76,7 +76,15 @@ public static class InvariantFormat
 		return span[..(length + 1)].ToString();
 	}
 
-	public static string ToInvariantShort(this in Guid guid) => $"0x{guid.GetHashCode():X8}";
+	public static unsafe string ToInvariantShort(this in Guid guid)
+	{
+		Span<byte> bytes = stackalloc byte[sizeof(Guid)];
+		bool success = guid.TryWriteBytes(bytes);
+		uint value = BitConverter.ToUInt32(bytes);
+
+		Ensure.IsTrue(success);
+		return value.ToString("X8");
+	}
 
 	/// <inheritdoc cref="ToInvariantMetric(ulong)"/>
 	public static string ToInvariantMetric(this uint value) => ToInvariantMetric((ulong)value);

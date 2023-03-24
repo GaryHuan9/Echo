@@ -46,7 +46,7 @@ public record StandardPathTracedProfile : RenderProfile
 		builder0.Add(evaluation with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), TargetLayer = "path" });
 		builder0.Add(evaluation with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), TargetLayer = "normal_depth" });
 
-		builder1.Add(new TexturesCopy { Sources = ImmutableArray.Create("path"), Targets = ImmutableArray.Create("main") });
+		builder1.Add(new TextureManage { CopySources = ImmutableArray.Create("path"), CopyLayers = ImmutableArray.Create("main") });
 		builder1.Add(new OidnDenoise());
 		builder1.Add(new AutoExposure());
 		builder1.Add(new Vignette());

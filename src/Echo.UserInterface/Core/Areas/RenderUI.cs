@@ -250,10 +250,14 @@ public sealed class RenderUI : AreaUI
 
 				ImGuiCustom.PropertySeparator();
 
-				ImGuiCustom.Property("Camera Position", scene.camera.ContainedPosition.ToInvariant());
-				ImGuiCustom.Property("Camera Forward", (scene.camera.ContainedRotation * Float3.Forward).ToInvariant());
-				ImGuiCustom.Property("Camera Up", (scene.camera.ContainedRotation * Float3.Up).ToInvariant());
-				ImGuiCustom.Property("Camera Field of View", scene.camera.FieldOfView.ToInvariant());
+				if (scene.camera != null)
+				{
+					ImGuiCustom.Property("Camera Position", scene.camera.ContainedPosition.ToInvariant());
+					ImGuiCustom.Property("Camera Forward", (scene.camera.ContainedRotation * Float3.Forward).ToInvariant());
+					ImGuiCustom.Property("Camera Up", (scene.camera.ContainedRotation * Float3.Up).ToInvariant());
+					ImGuiCustom.Property("Camera Field of View", scene.camera.FieldOfView.ToInvariant());
+				}
+				else ImGui.TextUnformatted("No camera found");
 
 				ImGuiCustom.EndProperties();
 			}

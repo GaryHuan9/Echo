@@ -39,10 +39,10 @@ public record RenderProfile
 	/// A list of <see cref="EvaluationProfile"/>s that define the series of evaluations to be performed on the <see cref="Scene"/>.
 	/// </summary>
 	/// <remarks>
-	/// The chronological order of the evaluations is the same as their order in this list. This list must not be empty.
+	/// The chronological order of the evaluations is the same as their order in this list. This list can be empty.
 	/// </remarks>
 	[EchoSourceUsable]
-	public ImmutableArray<EvaluationProfile> EvaluationProfiles { get; init; }
+	public ImmutableArray<EvaluationProfile> EvaluationProfiles { get; init; } = ImmutableArray<EvaluationProfile>.Empty;
 
 	/// <summary>
 	/// A list of <see cref="ICompositeLayer"/>s to be applied as post processing layers after the main evaluations are completed.
@@ -64,7 +64,7 @@ public record RenderProfile
 		bool validTileSize = BitOperations.IsPow2(TileSize.X) && BitOperations.IsPow2(TileSize.Y);
 		if (!validTileSize) throw ExceptionHelper.Invalid(nameof(TileSize), TileSize, InvalidType.outOfBounds);
 
-		if (EvaluationProfiles.IsDefaultOrEmpty) throw ExceptionHelper.Invalid(nameof(EvaluationProfiles), InvalidType.countIsZero);
+		if (EvaluationProfiles.IsDefault) throw ExceptionHelper.Invalid(nameof(EvaluationProfiles), InvalidType.countIsZero);
 		if (CompositionLayers.IsDefault) throw ExceptionHelper.Invalid(nameof(CompositionLayers), InvalidType.isNull);
 
 		foreach (EvaluationProfile profile in EvaluationProfiles) profile.Validate();

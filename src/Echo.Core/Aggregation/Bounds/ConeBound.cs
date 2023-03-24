@@ -93,7 +93,7 @@ public readonly struct ConeBound : IFormattable
 		if (offset >= Scalars.Pi) return CreateFullSphere(cosExtend);
 
 		//Rotate axis to the middle of the two axes of the two inputs
-		Float3 cross = axis.Cross(value1.axis);
+		Float3 cross = axis.Cross(value1.axis).Normalized;
 		float rotation = offset - offset0;
 		axis = new Versor(cross, rotation) * axis;
 
