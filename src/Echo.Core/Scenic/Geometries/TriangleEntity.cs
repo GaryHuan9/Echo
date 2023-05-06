@@ -56,41 +56,40 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 /// <remarks>Winding order is clockwise.</remarks>
 public readonly struct PreparedTriangle : IPreparedGeometry
 {
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, MaterialIndex materialIndex) : this
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
-		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0).Normalized, materialIndex
+		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0).Normalized, material
 	) { }
 
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, in Float3 normal, MaterialIndex materialIndex) : this
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, in Float3 normal, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
-		normal, normal, normal, materialIndex
+		normal, normal, normal, material
 	) { }
 
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex materialIndex) : this
+							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
 		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0).Normalized,
-		texcoord0, texcoord1, texcoord2, materialIndex
+		texcoord0, texcoord1, texcoord2, material
 	) { }
 
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							in Float3 normal,
-							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex materialIndex) : this
+	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, in Float3 normal,
+							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
 		normal, normal, normal,
-		texcoord0, texcoord1, texcoord2, materialIndex
+		texcoord0, texcoord1, texcoord2, material
 	) { }
 
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							in Float3 shadingNormal0, in Float3 shadingNormal1, in Float3 shadingNormal2, MaterialIndex materialIndex) : this
+							in Float3 shadingNormal0, in Float3 shadingNormal1, in Float3 shadingNormal2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
 		shadingNormal0, shadingNormal1, shadingNormal2,
-		Float2.Zero, Float2.Zero, Float2.Zero, materialIndex
+		Float2.Zero, Float2.Zero, Float2.Zero, material
 	) { }
 
 	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,

@@ -50,9 +50,9 @@ public class AmbientLight : InfiniteLight
 		worldToLocal = localToWorld.Inverse;
 
 		//Calculate power
-		float radius = Math.Max(scene.accelerator.SphereBound.radius, 0.1f);
-		float multiplier = Scalars.Pi * radius * radius;
-		_power = multiplier * Texture.Average.Luminance;
+		float radius = Math.Max(scene.accelerator.SphereBound.radius, 1f);
+		float luminance = Texture.Average.Luminance * Intensity.Luminance;
+		_power = Scalars.Pi * radius * radius * luminance;
 	}
 
 	public override RGB128 Evaluate(in Float3 direction) => Intensity * Texture.Evaluate(worldToLocal * direction);

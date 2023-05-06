@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Packed;
@@ -69,7 +68,7 @@ public record MagickSerializer : Serializer
 		nint stride = size.X * channels;
 		pointer += stride * (size.Y - 1);
 		float* border = pointer + stride;
-			
+
 		bool grayscale = channels < 3; //Gray scale images are not tested because I am too lazy to find one
 		bool gamma = image.Format is not (MagickFormat.Exr or MagickFormat.Hdr) && sRGB;
 
@@ -78,21 +77,20 @@ public record MagickSerializer : Serializer
 		{
 			float* address = pointer + x * channels;
 			Unsafe.SkipInit(out Float4 value);
-			
+
 			if (address + 4 < border) value = new Float4(Sse.LoadVector128(address));
 			else Buffer.MemoryCopy(address, &value, sizeof(Float4), border - address);
 
-			if (!hasAlpha)
-			{
-				value = ((RGBA128)value).AlphaOne;
-				if (grayscale) value = value.XXXW;
-			}
-			else if (grayscale) value = value.XXXY;
-
 			value = Float4.Max(Float4.Zero, value * (1f / ushort.MaxValue));
-			if (!float.IsFinite(value.Sum)) value = Float4.One; //There might be degenerate pixels
 
-			if (gamma) value = ColorConverter.GammaToLinear(value);
+			if (float.IsFinite(value.Sum))
+			{
+				if (grayscale) value = value.XXXY;
+				if (!hasAlpha) value = ((RGBA128)value).AlphaOne;
+				if (gamma) value = ColorConverter.GammaToLinear(value);
+			}
+			else value = Float4.One; //If the pixel is degenerates
+
 			texture.Set(new Int2(x, y), ((RGBA128)value).As<T>());
 		}
 

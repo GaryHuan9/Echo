@@ -275,8 +275,8 @@ public sealed class PreparedScene : PreparedPack
 
 		if (builder.Count == 0 && !FastMath.Positive(rootInstance.Power))
 		{
-			//Degenerate case with literally zero light contributor; our output image will literally be
-			//completely black, but we add in a light so no exception is thrown when we look for lights.
+			//Degenerate case with literally zero light contributor; our output image will be
+			//pure black, but we add in a light so no exception is thrown when we look for lights.
 
 			var light = new AmbientLight { Intensity = RGB128.Black };
 			light.Prepare((PreparedScene)rootInstance.pack);

@@ -28,6 +28,7 @@ public class MeshEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 
 		while (stream.ReadTriangle(out ITriangleStream.Triangle triangle))
 		{
+			if (!triangle.HasArea) continue;
 			yield return triangle.Prepare(transform, material);
 		}
 	}

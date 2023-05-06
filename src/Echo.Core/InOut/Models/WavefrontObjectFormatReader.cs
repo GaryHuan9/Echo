@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.Common.Threading;
 using Echo.Core.Scenic.Geometries;
@@ -221,34 +222,38 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 		if (currentIndex < packs0.Length) pack = ref packs0[currentIndex];
 		else pack = ref packs1[currentIndex - packs0.Length];
 
+		Float3 vertex0 = vertices[pack.vertexIndices.X];
+		Float3 vertex1 = vertices[pack.vertexIndices.Y];
+		Float3 vertex2 = vertices[pack.vertexIndices.Z];
+
+		Float3 normal0 = Float3.Zero;
+		Float3 normal1 = Float3.Zero;
+		Float3 normal2 = Float3.Zero;
+
+		Float2 texcoord0 = Float2.Zero;
+		Float2 texcoord1 = Float2.Zero;
+		Float2 texcoord2 = Float2.Zero;
+
 		if (pack.HasNormal)
 		{
-			triangle = pack.HasTexcoord ?
-				new ITriangleStream.Triangle
-				(
-					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z],
-					normals[pack.normalIndices.X], normals[pack.normalIndices.Y], normals[pack.normalIndices.Z],
-					texcoords[pack.texcoordIndices.X], texcoords[pack.texcoordIndices.Y], texcoords[pack.texcoordIndices.Z]
-				) :
-				new ITriangleStream.Triangle
-				(
-					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z],
-					normals[pack.normalIndices.X], normals[pack.normalIndices.Y], normals[pack.normalIndices.Z]
-				);
+			normal0 = normals[pack.normalIndices.X];
+			normal1 = normals[pack.normalIndices.Y];
+			normal2 = normals[pack.normalIndices.Z];
 		}
-		else
+
+		if (pack.HasTexcoord)
 		{
-			triangle = pack.HasTexcoord ?
-				new ITriangleStream.Triangle
-				(
-					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z],
-					texcoords[pack.texcoordIndices.X], texcoords[pack.texcoordIndices.Y], texcoords[pack.texcoordIndices.Z]
-				) :
-				new ITriangleStream.Triangle
-				(
-					vertices[pack.vertexIndices.X], vertices[pack.vertexIndices.Y], vertices[pack.vertexIndices.Z]
-				);
+			texcoord0 = texcoords[pack.texcoordIndices.X];
+			texcoord1 = texcoords[pack.texcoordIndices.Y];
+			texcoord2 = texcoords[pack.texcoordIndices.Z];
 		}
+
+		triangle = new ITriangleStream.Triangle
+		(
+			vertex0, vertex1, vertex2,
+			normal0, normal1, normal2,
+			texcoord0, texcoord1, texcoord2
+		);
 
 		++currentIndex;
 		return true;
@@ -295,34 +300,7 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 		return isNegative ? -result : result;
 	}
 
-	static float ParseSingle(ReadOnlySpan<char> span)
-	{
-		bool isNegative = span[0] == '-';
-		int index = isNegative ? 1 : 0;
-
-		int integer = 0;
-		float fraction = 0f;
-
-		for (; index < span.Length; index++)
-		{
-			char current = span[index];
-			if (current == '.') break;
-
-			integer = integer * 10 + current - '0';
-		}
-
-		for (int i = span.Length - 1; i > index; i--)
-		{
-			char current = span[i];
-			if (current == '.') break;
-
-			fraction += current - '0';
-			fraction /= 10f;
-		}
-
-		float result = integer + fraction;
-		return isNegative ? -result : result;
-	}
+	static float ParseSingle(ReadOnlySpan<char> span) => float.Parse(span);
 
 	static Int3 ParseIndices(ReadOnlySpan<char> span, ReadOnlySpan<Range> ranges)
 	{

@@ -1,5 +1,6 @@
 using System;
 using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Materials;
@@ -23,83 +24,17 @@ public interface ITriangleStream : IDisposable
 	/// <summary>
 	/// A struct containing data necessary to create a <see cref="PreparedTriangle"/>.
 	/// </summary>
+	/// <remarks>Winding order is clockwise.</remarks>
 	public readonly struct Triangle
 	{
 		/// <summary>
-		/// Constructs a <see cref="Triangle"/> with only vertex data.
+		/// Constructs a new <see cref="Triangle"/>.
 		/// </summary>
-		/// <remarks>Winding order is clockwise.</remarks>
-		public Triangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2)
-		{
-			this.vertex0 = vertex0;
-			this.vertex1 = vertex1;
-			this.vertex2 = vertex2;
-
-			normal0 = Float3.Zero;
-			normal1 = Float3.Zero;
-			normal2 = Float3.Zero;
-
-			texcoord0 = Float2.Zero;
-			texcoord1 = Float2.Zero;
-			texcoord2 = Float2.Zero;
-		}
-
-		/// <summary>
-		/// Constructs a <see cref="Triangle"/> with vertex and normal data.
-		/// </summary>
-		/// <remarks>Winding order is clockwise.</remarks>
-		public Triangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-						in Float3 normal0, in Float3 normal1, in Float3 normal2)
-		{
-			Ensure.AreNotEqual(normal0.SquaredMagnitude, 0f);
-			Ensure.AreNotEqual(normal1.SquaredMagnitude, 0f);
-			Ensure.AreNotEqual(normal2.SquaredMagnitude, 0f);
-
-			this.vertex0 = vertex0;
-			this.vertex1 = vertex1;
-			this.vertex2 = vertex2;
-
-			this.normal0 = normal0;
-			this.normal1 = normal1;
-			this.normal2 = normal2;
-
-			texcoord0 = Float2.Zero;
-			texcoord1 = Float2.Zero;
-			texcoord2 = Float2.Zero;
-		}
-
-		/// <summary>
-		/// Constructs a <see cref="Triangle"/> with vertex and texture coordinate data.
-		/// </summary>
-		/// <remarks>Winding order is clockwise.</remarks>
-		public Triangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-						Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
-		{
-			this.vertex0 = vertex0;
-			this.vertex1 = vertex1;
-			this.vertex2 = vertex2;
-
-			normal0 = Float3.Zero;
-			normal1 = Float3.Zero;
-			normal2 = Float3.Zero;
-
-			this.texcoord0 = texcoord0;
-			this.texcoord1 = texcoord1;
-			this.texcoord2 = texcoord2;
-		}
-
-		/// <summary>
-		/// Constructs a <see cref="Triangle"/> with vertex, normal, and texture coordinate data.
-		/// </summary>
-		/// <remarks>Winding order is clockwise.</remarks>
+		/// <remarks>Vertex information is mandatory, while normal and texcoord can be left as zero if not provided.</remarks>
 		public Triangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
 						in Float3 normal0, in Float3 normal1, in Float3 normal2,
 						Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
 		{
-			Ensure.AreNotEqual(normal0.SquaredMagnitude, 0f);
-			Ensure.AreNotEqual(normal1.SquaredMagnitude, 0f);
-			Ensure.AreNotEqual(normal2.SquaredMagnitude, 0f);
-
 			this.vertex0 = vertex0;
 			this.vertex1 = vertex1;
 			this.vertex2 = vertex2;
@@ -125,7 +60,20 @@ public interface ITriangleStream : IDisposable
 		readonly Float2 texcoord1;
 		readonly Float2 texcoord2;
 
-		bool HasNormal => normal0 != Float3.Zero;
+		/// <summary>
+		/// Whether this <see cref="Triangle"/> has any actual area.
+		/// </summary>
+		/// <remarks><see cref="Triangle"/>s without any area should be ignored.</remarks>
+		public bool HasArea
+		{
+			get
+			{
+				float squaredDoubleArea = Float3.Cross(vertex1 - vertex0, vertex2 - vertex0).SquaredMagnitude;
+				return FastMath.Positive(squaredDoubleArea, 1E-20f); //Tiny epsilon because this is squared
+			}
+		}
+
+		bool HasNormal => normal0 != Float3.Zero && normal1 != Float3.Zero && normal2 != Float3.Zero;
 
 		/// <summary>
 		/// Creates a <see cref="PreparedTriangle"/> out of this <see cref="Triangle"/>.
@@ -142,16 +90,14 @@ public interface ITriangleStream : IDisposable
 				transform.MultiplyDirection(normal0).Normalized,
 				transform.MultiplyDirection(normal1).Normalized,
 				transform.MultiplyDirection(normal2).Normalized,
-				texcoord0, texcoord1, texcoord2,
-				material
+				texcoord0, texcoord1, texcoord2, material
 			) :
 			new PreparedTriangle
 			(
 				transform.MultiplyPoint(vertex0),
 				transform.MultiplyPoint(vertex1),
 				transform.MultiplyPoint(vertex2),
-				texcoord0, texcoord1, texcoord2,
-				material
+				texcoord0, texcoord1, texcoord2, material
 			);
 	}
 }

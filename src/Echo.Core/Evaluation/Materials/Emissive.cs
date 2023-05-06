@@ -13,7 +13,7 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Evaluation.Materials;
 
 /// <summary>
-/// A <see cref="Material"/> that is emissive, meaning that any surface it is applied to will contribute photons to the scene.
+/// A <see cref="Material"/> that is emissive, meaning that any surface it is applied to will contribute radiance to the scene.
 /// The color is determined by the total average of <see cref="Material.Albedo"/>; currently textured area light is not supported.
 /// </summary>
 [EchoSourceUsable]
