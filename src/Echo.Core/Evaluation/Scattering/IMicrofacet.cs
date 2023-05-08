@@ -67,7 +67,7 @@ public interface IMicrofacet
 		roughness = FastMath.Clamp01(roughness);
 
 		const float Threshold = 0.0001f;
-		float alpha = roughness * roughness;
+		float alpha = roughness * roughness; //TODO: need to see if we should do another * roughness to get a linear scale visually
 		specular = alpha < Threshold;
 		return specular ? Threshold : alpha;
 	}
@@ -87,10 +87,21 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 	public float ProjectedArea(in Float3 normal)
 	{
 		float cos2 = CosineP2(normal);
-		if (FastMath.AlmostZero(cos2)) return 0f;
+		if (!FastMath.Positive(cos2)) return 0f;
 
-		Float2 theta2 = new Float2(CosineT2(normal), SineT2(normal));
-		float sum = (theta2 / (alpha * alpha)).Sum * SineP2(normal) + cos2;
+		float sum = cos2;
+
+		if (FastMath.Positive(1f - cos2, 1E-5f))
+		{
+			Float2 xy = new Float2(normal.X, normal.Y);
+			sum += (xy / alpha).SquaredMagnitude;
+		}
+
+		//Above is an algebraically equivalent version of the following two lines, with a few tweaks to avoid catastrophic cancellation
+
+		// Float2 theta2 = new Float2(CosineT2(normal), SineT2(normal));
+		// float sum = (theta2 / (alpha * alpha)).Sum * SineP2(normal) + cos2;
+
 		return 1f / (sum * sum * alpha.Product * Scalars.Pi);
 	}
 
@@ -98,7 +109,7 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 	public float ShadowingRatio(in Float3 direction)
 	{
 		float cos2 = CosineP2(direction);
-		if (FastMath.AlmostZero(cos2)) return 0f;
+		if (!FastMath.Positive(cos2)) return 0f;
 		float tan2 = SineP2(direction) / cos2;
 
 		Float2 theta2 = new Float2(CosineT2(direction), SineT2(direction));

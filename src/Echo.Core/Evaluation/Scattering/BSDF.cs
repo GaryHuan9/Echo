@@ -187,7 +187,7 @@ public class BSDF
 		{
 			BxDF function = functions[i];
 
-			if ((function == selected) | !function.type.Fits(type)) continue;
+			if (function == selected || !function.type.Fits(type)) continue;
 			pdf += function.ProbabilityDensity(outgoing, incident);
 
 			if (function.type.Any(reflect)) total += function.Evaluate(outgoing, incident);

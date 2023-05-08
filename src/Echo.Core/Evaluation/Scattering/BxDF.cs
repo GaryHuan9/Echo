@@ -180,7 +180,7 @@ public abstract class BxDF
 	/// flat against the local normal (dot = 0 with <see cref="Float3.Forward"/>) or if they are in the same hemisphere.
 	/// </summary>
 	public static bool FlatOrSameHemisphere(in Float3 direction0, in Float3 direction1) => !FastMath.Positive(-CosineP(direction0) * CosineP(direction1));
-	
+
 	/// <summary>
 	/// Returns whether either of the local directions <paramref name="direction0"/> and <paramref name="direction1"/> are
 	/// flat against the local normal (dot = 0 with <see cref="Float3.Forward"/>) or if they are in opposite hemispheres.
