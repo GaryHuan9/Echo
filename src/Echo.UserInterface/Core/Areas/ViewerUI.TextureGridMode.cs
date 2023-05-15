@@ -82,7 +82,7 @@ partial class ViewerUI
 				}
 				else
 				{
-					if (ImGui.MenuItem("Log Average Delta"))
+					if (ImGui.MenuItem("Print Total Delta"))
 					{
 						Summation total = Summation.Zero;
 
@@ -93,8 +93,7 @@ partial class ViewerUI
 							total += texture[uv] - (Float4)compare[uv];
 						}
 
-						Float4 average = total.Result / texture.size.Product;
-						LogList.Add($"Average color delta versus reference: {average:N4}.");
+						LogList.Add($"Color delta versus reference: {total.Result:N4}.");
 					}
 
 					if (ImGui.MenuItem("End"))
