@@ -15,7 +15,7 @@ public static class ImGuiCustom
 													 ImGuiTableFlags.BordersOuter;
 
 	public const float UseAvailable = -float.Epsilon;
-	
+
 	const ImGuiTableFlags PropertiesTableFlags = ImGuiTableFlags.BordersOuter | ImGuiTableFlags.NoSavedSettings |
 												 ImGuiTableFlags.Resizable | ImGuiTableFlags.NoBordersInBodyUntilResize;
 
@@ -70,6 +70,14 @@ public static class ImGuiCustom
 		ImGui.Unindent(SectionPadding);
 		ImGui.Dummy(new Vector2(0f, SectionPadding));
 		ImGui.PopID();
+	}
+
+	public static void HelpTip(string label)
+	{
+		ImGui.SameLine();
+		ImGui.TextDisabled("(?)");
+		if (!ImGui.IsItemHovered()) return;
+		ImGui.SetTooltip(label);
 	}
 
 	public static bool Selector(string label, ReadOnlySpan<string> items, ref int currentIndex)

@@ -208,22 +208,33 @@ public sealed class Device : IDisposable
 		public int Count { get; }
 
 		/// <summary>
-		/// The index of the current executing <see cref="Operation"/> or if nothing
-		/// is executing, the latest <see cref="Operation"/> that finished executing.
+		/// The index of the current executing <see cref="Operation"/> or if nothing is executing, <see cref="Count"/>.
 		/// </summary>
-		public int LatestIndex { get; }
+		public int CurrentIndex { get; }
 
 		/// <summary>
-		/// Similar to using <see cref="LatestIndex"/> on the indexer <see cref="this"/>,
-		/// except null is returned if <see cref="Count"/> is zero (rather than an exception).
+		/// Similar to using <see cref="CurrentIndex"/> on the indexer <see cref="this"/>, except null is returned
+		/// if <see cref="CurrentIndex"/> is not smaller than <see cref="Count"/> (rather than an exception).
 		/// </summary>
-		public sealed Operation Latest => Count == 0 ? null : this[LatestIndex];
+		public Operation Current { get; }
+
+		/// <summary>
+		/// Identical to <see cref="Current"/>, except if no <see cref="Operation"/> is executing, returns the latest one that executed.
+		/// </summary>
+		public Operation Latest { get; }
 
 		/// <summary>
 		/// Retrieves an <see cref="Operation"/>. 
 		/// </summary>
 		/// <param name="index">The index to retrieve, must be greater than or equals zero and less than <see cref="Count"/>.</param>
 		public Operation this[int index] { get; }
+
+		/// <summary>
+		/// Blocks the calling thread until this <see cref="Device"/> completes or aborts <paramref name="operation"/>.
+		/// </summary>
+		/// <param name="operation">The <see cref="Operation"/> to await for.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Argument is not an <see cref="Operation"/> scheduled to this <see cref="Device"/>.</exception>
+		public void Await(Operation operation);
 
 		/// <summary>
 		/// Returns the index of an <see cref="Operation"/> scheduled to this <see cref="Device"/>.
@@ -233,11 +244,11 @@ public sealed class Device : IDisposable
 		public int IndexOf(Operation operation);
 
 		/// <summary>
-		/// Blocks the calling thread until this <see cref="Device"/> completes or aborts <paramref name="operation"/>.
+		/// Whether an <see cref="Operation"/> is aborted. 
 		/// </summary>
-		/// <param name="operation">The <see cref="Operation"/> to await for.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Argument is not an <see cref="Operation"/> scheduled to this <see cref="Device"/>.</exception>
-		public void Await(Operation operation);
+		/// <param name="index">The index of the <see cref="Operation"/> to query for.</param>
+		/// <returns>Whether the <see cref="Operation"/> was aborted.</returns>
+		public bool Aborted(int index);
 	}
 
 	sealed class OperationsQueue : IOperations
@@ -264,29 +275,38 @@ public sealed class Device : IDisposable
 		}
 
 		/// <inheritdoc/>
-		public int LatestIndex
+		public int CurrentIndex
+		{
+			get
+			{
+				locker.EnterReadLock();
+				try { return currentIndex; }
+				finally { locker.ExitReadLock(); }
+			}
+		}
+
+		/// <inheritdoc/>
+		public Operation Current
+		{
+			get
+			{
+				locker.EnterReadLock();
+				try { return currentIndex == list.Count ? null : list[currentIndex]; }
+				finally { locker.ExitReadLock(); }
+			}
+		}
+
+		/// <inheritdoc/>
+		public Operation Latest
 		{
 			get
 			{
 				locker.EnterReadLock();
 				try
 				{
-					if (list.Count == 0) return 0;
-					return Math.Min(currentIndex, list.Count - 1);
+					if (list.Count == 0) return null;
+					return list[Math.Min(currentIndex, list.Count - 1)];
 				}
-				finally { locker.ExitReadLock(); }
-			}
-		}
-
-		/// <summary>
-		/// The <see cref="Operation"/> that is currently being worked on, or undefined behavior if nothing is being worked on.
-		/// </summary>
-		public Operation Current
-		{
-			get
-			{
-				locker.EnterReadLock();
-				try { return list[currentIndex]; }
 				finally { locker.ExitReadLock(); }
 			}
 		}
@@ -351,14 +371,6 @@ public sealed class Device : IDisposable
 		}
 
 		/// <inheritdoc/>
-		public int IndexOf(Operation operation)
-		{
-			locker.EnterReadLock();
-			try { return list.IndexOf(operation); }
-			finally { locker.ExitReadLock(); }
-		}
-
-		/// <inheritdoc/>
 		public void Await(Operation operation)
 		{
 			int index = IndexOf(operation);
@@ -398,10 +410,28 @@ public sealed class Device : IDisposable
 				skipIndices.Add(index);
 				return false;
 			}
-			finally
+			finally { locker.ExitWriteLock(); }
+		}
+
+		/// <inheritdoc/>
+		public int IndexOf(Operation operation)
+		{
+			locker.EnterReadLock();
+			try { return list.IndexOf(operation); }
+			finally { locker.ExitReadLock(); }
+		}
+
+		/// <inheritdoc/>
+		public bool Aborted(int index)
+		{
+			locker.EnterReadLock();
+			try
 			{
-				locker.ExitWriteLock();
+				if (index > currentIndex) return skipIndices.Contains(index);
+				if (index < currentIndex) return !this[index].IsCompleted;
+				return false;
 			}
+			finally { locker.ExitReadLock(); }
 		}
 
 		public void Dispose()

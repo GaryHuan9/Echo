@@ -85,10 +85,10 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 		var allocator = allocators[worker.Index];
 		PreparedScene scene = boxedScene.Value;
 
+		if (scene == null) return; //Cannot do anything without a scene lol (happens if the preparation operation is aborted)
+
 		Int2 tilePosition = tilePositions[(int)procedure.index];
 		IEvaluationWriteTile tile = destination.CreateTile(tilePosition);
-
-		Ensure.IsNotNull(scene);
 		Ensure.IsNotNull(tile);
 
 		procedure.Begin((uint)tile.Size.Y);

@@ -70,7 +70,12 @@ public sealed class RenderUI : AreaUI
 		if (ImGuiCustom.Selector("Select", CollectionsMarshal.AsSpan(renderStrings), ref currentIndex)) trackLatest = false;
 		ImGui.Checkbox("Track Latest Operation", ref trackLatest);
 
-		if (trackLatest) currentIndex = renders.Count - 1;
+		if (trackLatest)
+		{
+			while (currentIndex < renders.Count - 1 && renders[currentIndex].IsCompleted) ++currentIndex;
+			while (currentIndex > 0 && !renders[currentIndex - 1].IsCompleted) --currentIndex;
+		}
+
 		ScheduledRender render = renders[currentIndex];
 
 		if (!render.IsCompleted)

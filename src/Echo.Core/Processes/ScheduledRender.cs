@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using Echo.Core.Aggregation.Preparation;
@@ -26,7 +27,9 @@ public sealed class ScheduledRender
 		builder.Add(preparationOperation);
 		builder.AddRange(evaluationOperations);
 		if (compositionOperation != null) builder.Add(compositionOperation);
+
 		operations = builder.ToImmutable();
+		baseOperationIndex = device.Operations.IndexOf(operations[0]);
 	}
 
 	/// <summary>
@@ -64,6 +67,7 @@ public sealed class ScheduledRender
 	readonly StrongBox<PreparedScene> boxedScene = new();
 
 	readonly Device device;
+	readonly int baseOperationIndex;
 
 	/// <summary>
 	/// The <see cref="PreparedScene"/> that was created for this render.
@@ -74,9 +78,8 @@ public sealed class ScheduledRender
 	/// <summary>
 	/// Whether the entire render is completed.
 	/// </summary>
-	public bool IsCompleted => LastOperation.IsCompleted;
-
-	int _currentIndex;
+	/// <remarks>Renders with aborted <see cref="Operation"/> will also be considered as complete.</remarks>
+	public bool IsCompleted => CurrentIndex == operations.Length;
 
 	/// <summary>
 	/// An index in <see cref="operations"/> that is the currently executing <see cref="Operation"/>.
@@ -87,8 +90,9 @@ public sealed class ScheduledRender
 	{
 		get
 		{
-			while (_currentIndex < operations.Length && operations[_currentIndex].IsCompleted) ++_currentIndex;
-			return _currentIndex;
+			int deviceIndex = device.Operations.CurrentIndex;
+			if (deviceIndex < baseOperationIndex) return 0;
+			return Math.Min(deviceIndex - baseOperationIndex, operations.Length);
 		}
 	}
 
@@ -109,17 +113,12 @@ public sealed class ScheduledRender
 	}
 
 	/// <summary>
-	/// The last <see cref="Operation"/> of this <see cref="ScheduledRender"/>.
-	/// </summary>
-	public Operation LastOperation => operations[^1];
-
-	/// <summary>
 	/// Blocks the calling thread until <see cref="IsCompleted"/> is true or if this <see cref="ScheduledRender"/> is aborted.
 	/// </summary>
 	public void Await()
 	{
 		if (device.Disposed) return;
-		device.Operations.Await(LastOperation);
+		foreach (Operation operation in operations) device.Operations.Await(operation);
 	}
 
 	/// <summary>

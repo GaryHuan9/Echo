@@ -186,7 +186,7 @@ public sealed class SystemUI : AreaUI
 
 	void DrawDeviceAndWorkers()
 	{
-		if (!ImGuiCustom.BeginSection("Device and Workers")) return;
+		if (!ImGuiCustom.BeginSection("Device, Workers, and Operations")) return;
 
 		//Buttons
 		ImGui.BeginDisabled(!Device.IsDispatched);
@@ -221,37 +221,30 @@ public sealed class SystemUI : AreaUI
 		}
 
 		//Status
+		var operations = Device.Operations;
+		int operationCount = operations.Count;
+
 		if (ImGuiCustom.BeginProperties())
 		{
 			ImGuiCustom.Property("State", Device.IsDispatched ? "Running" : "Idle");
 			ImGuiCustom.Property("Population", Device.Population.ToInvariant());
-
-			if (Device.Operations.Count > 0)
-			{
-				ImGuiCustom.Property("Latest Dispatch", Device.Operations[^1].creationTime.ToInvariant());
-				ImGuiCustom.Property("Past Operation Count", Device.Operations.Count.ToInvariant());
-			}
-			else
-			{
-				ImGuiCustom.Property("Latest Dispatch", "None");
-				ImGuiCustom.Property("Past Operation Count", "0");
-			}
+			ImGuiCustom.Property("Past Operation Count", operationCount.ToInvariant());
 
 			ImGuiCustom.EndProperties();
 		}
 
 		//Workers
-		Operation operation = Device.Operations.Latest;
-		if (!Device.IsDispatched) operation = null;
+		Operation current = operations.Current;
+		if (!Device.IsDispatched) current = null;
 
-		if (ImGui.BeginTable("Workers Table", operation == null ? 2 : 5, ImGuiCustom.DefaultTableFlags))
+		if (ImGui.BeginTable("Workers Table", current == null ? 2 : 5, ImGuiCustom.DefaultTableFlags))
 		{
 			ImGui.TableSetupColumn("Worker Guid");
 			ImGui.TableSetupColumn("State");
 
-			if (operation != null)
+			if (current != null)
 			{
-				workersReport.Update(operation);
+				workersReport.Update(current);
 				ImGui.TableSetupColumn("Time Active");
 				ImGui.TableSetupColumn("Index");
 				ImGui.TableSetupColumn("Progress");
@@ -264,7 +257,7 @@ public sealed class SystemUI : AreaUI
 				ImGuiCustom.TableItem(worker.Guid.ToInvariantShort());
 				ImGuiCustom.TableItem(worker.State.ToDisplayString());
 
-				if (operation != null)
+				if (current != null)
 				{
 					(TimeSpan activeTime, Procedure procedure) = workersReport[worker.Index];
 
@@ -272,6 +265,35 @@ public sealed class SystemUI : AreaUI
 					ImGuiCustom.TableItem(procedure.index.ToInvariant());
 					ImGuiCustom.TableItem(procedure.Progress.ToInvariantPercent());
 				}
+			}
+
+			ImGui.EndTable();
+		}
+
+		//Operations
+		if (current != null && ImGui.BeginTable("Operations Table", 4, ImGuiCustom.DefaultTableFlags))
+		{
+			ImGui.TableSetupColumn("Operation Type");
+			ImGui.TableSetupColumn("Dispatch Time");
+			ImGui.TableSetupColumn("Status");
+			ImGui.TableSetupColumn("Action");
+			ImGui.TableHeadersRow();
+
+			for (int i = operations.CurrentIndex; i < operationCount; i++)
+			{
+				Operation operation = operations[i];
+				bool aborted = operations.Aborted(i);
+
+				ImGuiCustom.TableItem(operation.GetType().Name);
+				ImGuiCustom.TableItem(operation.creationTime.ToInvariant());
+				ImGuiCustom.TableItem(operation == current ? "Executing" : aborted ? "Aborted" : "Awaiting");
+
+				ImGui.TableNextColumn();
+				ImGui.PushID(i);
+				ImGui.BeginDisabled(aborted);
+				if (ImGui.SmallButton("Abort")) Device.Abort(operation);
+				ImGui.PopID();
+				ImGui.EndDisabled();
 			}
 
 			ImGui.EndTable();

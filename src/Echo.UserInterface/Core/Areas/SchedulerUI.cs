@@ -31,11 +31,12 @@ public sealed class SchedulerUI : AreaUI
 	DateTime loadTime;
 	int currentProfile;
 	bool autoSchedule = true;
+	bool autoAbort = true;
 
 	readonly List<string> profileStrings = new();
 	readonly List<int> profileIndices = new();
+	readonly List<ScheduledRender> allScheduled = new();
 
-	ScheduledRender latestRender;
 	RenderProfile constructedProfile;
 
 	const string EchoFileExtension = ".echo";
@@ -97,6 +98,11 @@ public sealed class SchedulerUI : AreaUI
 		}
 
 		ImGui.Checkbox("Auto Schedule on File Change", ref autoSchedule);
+		ImGuiCustom.HelpTip("Whether to automatically schedule with current settings when the file changes externally.");
+
+		ImGui.Checkbox("Auto Abort on New Schedule", ref autoAbort);
+		ImGuiCustom.HelpTip("Whether to automatically abort all previous unfinished renders when a new render is scheduled.");
+
 		if (autoSchedule && fileExists && fileChanged && LoadEchoFile()) ConstructRenderProfile();
 
 		var profile = Interlocked.Exchange(ref constructedProfile, null);
@@ -178,9 +184,16 @@ public sealed class SchedulerUI : AreaUI
 
 	void ScheduleRenderProfile(RenderProfile profile)
 	{
-		latestRender?.Abort();
-		latestRender = profile.ScheduleTo(currentDevice);
-		renderUI.AddRender(latestRender);
+		if (autoAbort)
+		{
+			foreach (ScheduledRender previous in allScheduled) previous.Abort();
+			allScheduled.Clear();
+		}
+
+		var render = profile.ScheduleTo(currentDevice);
+
+		allScheduled.Add(render);
+		renderUI.AddRender(render);
 	}
 
 	static void DrawFileMarker(string symbol, string help)
