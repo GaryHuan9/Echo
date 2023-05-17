@@ -10,14 +10,8 @@ namespace Echo.Core.Evaluation.Scattering;
 /// Generalization of Lambert's reflectance model [Oren and Nayar 1994].
 /// Implementation based on: https://mimosa-pudica.net/improved-oren-nayar.html
 /// </summary>
-public sealed class OrenNayar : BxDF
+public sealed class OrenNayar : LambertianReflection
 {
-	public OrenNayar() : base
-	(
-		FunctionType.Reflective |
-		FunctionType.Diffuse
-	) { }
-
 	public void Reset(float newRoughness)
 	{
 		Ensure.IsTrue(newRoughness is >= 0f and <= 1f);

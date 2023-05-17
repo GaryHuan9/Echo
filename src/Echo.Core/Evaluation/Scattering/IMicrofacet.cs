@@ -64,10 +64,10 @@ public interface IMicrofacet
 	/// <returns>The alpha value to be used with standard <see cref="IMicrofacet"/> models.</returns>
 	public static float GetAlpha(float roughness, out bool specular)
 	{
-		roughness = FastMath.Clamp01(roughness);
+		roughness = FastMath.Clamp01(roughness * 0.75f); //Values too high are visually unnatural
 
 		const float Threshold = 0.0001f;
-		float alpha = roughness * roughness; //TODO: need to see if we should do another * roughness to get a linear scale visually
+		float alpha = roughness * roughness;
 		specular = alpha < Threshold;
 		return specular ? Threshold : alpha;
 	}

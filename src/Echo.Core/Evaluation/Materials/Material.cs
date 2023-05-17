@@ -11,6 +11,9 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
+/// <summary>
+/// Describes the physical properties of a geometry regarding to light.
+/// </summary>
 public abstract class Material
 {
 	NotNull<Texture> _albedo = Pure.white;

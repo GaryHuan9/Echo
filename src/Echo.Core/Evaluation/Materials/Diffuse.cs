@@ -9,9 +9,18 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
+/// <summary>
+/// Models a surface that scatters light uniformly in general.
+/// </summary>
 [EchoSourceUsable]
 public sealed class Diffuse : Material
 {
+	/// <summary>
+	/// Whether light goes through the material instead of reflecting off of it.
+	/// </summary>
+	[EchoSourceUsable]
+	public bool Transmissive { get; set; } = false;
+
 	NotNull<Texture> _roughness = Pure.black;
 
 	[EchoSourceUsable]
@@ -25,10 +34,14 @@ public sealed class Diffuse : Material
 	{
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
-		float roughness = FastMath.Clamp01(Sample(Roughness, contact).R);
+		if (!Transmissive)
+		{
+			float roughness = FastMath.Clamp01(Sample(Roughness, contact).R);
 
-		if (FastMath.AlmostZero(roughness)) bsdf.Add<LambertianReflection>(allocator);
-		else bsdf.Add<OrenNayar>(allocator).Reset(roughness);
+			if (FastMath.AlmostZero(roughness)) bsdf.Add<LambertianReflection>(allocator);
+			else bsdf.Add<OrenNayar>(allocator).Reset(roughness);
+		}
+		else bsdf.Add<Lambertian>(allocator);
 
 		return bsdf;
 	}

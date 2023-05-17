@@ -11,18 +11,12 @@ using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Evaluation.Materials;
 
+/// <summary>
+/// Models conductive surfaces (metals) that has both glossy and specular properties.
+/// </summary>
 [EchoSourceUsable]
 public sealed class Conductor : Material
 {
-	NotNull<Texture> _roughness = Pure.black;
-
-	[EchoSourceUsable]
-	public Texture Roughness
-	{
-		get => _roughness;
-		set => _roughness = value;
-	}
-
 	/// <summary>
 	/// Whether this <see cref="Conductor"/> uses artistic parameters over physical parameters.
 	/// </summary>
@@ -64,6 +58,15 @@ public sealed class Conductor : Material
 	{
 		get => _extinction;
 		set => _extinction = value;
+	}
+
+	NotNull<Texture> _roughness = Pure.black;
+
+	[EchoSourceUsable]
+	public Texture Roughness
+	{
+		get => _roughness;
+		set => _roughness = value;
 	}
 
 	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)

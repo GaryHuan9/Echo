@@ -48,6 +48,7 @@ public class BxDFTests
 	{
 		(CheckType.everything, MakeFunction<LambertianReflection>(_ => { })),
 		(CheckType.everything, MakeFunction<LambertianTransmission>(_ => { })),
+		(CheckType.everything, MakeFunction<Lambertian>(_ => { })),
 		(CheckType.oneDirection, MakeFunction<OrenNayar>(bxdf => bxdf.Reset(0.15f))),
 		(CheckType.oneDirection, MakeFunction<OrenNayar>(bxdf => bxdf.Reset(0.82f))),
 		(CheckType.oneDirection, MakeFunction<SpecularReflection<RealFresnel>>(bxdf => bxdf.Reset(new RealFresnel(1.1f, 1.7f)))),
