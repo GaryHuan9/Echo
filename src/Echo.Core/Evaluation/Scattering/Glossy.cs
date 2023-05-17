@@ -26,11 +26,8 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		if (FlatOrOppositeHemisphere(outgoing, incident)) return RGB128.Black;
 		Float3 normal = FindNormal(outgoing, incident);
 
-		float cosO = CosineP(outgoing);
-		float cosI = CosineP(incident);
-
-		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(outgoing.Dot(normal))) / (4f * cosO * cosI);
-		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
+		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident) * 0.25f;
+		RGB128 evaluated = fresnel.Evaluate(outgoing.Dot(normal)) / (CosineP(outgoing) * CosineP(incident));
 		return evaluated * ratio;
 	}
 
@@ -52,11 +49,8 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 
 		if (FlatOrOppositeHemisphere(outgoing, incident)) return Probable<RGB128>.Impossible;
 
-		float cosO = CosineP(outgoing);
-		float cosI = CosineP(incident);
-
-		RGB128 evaluated = fresnel.Evaluate(FastMath.Abs(outgoing.Dot(normal))) / (4f * cosO * cosI);
-		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
+		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident) * 0.25f;
+		RGB128 evaluated = fresnel.Evaluate(outgoing.Dot(normal)) / (CosineP(outgoing) * CosineP(incident));
 		float pdf = microfacet.ProbabilityDensity(outgoing, normal) / FastMath.Abs(outgoing.Dot(normal) * 4f);
 
 		return (evaluated * ratio, pdf);
@@ -158,8 +152,8 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 
 		if (!FastMath.Positive(denominator)) denominator = 1f;
 
-		float evaluated = numerator * dotO / (denominator * CosineP(outgoing) * CosineP(incident));
 		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
+		float evaluated = numerator * dotO / (denominator * CosineP(outgoing) * CosineP(incident));
 		float pdf = microfacet.ProbabilityDensity(outgoing, normal) * (numerator / denominator);
 
 		return (new RGB128(1f - packet.Value) * FastMath.Abs(evaluated) * ratio, pdf);

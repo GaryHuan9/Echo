@@ -17,7 +17,8 @@
 
 	:material6 = new Dielectric
 	{
-		.Roughness = new Pure("hdr(0.05 0.05 0)")
+		.Albedo = new Pure("hdr(1 1 1)")
+		.Roughness = new Pure("hdr(0.01 0.01 0)")
 		.RefractiveIndex = new Pure("hdr(1.5 0 0)")
 	}
 
@@ -53,7 +54,7 @@
 	.EvaluationProfiles = [ new EvaluationProfile
 	{
 		.NoiseThreshold = "0.0003"
-		.Distribution = new StratifiedDistribution { .Extend = "64" }
+		.Distribution = new StratifiedDistribution { .Extend = "256" }
 		.Evaluator = new PathTracedEvaluator
 		.TargetLayer = "path" 
 	} ]
