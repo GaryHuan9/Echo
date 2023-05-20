@@ -57,7 +57,7 @@ class Program
 		//Begin rendering
 		ScheduledRender render = profile.ScheduleTo(device);
 		Console.WriteLine($"Scheduled render to {nameof(Device)} with {render.operations.Length} operations.");
-		
+
 		render.Monitor();
 		Console.WriteLine("Render finished.");
 

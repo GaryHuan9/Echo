@@ -131,14 +131,14 @@ public sealed class ScheduledRender
 	public void Monitor()
 	{
 		if (device.Disposed) return;
-		
+
 		try
 		{
 			Console.CursorVisible = false;
 			PrintRenderProcess(this);
 		}
 		finally { Console.CursorVisible = true; }
-		
+
 		Await();
 	}
 
@@ -203,7 +203,7 @@ public sealed class ScheduledRender
 			Console.WriteLine();
 		}
 	}
-	
+
 	static void WriteOperationStatus(StringBuilder builder, Operation operation)
 	{
 		Ensure.AreEqual(builder.Length, 0);

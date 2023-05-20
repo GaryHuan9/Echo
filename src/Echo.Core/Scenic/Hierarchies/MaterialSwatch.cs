@@ -4,6 +4,7 @@ using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Evaluation.Materials;
+using Echo.Core.InOut.EchoDescription;
 
 namespace Echo.Core.Scenic.Hierarchies;
 
@@ -11,6 +12,7 @@ namespace Echo.Core.Scenic.Hierarchies;
 /// A swatch of <see cref="Material"/>s that can be used to optionally map some original materials to different alternative materials in a <see cref="PackInstance"/>.
 /// Note that it can only exchange materials defined on geometries in the immediate <see cref="EntityPack"/> and cannot be used to modify materials in subsequent instances!
 /// </summary>
+[EchoSourceUsable]
 public class MaterialSwatch
 {
 	public MaterialSwatch() => map = new Dictionary<Material, Material>();
@@ -64,6 +66,12 @@ public class MaterialSwatch
 			}
 		}
 	}
+
+	[EchoSourceUsable]
+	public Material Get(Material material) => this[material];
+
+	[EchoSourceUsable]
+	public void Set(Material material, Material value) => this[material] = value;
 
 	static uint Hash(Material material) => SquirrelPrng.Mangle((uint)material.GetHashCode());
 
