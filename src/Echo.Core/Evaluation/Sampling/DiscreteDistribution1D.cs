@@ -7,7 +7,7 @@ using Echo.Core.Common.Mathematics.Primitives;
 namespace Echo.Core.Evaluation.Sampling;
 
 /// <summary>
-/// A one dimensional piecewise distribution constructed from a function of discrete probability destiny values.
+/// A one dimensional piecewise distribution constructed from a function of discrete probability density values.
 /// </summary>
 public readonly struct DiscreteDistribution1D
 {

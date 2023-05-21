@@ -36,26 +36,36 @@ public abstract record Prng
 	/// </summary>
 	public float Next1()
 	{
-		//Implemented based on blog from Marc B. Reynolds:
+		//Implemented based on blog from Marc B. Reynolds (modified to improve common case performance):
 		//https://marc-b-reynolds.github.io/distribution/2017/01/17/DenseFloat.html#the-parts-im-not-tell-you
 
-		ulong source = ((ulong)NextUInt32() << 32) | NextUInt32();
-		uint count = (uint)BitOperations.LeadingZeroCount(source);
+		const int MantissaBits = 23;
+		const uint MantissaMask = (1u << MantissaBits) - 1u;
 
-		if (count <= 40)
+		uint first = NextUInt32();
+		uint mantissa = first & MantissaMask;
+		int zeroCount;
+
+		first &= ~MantissaMask;
+
+		if (first == 0)
 		{
-			const uint Mask = (1u << 23) - 1u;
+			uint second = NextUInt32();
 
-			uint exponent = (126u - count) << 23;
-			uint mantissa = (uint)source & Mask;
+			zeroCount = sizeof(uint) * 8 - MantissaBits;
+			zeroCount += BitOperations.LeadingZeroCount(second);
 
-			return BitConverter.UInt32BitsToSingle(exponent | mantissa);
+			if (zeroCount > 40)
+			{
+				//The following code will only be reached 1 out of 2^40 times (probabilistically).
+				//The magic multiplier equals IEEE float with mantissa = zero and exponent = 0b111111
+				return mantissa * 5.421011E-20f;
+			}
 		}
+		else zeroCount = BitOperations.LeadingZeroCount(first);
 
-		//The following code will only be reached 1 out of 2^40 times (probabilistically).
-		//The magic multiplier equals IEEE float with mantissa = zero and exponent = 0b111111.
-
-		return (uint)source * 5.421011E-20f;
+		uint exponent = (uint)(126 - zeroCount) << MantissaBits;
+		return BitConverter.UInt32BitsToSingle(exponent | mantissa);
 	}
 
 	/// <summary>

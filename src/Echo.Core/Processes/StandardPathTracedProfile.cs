@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Immutable;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.InOut.EchoDescription;
@@ -23,28 +25,25 @@ public record StandardPathTracedProfile : RenderProfile
 		var builder0 = ImmutableArray.CreateBuilder<EvaluationProfile>();
 		var builder1 = ImmutableArray.CreateBuilder<ICompositeLayer>();
 
-		var evaluation = new EvaluationProfile
+		int extend = quality switch
 		{
-			Distribution = new StratifiedDistribution
-			{
-				Extend = quality switch
-				{
-					> 250 => 256,
-					> 30 => 64,
-					>= 0 => 16
-				}
-			},
-			MaxEpoch = quality switch
-			{
-				> 250 => 5000,
-				> 30 => 80,
-				>= 0 => 20
-			}
+			> 800 => 1024,
+			> 190 => 256,
+			> 30 => 64,
+			>= 0 => 16
 		};
 
-		builder0.Add(evaluation with { NoiseThreshold = 0.9f / quality, Evaluator = new AlbedoEvaluator(), TargetLayer = "albedo" });
-		builder0.Add(evaluation with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), TargetLayer = "path" });
-		builder0.Add(evaluation with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), TargetLayer = "normal_depth" });
+		int minEpoch = ((float)quality / extend * 2f).Round();
+
+		var evaluation = new EvaluationProfile
+		{
+			Distribution = new StratifiedDistribution { Extend = extend },
+			MaxEpoch = Math.Max(20, (MathF.Pow(quality, 2.1f) / extend / 10f).Round())
+		};
+
+		builder0.Add(evaluation with { NoiseThreshold = 0.9f / quality, Evaluator = new AlbedoEvaluator(), MinEpoch = 1, TargetLayer = "albedo" });
+		builder0.Add(evaluation with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), MinEpoch = minEpoch, TargetLayer = "path" });
+		builder0.Add(evaluation with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), MinEpoch = 1, TargetLayer = "normal_depth" });
 
 		builder1.Add(new TextureManage { CopySources = ImmutableArray.Create("path"), CopyLayers = ImmutableArray.Create("main") });
 		builder1.Add(new OidnDenoise());

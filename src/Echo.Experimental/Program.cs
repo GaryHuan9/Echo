@@ -23,6 +23,7 @@ public class Program
 		// BenchmarkRunner.Run<BufferCopy>();
 		// BenchmarkRunner.Run<Timing>();
 		// BenchmarkRunner.Run<DotProduct>();
+		// BenchmarkRunner.Run<PrngNext>();
 	}
 
 	static void TestMonteCarlo()

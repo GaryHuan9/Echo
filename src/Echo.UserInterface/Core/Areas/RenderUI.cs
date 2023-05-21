@@ -383,12 +383,13 @@ public sealed class RenderUI : AreaUI
 
 		if (EvaluationOperation.EventRowCount > 0 && ImGuiCustom.BeginSection("Events"))
 		{
-			if (ImGui.BeginTable("Table", 4, ImGuiCustom.DefaultTableFlags))
-			{
-				double timeR = 1d / time.TotalSeconds;
-				double progressR = 1d / progress;
-				bool divideByZero = time == TimeSpan.Zero || progress.AlmostEquals();
+			double timeR = 1d / time.TotalSeconds;
+			double remaining = 1d / progress - 1d;
+			bool printRate = time > TimeSpan.Zero;
+			bool printRemaining = FastMath.Positive((float)progress) && progress < 1d;
 
+			if (ImGui.BeginTable("Table", 2 + (printRate ? 1 : 0) + (printRemaining ? 1 : 0), ImGuiCustom.DefaultTableFlags))
+			{
 				Utility.EnsureCapacity(ref eventRows, EvaluationOperation.EventRowCount);
 
 				SpanFill<EventRow> fill = eventRows;
@@ -396,8 +397,8 @@ public sealed class RenderUI : AreaUI
 
 				ImGui.TableSetupColumn("Label");
 				ImGui.TableSetupColumn("Total Done");
-				ImGui.TableSetupColumn("Per Second");
-				ImGui.TableSetupColumn("Estimate");
+				if (printRate) ImGui.TableSetupColumn("Per Second");
+				if (printRemaining) ImGui.TableSetupColumn("Remaining");
 				ImGui.TableHeadersRow();
 
 				foreach ((string label, ulong count) in fill.Filled)
@@ -405,11 +406,8 @@ public sealed class RenderUI : AreaUI
 					ImGuiCustom.TableItem(label);
 					ImGuiCustom.TableItem(count.ToInvariant());
 
-					if (!divideByZero)
-					{
-						ImGuiCustom.TableItem(((float)(count * timeR)).ToInvariant());
-						ImGuiCustom.TableItem(((ulong)(count * progressR)).ToInvariant());
-					}
+					if (printRate) ImGuiCustom.TableItem(((float)(count * timeR)).ToInvariant());
+					if (printRemaining) ImGuiCustom.TableItem(((ulong)(count * remaining)).ToInvariant());
 				}
 
 				ImGui.EndTable();
@@ -468,8 +466,8 @@ public sealed class RenderUI : AreaUI
 
 		ImGuiCustom.PropertySeparator();
 
-		ImGuiCustom.Property("Time Spent", operation.Time.ToInvariant());
-		ImGuiCustom.Property("Time Spent (All Worker)", operation.TotalTime.ToInvariant());
+		ImGuiCustom.Property("Real Time Spent", operation.Time.ToInvariant());
+		ImGuiCustom.Property("Worker Time Spent", operation.TotalTime.ToInvariant());
 
 		return true;
 	}

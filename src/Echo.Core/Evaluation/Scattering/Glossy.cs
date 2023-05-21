@@ -12,14 +12,14 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 {
 	public GlossyReflection() : base(FunctionType.Glossy | FunctionType.Reflective) { }
 
-	TMicrofacet microfacet;
-	TFresnel fresnel;
-
 	public void Reset(in TMicrofacet newMicrofacet, in TFresnel newFresnel)
 	{
 		microfacet = newMicrofacet;
 		fresnel = newFresnel;
 	}
+
+	TMicrofacet microfacet;
+	TFresnel fresnel;
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
@@ -72,14 +72,14 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 {
 	public GlossyTransmission() : base(FunctionType.Glossy | FunctionType.Transmissive) { }
 
-	TMicrofacet microfacet;
-	RealFresnel fresnel;
-
 	public void Reset(in TMicrofacet newMicrofacet, RealFresnel newFresnel)
 	{
 		microfacet = newMicrofacet;
 		fresnel = newFresnel;
 	}
+
+	TMicrofacet microfacet;
+	RealFresnel fresnel;
 
 	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
 	{
