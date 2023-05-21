@@ -4,7 +4,7 @@ using System.IO;
 namespace Echo.Core.InOut.EchoDescription;
 
 /// <summary>
-/// A Echo Chronicle Hierarchy Objects (ECHO) source. Yes I am very smart.
+/// An Echo Chronicle Hierarchy Objects (ECHO) source. Yes I am very smart.
 /// </summary>
 /// <remarks>
 /// All of the 'Echo' under this namespace (including the namespace name) refers to the acronym.
