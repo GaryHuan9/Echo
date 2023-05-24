@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
+using Echo.Experimental.Benchmarks;
 using JitBuddy;
 
 namespace Echo.Experimental;
 
+[CsvExporter()]
 public class Program
 {
 	static void Main()
@@ -23,7 +27,7 @@ public class Program
 		// BenchmarkRunner.Run<BufferCopy>();
 		// BenchmarkRunner.Run<Timing>();
 		// BenchmarkRunner.Run<DotProduct>();
-		// BenchmarkRunner.Run<PrngNext>();
+		BenchmarkRunner.Run<BinarySearches>();
 	}
 
 	static void TestMonteCarlo()
