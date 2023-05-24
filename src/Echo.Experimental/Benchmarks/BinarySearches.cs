@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
+using Echo.Core.Common.Memory;
 
 namespace Echo.Experimental.Benchmarks;
 
@@ -12,13 +13,13 @@ public class BinarySearches
 	[GlobalSetup]
 	public void Setup()
 	{
-		data = new float[size];
+		data = new AlignedArray<float>(size);
 
 		float value = Random.Shared.NextSingle();
 		
 		for (int i = 0; i < size; i++)
 		{
-			data[i] = (float)i * value;
+			data[i] = i * value;
 		}
 
 		targetIndex = Random.Shared.Next(size);
@@ -28,13 +29,13 @@ public class BinarySearches
 	[Params(1000)]//, 10000, 100000, 1000000)]
 	public int size;
 
-	float[] data;
+	AlignedArray<float> data;
 
 	float targetValue;
 	int targetIndex;
 	
 	[Benchmark]
-	public int ClassicScalar()
+	public int BinarySearchScalar()
 	{
 		uint head = 0u;
 		uint tail = (uint)size;
@@ -54,6 +55,28 @@ public class BinarySearches
 		return (int)~head;
 	}
 
+	[Benchmark]
+	public unsafe int BinarySearchVectorial()
+	{
+		Vector128<float> targetVector = Vector128.Create(targetValue);
+		
+		int simdWords = size / 4;
+		int left = 0;
+		int right = simdWords - 1;
+
+		while (left <= right)
+		{
+			int mid = left + (right - left) / 2;
+			fixed (float* dataPtr = &data[mid * 4])
+			{
+				Vector128<float> seperators = Sse.LoadAlignedVector128(dataPtr);
+				int eqCompResult = Sse.MoveMask(Sse.CompareEqual(seperators, targetVector));
+			}
+		}
+		
+		return size;
+}
+	
 	[Benchmark]
 	public int SequentialSearchScalar()
 	{
@@ -79,7 +102,7 @@ public class BinarySearches
 			//Vector128<float> dataValues = Vector128.Create(data[i], data[i + 1], data[i + 2], data[i + 3]);
 			fixed (float* dataAddr = &data[i])
 			{
-				Vector128<float> dataValues = Sse.LoadVector128(dataAddr);
+				Vector128<float> dataValues = Sse.LoadAlignedVector128(dataAddr);
 				int result = Sse.MoveMask(Sse42.CompareGreaterThanOrEqual(dataValues, targetVector));
 				if (result != 0)
 				{
