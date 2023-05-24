@@ -67,62 +67,29 @@ public class BinarySearches
 		while (left <= right)
 		{
 			int mid = left + (right - left) / 2;
-			fixed (float* dataPtr = &data[mid * 4])
+			Vector128<float> separators = Sse.LoadAlignedVector128(data.Pointer + mid * 4);
+			int eqCompResult = Sse.MoveMask(Sse.CompareEqual(separators, targetVector));
+			if (eqCompResult != 0)
 			{
-				Vector128<float> seperators = Sse.LoadAlignedVector128(dataPtr);
-				int eqCompResult = Sse.MoveMask(Sse.CompareEqual(seperators, targetVector));
-			}
-		}
-		
-		return size;
-}
-	
-	[Benchmark]
-	public int SequentialSearchScalar()
-	{
-		for (int i = 0; i < size; i++)
-		{
-			if (targetValue == data[i])
-			{
-				if (i != targetIndex) throw new Exception("SquentialSearchScalar: TargetIndex != FoundIndex");
-				return i;
-			}
-		}
-		
-		// just for the function to not generate an error while building
-		return size;
-	}
-
-	[Benchmark]
-	public unsafe int SequentialSearchVectorial()
-	{
-		Vector128<float> targetVector = Vector128.Create(targetValue);
-		for (int i = 0; i < size; i += 4)
-		{
-			//Vector128<float> dataValues = Vector128.Create(data[i], data[i + 1], data[i + 2], data[i + 3]);
-			fixed (float* dataAddr = &data[i])
-			{
-				Vector128<float> dataValues = Sse.LoadAlignedVector128(dataAddr);
-				int result = Sse.MoveMask(Sse42.CompareGreaterThanOrEqual(dataValues, targetVector));
-				if (result != 0)
+				int i = 0;
+				for(int j = 3; j >= 0; j--)
 				{
-					int index = i;
-					for (int j = 3; j >= 0; j--)
+					int bitValue = (eqCompResult >> j) & 1;
+					if (bitValue == 1)
 					{
-						int compareResult = (result >> j) & 1;
-						if (compareResult != 0)
-						{
-							index += j;
-							if (index != targetIndex) throw new Exception($"SequentialSearchVectorial: TargetIndex ({targetIndex}) != FoundIndex ({index})");
-							return index;
-						}
+						int foundIndex =  mid * 4 + (3 - j);
+						if (foundIndex != targetIndex) throw new Exception($"BinarySearchVectorial: TargetIndex({targetIndex}) != FoundIndex({foundIndex})");
+						return foundIndex;
 					}
-
-					
 				}
 			}
-		}
 
+			int mask = Sse.MoveMask(Sse.CompareGreaterThan(targetVector, separators));
+			if (mask == 0x0f) right = mid - 1;		// all separators are larger than the search key
+			else if (mask == 0x00) left = mid + 1;	// all separators are smaller than the search key
+			else return size;						// search key is not in the list
+		}
+		
 		return size;
 	}
 }
