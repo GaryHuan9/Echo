@@ -20,5 +20,5 @@ public sealed class Invisible : Material
 	public static readonly Invisible instance = new();
 
 	public override void Scatter(ref Contact contact, Allocator allocator) => contact.bsdf = null;
-	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
+	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
 }

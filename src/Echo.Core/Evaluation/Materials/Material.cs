@@ -66,13 +66,11 @@ public abstract class Material
 		if (sampled.Alpha < 0.5f) return;
 
 		var albedo = (RGB128)sampled;
-		contact.bsdf = albedo.IsZero ?
-			NewBSDF(contact, allocator, RGB128.Black) :
-			Scatter(contact, allocator, albedo);
+		contact.bsdf = Scatter(contact, allocator, albedo);
 	}
 
 	/// <inheritdoc cref="Scatter(ref Contact, Allocator"/>
-	public abstract BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo);
+	protected abstract BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo);
 
 	/// <summary>
 	/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
@@ -112,10 +110,10 @@ public abstract class Material
 	/// <summary>
 	/// Creates a new <see cref="BSDF"/>
 	/// </summary>
-	protected static BSDF NewBSDF(in Contact contact, Allocator allocator, in RGB128 albedo)
+	protected static BSDF NewBSDF(in Contact contact, Allocator allocator, in RGB128 tint)
 	{
 		var bsdf = allocator.New<BSDF>();
-		bsdf.Reset(contact, albedo);
+		bsdf.Reset(contact, tint);
 		return bsdf;
 	}
 }

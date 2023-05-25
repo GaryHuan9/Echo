@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Runtime.Intrinsics.X86;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
@@ -69,7 +69,7 @@ public sealed class Conductor : Material
 		set => _roughness = value;
 	}
 
-	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
+	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 
@@ -102,7 +102,7 @@ public sealed class Conductor : Material
 			Float4 value = main * Square(eta + Float4.One) - Square(eta - Float4.One); //OPTIMIZE FMA
 			extinction = (RGB128)Sqrt((value / (Float4.One - main)).Max(Float4.Zero));
 
-			static Float4 Sqrt(in Float4 value) => new(MathF.Sqrt(value.X), MathF.Sqrt(value.Y), MathF.Sqrt(value.Z), MathF.Sqrt(value.W)); //OPTIMIZE
+			static Float4 Sqrt(in Float4 value) => new(Sse.Sqrt(value.v)); //OPTIMIZE
 			static Float4 Square(in Float4 value) => value * value;
 		}
 		else

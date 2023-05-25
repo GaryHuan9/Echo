@@ -18,20 +18,20 @@ public class BSDF
 	/// <summary>
 	/// Resets and initializes this <see cref="BSDF"/> for new use.
 	/// </summary>
-	public void Reset(in Contact contact, in RGB128 newAlbedo)
+	public void Reset(in Contact contact, in RGB128 newTint)
 	{
 		//Note that we do not need to worry about releasing the references from the functions
 		//because they are supposed to be allocated in an arena, which handles the deallocation
 
 		count = 0;
-		albedo = newAlbedo;
+		tint = newTint;
 
 		transform = new OrthonormalTransform(contact.shade.Normal);
 		geometricNormal = contact.point.normal;
 	}
 
 	int count;
-	RGB128 albedo;
+	RGB128 tint;
 
 	OrthonormalTransform transform;
 	Float3 geometricNormal;
@@ -106,7 +106,7 @@ public class BSDF
 			total += function.Evaluate(outgoing, incident);
 		}
 
-		return albedo * total;
+		return tint * total;
 	}
 
 	/// <summary>
@@ -177,7 +177,7 @@ public class BSDF
 			//Check if shading normal is too extreme and we sampled on the wrong side of the surface
 			bool wrongSide = !selected.type.Any(reflect);
 			if (wrongSide) return Probable<RGB128>.Impossible;
-			return (albedo * sampled, sampled.pdf / matched);
+			return (tint * sampled, sampled.pdf / matched);
 		}
 
 		//Sample the other matching functions
@@ -193,7 +193,7 @@ public class BSDF
 			if (function.type.Any(reflect)) total += function.Evaluate(outgoing, incident);
 		}
 
-		return (albedo * total, pdf / matched);
+		return (tint * total, pdf / matched);
 	}
 
 	// /// <summary>

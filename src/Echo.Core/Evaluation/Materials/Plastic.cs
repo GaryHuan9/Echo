@@ -24,7 +24,7 @@ public class Plastic : Material
 		set => _roughness = value;
 	}
 
-	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
+	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
 	{
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 

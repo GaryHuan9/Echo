@@ -53,7 +53,7 @@ public sealed class OneSided : Material
 		else Invisible.instance.Scatter(ref contact, allocator);
 	}
 
-	public override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
+	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
 
 	bool Cull(in Contact contact) => FastMath.Positive(contact.outgoing.Dot(contact.point.normal)) != Backface;
 }
