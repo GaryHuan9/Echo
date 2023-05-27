@@ -7,7 +7,7 @@
 	:material1 = new Diffuse { .Albedo = new Pure("hdr(1 1 1)") }
 	:material2 = new Emissive
 	:material3 = new Conductor { .Roughness = new Pure("hdr(0 0 0)") }
-	:material4 = new Dielectric { .Albedo = link gray .RefractiveIndex = new Pure("hdr(1.5 0 0)") }
+	:material4 = new Dielectric { .Albedo = link gray .RefractiveIndex = "1.5" }
 
 	:material5 = new Conductor
 	{
@@ -19,7 +19,7 @@
 	{
 		.Albedo = new Pure("hdr(1 1 1)")
 		.Roughness = new Pure("hdr(0.01 0.01 0)")
-		.RefractiveIndex = new Pure("hdr(1.5 0 0)")
+		.RefractiveIndex = "1.5"
 	}
 
 	:material7 = new Conductor
@@ -27,7 +27,13 @@
 		.Roughness = new Pure("hdr(1 1 0)")
 	}
 
-	.Add(new SphereEntity { .Material = link material6 .Radius = "1" })
+	:material8 = new CoatedDiffuse
+	{
+		.Albedo = new Pure("hdr(1 1 1)")
+		.RefractiveIndex = "1.7"
+	}
+
+	.Add(new SphereEntity { .Material = link material8 .Radius = "1" })
 
 	.Add(new AmbientLight { .Texture = new Pure("0xF") })
 	.Add(new Camera("45") { .Position = "0 0 -4.5" })

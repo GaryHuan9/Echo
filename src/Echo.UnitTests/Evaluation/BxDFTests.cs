@@ -10,6 +10,8 @@ using NUnit.Framework;
 
 namespace Echo.UnitTests.Evaluation;
 
+//This test is kind of a mess right now, but it works, and we will remake it when we redo the BSDF system
+
 [TestFixture]
 public class BxDFTests
 {
@@ -49,31 +51,35 @@ public class BxDFTests
 		(CheckType.everything, MakeFunction<LambertianReflection>(_ => { })),
 		(CheckType.everything, MakeFunction<LambertianTransmission>(_ => { })),
 		(CheckType.everything, MakeFunction<Lambertian>(_ => { })),
-		(CheckType.oneDirection, MakeFunction<OrenNayar>(bxdf => bxdf.Reset(0.15f))),
-		(CheckType.oneDirection, MakeFunction<OrenNayar>(bxdf => bxdf.Reset(0.82f))),
-		(CheckType.oneDirection, MakeFunction<SpecularReflection<RealFresnel>>(bxdf => bxdf.Reset(new RealFresnel(1.1f, 1.7f)))),
-		(CheckType.oneDirection, MakeFunction<SpecularReflection<RealFresnel>>(bxdf => bxdf.Reset(new RealFresnel(1.7f, 1.1f)))),
-		(CheckType.oneDirection, MakeFunction<SpecularReflection<ComplexFresnel>>(bxdf => bxdf.Reset(new ComplexFresnel(new RGB128(0.9f, 1.1f, 1.2f), new RGB128(0.27105f, 0.67693f, 1.31640f), new RGB128(3.60920f, 2.62480f, 2.29210f))))), //Copper
-		(CheckType.oneDirection, MakeFunction<SpecularReflection<ComplexFresnel>>(bxdf => bxdf.Reset(new ComplexFresnel(new RGB128(1.3f, 1.0f, 0.8f), new RGB128(2.74070f, 2.54180f, 2.26700f), new RGB128(3.81430f, 3.43450f, 3.03850f))))), //Titanium
-		(CheckType.oneDirection, MakeFunction<SpecularReflection<ComplexFresnel>>(bxdf => bxdf.Reset(new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(RGB128.Black), RGB128.Black)))),
-		(CheckType.oneDirection, MakeFunction<SpecularTransmission>(bxdf => bxdf.Reset(new RealFresnel(1.1f, 1.7f)))),
-		(CheckType.oneDirection, MakeFunction<SpecularTransmission>(bxdf => bxdf.Reset(new RealFresnel(1.7f, 1.1f)))),
-		(CheckType.everything, MakeFunction<SpecularFresnel>(bxdf => bxdf.Reset(new RealFresnel(1.1f, 1.7f)))),
-		(CheckType.everything, MakeFunction<SpecularFresnel>(bxdf => bxdf.Reset(new RealFresnel(1.7f, 1.1f)))),
-		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new RealFresnel(1.1f, 1.7f)))),
-		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new RealFresnel(1.7f, 1.1f)))),
-		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1f, 1f)))),
-		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1.5f, 1f)))),
-		(CheckType.everything, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1E-4f, 1E-4f), new RealFresnel(1f, 1.5f)))),
-		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new ComplexFresnel(new RGB128(0.9f, 1.1f, 1.2f), new RGB128(0.27105f, 0.67693f, 1.31640f), new RGB128(3.60920f, 2.62480f, 2.29210f))))), //Copper
-		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new ComplexFresnel(new RGB128(1.3f, 1.0f, 0.8f), new RGB128(2.74070f, 2.54180f, 2.26700f), new RGB128(3.81430f, 3.43450f, 3.03850f))))), //Titanium
-		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(RGB128.Black), RGB128.Black)))),
-		(CheckType.everything, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1E-4f, 1E-4f), new ComplexFresnel(RGB128.White, RGB128.White * 2f, RGB128.White * 3f)))),
-		(CheckType.oneDirection, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new RealFresnel(1.1f, 1.7f)))),
-		(CheckType.oneDirection, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new RealFresnel(1.7f, 1.1f)))),
-		(CheckType.onlyQuotient, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1f, 1f)))), //I cannot get this to match :( but this edge case should not effect visuals at all
-		(CheckType.oneDirection, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1.5f, 1f)))),
-		(CheckType.everything, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(bxdf => bxdf.Reset(new TrowbridgeReitzMicrofacet(1E-4f, 1E-4f), new RealFresnel(1f, 1.5f))))
+		(CheckType.oneDirection, MakeFunction<OrenNayar>(function => function.Reset(0.15f))),
+		(CheckType.oneDirection, MakeFunction<OrenNayar>(function => function.Reset(0.82f))),
+		(CheckType.oneDirection, MakeFunction<SpecularReflection<RealFresnel>>(function => function.Reset(new RealFresnel(1.1f, 1.7f)))),
+		(CheckType.oneDirection, MakeFunction<SpecularReflection<RealFresnel>>(function => function.Reset(new RealFresnel(1.7f, 1.1f)))),
+		(CheckType.oneDirection, MakeFunction<SpecularReflection<ComplexFresnel>>(function => function.Reset(new ComplexFresnel(new RGB128(0.9f, 1.1f, 1.2f), new RGB128(0.27105f, 0.67693f, 1.31640f), new RGB128(3.60920f, 2.62480f, 2.29210f))))), //Copper
+		(CheckType.oneDirection, MakeFunction<SpecularReflection<ComplexFresnel>>(function => function.Reset(new ComplexFresnel(new RGB128(1.3f, 1.0f, 0.8f), new RGB128(2.74070f, 2.54180f, 2.26700f), new RGB128(3.81430f, 3.43450f, 3.03850f))))), //Titanium
+		(CheckType.oneDirection, MakeFunction<SpecularReflection<ComplexFresnel>>(function => function.Reset(new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(RGB128.Black), RGB128.Black)))),
+		(CheckType.oneDirection, MakeFunction<SpecularTransmission>(function => function.Reset(new RealFresnel(1.1f, 1.7f)))),
+		(CheckType.oneDirection, MakeFunction<SpecularTransmission>(function => function.Reset(new RealFresnel(1.7f, 1.1f)))),
+		(CheckType.everything, MakeFunction<SpecularFresnel>(function => function.Reset(new RealFresnel(1.1f, 1.7f)))),
+		(CheckType.everything, MakeFunction<SpecularFresnel>(function => function.Reset(new RealFresnel(1.7f, 1.1f)))),
+		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new RealFresnel(1.1f, 1.7f)))),
+		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new RealFresnel(1.7f, 1.1f)))),
+		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1f, 1f)))),
+		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1.5f, 1f)))),
+		(CheckType.everything, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, RealFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1E-4f, 1E-4f), new RealFresnel(1f, 1.5f)))),
+		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new ComplexFresnel(new RGB128(0.9f, 1.1f, 1.2f), new RGB128(0.27105f, 0.67693f, 1.31640f), new RGB128(3.60920f, 2.62480f, 2.29210f))))), //Copper
+		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new ComplexFresnel(new RGB128(1.3f, 1.0f, 0.8f), new RGB128(2.74070f, 2.54180f, 2.26700f), new RGB128(3.81430f, 3.43450f, 3.03850f))))), //Titanium
+		(CheckType.oneDirection, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new ComplexFresnel(RGB128.White, RGB128.MaxEpsilon(RGB128.Black), RGB128.Black)))),
+		(CheckType.everything, MakeFunction<GlossyReflection<TrowbridgeReitzMicrofacet, ComplexFresnel>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1E-4f, 1E-4f), new ComplexFresnel(RGB128.White, RGB128.White * 2f, RGB128.White * 3f)))),
+		(CheckType.oneDirection, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(0.3f, 0.8f), new RealFresnel(1.1f, 1.7f)))),
+		(CheckType.oneDirection, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(0.7f, 0.4f), new RealFresnel(1.7f, 1.1f)))),
+		(CheckType.onlyQuotient, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1f, 1f)))), //I cannot get this to match :( but this edge case should not effect visuals at all
+		(CheckType.oneDirection, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1.5f, 1f)))),
+		(CheckType.everything, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1E-4f, 1E-4f), new RealFresnel(1f, 1.5f)))),
+		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White, new RealFresnel(1.1f, 1.7f), SpecularLambertian.FresnelDiffuseReflectance(1.1f / 1.7f)))),
+		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White * 0.3f, new RealFresnel(1.7f, 1.1f), SpecularLambertian.FresnelDiffuseReflectance(1.7f / 1.1f)))),
+		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White * 0.3f, new RealFresnel(1.1f, 1.7f)))),
+		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White, new RealFresnel(1f, 1f))))
 	};
 
 	static readonly Float3[] outgoings = new Float3[64];
@@ -98,8 +104,8 @@ public class BxDFTests
 
 				++goodSample;
 
-				Assert.That(outgoing.Magnitude, Is.EqualTo(1f).Roughly());
-				Assert.That(incident.Magnitude, Is.EqualTo(1f).Roughly());
+				Assert.That(outgoing.Magnitude, Is.EqualTo(1f).Roughly(1E-4f));
+				Assert.That(incident.Magnitude, Is.EqualTo(1f).Roughly(1E-4f));
 
 				RGB128 value = sampled.content / sampled.pdf * FastMath.Abs(incident.Dot(Float3.Forward));
 
@@ -107,6 +113,8 @@ public class BxDFTests
 
 				float pdf = function.ProbabilityDensity(outgoing, incident);
 				RGB128 evaluated = function.Evaluate(outgoing, incident);
+
+				if (type == CheckType.onlyOverall) continue;
 
 				if (function.type.Any(FunctionType.Specular))
 				{
@@ -134,7 +142,7 @@ public class BxDFTests
 				RGB128 result = (RGB128)(energy.Result / goodSample);
 				Assert.That(result < (Float4)(1f + 0.02f));
 
-				if (type == CheckType.everything) AssertRoughlyEquals(result, RGB128.White);
+				if (type is CheckType.everything or CheckType.onlyOverall) AssertRoughlyEquals(result, RGB128.White);
 			}
 		}
 
@@ -144,9 +152,9 @@ public class BxDFTests
 
 	static BxDF MakeFunction<T>(Action<T> reset) where T : BxDF, new()
 	{
-		T bxdf = new T();
-		reset(bxdf);
-		return bxdf;
+		T function = new T();
+		reset(function);
+		return function;
 	}
 
 	static void AssertRoughlyEquals(RGB128 value0, RGB128 value1, float tolerance = 0.01f)
@@ -166,6 +174,7 @@ public class BxDFTests
 	{
 		everything,
 		oneDirection,
-		onlyQuotient
+		onlyQuotient,
+		onlyOverall
 	}
 }

@@ -70,6 +70,7 @@ public readonly struct Sample1D
 	/// is uniform and unbiased. To do so, this <see cref="Stretch"/> method requires the two bounds, within
 	/// which categorized the previously sampled discrete value, to produce a new <see cref="Sample1D"/> by
 	/// utilizing the continuous (fractional) part of the discrete quantization.</remarks>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public Sample1D Stretch(float lower, float upper)
 	{
 		Ensure.IsTrue(u >= lower);

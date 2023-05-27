@@ -14,15 +14,10 @@ namespace Echo.Core.Evaluation.Materials;
 [EchoSourceUsable]
 public sealed class Dielectric : Material
 {
-	NotNull<Texture> _refractiveIndex = Pure.white;
-	NotNull<Texture> _roughness = Pure.black;
-
 	[EchoSourceUsable]
-	public Texture RefractiveIndex
-	{
-		get => _refractiveIndex;
-		set => _refractiveIndex = value;
-	}
+	public float RefractiveIndex { get; set; } = 1.5f;
+
+	NotNull<Texture> _roughness = Pure.black;
 
 	[EchoSourceUsable]
 	public Texture Roughness
@@ -39,8 +34,7 @@ public sealed class Dielectric : Material
 		float alphaX = IMicrofacet.GetAlpha(roughness.R, out bool specularX);
 		float alphaY = IMicrofacet.GetAlpha(roughness.G, out bool specularY);
 
-		float index = Sample(RefractiveIndex, contact).R;
-		var fresnel = new RealFresnel(1f, index);
+		var fresnel = new RealFresnel(1f, RefractiveIndex);
 
 		if (!specularX || !specularY)
 		{

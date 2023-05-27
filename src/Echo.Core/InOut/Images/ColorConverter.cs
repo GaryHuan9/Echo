@@ -10,6 +10,7 @@ public static class ColorConverter
 	const float LinearToGammaThreshold = 0.0031308f;
 	const float GammaToLinearThreshold = 0.04045f;
 	const float GammaMultiplier = 12.92f;
+	const byte AlphaControl = 0b0000_1000;
 
 	/// <summary>
 	/// Converts a <see cref="Float4"/> from linear space into sRGB.
@@ -20,11 +21,11 @@ public static class ColorConverter
 		Ensure.IsTrue(Float4.Zero <= x && x <= Float4.One);
 
 		Vector128<float> useCurve = Sse.CompareGreaterThan(x.v, Vector128.Create(LinearToGammaThreshold));
-		useCurve = Sse41.Insert(useCurve, useCurve, 0b0000_1000); //Set element for alpha to zero; no sRGB for alpha
+		useCurve = Sse41.Insert(useCurve, useCurve, AlphaControl); //Set element for alpha to zero; no sRGB for alpha
 
 		Float4 line = x * GammaMultiplier;
-		line = new Float4(Sse41.Blend(line.v, x.v, 0b0000_1000)); //No multiplication for alpha
-		if (Sse.MoveMask(useCurve) == 0) return line;             //Exit if all channel is under threshold
+		line = new Float4(Sse41.Blend(line.v, x.v, AlphaControl)); //No multiplication for alpha
+		if (Sse.MoveMask(useCurve) == 0) return line;              //Exit if all channel is under threshold
 
 		//7th degree polynomial approximation
 		Float4 c0 = (Float4)(-6.6597116468188869467222448794707645447488175705075E-6f);
@@ -93,11 +94,11 @@ public static class ColorConverter
 		Ensure.IsTrue(Float4.Zero <= x && x <= Float4.One);
 
 		Vector128<float> useCurve = Sse.CompareGreaterThan(x.v, Vector128.Create(GammaToLinearThreshold));
-		useCurve = Sse41.Insert(useCurve, useCurve, 0b0000_1000); //Set element for alpha to zero; no sRGB for alpha
+		useCurve = Sse41.Insert(useCurve, useCurve, AlphaControl); //Set element for alpha to zero; no sRGB for alpha
 
 		Float4 line = x * (1f / GammaMultiplier);
-		line = new Float4(Sse41.Blend(line.v, x.v, 0b0000_1000)); //No multiplication for alpha
-		if (Sse.MoveMask(useCurve) == 0) return line;             //Exit if all channel is under threshold
+		line = new Float4(Sse41.Blend(line.v, x.v, AlphaControl)); //No multiplication for alpha
+		if (Sse.MoveMask(useCurve) == 0) return line;              //Exit if all channel is under threshold
 
 		//7th degree polynomial approximation
 		Float4 c0 = (Float4)(+8.4588408523676651869227516300497882184572517871857E-4f);

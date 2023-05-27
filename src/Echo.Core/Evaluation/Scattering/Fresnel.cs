@@ -21,17 +21,16 @@ public readonly struct RealFresnel : IFresnel
 		this.etaBelow = etaBelow;
 	}
 
-	readonly float etaAbove;
-	readonly float etaBelow;
+	public readonly float etaAbove;
+	public readonly float etaBelow;
 
-	public RGB128 Evaluate(float cosO)
+	public float Evaluate(float cosO)
 	{
 		//Get the indices of reflection
 		var packet = CreateIncomplete(cosO);
 
 		//Apply Snell's law & the Fresnel equation
-		packet = packet.Complete;
-		return new RGB128(packet.Value);
+		return packet.Complete.Value;
 	}
 
 	/// <summary>
@@ -41,6 +40,8 @@ public readonly struct RealFresnel : IFresnel
 		cosOutgoing > 0f //Swap indices of refraction for when outgoing is below
 			? new Packet(etaAbove, etaBelow, cosOutgoing)
 			: new Packet(etaBelow, etaAbove, cosOutgoing);
+
+	RGB128 IFresnel.Evaluate(float cosO) => new(Evaluate(cosO));
 
 	public readonly struct Packet
 	{

@@ -8,8 +8,8 @@
 	:cullable = new OneSided { .Base = link white }
 	:light = new Emissive { .Albedo = new Pure("0xFFFAF4") }
 
-	:glass0 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = new Pure("hdr(1.2 0 0)") }
-	:glass1 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = new Pure("hdr(1.7 0 0)") }
+	:glass0 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = "1.2" }
+	:glass1 = new Dielectric { .Albedo = new Pure("0xF") .RefractiveIndex = "1.7" }
 
 	:wallSize = "10 10"
 	:wallSize5 = "5 5"

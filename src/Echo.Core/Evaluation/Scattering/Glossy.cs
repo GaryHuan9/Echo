@@ -91,10 +91,10 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 
 		float dotO = outgoing.Dot(normal);
 		float dotI = incident.Dot(normal);
-
 		if (FastMath.Positive(dotO * dotI)) return RGB128.Black;
-		RGB128 evaluated = RGB128.White - fresnel.Evaluate(dotO);
-		if (evaluated.IsZero) return RGB128.Black;
+
+		float evaluated = 1f - fresnel.Evaluate(dotO);
+		if (!FastMath.Positive(evaluated)) return RGB128.Black;
 
 		float numerator = etaR * etaR * dotO * dotI;
 		float denominator = FastMath.FMA(etaR, dotI, dotO);
@@ -104,7 +104,7 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 		denominator *= CosineP(outgoing) * CosineP(incident);
 
 		float ratio = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing, incident);
-		return evaluated * ratio * FastMath.Abs(numerator / denominator);
+		return new RGB128(evaluated * ratio * FastMath.Abs(numerator / denominator));
 	}
 
 	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
