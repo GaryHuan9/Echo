@@ -8,6 +8,7 @@ using NUnit.Framework;
 namespace Echo.UnitTests.Common;
 
 [TestFixture]
+[SingleThreaded]
 [TestFixtureSource(nameof(fixtureSource))]
 public class ViewIntTests : ViewBaseTests<int>
 {
@@ -20,6 +21,7 @@ public class ViewIntTests : ViewBaseTests<int>
 }
 
 [TestFixture]
+[SingleThreaded]
 [TestFixtureSource(nameof(fixtureSource))]
 public class ViewStringTests : ViewBaseTests<string>
 {

@@ -76,10 +76,10 @@ public class BxDFTests
 		(CheckType.onlyQuotient, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1f, 1f)))), //I cannot get this to match :( but this edge case should not effect visuals at all
 		(CheckType.oneDirection, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1f, 1f), new RealFresnel(1.5f, 1f)))),
 		(CheckType.everything, MakeFunction<GlossyTransmission<TrowbridgeReitzMicrofacet>>(function => function.Reset(new TrowbridgeReitzMicrofacet(1E-4f, 1E-4f), new RealFresnel(1f, 1.5f)))),
-		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White, new RealFresnel(1.1f, 1.7f), SpecularLambertian.FresnelDiffuseReflectance(1.1f / 1.7f)))),
-		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White * 0.3f, new RealFresnel(1.7f, 1.1f), SpecularLambertian.FresnelDiffuseReflectance(1.7f / 1.1f)))),
-		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White * 0.3f, new RealFresnel(1.1f, 1.7f)))),
-		// (CheckType.onlyOverall, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White, new RealFresnel(1f, 1f))))
+		(CheckType.everything, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White, new RealFresnel(1.1f, 1.7f), SpecularLambertian.FresnelDiffuseReflectance(1.1f / 1.7f)))),
+		(CheckType.oneDirection, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White * 0.3f, new RealFresnel(1.7f, 1.1f), SpecularLambertian.FresnelDiffuseReflectance(1.7f / 1.1f)))),
+		(CheckType.oneDirection, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White * 0.3f, new RealFresnel(1.1f, 1.7f)))),
+		(CheckType.everything, MakeFunction<SpecularLambertian>(function => function.Reset(RGB128.White, new RealFresnel(1f, 1f))))
 	};
 
 	static readonly Float3[] outgoings = new Float3[64];
@@ -114,8 +114,6 @@ public class BxDFTests
 				float pdf = function.ProbabilityDensity(outgoing, incident);
 				RGB128 evaluated = function.Evaluate(outgoing, incident);
 
-				if (type == CheckType.onlyOverall) continue;
-
 				if (function.type.Any(FunctionType.Specular))
 				{
 					Assert.That(pdf, Is.EqualTo(0f));
@@ -142,7 +140,7 @@ public class BxDFTests
 				RGB128 result = (RGB128)(energy.Result / goodSample);
 				Assert.That(result < (Float4)(1f + 0.02f));
 
-				if (type is CheckType.everything or CheckType.onlyOverall) AssertRoughlyEquals(result, RGB128.White);
+				if (type == CheckType.everything) AssertRoughlyEquals(result, RGB128.White);
 			}
 		}
 
@@ -174,7 +172,6 @@ public class BxDFTests
 	{
 		everything,
 		oneDirection,
-		onlyQuotient,
-		onlyOverall
+		onlyQuotient
 	}
 }

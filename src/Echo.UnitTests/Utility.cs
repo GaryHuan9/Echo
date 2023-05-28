@@ -3,6 +3,8 @@ using Echo.Core.Common.Mathematics.Randomization;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
+[assembly: Parallelizable(ParallelScope.Children)]
+
 namespace Echo.UnitTests;
 
 public static class Utility

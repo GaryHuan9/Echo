@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
@@ -52,53 +53,44 @@ public interface IDirectionalTexture
 		incident = sample.UniformSphere;
 		return (Evaluate(incident), Sample2D.UniformSpherePdf);
 	}
-}
 
-public static class IDirectionalTextureExtensions
-{
 	/// <summary>
 	/// Explicitly calculates a converged value for <see cref="IDirectionalTexture.Average"/> using Monte Carlo sampling.
 	/// </summary>
-	public static RGB128 ConvergeAverage(this IDirectionalTexture texture, int sampleCount = (int)1E6)
+	public sealed RGB128 AverageConverge(int sampleCount = (int)1E6)
 	{
-		using var sums = new ThreadLocal<SumPackage>(SumPackage.factory, true);
+		using var sums = new ThreadLocal<ConvergePackage>(() => new ConvergePackage(), true);
 
 		int size = (int)Math.Sqrt(sampleCount);
 		float sizeR = 1f / size;
 		int count = size * size;
 
 		//Sample random directions using stratified sampling
-		Parallel.For(0, count, index =>
+		Parallel.For(0, size, y =>
 		{
 			// ReSharper disable once AccessToDisposedClosure
-			SumPackage package = sums.Value;
+			ConvergePackage package = sums.Value;
+			if (package == null) throw new InvalidOperationException();
 
-			Int2 strata = new Int2(index % size, index / size);
-			Float2 position = strata + package.random.Next2();
-			Sample2D sample = (Sample2D)(position * sizeR);
-
-			package.Sum += texture.Evaluate(sample.UniformSphere);
+			for (int x = 0; x < size; x++)
+			{
+				Float2 position = new Int2(x, y) + package.random.Next2();
+				Sample2D sample = (Sample2D)(position * sizeR);
+				package.Sum += Evaluate(sample.UniformSphere);
+			}
 		});
 
 		//Total the sums for individual threads
 		Summation sum = Summation.Zero;
 
-		foreach (SumPackage package in sums.Values) sum += package.Sum;
+		foreach (ConvergePackage package in sums.Values) sum += package.Sum;
 
 		return (RGB128)(sum.Result / count);
 	}
 
-	class SumPackage
+	private record ConvergePackage
 	{
-		SumPackage()
-		{
-			random = new SquirrelPrng();
-			Sum = Summation.Zero;
-		}
-
-		public readonly Prng random;
+		public readonly Prng random = new SystemPrng();
 		public Summation Sum { get; set; }
-
-		public static readonly Func<SumPackage> factory = () => new SumPackage();
 	}
 }

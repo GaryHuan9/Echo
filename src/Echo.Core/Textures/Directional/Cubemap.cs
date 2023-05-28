@@ -76,7 +76,7 @@ public class Cubemap : IDirectionalTexture
 	static readonly string[] fileNames = { "px", "nx", "py", "ny", "pz", "nz" };
 
 	/// <inheritdoc/>
-	public void Prepare() => Average = this.ConvergeAverage();
+	public void Prepare() => Average = ((IDirectionalTexture)this).AverageConverge();
 
 	/// <inheritdoc/>
 	public RGB128 Evaluate(in Float3 incident)

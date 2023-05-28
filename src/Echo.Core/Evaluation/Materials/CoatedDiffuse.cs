@@ -1,5 +1,4 @@
 using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Evaluation.Scattering;
 using Echo.Core.InOut.EchoDescription;
@@ -16,12 +15,12 @@ public class CoatedDiffuse : Material
 	[EchoSourceUsable]
 	public float RefractiveIndex { get; set; } = 1.5f;
 
-	float reflectance; //Cached entrance reflectance for Pure RefractiveIndex textures.
+	float reflectance; //Cached fresnel diffuse reflectance for when the eta above is one.
 
 	public override void Prepare()
 	{
 		base.Prepare();
-		reflectance = SpecularLambertian.FresnelDiffuseReflectance(RefractiveIndex);
+		reflectance = SpecularLambertian.FresnelDiffuseReflectance(1f / RefractiveIndex);
 	}
 
 	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
@@ -29,8 +28,7 @@ public class CoatedDiffuse : Material
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 		var fresnel = new RealFresnel(1f, RefractiveIndex);
 
-		var function = bsdf.Add<SpecularLambertian>(allocator);
-		function.Reset(albedo, fresnel, reflectance);
+		bsdf.Add<SpecularLambertian>(allocator).Reset(albedo, fresnel, reflectance);
 		return bsdf;
 	}
 }

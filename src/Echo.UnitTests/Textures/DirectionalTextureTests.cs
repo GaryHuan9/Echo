@@ -51,7 +51,7 @@ public abstract class DirectionalTextureBaseTests
 	[Test]
 	public void Average()
 	{
-		RGB128 average = texture.ConvergeAverage();
+		RGB128 average = texture.AverageConverge();
 		Assert.That(FastMath.AlmostZero(Difference(average, texture.Average)));
 	}
 

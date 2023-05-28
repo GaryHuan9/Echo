@@ -6,7 +6,6 @@ using NUnit.Framework;
 namespace Echo.UnitTests.Common;
 
 [TestFixture]
-[Parallelizable]
 public class CurvesTests
 {
 	static readonly uint normalStart = BitConverter.SingleToUInt32Bits(0f);

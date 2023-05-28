@@ -24,8 +24,8 @@
 
 	:material7 = new CoatedDiffuse
 	{
-		.Albedo = new Pure("hdr(1 1 1)")
-		.RefractiveIndex = "0.7"
+		.Albedo = new Pure("hdr(0.4 0.7 0.8)")
+		.RefractiveIndex = "1.7"
 	}
 
 	.Add(new PlaneEntity { .Material = link material1 .Size = "32 24" })

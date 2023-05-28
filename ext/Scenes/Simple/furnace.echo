@@ -30,7 +30,7 @@
 	:material8 = new CoatedDiffuse
 	{
 		.Albedo = new Pure("hdr(1 1 1)")
-		.RefractiveIndex = "1.7"
+		.RefractiveIndex = "2"
 	}
 
 	.Add(new SphereEntity { .Material = link material8 .Radius = "1" })
