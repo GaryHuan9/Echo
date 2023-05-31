@@ -51,11 +51,11 @@ public abstract class InfiniteLight : LightEntity
 	/// <param name="direction">The normalized world-space direction to evaluate at.</param>
 	public abstract RGB128 Evaluate(in Float3 direction);
 
-	/// <inheritdoc cref="IPreparedLight.Sample"/>
-	public abstract Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel);
-
 	/// <inheritdoc cref="IPreparedLight.ProbabilityDensity"/>
 	public abstract float ProbabilityDensity(in GeometryPoint origin, in Float3 incident);
+
+	/// <inheritdoc cref="IPreparedLight.Sample"/>
+	public abstract Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel);
 
 	protected override void CheckRoot(EntityPack root)
 	{

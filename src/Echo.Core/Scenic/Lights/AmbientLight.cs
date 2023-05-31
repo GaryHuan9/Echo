@@ -57,6 +57,12 @@ public class AmbientLight : InfiniteLight
 
 	public override RGB128 Evaluate(in Float3 direction) => Intensity * Texture.Evaluate(worldToLocal * direction);
 
+	public override float ProbabilityDensity(in GeometryPoint origin, in Float3 incident)
+	{
+		Float3 transformed = worldToLocal * incident;
+		return Texture.ProbabilityDensity(transformed);
+	}
+
 	public override Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
 		Probable<RGB128> value = Texture.Sample(sample, out incident);
@@ -65,11 +71,5 @@ public class AmbientLight : InfiniteLight
 		travel = float.PositiveInfinity;
 
 		return (Intensity * value.content, value.pdf);
-	}
-
-	public override float ProbabilityDensity(in GeometryPoint origin, in Float3 incident)
-	{
-		Float3 transformed = worldToLocal * incident;
-		return Texture.ProbabilityDensity(transformed);
 	}
 }
