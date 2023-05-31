@@ -1,6 +1,4 @@
-﻿using Echo.Core.Scenic.Cameras;
-
-namespace Echo.Core.Evaluation.Sampling;
+﻿namespace Echo.Core.Evaluation.Sampling;
 
 /// <summary>
 /// A combination of <see cref="Sample2D"/> and <see cref="Sample1D"/> that defines the sampling for a <see cref="Camera"/>.

@@ -37,9 +37,9 @@ public readonly struct RealFresnel : IFresnel
 	/// Creates a new incomplete <see cref="Packet"/> from the cosine of an outgoing direction.
 	/// </summary>
 	public Packet CreateIncomplete(float cosOutgoing) =>
-		cosOutgoing > 0f //Swap indices of refraction for when outgoing is below
-			? new Packet(etaAbove, etaBelow, cosOutgoing)
-			: new Packet(etaBelow, etaAbove, cosOutgoing);
+		cosOutgoing > 0f ? //Swap indices of refraction for when outgoing is below
+			new Packet(etaAbove, etaBelow, cosOutgoing) : 
+			new Packet(etaBelow, etaAbove, cosOutgoing);
 
 	RGB128 IFresnel.Evaluate(float cosO) => new(Evaluate(cosO));
 

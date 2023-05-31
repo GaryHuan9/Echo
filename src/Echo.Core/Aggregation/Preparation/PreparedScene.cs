@@ -29,6 +29,8 @@ public sealed class PreparedScene : PreparedPack
 		: base(geometrySources, lightSources, instances, acceleratorCreator, swatchExtractor)
 	{
 		this.camera = camera;
+		if (camera == null) throw new ArgumentNullException(nameof(camera));
+
 		rootInstance = new PreparedInstance(this, geometries.swatch, Float4x4.identity);
 		this.infiniteLights = FilterLights(infiniteLights, rootInstance);
 		infiniteLightsPower = SumInfiniteLightsPower(this.infiniteLights);

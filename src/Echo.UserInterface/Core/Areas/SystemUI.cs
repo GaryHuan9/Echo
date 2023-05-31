@@ -85,7 +85,7 @@ public sealed class SystemUI : AreaUI
 		}
 
 		int frequency = FrameFrequency;
-		ImGui.SliderInt("Update Frequency", ref frequency, 1, 60);
+		ImGui.SliderInt("Update Frequency", ref frequency, 1, 120);
 		FrameFrequency = frequency;
 
 		ImGuiCustom.EndSection();

@@ -71,9 +71,9 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		}
 		else if (dot < 0f)
 		{
-			Float3 axis = FastMath.Abs(value0.X) > 0.9f
-				? Float3.Cross(Float3.Forward, value0)
-				: Float3.Cross(Float3.Right, value0);
+			Float3 axis = FastMath.Abs(value0.X) > 0.9f ?
+				Float3.Cross(Float3.Forward, value0) :
+				Float3.Cross(Float3.Right, value0);
 			d = new Float4(axis.X, axis.Y, axis.Z, 0f).Normalized;
 		}
 		else this = Identity;

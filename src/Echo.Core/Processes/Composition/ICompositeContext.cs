@@ -74,9 +74,9 @@ public interface ICompositeContext
 	/// but their <see cref="TextureGrid.size"/> is different, a resampling is performed for the best result.</remarks>
 	public sealed ComputeTask CopyAsync<T>(TextureGrid<T> source, SettableGrid<T> destination) where T : unmanaged, IColor<T>
 	{
-		return RunAsync(source.size == destination.size
-			? position => destination.Set(position, source[position])
-			: ResamplePass, destination.size);
+		return RunAsync(source.size == destination.size ? 
+			position => destination.Set(position, source[position]) : 
+			ResamplePass, destination.size);
 
 		void ResamplePass(Int2 position) //Performs a resampling of source from destination
 		{

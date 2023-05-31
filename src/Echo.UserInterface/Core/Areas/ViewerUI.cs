@@ -86,7 +86,7 @@ public sealed partial class ViewerUI : AreaUI
 		}
 
 		if (currentMode != null) DrawMode(region);
-		
+
 		if (currentMode != null && ImGui.BeginMenuBar())
 		{
 			currentMode.DrawMenuBar();
@@ -113,9 +113,9 @@ public sealed partial class ViewerUI : AreaUI
 		float planeAspect = currentMode.AspectRatio;
 		float regionAspect = region.extend.X / region.extend.Y;
 
-		Float2 displayExtend = planeAspect > regionAspect
-			? new Float2(region.extend.X, region.extend.X / planeAspect)
-			: new Float2(region.extend.Y * planeAspect, region.extend.Y);
+		Float2 displayExtend = planeAspect > regionAspect ?
+			new Float2(region.extend.X, region.extend.X / planeAspect) :
+			new Float2(region.extend.Y * planeAspect, region.extend.Y);
 
 		Float2? cursorUV = null;
 
@@ -128,7 +128,7 @@ public sealed partial class ViewerUI : AreaUI
 
 		Bounds plane = new Bounds(region.center + planeCenter, displayExtend * planeScale);
 		if (!currentMode.Draw(drawList, plane, cursorUV)) currentMode = null;
-		
+
 		drawList.PopClipRect();
 	}
 
