@@ -43,14 +43,14 @@ public class Camera : Entity
 		Float3 direction = spawner.SpawnX(sample.uv).CreateXY(forwardLength);
 		direction = InverseTransform.MultiplyDirection(direction).Normalized;
 
-		return new Ray(Position, direction);
+		return new Ray(ContainedPosition, direction);
 	}
 
-	public void LookAt(Entity target) => LookAt(target.Position);
+	public void LookAt(Entity target) => LookAt(target.ContainedPosition);
 
 	public void LookAt(Float3 target)
 	{
-		Float3 to = (target - Position).Normalized;
+		Float3 to = (target - ContainedPosition).Normalized;
 
 		float yAngle = -Float2.Up.SignedAngle(to.XZ);
 		float xAngle = -Float2.Right.SignedAngle(to.RotateXZ(yAngle).ZY);

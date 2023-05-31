@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Geometries;
 
 namespace Echo.Core.InOut.Models;
@@ -9,9 +10,11 @@ namespace Echo.Core.InOut.Models;
 /// An implementation of <see cref="ITriangleSource"/> that allows the usage of different 3D model file formats.
 /// </summary>
 /// <remarks>Currently .ply and .obj files are supported.</remarks>
+[EchoSourceUsable]
 public sealed class FileTriangleSource : ITriangleSource
 {
-	public FileTriangleSource(string path)
+	[EchoSourceUsable]
+	public FileTriangleSource(ImportPath path)
 	{
 		if (!File.Exists(path)) throw new FileNotFoundException("Triangle source file not found.", path);
 

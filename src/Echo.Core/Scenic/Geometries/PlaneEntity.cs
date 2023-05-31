@@ -50,11 +50,11 @@ public class PlaneEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 		MaterialIndex material = extractor.Register(Material, 2);
 
 		Float3 point00 = transform.MultiplyPoint(new Float3(-extend.X, 0f, -extend.Y));
-		Float3 point01 = transform.MultiplyPoint(new Float3(-extend.X, 0f, extend.Y));
-		Float3 point10 = transform.MultiplyPoint(new Float3(extend.X, 0f, -extend.Y));
+		Float3 point01 = transform.MultiplyPoint(new Float3(extend.X, 0f, -extend.Y));
+		Float3 point10 = transform.MultiplyPoint(new Float3(-extend.X, 0f, extend.Y));
 		Float3 point11 = transform.MultiplyPoint(new Float3(extend.X, 0f, extend.Y));
 
-		yield return new PreparedTriangle(point00, point11, point10, Texcoord00, Texcoord11, Texcoord10, material);
-		yield return new PreparedTriangle(point00, point01, point11, Texcoord00, Texcoord01, Texcoord11, material);
+		yield return new PreparedTriangle(point00, point10, point11, Texcoord00, Texcoord10, Texcoord11, material);
+		yield return new PreparedTriangle(point00, point11, point01, Texcoord00, Texcoord11, Texcoord01, material);
 	}
 }

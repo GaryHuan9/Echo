@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using Echo.Core.Common;
 using Echo.Core.Common.Packed;
-using Echo.Core.InOut.Images;
 using Echo.Core.InOut.Models;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Textures;
@@ -34,11 +33,12 @@ static class LiteralParser
 		AddTryParser<RGB128>(RGBA128.TryParse);
 
 		//We need a more sophisticated parser for different texture import options based on the string syntax
-		//For now though, TextureGrid uses RGB128 without the alpha since only TextureManage actually use it
+		//For now though, use ImportGrid for slightly more parameter control when trying to do custom imports
 		AddPathTryParser<Texture>(path => TextureGrid.Load<RGBA128>(path));
 		AddPathTryParser<TextureGrid>(path => TextureGrid.Load<RGB128>(path));
 
 		AddPathTryParser<ITriangleSource>(path => new FileTriangleSource(path));
+		AddPathTryParser(path => new ImportPath(path));
 		AddParser(span => span);
 
 		void AddTryParser<T>(TryParser<T> source) => parsers.Add

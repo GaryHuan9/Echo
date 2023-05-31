@@ -46,7 +46,7 @@ public abstract class Material
 	/// The intensity of <see cref="Normal"/> on this <see cref="Material"/>.
 	/// </summary>
 	[EchoSourceUsable]
-	public float NormalIntensity { get; set; } = 1f;
+	public float NormalIntensity { get; set; } = 0.5f;
 
 	bool zeroNormal;
 
@@ -82,14 +82,13 @@ public abstract class Material
 
 		//Evaluate normal texture at texcoord
 		Float4 local = Float4.Clamp(Normal[texcoord]);
-		local = local * 2f - new Float4(1f, 1f, 2f, 0f); //OPTIMIZE fma
-
+		local *= new Float4(-2f, 2f, 2f, 0f);
+		local += new Float4(1f, -1f, -2f, 0f);
 		local *= NormalIntensity;
-		if (local == Float4.Zero) return false;
 
 		//Create transform to move local direction to world-space
 		var transform = new OrthonormalTransform(normal);
-		Float3 delta = transform.ApplyForward(local.XYZ);
+		Float3 delta = transform.ApplyForward((Float3)local);
 
 		normal = (normal - delta).Normalized;
 		return true;
