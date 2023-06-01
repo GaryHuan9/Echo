@@ -57,14 +57,6 @@ public class Cubemap : IDirectionalTexture
 		set => this[direction.Index] = value;
 	}
 
-	public Tint Tint
-	{
-		set
-		{
-			foreach (var texture in textures) texture.Value.Tint = value;
-		}
-	}
-
 	public RGB128 Average { get; private set; }
 
 	Texture this[int index]

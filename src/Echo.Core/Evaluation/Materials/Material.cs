@@ -46,7 +46,7 @@ public abstract class Material
 	/// The intensity of <see cref="Normal"/> on this <see cref="Material"/>.
 	/// </summary>
 	[EchoSourceUsable]
-	public float NormalIntensity { get; set; } = 0.5f;
+	public float NormalIntensity { get; set; } = 0.25f;
 
 	bool zeroNormal;
 

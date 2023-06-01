@@ -25,9 +25,7 @@ public sealed class Pure : Texture, IDirectionalTexture
 
 	RGB128 IDirectionalTexture.Average => color;
 
-	public void Prepare() => Tint = Tint.Identity;
-
-	protected override RGBA128 Evaluate(Float2 uv) => rgba;
+	public override RGBA128 this[Float2 texcoord] => rgba;
 
 	RGB128 IDirectionalTexture.Evaluate(in Float3 incident) => color;
 

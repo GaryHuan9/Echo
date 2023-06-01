@@ -95,8 +95,8 @@ public class BSDF
 
 		Float3 outgoing = transform.ApplyInverse(outgoingWorld);
 		Float3 incident = transform.ApplyInverse(incidentWorld);
-
 		FunctionType reflect = Reflect(outgoingWorld, incidentWorld);
+
 		var total = RGB128.Black;
 
 		for (int i = 0; i < count; i++)

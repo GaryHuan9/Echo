@@ -22,7 +22,7 @@ public sealed class ImportGrid : TextureGrid
 
 	readonly TextureGrid texture;
 
-	protected override RGBA128 Evaluate(Float2 uv) => texture[uv];
+	public override RGBA128 this[Float2 texcoord] => texture[texcoord];
 
 	public override void Save(string path, Serializer serializer = null) => texture.Save(path, serializer);
 	public override TextureGrid Load(string path, Serializer serializer = null) => texture.Load(path, serializer);

@@ -205,6 +205,15 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 		if (size.MinComponent <= 0) throw new ArgumentOutOfRangeException(nameof(size));
 	}
 
+	public sealed override RGBA128 this[Float2 texcoord]
+	{
+		get
+		{
+			Ensure.IsTrue(float.IsFinite(texcoord.Sum));
+			return Filter.Evaluate(this, texcoord);
+		}
+	}
+
 	/// <summary>
 	/// Gets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
 	/// </summary>
@@ -229,12 +238,6 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 	/// <returns>A new <see cref="TextureGrid{T}"/> that is a view of this <see cref="TextureGrid{T}"/>
 	/// from <paramref name="min"/> (inclusive) to <paramref name="max"/> (exclusive).</returns>
 	public virtual TextureGrid<T> Crop(Int2 min, Int2 max) => new CropGrid(this, min, max);
-
-	protected sealed override RGBA128 Evaluate(Float2 uv)
-	{
-		Ensure.IsTrue(float.IsFinite(uv.Sum));
-		return Filter.Evaluate(this, uv);
-	}
 
 	class CropGrid : TextureGrid<T>
 	{
