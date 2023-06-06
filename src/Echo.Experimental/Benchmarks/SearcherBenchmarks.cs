@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 using BenchmarkDotNet.Attributes;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Memory;
 
 namespace Echo.Experimental.Benchmarks;
 
-public class RenameThisBenchmark
+public class SearcherBenchmarks
 {
-	public RenameThisBenchmark()
+	public SearcherBenchmarks()
 	{
 		//Generate values and samples
 		var random = new SystemPrng(42);
@@ -22,6 +24,7 @@ public class RenameThisBenchmark
 		values[^1] = 1f;
 
 		Searchers.Add(new Original(values));
+		Searchers.Add(new BinarySIMD(values));
 		//TODO: add more
 
 		//Test all searchers
@@ -116,5 +119,42 @@ public class RenameThisBenchmark
 
 			return (int)~head;
 		}
+	}
+
+	class BinarySIMD : Searcher
+	{
+		public BinarySIMD(ReadOnlySpan<float> values) : base(values) { }
+
+		public override unsafe int FindIndex(float sample)
+		{
+			uint left = 0;
+			uint right = (uint)array.Length;
+			while (left < right)
+			{
+				uint mid = left + ((right - left) >> 1);
+				if (array[mid] == sample) return (int)mid;
+				if (sample <= array[mid]) right = mid;
+				else left = mid + 1;
+			}
+
+			return (int)~left;
+		}
+	}
+
+	static int GetBitsSet(int mask) => (mask & 0x0001) + ((mask & 0x0010) >> 8) + ((mask & 0x0100) >> 16) + ((mask & 0x1000) >> 24);
+
+	static bool getFirstPositiveResult(int mask, ref int i)
+	{
+		if (mask == 0) return false;
+		for (int j = 3; j >= 0; j--)
+		{
+			int checkResult = (mask >> (j * 8)) & 1;
+			if (checkResult == 1)
+			{
+				i = j;
+				return true;
+			}
+		}
+		return false;
 	}
 }
