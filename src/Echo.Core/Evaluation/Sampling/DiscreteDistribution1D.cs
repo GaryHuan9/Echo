@@ -61,25 +61,36 @@ public readonly struct DiscreteDistribution1D
 		// while (--index > 0 && last == cdfValues[index]);
 
 		Count = pdfValues.Length;
-		List<float> weightsList = new List<float>();
-		weightsList.AddRange(pdfValues.ToArray());
+		List<PDFInfo> weightsList = new List<PDFInfo>();
 
-		sum = weightsList.Sum();
-		float averageSampleWeight = sum / this.Count;
+		sum = 0;
+		for (int i = 0; i < Count; i++)
+		{
+			PDFInfo info = new PDFInfo();
+			info.pdfIndex = i;
+			info.originalPDF = info.weight = pdfValues[i];
+			weightsList.Add(info);
+			sum += pdfValues[i];
+		}
+		
+		averageWeight = sum / Count;
 
 		List<Bin> generatedBins = new List<Bin>();
 		for (int i = 0; i < this.Count; i++)
 		{
-			weightsList.Sort((x,y) => y.CompareTo(x));
+			weightsList.Sort((x,y) => y.weight.CompareTo(x.weight));
 			int lowestWeightedSampleIndex = weightsList.Count - 1;
 			
 			Bin bin = new Bin();
-			bin.i = pdfValues.BinarySearch(weightsList[lowestWeightedSampleIndex]);
-			bin.j = pdfValues.BinarySearch(weightsList[0]);
-			bin.threshold = weightsList[lowestWeightedSampleIndex] / averageSampleWeight;
+			bin.i = weightsList[lowestWeightedSampleIndex].originalPDF;
+			bin.j = weightsList[0].originalPDF;
+			bin.iIndex = weightsList[lowestWeightedSampleIndex].pdfIndex;
+			bin.jIndex = weightsList[0].pdfIndex;
+			bin.threshold = weightsList[lowestWeightedSampleIndex].weight / averageWeight;
 			generatedBins.Add(bin);
-			
-			weightsList[0] -= averageSampleWeight - weightsList[lowestWeightedSampleIndex];
+
+			float newWeight = weightsList[0].weight - (averageWeight - weightsList[lowestWeightedSampleIndex].weight);
+			weightsList[0].setWeight(newWeight);
 			weightsList.RemoveAt(lowestWeightedSampleIndex);
 		}
 
@@ -112,6 +123,7 @@ public readonly struct DiscreteDistribution1D
 
 	readonly Bin[] aliasTable;
 	readonly float[] weights;
+	readonly float averageWeight;
 
 	/// <summary>
 	/// The total number of discrete values in this <see cref="DiscreteDistribution1D"/>.
@@ -138,11 +150,27 @@ public readonly struct DiscreteDistribution1D
 		// Sample1D result = (Sample1D)(shift * countR);
 		// return new Probable<Sample1D>(result, gap * Count);
 
+		Console.WriteLine(sample);
+		
 		Random random = new Random();
 		int index = random.Next(Count);
 		float value = SystemPrng.Shared.Next1();
-		int resultIndex = value >= aliasTable[index].threshold ? aliasTable[index].i : aliasTable[index].j;
-		return new Probable<Sample1D>((Sample1D)resultIndex, weights[resultIndex]);
+
+		Sample1D resultSample;
+		float resultPDF;
+		
+		if (value < aliasTable[index].threshold)
+		{
+			resultPDF = aliasTable[index].i;
+			resultSample = (Sample1D)aliasTable[index].i;
+		}
+		else
+		{
+			resultPDF = aliasTable[index].j;
+			resultSample = (Sample1D)aliasTable[index].j;
+		}
+		
+		return new Probable<Sample1D>(resultSample, resultPDF);
 
 	}
 
@@ -156,10 +184,7 @@ public readonly struct DiscreteDistribution1D
 		// int index = FindIndex(sample);
 		// GetBounds(index, out float lower, out float upper);
 		// return new Probable<int>(index, upper - lower);
-		int index = (int)SystemPrng.Shared.NextUInt32();
-		float value = SystemPrng.Shared.Next1();
-		int resultIndex = value >= aliasTable[index].threshold ? aliasTable[index].i : aliasTable[index].j;
-		return new Probable<int>(resultIndex, weights[resultIndex]);
+		return new Probable<int>(0, 0);
 	}
 
 	/// <inheritdoc cref="Pick(Sample1D)"/>
@@ -172,10 +197,7 @@ public readonly struct DiscreteDistribution1D
 		// GetBounds(index, out float lower, out float upper);
 		// sample = sample.Stretch(lower, upper);
 		// return new Probable<int>(index, upper - lower);
-		int index = (int)SystemPrng.Shared.NextUInt32();
-		float value = SystemPrng.Shared.Next1();
-		int resultIndex = value >= aliasTable[index].threshold ? aliasTable[index].i : aliasTable[index].j;
-		return new Probable<int>(resultIndex, weights[resultIndex]);
+		return new Probable<int>(0, 0);
 	}
 
 	/// <summary>
@@ -285,7 +307,18 @@ public readonly struct DiscreteDistribution1D
 	struct Bin
 	{
 		public float threshold;
-		public int i;
-		public int j;
+		public float i;
+		public float j;
+		public int iIndex;
+		public int jIndex;
+	}
+
+	struct PDFInfo
+	{
+		public float originalPDF;
+		public float weight;
+		public int pdfIndex;
+
+		public void setWeight(float weight) => this.weight = weight;
 	}
 }
