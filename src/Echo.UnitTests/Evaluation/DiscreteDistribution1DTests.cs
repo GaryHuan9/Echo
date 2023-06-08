@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -8,18 +9,19 @@ using NUnit.Framework;
 namespace Echo.UnitTests.Evaluation;
 
 [TestFixture]
-public class DiscreteDistribution1Tests
+public class DiscreteDistribution1DTests
 {
-	static DiscreteDistribution1Tests()
+	static DiscreteDistribution1DTests()
 	{
-		constant = new DiscreteDistribution1D(stackalloc[] { 1f, 1f, 1f, 1f, 1f });
-		singular = new DiscreteDistribution1D(stackalloc[] { 4f });
-		sequence = new DiscreteDistribution1D(stackalloc[] { 1f, 2f, 3f });
+		constant = new DiscreteDistribution1D(stackalloc[] { 1f, 1f, 1f, 1f });
+		singular = new DiscreteDistribution1D(stackalloc[] { 999f });
+		sequence = new DiscreteDistribution1D(stackalloc[] { 1f, 2f, 3f, 4f, 5f });
+		ordinary = new DiscreteDistribution1D(stackalloc[] { 3f, 5f, 2f, 4f, 6f });
 		allZeros = new DiscreteDistribution1D(stackalloc[] { 0f, 0f, 0f });
 		zerosOne = new DiscreteDistribution1D(stackalloc[] { 0f, 0f, 0f, 1f });
 		oneZeros = new DiscreteDistribution1D(stackalloc[] { 1f, 0f, 0f, 0f });
 
-		array = new[] { constant, singular, sequence, allZeros, zerosOne, oneZeros };
+		array = new[] { constant, singular, sequence, ordinary, allZeros, zerosOne, oneZeros };
 
 		var distribution = new StratifiedDistribution
 		{
@@ -39,6 +41,7 @@ public class DiscreteDistribution1Tests
 	static readonly DiscreteDistribution1D constant;
 	static readonly DiscreteDistribution1D singular;
 	static readonly DiscreteDistribution1D sequence;
+	static readonly DiscreteDistribution1D ordinary;
 	static readonly DiscreteDistribution1D allZeros;
 	static readonly DiscreteDistribution1D zerosOne;
 	static readonly DiscreteDistribution1D oneZeros;
@@ -49,9 +52,10 @@ public class DiscreteDistribution1Tests
 	[Test]
 	public void Sum()
 	{
-		Assert.That(constant.sum, Is.EqualTo(5f).Roughly());
-		Assert.That(singular.sum, Is.EqualTo(4f).Roughly());
-		Assert.That(sequence.sum, Is.EqualTo(6f).Roughly());
+		Assert.That(constant.sum, Is.EqualTo(4f).Roughly());
+		Assert.That(singular.sum, Is.EqualTo(999f).Roughly());
+		Assert.That(sequence.sum, Is.EqualTo(15f).Roughly());
+		Assert.That(ordinary.sum, Is.EqualTo(20f).Roughly());
 		Assert.That(allZeros.sum, Is.EqualTo(0f).Roughly());
 		Assert.That(zerosOne.sum, Is.EqualTo(1f).Roughly());
 		Assert.That(oneZeros.sum, Is.EqualTo(1f).Roughly());
@@ -61,8 +65,9 @@ public class DiscreteDistribution1Tests
 	public void Integral()
 	{
 		Assert.That(constant.integral, Is.EqualTo(1f).Roughly());
-		Assert.That(singular.integral, Is.EqualTo(4f).Roughly());
-		Assert.That(sequence.integral, Is.EqualTo(2f).Roughly());
+		Assert.That(singular.integral, Is.EqualTo(999f).Roughly());
+		Assert.That(sequence.integral, Is.EqualTo(3f).Roughly());
+		Assert.That(ordinary.integral, Is.EqualTo(4f).Roughly());
 		Assert.That(allZeros.integral, Is.EqualTo(0f).Roughly());
 		Assert.That(zerosOne.integral, Is.EqualTo(0.25f).Roughly());
 		Assert.That(oneZeros.integral, Is.EqualTo(0.25f).Roughly());
@@ -71,9 +76,10 @@ public class DiscreteDistribution1Tests
 	[Test]
 	public void Count()
 	{
-		Assert.That(constant, Has.Count.EqualTo(5));
+		Assert.That(constant, Has.Count.EqualTo(4));
 		Assert.That(singular, Has.Count.EqualTo(1));
-		Assert.That(sequence, Has.Count.EqualTo(3));
+		Assert.That(sequence, Has.Count.EqualTo(5));
+		Assert.That(ordinary, Has.Count.EqualTo(5));
 		Assert.That(allZeros, Has.Count.EqualTo(3));
 		Assert.That(zerosOne, Has.Count.EqualTo(4));
 		Assert.That(oneZeros, Has.Count.EqualTo(4));
@@ -88,7 +94,16 @@ public class DiscreteDistribution1Tests
 	[Test]
 	public void ProbabilityBoundaries([ValueSource(nameof(array))] DiscreteDistribution1D distribution)
 	{
-		foreach (Sample1D sample in Uniform(distribution.Count)) ProbabilitySingle(distribution, sample);
+		decimal countR = 1m / distribution.Count;
+
+		for (int i = 0; i <= distribution.Count; i++)
+		{
+			float sample0 = (float)(i * countR) + Scalars.Epsilon;
+			float sample1 = (float)(i * countR) - Scalars.Epsilon;
+
+			ProbabilitySingle(distribution, (Sample1D)sample0);
+			ProbabilitySingle(distribution, (Sample1D)sample1);
+		}
 	}
 
 	static void ProbabilitySingle(DiscreteDistribution1D distribution, Sample1D sample)
@@ -104,12 +119,5 @@ public class DiscreteDistribution1Tests
 
 		var again = distribution.Pick(ref sample);
 		Assert.That(again, Is.EqualTo(discrete));
-	}
-
-	static IEnumerable<Sample1D> Uniform(int count)
-	{
-		decimal countR = 1m / count;
-
-		for (int i = 0; i <= count; i++) yield return (Sample1D)(float)(i * countR);
 	}
 }
