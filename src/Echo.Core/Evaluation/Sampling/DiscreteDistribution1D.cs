@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
@@ -150,28 +151,9 @@ public readonly struct DiscreteDistribution1D
 		// Sample1D result = (Sample1D)(shift * countR);
 		// return new Probable<Sample1D>(result, gap * Count);
 
-		Console.WriteLine(sample);
-		
-		Random random = new Random();
-		int index = random.Next(Count);
-		float value = SystemPrng.Shared.Next1();
-
-		Sample1D resultSample;
-		float resultPDF;
-		
-		if (value < aliasTable[index].threshold)
-		{
-			resultPDF = aliasTable[index].i;
-			resultSample = (Sample1D)aliasTable[index].i;
-		}
-		else
-		{
-			resultPDF = aliasTable[index].j;
-			resultSample = (Sample1D)aliasTable[index].j;
-		}
-		
-		return new Probable<Sample1D>(resultSample, resultPDF);
-
+		int index = sample.Range(Count);
+		float pdf = sample < aliasTable[index].threshold ? aliasTable[index].i : aliasTable[index].j;
+		return new Probable<Sample1D>((Sample1D)aliasTable[index].threshold, pdf);
 	}
 
 	/// <summary>
@@ -184,7 +166,11 @@ public readonly struct DiscreteDistribution1D
 		// int index = FindIndex(sample);
 		// GetBounds(index, out float lower, out float upper);
 		// return new Probable<int>(index, upper - lower);
-		return new Probable<int>(0, 0);
+		int index = sample.Range(aliasTable.Length);
+
+		float result = sample < aliasTable[index].threshold ? aliasTable[index].i : aliasTable[index].j;
+
+		return new Probable<int>(index, result);
 	}
 
 	/// <inheritdoc cref="Pick(Sample1D)"/>
@@ -210,7 +196,9 @@ public readonly struct DiscreteDistribution1D
 	{
 		//GetBounds(result.Range(Count), out float lower, out float upper);
 		//return (upper - lower) * Count;
-		return 0;
+		int index = result.Range(Count);
+		float threshold = aliasTable[index].threshold;
+		return result < threshold ? aliasTable[index].i : aliasTable[index].j;
 	}
 
 	/// <summary>
@@ -223,7 +211,8 @@ public readonly struct DiscreteDistribution1D
 	{
 		//GetBounds(result, out float lower, out float upper);
 		//return upper - lower;
-		return 0;
+        float threshold = aliasTable[result].threshold;
+		return (result < threshold ? aliasTable[result].i : aliasTable[result].j) / (float)Count;
 	}
 
 	/*[MethodImpl(MethodImplOptions.AggressiveInlining)]
