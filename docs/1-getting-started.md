@@ -4,6 +4,17 @@
 
 :construction: this page is currently under construction! :construction:
 
+A page to get you started in using Echo.
+
+<!-- TOC -->
+* [Getting Started](#getting-started)
+  * [Welcome](#welcome)
+  * [User Interface](#user-interface)
+  * [Code](#code)
+<!-- TOC -->
+
+---
+
 ## Welcome
 Welcome to Echo documentation! Currently, the documentation is divided four four big files, each detailing a component that can help you understand and use Echo:
 1. If you are just starting and want to get something working, continue reading this [Getting Started](1-getting-started.md)!

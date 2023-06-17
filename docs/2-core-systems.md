@@ -6,6 +6,19 @@
 
 The main `Echo.Core` is composed of seven major systems, each contributing a different purpose towards to the goal of synthesizing photorealistic images. These systems occupy various namespaces under `Echo.Core` and are catalogued below in order of relative importance.
 
+<!-- TOC -->
+* [Core Systems](#core-systems)
+  * [Evaluation](#evaluation)
+  * [Aggregation](#aggregation)
+  * [Processes](#processes)
+  * [Scenic](#scenic)
+  * [Textures](#textures)
+  * [Common](#common)
+  * [In Out](#in-out)
+<!-- TOC -->
+
+---
+
 ## Evaluation
 The `Echo.Core.Evaluation` namespace contains systems related to the evaluation of a `Scene` (many evaluations are composited together to create a render). Besides [aggregation](#Aggregation), this namespace occupies the majority of the runtime during rendering. Its systems are listed here:
 - An `Evaluator` defines how a `Scene` is evaluated. It takes in a `PreparedScene` and a `Ray`, then returns a corresponding `Float4` which represents the evaluated data. The `PathTracedEvaluator` does exactly as its name suggests; it evaluates the `Scene` using path tracing with multiple importance sampling and next-event estimation. A simpler evaluator is the `BruteForcedEvaluator`, which implements the naive recursive path tracing algorithm; it is sometimes used as a reference evaluator. Besides evaluators, there is also `EvaluatorStatistics` that features a very lightweight statistics capture system and is mainly used by the `PathTracedEvaluator`.
@@ -16,23 +29,36 @@ The `Echo.Core.Evaluation` namespace contains systems related to the evaluation 
 ## Aggregation
 The `Echo.Core.Aggregation` namespace manages spatial calculations done on the `Scene`. This mainly includes the `Ray`-`Scene` intersection testing and light picking.
 - An `Accelerator` improves the speed of 
+- Light selection
+- Preparation
 
 ## Processes
-
-
+The `Echo.Core.Processes` namespace oversees the entire rendering process using `Operation`s; it handles the full lifecycle of a render, containing the following three stages.
+- Preparation
+- Evaluation
+- Composition
 
 ## Scenic
-
-
+The `Echo.Core.Scenic` namespace has the necessary components to building a `Scene`.
+- Geometric objects
+- Lights
+- Instancing
+- Preparation
 
 ## Textures
-
-
+The `Echo.Core.Textures` namespace defines various implementations of `Texture`s, which are 2D planes that can be samples at arbitrary coordinates to get colors.
+- Colors
+- Textures
+- Directional
 
 ## Common
-
-
+The `Echo.Core.Common` namespace
+- Compute
+- Mathematics
+- Packed
 
 ## In Out
-
-
+The `Echo.Core.InOut` namespace
+- Echo Description
+- Images
+- Models
