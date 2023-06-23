@@ -19,6 +19,11 @@ public sealed class Invisible : Material
 	/// </summary>
 	public static readonly Invisible instance = new();
 
-	public override void Scatter(ref Contact contact, Allocator allocator) => contact.bsdf = null;
+	public override void Scatter(ref Contact contact, Allocator allocator)
+	{
+		contact.bsdf = NewBSDF(contact, allocator, RGB128.White);
+		contact.bsdf.Add<SpecularTransmission>(allocator).Reset(new RealFresnel(1f, 1f));
+	}
+
 	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
 }

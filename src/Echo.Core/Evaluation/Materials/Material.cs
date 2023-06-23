@@ -63,7 +63,13 @@ public abstract class Material
 	public virtual void Scatter(ref Contact contact, Allocator allocator)
 	{
 		RGBA128 sampled = SampleAlbedo(contact);
-		if (sampled.Alpha < 0.5f) return;
+
+		if (sampled.Alpha < 0.5f)
+		{
+			//Alpha test failed, surface is transparent
+			Invisible.instance.Scatter(ref contact, allocator);
+			return;
+		}
 
 		var albedo = (RGB128)sampled;
 		contact.bsdf = Scatter(contact, allocator, albedo);
