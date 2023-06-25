@@ -118,7 +118,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		}
 	}
 
-	public static Versor Identity = new(Float4.Ana);
+	public static Versor Identity => new(Float4.Ana);
 
 	public float Dot(in Versor other) => d.Dot(other.d);
 
@@ -135,7 +135,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 
 	public Versor Damp(in Versor target, ref Float4 velocity, float smoothTime, float deltaTime) => Damp(this, target, ref velocity, smoothTime, deltaTime);
 
-	public bool Equals(in Versor other) => Math.Abs(Dot(other)).AlmostEquals(1f);
+	public bool Equals(in Versor other) => FastMath.Abs(Dot(other)).AlmostEquals(1f);
 	public override bool Equals(object obj) => obj is Versor other && Equals(other);
 
 	public override int GetHashCode() => d.GetHashCode();
@@ -176,7 +176,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	public static bool operator ==(in Versor left, in Versor right) => left.Equals(right);
 	public static bool operator !=(in Versor left, in Versor right) => !left.Equals(right);
 
-	public static implicit operator Float3x3(in Versor value)
+	public static explicit operator Float3x3(in Versor value)
 	{
 		ref readonly Float4 d = ref value.d;
 
@@ -198,7 +198,6 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Versor Join(in Versor first, in Versor second, bool conjugate)
 	{
 		Float3 xyz0 = first.d.XYZ;
@@ -221,7 +220,6 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		return new Versor(result);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static Float3 Join(in Versor first, in Float3 second, bool conjugate)
 	{
 		ref readonly Float4 d = ref first.d;

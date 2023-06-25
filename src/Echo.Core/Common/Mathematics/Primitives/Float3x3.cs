@@ -158,7 +158,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	/// <summary>
 	/// The idempotent <see cref="Float3x3"/> value.
 	/// </summary>
-	public static readonly Float3x3 identity = new
+	public static Float3x3 Identity => new
 	(
 		1f, 0f, 0f,
 		0f, 1f, 0f,
@@ -203,12 +203,6 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 		$"{f10.ToString(format, provider)}\t{f11.ToString(format, provider)}\t{f12.ToString(format, provider)}\n" +
 		$"{f20.ToString(format, provider)}\t{f21.ToString(format, provider)}\t{f22.ToString(format, provider)}\n";
 
-	// ReSharper disable CompareOfFloatsByEqualityOperator
-	public bool EqualsExact(in Float3x3 other) => f00 == other.f00 && f01 == other.f01 && f02 == other.f02 &&
-												  f10 == other.f10 && f11 == other.f11 && f12 == other.f12 &&
-												  f20 == other.f20 && f21 == other.f21 && f22 == other.f22;
-	// ReSharper restore CompareOfFloatsByEqualityOperator
-
 	public override bool Equals(object obj) => obj is Float3x3 other && EqualsFast(other);
 
 	public bool Equals(Float3x3 other) => EqualsFast(other);
@@ -242,7 +236,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	/// <summary>
 	/// Creates and returns a 3D rotational matrix that applies in ZXY order.
 	/// </summary>
-	public static Float3x3 Rotation(in Float3 rotation) => new Versor(rotation);
+	public static Float3x3 Rotation(in Float3 rotation) => (Float3x3)new Versor(rotation);
 
 	/// <summary>
 	/// Creates and returns a 3D scaling matrix.

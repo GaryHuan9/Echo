@@ -31,7 +31,7 @@ public sealed class PreparedScene : PreparedPack
 		this.camera = camera;
 		if (camera == null) throw new ArgumentNullException(nameof(camera));
 
-		rootInstance = new PreparedInstance(this, geometries.swatch, Float4x4.identity);
+		rootInstance = new PreparedInstance(this, geometries.swatch, Float4x4.Identity);
 		this.infiniteLights = FilterLights(infiniteLights, rootInstance);
 		infiniteLightsPower = SumInfiniteLightsPower(this.infiniteLights);
 
@@ -241,8 +241,8 @@ public sealed class PreparedScene : PreparedPack
 
 	ref readonly PreparedInstance FindLayer(in TokenHierarchy hierarchy, out Float4x4 forwardTransform, out Float4x4 inverseTransform)
 	{
-		forwardTransform = Float4x4.identity;
-		inverseTransform = Float4x4.identity;
+		forwardTransform = Float4x4.Identity;
+		inverseTransform = Float4x4.Identity;
 
 		ref readonly PreparedInstance instance = ref rootInstance;
 

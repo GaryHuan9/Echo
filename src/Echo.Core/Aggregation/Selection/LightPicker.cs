@@ -25,7 +25,7 @@ public abstract class LightPicker
 	{
 		get
 		{
-			_boxBound ??= GetTransformedBound(Float4x4.identity);
+			_boxBound ??= GetTransformedBound(Float4x4.Identity);
 			return _boxBound.Value;
 		}
 	}

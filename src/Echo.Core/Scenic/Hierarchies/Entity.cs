@@ -33,7 +33,7 @@ public class Entity : IEnumerable<Entity>
 	public EntityPack Root { get; private set; }
 
 	Float3 _position;
-	Float3 _rotation;
+	Versor _rotation = Versor.Identity;
 	float _scale = 1f;
 
 	/// <summary>
@@ -52,10 +52,10 @@ public class Entity : IEnumerable<Entity>
 	}
 
 	/// <summary>
-	/// The rotation (in euler angles) of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
+	/// The rotation of this <see cref="Entity"/> relative to its <see cref="Parent"/>.
 	/// </summary>
 	[EchoSourceUsable]
-	public virtual Float3 Rotation
+	public virtual Versor Rotation
 	{
 		get => _rotation;
 		set
@@ -84,8 +84,9 @@ public class Entity : IEnumerable<Entity>
 		}
 	}
 
-	Float4x4 _forwardTransform = Float4x4.identity;
-	Float4x4 _inverseTransform = Float4x4.identity;
+	Float4x4 _forwardTransform = Float4x4.Identity;
+	Float4x4 _inverseTransform = Float4x4.Identity;
+	Versor _containedRotation = Versor.Identity;
 
 	/// <summary>
 	/// A <see cref="Float4x4"/> that transforms from the space of the <see cref="EntityPack"/>
@@ -114,26 +115,19 @@ public class Entity : IEnumerable<Entity>
 	}
 
 	/// <summary>
-	/// The <see cref="Position"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// The position of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
 	/// </summary>
-	public Float3 ContainedPosition => InverseTransform.GetColumn(3).XYZ;
+	public Float3 ContainedPosition => Utility.GetPosition(InverseTransform);
 
 	/// <summary>
-	/// The <see cref="Rotation"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// The rotation of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
 	/// </summary>
-	public Float3x3 ContainedRotation
+	public Versor ContainedRotation
 	{
 		get
 		{
-			float scaleR = 1f / ContainedScale;
-			Float4x4 transform = InverseTransform;
-
-			return new Float3x3
-			(
-				transform.f00 * scaleR, transform.f01 * scaleR, transform.f02 * scaleR,
-				transform.f10 * scaleR, transform.f11 * scaleR, transform.f12 * scaleR,
-				transform.f20 * scaleR, transform.f21 * scaleR, transform.f22 * scaleR
-			);
+			RecalculateTransform();
+			return _containedRotation;
 		}
 	}
 
@@ -233,6 +227,7 @@ public class Entity : IEnumerable<Entity>
 		{
 			_forwardTransform = transform.Inverse;
 			_inverseTransform = transform;
+			_containedRotation = Rotation;
 		}
 		else
 		{
@@ -240,6 +235,7 @@ public class Entity : IEnumerable<Entity>
 
 			_forwardTransform = Parent.ForwardTransform * transform.Inverse;
 			_inverseTransform = Parent.InverseTransform * transform;
+			_containedRotation = Parent.ContainedRotation * Rotation;
 		}
 	}
 

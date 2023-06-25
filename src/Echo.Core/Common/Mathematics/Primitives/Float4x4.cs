@@ -218,7 +218,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	/// <summary>
 	/// The idempotent <see cref="Float4x4"/> value.
 	/// </summary>
-	public static readonly Float4x4 identity = new
+	public static Float4x4 Identity => new
 	(
 		1f, 0f, 0f, 0f,
 		0f, 1f, 0f, 0f,
@@ -284,13 +284,6 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		$"{f10.ToString(format, provider)}\t{f11.ToString(format, provider)}\t{f12.ToString(format, provider)}\t{f13.ToString(format, provider)}\n" +
 		$"{f20.ToString(format, provider)}\t{f21.ToString(format, provider)}\t{f22.ToString(format, provider)}\t{f23.ToString(format, provider)}\n" +
 		$"{f30.ToString(format, provider)}\t{f31.ToString(format, provider)}\t{f32.ToString(format, provider)}\t{f33.ToString(format, provider)}\n";
-
-	// ReSharper disable CompareOfFloatsByEqualityOperator
-	public bool EqualsExact(in Float4x4 other) => f00 == other.f00 && f01 == other.f01 && f02 == other.f02 && f03 == other.f03 &&
-												  f10 == other.f10 && f11 == other.f11 && f12 == other.f12 && f13 == other.f13 &&
-												  f20 == other.f20 && f21 == other.f21 && f22 == other.f22 && f23 == other.f23 &&
-												  f30 == other.f30 && f31 == other.f31 && f32 == other.f32 && f33 == other.f33;
-	// ReSharper restore CompareOfFloatsByEqualityOperator
 
 	public override bool Equals(object obj) => obj is Float4x4 other && EqualsFast(other);
 

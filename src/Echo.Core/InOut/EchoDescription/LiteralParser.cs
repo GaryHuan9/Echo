@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Echo.Core.Common;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut.Models;
 using Echo.Core.Scenic.Geometries;
@@ -31,6 +32,18 @@ static class LiteralParser
 
 		AddTryParser<RGBA128>(RGBA128.TryParse);
 		AddTryParser<RGB128>(RGBA128.TryParse);
+
+		AddTryParser((CharSpan span, out Versor result) =>
+		{
+			if (InvariantFormat.TryParse(span, out Float3 angles))
+			{
+				result = new Versor(angles);
+				return true;
+			}
+
+			result = default;
+			return true;
+		});
 
 		//We need a more sophisticated parser for different texture import options based on the string syntax
 		//For now though, use ImportGrid for slightly more parameter control when trying to do custom imports

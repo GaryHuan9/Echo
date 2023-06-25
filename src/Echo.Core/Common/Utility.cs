@@ -50,6 +50,29 @@ public static class Utility
 	public static unsafe void MemoryCopy<T>(T* source, T* target, long length) where T : unmanaged =>
 		Buffer.MemoryCopy(source, target, length * sizeof(T), length * sizeof(T));
 
+	/// <summary>
+	/// Returns the position represented by a <see cref="Float4x4"/> transform.
+	/// </summary>
+	public static Float3 GetPosition(in Float4x4 transform) => transform.GetColumn(3).XYZ;
+
+	/// <summary>
+	/// Returns the rotation represented by a <see cref="Float4x4"/> transform.
+	/// </summary>
+	public static Float3x3 GetRotation(in Float4x4 transform)
+	{
+		float scaleR = 1f / GetScale(transform);
+
+		return new Float3x3
+		(
+			transform.f00 * scaleR, transform.f01 * scaleR, transform.f02 * scaleR,
+			transform.f10 * scaleR, transform.f11 * scaleR, transform.f12 * scaleR,
+			transform.f20 * scaleR, transform.f21 * scaleR, transform.f22 * scaleR
+		);
+	}
+
+	/// <summary>
+	/// Returns the uniform scale represented by a <see cref="Float4x4"/> transform.
+	/// </summary>
 	public static float GetScale(in Float4x4 transform) => transform.GetRow(0).XYZ_.Magnitude;
 
 	/// <summary>

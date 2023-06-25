@@ -17,20 +17,12 @@ public abstract class InfiniteLight : LightEntity
 {
 	public override Float3 Position
 	{
-		set
-		{
-			if (value.EqualsExact(Position)) return;
-			throw ModifyTransformException();
-		}
+		set => throw ModifyTransformException();
 	}
 
 	public override float Scale
 	{
-		set
-		{
-			if (value.Equals(Scale)) return;
-			throw ModifyTransformException();
-		}
+		set => throw ModifyTransformException();
 	}
 
 	/// <summary>

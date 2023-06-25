@@ -46,7 +46,7 @@ public class AmbientLight : InfiniteLight
 		Texture.Prepare();
 
 		//Calculate transforms
-		localToWorld = ContainedRotation;
+		localToWorld = (Float3x3)ContainedRotation;
 		worldToLocal = localToWorld.Inverse;
 
 		//Calculate power

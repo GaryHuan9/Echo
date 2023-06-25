@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Diagnostics;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut.EchoDescription;
 
@@ -21,29 +22,17 @@ public class EntityPack : Entity
 
 	public override Float3 Position
 	{
-		set
-		{
-			if (value.EqualsExact(Position)) return;
-			throw ModifyTransformException();
-		}
+		set => throw ModifyTransformException();
 	}
 
-	public override Float3 Rotation
+	public override Versor Rotation
 	{
-		set
-		{
-			if (value.EqualsExact(Rotation)) return;
-			throw ModifyTransformException();
-		}
+		set => throw ModifyTransformException();
 	}
 
 	public override float Scale
 	{
-		set
-		{
-			if (value.Equals(Scale)) return;
-			throw ModifyTransformException();
-		}
+		set => throw ModifyTransformException();
 	}
 
 	/// <summary>

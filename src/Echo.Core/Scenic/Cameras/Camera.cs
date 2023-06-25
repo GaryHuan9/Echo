@@ -1,6 +1,7 @@
 ﻿using System;
 using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics;
+using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.InOut.EchoDescription;
@@ -55,6 +56,6 @@ public class Camera : Entity
 		float yAngle = -Float2.Up.SignedAngle(to.XZ);
 		float xAngle = -Float2.Right.SignedAngle(to.RotateXZ(yAngle).ZY);
 
-		Rotation = new Float3(xAngle, yAngle, 0f);
+		Rotation = new Versor(xAngle, yAngle, 0f);
 	}
 }

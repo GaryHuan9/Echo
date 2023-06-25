@@ -311,10 +311,6 @@ public readonly partial struct Float2 : IEquatable<Float2>, ISpanFormattable
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Reflect(Float2 normal) => 2f * Dot(normal) * normal - this;
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float2 Project(Float2 normal) => normal * (Dot(normal) / normal.SquaredMagnitude);
 
-	// ReSharper disable CompareOfFloatsByEqualityOperator
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public bool EqualsExact(Float2 other) => (X == other.X) & Y == other.Y;
-	// ReSharper restore CompareOfFloatsByEqualityOperator
-
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public override bool Equals(object obj) => obj is Float2 other && Equals(other);
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public bool Equals(Float2 other) => X.AlmostEquals(other.X) && Y.AlmostEquals(other.Y);
 
