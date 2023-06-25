@@ -35,18 +35,24 @@ public interface ICompositeContext
 		TryGetTexture(label, out SettableGrid<T> texture) ? texture :
 			throw new TextureNotFoundException(label, true, typeof(T));
 
-	/// <inheritdoc cref="RenderTexture.TryGetLayer{T,U}"/>
-	public bool TryGetTexture<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
-															   where U : TextureGrid<T>;
+	/// <inheritdoc cref="RenderTexture.TryGetLayer"/>
+	public bool TryGetTexture(string label, out TextureGrid layer);
 
-	/// <inheritdoc cref="RenderTexture.TryGetLayer{T,U}"/>
-	public sealed bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T> =>
-		TryGetTexture<T, TextureGrid<T>>(label, out texture);
+	/// <inheritdoc cref="RenderTexture.TryGetLayer"/>
+	public sealed bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T>
+	{
+		bool found = TryGetTexture(label, out TextureGrid candidate);
+		texture = found ? candidate as TextureGrid<T> : null;
+		return texture != null;
+	}
 
-	/// <inheritdoc cref="RenderTexture.TryGetLayer{T,U}"/>
-	public sealed bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T> =>
-		TryGetTexture<T, SettableGrid<T>>(label, out texture);
-
+	/// <inheritdoc cref="RenderTexture.TryGetLayer"/>
+	public sealed bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T>
+	{
+		bool found = TryGetTexture(label, out TextureGrid candidate);
+		texture = found ? candidate as SettableGrid<T> : null;
+		return texture != null;
+	}
 
 	/// <inheritdoc cref="RenderTexture.TryAddLayer"/>
 	public bool TryAddTexture(string label, TextureGrid texture);
@@ -74,8 +80,8 @@ public interface ICompositeContext
 	/// but their <see cref="TextureGrid.size"/> is different, a resampling is performed for the best result.</remarks>
 	public sealed ComputeTask CopyAsync<T>(TextureGrid<T> source, SettableGrid<T> destination) where T : unmanaged, IColor<T>
 	{
-		return RunAsync(source.size == destination.size ? 
-			position => destination.Set(position, source[position]) : 
+		return RunAsync(source.size == destination.size ?
+			position => destination.Set(position, source[position]) :
 			ResamplePass, destination.size);
 
 		void ResamplePass(Int2 position) //Performs a resampling of source from destination
@@ -108,6 +114,7 @@ public interface ICompositeContext
 	/// <summary>
 	/// Asynchronously runs a Gaussian blur on a <see cref="SettableGrid{T}"/>.
 	/// </summary>
+	/// <returns>The actual deviation used for this blur.</returns>
 	public sealed async ComputeTask<float> GaussianBlurAsync(SettableGrid<RGB128> sourceTexture, float intensity = 1f, int quality = 5)
 	{
 		Int2 size = sourceTexture.size;

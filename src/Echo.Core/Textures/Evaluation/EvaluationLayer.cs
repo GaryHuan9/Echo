@@ -120,8 +120,7 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 
 		GetTileBounds(writeTile.tilePosition, out Int2 min, out Int2 max);
 		var readTile = new ReadTile(writeTile.tilePosition, min, max, buffer);
-		ref ReadTile destination = ref tiles[GetTileIndex(writeTile.tilePosition)];
-		Interlocked.Exchange(ref destination, readTile);
+		Interlocked.Exchange(ref tiles[GetTileIndex(writeTile.tilePosition)], readTile);
 	}
 
 	/// <summary>

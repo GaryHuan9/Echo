@@ -104,9 +104,7 @@ public sealed class CompositionOperation : AsyncOperation
 		public Int2 RenderSize => renderTexture.size;
 
 		/// <inheritdoc/>
-		public bool TryGetTexture<T, U>(string label, out U layer) where T : unmanaged, IColor<T>
-																   where U : TextureGrid<T> =>
-			renderTexture.TryGetLayer<T, U>(label, out layer);
+		public bool TryGetTexture(string label, out TextureGrid layer) => renderTexture.TryGetLayer(label, out layer);
 
 		/// <inheritdoc/>
 		public bool TryAddTexture(string label, TextureGrid texture) => renderTexture.TryAddLayer(label, texture);

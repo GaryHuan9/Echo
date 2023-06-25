@@ -5,6 +5,7 @@ using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
+using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Evaluation.Evaluators;
 
@@ -43,8 +44,8 @@ public abstract record Evaluator
 	/// <returns>The <see cref="IEvaluationLayer"/> that was found or created.</returns>
 	protected static IEvaluationLayer CreateOrClearLayer<T>(RenderTexture texture, string label) where T : unmanaged, IColor<T>
 	{
-		bool found = texture.TryGetLayer<T, EvaluationLayer<T>>(label, out var layer);
-		if (!found) return texture.CreateLayer<T>(label);
+		texture.TryGetLayer(label, out TextureGrid candidate);
+		if (candidate is not EvaluationLayer<T> layer) return texture.CreateLayer<T>(label);
 
 		layer.Clear();
 		return layer;
