@@ -45,7 +45,7 @@ public abstract class SettableGrid<T> : TextureGrid<T> where T : unmanaged, ICol
 		readonly SettableGrid<T> source;
 		readonly Int2 min;
 
-		public override T this[Int2 position] => source[min + position];
+		public override T Get(Int2 position) => source.Get(min + position);
 
 		public override void Set(Int2 position, in T value) => source.Set(min + position, value);
 	}

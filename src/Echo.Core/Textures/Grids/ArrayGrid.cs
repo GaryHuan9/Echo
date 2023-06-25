@@ -37,7 +37,7 @@ public class ArrayGrid<T> : SettableGrid<T> where T : unmanaged, IColor<T>
 	/// </summary>
 	public const int MinorAxis = MajorAxis ^ 1;
 
-	public override T this[Int2 position] => pixels[ToIndex(position)];
+	public override T Get(Int2 position) => pixels[ToIndex(position)];
 
 	public override void Set(Int2 position, in T value) => pixels[ToIndex(position)] = value;
 

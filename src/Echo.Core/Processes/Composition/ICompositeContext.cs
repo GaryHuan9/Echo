@@ -81,7 +81,7 @@ public interface ICompositeContext
 	public sealed ComputeTask CopyAsync<T>(TextureGrid<T> source, SettableGrid<T> destination) where T : unmanaged, IColor<T>
 	{
 		return RunAsync(source.size == destination.size ?
-			position => destination.Set(position, source[position]) :
+			position => destination.Set(position, source.Get(position)) :
 			ResamplePass, destination.size);
 
 		void ResamplePass(Int2 position) //Performs a resampling of source from destination
@@ -103,7 +103,7 @@ public interface ICompositeContext
 				Float2 max = Float2.Min(sourceMax, current + Float2.One);
 				float area = (max - min).Product;
 
-				totalValue += source[current].ToFloat4() * area;
+				totalValue += source.Get(current).ToFloat4() * area;
 				totalArea += Float4.One * area;
 			}
 
@@ -153,7 +153,7 @@ public interface ICompositeContext
 				accumulator -= Get(y - radius);
 			}
 
-			RGB128 Get(int y) => sourceTexture[new Int2((int)x, y.Clamp(0, size.Y - 1))];
+			RGB128 Get(int y) => sourceTexture.Get(new Int2((int)x, y.Clamp(0, size.Y - 1)));
 		}
 
 		void BlurPassY(uint y)
@@ -171,7 +171,7 @@ public interface ICompositeContext
 				accumulator -= Get(x - radius);
 			}
 
-			RGB128 Get(int x) => workerTexture[new Int2(x.Clamp(0, size.X - 1), (int)y)];
+			RGB128 Get(int x) => workerTexture.Get(new Int2(x.Clamp(0, size.X - 1), (int)y));
 		}
 
 		static void FillGaussianRadii(float deviation, Span<int> radii, out float actual)

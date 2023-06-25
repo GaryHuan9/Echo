@@ -41,7 +41,7 @@ public record FpiSerializer : Serializer
 		//Write the xor difference as variable length quantity for lossless compression
 		foreach (Int2 position in texture.size.Loop())
 		{
-			Vector128<float> current = texture[position].ToFloat4().v;
+			Vector128<float> current = texture.Get(position).ToFloat4().v;
 			Vector128<uint> xor = Sse.Xor(previous, current).AsUInt32();
 
 			previous = current;

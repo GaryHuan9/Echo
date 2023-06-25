@@ -35,7 +35,7 @@ public record Vignette : ICompositeLayer
 		void MainPass(Int2 position)
 		{
 			float distance = Float2.Distance(sourceTexture.ToUV(position), Float2.Half) * Scalars.Root2;
-			sourceTexture.Set(position, sourceTexture[position] * (1f - Curves.Sigmoid(distance) * Intensity));
+			sourceTexture.Set(position, sourceTexture.Get(position) * (1f - Curves.Sigmoid(distance) * Intensity));
 		}
 	}
 }

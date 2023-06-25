@@ -85,14 +85,11 @@ public class EvaluationLayer<T> : TextureGrid<T>, IEvaluationLayer where T : unm
 	readonly ReadTile[] tiles;
 	readonly Int2 logTileSize;
 
-	public override T this[Int2 position]
+	public override T Get(Int2 position)
 	{
-		get
-		{
-			Int2 tilePosition = GetTilePosition(position);
-			int tileIndex = GetTileIndex(tilePosition);
-			return tiles[tileIndex]?[position] ?? default;
-		}
+		Int2 tilePosition = GetTilePosition(position);
+		int tileIndex = GetTileIndex(tilePosition);
+		return tiles[tileIndex]?[position] ?? default;
 	}
 
 	/// <inheritdoc/>

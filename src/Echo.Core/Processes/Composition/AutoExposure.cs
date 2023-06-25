@@ -68,7 +68,7 @@ public record AutoExposure : ICompositeLayer
 		float exposure = AverageLuminance / average;
 		await context.RunAsync(MainPass, sourceTexture.size);
 
-		void MainPass(Int2 position) => sourceTexture.Set(position, sourceTexture[position] * exposure);
+		void MainPass(Int2 position) => sourceTexture.Set(position, sourceTexture.Get(position) * exposure);
 	}
 
 	async ComputeTask<float[]> MakeLuminanceHistogram(ICompositeContext context, TextureGrid<RGB128> sourceTexture, float logMin, float logStep)
@@ -91,7 +91,7 @@ public record AutoExposure : ICompositeLayer
 
 				float distance = Float2.Distance(sourceTexture.ToUV(position), Float2.Half) * 2f;
 				float weight = (1f - Curves.EaseOutSmooth(distance)) * CenterWeight + 1f;
-				float logLuminance = GetLog(sourceTexture[position].Luminance);
+				float logLuminance = GetLog(sourceTexture.Get(position).Luminance);
 
 				//Split the luminance into the two bins that are the closest
 				float bin = (logLuminance - logMin) * logStepR;
@@ -139,7 +139,7 @@ public record AutoExposure : ICompositeLayer
 
 			for (int x = 0; x < sourceBuffer.size.X; x++)
 			{
-				RGB128 value = sourceBuffer[new Int2(x, (int)y)];
+				RGB128 value = sourceBuffer.Get(new Int2(x, (int)y));
 				float luminance = value.Luminance;
 				rowMin = FastMath.Min(rowMin, luminance);
 				rowMax = FastMath.Max(rowMax, luminance);

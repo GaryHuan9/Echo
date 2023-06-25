@@ -42,14 +42,11 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// </summary>
 	public IReadOnlyDictionary<string, TextureGrid> Layers => layers;
 
-	public override RGB128 this[Int2 position]
+	public override RGB128 Get(Int2 position)
 	{
-		get
-		{
-			var main = mainTexture; //Non volatile read for better performance, probably won't be a problem
-			if (main == null) return RGB128.Black;
-			return main[ToUV(position)].As<RGB128>();
-		}
+		var main = mainTexture; //Non volatile read for better performance, probably is not a problem
+		if (main == null) return RGB128.Black;
+		return main[ToUV(position)].As<RGB128>();
 	}
 
 	/// <summary>

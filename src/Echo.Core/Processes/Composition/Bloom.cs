@@ -42,7 +42,7 @@ public record Bloom : ICompositeLayer
 
 		void FilterPass(Int2 position)
 		{
-			RGB128 source = sourceTexture[position];
+			RGB128 source = sourceTexture.Get(position);
 			float luminance = source.Luminance;
 
 			if (luminance <= Threshold)
@@ -60,8 +60,8 @@ public record Bloom : ICompositeLayer
 
 		void CombinePass(Int2 position)
 		{
-			RGB128 source = workerTexture[position];
-			RGB128 target = sourceTexture[position];
+			RGB128 source = workerTexture.Get(position);
+			RGB128 target = sourceTexture.Get(position);
 			sourceTexture.Set(position, target + source);
 		}
 	}

@@ -79,7 +79,7 @@ public record OidnDenoise : ICompositeLayer
 
 			void MainPass(Int2 position)
 			{
-				Float4 source = sourceTexture[position].ToFloat4();
+				Float4 source = sourceTexture.Get(position).ToFloat4();
 				int index = (position.Y * size.X + position.X) * 3;
 
 				buffer[index + 0] = source.X;

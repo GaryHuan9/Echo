@@ -47,7 +47,7 @@ public record ToneMapper : ICompositeLayer
 
 		void SaturationPass(Int2 position)
 		{
-			RGB128 source = sourceTexture[position];
+			RGB128 source = sourceTexture.Get(position);
 			Float4 gray = (Float4)source.Luminance;
 
 			sourceTexture.Set(position, (RGB128)Float4.Lerp(gray, source, Saturation));
@@ -55,7 +55,7 @@ public record ToneMapper : ICompositeLayer
 
 		void CombinedPass(Int2 position)
 		{
-			RGB128 source = sourceTexture[position];
+			RGB128 source = sourceTexture.Get(position);
 			float luminance = source.Luminance;
 			if (FastMath.AlmostZero(luminance)) return;
 
@@ -65,7 +65,7 @@ public record ToneMapper : ICompositeLayer
 
 		void PerChannelPass(Int2 position)
 		{
-			RGB128 source = sourceTexture[position];
+			RGB128 source = sourceTexture.Get(position);
 
 			RGB128 adjusted = new RGB128
 			(

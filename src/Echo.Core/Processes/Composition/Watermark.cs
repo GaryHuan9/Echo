@@ -91,17 +91,17 @@ public record Watermark : ICompositeLayer
 
 		void StampPass(Int2 position)
 		{
-			float intensity = logoTexture[position].Luminance;
-			Float4 source = sourceCrop[position];
-			Float4 blurred = workerCrop[position] * (1f + tintDirection * BlurTint);
+			float intensity = logoTexture.Get(position).Luminance;
+			Float4 source = sourceCrop.Get(position);
+			Float4 blurred = workerCrop.Get(position) * (1f + tintDirection * BlurTint);
 			sourceCrop.Set(position, (RGB128)Float4.Lerp(source, blurred, intensity));
 		}
 
 		void ShadowPass(Int2 position)
 		{
-			float intensity = logoTexture[position].Luminance * tintDirection * ShadowTint;
-			float multiplier = 1f + intensity * (1f - workerCrop[position].Luminance);
-			sourceCrop.Set(position, sourceCrop[position] * multiplier);
+			float intensity = logoTexture.Get(position).Luminance * tintDirection * ShadowTint;
+			float multiplier = 1f + intensity * (1f - workerCrop.Get(position).Luminance);
+			sourceCrop.Set(position, sourceCrop.Get(position) * multiplier);
 		}
 	}
 

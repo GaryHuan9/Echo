@@ -100,23 +100,21 @@ public abstract class TextureGrid : Texture
 
 	public override Int2 DiscreteResolution => size;
 
-	/// <summary>
-	/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
-	/// </summary>
-	public virtual void ForEach(Action<Int2> action, bool parallel = true)
+	public sealed override RGBA128 this[Float2 texcoord]
 	{
-		if (parallel)
+		get
 		{
-			Parallel.ForEach(size.Loop(), action);
-			return;
-		}
-
-		for (int x = 0; x < size.X; x++)
-		for (int y = 0; y < size.X; y++)
-		{
-			action(new Int2(x, y));
+			Ensure.IsTrue(float.IsFinite(texcoord.Sum));
+			return Filter.Evaluate(this, texcoord);
 		}
 	}
+
+	/// <summary>
+	/// Gets the pixel (<see cref="RGBA128"/>) value of this <see cref="TextureGrid"/> at a <paramref name="position"/>.
+	/// </summary>
+	/// <param name="position">The integral pixel position to get the value from. This <see cref="Int2"/> must
+	/// be between <see cref="Int2.Zero"/> (inclusive) and <see cref="TextureGrid.size"/> (exclusive).</param>
+	public abstract RGBA128 this[Int2 position] { get; }
 
 	/// <summary>
 	/// Saves this <see cref="TextureGrid"/> to a file.
@@ -172,6 +170,24 @@ public abstract class TextureGrid : Texture
 	}
 
 	/// <summary>
+	/// Enumerates through all pixels on <see cref="Texture"/> and invoke <paramref name="action"/>.
+	/// </summary>
+	public void ForEach(Action<Int2> action, bool parallel = true)
+	{
+		if (parallel)
+		{
+			Parallel.ForEach(size.Loop(), action);
+			return;
+		}
+
+		for (int x = 0; x < size.X; x++)
+		for (int y = 0; y < size.X; y++)
+		{
+			action(new Int2(x, y));
+		}
+	}
+
+	/// <summary>
 	/// Asserts an <see cref="Int2"/> is between zero (inclusive) and a certain <paramref name="size"/> (exclusive).
 	/// </summary>
 	/// <param name="position">The <see cref="Int2"/> to ensure that is within bounds.</param>
@@ -205,21 +221,15 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 		if (size.MinComponent <= 0) throw new ArgumentOutOfRangeException(nameof(size));
 	}
 
-	public sealed override RGBA128 this[Float2 texcoord]
-	{
-		get
-		{
-			Ensure.IsTrue(float.IsFinite(texcoord.Sum));
-			return Filter.Evaluate(this, texcoord);
-		}
-	}
+	public sealed override RGBA128 this[Int2 position] => Get(position).ToRGBA128();
 
 	/// <summary>
 	/// Gets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
 	/// </summary>
-	/// <param name="position">The integral pixel position to get the value from. This <see cref="Int2"/> must
-	/// be between <see cref="Int2.Zero"/> (inclusive) and <see cref="TextureGrid.size"/> (exclusive).</param>
-	public abstract T this[Int2 position] { get; }
+	/// <param name="position">The integral pixel position to get the value from. This <see cref="Int2"/> must 
+	/// be between <see cref="Int2.Zero"/> (inclusive) and <see cref="TextureGrid{T}.size"/> (exclusive).</param>
+	/// <remarks>This is identical to <see cref="TextureGrid.Item(Int2)"/>, except the return type.</remarks>
+	public abstract T Get(Int2 position);
 
 	public sealed override void Save(string path, Serializer serializer = null)
 	{
@@ -255,6 +265,6 @@ public abstract class TextureGrid<T> : TextureGrid where T : unmanaged, IColor<T
 		readonly TextureGrid<T> source;
 		readonly Int2 min;
 
-		public override T this[Int2 position] => source[min + position];
+		public override T Get(Int2 position) => source.Get(min + position);
 	}
 }

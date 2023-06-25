@@ -18,23 +18,23 @@ public interface IFilter
 	/// </summary>
 	/// <param name="texture">The target texture to retrieve the color from.</param>
 	/// <param name="uv">The texture coordinate. Must be between zero and one.</param>
-	public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>;
+	public RGBA128 Evaluate(TextureGrid texture, Float2 uv);
 
 	private class Point : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>
+		public RGBA128 Evaluate(TextureGrid texture, Float2 uv)
 		{
 			Int2 position = texture.ToPosition(uv);
 			texture.Wrapper.Wrap(texture, ref position);
-			return texture[position].ToRGBA128();
+			return texture[position];
 		}
 	}
 
 	private class Bilinear : IFilter
 	{
 		/// <inheritdoc/>
-		public RGBA128 Evaluate<T>(TextureGrid<T> texture, Float2 uv) where T : unmanaged, IColor<T>
+		public RGBA128 Evaluate(TextureGrid texture, Float2 uv)
 		{
 			//Find x and y
 			Float2 scaled = uv * texture.size;
@@ -54,11 +54,11 @@ public interface IFilter
 			//OPTIMIZE shuffle x and y so we only use half of the GetElement calls
 
 			//Fetch color data
-			RGBA128 y0x0 = texture[new Int2(x.GetElement(0), y.GetElement(0))].ToRGBA128();
-			RGBA128 y0x1 = texture[new Int2(x.GetElement(1), y.GetElement(1))].ToRGBA128();
+			RGBA128 y0x0 = texture[new Int2(x.GetElement(0), y.GetElement(0))];
+			RGBA128 y0x1 = texture[new Int2(x.GetElement(1), y.GetElement(1))];
 
-			RGBA128 y1x0 = texture[new Int2(x.GetElement(2), y.GetElement(2))].ToRGBA128();
-			RGBA128 y1x1 = texture[new Int2(x.GetElement(3), y.GetElement(3))].ToRGBA128();
+			RGBA128 y1x0 = texture[new Int2(x.GetElement(2), y.GetElement(2))];
+			RGBA128 y1x1 = texture[new Int2(x.GetElement(3), y.GetElement(3))];
 
 			//Interpolate
 			float timeX = scaled.X - 0.5f - minX;
@@ -66,7 +66,6 @@ public interface IFilter
 
 			Float4 y0 = Float4.Lerp(y0x0, y0x1, timeX);
 			Float4 y1 = Float4.Lerp(y1x0, y1x1, timeX);
-
 			return (RGBA128)Float4.Lerp(y0, y1, timeY);
 		}
 	}
