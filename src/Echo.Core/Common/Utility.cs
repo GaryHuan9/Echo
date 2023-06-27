@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using Echo.Core.Common.Mathematics.Primitives;
+using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
 
 namespace Echo.Core.Common;
@@ -91,6 +92,39 @@ public static class Utility
 
 		if (!copy || array == null) array = new T[length];
 		else Array.Resize(ref array, (int)length);
+	}
+
+	/// <summary>
+	/// Ensures an <see cref="AlignedArray{T}"/> is large enough for some number of items.
+	/// </summary>
+	/// <param name="array">The <see cref="AlignedArray{T}"/> to ensure; this argument can be null.</param>
+	/// <param name="capacity">The number of items to potentially store.</param>
+	/// <param name="copy">Whether to copy over the old items in <paramref name="array"/> to the new one.</param>
+	/// <param name="capacityMin">The minimum <see cref="Array.Length"/> if a new <see cref="Array"/> is created.</param>
+	public static void EnsureCapacity<T>(ref AlignedArray<T> array, int capacity, bool copy = false, int capacityMin = 16) where T : unmanaged
+	{
+		if ((array?.Length ?? 0) >= capacity) return;
+
+		var oldArray = array;
+
+		uint length = (uint)Math.Max(capacity, capacityMin);
+		length = BitOperations.RoundUpToPowerOf2(length);
+		array = new AlignedArray<T>((int)length, false);
+
+		if (oldArray == null)
+		{
+			array.Clear();
+			return;
+		}
+
+		if (copy)
+		{
+			oldArray.AsSpan().CopyTo(array);
+			array.AsSpan()[oldArray.Length..].Clear();
+		}
+		else array.Clear();
+
+		oldArray.Dispose();
 	}
 
 	/// <summary>

@@ -51,9 +51,9 @@ public sealed class SystemUI : AreaUI
 		OidnPrecompiled.TryLoad();
 	}
 
-	protected override void NewFrameWindow(in Moment moment)
+	protected override void NewFrameWindow()
 	{
-		DrawGeneral(moment);
+		DrawGeneral();
 		DrawGarbageCollector();
 		DrawDeviceAndWorkers();
 	}
@@ -64,7 +64,7 @@ public sealed class SystemUI : AreaUI
 		if (disposing) Device.Dispose();
 	}
 
-	void DrawGeneral(in Moment moment)
+	void DrawGeneral()
 	{
 		if (!ImGuiCustom.BeginSection("General")) return;
 
@@ -76,7 +76,7 @@ public sealed class SystemUI : AreaUI
 
 			ImGuiCustom.PropertySeparator();
 
-			UpdateFrameRateAndUtilization(moment.elapsed - lastUpdateTime);
+			UpdateFrameRateAndUtilization(root.Moment.elapsed - lastUpdateTime);
 
 			ImGuiCustom.Property("Interface Frame Rate", frameRateString);
 			ImGuiCustom.Property("Device Utilization", utilizationString);
@@ -108,7 +108,7 @@ public sealed class SystemUI : AreaUI
 
 		if (elapsed < TimeSpan.FromSeconds(UpdatePeriod)) return;
 
-		ulong frameCount = root.FrameCount;
+		ulong frameCount = root.Moment.frame;
 		TimeSpan cpuTime = currentProcess.UserProcessorTime;
 
 		float elapsedSeconds = (float)elapsed.TotalSeconds;

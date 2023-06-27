@@ -2,16 +2,18 @@ using System;
 using System.Numerics;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-using Echo.Core.Common.Compute;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut.Images;
 using Echo.Core.Processes.Evaluation;
+using Echo.Core.Scenic.Cameras;
+using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
+using SDL2;
 
 namespace Echo.UserInterface.Core.Areas;
 
@@ -21,6 +23,7 @@ public sealed partial class ViewerUI : AreaUI
 	{
 		evaluationOperationMode = new EvaluationOperationMode(root);
 		staticTextureGridMode = new StaticTextureGridMode(root);
+		dynamicRenderTextureMode = new DynamicRenderTextureMode(root);
 	}
 
 	Mode currentMode;
@@ -31,6 +34,7 @@ public sealed partial class ViewerUI : AreaUI
 
 	readonly EvaluationOperationMode evaluationOperationMode;
 	readonly StaticTextureGridMode staticTextureGridMode;
+	readonly DynamicRenderTextureMode dynamicRenderTextureMode;
 
 	float _logPlaneScale;
 
@@ -62,7 +66,13 @@ public sealed partial class ViewerUI : AreaUI
 		currentMode = staticTextureGridMode;
 	}
 
-	protected override void NewFrameWindow(in Moment moment)
+	public void Track(TextureGrid mainTexture, TextureGrid<NormalDepth128> depthTexture, Camera camera)
+	{
+		dynamicRenderTextureMode.Reset(mainTexture, depthTexture, camera);
+		currentMode = dynamicRenderTextureMode;
+	}
+
+	protected override void NewFrameWindow()
 	{
 		FindImGuiRegion(out Bounds region);
 		UpdateCursorPosition(region);
@@ -71,7 +81,7 @@ public sealed partial class ViewerUI : AreaUI
 		{
 			if (ImGui.BeginMenu("View"))
 			{
-				if (ImGui.MenuItem("Recenter"))
+				if (!currentMode.LockPlane && ImGui.MenuItem("Recenter"))
 				{
 					planeCenter = Float2.Zero;
 					LogPlaneScale = 0f;
@@ -85,12 +95,21 @@ public sealed partial class ViewerUI : AreaUI
 			ImGui.EndMenuBar();
 		}
 
-		if (currentMode != null) DrawMode(region);
-
-		if (currentMode != null && ImGui.BeginMenuBar())
+		if (currentMode != null)
 		{
-			currentMode.DrawMenuBar();
-			ImGui.EndMenuBar();
+			if (currentMode.LockPlane)
+			{
+				planeCenter = Float2.Zero;
+				LogPlaneScale = 0f;
+			}
+
+			DrawMode(region);
+
+			if (ImGui.BeginMenuBar())
+			{
+				currentMode.DrawMenuBar();
+				ImGui.EndMenuBar();
+			}
 		}
 
 		ProcessMouseInput(region);
@@ -103,6 +122,7 @@ public sealed partial class ViewerUI : AreaUI
 
 		evaluationOperationMode?.Dispose();
 		staticTextureGridMode?.Dispose();
+		dynamicRenderTextureMode?.Dispose();
 	}
 
 	void DrawMode(in Bounds region)
@@ -183,7 +203,7 @@ public sealed partial class ViewerUI : AreaUI
 
 		protected readonly EchoUI root;
 
-		IntPtr _display;
+		IntPtr display;
 		Int2 currentSize;
 
 		/// <summary>
@@ -191,30 +211,79 @@ public sealed partial class ViewerUI : AreaUI
 		/// </summary>
 		public abstract float AspectRatio { get; }
 
-		protected IntPtr Display => _display;
+		/// <summary>
+		/// Whether to lock the display plane to the region center.
+		/// </summary>
+		public virtual bool LockPlane => false;
+
 		ImGuiDevice Backend => root.backend;
 
 		public abstract bool Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV);
 
-		public abstract void DrawMenuBar();
-
-		protected void RecreateDisplay(Int2 size)
-		{
-			if (size == currentSize) return;
-			currentSize = size;
-
-			Backend.DestroyTexture(ref _display);
-			if (currentSize == Int2.Zero) return;
-			_display = Backend.CreateTexture(currentSize, true);
-		}
+		public virtual void DrawMenuBar() { }
 
 		public void Dispose()
 		{
+			Dispose(true);
 			GC.SuppressFinalize(this);
-			Backend.DestroyTexture(ref _display);
 		}
 
-		~Mode() => Dispose();
+		protected virtual void Dispose(bool disposing) => Backend.DestroyTexture(ref display);
+
+		~Mode() => Dispose(false);
+
+		protected void DrawDisplay(ImDrawListPtr drawList, in Bounds plane)
+		{
+			uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
+			drawList.AddImage(display, plane.MinVector2, plane.MaxVector2);
+			drawList.AddRect(plane.MinVector2, plane.MaxVector2, borderColor);
+		}
+
+		protected bool RecreateDisplay(Int2 size)
+		{
+			if (size == currentSize) return false;
+			currentSize = size;
+
+			Backend.DestroyTexture(ref display);
+			if (currentSize == Int2.Zero) return true;
+			display = Backend.CreateTexture(currentSize, true);
+
+			SDL.SDL_SetTextureBlendMode(display, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
+			return true;
+		}
+
+		protected void ClearDisplay()
+		{
+			SDL.SDL_LockTexture(display, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
+
+			unsafe
+			{
+				if (pitch == sizeof(uint) * currentSize.X) new Span<uint>((uint*)pointer, currentSize.Product).Fill(0);
+				else throw new InvalidOperationException("Fill assumption of contiguous memory from SDL2 is violated!");
+			}
+
+			UnlockDisplay();
+		}
+
+		protected unsafe void LockDisplay(out uint* pixels, out nint stride)
+		{
+			SDL.SDL_LockTexture(display, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
+
+			stride = -pitch / sizeof(uint);
+			pixels = (uint*)pointer - stride * (currentSize.Y - 1);
+		}
+
+		protected unsafe void LockDisplay(Int2 position, Int2 size, out uint* pixels, out nint stride)
+		{
+			int invertY = currentSize.Y - (position.Y + size.Y);
+			SDL.SDL_Rect rect = new SDL.SDL_Rect { x = position.X, y = invertY, w = size.X, h = size.Y };
+			SDL.SDL_LockTexture(display, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
+
+			stride = -pitch / sizeof(uint);
+			pixels = (uint*)pointer - position.X - stride * (size.Y - 1);
+		}
+
+		protected void UnlockDisplay() => SDL.SDL_UnlockTexture(display);
 
 		protected static uint ColorToUInt32(Float4 color)
 		{

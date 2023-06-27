@@ -35,18 +35,18 @@ public sealed class EchoUI : IApplication
 
 	public TimeSpan FrameDelay { get; set; } = TimeSpan.Zero;
 
-	public ulong FrameCount { get; private set; }
+	public Moment Moment { get; private set; }
 	public string Label => "Echo User Interface";
 
 	public void NewFrame(in Moment moment)
 	{
+		Moment = moment;
+
 		ImGui.DockSpaceOverViewport(ImGui.GetMainViewport());
 
 		ImGui.ShowDemoWindow();
 
-		foreach (AreaUI area in areas) area.NewFrame(moment);
-
-		++FrameCount;
+		foreach (AreaUI area in areas) area.NewFrame();
 	}
 
 	public T Find<T>() where T : AreaUI

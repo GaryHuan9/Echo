@@ -19,7 +19,7 @@ public sealed class LogsUI : AreaUI
 		DebugHelper.Logger = LogList.Logger;
 	}
 
-	protected override void NewFrameWindow(in Moment moment)
+	protected override void NewFrameWindow()
 	{
 		if (ImGui.Button("Save to Disk")) SaveToFile();
 

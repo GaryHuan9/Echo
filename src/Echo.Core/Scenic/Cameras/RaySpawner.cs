@@ -14,12 +14,10 @@ public readonly struct RaySpawner
 	/// <summary>
 	/// Constructs a new <see cref="RaySpawner"/>.
 	/// </summary>
-	/// <param name="layer">The destination <see cref="IEvaluationLayer"/>; this object must also be a <see cref="TextureGrid"/>.</param>
-	/// <param name="position">The location on the <see cref="IEvaluationLayer"/> this <see cref="RaySpawner"/> originates.</param>
-	public RaySpawner(IEvaluationLayer layer, Int2 position)
+	/// <param name="texture">The destination <see cref="TextureGrid"/>; most often this is also an <see cref="IEvaluationLayer"/>.</param>
+	/// <param name="position">A location on the <see cref="TextureGrid"/> this <see cref="RaySpawner"/> originates from.</param>
+	public RaySpawner(TextureGrid texture, Int2 position)
 	{
-		var texture = (TextureGrid)layer;
-		
 		sizeR = texture.sizeR;
 		offsets = texture.aspects / -2f;
 		this.position = position;

@@ -15,9 +15,9 @@ using Echo.Core.Processes;
 using Echo.Core.Processes.Composition;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Processes.Preparation;
+using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
-using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 
@@ -59,7 +59,7 @@ public sealed class RenderUI : AreaUI
 		renderStrings.Clear();
 	}
 
-	protected override void NewFrameWindow(in Moment moment)
+	protected override void NewFrameWindow()
 	{
 		if (renders.Count == 0)
 		{
@@ -92,7 +92,7 @@ public sealed class RenderUI : AreaUI
 
 		if (trackLatest)
 		{
-			if (render.CurrentIndex == render.operations.Length)
+			if (render.IsCompleted)
 			{
 				//Just finished the final operation in this render, display the result
 				if (lastTracked != null) viewerUI.Track(render.texture);
@@ -155,6 +155,9 @@ public sealed class RenderUI : AreaUI
 				ImGuiCustom.EndProperties();
 			}
 
+			TextureGrid<NormalDepth128> depthTexture = null;
+			if (render.IsCompleted && !render.texture.TryGetLayer(out depthTexture)) depthTexture = null;
+
 			if (ImGui.BeginTable("Layers", 4, ImGuiCustom.DefaultTableFlags))
 			{
 				ImGui.TableSetupColumn("Label");
@@ -174,6 +177,12 @@ public sealed class RenderUI : AreaUI
 					ImGui.PushID(label);
 					ImGui.TableNextColumn();
 					if (ImGui.SmallButton("View")) viewerUI.Track(layer);
+
+					if (depthTexture != null)
+					{
+						ImGui.SameLine();
+						if (ImGui.SmallButton("Explore")) viewerUI.Track(layer, depthTexture, render.Scene.camera);
+					}
 
 					ImGui.SameLine();
 					if (ImGui.SmallButton("Save")) dialogueUI.Open($"{label}.png", false, path => SaveTexture(path, layer));

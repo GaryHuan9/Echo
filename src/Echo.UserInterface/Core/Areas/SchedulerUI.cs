@@ -68,7 +68,7 @@ public sealed class SchedulerUI : AreaUI
 		ChangeCurrentPath(path);
 	}
 
-	protected override void NewFrameWindow(in Moment moment)
+	protected override void NewFrameWindow()
 	{
 		Device device = systemUI.Device;
 		if (currentDevice != device) renderUI.ClearRenders();

@@ -11,6 +11,7 @@ using Echo.Core.Evaluation.Evaluators;
 using Echo.Core.Evaluation.Sampling;
 using Echo.Core.Scenic.Cameras;
 using Echo.Core.Textures.Evaluation;
+using Echo.Core.Textures.Grids;
 
 namespace Echo.Core.Processes.Evaluation;
 
@@ -103,7 +104,7 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 				Int2 position = new Int2(x, y);
 				Accumulator accumulator = new();
 
-				var spawner = new RaySpawner(destination, position);
+				var spawner = new RaySpawner((TextureGrid)destination, position);
 
 				int epoch = 0;
 
@@ -118,7 +119,7 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 						distribution.BeginSession();
 
 						var cameraSample = new CameraSample(distribution);
-						Ray ray = scene.camera.SpawnRay(cameraSample, spawner);
+						Ray ray = scene.camera.SpawnRay(spawner, cameraSample);
 
 						Float4 evaluated = profile.Evaluator.Evaluate
 						(

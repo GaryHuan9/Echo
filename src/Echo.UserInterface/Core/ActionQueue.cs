@@ -9,30 +9,30 @@ namespace Echo.UserInterface.Core;
 
 public static class ActionQueue
 {
-	static readonly BlockingCollection<Labeled<Action>> queue = new();
+	static readonly BlockingCollection<(string label, Action action)> queue = new();
 	static readonly HashSet<string> labels = new();
-	static readonly Locker locker = new();
 
-	static bool hasThread;
+	static Thread thread;
+
+	static MonoThread monoThread;
 
 	public static void Enqueue(string label, Action action)
 	{
-		using var _ = locker.Fetch();
+		monoThread.Ensure();
 
-		if (!labels.Add(label))
+		lock (labels)
 		{
-			LogList.Add($"Attempting to enqueue duplicate '{label}' into {nameof(ActionQueue)}.");
-			return;
+			if (!labels.Add(label))
+			{
+				LogList.Add($"Attempting to enqueue duplicate '{label}' into {nameof(ActionQueue)}.");
+				return;
+			}
+
+			LogList.Add($"Successfully enqueued '{label}' into {nameof(ActionQueue)}.");
+			queue.Add((label, action));
 		}
 
-		LogList.Add($"Successfully enqueued '{label}' into {nameof(ActionQueue)}.");
-		queue.Add(new Labeled<Action>(label, action));
-
-		if (hasThread) return;
-
-		var thread = new Thread(ProcessQueue) { IsBackground = true };
-		hasThread = true;
-		thread.Start();
+		if (thread == null) LaunchThread();
 	}
 
 	static void ProcessQueue()
@@ -45,11 +45,18 @@ public static class ActionQueue
 
 			LogList.Add($"Completed executing '{label}' from {nameof(ActionQueue)}.");
 
-			// ReSharper disable once RedundantAssignment
-			bool removed = labels.Remove(label);
-			Ensure.IsTrue(removed);
+			lock (labels)
+			{
+				// ReSharper disable once RedundantAssignment
+				bool removed = labels.Remove(label);
+				Ensure.IsTrue(removed);
+			}
 		}
 	}
 
-	readonly record struct Labeled<T>(string Label, in T Item);
+	static void LaunchThread()
+	{
+		thread = new Thread(ProcessQueue) { IsBackground = true };
+		thread.Start();
+	}
 }

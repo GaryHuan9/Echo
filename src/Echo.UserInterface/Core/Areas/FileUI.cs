@@ -44,7 +44,7 @@ public sealed class FileUI : AreaUI
 		openAction = action;
 	}
 
-	public override void NewFrame(in Moment moment)
+	public override void NewFrame()
 	{
 		if (!IsOpen) return;
 
@@ -58,12 +58,12 @@ public sealed class FileUI : AreaUI
 		ImGui.BeginPopupModal(name, ref open, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse);
 
 		if (!open) CloseDialogue();
-		else NewFrameWindow(moment);
+		else NewFrameWindow();
 
 		ImGui.EndPopup();
 	}
 
-	protected override void NewFrameWindow(in Moment moment)
+	protected override void NewFrameWindow()
 	{
 		DirectoryInfo current = new DirectoryInfo(currentPath);
 
@@ -82,7 +82,7 @@ public sealed class FileUI : AreaUI
 		ImGui.TextWrapped(current.FullName);
 
 		float tableHeight = ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing();
-		
+
 		if (exists) DrawTable(tableHeight, current);
 		else DrawNoDirectoryTable(tableHeight);
 

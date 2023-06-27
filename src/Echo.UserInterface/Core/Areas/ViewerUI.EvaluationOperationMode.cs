@@ -9,10 +9,8 @@ using Echo.Core.InOut;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
-using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
-using SDL2;
 
 namespace Echo.UserInterface.Core.Areas;
 
@@ -42,7 +40,7 @@ partial class ViewerUI
 		public override bool Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
 		{
 			if (operation.Disposed) return false;
-			
+
 			//Find and update tile from completed procedures
 			while (true)
 			{
@@ -52,11 +50,9 @@ partial class ViewerUI
 			}
 
 			//Actually draw the display
-			uint borderColor = ImGuiCustom.GetColorInteger(ImGuiCol.Border);
 			drawList.AddRectFilled(plane.MinVector2, plane.MaxVector2, 0xFF000000u);
-			drawList.AddImage(Display, plane.MinVector2, plane.MaxVector2);
-			drawList.AddRect(plane.MinVector2, plane.MaxVector2, borderColor);
 
+			DrawDisplay(drawList, plane);
 			DrawCurrentTiles(drawList, plane);
 
 			//Display pixel information
@@ -96,16 +92,7 @@ partial class ViewerUI
 			nextExploreIndex = 0;
 
 			//Clear display
-			SDL.SDL_LockTexture(Display, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
-			SDL.SDL_SetTextureBlendMode(Display, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
-
-			unsafe
-			{
-				if (pitch == sizeof(uint) * LayerSize.X) new Span<uint>((uint*)pointer, LayerSize.Product).Fill(0);
-				else throw new InvalidOperationException("Fill assumption of contiguous memory from SDL2 is violated!");
-			}
-
-			SDL.SDL_UnlockTexture(Display);
+			ClearDisplay();
 		}
 
 		IEvaluationReadTile RequestUpdateTile()
@@ -141,15 +128,10 @@ partial class ViewerUI
 			Int2 min = tile.Min;
 			Int2 max = tile.Max;
 
-			int invertY = LayerSize.Y - min.Y - tileSize.Y;
-			SDL.SDL_Rect rect = new SDL.SDL_Rect { x = min.X, y = invertY, w = tileSize.X, h = tileSize.Y };
-			SDL.SDL_LockTexture(Display, ref rect, out IntPtr pointer, out int pitch).ThrowOnError();
-
-			int stride = pitch / sizeof(uint);
-			uint* pixels = (uint*)pointer - min.X + stride * (tileSize.Y - 1);
+			LockDisplay(min, tileSize, out uint* pixels, out nint stride);
 
 			//Convert and assign each pixel
-			for (int y = min.Y; y < max.Y; y++, pixels -= stride)
+			for (int y = min.Y; y < max.Y; y++, pixels += stride)
 			for (int x = min.X; x < max.X; x++)
 			{
 				Int2 position = new Int2(x, y);
@@ -157,7 +139,7 @@ partial class ViewerUI
 				pixels[x] = ColorToUInt32(color);
 			}
 
-			SDL.SDL_UnlockTexture(Display);
+			UnlockDisplay();
 		}
 
 		[SkipLocalsInit]

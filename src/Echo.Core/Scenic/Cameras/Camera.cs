@@ -39,16 +39,17 @@ public class Camera : Entity
 	/// <summary>
 	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>.
 	/// </summary>
-	public Ray SpawnRay(in CameraSample sample, in RaySpawner spawner)
-	{
-		Float3 direction = spawner.SpawnX(sample.uv).CreateXY(forwardLength);
-		direction = InverseTransform.MultiplyDirection(direction).Normalized;
+	public Ray SpawnRay(in RaySpawner spawner, in CameraSample sample) => SpawnRay(spawner, sample.uv);
 
-		return new Ray(ContainedPosition, direction);
-	}
+	/// <summary>
+	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>.
+	/// </summary>
+	public Ray SpawnRay(in RaySpawner spawner) => SpawnRay(spawner, Float2.Half);
 
+	[EchoSourceUsable]
 	public void LookAt(Entity target) => LookAt(target.ContainedPosition);
 
+	[EchoSourceUsable]
 	public void LookAt(Float3 target)
 	{
 		Float3 to = (target - ContainedPosition).Normalized;
@@ -57,5 +58,12 @@ public class Camera : Entity
 		float xAngle = -Float2.Right.SignedAngle(to.RotateXZ(yAngle).ZY);
 
 		Rotation = new Versor(xAngle, yAngle, 0f);
+	}
+
+	Ray SpawnRay(in RaySpawner spawner, Float2 uv)
+	{
+		Float3 direction = spawner.SpawnX(uv).CreateXY(forwardLength);
+		direction = InverseTransform.MultiplyDirection(direction);
+		return new Ray(ContainedPosition, direction.Normalized);
 	}
 }
