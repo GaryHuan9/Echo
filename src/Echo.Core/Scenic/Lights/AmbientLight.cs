@@ -20,7 +20,7 @@ namespace Echo.Core.Scenic.Lights;
 [EchoSourceUsable]
 public class AmbientLight : InfiniteLight
 {
-	NotNull<object> _texture = Pure.white;
+	NotNull<IDirectionalTexture> _texture = Pure.white;
 
 	/// <summary>
 	/// The <see cref="IDirectionalTexture"/> applied to this <see cref="AmbientLight"/>.
@@ -29,8 +29,8 @@ public class AmbientLight : InfiniteLight
 	[EchoSourceUsable]
 	public IDirectionalTexture Texture
 	{
-		get => (IDirectionalTexture)_texture.Value;
-		set => _texture = new NotNull<object>(value);
+		get => _texture.Value;
+		set => _texture = new NotNull<IDirectionalTexture>(value);
 	}
 
 	Float3x3 localToWorld; //From local-space to world-space, rotation only
