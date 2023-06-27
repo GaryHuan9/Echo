@@ -17,9 +17,9 @@ using DepthTexture = TextureGrid<NormalDepth128>;
 
 partial class ViewerUI
 {
-	sealed class DynamicRenderTextureMode : Mode
+	sealed class ExploreTextureGridMode : Mode
 	{
-		public DynamicRenderTextureMode(EchoUI root) : base(root) { }
+		public ExploreTextureGridMode(EchoUI root) : base(root) { }
 
 		TextureGrid mainTexture;
 		DepthTexture depthTexture;

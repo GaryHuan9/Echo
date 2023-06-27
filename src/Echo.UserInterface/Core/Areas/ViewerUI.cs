@@ -23,7 +23,7 @@ public sealed partial class ViewerUI : AreaUI
 	{
 		evaluationOperationMode = new EvaluationOperationMode(root);
 		staticTextureGridMode = new StaticTextureGridMode(root);
-		dynamicRenderTextureMode = new DynamicRenderTextureMode(root);
+		exploreTextureGridMode = new ExploreTextureGridMode(root);
 	}
 
 	Mode currentMode;
@@ -34,7 +34,7 @@ public sealed partial class ViewerUI : AreaUI
 
 	readonly EvaluationOperationMode evaluationOperationMode;
 	readonly StaticTextureGridMode staticTextureGridMode;
-	readonly DynamicRenderTextureMode dynamicRenderTextureMode;
+	readonly ExploreTextureGridMode exploreTextureGridMode;
 
 	float _logPlaneScale;
 
@@ -68,8 +68,8 @@ public sealed partial class ViewerUI : AreaUI
 
 	public void Track(TextureGrid mainTexture, TextureGrid<NormalDepth128> depthTexture, Camera camera)
 	{
-		dynamicRenderTextureMode.Reset(mainTexture, depthTexture, camera);
-		currentMode = dynamicRenderTextureMode;
+		exploreTextureGridMode.Reset(mainTexture, depthTexture, camera);
+		currentMode = exploreTextureGridMode;
 	}
 
 	protected override void NewFrameWindow()
@@ -122,7 +122,7 @@ public sealed partial class ViewerUI : AreaUI
 
 		evaluationOperationMode?.Dispose();
 		staticTextureGridMode?.Dispose();
-		dynamicRenderTextureMode?.Dispose();
+		exploreTextureGridMode?.Dispose();
 	}
 
 	void DrawMode(in Bounds region)
