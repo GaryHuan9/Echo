@@ -85,7 +85,7 @@ partial class ViewerUI
 				resetBuffer = false;
 			}
 
-			UpdateBufferFromView(size);
+			UpdateBufferFromView(size); //If this is too slow in the future, we can rewrite it to use SIMD and progress update across frames
 
 			UpdateDisplayFromBuffer(size);
 			DrawDisplay(drawList, plane);
@@ -98,10 +98,18 @@ partial class ViewerUI
 
 			if (ImGui.BeginMenu("Camera"))
 			{
+				if (ImGui.MenuItem("Help")) LogList.Add("Hold down Left Mouse Button to change the view: WASD to move and mouse drag to rotate.");
+
 				if (ImGui.MenuItem("Reset")) ResetCamera();
 
-				ImGui.SliderFloat("Speed", ref viewSpeed, 1E-3f, 1E2f, "%f", ImGuiSliderFlags.Logarithmic);
-				ImGui.SliderFloat("Sensitivity", ref viewSensitivity, 0f, 1f);
+				if (ImGui.BeginMenu("Settings"))
+				{
+					ImGui.SliderFloat("Speed", ref viewSpeed, 1E-3f, 1E2f, "%f", ImGuiSliderFlags.Logarithmic);
+					ImGui.SliderFloat("Sensitivity", ref viewSensitivity, 0f, 1f);
+
+					ImGui.EndMenu();
+				}
+
 				ImGui.EndMenu();
 			}
 		}
@@ -167,6 +175,9 @@ partial class ViewerUI
 
 		void UpdateBufferFromView(Int2 size)
 		{
+			int length = Volatile.Read(ref pointsLength);
+			if (length == 0) return;
+
 			float fov = Scalars.ToRadians(camera.FieldOfView);
 			float widthScale = 1f / MathF.Tan(fov / 2f);
 			float heightScale = widthScale * mainTexture.aspects.X;
@@ -181,15 +192,16 @@ partial class ViewerUI
 
 			Float4x4 transform = projection * Float4x4.Transformation(viewPosition, viewRotation, Float3.One).Inverse;
 
-			int length = Volatile.Read(ref pointsLength);
-
 			for (int i = 0; i < length; i++)
 			{
 				Float4 converted = transform * new Float4(pointsX[i], pointsY[i], pointsZ[i], 1f);
 				Float3 point = new Float3(converted.X, converted.Y, converted.Z) / converted.W;
-				Int2 position = (Int2)(new Float2(point.X / 2f + 0.5f, point.Y / -2f + 0.5f) * size);
 
-				if (!(Int2.Zero <= position) || !(position < size) || point.Z < 1f) continue;
+				if (point.Z < 1f) continue;
+
+				Float2 uv = new Float2(point.X / 2f + 0.5f, point.Y / -2f + 0.5f);
+				Int2 position = (Int2)(uv * size);
+				if (!(Int2.Zero <= position) || !(position < size)) continue;
 
 				int index = position.Y * size.X + position.X;
 				if (point.Z <= depthBuffer[index]) continue;
