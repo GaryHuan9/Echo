@@ -71,7 +71,7 @@ public class BSDF
 	}
 
 	/// <summary>
-	/// Counts how many <see cref="BxDF"/> in this <see cref="BSDF"/> fits the attributes outlined by <paramref name="type"/>.
+	/// Counts how many <see cref="BxDF"/> in this <see cref="BSDF"/> has any attribute outlined by <paramref name="type"/>.
 	/// </summary>
 	public int Count(FunctionType type)
 	{
@@ -79,7 +79,7 @@ public class BSDF
 
 		int result = 0;
 
-		for (int i = 0; i < count; i++) result += functions[i].type.Fits(type) ? 0 : 1;
+		for (int i = 0; i < count; i++) result += functions[i].type.Any(type) ? 1 : 0;
 
 		return result;
 	}

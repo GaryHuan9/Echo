@@ -6,9 +6,9 @@ using static SDL2.SDL;
 
 namespace Echo.UserInterface.Backend;
 
-public sealed class ImGuiRoot : IDisposable
+public sealed class Window : IDisposable
 {
-	public ImGuiRoot(Func<ImGuiDevice, IApplication> creator)
+	public Window(Func<ImGuiDevice, IApplication> creator)
 	{
 		this.creator = creator;
 
