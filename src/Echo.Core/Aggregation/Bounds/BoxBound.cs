@@ -12,7 +12,7 @@ namespace Echo.Core.Aggregation.Bounds;
 /// </summary>
 public readonly struct BoxBound : IFormattable
 {
-	public BoxBound(in Float3 min, in Float3 max)
+	public BoxBound(Float3 min, Float3 max)
 	{
 		this.min = min;
 		this.max = max;
@@ -36,7 +36,7 @@ public readonly struct BoxBound : IFormattable
 		this = builder.ToBoxBound();
 	}
 
-	public BoxBound(ReadOnlySpan<BoxBound> bounds, in Float4x4 transform)
+	public BoxBound(ReadOnlySpan<BoxBound> bounds, Float4x4 transform)
 	{
 		Ensure.AreNotEqual(bounds.Length, 0);
 		Float4x4 absolute = transform.Absoluted;

@@ -7,9 +7,9 @@ namespace Echo.Core.Common.Mathematics.Primitives;
 /// </summary>
 public readonly struct Summation
 {
-	public Summation(in Float4 value) : this(value, Float4.Zero) { }
+	public Summation(Float4 value) : this(value, Float4.Zero) { }
 
-	Summation(in Float4 total, in Float4 error)
+	Summation(Float4 total, Float4 error)
 	{
 		this.total = total;
 		this.error = error;
@@ -30,10 +30,10 @@ public readonly struct Summation
 
 	public override string ToString() => Result.ToString();
 
-	public static Summation operator -(in Summation summation, in Float4 value) => summation + -value;
-	public static Summation operator /(in Summation summation, in Float4 value) => summation * (1f / value);
+	public static Summation operator -(in Summation summation, Float4 value) => summation + -value;
+	public static Summation operator /(in Summation summation, Float4 value) => summation * (1f / value);
 
-	public static Summation operator +(in Summation summation, in Float4 value)
+	public static Summation operator +(in Summation summation, Float4 value)
 	{
 		Float4 delta = value - summation.error;
 		Float4 total = summation.total + delta;
@@ -42,7 +42,7 @@ public readonly struct Summation
 		return new Summation(total, error);
 	}
 
-	public static Summation operator *(in Summation summation, in Float4 value) => new(summation.total * value, summation.error * value);
+	public static Summation operator *(in Summation summation, Float4 value) => new(summation.total * value, summation.error * value);
 
 	public static Summation operator +(in Summation summation, in Summation value)
 	{

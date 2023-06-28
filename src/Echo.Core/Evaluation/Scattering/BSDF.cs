@@ -18,7 +18,7 @@ public class BSDF
 	/// <summary>
 	/// Resets and initializes this <see cref="BSDF"/> for new use.
 	/// </summary>
-	public void Reset(in Contact contact, in RGB128 newTint)
+	public void Reset(in Contact contact, RGB128 newTint)
 	{
 		//Note that we do not need to worry about releasing the references from the functions
 		//because they are supposed to be allocated in an arena, which handles the deallocation
@@ -88,7 +88,7 @@ public class BSDF
 	/// Evaluates all <see cref="BxDF"/> contained in this <see cref="BSDF"/> that matches
 	/// <paramref name="type"/>. See <see cref="BxDF.Evaluate"/> for more information.
 	/// </summary>
-	public RGB128 Evaluate(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.All)
+	public RGB128 Evaluate(Float3 outgoingWorld, Float3 incidentWorld, FunctionType type = FunctionType.All)
 	{
 		Ensure.AreEqual(outgoingWorld.SquaredMagnitude, 1f);
 		Ensure.AreEqual(incidentWorld.SquaredMagnitude, 1f);
@@ -113,7 +113,7 @@ public class BSDF
 	/// Returns the aggregated probability density for all <see cref="BxDF"/> that matches with
 	/// <paramref name="type"/>. See <see cref="BxDF.ProbabilityDensity"/> for more information.
 	/// </summary>
-	public float ProbabilityDensity(in Float3 outgoingWorld, in Float3 incidentWorld, FunctionType type = FunctionType.All)
+	public float ProbabilityDensity(Float3 outgoingWorld, Float3 incidentWorld, FunctionType type = FunctionType.All)
 	{
 		Ensure.AreEqual(outgoingWorld.SquaredMagnitude, 1f);
 		Ensure.AreEqual(incidentWorld.SquaredMagnitude, 1f);
@@ -141,7 +141,7 @@ public class BSDF
 	/// Outputs the main <see cref="BxDF"/> sampled to <paramref name="selected"/>.
 	/// See <see cref="BxDF.Sample"/> for more information.
 	/// </summary>
-	public Probable<RGB128> Sample(in Float3 outgoingWorld, Sample2D sample, out Float3 incidentWorld,
+	public Probable<RGB128> Sample(Float3 outgoingWorld, Sample2D sample, out Float3 incidentWorld,
 								   out BxDF selected, FunctionType type = FunctionType.All)
 	{
 		//Uniformly select a matching function
@@ -198,9 +198,9 @@ public class BSDF
 
 	// /// <summary>
 	// /// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	// /// See <see cref="BxDF.GetReflectance(in Float3, ReadOnlySpan{Sample2D})"/> for more information.
+	// /// See <see cref="BxDF.GetReflectance(Float3, ReadOnlySpan{Sample2D})"/> for more information.
 	// /// </summary>
-	// public RGB128 GetReflectance(in Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
+	// public RGB128 GetReflectance(Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
 	// {
 	// 	Float3 outgoing = transform.WorldToLocal(outgoingWorld);
 	// 	var reflectance = RGB128.Black;
@@ -237,7 +237,7 @@ public class BSDF
 	/// Determines whether the direction pair <paramref name="outgoingWorld"/> and <paramref name="incidentWorld"/>
 	/// is a reflective transport or a transmissive transport using our geometry normal to avoid light leak.
 	/// </summary>
-	FunctionType Reflect(in Float3 outgoingWorld, in Float3 incidentWorld)
+	FunctionType Reflect(Float3 outgoingWorld, Float3 incidentWorld)
 	{
 		float dot0 = outgoingWorld.Dot(geometricNormal);
 		float dot1 = incidentWorld.Dot(geometricNormal);

@@ -189,7 +189,7 @@ public readonly struct Direction : IEquatable<Direction>
 	/// where the plane normal is pointing towards the camera.
 	/// NOTE: undefined behavior if <see cref="IsZero"/>.
 	/// </summary>
-	public Float2 Project(in Float3 value)
+	public Float2 Project(Float3 value)
 	{
 		EnsureNotZero();
 
@@ -201,12 +201,12 @@ public readonly struct Direction : IEquatable<Direction>
 			DataNegativeY => new Float2(-value.X, value.Z),
 			DataPositiveZ => value.YX,
 			DataNegativeZ => new Float2(-value.Y, value.X),
-			_             => throw ExceptionHelper.NotPossible
+			_ => throw ExceptionHelper.NotPossible
 		};
 	}
 
 	/// <inheritdoc cref="Float3"/>
-	public Int2 Project(in Int3 value)
+	public Int2 Project(Int3 value)
 	{
 		EnsureNotZero();
 
@@ -218,7 +218,7 @@ public readonly struct Direction : IEquatable<Direction>
 			DataNegativeY => new Int2(-value.X, value.Z),
 			DataPositiveZ => value.YX,
 			DataNegativeZ => new Int2(-value.Y, value.X),
-			_             => throw ExceptionHelper.NotPossible
+			_ => throw ExceptionHelper.NotPossible
 		};
 	}
 
@@ -226,7 +226,7 @@ public readonly struct Direction : IEquatable<Direction>
 	/// Multiplies this <see cref="Direction"/> with <paramref name="value"/> as a scalar result.
 	/// NOTE: undefined behavior if <see cref="IsZero"/>.
 	/// </summary>
-	public float ExtractComponent(in Float3 value)
+	public float ExtractComponent(Float3 value)
 	{
 		int index = Axis;
 		float part = value[index];
@@ -234,7 +234,7 @@ public readonly struct Direction : IEquatable<Direction>
 	}
 
 	/// <inheritdoc cref="Float3"/>
-	public int ExtractComponent(in Int3 value)
+	public int ExtractComponent(Int3 value)
 	{
 		int index = Axis;
 		int part = value[index];
@@ -306,7 +306,7 @@ public readonly struct Direction : IEquatable<Direction>
 		return new Direction(direction.data ^ 0b1000u);
 	}
 
-	public static Float3 operator *(Direction direction, in Float3 value)
+	public static Float3 operator *(Direction direction, Float3 value)
 	{
 		int index = direction.Axis;
 		float part = value[index];
@@ -314,7 +314,7 @@ public readonly struct Direction : IEquatable<Direction>
 		return Float3.Create(index, part);
 	}
 
-	public static Int3 operator *(Direction direction, in Int3 value)
+	public static Int3 operator *(Direction direction, Int3 value)
 	{
 		int index = direction.Axis;
 		int part = value[index];
@@ -322,7 +322,7 @@ public readonly struct Direction : IEquatable<Direction>
 		return Int3.Create(index, part);
 	}
 
-	public static explicit operator Direction(in Float3 value)
+	public static explicit operator Direction(Float3 value)
 	{
 		if (value.SquaredMagnitude.AlmostEquals()) return default;
 
@@ -332,10 +332,10 @@ public readonly struct Direction : IEquatable<Direction>
 		return new Direction((uint)axis | (uint)(sign << 3) | 0b10000);
 	}
 
-	public static explicit operator Direction(in Float2 value) => (Direction)value.XY_;
+	public static explicit operator Direction(Float2 value) => (Direction)value.XY_;
 
-	public static explicit operator Direction(in Int3 value) => (Direction)(Float3)value;
-	public static explicit operator Direction(in Int2 value) => (Direction)(Float2)value;
+	public static explicit operator Direction(Int3 value) => (Direction)(Float3)value;
+	public static explicit operator Direction(Int2 value) => (Direction)(Float2)value;
 
 	public static implicit operator Int3(Direction direction)
 	{

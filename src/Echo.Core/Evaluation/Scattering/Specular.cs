@@ -15,10 +15,10 @@ public sealed class SpecularReflection<TFresnel> : BxDF where TFresnel : IFresne
 
 	TFresnel fresnel;
 
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
-	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
+	public override RGB128 Evaluate(Float3 outgoing, Float3 incident) => RGB128.Black;
+	public override float ProbabilityDensity(Float3 outgoing, Float3 incident) => 0f;
 
-	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident)
 	{
 		incident = Reflect(outgoing);
 		float cosO = CosineP(outgoing);
@@ -28,7 +28,7 @@ public sealed class SpecularReflection<TFresnel> : BxDF where TFresnel : IFresne
 		return (evaluated / FastMath.Abs(cosI), 1f);
 	}
 
-	public static Float3 Reflect(in Float3 outgoing) => new(-outgoing.X, -outgoing.Y, outgoing.Z);
+	public static Float3 Reflect(Float3 outgoing) => new(-outgoing.X, -outgoing.Y, outgoing.Z);
 }
 
 public sealed class SpecularTransmission : BxDF
@@ -39,10 +39,10 @@ public sealed class SpecularTransmission : BxDF
 
 	RealFresnel fresnel;
 
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
-	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
+	public override RGB128 Evaluate(Float3 outgoing, Float3 incident) => RGB128.Black;
+	public override float ProbabilityDensity(Float3 outgoing, Float3 incident) => 0f;
 
-	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident)
 	{
 		var packet = fresnel.CreateIncomplete(CosineP(outgoing)).Complete;
 
@@ -68,10 +68,10 @@ public sealed class SpecularFresnel : BxDF
 
 	RealFresnel fresnel;
 
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
-	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
+	public override RGB128 Evaluate(Float3 outgoing, Float3 incident) => RGB128.Black;
+	public override float ProbabilityDensity(Float3 outgoing, Float3 incident) => 0f;
 
-	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident)
 	{
 		var packet = fresnel.CreateIncomplete(CosineP(outgoing)).Complete;
 		float evaluated = packet.Value;
@@ -96,14 +96,14 @@ public sealed class SpecularLambertian : BxDF
 {
 	public SpecularLambertian() : base(FunctionType.Specular | FunctionType.Reflective) { }
 
-	public void Reset(in RGB128 newAlbedo, RealFresnel newFresnel)
+	public void Reset(RGB128 newAlbedo, RealFresnel newFresnel)
 	{
 		float eta = newFresnel.etaAbove / newFresnel.etaBelow;
 		float reflectance = FresnelDiffuseReflectanceFast(eta);
 		Reset(newAlbedo, newFresnel, reflectance);
 	}
 
-	public void Reset(in RGB128 newAlbedo, RealFresnel newFresnel, float newReflectance)
+	public void Reset(RGB128 newAlbedo, RealFresnel newFresnel, float newReflectance)
 	{
 		fresnel = newFresnel;
 
@@ -118,10 +118,10 @@ public sealed class SpecularLambertian : BxDF
 	//The current BSDF system does not support one BxDF with mixed specular and non specular samples
 	//For now we treat this BxDF as a specular one for correct sampling at the cost of disabling MIS
 
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident) => RGB128.Black;
-	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident) => 0f;
+	public override RGB128 Evaluate(Float3 outgoing, Float3 incident) => RGB128.Black;
+	public override float ProbabilityDensity(Float3 outgoing, Float3 incident) => 0f;
 
-	// public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
+	// public override RGB128 Evaluate(Float3 outgoing, Float3 incident)
 	// {
 	// 	if (FlatOrOppositeHemisphere(outgoing, incident)) return RGB128.Black;
 	//
@@ -132,7 +132,7 @@ public sealed class SpecularLambertian : BxDF
 	// 	return multiplier * (1f - evaluatedOutgoing) * (1f - evaluatedIncident);
 	// }
 	//
-	// public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
+	// public override float ProbabilityDensity(Float3 outgoing, Float3 incident)
 	// {
 	// 	if (FlatOrOppositeHemisphere(outgoing, incident)) return 0f;
 	//
@@ -141,7 +141,7 @@ public sealed class SpecularLambertian : BxDF
 	// 	return (1f - evaluated) * FastMath.Abs(CosineP(incident)) * Scalars.PiR;
 	// }
 
-	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident)
 	{
 		float cosO = FastMath.Abs(CosineP(outgoing));
 		float evaluatedOutgoing = fresnel.Evaluate(cosO);

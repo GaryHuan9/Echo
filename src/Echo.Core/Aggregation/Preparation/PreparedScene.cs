@@ -204,7 +204,7 @@ public sealed class PreparedScene : PreparedPack
 	}
 
 	/// <inheritdoc cref="IPreparedLight.ProbabilityDensity"/>
-	public float ProbabilityDensity(in TokenHierarchy light, in GeometryPoint origin, in Float3 incident)
+	public float ProbabilityDensity(in TokenHierarchy light, in GeometryPoint origin, Float3 incident)
 	{
 		EntityToken token = light.TopToken;
 

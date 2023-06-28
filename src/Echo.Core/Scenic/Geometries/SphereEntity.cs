@@ -47,7 +47,7 @@ public class SphereEntity : MaterialEntity, IGeometrySource<PreparedSphere>
 /// </summary>
 public readonly struct PreparedSphere : IPreparedGeometry
 {
-	public PreparedSphere(in Float3 position, float radius, MaterialIndex material)
+	public PreparedSphere(Float3 position, float radius, MaterialIndex material)
 	{
 		Ensure.IsTrue(radius > 0f);
 
@@ -147,7 +147,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 	}
 
 	/// <inheritdoc/>
-	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
+	public Probable<GeometryPoint> Sample(Float3 origin, Sample2D sample)
 	{
 		//Check whether origin is inside sphere
 		Float3 offset = origin - position;
@@ -188,7 +188,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 	}
 
 	/// <inheritdoc/>
-	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
+	public float ProbabilityDensity(Float3 origin, Float3 incident)
 	{
 		Ensure.AreEqual(incident.SquaredMagnitude, 1f);
 
@@ -219,7 +219,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		return ProbabilityDensityCone(cosMaxT);
 	}
 
-	GeometryPoint GetPoint(in Float3 normal) => new(normal * radius + position, normal);
+	GeometryPoint GetPoint(Float3 normal) => new(normal * radius + position, normal);
 
 	public static Float3 GetNormal(Float2 uv)
 	{

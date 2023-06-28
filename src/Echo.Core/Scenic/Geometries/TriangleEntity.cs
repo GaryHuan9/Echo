@@ -56,19 +56,19 @@ public class TriangleEntity : MaterialEntity, IGeometrySource<PreparedTriangle>
 /// <remarks>Winding order is clockwise.</remarks>
 public readonly struct PreparedTriangle : IPreparedGeometry
 {
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, MaterialIndex material) : this
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
 		Float3.Cross(vertex1 - vertex0, vertex2 - vertex0).Normalized, material
 	) { }
 
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, in Float3 normal, MaterialIndex material) : this
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
 		normal, normal, normal, material
 	) { }
 
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
@@ -76,7 +76,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 		texcoord0, texcoord1, texcoord2, material
 	) { }
 
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2, in Float3 normal,
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2, Float3 normal,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
@@ -84,16 +84,16 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 		texcoord0, texcoord1, texcoord2, material
 	) { }
 
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							in Float3 shadingNormal0, in Float3 shadingNormal1, in Float3 shadingNormal2, MaterialIndex material) : this
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+							Float3 shadingNormal0, Float3 shadingNormal1, Float3 shadingNormal2, MaterialIndex material) : this
 	(
 		vertex0, vertex1, vertex2,
 		shadingNormal0, shadingNormal1, shadingNormal2,
 		Float2.Zero, Float2.Zero, Float2.Zero, material
 	) { }
 
-	public PreparedTriangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-							in Float3 shadingNormal0, in Float3 shadingNormal1, in Float3 shadingNormal2,
+	public PreparedTriangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+							Float3 shadingNormal0, Float3 shadingNormal1, Float3 shadingNormal2,
 							Float2 texcoord0, Float2 texcoord1, Float2 texcoord2, MaterialIndex material)
 	{
 		Ensure.AreEqual(shadingNormal0.SquaredMagnitude, 1f);
@@ -163,7 +163,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 	public bool Intersect(in Ray ray, float travel) => IntersectImpl(ray.origin, ray.direction, travel);
 
 	/// <inheritdoc/>
-	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample)
+	public Probable<GeometryPoint> Sample(Float3 origin, Sample2D sample)
 	{
 		Float2 uv = sample.UniformTriangle;
 		Float3 position = GetPoint(uv);
@@ -174,7 +174,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 	}
 
 	/// <inheritdoc/>
-	public float ProbabilityDensity(in Float3 origin, in Float3 incident)
+	public float ProbabilityDensity(Float3 origin, Float3 incident)
 	{
 		float distance = IntersectImpl(origin, incident, out Float2 uv);
 
@@ -201,7 +201,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 
 	public override string ToString() => $"<{nameof(vertex0)}: {vertex0}, {nameof(Vertex1)}: {Vertex1}, {nameof(Vertex2)}: {Vertex2}>";
 
-	float IntersectImpl(in Float3 origin, in Float3 direction, out Float2 uv)
+	float IntersectImpl(Float3 origin, Float3 direction, out Float2 uv)
 	{
 		const float Infinity = float.PositiveInfinity;
 		Unsafe.SkipInit(out uv);
@@ -234,7 +234,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 		return distance < 0f ? Infinity : distance;
 	}
 
-	bool IntersectImpl(in Float3 origin, in Float3 direction, float travel)
+	bool IntersectImpl(Float3 origin, Float3 direction, float travel)
 	{
 		//Calculate determinant and u
 		Float3 cross2 = Float3.Cross(direction, edge2);
@@ -264,7 +264,7 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 
 	Float3 GetPoint(Float2 uv) => vertex0 + uv.X * edge1 + uv.Y * edge2;
 
-	static void GetSubdivided(Span<PreparedTriangle> triangles, in Float3 normal00, in Float3 normal11, in Float3 normal22)
+	static void GetSubdivided(Span<PreparedTriangle> triangles, Float3 normal00, Float3 normal11, Float3 normal22)
 	{
 		if (triangles.Length <= 1) return;
 
@@ -303,11 +303,11 @@ public readonly struct PreparedTriangle : IPreparedGeometry
 
 		//NOTE: this normal is not normalized, because normalized normals will mess up during subdivision
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static Float3 GetInterpolatedNormal(Float2 uv, in Float3 normal00, in Float3 normal11, in Float3 normal22) => (1f - uv.X - uv.Y) * normal00 + uv.X * normal11 + uv.Y * normal22;
+		static Float3 GetInterpolatedNormal(Float2 uv, Float3 normal00, Float3 normal11, Float3 normal22) => (1f - uv.X - uv.Y) * normal00 + uv.X * normal11 + uv.Y * normal22;
 
 		static void Fill(Span<PreparedTriangle> span, int index, MaterialIndex material,
-						 in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-						 in Float3 normal0, in Float3 normal1, in Float3 normal2,
+						 Float3 vertex0, Float3 vertex1, Float3 vertex2,
+						 Float3 normal0, Float3 normal1, Float3 normal2,
 						 Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
 		{
 			int gap = span.Length / 4;

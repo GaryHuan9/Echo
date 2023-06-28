@@ -10,7 +10,7 @@ namespace Echo.Core.Aggregation.Primitives;
 /// </summary>
 public readonly struct GeometryPoint
 {
-	public GeometryPoint(in Float3 position, in Float3 normal)
+	public GeometryPoint(Float3 position, Float3 normal)
 	{
 		Ensure.AreEqual(normal.SquaredMagnitude, 1f);
 
@@ -32,7 +32,7 @@ public readonly struct GeometryPoint
 	/// Returns the uniform probability density function (pdf) of sampling this <see cref="GeometryPoint"/>,
 	/// which is from a geometry with <paramref name="area"/>, over solid angles at <paramref name="origin"/>.
 	/// </summary>
-	public float ProbabilityDensity(in Float3 origin, float area)
+	public float ProbabilityDensity(Float3 origin, float area)
 	{
 		Ensure.IsTrue(area >= 0f);
 
@@ -48,7 +48,7 @@ public readonly struct GeometryPoint
 	/// <summary>
 	/// Transforms this <see cref="GeometryPoint"/> by <paramref name="transform"/>.
 	/// </summary>
-	public static GeometryPoint operator *(in Float4x4 transform, in GeometryPoint point) => new
+	public static GeometryPoint operator *(Float4x4 transform, in GeometryPoint point) => new
 	(
 		transform.MultiplyPoint(point.position),
 		transform.MultiplyDirection(point.normal).Normalized

@@ -35,7 +35,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		this.f33 = f33;
 	}
 
-	public Float4x4(in Float4x4 source) : this
+	public Float4x4(Float4x4 source) : this
 	(
 		source.f00, source.f01, source.f02, source.f03,
 		source.f10, source.f11, source.f12, source.f13,
@@ -43,7 +43,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		source.f30, source.f31, source.f32, source.f33
 	) { }
 
-	public Float4x4(in Float4 row0, in Float4 row1, in Float4 row2, in Float4 row3) : this
+	public Float4x4(Float4 row0, Float4 row1, Float4 row2, Float4 row3) : this
 	(
 		row0.X, row0.Y, row0.Z, row0.W,
 		row1.X, row1.Y, row1.Z, row1.W,
@@ -257,14 +257,14 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		}
 	}
 
-	public Float3 MultiplyPoint(in Float3 point) => new
+	public Float3 MultiplyPoint(Float3 point) => new
 	(
 		f00 * point.X + f01 * point.Y + f02 * point.Z + f03,
 		f10 * point.X + f11 * point.Y + f12 * point.Z + f13,
 		f20 * point.X + f21 * point.Y + f22 * point.Z + f23
 	);
 
-	public Float3 MultiplyDirection(in Float3 direction) => new
+	public Float3 MultiplyDirection(Float3 direction) => new
 	(
 		f00 * direction.X + f01 * direction.Y + f02 * direction.Z,
 		f10 * direction.X + f11 * direction.Y + f12 * direction.Z,
@@ -290,7 +290,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	public bool Equals(Float4x4 other) => EqualsFast(other);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool EqualsFast(in Float4x4 other) => f00.AlmostEquals(other.f00) && f01.AlmostEquals(other.f01) && f02.AlmostEquals(other.f02) && f03.AlmostEquals(other.f03) &&
+	public bool EqualsFast(Float4x4 other) => f00.AlmostEquals(other.f00) && f01.AlmostEquals(other.f01) && f02.AlmostEquals(other.f02) && f03.AlmostEquals(other.f03) &&
 												 f10.AlmostEquals(other.f10) && f11.AlmostEquals(other.f11) && f12.AlmostEquals(other.f12) && f13.AlmostEquals(other.f13) &&
 												 f20.AlmostEquals(other.f20) && f21.AlmostEquals(other.f21) && f22.AlmostEquals(other.f22) && f23.AlmostEquals(other.f23) &&
 												 f30.AlmostEquals(other.f30) && f31.AlmostEquals(other.f31) && f32.AlmostEquals(other.f32) && f33.AlmostEquals(other.f33);
@@ -326,7 +326,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	/// <summary>
 	/// Creates and returns a positional matrix.
 	/// </summary>
-	public static Float4x4 Position(in Float3 position) => new
+	public static Float4x4 Position(Float3 position) => new
 	(
 		1f, 0f, 0f, position.X,
 		0f, 1f, 0f, position.Y,
@@ -337,19 +337,19 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	/// <summary>
 	/// Returns a combined transformation matrix. Scaling is applied first, then rotation, finally translation.
 	/// </summary>
-	public static Float4x4 Transformation(in Float3 position, in Float3 rotation, in Float3 scale) => Transformation(position, new Versor(rotation), scale);
+	public static Float4x4 Transformation(Float3 position, Float3 rotation, Float3 scale) => Transformation(position, new Versor(rotation), scale);
 
 	/// <summary>
 	/// Returns a combined transformation matrix. Scaling is applied first, then rotation, finally translation.
 	/// </summary>
-	public static Float4x4 Transformation(in Float3 position, in Versor rotation, in Float3 scale) => Position(position) * (Float3x3)rotation * Float3x3.Scale(scale);
+	public static Float4x4 Transformation(Float3 position, Versor rotation, Float3 scale) => Position(position) * (Float3x3)rotation * Float3x3.Scale(scale);
 
 #endregion
 
 #region Operators
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float4x4 operator *(in Float4x4 first, in Float4x4 second) => new
+	public static Float4x4 operator *(Float4x4 first, Float4x4 second) => new
 	(
 		first.f00 * second.f00 + first.f01 * second.f10 + first.f02 * second.f20 + first.f03 * second.f30, first.f00 * second.f01 + first.f01 * second.f11 + first.f02 * second.f21 + first.f03 * second.f31, first.f00 * second.f02 + first.f01 * second.f12 + first.f02 * second.f22 + first.f03 * second.f32, first.f00 * second.f03 + first.f01 * second.f13 + first.f02 * second.f23 + first.f03 * second.f33,
 		first.f10 * second.f00 + first.f11 * second.f10 + first.f12 * second.f20 + first.f13 * second.f30, first.f10 * second.f01 + first.f11 * second.f11 + first.f12 * second.f21 + first.f13 * second.f31, first.f10 * second.f02 + first.f11 * second.f12 + first.f12 * second.f22 + first.f13 * second.f32, first.f10 * second.f03 + first.f11 * second.f13 + first.f12 * second.f23 + first.f13 * second.f33,
@@ -358,7 +358,7 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 	);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float4 operator *(in Float4x4 first, in Float4 second) => new
+	public static Float4 operator *(Float4x4 first, Float4 second) => new
 	(
 		first.f00 * second.X + first.f01 * second.Y + first.f02 * second.Z + first.f03 * second.W,
 		first.f10 * second.X + first.f11 * second.Y + first.f12 * second.Z + first.f13 * second.W,
@@ -366,10 +366,10 @@ public readonly struct Float4x4 : IEquatable<Float4x4>, IFormattable
 		first.f30 * second.X + first.f31 * second.Y + first.f32 * second.Z + first.f33 * second.W
 	);
 
-	public static bool operator ==(in Float4x4 first, in Float4x4 second) => first.EqualsFast(second);
-	public static bool operator !=(in Float4x4 first, in Float4x4 second) => !first.EqualsFast(second);
+	public static bool operator ==(Float4x4 first, Float4x4 second) => first.EqualsFast(second);
+	public static bool operator !=(Float4x4 first, Float4x4 second) => !first.EqualsFast(second);
 
-	public static implicit operator Float4x4(in Float3x3 value) => new
+	public static implicit operator Float4x4(Float3x3 value) => new
 	(
 		value.f00, value.f01, value.f02, 0f,
 		value.f10, value.f11, value.f12, 0f,

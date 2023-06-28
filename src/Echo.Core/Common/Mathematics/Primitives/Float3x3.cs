@@ -27,14 +27,14 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 		this.f22 = f22;
 	}
 
-	public Float3x3(in Float3x3 source) : this
+	public Float3x3(Float3x3 source) : this
 	(
 		source.f00, source.f01, source.f02,
 		source.f10, source.f11, source.f12,
 		source.f20, source.f21, source.f22
 	) { }
 
-	public Float3x3(in Float3 row0, in Float3 row1, in Float3 row2) : this
+	public Float3x3(Float3 row0, Float3 row1, Float3 row2) : this
 	(
 		row0.X, row0.Y, row0.Z,
 		row1.X, row1.Y, row1.Z,
@@ -208,7 +208,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	public bool Equals(Float3x3 other) => EqualsFast(other);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public bool EqualsFast(in Float3x3 other) => f00.AlmostEquals(other.f00) && f01.AlmostEquals(other.f01) && f02.AlmostEquals(other.f02) &&
+	public bool EqualsFast(Float3x3 other) => f00.AlmostEquals(other.f00) && f01.AlmostEquals(other.f01) && f02.AlmostEquals(other.f02) &&
 												 f10.AlmostEquals(other.f10) && f11.AlmostEquals(other.f11) && f12.AlmostEquals(other.f12) &&
 												 f20.AlmostEquals(other.f20) && f21.AlmostEquals(other.f21) && f22.AlmostEquals(other.f22);
 
@@ -236,12 +236,12 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	/// <summary>
 	/// Creates and returns a 3D rotational matrix that applies in ZXY order.
 	/// </summary>
-	public static Float3x3 Rotation(in Float3 rotation) => (Float3x3)new Versor(rotation);
+	public static Float3x3 Rotation(Float3 rotation) => (Float3x3)new Versor(rotation);
 
 	/// <summary>
 	/// Creates and returns a 3D scaling matrix.
 	/// </summary>
-	public static Float3x3 Scale(in Float3 scale) => new
+	public static Float3x3 Scale(Float3 scale) => new
 	(
 		scale.X, 0f, 0f,
 		0f, scale.Y, 0f,
@@ -253,7 +253,7 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 #region Operators
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float3x3 operator *(in Float3x3 first, in Float3x3 second) => new
+	public static Float3x3 operator *(Float3x3 first, Float3x3 second) => new
 	(
 		first.f00 * second.f00 + first.f01 * second.f10 + first.f02 * second.f20, first.f00 * second.f01 + first.f01 * second.f11 + first.f02 * second.f21, first.f00 * second.f02 + first.f01 * second.f12 + first.f02 * second.f22,
 		first.f10 * second.f00 + first.f11 * second.f10 + first.f12 * second.f20, first.f10 * second.f01 + first.f11 * second.f11 + first.f12 * second.f21, first.f10 * second.f02 + first.f11 * second.f12 + first.f12 * second.f22,
@@ -261,17 +261,17 @@ public readonly struct Float3x3 : IEquatable<Float3x3>
 	);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Float3 operator *(in Float3x3 first, in Float3 second) => new
+	public static Float3 operator *(Float3x3 first, Float3 second) => new
 	(
 		first.f00 * second.X + first.f01 * second.Y + first.f02 * second.Z,
 		first.f10 * second.X + first.f11 * second.Y + first.f12 * second.Z,
 		first.f20 * second.X + first.f21 * second.Y + first.f22 * second.Z
 	);
 
-	public static bool operator ==(in Float3x3 first, in Float3x3 second) => first.EqualsFast(second);
-	public static bool operator !=(in Float3x3 first, in Float3x3 second) => !first.EqualsFast(second);
+	public static bool operator ==(Float3x3 first, Float3x3 second) => first.EqualsFast(second);
+	public static bool operator !=(Float3x3 first, Float3x3 second) => !first.EqualsFast(second);
 
-	public static explicit operator Float3x3(in Float4x4 value) => new
+	public static explicit operator Float3x3(Float4x4 value) => new
 	(
 		value.f00, value.f01, value.f02,
 		value.f10, value.f11, value.f12,

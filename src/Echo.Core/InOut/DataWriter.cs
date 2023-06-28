@@ -33,14 +33,14 @@ public class DataWriter : BinaryWriter
 		Write(value.Y);
 	}
 
-	public void Write(in Float3 value)
+	public void Write(Float3 value)
 	{
 		Write(value.X);
 		Write(value.Y);
 		Write(value.Z);
 	}
 
-	public void Write(in Float4 value)
+	public void Write(Float4 value)
 	{
 		Write(value.X);
 		Write(value.Y);
@@ -48,7 +48,7 @@ public class DataWriter : BinaryWriter
 		Write(value.W);
 	}
 
-	public void Write(in Float4x4 value)
+	public void Write(Float4x4 value)
 	{
 		Write(value.f00);
 		Write(value.f01);
@@ -77,14 +77,14 @@ public class DataWriter : BinaryWriter
 		Write(value.Y);
 	}
 
-	public void Write(in Int3 value)
+	public void Write(Int3 value)
 	{
 		Write(value.X);
 		Write(value.Y);
 		Write(value.Z);
 	}
 
-	public void Write(in Int4 value)
+	public void Write(Int4 value)
 	{
 		Write(value.X);
 		Write(value.Y);
@@ -92,7 +92,7 @@ public class DataWriter : BinaryWriter
 		Write(value.W);
 	}
 
-	public void Write(in Versor value) => Write(value.d);
+	public void Write(Versor value) => Write(value.d);
 
 	public unsafe void Write(in Guid value)
 	{
@@ -172,14 +172,14 @@ public class DataWriter : BinaryWriter
 		WriteCompact(int2.Y);
 	}
 
-	public void WriteCompact(in Int3 int3)
+	public void WriteCompact(Int3 int3)
 	{
 		WriteCompact(int3.X);
 		WriteCompact(int3.Y);
 		WriteCompact(int3.Z);
 	}
 
-	public void WriteCompact(in Int4 int4)
+	public void WriteCompact(Int4 int4)
 	{
 		WriteCompact(int4.X);
 		WriteCompact(int4.Y);

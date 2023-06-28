@@ -16,7 +16,7 @@ public static class ColorConverter
 	/// Converts a <see cref="Float4"/> from linear space into sRGB.
 	/// </summary>
 	/// <remarks>This mapping is from [0, 1] to [0, 1].</remarks>
-	public static Float4 LinearToGamma(in Float4 x)
+	public static Float4 LinearToGamma(Float4 x)
 	{
 		Ensure.IsTrue(Float4.Zero <= x && x <= Float4.One);
 

@@ -23,7 +23,7 @@ public class CoatedDiffuse : Material
 		reflectance = SpecularLambertian.FresnelDiffuseReflectance(1f / RefractiveIndex);
 	}
 
-	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo)
+	protected override BSDF Scatter(in Contact contact, Allocator allocator, RGB128 albedo)
 	{
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
 		var fresnel = new RealFresnel(1f, RefractiveIndex);

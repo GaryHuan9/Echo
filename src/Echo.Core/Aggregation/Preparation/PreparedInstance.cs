@@ -9,7 +9,7 @@ namespace Echo.Core.Aggregation.Preparation;
 
 public readonly struct PreparedInstance
 {
-	public PreparedInstance(PreparedPack pack, PreparedSwatch swatch, in Float4x4 inverseTransform)
+	public PreparedInstance(PreparedPack pack, PreparedSwatch swatch, Float4x4 inverseTransform)
 	{
 		this.pack = pack;
 		this.swatch = swatch;

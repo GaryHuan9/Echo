@@ -80,5 +80,5 @@ public abstract class DirectionalTextureBaseTests
 		static Int2 Next2(Prng random, Int2 max) => new(random.Next1(max.X), random.Next1(max.Y));
 	}
 
-	static float Difference(in RGB128 value, in RGB128 other) => ((Float4)value - other).SquaredMagnitude;
+	static float Difference(RGB128 value, RGB128 other) => ((Float4)value - other).SquaredMagnitude;
 }

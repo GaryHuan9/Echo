@@ -13,12 +13,12 @@ namespace Echo.Core.Aggregation.Primitives;
 /// </summary>
 public struct Contact
 {
-	public Contact(in TraceQuery query, in Float3 normal) : this
+	public Contact(in TraceQuery query, Float3 normal) : this
 	(
 		query, new GeometryPoint(query.Position, normal)
 	) { }
 
-	public Contact(in TraceQuery query, in Float3 normal, Material material, in Float3 shadingNormal, Float2 texcoord) : this
+	public Contact(in TraceQuery query, Float3 normal, Material material, Float3 shadingNormal, Float2 texcoord) : this
 	(
 		query, new GeometryPoint(query.Position, normal),
 		new GeometryShade(material, shadingNormal, texcoord)
@@ -66,7 +66,7 @@ public struct Contact
 	/// <summary>
 	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Contact"/> towards <paramref name="direction"/>.
 	/// </summary>
-	public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(point.position, direction), float.PositiveInfinity, token);
+	public readonly TraceQuery SpawnTrace(Float3 direction) => new(new Ray(point.position, direction), float.PositiveInfinity, token);
 
 	/// <summary>
 	/// Spawns a new <see cref="TraceQuery"/> from this <see cref="Contact"/> with a direction directly opposite to <see cref="outgoing"/>.
@@ -76,7 +76,7 @@ public struct Contact
 	/// <summary>
 	/// Spawns a new <see cref="OccludeQuery"/> with <paramref name="direction"/> and <paramref name="travel"/>.
 	/// </summary>
-	public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(point.position, direction), travel, token);
+	public readonly OccludeQuery SpawnOcclude(Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(point.position, direction), travel, token);
 
 	/// <summary>
 	/// Spawns a new <see cref="OccludeQuery"/> directly opposite to <see cref="outgoing"/> with <paramref name="travel"/>.
@@ -86,7 +86,7 @@ public struct Contact
 	/// <summary>
 	/// Returns the absolute value of the dot product between <paramref name="direction"/> and <see cref="GeometryShade.Normal"/>.
 	/// </summary>
-	public readonly float NormalDot(in Float3 direction) => FastMath.Abs(direction.Dot(shade.Normal));
+	public readonly float NormalDot(Float3 direction) => FastMath.Abs(direction.Dot(shade.Normal));
 
 	/// <summary>
 	/// Converts to the position of <paramref name="contact"/>.
@@ -98,7 +98,7 @@ public struct Contact
 	/// </summary>
 	public readonly struct Info
 	{
-		public Info(MaterialIndex material, in Float3 normal, Float3 shadingNormal, Float2 texcoord)
+		public Info(MaterialIndex material, Float3 normal, Float3 shadingNormal, Float2 texcoord)
 		{
 			this.material = material;
 			this.normal = normal;

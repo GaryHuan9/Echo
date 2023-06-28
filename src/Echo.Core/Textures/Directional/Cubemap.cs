@@ -71,7 +71,7 @@ public class Cubemap : IDirectionalTexture
 	public void Prepare() => Average = ((IDirectionalTexture)this).AverageConverge();
 
 	/// <inheritdoc/>
-	public RGB128 Evaluate(in Float3 incident)
+	public RGB128 Evaluate(Float3 incident)
 	{
 		Direction target = (Direction)incident;
 

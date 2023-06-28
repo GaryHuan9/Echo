@@ -39,7 +39,7 @@ public class ArrayGrid<T> : SettableGrid<T> where T : unmanaged, IColor<T>
 
 	public override T Get(Int2 position) => pixels[ToIndex(position)];
 
-	public override void Set(Int2 position, in T value) => pixels[ToIndex(position)] = value;
+	public override void Set(Int2 position, T value) => pixels[ToIndex(position)] = value;
 
 	/// <summary>
 	/// Converts the integer pixel <paramref name="position"/> to an index [0, <see cref="length"/>)

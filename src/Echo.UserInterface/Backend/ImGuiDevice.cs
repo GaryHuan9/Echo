@@ -356,7 +356,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		else _ = SDL_ShowCursor((int)SDL_bool.SDL_FALSE);
 	}
 
-	void ExecuteCommandList(ImDrawListPtr list, in Float4 clipOffset, in Float4 clipSize)
+	void ExecuteCommandList(ImDrawListPtr list, Float4 clipOffset, Float4 clipSize)
 	{
 		ImPtrVector<ImDrawCmdPtr> buffer = list.CmdBuffer;
 		var vertices = (ImDrawVert*)list.VtxBuffer.Data;

@@ -198,6 +198,6 @@ public sealed class EchoUI : IApplication
 		colors[(int)ImGuiCol.ModalWindowDimBg] = white1 with { W = Alpha0 };
 	}
 
-	static Vector4 ToVector4(in RGB128 color) => ToVector4((RGBA128)color);
-	static Vector4 ToVector4(in RGBA128 color) => ((Float4)color).v.AsVector4();
+	static Vector4 ToVector4(RGB128 color) => ToVector4((RGBA128)color);
+	static Vector4 ToVector4(RGBA128 color) => ((Float4)color).v.AsVector4();
 }

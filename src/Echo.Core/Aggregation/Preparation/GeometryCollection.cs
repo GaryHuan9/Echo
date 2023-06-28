@@ -258,7 +258,7 @@ public sealed class GeometryCollection
 	}
 
 	/// <inheritdoc cref="IPreparedGeometry.Sample"/>
-	public Probable<GeometryPoint> Sample(EntityToken token, in Float3 origin, Sample2D sample)
+	public Probable<GeometryPoint> Sample(EntityToken token, Float3 origin, Sample2D sample)
 	{
 		Ensure.IsTrue(token.Type.IsRawGeometry());
 
@@ -271,7 +271,7 @@ public sealed class GeometryCollection
 	}
 
 	/// <inheritdoc cref="IPreparedGeometry.ProbabilityDensity"/>
-	public float ProbabilityDensity(EntityToken token, in Float3 origin, in Float3 incident)
+	public float ProbabilityDensity(EntityToken token, Float3 origin, Float3 incident)
 	{
 		Ensure.IsTrue(token.Type.IsRawGeometry());
 

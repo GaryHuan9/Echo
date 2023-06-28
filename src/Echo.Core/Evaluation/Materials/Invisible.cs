@@ -25,5 +25,5 @@ public sealed class Invisible : Material
 		contact.bsdf.Add<SpecularTransmission>(allocator).Reset(new RealFresnel(1f, 1f));
 	}
 
-	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
+	protected override BSDF Scatter(in Contact contact, Allocator allocator, RGB128 albedo) => throw new NotSupportedException();
 }

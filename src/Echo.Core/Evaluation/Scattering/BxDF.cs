@@ -27,7 +27,7 @@ public abstract class BxDF
 	/// <param name="incident">The unit local direction towards which we exit.</param>
 	/// <returns>The <see cref="RGB128"/> value evaluated.</returns>
 	/// <seealso cref="Sample"/>
-	public abstract RGB128 Evaluate(in Float3 outgoing, in Float3 incident);
+	public abstract RGB128 Evaluate(Float3 outgoing, Float3 incident);
 
 	/// <summary>
 	/// Calculates the pdf of selecting <paramref name="incident"/> from <see cref="outgoing"/> with <see cref="Sample"/>.
@@ -36,7 +36,7 @@ public abstract class BxDF
 	/// <param name="incident">The selected unit local direction towards which we exit.</param>
 	/// <returns>The probability density function (pdf) value of this selection.</returns>
 	/// <seealso cref="Sample"/>
-	public abstract float ProbabilityDensity(in Float3 outgoing, in Float3 incident);
+	public abstract float ProbabilityDensity(Float3 outgoing, Float3 incident);
 
 	/// <summary>
 	/// Samples <paramref name="incident"/> based on <paramref name="outgoing"/> for this <see cref="BxDF"/>.
@@ -45,13 +45,13 @@ public abstract class BxDF
 	/// <param name="outgoing">The unit local source direction from which we enter.</param>
 	/// <param name="incident">The sampled unit local direction towards which we exit.</param>
 	/// <returns>The <see cref="Probable{T}"/> value evaluated from <paramref name="outgoing"/> to <paramref name="incident"/>.</returns>
-	public abstract Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident);
+	public abstract Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident);
 
 	/// <summary>
 	/// Returns the hemispherical-directional reflectance, the total reflectance in direction
 	/// <paramref name="outgoing"/> due to a constant illumination over the doming hemisphere
 	/// </summary>
-	public virtual RGB128 GetReflectance(in Float3 outgoing, ReadOnlySpan<Sample2D> samples)
+	public virtual RGB128 GetReflectance(Float3 outgoing, ReadOnlySpan<Sample2D> samples)
 	{
 		var result = RGB128.Black;
 
@@ -94,42 +94,42 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns the local surface normal that lies in the same hemisphere as <paramref name="direction"/>.
 	/// </summary>
-	public static Float3 Normal(in Float3 direction) => CosineP(direction) < 0f ? Float3.Backward : Float3.Forward;
+	public static Float3 Normal(Float3 direction) => CosineP(direction) < 0f ? Float3.Backward : Float3.Forward;
 
 	/// <summary>
 	/// Returns the cosine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float CosineP(in Float3 direction) => direction.Z;
+	public static float CosineP(Float3 direction) => direction.Z;
 
 	/// <summary>
 	/// Returns the cosine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float CosineP2(in Float3 direction) => direction.Z * direction.Z;
+	public static float CosineP2(Float3 direction) => direction.Z * direction.Z;
 
 	/// <summary>
 	/// Returns the sine squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float SineP2(in Float3 direction) => FastMath.OneMinus2(direction.Z);
+	public static float SineP2(Float3 direction) => FastMath.OneMinus2(direction.Z);
 
 	/// <summary>
 	/// Returns the sine value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float SineP(in Float3 direction) => FastMath.Identity(CosineP(direction));
+	public static float SineP(Float3 direction) => FastMath.Identity(CosineP(direction));
 
 	/// <summary>
 	/// Returns the tangent value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float TangentP(in Float3 direction) => SineP(direction) / CosineP(direction);
+	public static float TangentP(Float3 direction) => SineP(direction) / CosineP(direction);
 
 	/// <summary>
 	/// Returns the tangent squared value of the vertical angle phi between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float TangentP2(in Float3 direction) => SineP2(direction) / CosineP2(direction);
+	public static float TangentP2(Float3 direction) => SineP2(direction) / CosineP2(direction);
 
 	/// <summary>
 	/// Returns the cosine value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float CosineT(in Float3 direction)
+	public static float CosineT(Float3 direction)
 	{
 		float sin = SineP(direction);
 		if (FastMath.AlmostZero(sin)) return 1f;
@@ -139,7 +139,7 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns the sine value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float SineT(in Float3 direction)
+	public static float SineT(Float3 direction)
 	{
 		float sin = SineP(direction);
 		if (FastMath.AlmostZero(sin)) return 0f;
@@ -149,7 +149,7 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns the cosine squared value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float CosineT2(in Float3 direction)
+	public static float CosineT2(Float3 direction)
 	{
 		float sin2 = SineP2(direction);
 		if (FastMath.AlmostZero(sin2)) return 1f;
@@ -159,7 +159,7 @@ public abstract class BxDF
 	/// <summary>
 	/// Returns the sine squared value of the horizontal angle theta between local <paramref name="direction"/> and the local normal.
 	/// </summary>
-	public static float SineT2(in Float3 direction)
+	public static float SineT2(Float3 direction)
 	{
 		float sin2 = SineP2(direction);
 		if (FastMath.AlmostZero(sin2)) return 0f;
@@ -170,11 +170,11 @@ public abstract class BxDF
 	/// Returns whether either of the local directions <paramref name="direction0"/> and <paramref name="direction1"/> are
 	/// flat against the local normal (dot = 0 with <see cref="Float3.Forward"/>) or if they are in the same hemisphere.
 	/// </summary>
-	protected static bool FlatOrSameHemisphere(in Float3 direction0, in Float3 direction1) => !FastMath.Positive(-CosineP(direction0) * CosineP(direction1));
+	protected static bool FlatOrSameHemisphere(Float3 direction0, Float3 direction1) => !FastMath.Positive(-CosineP(direction0) * CosineP(direction1));
 
 	/// <summary>
 	/// Returns whether either of the local directions <paramref name="direction0"/> and <paramref name="direction1"/> are
 	/// flat against the local normal (dot = 0 with <see cref="Float3.Forward"/>) or if they are in opposite hemispheres.
 	/// </summary>
-	protected static bool FlatOrOppositeHemisphere(in Float3 direction0, in Float3 direction1) => !FastMath.Positive(CosineP(direction0) * CosineP(direction1));
+	protected static bool FlatOrOppositeHemisphere(Float3 direction0, Float3 direction1) => !FastMath.Positive(CosineP(direction0) * CosineP(direction1));
 }

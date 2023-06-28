@@ -98,7 +98,7 @@ public struct TraceQuery
 	/// Spawns a new <see cref="TraceQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 	/// </summary>
 	[SkipLocalsInit]
-	public readonly TraceQuery SpawnTrace(in Float3 direction) => new(new Ray(Position, direction), float.PositiveInfinity, token);
+	public readonly TraceQuery SpawnTrace(Float3 direction) => new(new Ray(Position, direction), float.PositiveInfinity, token);
 
 	/// <summary>
 	/// Spawns a new <see cref="TraceQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.
@@ -108,7 +108,7 @@ public struct TraceQuery
 	/// <summary>
 	/// Spawns a new <see cref="OccludeQuery"/> from the result of this <see cref="TraceQuery"/> towards <paramref name="direction"/>.
 	/// </summary>
-	public readonly OccludeQuery SpawnOcclude(in Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(Position, direction), travel, token);
+	public readonly OccludeQuery SpawnOcclude(Float3 direction, float travel = float.PositiveInfinity) => new(new Ray(Position, direction), travel, token);
 
 	/// <summary>
 	/// Spawns a new <see cref="OccludeQuery"/> with the same direction from the result of this <see cref="TraceQuery"/>.

@@ -381,7 +381,7 @@ public sealed class WavefrontObjectFormatReader : ITriangleStream
 
 	readonly struct IndicesPack
 	{
-		public IndicesPack(in Int3 vertexIndices, in Int3 normalIndices, in Int3 texcoordIndices, string materialName)
+		public IndicesPack(Int3 vertexIndices, Int3 normalIndices, Int3 texcoordIndices, string materialName)
 		{
 			this.vertexIndices = vertexIndices;
 			this.normalIndices = normalIndices;

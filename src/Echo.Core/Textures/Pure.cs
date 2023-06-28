@@ -12,7 +12,7 @@ namespace Echo.Core.Textures;
 public sealed class Pure : Texture, IDirectionalTexture
 {
 	[EchoSourceUsable]
-	public Pure(in RGBA128 color)
+	public Pure(RGBA128 color)
 	{
 		this.color = (RGB128)color;
 		rgba = color;
@@ -27,9 +27,9 @@ public sealed class Pure : Texture, IDirectionalTexture
 
 	public override RGBA128 this[Float2 texcoord] => rgba;
 
-	RGB128 IDirectionalTexture.Evaluate(in Float3 incident) => color;
+	RGB128 IDirectionalTexture.Evaluate(Float3 incident) => color;
 
-	public static explicit operator Pure(in RGBA128 color) => new(color);
+	public static explicit operator Pure(RGBA128 color) => new(color);
 	public static readonly Pure white = new(RGBA128.White);
 	public static readonly Pure black = new(RGBA128.Black);
 	public static readonly Pure clear = new(RGBA128.Zero);

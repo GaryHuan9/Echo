@@ -55,9 +55,9 @@ public class AmbientLight : InfiniteLight
 		_power = Scalars.Pi * radius * radius * luminance;
 	}
 
-	public override RGB128 Evaluate(in Float3 direction) => Intensity * Texture.Evaluate(worldToLocal * direction);
+	public override RGB128 Evaluate(Float3 direction) => Intensity * Texture.Evaluate(worldToLocal * direction);
 
-	public override float ProbabilityDensity(in GeometryPoint origin, in Float3 incident)
+	public override float ProbabilityDensity(in GeometryPoint origin, Float3 incident)
 	{
 		Float3 transformed = worldToLocal * incident;
 		return Texture.ProbabilityDensity(transformed);

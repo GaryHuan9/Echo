@@ -337,11 +337,11 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 
 #region Instance
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public int Dot(in Int4 other) => X * other.X + Y * other.Y + Z * other.Z + W * other.W;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public long DotLong(in Int4 other) => (long)X * other.X + (long)Y * other.Y + (long)Z * other.Z + (long)W * other.W;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public int Dot(Int4 other) => X * other.X + Y * other.Y + Z * other.Z + W * other.W;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public long DotLong(Int4 other) => (long)X * other.X + (long)Y * other.Y + (long)Z * other.Z + (long)W * other.W;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public float Angle(in Int4 other)
+	public float Angle(Int4 other)
 	{
 		long squared = SquaredMagnitudeLong * other.SquaredMagnitudeLong;
 		if (squared == 0) return 0f;
@@ -349,19 +349,19 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 		return Scalars.ToDegrees((float)Math.Acos(DotLong(other) / Math.Sqrt(squared)));
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public float Distance(in Int4 other) => (other - this).Magnitude;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public double DistanceDouble(in Int4 other) => (other - this).MagnitudeDouble;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public float Distance(Int4 other) => (other - this).Magnitude;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public double DistanceDouble(Int4 other) => (other - this).MagnitudeDouble;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public int SquaredDistance(in Int4 other) => (other - this).SquaredMagnitude;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public long SquaredDistanceLong(in Int4 other) => (other - this).SquaredMagnitudeLong;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public int SquaredDistance(Int4 other) => (other - this).SquaredMagnitude;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public long SquaredDistanceLong(Int4 other) => (other - this).SquaredMagnitudeLong;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Min(in Int4 other) => new(Math.Min(X, other.X), Math.Min(Y, other.Y), Math.Min(Z, other.Z), Math.Min(W, other.W));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Max(in Int4 other) => new(Math.Max(X, other.X), Math.Max(Y, other.Y), Math.Max(Z, other.Z), Math.Max(W, other.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Min(Int4 other) => new(Math.Min(X, other.X), Math.Min(Y, other.Y), Math.Min(Z, other.Z), Math.Min(W, other.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Max(Int4 other) => new(Math.Max(X, other.X), Math.Max(Y, other.Y), Math.Max(Z, other.Z), Math.Max(W, other.W));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Clamp(in Int4 min, in Int4 max) => new(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y), Z.Clamp(min.Z, max.Z), W.Clamp(min.W, max.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Clamp(Int4 min, Int4 max) => new(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y), Z.Clamp(min.Z, max.Z), W.Clamp(min.W, max.W));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Clamp(int min = 0, int max = 1) => new(X.Clamp(min, max), Y.Clamp(min, max), Z.Clamp(min, max), W.Clamp(min, max));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Clamp(in Float4 min, in Float4 max) => new(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y), Z.Clamp(min.Z, max.Z), W.Clamp(min.W, max.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Clamp(Float4 min, Float4 max) => new(X.Clamp(min.X, max.X), Y.Clamp(min.Y, max.Y), Z.Clamp(min.Z, max.Z), W.Clamp(min.W, max.W));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Clamp(float min, float max = 1f) => new(X.Clamp(min, max), Y.Clamp(min, max), Z.Clamp(min, max), W.Clamp(min, max));
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -374,41 +374,41 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 		return new Float4(X * scale, Y * scale, Z * scale, W * scale);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Power(in Float4 value) => new((float)Math.Pow(X, value.X), (float)Math.Pow(Y, value.Y), (float)Math.Pow(Z, value.Z), (float)Math.Pow(W, value.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Power(Float4 value) => new((float)Math.Pow(X, value.X), (float)Math.Pow(Y, value.Y), (float)Math.Pow(Z, value.Z), (float)Math.Pow(W, value.W));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Power(float value) => new((float)Math.Pow(X, value), (float)Math.Pow(Y, value), (float)Math.Pow(Z, value), (float)Math.Pow(W, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Lerp(in Int4 other, in Int4 value) => new(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y), Scalars.Lerp(Z, other.Z, value.Z), Scalars.Lerp(W, other.W, value.W));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Lerp(in Int4 other, int value) => new(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value), Scalars.Lerp(Z, other.Z, value), Scalars.Lerp(W, other.W, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Lerp(Int4 other, Int4 value) => new(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y), Scalars.Lerp(Z, other.Z, value.Z), Scalars.Lerp(W, other.W, value.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Lerp(Int4 other, int value) => new(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value), Scalars.Lerp(Z, other.Z, value), Scalars.Lerp(W, other.W, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Lerp(in Int4 other, in Float4 value) => new(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y), Scalars.Lerp(Z, other.Z, value.Z), Scalars.Lerp(Z, other.Z, value.Z));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Lerp(in Int4 other, float value) => new(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value), Scalars.Lerp(Z, other.Z, value), Scalars.Lerp(Z, other.Z, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Lerp(Int4 other, Float4 value) => new(Scalars.Lerp(X, other.X, value.X), Scalars.Lerp(Y, other.Y, value.Y), Scalars.Lerp(Z, other.Z, value.Z), Scalars.Lerp(Z, other.Z, value.Z));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Lerp(Int4 other, float value) => new(Scalars.Lerp(X, other.X, value), Scalars.Lerp(Y, other.Y, value), Scalars.Lerp(Z, other.Z, value), Scalars.Lerp(Z, other.Z, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 InverseLerp(in Int4 other, in Int4 value) => new(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y), Scalars.InverseLerp(Z, other.Z, value.Z), Scalars.InverseLerp(W, other.W, value.W));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 InverseLerp(in Int4 other, int value) => new(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value), Scalars.InverseLerp(Z, other.Z, value), Scalars.InverseLerp(W, other.W, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 InverseLerp(Int4 other, Int4 value) => new(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y), Scalars.InverseLerp(Z, other.Z, value.Z), Scalars.InverseLerp(W, other.W, value.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 InverseLerp(Int4 other, int value) => new(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value), Scalars.InverseLerp(Z, other.Z, value), Scalars.InverseLerp(W, other.W, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 InverseLerp(in Int4 other, in Float4 value) => new(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y), Scalars.InverseLerp(Z, other.Z, value.Z), Scalars.InverseLerp(W, other.W, value.W));
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 InverseLerp(in Int4 other, float value) => new(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value), Scalars.InverseLerp(Z, other.Z, value), Scalars.InverseLerp(W, other.W, value));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 InverseLerp(Int4 other, Float4 value) => new(Scalars.InverseLerp(X, other.X, value.X), Scalars.InverseLerp(Y, other.Y, value.Y), Scalars.InverseLerp(Z, other.Z, value.Z), Scalars.InverseLerp(W, other.W, value.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 InverseLerp(Int4 other, float value) => new(Scalars.InverseLerp(X, other.X, value), Scalars.InverseLerp(Y, other.Y, value), Scalars.InverseLerp(Z, other.Z, value), Scalars.InverseLerp(W, other.W, value));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Repeat(in Int4 length) => new(X.Repeat(length.X), Y.Repeat(length.Y), Z.Repeat(length.Z), W.Repeat(length.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Repeat(Int4 length) => new(X.Repeat(length.X), Y.Repeat(length.Y), Z.Repeat(length.Z), W.Repeat(length.W));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Repeat(int length) => new(X.Repeat(length), Y.Repeat(length), Z.Repeat(length), W.Repeat(length));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Repeat(in Float4 length) => new(((float)X).Repeat(length.X), ((float)Y).Repeat(length.Y), ((float)Z).Repeat(length.Z), ((float)Z).Repeat(length.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Repeat(Float4 length) => new(((float)X).Repeat(length.X), ((float)Y).Repeat(length.Y), ((float)Z).Repeat(length.Z), ((float)Z).Repeat(length.W));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Repeat(float length) => new(((float)X).Repeat(length), ((float)Y).Repeat(length), ((float)Z).Repeat(length), ((float)W).Repeat(length));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 FlooredDivide(in Int4 divisor) => new(X.FlooredDivide(divisor.X), Y.FlooredDivide(divisor.Y), Z.FlooredDivide(divisor.Z), W.FlooredDivide(divisor.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 FlooredDivide(Int4 divisor) => new(X.FlooredDivide(divisor.X), Y.FlooredDivide(divisor.Y), Z.FlooredDivide(divisor.Z), W.FlooredDivide(divisor.W));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 FlooredDivide(int divisor) => new(X.FlooredDivide(divisor), Y.FlooredDivide(divisor), Z.FlooredDivide(divisor), W.FlooredDivide(divisor));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 CeiledDivide(in Int4 divisor) => new(X.CeiledDivide(divisor.X), Y.CeiledDivide(divisor.Y), Z.CeiledDivide(divisor.Z), W.CeiledDivide(divisor.W));
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 CeiledDivide(Int4 divisor) => new(X.CeiledDivide(divisor.X), Y.CeiledDivide(divisor.Y), Z.CeiledDivide(divisor.Z), W.CeiledDivide(divisor.W));
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 CeiledDivide(int divisor) => new(X.CeiledDivide(divisor), Y.CeiledDivide(divisor), Z.CeiledDivide(divisor), W.CeiledDivide(divisor));
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Damp(in Float4 target, ref Float4 velocity, in Float4 smoothTime, float deltaTime) => Float4.Damp(this, target, ref velocity, smoothTime, deltaTime);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Damp(in Float4 target, ref Float4 velocity, float smoothTime, float deltaTime) => Float4.Damp(this, target, ref velocity, smoothTime, deltaTime);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Damp(Float4 target, ref Float4 velocity, Float4 smoothTime, float deltaTime) => Float4.Damp(this, target, ref velocity, smoothTime, deltaTime);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Damp(Float4 target, ref Float4 velocity, float smoothTime, float deltaTime) => Float4.Damp(this, target, ref velocity, smoothTime, deltaTime);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Reflect(in Int4 normal) => 2 * Dot(normal) * normal - this;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Project(in Float4 normal) => normal * (normal.Dot(this) / normal.SquaredMagnitude);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Int4 Reflect(Int4 normal) => 2 * Dot(normal) * normal - this;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public Float4 Project(Float4 normal) => normal * (normal.Dot(this) / normal.SquaredMagnitude);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)] public override bool Equals(object obj) => obj is Int4 other && Equals(other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public bool Equals(in Int4 other) => (X == other.X) & (Y == other.Y) & (Z == other.Z) & (W == other.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public bool Equals(Int4 other) => (X == other.X) & (Y == other.Y) & (Z == other.Z) & (W == other.W);
 
 	public override int GetHashCode()
 	{
@@ -428,60 +428,60 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 
 #region Static
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Dot(in Int4 value, in Int4 other) => value.Dot(other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static double DotLong(in Int4 value, in Int4 other) => value.DotLong(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Dot(Int4 value, Int4 other) => value.Dot(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static double DotLong(Int4 value, Int4 other) => value.DotLong(other);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Angle(in Int4 first, in Int4 second) => first.Angle(second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Angle(Int4 first, Int4 second) => first.Angle(second);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Distance(in Int4 value, in Int4 other) => value.Distance(other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static double DistanceDouble(in Int4 value, in Int4 other) => value.DistanceDouble(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Distance(Int4 value, Int4 other) => value.Distance(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static double DistanceDouble(Int4 value, Int4 other) => value.DistanceDouble(other);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float SquaredDistance(in Int4 value, in Int4 other) => value.SquaredDistance(other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static double SquaredDistanceLong(in Int4 value, in Int4 other) => value.SquaredDistanceLong(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static float SquaredDistance(Int4 value, Int4 other) => value.SquaredDistance(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static double SquaredDistanceLong(Int4 value, Int4 other) => value.SquaredDistanceLong(other);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Min(in Int4 value, in Int4 other) => value.Min(other);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Max(in Int4 value, in Int4 other) => value.Max(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Min(Int4 value, Int4 other) => value.Min(other);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Max(Int4 value, Int4 other) => value.Max(other);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Clamp(in Int4 value, in Int4 min, in Int4 max) => value.Clamp(min, max);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Clamp(in Int4 value, int min = 0, int max = 1) => value.Clamp(min, max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Clamp(Int4 value, Int4 min, Int4 max) => value.Clamp(min, max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Clamp(Int4 value, int min = 0, int max = 1) => value.Clamp(min, max);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Clamp(in Int4 value, in Float4 min, in Float4 max) => value.Clamp(min, max);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Clamp(in Int4 value, float min, float max = 1f) => value.Clamp(min, max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Clamp(Int4 value, Float4 min, Float4 max) => value.Clamp(min, max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Clamp(Int4 value, float min, float max = 1f) => value.Clamp(min, max);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 ClampMagnitude(in Int4 value, float max) => value.ClampMagnitude(max);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 ClampMagnitude(Int4 value, float max) => value.ClampMagnitude(max);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Power(in Float4 value, in Float4 power) => value.Power(power);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Power(in Float4 value, float power) => value.Power(power);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Power(Float4 value, Float4 power) => value.Power(power);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Power(Float4 value, float power) => value.Power(power);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Lerp(in Int4 first, in Int4 second, in Int4 value) => first.Lerp(second, value);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Lerp(in Int4 first, in Int4 second, int value) => first.Lerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Lerp(Int4 first, Int4 second, Int4 value) => first.Lerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Lerp(Int4 first, Int4 second, int value) => first.Lerp(second, value);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Lerp(in Int4 first, in Int4 second, in Float4 value) => first.Lerp(second, value);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Lerp(in Int4 first, in Int4 second, float value) => first.Lerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Lerp(Int4 first, Int4 second, Float4 value) => first.Lerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Lerp(Int4 first, Int4 second, float value) => first.Lerp(second, value);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 InverseLerp(in Int4 first, in Int4 second, in Int4 value) => first.InverseLerp(second, value);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 InverseLerp(in Int4 first, in Int4 second, int value) => first.InverseLerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 InverseLerp(Int4 first, Int4 second, Int4 value) => first.InverseLerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 InverseLerp(Int4 first, Int4 second, int value) => first.InverseLerp(second, value);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 InverseLerp(in Int4 first, in Int4 second, in Float4 value) => first.InverseLerp(second, value);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 InverseLerp(in Int4 first, in Int4 second, float value) => first.InverseLerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 InverseLerp(Int4 first, Int4 second, Float4 value) => first.InverseLerp(second, value);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 InverseLerp(Int4 first, Int4 second, float value) => first.InverseLerp(second, value);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Repeat(in Int4 value, in Int4 length) => value.Repeat(length);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Repeat(in Int4 value, int length) => value.Repeat(length);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Repeat(Int4 value, Int4 length) => value.Repeat(length);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Repeat(Int4 value, int length) => value.Repeat(length);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Repeat(in Int4 value, in Float4 length) => value.Repeat(length);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Repeat(in Int4 value, float length) => value.Repeat(length);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Repeat(Int4 value, Float4 length) => value.Repeat(length);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Repeat(Int4 value, float length) => value.Repeat(length);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 FlooredDivide(in Int4 value, in Int4 divisor) => value.FlooredDivide(divisor);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 FlooredDivide(in Int4 value, int divisor) => value.FlooredDivide(divisor);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 FlooredDivide(Int4 value, Int4 divisor) => value.FlooredDivide(divisor);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 FlooredDivide(Int4 value, int divisor) => value.FlooredDivide(divisor);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 CeiledDivide(in Int4 value, in Int4 divisor) => value.CeiledDivide(divisor);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 CeiledDivide(in Int4 value, int divisor) => value.CeiledDivide(divisor);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 CeiledDivide(Int4 value, Int4 divisor) => value.CeiledDivide(divisor);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 CeiledDivide(Int4 value, int divisor) => value.CeiledDivide(divisor);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Damp(in Int4 current, in Float4 target, ref Float4 velocity, in Float4 smoothTime, float deltaTime) => Float4.Damp(current, target, ref velocity, smoothTime, deltaTime);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Damp(in Int4 current, in Float4 target, ref Float4 velocity, float smoothTime, float deltaTime) => Float4.Damp(current, target, ref velocity, smoothTime, deltaTime);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Damp(Int4 current, Float4 target, ref Float4 velocity, Float4 smoothTime, float deltaTime) => Float4.Damp(current, target, ref velocity, smoothTime, deltaTime);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Damp(Int4 current, Float4 target, ref Float4 velocity, float smoothTime, float deltaTime) => Float4.Damp(current, target, ref velocity, smoothTime, deltaTime);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Reflect(in Int4 value, in Int4 normal) => value.Reflect(normal);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Project(in Int4 value, in Float4 normal) => value.Project(normal);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 Reflect(Int4 value, Int4 normal) => value.Reflect(normal);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 Project(Int4 value, Float4 normal) => value.Project(normal);
 
 #endregion
 
@@ -533,42 +533,42 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 
 #region Operators
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator +(in Int4 first, in Int4 second) => new(first.X + second.X, first.Y + second.Y, first.Z + second.Z, first.W + second.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator -(in Int4 first, in Int4 second) => new(first.X - second.X, first.Y - second.Y, first.Z - second.Z, first.W - second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator +(Int4 first, Int4 second) => new(first.X + second.X, first.Y + second.Y, first.Z + second.Z, first.W + second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator -(Int4 first, Int4 second) => new(first.X - second.X, first.Y - second.Y, first.Z - second.Z, first.W - second.W);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator *(in Int4 first, in Int4 second) => new(first.X * second.X, first.Y * second.Y, first.Z * second.Z, first.W * second.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator /(in Int4 first, in Int4 second) => new(first.X / second.X, first.Y / second.Y, first.Z / second.Z, first.W / second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator *(Int4 first, Int4 second) => new(first.X * second.X, first.Y * second.Y, first.Z * second.Z, first.W * second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator /(Int4 first, Int4 second) => new(first.X / second.X, first.Y / second.Y, first.Z / second.Z, first.W / second.W);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator *(in Int4 first, int second) => new(first.X * second, first.Y * second, first.Z * second, first.W * second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator /(in Int4 first, int second) => new(first.X / second, first.Y / second, first.Z / second, first.W / second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator *(Int4 first, int second) => new(first.X * second, first.Y * second, first.Z * second, first.W * second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator /(Int4 first, int second) => new(first.X / second, first.Y / second, first.Z / second, first.W / second);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator *(in Int4 first, float second) => new(first.X * second, first.Y * second, first.Z * second, first.W * second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator /(in Int4 first, float second) => new(first.X / second, first.Y / second, first.Z / second, first.W / second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator *(Int4 first, float second) => new(first.X * second, first.Y * second, first.Z * second, first.W * second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator /(Int4 first, float second) => new(first.X / second, first.Y / second, first.Z / second, first.W / second);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator *(int first, in Int4 second) => new(first * second.X, first * second.Y, first * second.Z, first * second.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator /(int first, in Int4 second) => new(first / second.X, first / second.Y, first / second.Z, first / second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator *(int first, Int4 second) => new(first * second.X, first * second.Y, first * second.Z, first * second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator /(int first, Int4 second) => new(first / second.X, first / second.Y, first / second.Z, first / second.W);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator *(float first, in Int4 second) => new(first * second.X, first * second.Y, first * second.Z, first * second.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator /(float first, in Int4 second) => new(first / second.X, first / second.Y, first / second.Z, first / second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator *(float first, Int4 second) => new(first * second.X, first * second.Y, first * second.Z, first * second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator /(float first, Int4 second) => new(first / second.X, first / second.Y, first / second.Z, first / second.W);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator +(in Int4 value) => value;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator -(in Int4 value) => new(-value.X, -value.Y, -value.Z, -value.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator +(Int4 value) => value;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator -(Int4 value) => new(-value.X, -value.Y, -value.Z, -value.W);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator %(in Int4 first, in Int4 second) => new(first.X % second.X, first.Y % second.Y, first.Z % second.Z, first.W % second.W);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator %(in Int4 first, int second) => new(first.X % second, first.Y % second, first.Z % second, first.W % second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator %(int first, in Int4 second) => new(first % second.X, first % second.Y, first % second.Z, first % second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator %(Int4 first, Int4 second) => new(first.X % second.X, first.Y % second.Y, first.Z % second.Z, first.W % second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator %(Int4 first, int second) => new(first.X % second, first.Y % second, first.Z % second, first.W % second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Int4 operator %(int first, Int4 second) => new(first % second.X, first % second.Y, first % second.Z, first % second.W);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator %(in Int4 first, float second) => new(first.X % second, first.Y % second, first.Z % second, first.W % second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator %(float first, in Int4 second) => new(first % second.X, first % second.Y, first % second.Z, first % second.W);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator %(Int4 first, float second) => new(first.X % second, first.Y % second, first.Z % second, first.W % second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static Float4 operator %(float first, Int4 second) => new(first % second.X, first % second.Y, first % second.Z, first % second.W);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator ==(in Int4 first, in Int4 second) => first.Equals(second);
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator !=(in Int4 first, in Int4 second) => !first.Equals(second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator ==(Int4 first, Int4 second) => first.Equals(second);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator !=(Int4 first, Int4 second) => !first.Equals(second);
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator <(in Int4 first, in Int4 second) => first.X < second.X && first.Y < second.Y && first.Z < second.Z && first.W < second.W;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator >(in Int4 first, in Int4 second) => first.X > second.X && first.Y > second.Y && first.Z > second.Z && first.W > second.W;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator <(Int4 first, Int4 second) => first.X < second.X && first.Y < second.Y && first.Z < second.Z && first.W < second.W;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator >(Int4 first, Int4 second) => first.X > second.X && first.Y > second.Y && first.Z > second.Z && first.W > second.W;
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator <=(in Int4 first, in Int4 second) => first.X <= second.X && first.Y <= second.Y && first.Z <= second.Z && first.W <= second.W;
-	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator >=(in Int4 first, in Int4 second) => first.X >= second.X && first.Y >= second.Y && first.Z >= second.Z && first.W >= second.W;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator <=(Int4 first, Int4 second) => first.X <= second.X && first.Y <= second.Y && first.Z <= second.Z && first.W <= second.W;
+	[MethodImpl(MethodImplOptions.AggressiveInlining)] public static bool operator >=(Int4 first, Int4 second) => first.X >= second.X && first.Y >= second.Y && first.Z >= second.Z && first.W >= second.W;
 
 #endregion
 
@@ -584,7 +584,7 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 
 	public readonly struct SeriesEnumerable : IEnumerable<int>
 	{
-		public SeriesEnumerable(in Int4 value) => enumerator = new Enumerator(value);
+		public SeriesEnumerable(Int4 value) => enumerator = new Enumerator(value);
 
 		readonly Enumerator enumerator;
 
@@ -595,7 +595,7 @@ public readonly partial struct Int4 : IEquatable<Int4>, ISpanFormattable
 
 		public struct Enumerator : IEnumerator<int>
 		{
-			public Enumerator(in Int4 source)
+			public Enumerator(Int4 source)
 			{
 				this.source = source;
 				index = -1;

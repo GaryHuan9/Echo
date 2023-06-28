@@ -96,10 +96,10 @@ public class CylindricalTexture : IDirectionalTexture
 	}
 
 	/// <inheritdoc/>
-	public RGB128 Evaluate(in Float3 incident) => (RGB128)Texture[ToUV(incident)];
+	public RGB128 Evaluate(Float3 incident) => (RGB128)Texture[ToUV(incident)];
 
 	/// <inheritdoc/>
-	public float ProbabilityDensity(in Float3 incident)
+	public float ProbabilityDensity(Float3 incident)
 	{
 		Float2 uv = ToUV(incident);
 		float cosP = -incident.Y;
@@ -140,7 +140,7 @@ public class CylindricalTexture : IDirectionalTexture
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float2 ToUV(in Float3 direction) => new
+	static Float2 ToUV(Float3 direction) => new
 	(
 		FastMath.FMA(MathF.Atan2(direction.X, direction.Z), Scalars.PiR / 2f, 0.5f),
 		FastMath.FMA(MathF.Acos(FastMath.Clamp11(direction.Y)), -Scalars.PiR, 1f)

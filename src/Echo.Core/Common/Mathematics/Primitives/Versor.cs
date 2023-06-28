@@ -18,7 +18,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	/// <summary>
 	/// Creates a <see cref="Versor"/> from three angles (degrees) in the ZXY rotation order.
 	/// </summary>
-	public Versor(in Float3 angles)
+	public Versor(Float3 angles)
 	{
 		Float3 halfRadians = angles * Scalars.ToRadians(0.5f);
 		FastMath.SinCos(halfRadians.X, out float sinX, out float cosX);
@@ -37,7 +37,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	/// <summary>
 	/// Creates a <see cref="Versor"/> from an <paramref name="axis"/> and an <paramref name="angle"/> (degrees).
 	/// </summary>
-	public Versor(in Float3 axis, float angle)
+	public Versor(Float3 axis, float angle)
 	{
 		Ensure.AreEqual(axis.SquaredMagnitude, 1f);
 		float radians = Scalars.ToRadians(angle / 2f);
@@ -57,7 +57,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	/// <summary>
 	/// Creates a <see cref="Versor"/> that rotates from <paramref name="value0"/> to <see cref="value1"/>.
 	/// </summary>
-	public Versor(in Float3 value0, in Float3 value1)
+	public Versor(Float3 value0, Float3 value1)
 	{
 		Ensure.AreEqual(value0.SquaredMagnitude, 1f);
 		Ensure.AreEqual(value1.SquaredMagnitude, 1f);
@@ -80,7 +80,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	internal Versor(in Float4 d) => this.d = d;
+	internal Versor(Float4 d) => this.d = d;
 
 	internal readonly Float4 d;
 
@@ -120,12 +120,12 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 
 	public static Versor Identity => new(Float4.Ana);
 
-	public float Dot(in Versor other) => d.Dot(other.d);
+	public float Dot(Versor other) => d.Dot(other.d);
 
 	/// <summary>
 	/// Returns the smallest angle between this <see cref="Versor"/> and <paramref name="other"/>.
 	/// </summary>
-	public float Angle(in Versor other)
+	public float Angle(Versor other)
 	{
 		float dot = Math.Abs(Dot(other));
 		if (dot.AlmostEquals()) return 0f;
@@ -133,9 +133,9 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		return Scalars.ToDegrees((float)Math.Acos(dot) * 2f);
 	}
 
-	public Versor Damp(in Versor target, ref Float4 velocity, float smoothTime, float deltaTime) => Damp(this, target, ref velocity, smoothTime, deltaTime);
+	public Versor Damp(Versor target, ref Float4 velocity, float smoothTime, float deltaTime) => Damp(this, target, ref velocity, smoothTime, deltaTime);
 
-	public bool Equals(in Versor other) => FastMath.Abs(Dot(other)).AlmostEquals(1f);
+	public bool Equals(Versor other) => FastMath.Abs(Dot(other)).AlmostEquals(1f);
 	public override bool Equals(object obj) => obj is Versor other && Equals(other);
 
 	public override int GetHashCode() => d.GetHashCode();
@@ -148,9 +148,9 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 	/// <summary>
 	/// Returns the smallest angle between this <see cref="Versor"/> and <paramref name="other"/>.
 	/// </summary>
-	public static float Angle(in Versor value, in Versor other) => value.Angle(other);
+	public static float Angle(Versor value, Versor other) => value.Angle(other);
 
-	public static Versor Damp(in Versor current, in Versor target, ref Float4 velocity, float smoothTime, float deltaTime)
+	public static Versor Damp(Versor current, Versor target, ref Float4 velocity, float smoothTime, float deltaTime)
 	{
 		//Code based on: https://gist.github.com/maxattack/4c7b4de00f5c1b95a33b
 
@@ -167,16 +167,16 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		return new Versor(result);
 	}
 
-	public static Versor operator *(in Versor first, in Versor second) => Join(first, second, false);
-	public static Versor operator /(in Versor first, in Versor second) => Join(first, second, true);
+	public static Versor operator *(Versor first, Versor second) => Join(first, second, false);
+	public static Versor operator /(Versor first, Versor second) => Join(first, second, true);
 
-	public static Float3 operator *(in Versor first, in Float3 second) => Join(first, second, false);
-	public static Float3 operator /(in Versor first, in Float3 second) => Join(first, second, true);
+	public static Float3 operator *(Versor first, Float3 second) => Join(first, second, false);
+	public static Float3 operator /(Versor first, Float3 second) => Join(first, second, true);
 
-	public static bool operator ==(in Versor left, in Versor right) => left.Equals(right);
-	public static bool operator !=(in Versor left, in Versor right) => !left.Equals(right);
+	public static bool operator ==(Versor left, Versor right) => left.Equals(right);
+	public static bool operator !=(Versor left, Versor right) => !left.Equals(right);
 
-	public static explicit operator Float3x3(in Versor value)
+	public static explicit operator Float3x3(Versor value)
 	{
 		ref readonly Float4 d = ref value.d;
 
@@ -198,7 +198,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		);
 	}
 
-	static Versor Join(in Versor first, in Versor second, bool conjugate)
+	static Versor Join(Versor first, Versor second, bool conjugate)
 	{
 		Float3 xyz0 = first.d.XYZ;
 		Float3 xyz1 = second.d.XYZ;
@@ -220,7 +220,7 @@ public readonly struct Versor : IEquatable<Versor>, IFormattable
 		return new Versor(result);
 	}
 
-	static Float3 Join(in Versor first, in Float3 second, bool conjugate)
+	static Float3 Join(Versor first, Float3 second, bool conjugate)
 	{
 		ref readonly Float4 d = ref first.d;
 

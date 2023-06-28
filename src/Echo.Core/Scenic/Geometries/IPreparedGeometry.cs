@@ -39,7 +39,7 @@ public interface IPreparedGeometry
 	/// <param name="origin">The geometry-space point of whose perspective the sampling should be performed through.</param>
 	/// <param name="sample">The <see cref="Sample2D"/> value used to sample the result.</param>
 	/// <returns>The <see cref="Probable{T}"/> of type <see cref="GeometryPoint"/> that was probabilistically sampled.</returns>
-	public Probable<GeometryPoint> Sample(in Float3 origin, Sample2D sample);
+	public Probable<GeometryPoint> Sample(Float3 origin, Sample2D sample);
 
 	/// <summary>
 	/// Calculates the probability density function (pdf) value of sampling this <see cref="IPreparedGeometry"/> through <see cref="Sample"/>.
@@ -51,5 +51,5 @@ public interface IPreparedGeometry
 	/// Implementation can assume that the input <paramref name="origin"/> and <paramref name="incident"/> are generally actually
 	/// hitting this <see cref="IPreparedGeometry"/>, meaning it can ignore whether the direction actually intersect with our object.
 	/// </remarks>
-	public float ProbabilityDensity(in Float3 origin, in Float3 incident);
+	public float ProbabilityDensity(Float3 origin, Float3 incident);
 }

@@ -17,23 +17,23 @@ public interface IMicrofacet
 	/// </summary>
 	/// <param name="normal">The microfacet surface normal to measure against.</param>
 	/// <returns>The calculated projected area.</returns>
-	public float ProjectedArea(in Float3 normal);
+	public float ProjectedArea(Float3 normal);
 
 	/// <summary>
 	/// Calculates the ratio of the projected area of invisible over visible microfacet faces.
 	/// </summary>
 	/// <param name="direction">The direction towards which the projected face areas are calculated from.</param>
 	/// <returns>The area of the shadowed microfacet (blocked by others) over the area of the visible microfacet.</returns>
-	public float ShadowingRatio(in Float3 direction);
+	public float ShadowingRatio(Float3 direction);
 
-	public Float3 Sample(in Float3 outgoing, Sample2D sample);
+	public Float3 Sample(Float3 outgoing, Sample2D sample);
 
 	/// <summary>
 	/// Calculates the fraction of visible microfacet faces over all microfacet faces from a direction.
 	/// </summary>
 	/// <param name="direction">The direction towards which the visibility is calculated.</param>
 	/// <returns>The calculated fraction, between 0 and 1.</returns>
-	public sealed float Visibility(in Float3 direction) => 1f / (1f + ShadowingRatio(direction));
+	public sealed float Visibility(Float3 direction) => 1f / (1f + ShadowingRatio(direction));
 
 	/// <summary>
 	/// Calculates the fraction of visible microfacet faces from two directions.
@@ -41,7 +41,7 @@ public interface IMicrofacet
 	/// <param name="outgoing">The first direction towards which the visibility is calculated.</param>
 	/// <param name="incident">The second direction towards which the visibility is calculated.</param>
 	/// <returns>The calculated fraction, between 0 and 1.</returns>
-	public sealed float Visibility(in Float3 outgoing, in Float3 incident) => 1f / (1f + ShadowingRatio(outgoing) + ShadowingRatio(incident));
+	public sealed float Visibility(Float3 outgoing, Float3 incident) => 1f / (1f + ShadowingRatio(outgoing) + ShadowingRatio(incident));
 
 	/// <summary>
 	/// Calculates the pdf of selecting <paramref name="normal"/> from <see cref="outgoing"/> with <see cref="Sample"/>.
@@ -50,7 +50,7 @@ public interface IMicrofacet
 	/// <param name="normal">The unit local normal direction that was probabilistically selected to be sampled.</param>
 	/// <returns>The probability density function (pdf) value of this selection.</returns>
 	/// <seealso cref="Sample"/>
-	public sealed float ProbabilityDensity(in Float3 outgoing, in Float3 normal)
+	public sealed float ProbabilityDensity(Float3 outgoing, Float3 normal)
 	{
 		float fraction = ProjectedArea(normal) * Visibility(outgoing);
 		return fraction * FastMath.Abs(outgoing.Dot(normal) / CosineP(outgoing));
@@ -84,7 +84,7 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 	readonly Float2 alpha;
 
 	/// <inheritdoc/>
-	public float ProjectedArea(in Float3 normal)
+	public float ProjectedArea(Float3 normal)
 	{
 		float cos2 = CosineP2(normal);
 		if (!FastMath.Positive(cos2)) return 0f;
@@ -106,7 +106,7 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 	}
 
 	/// <inheritdoc/>
-	public float ShadowingRatio(in Float3 direction)
+	public float ShadowingRatio(Float3 direction)
 	{
 		float cos2 = CosineP2(direction);
 		if (!FastMath.Positive(cos2)) return 0f;
@@ -120,7 +120,7 @@ public readonly struct TrowbridgeReitzMicrofacet : IMicrofacet
 	/// <inheritdoc/>
 	/// Implementation based on
 	/// A Simpler and Exact Sampling Routine for the GGX Distribution of Visible Normals [Heitz 2017].
-	public Float3 Sample(in Float3 outgoing, Sample2D sample)
+	public Float3 Sample(Float3 outgoing, Sample2D sample)
 	{
 		//Scale direction
 		Float3 scaled = new Float3

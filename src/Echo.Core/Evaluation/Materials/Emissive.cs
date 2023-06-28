@@ -54,12 +54,12 @@ public sealed class Emissive : Material
 	}
 
 	public override void Scatter(ref Contact contact, Allocator allocator) => contact.bsdf = NewBSDF(contact, allocator, RGB128.Black);
-	protected override BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo) => throw new NotSupportedException();
+	protected override BSDF Scatter(in Contact contact, Allocator allocator, RGB128 albedo) => throw new NotSupportedException();
 
 	/// <summary>
 	/// Returns the emission of this <see cref="Emissive"/>.
 	/// </summary>
 	/// <param name="point">A <see cref="GeometryPoint"/> on this <see cref="Emissive"/> surface.</param>
 	/// <param name="outgoing">A direction leaving this <see cref="Emissive"/> surface from <paramref name="point"/>.</param>
-	public RGB128 Emit(in GeometryPoint point, in Float3 outgoing) => outgoing.Dot(point.normal) > 0f ? emission : RGB128.Black;
+	public RGB128 Emit(in GeometryPoint point, Float3 outgoing) => outgoing.Dot(point.normal) > 0f ? emission : RGB128.Black;
 }

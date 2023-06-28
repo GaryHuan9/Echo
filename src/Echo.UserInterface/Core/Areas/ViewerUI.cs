@@ -291,7 +291,7 @@ public sealed partial class ViewerUI : AreaUI
 			color = color.Min(Float4.One) * byte.MaxValue;
 			return ColorConverter.GatherBytes(Sse2.ConvertToVector128Int32(color.v).AsUInt32());
 
-			static Float4 ApproximateSqrt(in Float4 value)
+			static Float4 ApproximateSqrt(Float4 value)
 			{
 				Vector128<float> notZero = Sse.CompareNotEqual(value.v, Vector128<float>.Zero);
 				return new Float4(Sse.And(notZero, Sse.Multiply(Sse.ReciprocalSqrt(value.v), value.v)));

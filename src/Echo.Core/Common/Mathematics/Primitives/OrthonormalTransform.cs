@@ -9,7 +9,7 @@ namespace Echo.Core.Common.Mathematics.Primitives;
 /// </summary>
 public readonly struct OrthonormalTransform
 {
-	public OrthonormalTransform(in Float3 axisZ)
+	public OrthonormalTransform(Float3 axisZ)
 	{
 		Ensure.AreEqual(axisZ.SquaredMagnitude, 1f);
 
@@ -30,7 +30,7 @@ public readonly struct OrthonormalTransform
 		Ensure.AreEqual(axisY.SquaredMagnitude, 1f);
 	}
 
-	public OrthonormalTransform(in Float3 axisZ, in Float3 axisX)
+	public OrthonormalTransform(Float3 axisZ, Float3 axisX)
 	{
 		Ensure.AreEqual(axisZ.SquaredMagnitude, 1f);
 		Ensure.AreEqual(axisX.SquaredMagnitude, 1f);
@@ -48,7 +48,7 @@ public readonly struct OrthonormalTransform
 	/// <summary>
 	/// Transforms a <see cref="Float3"/> vector along this <see cref="OrthonormalTransform"/>.
 	/// </summary>
-	public Float3 ApplyForward(in Float3 direction) => new
+	public Float3 ApplyForward(Float3 direction) => new
 	(
 		axisX.X * direction.X + axisY.X * direction.Y + axisZ.X * direction.Z,
 		axisX.Y * direction.X + axisY.Y * direction.Y + axisZ.Y * direction.Z,
@@ -58,7 +58,7 @@ public readonly struct OrthonormalTransform
 	/// <summary>
 	/// Transforms a <see cref="Float3"/> vector against this <see cref="OrthonormalTransform"/>.
 	/// </summary>
-	public Float3 ApplyInverse(in Float3 direction) => new
+	public Float3 ApplyInverse(Float3 direction) => new
 	(
 		axisX.X * direction.X + axisX.Y * direction.Y + axisX.Z * direction.Z,
 		axisY.X * direction.X + axisY.Y * direction.Y + axisY.Z * direction.Z,

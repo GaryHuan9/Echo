@@ -192,7 +192,7 @@ public sealed class LightCollection
 	}
 
 	/// <inheritdoc cref="IPreparedLight.ProbabilityDensity"/>
-	public float ProbabilityDensity(EntityToken token, in GeometryPoint origin, in Float3 incident)
+	public float ProbabilityDensity(EntityToken token, in GeometryPoint origin, Float3 incident)
 	{
 		switch (token.Type)
 		{
@@ -210,7 +210,7 @@ public sealed class LightCollection
 		}
 
 		static float HandleGeometry<T>(ImmutableArray<T> array, EntityToken token,
-									   in GeometryPoint origin, in Float3 incident) where T : IPreparedGeometry
+									   in GeometryPoint origin, Float3 incident) where T : IPreparedGeometry
 		{
 			ref readonly T geometry = ref array.ItemRef(token.Index);
 			return geometry.ProbabilityDensity(origin, incident);

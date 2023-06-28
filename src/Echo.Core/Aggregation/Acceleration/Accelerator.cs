@@ -68,7 +68,7 @@ public abstract class Accelerator
 	/// </summary>
 	/// <param name="transform">The <see cref="Float4x4"/> used to transform this <see cref="Accelerator"/>.</param>
 	/// <remarks>This transformation is usually performed inversely.</remarks>
-	public BoxBound GetTransformedBound(in Float4x4 transform)
+	public BoxBound GetTransformedBound(Float4x4 transform)
 	{
 		//Potentially find a smaller bounds by encapsulating
 		//transformed children nodes instead of the full tree

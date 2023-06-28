@@ -36,12 +36,12 @@ public static class InvariantFormat
 	public static string ToInvariant(this ulong value) => value.ToString(IntegerPattern, Culture);
 
 	public static string ToInvariant(this Float2 value) => value.ToString(DefaultPattern, Culture);
-	public static string ToInvariant(this in Float3 value) => value.ToString(DefaultPattern, Culture);
-	public static string ToInvariant(this in Float4 value) => value.ToString(DefaultPattern, Culture);
+	public static string ToInvariant(this Float3 value) => value.ToString(DefaultPattern, Culture);
+	public static string ToInvariant(this Float4 value) => value.ToString(DefaultPattern, Culture);
 
 	public static string ToInvariant(this Int2 value) => value.ToString(IntegerPattern, Culture);
-	public static string ToInvariant(this in Int3 value) => value.ToString(IntegerPattern, Culture);
-	public static string ToInvariant(this in Int4 value) => value.ToString(IntegerPattern, Culture);
+	public static string ToInvariant(this Int3 value) => value.ToString(IntegerPattern, Culture);
+	public static string ToInvariant(this Int4 value) => value.ToString(IntegerPattern, Culture);
 
 	public static string ToInvariant(this TimeSpan value) => value.ToString(@"hh\:mm\:ss\.ff", Culture);
 	public static string ToInvariant(this DateTime value) => value.ToString("HH:mm:ss", Culture);

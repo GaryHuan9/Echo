@@ -54,12 +54,12 @@ public static class Utility
 	/// <summary>
 	/// Returns the position represented by a <see cref="Float4x4"/> transform.
 	/// </summary>
-	public static Float3 GetPosition(in Float4x4 transform) => transform.GetColumn(3).XYZ;
+	public static Float3 GetPosition(Float4x4 transform) => transform.GetColumn(3).XYZ;
 
 	/// <summary>
 	/// Returns the rotation represented by a <see cref="Float4x4"/> transform.
 	/// </summary>
-	public static Float3x3 GetRotation(in Float4x4 transform)
+	public static Float3x3 GetRotation(Float4x4 transform)
 	{
 		float scaleR = 1f / GetScale(transform);
 
@@ -74,7 +74,7 @@ public static class Utility
 	/// <summary>
 	/// Returns the uniform scale represented by a <see cref="Float4x4"/> transform.
 	/// </summary>
-	public static float GetScale(in Float4x4 transform) => transform.GetRow(0).XYZ_.Magnitude;
+	public static float GetScale(Float4x4 transform) => transform.GetRow(0).XYZ_.Magnitude;
 
 	/// <summary>
 	/// Ensures an <see cref="Array"/> is large enough for some number of items.

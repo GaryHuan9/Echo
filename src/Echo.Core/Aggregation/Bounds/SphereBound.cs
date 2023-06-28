@@ -38,7 +38,7 @@ public readonly struct SphereBound : IFormattable
 		radius *= 1f + FastMath.Epsilon;
 	}
 
-	public SphereBound(in Float3 center, float radius)
+	public SphereBound(Float3 center, float radius)
 	{
 		this.center = center;
 		this.radius = radius;
@@ -68,7 +68,7 @@ public readonly struct SphereBound : IFormattable
 	/// <summary>
 	///     Returns whether <paramref name="point" /> is inside this <see cref="SphereBound" />.
 	/// </summary>
-	public bool Contains(in Float3 point) => point.SquaredDistance(center) <= radius * radius;
+	public bool Contains(Float3 point) => point.SquaredDistance(center) <= radius * radius;
 
 	public override string ToString() => ToString(default);
 	public string ToString(string format, IFormatProvider provider = null) => $"{center.ToString(format, provider)} ± {radius.ToString(format, provider)}";
@@ -84,7 +84,7 @@ public readonly struct SphereBound : IFormattable
 			Float3 min3 = Float3.Zero;
 			Float3 max3 = Float3.Zero;
 
-			foreach (ref readonly Float3 point in points)
+			foreach (Float3 point in points)
 			{
 				// dot product with normal to find the extreme points efficiently
 				float value = point.Dot(normal);
@@ -194,12 +194,12 @@ public readonly struct SphereBound : IFormattable
 		}
 	}
 
-	static bool Contains(in Float3 point, in Float3 center, float radius2) => center.SquaredDistance(point) <= radius2;
+	static bool Contains(Float3 point, Float3 center, float radius2) => center.SquaredDistance(point) <= radius2;
 
 	/// <summary>
 	///     Solves the CircumSphere from three points
 	/// </summary>
-	static void SolveFromTriangle(in Float3 a, in Float3 b, in Float3 c, out Float3 center, out float radius2)
+	static void SolveFromTriangle(Float3 a, Float3 b, Float3 c, out Float3 center, out float radius2)
 	{
 		Float3 pba = b - a;
 		Float3 pca = c - a;
@@ -224,7 +224,7 @@ public readonly struct SphereBound : IFormattable
 		}
 	}
 
-	static void SolveCircumSphereFromFourExtremes(in Float3 a, in Float3 b, in Float3 c, in Float3 d, out Float3 center, out float radius2)
+	static void SolveCircumSphereFromFourExtremes(Float3 a, Float3 b, Float3 c, Float3 d, out Float3 center, out float radius2)
 	{
 		float a2 = a.SquaredMagnitude;
 		float b2 = b.SquaredMagnitude;
@@ -270,7 +270,7 @@ public readonly struct SphereBound : IFormattable
 	/// <summary>
 	///     Solves the sphere from two extreme points (assuming they are the sphere's diameter end points)
 	/// </summary>
-	static void SolveFromDiameterPoints(in Float3 a, in Float3 b, out Float3 center, out float radius2)
+	static void SolveFromDiameterPoints(Float3 a, Float3 b, out Float3 center, out float radius2)
 	{
 		center = (a + b) / 2f;
 		radius2 = (a - b).SquaredMagnitude / 4f;

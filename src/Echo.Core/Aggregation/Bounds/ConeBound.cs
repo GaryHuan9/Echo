@@ -8,7 +8,7 @@ namespace Echo.Core.Aggregation.Bounds;
 
 public readonly struct ConeBound : IFormattable
 {
-	ConeBound(in Float3 axis, float cosOffset = 1f, float cosExtend = 0f)
+	ConeBound(Float3 axis, float cosOffset = 1f, float cosExtend = 0f)
 	{
 		Ensure.AreEqual(axis.SquaredMagnitude, 1f);
 		Ensure.IsTrue(cosOffset is >= -1f and <= 1f);
@@ -63,9 +63,9 @@ public readonly struct ConeBound : IFormattable
 
 	public static ConeBound CreateFullSphere(float cosExtend = 0f /* = cos(pi/2) */) => new(Float3.Up, -1f /* = cos(pi) */, cosExtend);
 
-	public static ConeBound CreateDirection(in Float3 direction, float cosExtend = 0f /* = cos(pi/2) */) => new(direction, 1f /* = cos(0) */, cosExtend);
+	public static ConeBound CreateDirection(Float3 direction, float cosExtend = 0f /* = cos(pi/2) */) => new(direction, 1f /* = cos(0) */, cosExtend);
 
-	public static ConeBound operator *(in Float4x4 transform, ConeBound bound) => new
+	public static ConeBound operator *(Float4x4 transform, ConeBound bound) => new
 	(
 		transform.MultiplyDirection(bound.axis).Normalized,
 		bound.cosOffset, bound.cosExtend

@@ -17,10 +17,10 @@ public interface IColor<out T> where T : unmanaged, IColor<T>
 	/// <summary>
 	/// Creates a new <typeparamref name="T"/> from an <see cref="RGBA128"/>.
 	/// </summary>
-	public T FromRGBA128(in RGBA128 value); //OPTIMIZE: convert to static method when we upgrade to dotnet 7
+	public T FromRGBA128(RGBA128 value); //OPTIMIZE: convert to static method when we upgrade to dotnet 7
 
 	/// <summary>
 	/// Creates a new <typeparamref name="T"/> from a <see cref="Float4"/>.
 	/// </summary>
-	public T FromFloat4(in Float4 value) => FromRGBA128((RGBA128)value);
+	public T FromFloat4(Float4 value) => FromRGBA128((RGBA128)value);
 }

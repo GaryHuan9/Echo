@@ -302,7 +302,7 @@ public sealed record PathTracedEvaluator : Evaluator
 		/// Contributes to the <see cref="Result"/> of this <see cref="Path"/>.
 		/// </summary>
 		/// <param name="value">The <see cref="RGB128"/> value to contribute.</param>
-		public void Contribute(in RGB128 value) => Result += energy * value; //OPTIMIZE: fma
+		public void Contribute(RGB128 value) => Result += energy * value; //OPTIMIZE: fma
 
 		/// <summary>
 		/// Contributes the emission of the <see cref="Material"/> of the current <see cref="contact"/>.

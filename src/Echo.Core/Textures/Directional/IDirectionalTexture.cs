@@ -32,7 +32,7 @@ public interface IDirectionalTexture
 	/// <param name="incident">The unit local direction to evaluate at.</param>
 	/// <returns>The <see cref="RGB128"/> value evaluated.</returns>
 	/// <seealso cref="Sample"/>
-	public RGB128 Evaluate(in Float3 incident);
+	public RGB128 Evaluate(Float3 incident);
 
 	/// <summary>
 	/// Calculates the pdf of selecting <paramref name="incident"/> with <see cref="Sample"/>.
@@ -40,7 +40,7 @@ public interface IDirectionalTexture
 	/// <param name="incident">The unit local direction that was selected.</param>
 	/// <returns>The probability density function (pdf) value of the selection.</returns>
 	/// <seealso cref="Sample"/>
-	public float ProbabilityDensity(in Float3 incident) => Sample2D.UniformSpherePdf;
+	public float ProbabilityDensity(Float3 incident) => Sample2D.UniformSpherePdf;
 
 	/// <summary>
 	/// Samples <paramref name="incident"/> for this <see cref="IDirectionalTexture"/>.

@@ -21,7 +21,7 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 	TMicrofacet microfacet;
 	TFresnel fresnel;
 
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
+	public override RGB128 Evaluate(Float3 outgoing, Float3 incident)
 	{
 		if (FlatOrOppositeHemisphere(outgoing, incident)) return RGB128.Black;
 		Float3 normal = FindNormal(outgoing, incident);
@@ -31,7 +31,7 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		return evaluated * ratio;
 	}
 
-	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
+	public override float ProbabilityDensity(Float3 outgoing, Float3 incident)
 	{
 		if (FlatOrOppositeHemisphere(outgoing, incident)) return 0f;
 		Float3 normal = FindNormal(outgoing, incident);
@@ -39,7 +39,7 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		return microfacet.ProbabilityDensity(outgoing, normal) / FastMath.Abs(outgoing.Dot(normal) * 4f);
 	}
 
-	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident)
 	{
 		Float3 normal = microfacet.Sample(outgoing, sample);
 		incident = Float3.Reflect(outgoing, normal);
@@ -56,7 +56,7 @@ public sealed class GlossyReflection<TMicrofacet, TFresnel> : BxDF where TMicrof
 		return (evaluated * ratio, pdf);
 	}
 
-	public static Float3 FindNormal(in Float3 outgoing, in Float3 incident)
+	public static Float3 FindNormal(Float3 outgoing, Float3 incident)
 	{
 		Float3 normal = outgoing + incident;
 		float length2 = normal.SquaredMagnitude;
@@ -81,7 +81,7 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 	TMicrofacet microfacet;
 	RealFresnel fresnel;
 
-	public override RGB128 Evaluate(in Float3 outgoing, in Float3 incident)
+	public override RGB128 Evaluate(Float3 outgoing, Float3 incident)
 	{
 		if (FlatOrSameHemisphere(outgoing, incident)) return RGB128.Black;
 
@@ -107,7 +107,7 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 		return new RGB128(evaluated * ratio * FastMath.Abs(numerator / denominator));
 	}
 
-	public override float ProbabilityDensity(in Float3 outgoing, in Float3 incident)
+	public override float ProbabilityDensity(Float3 outgoing, Float3 incident)
 	{
 		if (FlatOrSameHemisphere(outgoing, incident)) return 0f;
 
@@ -127,7 +127,7 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 		return microfacet.ProbabilityDensity(outgoing, normal) * (numerator / denominator);
 	}
 
-	public override Probable<RGB128> Sample(Sample2D sample, in Float3 outgoing, out Float3 incident)
+	public override Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident)
 	{
 		Float3 normal = microfacet.Sample(outgoing, sample);
 		float dotO = outgoing.Dot(normal);
@@ -159,5 +159,5 @@ public sealed class GlossyTransmission<TMicrofacet> : BxDF where TMicrofacet : I
 		return (new RGB128(1f - packet.Value) * FastMath.Abs(evaluated) * ratio, pdf);
 	}
 
-	static Float3 FindNormal(in Float3 outgoing, in Float3 incident, float etaR) => GlossyReflection<TMicrofacet, RealFresnel>.FindNormal(outgoing, incident * etaR);
+	static Float3 FindNormal(Float3 outgoing, Float3 incident, float etaR) => GlossyReflection<TMicrofacet, RealFresnel>.FindNormal(outgoing, incident * etaR);
 }

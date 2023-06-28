@@ -128,7 +128,7 @@ public readonly struct RealFresnel : IFresnel
 		/// <summary>
 		/// Refracts an outgoing direction using this <see cref="Packet"/> to get the incident direction.
 		/// </summary>
-		public Float3 Refract(in Float3 outgoing, in Float3 normal)
+		public Float3 Refract(Float3 outgoing, Float3 normal)
 		{
 			Ensure.IsFalse(IsIncomplete);
 			Ensure.IsFalse(TotalInternalReflection);
@@ -153,7 +153,7 @@ public readonly struct RealFresnel : IFresnel
 
 public readonly struct ComplexFresnel : IFresnel
 {
-	public ComplexFresnel(in RGB128 etaAbove, in RGB128 etaBelow, in RGB128 extinction)
+	public ComplexFresnel(RGB128 etaAbove, RGB128 etaBelow, RGB128 extinction)
 	{
 		Ensure.IsFalse(etaAbove.IsZero);
 		Ensure.IsFalse(etaBelow.IsZero);
@@ -195,6 +195,6 @@ public readonly struct ComplexFresnel : IFresnel
 		return (RGB128)(para * perp + para) / 2f;
 
 		//OPTIMIZE:
-		static Float4 Sqrt(in Float4 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z), 1f);
+		static Float4 Sqrt(Float4 value) => new(FastMath.Sqrt0(value.X), FastMath.Sqrt0(value.Y), FastMath.Sqrt0(value.Z), 1f);
 	}
 }

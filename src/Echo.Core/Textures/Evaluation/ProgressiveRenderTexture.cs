@@ -43,7 +43,7 @@ public class ProgressiveRenderTexture : ArrayGrid<RGB128>
 	/// When writing to one pixel, this special setter will write that same color to every pixel after this pixel in
 	/// the same <see cref="ArrayGrid{T}.MajorAxis"/> that has not been written. Auxiliary data will not be assigned.
 	/// </summary>
-	public override unsafe void Set(Int2 position, in RGB128 value)
+	public override unsafe void Set(Int2 position, RGB128 value)
 	{
 		int index = ToIndex(position); //The global positional index of the pixel
 

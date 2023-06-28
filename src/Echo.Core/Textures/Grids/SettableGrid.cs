@@ -15,12 +15,12 @@ public abstract class SettableGrid<T> : TextureGrid<T> where T : unmanaged, ICol
 	/// Sets the pixel value of type <see cref="T"/> of this <see cref="TextureGrid{T}"/> at a <paramref name="position"/>.
 	/// </summary>
 	/// <param name="position">The integral pixel position to get the value from. This <see cref="Int2"/> must 
-	/// be between <see cref="Int2.Zero"/> (inclusive) and <see cref="TextureGrid{T}.size"/> (exclusive).</param>
+	///     be between <see cref="Int2.Zero"/> (inclusive) and <see cref="TextureGrid{T}.size"/> (exclusive).</param>
 	/// <param name="value">The value of type <see cref="T"/> to set.</param>
 	/// <remarks>The reason that this is a method but not an indexer is because of C#'s
 	/// (pathetic) inability to extend abstract indexers in derived classes.</remarks>
 	/// <!-- https://github.com/dotnet/csharplang/issues/1568 -->
-	public abstract void Set(Int2 position, in T value);
+	public abstract void Set(Int2 position, T value);
 
 	public override SettableGrid<T> Crop(Int2 min, Int2 max) => new CropGrid(this, min, max);
 
@@ -47,6 +47,6 @@ public abstract class SettableGrid<T> : TextureGrid<T> where T : unmanaged, ICol
 
 		public override T Get(Int2 position) => source.Get(min + position);
 
-		public override void Set(Int2 position, in T value) => source.Set(min + position, value);
+		public override void Set(Int2 position, T value) => source.Set(min + position, value);
 	}
 }

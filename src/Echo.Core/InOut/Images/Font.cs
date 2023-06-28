@@ -165,7 +165,7 @@ public class Font
 		return position.X + position.Y * MapSize;
 	}
 
-	public record struct Style(float Height, in RGBA128 Color)
+	public record struct Style(float Height, RGBA128 Color)
 	{
 		public Style(float height) : this(height, RGBA128.White) { }
 

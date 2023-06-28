@@ -45,7 +45,7 @@ public class LightTree : LightPicker
 	public override ConeBound ConeBound => root == null ? default : root.bound.cone;
 	public override float Power => root == null ? default : root.bound.power;
 
-	public override BoxBound GetTransformedBound(in Float4x4 transform)
+	public override BoxBound GetTransformedBound(Float4x4 transform)
 	{
 		if (root == null) return default;
 		return new BoxBound(stackalloc BoxBound[1] { root.bound.box }, transform);

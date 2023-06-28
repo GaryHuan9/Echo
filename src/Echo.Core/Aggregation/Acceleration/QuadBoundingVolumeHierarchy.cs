@@ -198,7 +198,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static void Push(in Float4 intersections, in EntityToken4 token4, GeometryCollection geometries,
+			static void Push(Float4 intersections, in EntityToken4 token4, GeometryCollection geometries,
 							 int offset, ref EntityToken* next, ref float* hits, ref TraceQuery query)
 			{
 				float hit = intersections[offset];
@@ -293,7 +293,7 @@ public class QuadBoundingVolumeHierarchy : Accelerator
 			}
 
 			[MethodImpl(ImplementationOptions)]
-			static bool Push(in Float4 intersections, in EntityToken4 token4,
+			static bool Push(Float4 intersections, in EntityToken4 token4,
 							 GeometryCollection geometries, int offset,
 							 ref EntityToken* next, ref OccludeQuery query)
 			{

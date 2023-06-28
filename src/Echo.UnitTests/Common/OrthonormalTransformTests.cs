@@ -47,7 +47,7 @@ public class OrthonormalTransformTests
 		}
 	}
 
-	static void AssertAlmostEquals(in Float3 value0, in Float3 value1)
+	static void AssertAlmostEquals(Float3 value0, Float3 value1)
 	{
 		Assert.That(Float3.SquaredDistance(value0, value1), Utility.AlmostZero());
 	}

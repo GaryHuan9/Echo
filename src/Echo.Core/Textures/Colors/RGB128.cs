@@ -22,7 +22,7 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	/// <summary>
 	/// Create an <see cref="RGB128"/> without any checks.
 	/// </summary>
-	RGB128(in Float4 value) => d = value;
+	RGB128(Float4 value) => d = value;
 
 	readonly Float4 d; //The W component should always be zero
 
@@ -62,14 +62,14 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 	public RGBA128 ToRGBA128() => (RGBA128)this;
 
 	/// <inheritdoc/>
-	public RGB128 FromRGBA128(in RGBA128 value) => (RGB128)value;
+	public RGB128 FromRGBA128(RGBA128 value) => (RGB128)value;
 
 	/// <summary>
 	/// Increases <paramref name="value"/> slightly if needed so it is not zero.
 	/// </summary>
 	/// <remarks><see cref="IsZero"/> will be false on the returned value.</remarks>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static RGB128 MaxEpsilon(in RGB128 value) => new(value.d.Max(new Float4
+	public static RGB128 MaxEpsilon(RGB128 value) => new(value.d.Max(new Float4
 	(
 		EpsilonWeight / RadianceWeightR,
 		EpsilonWeight / RadianceWeightG,
@@ -77,35 +77,35 @@ public readonly struct RGB128 : IColor<RGB128>, IFormattable
 		0f
 	)));
 
-	public static implicit operator Float4(in RGB128 value) => value.d;
-	public static explicit operator RGB128(in Float4 value) => new(Check(value.XYZ_));
-	public static explicit operator RGB128(in RGBA128 value) => new(((Float4)value).XYZ_);
+	public static implicit operator Float4(RGB128 value) => value.d;
+	public static explicit operator RGB128(Float4 value) => new(Check(value.XYZ_));
+	public static explicit operator RGB128(RGBA128 value) => new(((Float4)value).XYZ_);
 
-	public static RGB128 operator +(in RGB128 first, in RGB128 second) => new(first.d + second.d);
-	public static RGB128 operator *(in RGB128 first, in RGB128 second) => new(first.d * second.d);
+	public static RGB128 operator +(RGB128 first, RGB128 second) => new(first.d + second.d);
+	public static RGB128 operator *(RGB128 first, RGB128 second) => new(first.d * second.d);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static RGB128 operator *(in RGB128 first, float second)
+	public static RGB128 operator *(RGB128 first, float second)
 	{
 		Ensure.IsTrue(second >= 0f);
 		Ensure.IsTrue(float.IsFinite(second));
 		return new RGB128(first.d * second);
 	}
 
-	public static RGB128 operator -(in RGB128 first, in RGB128 second) => new(Check(first.d - second.d));
+	public static RGB128 operator -(RGB128 first, RGB128 second) => new(Check(first.d - second.d));
 
-	public static RGB128 operator /(in RGB128 first, float second) => new(Check(first.d / second));
-	public static RGB128 operator /(in RGB128 first, in RGB128 second) => Divide(first.d, second.d);
+	public static RGB128 operator /(RGB128 first, float second) => new(Check(first.d / second));
+	public static RGB128 operator /(RGB128 first, RGB128 second) => Divide(first.d, second.d);
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static RGB128 Divide(in Float4 first, in Float4 second)
+	static RGB128 Divide(Float4 first, Float4 second)
 	{
 		Float4 result = first / (second + Float4.Ana);
 		return new RGB128(Check(result));
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float4 Check(in Float4 value)
+	static Float4 Check(Float4 value)
 	{
 		Ensure.AreEqual(value.W, 0f);
 		Ensure.IsTrue(value.XYZ >= Float3.Zero);

@@ -31,8 +31,8 @@ public interface ITriangleStream : IDisposable
 		/// Constructs a new <see cref="Triangle"/>.
 		/// </summary>
 		/// <remarks>Vertex information is mandatory, while normal and texcoord can be left as zero if not provided.</remarks>
-		public Triangle(in Float3 vertex0, in Float3 vertex1, in Float3 vertex2,
-						in Float3 normal0, in Float3 normal1, in Float3 normal2,
+		public Triangle(Float3 vertex0, Float3 vertex1, Float3 vertex2,
+						Float3 normal0, Float3 normal1, Float3 normal2,
 						Float2 texcoord0, Float2 texcoord1, Float2 texcoord2)
 		{
 			this.vertex0 = vertex0;
@@ -81,7 +81,7 @@ public interface ITriangleStream : IDisposable
 		/// <param name="transform">The <see cref="Float4x4"/> transform applied during this preparation.</param>
 		/// <param name="material">The <see cref="MaterialIndex"/> that represents the <see cref="Material"/>.</param>
 		/// <returns>The newly created <see cref="PreparedTriangle"/>.</returns>
-		public PreparedTriangle Prepare(in Float4x4 transform, MaterialIndex material) => HasNormal ?
+		public PreparedTriangle Prepare(Float4x4 transform, MaterialIndex material) => HasNormal ?
 			new PreparedTriangle
 			(
 				transform.MultiplyPoint(vertex0),

@@ -54,5 +54,5 @@ public interface IPreparedLight
 	/// <param name="incident">An incoming direction that points from <paramref name="origin"/> towards this <see cref="IPreparedLight"/>.</param>
 	/// <returns>The calculated pdf value for the <paramref name="incident"/> direction occur at <paramref name="origin"/>.</returns>
 	/// <remarks>For <see cref="IPreparedLight"/> that is a singularity (ie. from a single point), this simply returns 1.</remarks>
-	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident);
+	public float ProbabilityDensity(in GeometryPoint origin, Float3 incident);
 }

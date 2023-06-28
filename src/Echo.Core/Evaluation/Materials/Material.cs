@@ -75,13 +75,13 @@ public abstract class Material
 	}
 
 	/// <inheritdoc cref="Scatter(ref Contact, Allocator"/>
-	protected abstract BSDF Scatter(in Contact contact, Allocator allocator, in RGB128 albedo);
+	protected abstract BSDF Scatter(in Contact contact, Allocator allocator, RGB128 albedo);
 
 	/// <summary>
 	/// Applies this <see cref="Material"/>'s <see cref="Normal"/> mapping at <paramref name="texcoord"/>
 	/// to <paramref name="normal"/>. Returns whether this method caused <paramref name="normal"/> to change.
 	/// </summary>
-	public bool ApplyNormalMapping(in Float2 texcoord, ref Float3 normal)
+	public bool ApplyNormalMapping(Float2 texcoord, ref Float3 normal)
 	{
 		if (zeroNormal) return false;
 
@@ -114,7 +114,7 @@ public abstract class Material
 	/// <summary>
 	/// Creates a new <see cref="BSDF"/>
 	/// </summary>
-	protected static BSDF NewBSDF(in Contact contact, Allocator allocator, in RGB128 tint)
+	protected static BSDF NewBSDF(in Contact contact, Allocator allocator, RGB128 tint)
 	{
 		var bsdf = allocator.New<BSDF>();
 		bsdf.Reset(contact, tint);

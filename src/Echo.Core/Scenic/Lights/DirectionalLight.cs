@@ -31,8 +31,8 @@ public class DirectionalLight : InfiniteLight
 		_power = Intensity.Luminance * Multiplier * radius * radius;
 	}
 
-	public override RGB128 Evaluate(in Float3 direction) => RGB128.Black;
-	public override float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 0f;
+	public override RGB128 Evaluate(Float3 direction) => RGB128.Black;
+	public override float ProbabilityDensity(in GeometryPoint origin, Float3 incident) => 0f;
 
 	public override Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{

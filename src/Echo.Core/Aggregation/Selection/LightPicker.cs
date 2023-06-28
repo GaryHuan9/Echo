@@ -39,7 +39,7 @@ public abstract class LightPicker
 	/// Calculates a <see cref="BoxBound"/> that bounds this <see cref="LightPicker"/> while transformed.
 	/// </summary>
 	/// <param name="transform">The <see cref="Float4x4"/> used to transform this <see cref="LightPicker"/>.</param>
-	public abstract BoxBound GetTransformedBound(in Float4x4 transform);
+	public abstract BoxBound GetTransformedBound(Float4x4 transform);
 
 	/// <summary>
 	/// Selects a light using this <see cref="LightPicker"/>.

@@ -24,7 +24,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// Create an <see cref="RGBA128"/> without any checks.
 	/// </summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	RGBA128(in Float4 value) => d = value;
+	RGBA128(Float4 value) => d = value;
 
 	readonly Float4 d;
 
@@ -68,7 +68,7 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	public RGBA128 ToRGBA128() => this;
 
 	/// <inheritdoc/>
-	public RGBA128 FromRGBA128(in RGBA128 value) => value;
+	public RGBA128 FromRGBA128(RGBA128 value) => value;
 
 	/// <inheritdoc/>
 	public string ToString(string format, IFormatProvider provider = null) => d.ToString(format, provider);
@@ -103,12 +103,12 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	/// <returns>Whether the parsing operation was successful.</returns>
 	public static bool TryParse(ReadOnlySpan<char> span, out RGBA128 result) => new Parser(span).Execute(out result);
 
-	public static implicit operator Float4(in RGBA128 value) => value.d;
-	public static explicit operator RGBA128(in Float4 value) => new(CheckInput(value));
-	public static explicit operator RGBA128(in RGB128 value) => new RGBA128(value).AlphaOne;
+	public static implicit operator Float4(RGBA128 value) => value.d;
+	public static explicit operator RGBA128(Float4 value) => new(CheckInput(value));
+	public static explicit operator RGBA128(RGB128 value) => new RGBA128(value).AlphaOne;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float4 CheckInput(in Float4 value)
+	static Float4 CheckInput(Float4 value)
 	{
 		Ensure.IsTrue(value >= Float4.Zero);
 		Ensure.IsTrue(float.IsFinite(value.Sum));

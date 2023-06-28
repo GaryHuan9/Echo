@@ -24,7 +24,7 @@ public class PointLight : LightEntity, ILightSource<PreparedPointLight>
 /// </summary>
 public readonly struct PreparedPointLight : IPreparedLight
 {
-	public PreparedPointLight(in RGB128 intensity, in Float3 position)
+	public PreparedPointLight(RGB128 intensity, Float3 position)
 	{
 		this.intensity = intensity;
 		this.position = position;
@@ -66,5 +66,5 @@ public readonly struct PreparedPointLight : IPreparedLight
 	}
 
 	/// <inheritdoc/>
-	public float ProbabilityDensity(in GeometryPoint origin, in Float3 incident) => 0f;
+	public float ProbabilityDensity(in GeometryPoint origin, Float3 incident) => 0f;
 }

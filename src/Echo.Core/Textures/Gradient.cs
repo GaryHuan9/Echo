@@ -55,7 +55,7 @@ public class Gradient : IEnumerable<float>
 	/// <summary>
 	/// Inserts a new <paramref name="color"/> at <paramref name="percent"/> to this <see cref="Gradient"/>.
 	/// </summary>
-	public void Add(float percent, in RGBA128 color)
+	public void Add(float percent, RGBA128 color)
 	{
 		seal.EnsureNotApplied();
 
@@ -87,7 +87,7 @@ public class Gradient : IEnumerable<float>
 
 	readonly struct Anchor : IComparable<Anchor>
 	{
-		public Anchor(float percent, in RGBA128 color)
+		public Anchor(float percent, RGBA128 color)
 		{
 			this.percent = percent;
 			this.color = color;
