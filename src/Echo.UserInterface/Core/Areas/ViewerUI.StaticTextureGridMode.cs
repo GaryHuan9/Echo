@@ -38,8 +38,7 @@ partial class ViewerUI
 
 			Float2 uv = cursorUV.Value;
 			Int2 position = texture.ToPosition(uv);
-			uv = texture.ToUV(position);
-			RGBA128 color = texture[uv];
+			RGBA128 color = texture[position];
 
 			ImGui.BeginTooltip();
 
@@ -82,8 +81,9 @@ partial class ViewerUI
 						for (int y = 0; y < texture.size.Y; y++)
 						for (int x = 0; x < texture.size.X; x++)
 						{
-							Float2 uv = texture.ToUV(new Int2(x, y));
-							total += texture[uv] - (Float4)compare[uv];
+							Int2 position = new Int2(x, y);
+							Float2 uv = texture.ToUV(position);
+							total += texture[position] - (Float4)compare[uv];
 						}
 
 						LogList.Add($"Color delta versus reference: {total.Result:N4}.");
@@ -104,36 +104,34 @@ partial class ViewerUI
 
 		unsafe void FillDisplay()
 		{
-			var filter = texture.Filter;
-			texture.Filter = IFilter.point;
+			LockDisplay(out uint* pixels);
+			int height = texture.oneLess.Y;
 
-			LockDisplay(out uint* pixels, out nint stride);
-
-			for (int y = 0; y < texture.size.Y; y++, pixels += stride)
+			for (int y = 0; y < texture.size.Y; y++)
 			for (int x = 0; x < texture.size.X; x++)
 			{
-				Float2 uv = texture.ToUV(new Int2(x, y));
-				pixels[x] = ColorToUInt32(texture[uv]);
+				Int2 position = new Int2(x, height - y);
+				*pixels++ = ColorToUInt32(texture[position]);
 			}
 
 			UnlockDisplay();
-
-			texture.Filter = filter;
 		}
 
 		unsafe void FillDisplayCompare()
 		{
-			LockDisplay(out uint* pixels, out nint stride);
+			LockDisplay(out uint* pixels);
+			int height = texture.oneLess.Y;
 
-			for (int y = 0; y < texture.size.Y; y++, pixels += stride)
+			for (int y = 0; y < texture.size.Y; y++)
 			for (int x = 0; x < texture.size.X; x++)
 			{
-				Float2 uv = texture.ToUV(new Int2(x, y));
-				Float4 color = texture[uv];
+				Int2 position = new Int2(x, height - y);
+				Float2 uv = texture.ToUV(position);
+				Float4 color = texture[position];
 
 				color = Float4.Half + color - compare[uv];
 				color += Float4.Ana; //Force alpha to be 1
-				pixels[x] = ColorToUInt32(color);
+				*pixels++ = ColorToUInt32(color);
 			}
 
 			UnlockDisplay();

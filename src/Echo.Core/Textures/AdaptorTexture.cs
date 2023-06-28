@@ -21,7 +21,7 @@ public class AdaptorTexture : Texture
 	bool hasTransform;
 	bool hasSwizzle;
 
-	Vector128<byte> swizzler;
+	Vector128<byte> swizzle;
 
 	Float4 _scale = Float4.One;
 	Float4 _shift = Float4.Zero;
@@ -72,7 +72,7 @@ public class AdaptorTexture : Texture
 				else value = Fma.MultiplyAdd(value, Scale.v, Shift.v);
 			}
 
-			if (hasSwizzle) value = Ssse3.Shuffle(value.AsByte(), swizzler).AsSingle();
+			if (hasSwizzle) value = Ssse3.Shuffle(value.AsByte(), swizzle).AsSingle();
 
 			return (RGBA128)new Float4(value);
 		}
@@ -111,6 +111,6 @@ public class AdaptorTexture : Texture
 			}
 		}
 
-		swizzler = Sse2.LoadVector128(result);
+		swizzle = Sse2.LoadVector128(result);
 	}
 }

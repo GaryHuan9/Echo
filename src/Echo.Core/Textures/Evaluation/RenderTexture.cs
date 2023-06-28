@@ -33,7 +33,7 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <summary>
 	/// The first texture that was added, or a layer named 'main'.
 	/// </summary>
-	Texture mainTexture;
+	TextureGrid mainTexture;
 
 	readonly ConcurrentDictionary<string, TextureGrid> layers = new(StringComparer.OrdinalIgnoreCase);
 
@@ -46,7 +46,7 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	{
 		var main = mainTexture; //Non volatile read for better performance, probably is not a problem
 		if (main == null) return RGB128.Black;
-		return main[ToUV(position)].As<RGB128>();
+		return (RGB128)main[position];
 	}
 
 	/// <summary>

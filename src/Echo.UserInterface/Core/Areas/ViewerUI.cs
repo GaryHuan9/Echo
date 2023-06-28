@@ -254,23 +254,23 @@ public sealed partial class ViewerUI : AreaUI
 
 		protected void ClearDisplay()
 		{
-			SDL.SDL_LockTexture(display, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
-
 			unsafe
 			{
-				if (pitch == sizeof(uint) * currentSize.X) new Span<uint>((uint*)pointer, currentSize.Product).Fill(0);
-				else throw new InvalidOperationException("Fill assumption of contiguous memory from SDL2 is violated!");
+				LockDisplay(out uint* pixels);
+				new Span<uint>(pixels, currentSize.Product).Clear();
 			}
 
 			UnlockDisplay();
 		}
 
-		protected unsafe void LockDisplay(out uint* pixels, out nint stride)
+		protected unsafe void LockDisplay(out uint* pixels)
 		{
 			SDL.SDL_LockTexture(display, IntPtr.Zero, out IntPtr pointer, out int pitch).ThrowOnError();
 
-			stride = -pitch / sizeof(uint);
-			pixels = (uint*)pointer - stride * (currentSize.Y - 1);
+			pixels = (uint*)pointer;
+
+			if (pitch == sizeof(uint) * currentSize.X) return;
+			throw new InvalidOperationException($"Assumption of contiguous memory from {nameof(SDL)} is violated!");
 		}
 
 		protected unsafe void LockDisplay(Int2 position, Int2 size, out uint* pixels, out nint stride)

@@ -80,9 +80,8 @@ public class CylindricalTexture : IDirectionalTexture
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			RGB128 Grab(int x)
 			{
-				var lower = (RGB128)texture[new Float2(x, y + 0f) * sizeR];
-				var upper = (RGB128)texture[new Float2(x, y + 1f) * sizeR];
-
+				var lower = (RGB128)texture[new Int2(x, y + 0)];
+				var upper = (RGB128)texture[new Int2(x, y + 1)];
 				return lower * sin0 + upper * sin1;
 			}
 		}, sum =>

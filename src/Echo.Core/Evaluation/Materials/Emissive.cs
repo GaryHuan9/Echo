@@ -34,15 +34,14 @@ public sealed class Emissive : Material
 		//Get averaged texture value
 		Texture texture = Albedo;
 		Int2 size = texture.DiscreteResolution;
-		Float2 sizeR = 1f / size;
 
 		var total = Summation.Zero;
 		var locker = new object();
 
-		Parallel.For(0, size.Product, () => Summation.Zero, (i, _, sum) =>
+		Parallel.For(0, size.Y, () => Summation.Zero, (y, _, sum) =>
 		{
-			Int2 position = new Int2(i % size.X, i / size.X);
-			return sum + texture[(position + Float2.Half) * sizeR];
+			for (int x = 0; x < size.X; x++) sum += texture[new Int2(x, y)];
+			return sum;
 		}, sum =>
 		{
 			//Accumulate sums

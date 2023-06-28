@@ -46,19 +46,26 @@ partial class ViewerUI
 
 		public void Reset(TextureGrid newMainTexture, DepthTexture newDepthTexture, Camera newCamera)
 		{
+			if (mainTexture == newMainTexture && depthTexture == newDepthTexture && camera == newCamera) return;
+
 			mainTexture = newMainTexture;
 			depthTexture = newDepthTexture;
 			camera = newCamera;
 			ResetCamera();
 
-			EnsureCapacity(mainTexture.size.Product);
+			int capacity = mainTexture.size.Product;
+			Utility.EnsureCapacity(ref pointsX, capacity);
+			Utility.EnsureCapacity(ref pointsY, capacity);
+			Utility.EnsureCapacity(ref pointsZ, capacity);
+			Utility.EnsureCapacity(ref pointsColor, capacity);
+
 			Interlocked.Exchange(ref pointsLength, 0);
 			ActionQueue.Enqueue("Populate Point Cloud", PopulatePoints);
 		}
 
 		public override bool Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
 		{
-			Int2 size = Int2.Min(plane.extend.Rounded, mainTexture.size / 2);
+			Int2 size = Int2.Min((plane.extend * 2f).Rounded, mainTexture.size);
 
 			if (RecreateDisplay(size))
 			{
@@ -180,7 +187,7 @@ partial class ViewerUI
 			{
 				Float4 converted = transform * new Float4(pointsX[i], pointsY[i], pointsZ[i], 1f);
 				Float3 point = new Float3(converted.X, converted.Y, converted.Z) / converted.W;
-				Int2 position = (Int2)(new Float2(point.X / 2f + 0.5f, point.Y / 2f + 0.5f) * size);
+				Int2 position = (Int2)(new Float2(point.X / 2f + 0.5f, point.Y / -2f + 0.5f) * size);
 
 				if (!(Int2.Zero <= position) || !(position < size) || point.Z < 1f) continue;
 
@@ -194,35 +201,15 @@ partial class ViewerUI
 
 		unsafe void UpdateDisplayFromBuffer(Int2 size)
 		{
-			LockDisplay(out uint* pixels, out nint stride);
+			LockDisplay(out uint* pixels);
 
 			fixed (uint* pointer = colorBuffer)
 			{
-				if (stride == sizeof(uint) * size.X)
-				{
-					ulong length = sizeof(uint) * (ulong)size.Product;
-					Buffer.MemoryCopy(pointer, pixels, length, length);
-				}
-				else
-				{
-					for (int y = 0; y < size.Y; y++, pixels += stride)
-					{
-						void* source = pointer + size.X * y;
-						ulong length = sizeof(uint) * (ulong)size.X;
-						Buffer.MemoryCopy(source, pixels, length, length);
-					}
-				}
+				ulong length = sizeof(uint) * (ulong)size.Product;
+				Buffer.MemoryCopy(pointer, pixels, length, length);
 			}
 
 			UnlockDisplay();
-		}
-
-		void EnsureCapacity(int capacity)
-		{
-			Utility.EnsureCapacity(ref pointsX, capacity);
-			Utility.EnsureCapacity(ref pointsY, capacity);
-			Utility.EnsureCapacity(ref pointsZ, capacity);
-			Utility.EnsureCapacity(ref pointsColor, capacity);
 		}
 
 		void PopulatePoints()
