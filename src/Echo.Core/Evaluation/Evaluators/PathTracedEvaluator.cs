@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Memory;
 using Echo.Core.Common.Packed;
@@ -19,7 +20,7 @@ namespace Echo.Core.Evaluation.Evaluators;
 /// light effects such as global illumination and ambient occlusion.
 /// </summary>
 [EchoSourceUsable]
-public record PathTracedEvaluator : Evaluator
+public sealed record PathTracedEvaluator : Evaluator
 {
 	/// <summary>
 	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
@@ -266,18 +267,13 @@ public record PathTracedEvaluator : Evaluator
 		public bool Advance(PreparedScene scene, Allocator allocator)
 		{
 			allocator.Restart();
+			if (!scene.Trace(ref query)) return false;
 
-			while (scene.Trace(ref query))
-			{
-				contact = scene.Interact(query);
+			contact = scene.Interact(query);
+			Material.Scatter(ref contact, allocator);
+			Ensure.IsNotNull(contact.bsdf);
 
-				Material.Scatter(ref contact, allocator);
-				if (contact.bsdf != null) return true;
-
-				query = query.SpawnTrace();
-			}
-
-			return false;
+			return true;
 		}
 
 		/// <summary>

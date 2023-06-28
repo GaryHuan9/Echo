@@ -42,7 +42,7 @@ partial class ViewerUI
 		public override bool Draw(ImDrawListPtr drawList, in Bounds plane, Float2? cursorUV)
 		{
 			if (operation.Disposed) return false;
-			
+
 			//Find and update tile from completed procedures
 			while (true)
 			{

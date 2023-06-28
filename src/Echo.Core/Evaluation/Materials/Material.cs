@@ -62,17 +62,16 @@ public abstract class Material
 	/// </summary>
 	public virtual void Scatter(ref Contact contact, Allocator allocator)
 	{
-		RGBA128 sampled = SampleAlbedo(contact);
+		RGBA128 albedo = SampleAlbedo(contact);
 
-		if (sampled.Alpha < 0.5f)
+		if (albedo.Alpha < 0.5f)
 		{
 			//Alpha test failed, surface is transparent
 			Invisible.instance.Scatter(ref contact, allocator);
 			return;
 		}
 
-		var albedo = (RGB128)sampled;
-		contact.bsdf = Scatter(contact, allocator, albedo);
+		contact.bsdf = Scatter(contact, allocator, (RGB128)albedo);
 	}
 
 	/// <inheritdoc cref="Scatter(ref Contact, Allocator"/>
