@@ -35,7 +35,7 @@ public record Watermark : ICompositeLayer
 
 	const float MarginScale = 0.07f;
 	const float DeviationIntensity = 9.5f;
-	const float LuminanceThreshold = 0.2f;
+	const float LuminanceThreshold = 0.1f;
 	const float BlurTint = 0.115f;
 	const float ShadowTint = 0.8f;
 

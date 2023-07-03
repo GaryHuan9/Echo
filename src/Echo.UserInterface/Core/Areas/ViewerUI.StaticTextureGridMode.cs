@@ -1,6 +1,7 @@
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut;
+using Echo.Core.Textures;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
 using ImGuiNET;
@@ -16,7 +17,7 @@ partial class ViewerUI
 		FileUI dialogue;
 
 		TextureGrid texture;
-		TextureGrid compare;
+		Texture reference;
 
 		public override float AspectRatio => texture.aspects.X;
 
@@ -24,7 +25,7 @@ partial class ViewerUI
 		{
 			dialogue ??= root.Find<FileUI>();
 			texture = newTexture;
-			compare = null;
+			reference = null;
 
 			Int2 size = texture.size;
 			RecreateDisplay(size);
@@ -43,9 +44,9 @@ partial class ViewerUI
 			ImGui.BeginTooltip();
 
 			ImGui.TextUnformatted($"Location: {position.ToInvariant()}");
-			ImGui.TextUnformatted(compare == null ?
+			ImGui.TextUnformatted(reference == null ?
 				$"Color: {color.ToInvariant()}" :
-				$"Delta: {(color - (Float4)compare[uv]).ToInvariant()}");
+				$"Delta: {(color - (Float4)reference[uv]).ToInvariant()}");
 
 			ImGui.EndTooltip();
 			return true;
@@ -61,15 +62,21 @@ partial class ViewerUI
 
 			if (ImGui.BeginMenu("Comparison"))
 			{
-				if (compare == null)
+				if (reference == null)
 				{
 					if (ImGui.MenuItem("Begin"))
 					{
 						dialogue.Open("main.png", true, path =>
 						{
-							compare = texture.Load(path);
+							reference = texture.Load(path);
 							UpdateDisplayContent();
 						});
+					}
+
+					if (ImGui.MenuItem("Against White"))
+					{
+						reference = Pure.white;
+						UpdateDisplayContent();
 					}
 				}
 				else
@@ -83,15 +90,16 @@ partial class ViewerUI
 						{
 							Int2 position = new Int2(x, y);
 							Float2 uv = texture.ToUV(position);
-							total += texture[position] - (Float4)compare[uv];
+							total += texture[position] - (Float4)reference[uv];
 						}
 
-						LogList.Add($"Color delta versus reference: {total.Result:N4}.");
+						Float4 average = total.Result / texture.size.Product;
+						LogList.Add($"Total delta versus reference is {total.Result.ToInvariant()}, or ({average.ToInvariant()} per pixel.");
 					}
 
-					if (ImGui.MenuItem("End"))
+					if (ImGui.MenuItem("Stop"))
 					{
-						compare = null;
+						reference = null;
 						UpdateDisplayContent();
 					}
 				}
@@ -100,7 +108,7 @@ partial class ViewerUI
 			}
 		}
 
-		void UpdateDisplayContent() => ActionQueue.Enqueue("Fill Viewer Display", compare == null ? FillDisplay : FillDisplayCompare);
+		void UpdateDisplayContent() => ActionQueue.Enqueue("Fill Viewer Display", reference == null ? FillDisplay : FillDisplayCompare);
 
 		unsafe void FillDisplay()
 		{
@@ -129,7 +137,7 @@ partial class ViewerUI
 				Float2 uv = texture.ToUV(position);
 				Float4 color = texture[position];
 
-				color = Float4.Half + color - compare[uv];
+				color = Float4.Half + color - reference[uv];
 				color += Float4.Ana; //Force alpha to be 1
 				*pixels++ = ColorToUInt32(color);
 			}

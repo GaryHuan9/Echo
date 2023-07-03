@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Threading;
 using Echo.Core.Evaluation.Materials;
 using Echo.Core.Scenic.Geometries;
 using Echo.Core.Scenic.Hierarchies;
+using Echo.Core.Textures;
+using Echo.Core.Textures.Colors;
 
 namespace Echo.Core.Scenic.Preparation;
 
@@ -27,6 +30,11 @@ public class SwatchExtractor
 	Dictionary<MaterialSwatch, PreparedSwatch> cachedSwatches;
 
 	Seal seal;
+
+	/// <summary>
+	/// Whether all materials in scene should be replaced by a 75% white <see cref="Diffuse"/>. 
+	/// </summary>
+	public bool WhiteMaterial { get; set; } = false;
 
 	/// <summary>
 	/// An empty <see cref="MaterialSwatch"/> used to replace null ones.
@@ -92,6 +100,12 @@ public class SwatchExtractor
 
 		Material[] CreateMaterials()
 		{
+			if (WhiteMaterial)
+			{
+				Diffuse white = new Diffuse { Albedo = new Pure(new RGBA128(0.75f)) };
+				return Enumerable.Repeat((Material)white, materialList.Count).ToArray();
+			}
+
 			int count = materialList.Count;
 			var result = new Material[count];
 

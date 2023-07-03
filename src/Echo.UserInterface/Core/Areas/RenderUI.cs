@@ -356,6 +356,13 @@ public sealed class RenderUI : AreaUI
 					ImGuiCustom.Property("Estimated Completion Time", timeFinish.ToInvariant());
 				}
 
+				if (progress > 0f)
+				{
+					int pixels = ((TextureGrid)operation.destination).size.Product;
+					double average = operation.TotalSamples / (pixels * progress);
+					ImGuiCustom.Property("Sample Per Pixel", average.ToInvariant());
+				}
+
 				ImGuiCustom.EndProperties();
 			}
 
