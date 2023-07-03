@@ -16,9 +16,12 @@ using Echo.Core.Textures.Colors;
 namespace Echo.Core.Evaluation.Evaluators;
 
 /// <summary>
-/// A unidirectional <see cref="Evaluator"/> able to simulate complex
-/// light effects such as global illumination and ambient occlusion.
+/// A unidirectional path traced <see cref="Evaluator"/> with multiple importance sampling and next event estimation,
+/// able to efficiently simulate complex lighting effects such as global illumination and ambient occlusion.
 /// </summary>
+/// <remarks>This is the main <see cref="Evaluator"/> of <see cref="Echo"/>. Compared to the <see cref="StandardNaiveEvaluator"/>,
+/// the <see cref="PathTracedEvaluator"/> offers a much more efficient sampling technique which can handle many complex lighting
+/// situations while also supporting delta (singularity) lights. This should be the default <see cref="Evaluator"/> for renders.</remarks>
 [EchoSourceUsable]
 public sealed record PathTracedEvaluator : Evaluator
 {
