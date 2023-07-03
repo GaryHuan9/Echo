@@ -177,9 +177,7 @@ public static class EntityTokenExtensions
 	public static bool IsAreaLight(this EntityToken token)
 	{
 		if (token.Type.IsRawGeometry()) return true;
-		if (token.Type != TokenType.Light) return false;
-
-		return AreEqual(token.LightType, LightType.Infinite);
+		return token.IsInfiniteLight();
 	}
 
 	/// <summary>

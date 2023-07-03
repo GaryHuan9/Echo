@@ -29,12 +29,11 @@ public sealed class Dielectric : Material
 	protected override BSDF Scatter(in Contact contact, Allocator allocator, RGB128 albedo)
 	{
 		BSDF bsdf = NewBSDF(contact, allocator, albedo);
+		var fresnel = new RealFresnel(1f, RefractiveIndex);
 
 		RGB128 roughness = Sample(Roughness, contact);
 		float alphaX = IMicrofacet.GetAlpha(roughness.R, out bool specularX);
 		float alphaY = IMicrofacet.GetAlpha(roughness.G, out bool specularY);
-
-		var fresnel = new RealFresnel(1f, RefractiveIndex);
 
 		if (!specularX || !specularY)
 		{

@@ -63,7 +63,7 @@ public sealed record PathTracedEvaluator : Evaluator
 			Sample2D radiantSample = distribution.Next2D();
 
 			//First check if the bounce is specular (Dirac delta)
-			if (bounce.function == null || bounce.function.type.Any(FunctionType.Specular))
+			if (!FastMath.Positive(bounce.scatterPdf) || bounce.function.type.Any(FunctionType.Specular))
 			{
 				//If the bounce is specular, then we do not use multiple importance sampling (MIS)
 				statistics.Report("Bounce/Specular");
@@ -85,7 +85,7 @@ public sealed record PathTracedEvaluator : Evaluator
 
 				if (mis)
 				{
-					//We have both an area light a non-delta BSDF, begin MIS
+					//We have both a non-delta BSDF and non-delta light, begin MIS
 					GeometryPoint oldPoint = path.contact.point;
 					statistics.Report("Bounce/Multiple Importance");
 
@@ -333,11 +333,7 @@ public sealed record PathTracedEvaluator : Evaluator
 	{
 		public Bounce(in Contact contact, Sample2D sample)
 		{
-			(scatter, scatterPdf) = contact.bsdf.Sample
-			(
-				contact.outgoing, sample, out incident,
-				out function, TryExcludeSpecular(contact.bsdf)
-			);
+			(scatter, scatterPdf) = contact.bsdf.Sample(contact.outgoing, sample, out incident, out function);
 
 			scatter *= contact.NormalDot(incident);
 		}
@@ -361,17 +357,5 @@ public sealed record PathTracedEvaluator : Evaluator
 		/// The <see cref="BxDF"/> function that was sampled for this <see cref="Bounce"/>.
 		/// </summary>
 		public readonly BxDF function;
-
-		/// <summary>
-		/// Returns a <see cref="FunctionType"/> that tries to exclude all <see cref="BxDF"/> of type <see cref="FunctionType.Specular"/>.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static FunctionType TryExcludeSpecular(BSDF bsdf)
-		{
-			int count = bsdf.Count(FunctionType.Specular);
-			int total = bsdf.Count(FunctionType.All);
-
-			return count == 0 || count == total ? FunctionType.All : ~FunctionType.Specular;
-		}
 	}
 }

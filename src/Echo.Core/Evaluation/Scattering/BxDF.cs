@@ -48,50 +48,6 @@ public abstract class BxDF
 	public abstract Probable<RGB128> Sample(Sample2D sample, Float3 outgoing, out Float3 incident);
 
 	/// <summary>
-	/// Returns the hemispherical-directional reflectance, the total reflectance in direction
-	/// <paramref name="outgoing"/> due to a constant illumination over the doming hemisphere
-	/// </summary>
-	public virtual RGB128 GetReflectance(Float3 outgoing, ReadOnlySpan<Sample2D> samples)
-	{
-		var result = RGB128.Black;
-
-		foreach (ref readonly Sample2D sample in samples)
-		{
-			Probable<RGB128> sampled = Sample(sample, outgoing, out Float3 incident);
-
-			if (sampled.NotPossible | sampled.content.IsZero) continue;
-
-			result += sampled.content * FastMath.Abs(CosineP(incident)) / sampled.pdf;
-		}
-
-		return result / samples.Length;
-	}
-
-	/// <summary>
-	/// Returns the hemispherical-hemispherical reflectance, the fraction of incident light
-	/// reflected when the amount of incident light is constant across all directions
-	/// </summary>
-	public virtual RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1)
-	{
-		Ensure.AreEqual(samples0.Length, samples1.Length);
-
-		var result = RGB128.Black;
-
-		for (int i = 0; i < samples0.Length; i++)
-		{
-			Float3 outgoing = samples0[i].UniformHemisphere;
-			Probable<RGB128> sampled = Sample(samples1[i], outgoing, out Float3 incident);
-
-			if (sampled.NotPossible | sampled.content.IsZero) continue;
-
-			result += sampled.content * FastMath.Abs(CosineP(outgoing) * CosineP(incident))
-					/ (sampled.pdf * Sample2D.UniformHemispherePdf);
-		}
-
-		return result / samples0.Length;
-	}
-
-	/// <summary>
 	/// Returns the local surface normal that lies in the same hemisphere as <paramref name="direction"/>.
 	/// </summary>
 	public static Float3 Normal(Float3 direction) => CosineP(direction) < 0f ? Float3.Backward : Float3.Forward;

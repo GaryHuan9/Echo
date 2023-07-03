@@ -7,9 +7,9 @@ using NUnit.Framework;
 namespace Echo.UnitTests.Evaluation;
 
 [TestFixture]
-public class SpecularLambertianTests
+public class CoatedLambertianReflectionTests
 {
-	static SpecularLambertianTests()
+	static CoatedLambertianReflectionTests()
 	{
 		inputs.Add(1f);
 		inputs.Add(1.001f);
@@ -31,8 +31,8 @@ public class SpecularLambertianTests
 	[Test]
 	public void ReflectanceExact([ValueSource(nameof(inputs))] float eta)
 	{
-		float reflectance = SpecularLambertian.FresnelDiffuseReflectance(eta);
-		float converged = SpecularLambertian.FresnelDiffuseReflectanceConverge(eta);
+		float reflectance = CoatedLambertianReflection.FresnelDiffuseReflectance(eta);
+		float converged = CoatedLambertianReflection.FresnelDiffuseReflectanceConverge(eta);
 
 		Assert.That(reflectance, Is.Not.Negative);
 		Assert.That(converged, Is.Not.Negative);
@@ -45,8 +45,8 @@ public class SpecularLambertianTests
 	[Test]
 	public void ReflectanceFast([ValueSource(nameof(inputs))] float eta)
 	{
-		float reflectance = SpecularLambertian.FresnelDiffuseReflectanceFast(eta);
-		float converged = SpecularLambertian.FresnelDiffuseReflectanceConverge(eta);
+		float reflectance = CoatedLambertianReflection.FresnelDiffuseReflectanceFast(eta);
+		float converged = CoatedLambertianReflection.FresnelDiffuseReflectanceConverge(eta);
 
 		Assert.That(reflectance, Is.Not.Negative);
 		Assert.That(converged, Is.Not.Negative);

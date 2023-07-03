@@ -41,6 +41,26 @@ public class BSDF
 	const int InitialSize = 8;
 
 	/// <summary>
+	/// The total number of <see cref="BxDF"/> contained in this <see cref="BSDF"/>.
+	/// </summary>
+	public int Count => count;
+
+	/// <summary>
+	/// The number of <see cref="FunctionType.Specular"/> type <see cref="BxDF"/> in this <see cref="BSDF"/>.
+	/// </summary>
+	public int CountSpecular
+	{
+		get
+		{
+			int result = 0;
+
+			for (int i = 0; i < count; i++) result += functions[i].type.Any(FunctionType.Specular) ? 1 : 0;
+
+			return result;
+		}
+	}
+
+	/// <summary>
 	/// Adds a new <see cref="BxDF"/> to this <see cref="BSDF"/>.
 	/// </summary>
 	/// <param name="allocator">The <see cref="Allocator"/> to use to create the new <see cref="BxDF"/>.</param>
@@ -71,20 +91,6 @@ public class BSDF
 	}
 
 	/// <summary>
-	/// Counts how many <see cref="BxDF"/> in this <see cref="BSDF"/> has any attribute outlined by <paramref name="type"/>.
-	/// </summary>
-	public int Count(FunctionType type)
-	{
-		if (FunctionType.All.Fits(type)) return count;
-
-		int result = 0;
-
-		for (int i = 0; i < count; i++) result += functions[i].type.Any(type) ? 1 : 0;
-
-		return result;
-	}
-
-	/// <summary>
 	/// Evaluates all <see cref="BxDF"/> contained in this <see cref="BSDF"/> that matches
 	/// <paramref name="type"/>. See <see cref="BxDF.Evaluate"/> for more information.
 	/// </summary>
@@ -102,7 +108,7 @@ public class BSDF
 		for (int i = 0; i < count; i++)
 		{
 			BxDF function = functions[i];
-			if (!function.type.Fits(type) | !function.type.Any(reflect)) continue;
+			if (!function.type.Fits(type) || !function.type.Any(reflect)) continue;
 			total += function.Evaluate(outgoing, incident);
 		}
 
@@ -186,52 +192,16 @@ public class BSDF
 		for (int i = 0; i < count; i++)
 		{
 			BxDF function = functions[i];
+			if (function == selected) continue;
 
-			if (function == selected || !function.type.Fits(type)) continue;
+			if (!function.type.Fits(type) || !function.type.Any(reflect)) continue;
+
+			total += function.Evaluate(outgoing, incident);
 			pdf += function.ProbabilityDensity(outgoing, incident);
-
-			if (function.type.Any(reflect)) total += function.Evaluate(outgoing, incident);
 		}
 
 		return (tint * total, pdf / matched);
 	}
-
-	// /// <summary>
-	// /// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	// /// See <see cref="BxDF.GetReflectance(Float3, ReadOnlySpan{Sample2D})"/> for more information.
-	// /// </summary>
-	// public RGB128 GetReflectance(Float3 outgoingWorld, ReadOnlySpan<Sample2D> samples, FunctionType type)
-	// {
-	// 	Float3 outgoing = transform.WorldToLocal(outgoingWorld);
-	// 	var reflectance = RGB128.Black;
-	//
-	// 	for (int i = 0; i < count; i++)
-	// 	{
-	// 		BxDF function = functions[i];
-	// 		if (!function.type.Fits(type)) continue;
-	// 		reflectance += function.GetReflectance(outgoing, samples);
-	// 	}
-	//
-	// 	return reflectance;
-	// }
-	//
-	// /// <summary>
-	// /// Returns the aggregated reflectance for all <see cref="BxDF"/> that matches with <paramref name="type"/>.
-	// /// See <see cref="BxDF.GetReflectance(ReadOnlySpan{Sample2D}, ReadOnlySpan{Sample2D})"/> for more information.
-	// /// </summary>
-	// public RGB128 GetReflectance(ReadOnlySpan<Sample2D> samples0, ReadOnlySpan<Sample2D> samples1, FunctionType type)
-	// {
-	// 	var reflectance = RGB128.Black;
-	//
-	// 	for (int i = 0; i < count; i++)
-	// 	{
-	// 		BxDF function = functions[i];
-	// 		if (!function.type.Fits(type)) continue;
-	// 		reflectance += function.GetReflectance(samples0, samples1);
-	// 	}
-	//
-	// 	return reflectance;
-	// }
 
 	/// <summary>
 	/// Determines whether the direction pair <paramref name="outgoingWorld"/> and <paramref name="incidentWorld"/>

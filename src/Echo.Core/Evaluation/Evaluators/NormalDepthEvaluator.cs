@@ -46,7 +46,7 @@ public sealed record NormalDepthEvaluator : Evaluator
 			BSDF bsdf = contact.bsdf;
 			Ensure.IsNotNull(bsdf);
 
-			if (bsdf.Count(FunctionType.All) != bsdf.Count(FunctionType.Specular)) return Exit(); //Not fully specular
+			if (bsdf.Count != bsdf.CountSpecular) return Exit(); //Not fully specular
 			var sample = contact.bsdf.Sample(contact.outgoing, distribution.Next2D(), out Float3 incident, out _);
 			if (sample.NotPossible) return Exit();
 
