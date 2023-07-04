@@ -123,7 +123,8 @@ public static class FastMath
 	public static float Abs(float value)
 	{
 		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
-		Vector128<uint> mask = Vector128.CreateScalarUnsafe(~0u >> 1);
+		Vector128<uint> mask = Vector128<uint>.AllBitsSet;
+		mask = Sse2.ShiftRightLogical(mask, 1);
 		return Sse.And(valueV, mask.AsSingle()).ToScalar();
 	}
 
@@ -132,7 +133,13 @@ public static class FastMath
 	/// </summary>
 	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
-	public static float Sqrt0(float value) => value <= 0f ? 0f : MathF.Sqrt(value);
+	public static float Sqrt0(float value)
+	{
+		Vector128<float> zero = Vector128<float>.Zero;
+		Vector128<float> valueV = Vector128.CreateScalarUnsafe(value);
+		Vector128<float> mask = Sse.CompareScalarLessThanOrEqual(valueV, zero);
+		return Sse.AndNot(mask, Sse.SqrtScalar(valueV)).ToScalar();
+	}
 
 	/// <summary>
 	/// Returns the inverse/reciprocal square root of <paramref name="value"/> if it is
@@ -140,7 +147,7 @@ public static class FastMath
 	/// </summary>
 	/// <remarks>If <paramref name="value"/> is <see cref="float.NaN"/>, it is passed through.</remarks>
 	[MethodImpl(Options)]
-	public static float SqrtR0(float value) => value <= 0f ? float.PositiveInfinity : 1f / MathF.Sqrt(value);
+	public static float SqrtR0(float value) => 1f / Sqrt0(value);
 
 	/// <summary>
 	/// Returns one minus <paramref name="value"/> squared.
@@ -202,5 +209,12 @@ public static class FastMath
 	/// Returns whether <paramref name="value"/> is almost zero based on <paramref name="epsilon"/>.
 	/// </summary>
 	[MethodImpl(Options)]
-	public static bool AlmostZero(float value, float epsilon = Epsilon) => (-epsilon < value) & (value < epsilon);
+	public static bool AlmostZero(float value, float epsilon = Epsilon)
+	{
+		//Behavior identical to -epsilon < value && value < epsilon, including when value is float.NaN
+
+		uint converted = BitConverter.SingleToUInt32Bits(value) << 1;
+		uint threshold = BitConverter.SingleToUInt32Bits(epsilon) << 1;
+		return converted < threshold;
+	}
 }

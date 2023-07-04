@@ -15,28 +15,46 @@ public class FastMathTests
 	};
 
 	[Test]
+	public void OneMinusEpsilon()
+	{
+		float expected = BitConverter.UInt32BitsToSingle(BitConverter.SingleToUInt32Bits(1f) - 1);
+		Assert.That(FastMath.OneMinusEpsilon, Is.EqualTo(expected));
+	}
+
+	[Test]
 	public void Max0([ValueSource(nameof(floatValues))] float value)
 	{
-		Assert.That(FastMath.Max0(value), Is.EqualTo(value < 0f ? 0f : value));
+		float expected = value < 0f ? 0f : value;
+		Assert.That(FastMath.Max0(value), Is.EqualTo(expected));
 	}
 
 	[Test]
 	public void Clamp01([ValueSource(nameof(floatValues))] float value)
 	{
-		Assert.That(FastMath.Clamp01(value), Is.EqualTo(value < 0f ? 0f : value > 1f ? 1f : value));
+		float expected = value < 0f ? 0f : value > 1f ? 1f : value;
+		Assert.That(FastMath.Clamp01(value), Is.EqualTo(expected));
 	}
 
 	[Test]
 	public void Clamp11([ValueSource(nameof(floatValues))] float value)
 	{
-		Assert.That(FastMath.Clamp11(value), Is.EqualTo(value < -1f ? -1f : value > 1f ? 1f : value));
+		float expected = value < -1f ? -1f : value > 1f ? 1f : value;
+		Assert.That(FastMath.Clamp11(value), Is.EqualTo(expected));
 	}
 
 	[Test]
 	public void ClampEpsilon([ValueSource(nameof(floatValues))] float value)
 	{
 		float epsilon = BitConverter.UInt32BitsToSingle(BitConverter.SingleToUInt32Bits(1f) - 1u);
-		Assert.That(FastMath.ClampEpsilon(value), Is.EqualTo(value < 0f ? 0f : value >= 1f ? epsilon : value));
+		float expected = value < 0f ? 0f : value >= 1f ? epsilon : value;
+		Assert.That(FastMath.ClampEpsilon(value), Is.EqualTo(expected));
+	}
+
+	[Test]
+	public void Abs([ValueSource(nameof(floatValues))] float value)
+	{
+		float expected = value < 0f ? -value : value;
+		Assert.That(FastMath.Abs(value), Is.EqualTo(expected));
 	}
 
 	[Test]

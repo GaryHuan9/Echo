@@ -5,18 +5,10 @@ namespace Echo.Core.Common.Mathematics.Primitives;
 /// <summary>
 /// Represents something of type <typeparamref name="T"/> with a particular probability density function (pdf) value associated with it.
 /// </summary>
-public readonly struct Probable<T>
+public readonly record struct Probable<T>(in T content, float pdf)
 {
-	public Probable(in T content, float pdf)
-	{
-		Ensure.IsTrue(FastMath.AlmostZero(pdf) || FastMath.Positive(pdf));
-
-		this.content = content;
-		this.pdf = pdf;
-	}
-
-	public readonly T content;
-	public readonly float pdf;
+	public readonly T content = content;
+	public readonly float pdf = CheckPdf(pdf);
 
 	/// <summary>
 	/// Returns a <see cref="Probable{T}"/> with a <see cref="pdf"/> of 0.
@@ -31,18 +23,17 @@ public readonly struct Probable<T>
 	/// <summary>
 	/// Converts a tuple with (<see cref="content"/>, <see cref="pdf"/>) to a matching <see cref="Probable{T}"/>.
 	/// </summary>
-	public static implicit operator Probable<T>(in (T content, float pdf) pair) => new(pair.content, pair.pdf);
+	public static implicit operator Probable<T>(in (T content, float pdf) tuple) => new(tuple.content, tuple.pdf);
 
 	/// <summary>
 	/// Converts a <see cref="Probable{T}"/> to its <see cref="content"/>.
 	/// </summary>
 	public static implicit operator T(in Probable<T> probable) => probable.content;
 
-	public void Deconstruct(out T _content, out float _pdf)
+	static float CheckPdf(float pdf)
 	{
-		_content = content;
-		_pdf = pdf;
+		Ensure.IsTrue(pdf >= 0f);
+		Ensure.IsTrue(float.IsFinite(pdf));
+		return pdf;
 	}
-
-	public override string ToString() => $"{nameof(content)}: {content}, {nameof(pdf)}: {pdf}";
 }

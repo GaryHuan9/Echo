@@ -177,16 +177,21 @@ public abstract record Prng
 	public Int4 Next4(int min, int max) => new(Next1(min, max), Next1(min, max), Next1(min, max), Next1(min, max));
 
 	/// <summary>
+	/// Returns a random boolean.
+	/// </summary>
+	public bool NextBoolean() => (NextUInt32() & 1) == 0;
+
+	/// <summary>
 	/// Returns a random vector inside a unit sphere.
 	/// </summary>
 	public Float3 NextInSphere()
 	{
-		Float3 random;
+		Float3 result;
 
-		do random = Next3(-1f, 1f);
-		while (random.SquaredMagnitude > 1f);
+		do result = Next3(-1f, 1f);
+		while (result.SquaredMagnitude > 1f);
 
-		return random;
+		return result;
 	}
 
 	/// <summary>

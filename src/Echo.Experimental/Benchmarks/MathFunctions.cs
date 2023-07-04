@@ -14,34 +14,42 @@ public class MathFunctions
 		array = new float[1024 * 1024];
 		Prng random = new SystemPrng(42);
 
-		for (int i = 0; i < array.Length; i++) array[i] = random.Next1(10f);
+		for (int i = 0; i < array.Length; i++)
+		{
+			float value = random.Next1(16f);
+			array[i] = random.NextBoolean() ? value : -value;
+		}
 	}
 
 	readonly float[] array;
 
-	// Input range 0 - 100
+	// Input range (16, -16) on AMD 3900x
 	// |                 Method |        Mean |     Error |    StdDev | Ratio | RatioSD |
 	// |----------------------- |------------:|----------:|----------:|------:|--------:|
-	// |               Overhead |    718.3 us |   6.97 us |   6.52 us |  1.01 |    0.01 |
-	// |                    Add |    715.2 us |   3.37 us |   2.81 us |  1.00 |    0.00 |
-	// |               Multiply |    713.5 us |   4.44 us |   4.15 us |  1.00 |    0.01 |
-	// |             Reciprocal |    834.5 us |   8.29 us |   7.76 us |  1.17 |    0.01 |
-	// |         ReciprocalSqrt |  2,216.3 us |  10.97 us |  10.27 us |  3.10 |    0.02 |
-	// |     EstimateReciprocal |    715.1 us |   4.68 us |   4.38 us |  1.00 |    0.01 |
-	// | EstimateReciprocalSqrt |    719.5 us |   5.26 us |   4.92 us |  1.01 |    0.01 |
-	// |             Conversion |    727.9 us |   6.34 us |   5.93 us |  1.02 |    0.01 |
-	// |            SqrtFloat64 |  2,066.6 us |  12.80 us |  10.69 us |  2.89 |    0.02 |
-	// |            SqrtFloat32 |  1,301.9 us |   6.92 us |   6.14 us |  1.82 |    0.01 |
-	// |                   Cbrt | 30,367.7 us | 319.49 us | 298.85 us | 42.41 |    0.40 |
-	// |                 Cosine | 11,445.5 us | 103.09 us |  96.43 us | 16.00 |    0.16 |
-	// |              Arccosine | 53,868.2 us | 565.67 us | 501.45 us | 75.24 |    0.69 |
-	// |                    Exp | 11,330.3 us |  81.30 us |  76.05 us | 15.82 |    0.07 |
-	// |                    Log |  4,248.1 us |  24.98 us |  22.14 us |  5.94 |    0.04 |
-	// |                   Log2 | 27,101.2 us | 128.07 us | 119.80 us | 37.87 |    0.28 |
-	// |                MathAbs |    725.8 us |   3.42 us |   3.20 us |  1.01 |    0.01 |
-	// |            FastMathAbs |    722.7 us |   4.23 us |   3.95 us |  1.01 |    0.00 |
+	// |               Overhead |    702.2 us |   1.85 us |   1.73 us |  1.00 |    0.00 |
+	// |                    Add |    703.9 us |   2.97 us |   2.63 us |  1.00 |    0.00 |
+	// |               Multiply |    704.3 us |   3.48 us |   3.25 us |  1.00 |    0.01 |
+	// |                 Divide |    820.8 us |   4.07 us |   3.81 us |  1.17 |    0.01 |
+	// |             Reciprocal |    826.8 us |   4.23 us |   3.95 us |  1.18 |    0.01 |
+	// |         ReciprocalSqrt |  2,198.9 us |   6.02 us |   5.34 us |  3.13 |    0.01 |
+	// |     EstimateReciprocal |    709.2 us |   3.40 us |   3.01 us |  1.01 |    0.01 |
+	// | EstimateReciprocalSqrt |    702.6 us |   3.09 us |   2.58 us |  1.00 |    0.00 |
+	// |             Conversion |    718.8 us |   2.76 us |   2.30 us |  1.02 |    0.00 |
+	// |            SqrtFloat32 |  1,279.0 us |   1.35 us |   1.13 us |  1.82 |    0.00 |
+	// |            SqrtFloat64 |  2,085.2 us |   8.40 us |   7.86 us |  2.97 |    0.01 |
+	// |                 Cosine | 11,259.0 us |  91.40 us |  85.50 us | 16.03 |    0.13 |
+	// |                   Sine | 11,306.5 us |  83.31 us |  77.93 us | 16.10 |    0.10 |
+	// |             SineCosine |  9,199.4 us |  73.90 us |  69.13 us | 13.10 |    0.11 |
+	// |              Arccosine | 51,052.6 us | 876.27 us | 819.66 us | 72.70 |    1.27 |
+	// |                    Exp |  3,412.7 us |  32.23 us |  30.14 us |  4.86 |    0.05 |
+	// |                    Log | 34,397.0 us | 533.83 us | 499.35 us | 48.98 |    0.71 |
+	// |                   Log2 | 40,813.7 us | 315.03 us | 294.68 us | 58.12 |    0.44 |
+	// |                MathAbs |    708.1 us |   5.60 us |   5.23 us |  1.01 |    0.01 |
+	// |            FastMathAbs |    703.3 us |   1.11 us |   0.87 us |  1.00 |    0.00 |
+	// |               MathMax0 |  5,337.6 us |  38.27 us |  35.80 us |  7.60 |    0.06 |
+	// |           FastMathMax0 |    706.8 us |   3.82 us |   3.57 us |  1.01 |    0.00 |
 
-	[Benchmark]
+	[Benchmark(Baseline = true)]
 	public float Overhead()
 	{
 		float result = 0f;
@@ -51,7 +59,7 @@ public class MathFunctions
 		return result;
 	}
 
-	[Benchmark(Baseline = true)]
+	[Benchmark]
 	public float Add()
 	{
 		float result = 0f;
@@ -67,6 +75,16 @@ public class MathFunctions
 		float result = 0f;
 
 		foreach (float value in array) result += value * value;
+
+		return result;
+	}
+
+	[Benchmark]
+	public float Divide()
+	{
+		float result = 0f;
+
+		foreach (float value in array) result += value / value;
 
 		return result;
 	}
@@ -122,16 +140,6 @@ public class MathFunctions
 	}
 
 	[Benchmark]
-	public float SqrtFloat64()
-	{
-		float result = 0f;
-
-		foreach (float value in array) result += (float)Math.Sqrt(value);
-
-		return result;
-	}
-
-	[Benchmark]
 	public float SqrtFloat32()
 	{
 		float result = 0f;
@@ -142,11 +150,11 @@ public class MathFunctions
 	}
 
 	[Benchmark]
-	public float Cbrt()
+	public float SqrtFloat64()
 	{
 		float result = 0f;
 
-		foreach (float value in array) result += MathF.Cbrt(value);
+		foreach (float value in array) result += (float)Math.Sqrt(value);
 
 		return result;
 	}
@@ -157,6 +165,30 @@ public class MathFunctions
 		float result = 0f;
 
 		foreach (float value in array) result += MathF.Cos(value);
+
+		return result;
+	}
+
+	[Benchmark]
+	public float Sine()
+	{
+		float result = 0f;
+
+		foreach (float value in array) result += MathF.Sin(value);
+
+		return result;
+	}
+
+	[Benchmark]
+	public float SineCosine()
+	{
+		float result = 0f;
+
+		foreach (float value in array)
+		{
+			(float sin, float cos) = MathF.SinCos(value);
+			result += sin + cos;
+		}
 
 		return result;
 	}
@@ -217,6 +249,26 @@ public class MathFunctions
 		float result = 0f;
 
 		foreach (float value in array) result += FastMath.Abs(value);
+
+		return result;
+	}
+
+	[Benchmark]
+	public float MathMax0()
+	{
+		float result = 0f;
+
+		foreach (float value in array) result += Math.Max(value, 0f);
+
+		return result;
+	}
+
+	[Benchmark]
+	public float FastMathMax0()
+	{
+		float result = 0f;
+
+		foreach (float value in array) result += FastMath.Max0(value);
 
 		return result;
 	}
