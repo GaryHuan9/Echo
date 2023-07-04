@@ -18,7 +18,7 @@ namespace Echo.Core.Scenic.Lights;
 /// A directional <see cref="InfiniteLight"/> that surrounds the entirety of a <see cref="Scene"/>.
 /// </summary>
 [EchoSourceUsable]
-public class AmbientLight : InfiniteLight
+public sealed class AmbientLight : InfiniteLight
 {
 	NotNull<IDirectionalTexture> _texture = Pure.white;
 
@@ -39,6 +39,7 @@ public class AmbientLight : InfiniteLight
 	float _power;
 
 	public override float Power => _power;
+	public override bool IsDelta => false;
 
 	public override void Prepare(PreparedScene scene)
 	{
@@ -55,13 +56,11 @@ public class AmbientLight : InfiniteLight
 		_power = Scalars.Pi * radius * radius * luminance;
 	}
 
-	public override RGB128 Evaluate(Float3 direction) => Intensity * Texture.Evaluate(worldToLocal * direction);
+	public override RGB128 Evaluate(Float3 incident) =>
+		Intensity * Texture.Evaluate(worldToLocal * incident);
 
 	public override float ProbabilityDensity(in GeometryPoint origin, Float3 incident)
-	{
-		Float3 transformed = worldToLocal * incident;
-		return Texture.ProbabilityDensity(transformed);
-	}
+		=> Texture.ProbabilityDensity(worldToLocal * incident);
 
 	public override Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{

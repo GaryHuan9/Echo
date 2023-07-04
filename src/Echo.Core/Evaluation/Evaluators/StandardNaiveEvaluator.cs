@@ -24,20 +24,23 @@ public record StandardNaiveEvaluator : Evaluator
 	/// The maximum number of bounces a path can have before it is immediately terminated unconditionally.
 	/// If such occurrence appears, the sample becomes biased and this property should be increased.
 	/// </summary>
+	[EchoSourceUsable]
 	public int BounceLimit { get; init; } = 128;
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
-		int depth = BounceLimit;
 		var query = new TraceQuery(ray);
-
-		return Evaluate(scene, ref query, distribution, allocator, ref depth);
+		return Evaluate(scene, ref query, distribution, allocator, 0);
 	}
 
-	static RGB128 Evaluate(PreparedScene scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, ref int depth)
+	RGB128 Evaluate(PreparedScene scene, ref TraceQuery query, ContinuousDistribution distribution, Allocator allocator, int depth)
 	{
 		//Early exit if path depth has been exhausted or the ray did not hit the scene
-		if (--depth < 0 || !scene.Trace(ref query)) return scene.EvaluateInfinite(query.ray.direction);
+		if (depth == BounceLimit || !scene.Trace(ref query))
+		{
+			bool direct = depth == 0; //Escaped without hitting any geometry
+			return scene.EvaluateInfinite(query.ray.direction, direct);
+		}
 
 		allocator.Restart();
 
@@ -59,6 +62,6 @@ public record StandardNaiveEvaluator : Evaluator
 		query = query.SpawnTrace(incident);
 
 		//Recursively evaluates the rendering equation
-		return scatter * Evaluate(scene, ref query, distribution, allocator, ref depth) + emission;
+		return scatter * Evaluate(scene, ref query, distribution, allocator, depth + 1) + emission;
 	}
 }

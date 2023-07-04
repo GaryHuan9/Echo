@@ -24,7 +24,7 @@ public sealed record AlbedoEvaluator : Evaluator
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
 		var query = new TraceQuery(ray);
-		bool straight = true;
+		bool direct = true; //Whether the path is still going in its original direction (i.e. straight)
 
 		//Trace for intersection
 		while (scene.Trace(ref query))
@@ -32,7 +32,7 @@ public sealed record AlbedoEvaluator : Evaluator
 			Contact contact = scene.Interact(query);
 			Material material = contact.shade.material;
 
-			if (!straight) return Exit();
+			if (!direct) return Exit();
 
 			allocator.Restart();
 			material.Scatter(ref contact, allocator);
@@ -44,8 +44,8 @@ public sealed record AlbedoEvaluator : Evaluator
 			var sample = contact.bsdf.Sample(contact.outgoing, distribution.Next2D(), out Float3 incident, out _);
 			if (sample.NotPossible) return Exit();
 
-			if (incident != ray.direction) straight = false;
-			if (!DivergeOnce && !straight) return Exit();
+			if (incident != ray.direction) direct = false;
+			if (!DivergeOnce && !direct) return Exit();
 
 			query = query.SpawnTrace(incident);
 
@@ -53,6 +53,6 @@ public sealed record AlbedoEvaluator : Evaluator
 		}
 
 		//Sample infinite lights
-		return scene.EvaluateInfinite(query.ray.direction);
+		return scene.EvaluateInfinite(query.ray.direction, direct);
 	}
 }

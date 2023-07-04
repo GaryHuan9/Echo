@@ -28,7 +28,7 @@ public sealed record NormalDepthEvaluator : Evaluator
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{
 		var query = new TraceQuery(ray);
-		bool straight = true;
+		bool direct = true; //Whether the path is still going in its original direction (i.e. straight)
 		float depth = 0f;
 
 		//Trace for intersection
@@ -37,7 +37,7 @@ public sealed record NormalDepthEvaluator : Evaluator
 			Contact contact = scene.Interact(query);
 			Material material = contact.shade.material;
 
-			if (!straight) return Exit();
+			if (!direct) return Exit();
 			depth += query.distance;
 
 			allocator.Restart();
@@ -50,8 +50,8 @@ public sealed record NormalDepthEvaluator : Evaluator
 			var sample = contact.bsdf.Sample(contact.outgoing, distribution.Next2D(), out Float3 incident, out _);
 			if (sample.NotPossible) return Exit();
 
-			if (incident != ray.direction) straight = false;
-			if (!DivergeOnce && !straight) return Exit();
+			if (incident != ray.direction) direct = false;
+			if (!DivergeOnce && !direct) return Exit();
 
 			query = query.SpawnTrace(incident);
 
@@ -59,7 +59,7 @@ public sealed record NormalDepthEvaluator : Evaluator
 		}
 
 		//Use negative direction and scene diameter for escaped rays
-		if (straight) depth = scene.accelerator.SphereBound.radius * 2f;
+		if (direct) depth = scene.accelerator.SphereBound.radius * 2f;
 		return new NormalDepth128(-ray.direction, depth).ToFloat4();
 	}
 }

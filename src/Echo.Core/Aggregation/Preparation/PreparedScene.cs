@@ -116,9 +116,9 @@ public sealed class PreparedScene : PreparedPack
 		{
 			sample = sample.Stretch(0f, infiniteLightsThreshold);
 			int index = sample.Range(infiniteLights.Length);
-			var token = new EntityToken(LightType.Infinite, index);
 
-			return (new TokenHierarchy { TopToken = token }, infiniteLightsPdf);
+			var lightType = infiniteLights[index].IsDelta ? LightType.InfiniteDelta : LightType.Infinite;
+			return (new TokenHierarchy { TopToken = new EntityToken(lightType, index) }, infiniteLightsPdf);
 		}
 
 		sample = sample.Stretch(infiniteLightsThreshold, 1f);
@@ -224,17 +224,30 @@ public sealed class PreparedScene : PreparedPack
 	}
 
 	/// <summary>
-	/// Evaluates all of the <see cref="AmbientLight"/> in this <see cref="PreparedScene"/>.
+	/// Evaluates all of the <see cref="InfiniteLight"/> in this <see cref="PreparedScene"/>.
 	/// </summary>
 	/// <param name="direction">The normalized direction in world-space.</param>
+	/// <param name="direct">Whether this is a direct evaluation, which may hide some
+	/// <see cref="InfiniteLight"/> based on <see cref="InfiniteLight.DirectlyVisible"/>.</param>
 	/// <returns>The evaluated <see cref="RGB128"/> light value.</returns>
-	public RGB128 EvaluateInfinite(Float3 direction)
+	public RGB128 EvaluateInfinite(Float3 direction, bool direct = false)
 	{
 		Ensure.AreEqual(direction.SquaredMagnitude, 1f);
 
 		var total = RGB128.Black;
 
-		foreach (var light in infiniteLights) total += light.Evaluate(direction);
+		if (direct)
+		{
+			foreach (var light in infiniteLights)
+			{
+				if (!light.DirectlyVisible) continue;
+				total += light.Evaluate(direction);
+			}
+		}
+		else
+		{
+			foreach (var light in infiniteLights) total += light.Evaluate(direction);
+		}
 
 		return total;
 	}

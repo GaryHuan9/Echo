@@ -48,7 +48,7 @@ public sealed record PathTracedEvaluator : Evaluator
 		if (!path.Advance(scene, allocator))
 		{
 			statistics.Report("Light/Evaluated Infinite");
-			return EvaluateInfinite(scene, path);
+			return scene.EvaluateInfinite(path.CurrentDirection, true);
 		}
 
 		//Add emission for first hit, if available
@@ -115,8 +115,9 @@ public sealed record PathTracedEvaluator : Evaluator
 					for (int i = 0; i < scene.infiniteLights.Length; i++)
 					{
 						InfiniteLight light = scene.infiniteLights[i];
-						hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
+						if (light.IsDelta) continue; //Skip delta lights; they do not like MIS
 
+						hierarchy.TopToken = new EntityToken(LightType.Infinite, i);
 						float pdf = scene.ProbabilityMass(hierarchy, oldPoint) *
 									light.ProbabilityDensity(oldPoint, direction);
 						if (!FastMath.Positive(pdf)) continue;
@@ -137,7 +138,7 @@ public sealed record PathTracedEvaluator : Evaluator
 			{
 				//No further intersection with scene is found, accumulate infinite lights and exit
 				statistics.Report("Light/Evaluated Infinite");
-				path.Contribute(EvaluateInfinite(scene, path));
+				path.Contribute(scene.EvaluateInfinite(path.CurrentDirection));
 				break;
 			}
 
@@ -147,15 +148,6 @@ public sealed record PathTracedEvaluator : Evaluator
 
 		return path.Result;
 	}
-
-	/// <summary>
-	/// Evaluates <see cref="InfiniteLight"/>s.
-	/// </summary>
-	/// <param name="scene">The <see cref="PreparedScene"/> from which the <see cref="InfiniteLight"/>s should be evaluated.</param>
-	/// <param name="path">The current <see cref="Path"/> that escaped the <see cref="PreparedScene"/>.</param>
-	/// <returns>The evaluated <see cref="RGB128"/> value.</returns>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static RGB128 EvaluateInfinite(PreparedScene scene, in Path path) => scene.EvaluateInfinite(path.CurrentDirection);
 
 	/// <summary>
 	/// Importance samples a the radiant in a <see cref="PreparedScene"/>.
@@ -218,7 +210,6 @@ public sealed record PathTracedEvaluator : Evaluator
 	/// Power heuristic with a constant power of two used for multiple importance sampling.
 	/// NOTE: <paramref name="pdf0"/> will become the numerator, not <paramref name="pdf1"/>.
 	/// </summary>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	static float PowerHeuristic(float pdf0, float pdf1)
 	{
 		float squared = pdf0 * pdf0;

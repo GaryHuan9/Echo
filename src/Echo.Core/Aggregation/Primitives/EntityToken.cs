@@ -34,7 +34,6 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 		Ensure.AreEqual(LightIndex, index);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	EntityToken(uint data) => this.data = data;
 
 	readonly uint data;
@@ -158,17 +157,28 @@ public readonly struct EntityToken : IEquatable<EntityToken>
 
 public static class EntityTokenExtensions
 {
-	const uint Invalid = uint.MaxValue;
-
 	/// <summary>
 	/// Returns whether a <see cref="TokenType"/> is of type <see cref="TokenType.Triangle"/>, <see cref="TokenType.Instance"/>, or <see cref="TokenType.Sphere"/>.
 	/// </summary>
-	public static bool IsGeometry(this TokenType type) => AreEqual(type, TokenType.Triangle, TokenType.Sphere, TokenType.Instance);
+	public static bool IsGeometry(this TokenType type)
+	{
+		var set = new BitSet64<TokenType>();
+		set = set.Union(TokenType.Triangle);
+		set = set.Union(TokenType.Sphere);
+		set = set.Union(TokenType.Instance);
+		return set.HasIntersection(type);
+	}
 
 	/// <summary>
 	/// Returns whether a <see cref="TokenType"/> is of type <see cref="TokenType.Triangle"/> or <see cref="TokenType.Sphere"/>.
 	/// </summary>
-	public static bool IsRawGeometry(this TokenType type) => AreEqual(type, TokenType.Triangle, TokenType.Sphere);
+	public static bool IsRawGeometry(this TokenType type)
+	{
+		var set = new BitSet64<TokenType>();
+		set = set.Union(TokenType.Triangle);
+		set = set.Union(TokenType.Sphere);
+		return set.HasIntersection(type);
+	}
 
 	/// <summary>
 	/// Returns whether an <see cref="EntityToken"/> can represent an area light.
@@ -177,47 +187,44 @@ public static class EntityTokenExtensions
 	public static bool IsAreaLight(this EntityToken token)
 	{
 		if (token.Type.IsRawGeometry()) return true;
-		return token.IsInfiniteLight();
+		if (token.Type != TokenType.Light) return false;
+		return token.LightType == LightType.Infinite;
 	}
 
 	/// <summary>
 	/// Returns whether an <see cref="EntityToken"/> is representing an <see cref="InfiniteLight"/>.
 	/// </summary>
-	public static bool IsInfiniteLight(this EntityToken token) => token.Type == TokenType.Light && AreEqual(token.LightType, LightType.Infinite);
-
-	//Both comparison methods compares the first argument and see if it matches with any of the following arguments.
-	//These are done using some bitmask and shifting so it can handle a bunch of arguments with O(1) speed. Furthermore,
-	//the methods are designed to inline into the calling methods as only a few instructions
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static bool AreEqual(TokenType value,
-						 TokenType other00 = (TokenType)Invalid, TokenType other01 = (TokenType)Invalid, TokenType other02 = (TokenType)Invalid, TokenType other03 = (TokenType)Invalid,
-						 TokenType other04 = (TokenType)Invalid, TokenType other05 = (TokenType)Invalid, TokenType other06 = (TokenType)Invalid, TokenType other07 = (TokenType)Invalid,
-						 TokenType other08 = (TokenType)Invalid, TokenType other09 = (TokenType)Invalid, TokenType other10 = (TokenType)Invalid, TokenType other11 = (TokenType)Invalid,
-						 TokenType other12 = (TokenType)Invalid, TokenType other13 = (TokenType)Invalid, TokenType other14 = (TokenType)Invalid, TokenType other15 = (TokenType)Invalid)
+	public static bool IsInfiniteLight(this EntityToken token)
 	{
-		uint constant = Once(other00) | Once(other01) | Once(other02) | Once(other03) | Once(other04) | Once(other05) | Once(other06) | Once(other07) |
-						Once(other08) | Once(other09) | Once(other10) | Once(other11) | Once(other12) | Once(other13) | Once(other14) | Once(other15);
+		if (token.Type != TokenType.Light) return false;
 
-		return ((1 << (int)value) & constant) != 0;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static uint Once(TokenType type) => type == (TokenType)Invalid ? 0 : 1u << (int)type;
+		var set = new BitSet64<LightType>();
+		set = set.Union(LightType.Infinite);
+		set = set.Union(LightType.InfiniteDelta);
+		return set.HasIntersection(token.LightType);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static bool AreEqual(LightType value,
-						 LightType other00 = (LightType)Invalid, LightType other01 = (LightType)Invalid, LightType other02 = (LightType)Invalid, LightType other03 = (LightType)Invalid,
-						 LightType other04 = (LightType)Invalid, LightType other05 = (LightType)Invalid, LightType other06 = (LightType)Invalid, LightType other07 = (LightType)Invalid,
-						 LightType other08 = (LightType)Invalid, LightType other09 = (LightType)Invalid, LightType other10 = (LightType)Invalid, LightType other11 = (LightType)Invalid,
-						 LightType other12 = (LightType)Invalid, LightType other13 = (LightType)Invalid, LightType other14 = (LightType)Invalid, LightType other15 = (LightType)Invalid)
+	/// <summary>
+	/// An elaborate implementation to achieve constant time enum matching regardless of number of operators.
+	/// </summary>
+	/// <remarks>Under optimization, the entire set should merge into one constant that is prompted compared.</remarks>
+	readonly struct BitSet64<T> where T : unmanaged, Enum
 	{
-		ulong constant = Once(other00) | Once(other01) | Once(other02) | Once(other03) | Once(other04) | Once(other05) | Once(other06) | Once(other07) |
-						 Once(other08) | Once(other09) | Once(other10) | Once(other11) | Once(other12) | Once(other13) | Once(other14) | Once(other15);
+		public BitSet64() : this(0) { }
 
-		return ((1ul << (int)value) & constant) != 0;
+		BitSet64(ulong data) => this.data = data;
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static ulong Once(LightType type) => type == (LightType)Invalid ? 0 : 1ul << (int)type;
+		readonly ulong data;
+
+		public BitSet64<T> Union(BitSet64<T> value) => new(value.data | data);
+
+		public bool HasIntersection(BitSet64<T> value) => (value.data & data) != 0;
+
+		public static implicit operator BitSet64<T>(T value)
+		{
+			int converted = Unsafe.As<T, int>(ref value);
+			Ensure.IsTrue(converted is >= 0 and < 64);
+			return new BitSet64<T>(1ul << converted);
+		}
 	}
 }

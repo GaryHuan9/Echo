@@ -3,6 +3,7 @@ using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
+using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Textures.Colors;
 
@@ -26,10 +27,21 @@ public abstract class InfiniteLight : LightEntity
 	}
 
 	/// <summary>
+	/// Whether this <see cref="InfiniteLight"/> should be evaluated for immediately escaped light paths.
+	/// </summary>
+	[EchoSourceUsable]
+	public bool DirectlyVisible { get; set; } = true;
+
+	/// <summary>
 	/// The total power of this <see cref="InfiniteLight"/>.
 	/// </summary>
 	/// <remarks>Should be initialized after <see cref="Prepare"/> is invoked.</remarks>
 	public abstract float Power { get; }
+
+	/// <summary>
+	/// Whether this <see cref="InfiniteLight"/> uses a Dirac delta distribution.
+	/// </summary>
+	public abstract bool IsDelta { get; }
 
 	/// <summary>
 	/// Invoked before rendering; after geometry and other lights are prepared.
@@ -40,8 +52,8 @@ public abstract class InfiniteLight : LightEntity
 	/// <summary>
 	/// Evaluates this <see cref="InfiniteLight"/>.
 	/// </summary>
-	/// <param name="direction">The normalized world-space direction to evaluate at.</param>
-	public abstract RGB128 Evaluate(Float3 direction);
+	/// <param name="incident">The normalized world-space direction to evaluate at.</param>
+	public abstract RGB128 Evaluate(Float3 incident);
 
 	/// <inheritdoc cref="IPreparedLight.ProbabilityDensity"/>
 	public abstract float ProbabilityDensity(in GeometryPoint origin, Float3 incident);
@@ -57,5 +69,5 @@ public abstract class InfiniteLight : LightEntity
 		throw new SceneException($"Cannot add an {nameof(InfiniteLight)} to an {nameof(EntityPack)} that is not a {nameof(Scene)}.");
 	}
 
-	static SceneException ModifyTransformException() => new($"Cannot modify the {nameof(Position)} nor {nameof(Scale)} of an {nameof(InfiniteLight)}.");
+	static SceneException ModifyTransformException() => new($"Cannot modify the {nameof(Position)} nor the {nameof(Scale)} of an {nameof(InfiniteLight)}.");
 }

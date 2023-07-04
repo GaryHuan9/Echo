@@ -15,6 +15,11 @@ public enum LightType : uint
 	Infinite,
 
 	/// <summary>
+	/// Identical to <see cref="Infinite"/> except the light is Dirac delta
+	/// </summary>
+	InfiniteDelta,
+
+	/// <summary>
 	/// Represents a <see cref="PreparedPointLight"/>.
 	/// </summary>
 	Point
