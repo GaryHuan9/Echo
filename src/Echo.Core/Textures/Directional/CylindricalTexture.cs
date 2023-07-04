@@ -15,6 +15,14 @@ namespace Echo.Core.Textures.Directional;
 [EchoSourceUsable]
 public class CylindricalTexture : IDirectionalTexture
 {
+	DiscreteDistribution2D distribution;
+
+	/// <summary>
+	/// The Jacobian used to convert from uv coordinates to spherical coordinates.
+	/// NOTE: we are also missing the one over sin phi term.
+	/// </summary>
+	const float Jacobian = Scalars.TauR / Scalars.Pi;
+
 	NotNull<Texture> _texture = Pure.black;
 
 	[EchoSourceUsable]
@@ -23,14 +31,6 @@ public class CylindricalTexture : IDirectionalTexture
 		get => _texture;
 		set => _texture = value;
 	}
-
-	DiscreteDistribution2D distribution;
-
-	/// <summary>
-	/// The Jacobian used to convert from uv coordinates to spherical coordinates.
-	/// NOTE: we are also missing the one over sin phi term.
-	/// </summary>
-	const float Jacobian = Scalars.TauR / Scalars.Pi;
 
 	public RGB128 Average { get; private set; }
 

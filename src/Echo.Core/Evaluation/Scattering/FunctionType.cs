@@ -28,7 +28,7 @@ public enum FunctionType
 	Glossy = 1 << 3,
 
 	/// <summary>
-	/// Light only bounces in one direction
+	/// Light bounces based on some Dirac delta distribution (i.e. only towards a few discrete directions).
 	/// </summary>
 	Specular = 1 << 4,
 

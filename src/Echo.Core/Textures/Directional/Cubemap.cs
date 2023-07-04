@@ -48,6 +48,10 @@ public class Cubemap : IDirectionalTexture
 
 	readonly NotNull<Texture>[] textures;
 
+	static readonly string[] fileNames = { "px", "nx", "py", "ny", "pz", "nz" };
+
+	public RGB128 Average { get; private set; }
+
 	/// <summary>
 	/// Accesses the <see cref="Texture"/> at a specific <paramref name="direction"/>.
 	/// </summary>
@@ -57,15 +61,11 @@ public class Cubemap : IDirectionalTexture
 		set => this[direction.Index] = value;
 	}
 
-	public RGB128 Average { get; private set; }
-
 	Texture this[int index]
 	{
 		get => textures[index];
 		set => textures[index] = value;
 	}
-
-	static readonly string[] fileNames = { "px", "nx", "py", "ny", "pz", "nz" };
 
 	/// <inheritdoc/>
 	public void Prepare() => Average = ((IDirectionalTexture)this).AverageConverge();

@@ -7,5 +7,5 @@ namespace Echo.Core.InOut.EchoDescription;
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct |
 				AttributeTargets.Method | AttributeTargets.Constructor |
-				AttributeTargets.Property)]
+				AttributeTargets.Property, Inherited = false)]
 public sealed class EchoSourceUsableAttribute : Attribute { }

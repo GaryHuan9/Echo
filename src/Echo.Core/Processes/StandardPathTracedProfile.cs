@@ -17,13 +17,13 @@ namespace Echo.Core.Processes;
 public record StandardPathTracedProfile : RenderProfile
 {
 	[EchoSourceUsable]
-	public StandardPathTracedProfile(Scene scene, uint quality = 40, bool watermark = true)
+	public StandardPathTracedProfile(Scene scene, uint quality = 40, bool onlyDenoise = false, bool watermark = true)
 	{
 		Scene = scene;
 		if (quality == 0) quality = 1;
 
-		var builder0 = ImmutableArray.CreateBuilder<EvaluationProfile>();
-		var builder1 = ImmutableArray.CreateBuilder<ICompositeLayer>();
+		var evaluations = ImmutableArray.CreateBuilder<EvaluationProfile>();
+		var composition = ImmutableArray.CreateBuilder<ICompositeLayer>();
 
 		int extend = quality switch
 		{
@@ -35,25 +35,29 @@ public record StandardPathTracedProfile : RenderProfile
 
 		int minEpoch = ((float)quality / extend * 2f).Round();
 
-		var evaluation = new EvaluationProfile
+		var template = new EvaluationProfile
 		{
 			Distribution = new StratifiedDistribution { Extend = extend },
 			MaxEpoch = Math.Max(20, (MathF.Pow(quality, 2.1f) / extend / 10f).Round())
 		};
 
-		builder0.Add(evaluation with { NoiseThreshold = 0.9f / quality, Evaluator = new AlbedoEvaluator(), MinEpoch = 1, TargetLayer = "albedo" });
-		builder0.Add(evaluation with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), MinEpoch = minEpoch, TargetLayer = "path" });
-		builder0.Add(evaluation with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), MinEpoch = 1, TargetLayer = "normal_depth" });
+		evaluations.Add(template with { NoiseThreshold = 0.9f / quality, Evaluator = new AlbedoEvaluator(), MinEpoch = 1, TargetLayer = "albedo" });
+		evaluations.Add(template with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), MinEpoch = minEpoch, TargetLayer = "path" });
+		evaluations.Add(template with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), MinEpoch = 1, TargetLayer = "normal_depth" });
 
-		builder1.Add(new TextureManage { CopySources = ImmutableArray.Create("path"), CopyLayers = ImmutableArray.Create("main") });
-		builder1.Add(new OidnDenoise());
-		builder1.Add(new AutoExposure());
-		builder1.Add(new Vignette());
-		builder1.Add(new Bloom());
-		builder1.Add(new ToneMapper());
-		builder1.Add(new Watermark { Enabled = watermark });
+		composition.Add(new TextureManage { CopySources = ImmutableArray.Create("path"), CopyLayers = ImmutableArray.Create("main") });
+		composition.Add(new OidnDenoise());
 
-		EvaluationProfiles = builder0.ToImmutable();
-		CompositionLayers = builder1.ToImmutable();
+		if (!onlyDenoise)
+		{
+			composition.Add(new AutoExposure());
+			composition.Add(new Vignette());
+			composition.Add(new Bloom());
+			composition.Add(new ToneMapper());
+			composition.Add(new Watermark { Enabled = watermark });
+		}
+
+		EvaluationProfiles = evaluations.ToImmutable();
+		CompositionLayers = composition.ToImmutable();
 	}
 }
