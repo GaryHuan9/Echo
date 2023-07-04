@@ -31,9 +31,10 @@
 	.Add(new PlaneEntity { .Material = link material1 .Size = "32 24" })
 
 	.Add(new AmbientLight { .Texture = new CylindricalTexture { .Texture = "UlmerMuenster.jpg" } })
+#	.Add(new DirectionalLight { .Rotation = "30 210 0" .Intensity = "hdr(2 1.94 1.95)" })
 
 	.Add(new MeshEntity { .Source = "bunny.obj" .Material = link material5 .Position = "0 0 -3" .Rotation = "0 90 -90" .Scale = "2.5" })
-#	.Add(new SphereEntity { .Radius = "1" .Material = link material6 .Position = "0 1 -3" })
+#	.Add(new SphereEntity { .Radius = "1.5" .Material = link material5 .Position = "0 1.5 -3" })
 
 	.Add(new SphereEntity { .Material = link material0 .Radius = "1" .Position = "-3 1 -2" })
 
@@ -54,4 +55,4 @@
 }
 
 :standard = new StandardPathTracedProfile(link scene)
-:final = new StandardPathTracedProfile(link scene "100")
+:final = new StandardPathTracedProfile(link scene "100" "True")

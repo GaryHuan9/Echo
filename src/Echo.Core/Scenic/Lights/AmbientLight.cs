@@ -33,9 +33,6 @@ public sealed class AmbientLight : InfiniteLight
 		set => _texture = new NotNull<IDirectionalTexture>(value);
 	}
 
-	Float3x3 localToWorld; //From local-space to world-space, rotation only
-	Float3x3 worldToLocal; //From world-space to local-space, rotation only
-
 	float _power;
 
 	public override float Power => _power;
@@ -46,10 +43,6 @@ public sealed class AmbientLight : InfiniteLight
 		base.Prepare(scene);
 		Texture.Prepare();
 
-		//Calculate transforms
-		localToWorld = (Float3x3)ContainedRotation;
-		worldToLocal = localToWorld.Inverse;
-
 		//Calculate power
 		float radius = Math.Max(scene.accelerator.SphereBound.radius, 1f);
 		float luminance = Texture.Average.Luminance * Intensity.Luminance;
@@ -57,18 +50,17 @@ public sealed class AmbientLight : InfiniteLight
 	}
 
 	public override RGB128 Evaluate(Float3 incident) =>
-		Intensity * Texture.Evaluate(worldToLocal * incident);
+		Intensity * Texture.Evaluate(WorldToLocalRotation * incident);
 
-	public override float ProbabilityDensity(in GeometryPoint origin, Float3 incident)
-		=> Texture.ProbabilityDensity(worldToLocal * incident);
+	public override float ProbabilityDensity(in GeometryPoint origin, Float3 incident) =>
+		Texture.ProbabilityDensity(WorldToLocalRotation * incident);
 
 	public override Probable<RGB128> Sample(in GeometryPoint origin, Sample2D sample, out Float3 incident, out float travel)
 	{
-		Probable<RGB128> value = Texture.Sample(sample, out incident);
+		(RGB128 sampled, float pdf) = Texture.Sample(sample, out incident);
+		incident = LocalToWorldRotation * incident;
 
-		incident = localToWorld * incident;
 		travel = float.PositiveInfinity;
-
-		return (Intensity * value.content, value.pdf);
+		return (sampled * Intensity, pdf);
 	}
 }

@@ -166,7 +166,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
 
 		//Uniform sample cone, defined by theta and phi
-		float cosT = FastMath.FMA(sample.x, cosMaxT - 1f, 1f);
+		float cosT = FastMath.FMA(cosMaxT - 1f, sample.x, 1f);
 		float sinT = FastMath.Identity(cosT);
 		float phi = sample.y * Scalars.Tau;
 
@@ -179,8 +179,7 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		//Calculate normal and pdf
 		FastMath.SinCos(phi, out float sinP, out float cosP);
 		Float3 normal = new Float3(sinA * cosP, sinA * sinP, cosA).Normalized;
-
-		float pdf = ProbabilityDensityCone(cosMaxT);
+		float pdf = Sample2D.UniformConePdf(cosMaxT);
 
 		//Transform and returns point
 		var transform = new OrthonormalTransform(offset / length);
@@ -213,10 +212,10 @@ public readonly struct PreparedSphere : IPreparedGeometry
 			return distance * distance / FastMath.Abs(cosWeight) * Sample2D.UniformSpherePdf;
 		}
 
-		//Since the point is not inside our sphere, the sampling is based on a cone and is not uniform
+		//Since the point is not inside our sphere, the sampling is based on a cone
 		float sinMaxT2 = radius2 / length2;
 		float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
-		return ProbabilityDensityCone(cosMaxT);
+		return Sample2D.UniformConePdf(cosMaxT);
 	}
 
 	GeometryPoint GetPoint(Float3 normal) => new(normal * radius + position, normal);
@@ -258,6 +257,4 @@ public readonly struct PreparedSphere : IPreparedGeometry
 
 		cosT = FastMath.Identity(sinT) * sign;
 	}
-
-	static float ProbabilityDensityCone(float cosMaxT) => Scalars.TauR / (1f - cosMaxT);
 }

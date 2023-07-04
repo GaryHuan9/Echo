@@ -62,7 +62,7 @@ public readonly struct PreparedPointLight : IPreparedLight
 		float travelR = 1f / travel;
 		incident = offset * travelR;
 
-		return new Probable<RGB128>(intensity * travelR * travelR, 1f);
+		return (intensity * travelR * travelR, 1f);
 	}
 
 	/// <inheritdoc/>

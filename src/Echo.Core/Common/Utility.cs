@@ -52,6 +52,11 @@ public static class Utility
 		Buffer.MemoryCopy(source, target, length * sizeof(T), length * sizeof(T));
 
 	/// <summary>
+	/// Negates the sign of the <see cref="Float3.Z"/> component of a <see cref="Float3"/>.
+	/// </summary>
+	public static Float3 NegateZ(Float3 value) => new(value.X, value.Y, -value.Z);
+
+	/// <summary>
 	/// Returns the position represented by a <see cref="Float4x4"/> transform.
 	/// </summary>
 	public static Float3 GetPosition(Float4x4 transform) => transform.GetColumn(3).XYZ;

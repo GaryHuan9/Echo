@@ -25,6 +25,8 @@ public readonly struct Sample2D
 	/// <summary>
 	/// Returns a uniformly sampled point on a unit hemisphere surface.
 	/// </summary>
+	/// <remarks>The hemisphere points in the <see cref="Float3.Forward"/>
+	/// direction (i.e. the returned Z axis is always positive).</remarks>
 	public Float3 UniformHemisphere => ProjectSphere(x, y);
 
 	/// <summary>
@@ -47,8 +49,8 @@ public readonly struct Sample2D
 
 	/// <summary>
 	/// Returns a uniformly sampled barycentric coordinate for a triangle.
-	/// NOTE: the pdf is simply one over the area of the triangle.
 	/// </summary>
+	/// <remarks>The probability density function is simply one over the area of the triangle.</remarks>
 	public Float2 UniformTriangle
 	{
 		get
@@ -92,6 +94,7 @@ public readonly struct Sample2D
 	/// Returns a cosine weight sampled point on the surface of a unit hemisphere by
 	/// first generating a uniform disk as the base and projecting it onto the hemisphere.
 	/// </summary>
+	/// <remarks>The orientation of the hemisphere is identical to that of <see cref="UniformHemisphere"/>.</remarks>
 	public Float3 CosineHemisphere
 	{
 		get
@@ -110,7 +113,18 @@ public readonly struct Sample2D
 	/// <summary>
 	/// The probability density function for <see cref="UniformSphere"/>.
 	/// </summary>
-	public const float UniformSpherePdf = Scalars.TauR / 2f;
+	public const float UniformSpherePdf = UniformHemispherePdf / 2f;
+
+	/// <summary>
+	/// Returns a uniformly sampled direction on a unit cone with a specific vertical opening angle.
+	/// </summary>
+	/// <param name="cosMaxP">The cosine of the maximum phi vertical opening angle.</param>
+	/// <remarks>The orientation of the cone is identical to that of <see cref="UniformHemisphere"/>.</remarks>
+	public Float3 UniformCone(float cosMaxP)
+	{
+		float cosP = FastMath.FMA(cosMaxP - 1f, x, 1f);
+		return ProjectSphere(cosP, y);
+	}
 
 	/// <summary>
 	/// Maps this <see cref="Sample2D"/> to be between zero (inclusive) and <paramref name="max"/> (exclusive).
@@ -129,6 +143,12 @@ public readonly struct Sample2D
 		Ensure.IsTrue(min < max);
 		return Range(max - min) + min;
 	}
+
+	/// <summary>
+	/// The probability density function for <see cref="UniformCone"/>.
+	/// </summary>
+	/// <param name="cosMaxP">The cosine of the maximum phi vertical angle.</param>
+	public static float UniformConePdf(float cosMaxP) => Scalars.TauR / (1f - cosMaxP);
 
 	public static implicit operator Float2(Sample2D sample) => new(sample.x, sample.y);
 	public static explicit operator Sample2D(Float2 value) => new(value);

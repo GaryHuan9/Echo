@@ -1,4 +1,5 @@
 ﻿using System;
+using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
@@ -32,7 +33,7 @@ public class LambertianReflection : BxDF
 		incident = sample.CosineHemisphere;
 		float pdf = CosineP(incident) * Scalars.PiR;
 
-		if (outgoing.Z < 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
+		if (outgoing.Z < 0f) incident = Utility.NegateZ(incident);
 		return (Evaluate(outgoing, incident), pdf);
 	}
 }
@@ -62,7 +63,7 @@ public sealed class LambertianTransmission : BxDF
 		float pdf = CosineP(incident) * Scalars.PiR;
 
 		if (FastMath.AlmostZero(CosineP(incident))) return Probable<RGB128>.Impossible;
-		if (outgoing.Z > 0f) incident = new Float3(incident.X, incident.Y, -incident.Z);
+		if (outgoing.Z > 0f) incident = Utility.NegateZ(incident);
 		return (new RGB128(Scalars.PiR), pdf);
 	}
 }
@@ -87,7 +88,7 @@ public sealed class Lambertian : BxDF
 		float pdf = CosineP(incident) * Scalars.TauR;
 		bool flip = (outgoing.Z > 0f) ^ reflect;
 
-		if (flip) incident = new Float3(incident.X, incident.Y, -incident.Z);
+		if (flip) incident = Utility.NegateZ(incident);
 		return (new RGB128(Scalars.TauR), pdf);
 	}
 }
