@@ -18,11 +18,11 @@ public abstract record Evaluator
 	/// Creates or cleans an <see cref="IEvaluationLayer"/> for a new evaluation session.
 	/// </summary>
 	/// <param name="texture">The destination containing <see cref="RenderTexture"/>.</param>
-	/// <param name="label">The <see cref="string"/> used to identify the layer.</param>
+	/// <param name="name">The <see cref="string"/> used to identify the layer.</param>
 	/// <returns>The <see cref="IEvaluationLayer"/> for this new evaluation session.</returns>
 	/// <remarks> A simple invocation to static method <see cref="CreateOrClearLayer{T}"/> with a specified type
 	/// parameter is sufficient for most implementations that require a custom <see cref="IColor{T}"/> type. </remarks>
-	public virtual IEvaluationLayer CreateOrClearLayer(RenderTexture texture, string label) => CreateOrClearLayer<RGB128>(texture, label);
+	public virtual IEvaluationLayer CreateOrClearLayer(RenderTexture texture, string name) => CreateOrClearLayer<RGB128>(texture, name);
 
 	/// <summary>
 	/// Evaluates a <see cref="PreparedScene"/> using this <see cref="Evaluator"/>.
@@ -39,13 +39,13 @@ public abstract record Evaluator
 	/// Default implementation for <see cref="CreateOrClearLayer"/>.
 	/// </summary>
 	/// <param name="texture">The destination <see cref="RenderTexture"/>.</param>
-	/// <param name="label">The <see cref="string"/> used to identify the layer.</param>
+	/// <param name="name">The <see cref="string"/> used to identify the layer.</param>
 	/// <typeparam name="T">The <see cref="IColor{T}"/> type for this layer.</typeparam>
 	/// <returns>The <see cref="IEvaluationLayer"/> that was found or created.</returns>
-	protected static IEvaluationLayer CreateOrClearLayer<T>(RenderTexture texture, string label) where T : unmanaged, IColor<T>
+	protected static IEvaluationLayer CreateOrClearLayer<T>(RenderTexture texture, string name) where T : unmanaged, IColor<T>
 	{
-		texture.TryGetLayer(label, out TextureGrid candidate);
-		if (candidate is not EvaluationLayer<T> layer) return texture.CreateLayer<T>(label);
+		texture.TryGetLayer(name, out TextureGrid candidate);
+		if (candidate is not EvaluationLayer<T> layer) return texture.CreateLayer<T>(name);
 
 		layer.Clear();
 		return layer;

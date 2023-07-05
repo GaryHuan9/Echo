@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using Echo.Core.Common.Compute.Async;
-using Echo.Core.Common.Memory;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Grids;
@@ -27,19 +25,19 @@ public record TextureManage : ICompositeLayer
 	public ImmutableArray<TextureGrid> InsertSources { get; init; } = ImmutableArray<TextureGrid>.Empty;
 
 	/// <summary>
-	/// During insert, the label of new destination <see cref="TextureGrid{T}"/> layers of type <see cref="RGB128"/> to create and insert as.
+	/// During insert, the name of new destination <see cref="TextureGrid{T}"/> layers of type <see cref="RGB128"/> to create and insert as.
 	/// </summary>
 	[EchoSourceUsable]
 	public ImmutableArray<string> InsertLayers { get; init; } = ImmutableArray<string>.Empty;
 
 	/// <summary>
-	/// During copy, the label of all source <see cref="TextureGrid{T}"/> layers of type <see cref="RGB128"/> to read from.
+	/// During copy, the name of all source <see cref="TextureGrid{T}"/> layers of type <see cref="RGB128"/> to read from.
 	/// </summary>
 	[EchoSourceUsable]
 	public ImmutableArray<string> CopySources { get; init; } = ImmutableArray<string>.Empty;
 
 	/// <summary>
-	/// During copy, the label of new destination <see cref="TextureGrid{T}"/> layers of type <see cref="RGB128"/> to create and copy to.
+	/// During copy, the name of new destination <see cref="TextureGrid{T}"/> layers of type <see cref="RGB128"/> to create and copy to.
 	/// </summary>
 	[EchoSourceUsable]
 	public ImmutableArray<string> CopyLayers { get; init; } = ImmutableArray<string>.Empty;
@@ -68,12 +66,12 @@ public record TextureManage : ICompositeLayer
 			await CopyInto(context, source, CopyLayers[i]);
 		}
 
-		static ComputeTask CopyInto(ICompositeContext context, TextureGrid<RGB128> source, string label)
+		static ComputeTask CopyInto(ICompositeContext context, TextureGrid<RGB128> source, string name)
 		{
 			var target = new ArrayGrid<RGB128>(source.size);
 
-			if (context.TryAddTexture(label, target)) return context.CopyAsync(source, target);
-			throw new CompositeException($"Tried to add layer '{label}', but it already exists.");
+			if (context.TryAddTexture(name, target)) return context.CopyAsync(source, target);
+			throw new CompositeException($"Tried to add layer '{name}', but it already exists.");
 		}
 	}
 }

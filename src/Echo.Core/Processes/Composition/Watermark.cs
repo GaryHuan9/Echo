@@ -18,10 +18,10 @@ namespace Echo.Core.Processes.Composition;
 public record Watermark : ICompositeLayer
 {
 	/// <summary>
-	/// The label of the layer to operate on.
+	/// The name of the layer to operate on.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; } = "main";
+	public string LayerName { get; init; } = "main";
 
 	/// <summary>
 	/// The size of the watermark.
@@ -56,7 +56,7 @@ public record Watermark : ICompositeLayer
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
 
 		//Find size and position
 		float width = sourceTexture.LogSize * Scale;

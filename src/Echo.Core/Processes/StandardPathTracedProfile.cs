@@ -41,9 +41,9 @@ public record StandardPathTracedProfile : RenderProfile
 			MaxEpoch = Math.Max(20, (MathF.Pow(quality, 2.1f) / extend / 10f).Round())
 		};
 
-		evaluations.Add(template with { NoiseThreshold = 0.9f / quality, Evaluator = new AlbedoEvaluator(), MinEpoch = 1, TargetLayer = "albedo" });
-		evaluations.Add(template with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), MinEpoch = minEpoch, TargetLayer = "path" });
-		evaluations.Add(template with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), MinEpoch = 1, TargetLayer = "normal_depth" });
+		evaluations.Add(template with { NoiseThreshold = 0.9f / quality, Evaluator = new AlbedoEvaluator(), MinEpoch = 1, LayerName = "albedo" });
+		evaluations.Add(template with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), MinEpoch = minEpoch, LayerName = "path" });
+		evaluations.Add(template with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), MinEpoch = 1, LayerName = "normal_depth" });
 
 		composition.Add(new TextureManage { CopySources = ImmutableArray.Create("path"), CopyLayers = ImmutableArray.Create("main") });
 		composition.Add(new OidnDenoise());

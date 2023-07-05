@@ -160,21 +160,21 @@ public sealed class RenderUI : AreaUI
 
 			if (ImGui.BeginTable("Layers", 4, ImGuiCustom.DefaultTableFlags))
 			{
-				ImGui.TableSetupColumn("Label");
+				ImGui.TableSetupColumn("Name");
 				ImGui.TableSetupColumn("Type");
 				ImGui.TableSetupColumn("Color");
 				ImGui.TableSetupColumn("Actions");
 				ImGui.TableHeadersRow();
 
-				foreach ((string label, TextureGrid layer) in texture.Layers)
+				foreach ((string name, TextureGrid layer) in texture.Layers)
 				{
-					ImGuiCustom.TableItem(label);
+					ImGuiCustom.TableItem(name);
 					Type type = layer.GetType();
 
 					ImGuiCustom.TableItem(type.Name);
 					ImGuiCustom.TableItem(type.IsGenericType ? type.GetGenericArguments()[0].Name : "");
 
-					ImGui.PushID(label);
+					ImGui.PushID(name);
 					ImGui.TableNextColumn();
 					if (ImGui.SmallButton("View")) viewerUI.Track(layer);
 
@@ -185,7 +185,7 @@ public sealed class RenderUI : AreaUI
 					}
 
 					ImGui.SameLine();
-					if (ImGui.SmallButton("Save")) dialogueUI.Open($"{label}.png", false, path => SaveTexture(path, layer));
+					if (ImGui.SmallButton("Save")) dialogueUI.Open($"{name}.png", false, path => SaveTexture(path, layer));
 					ImGui.PopID();
 				}
 
@@ -377,7 +377,7 @@ public sealed class RenderUI : AreaUI
 
 				ImGuiCustom.Property("Evaluator", profile.Evaluator.GetType().Name);
 				ImGuiCustom.Property("Distribution", profile.Distribution.GetType().Name);
-				ImGuiCustom.Property("Destination", profile.TargetLayer);
+				ImGuiCustom.Property("Destination", profile.LayerName);
 
 				ImGui.SameLine();
 				ImGui.Spacing();

@@ -170,7 +170,7 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 		/// <inheritdoc/>
 		public Operation CreateOperation(ImmutableArray<IWorker> workers)
 		{
-			IEvaluationLayer destination = profile.Evaluator.CreateOrClearLayer(renderTexture, profile.TargetLayer);
+			IEvaluationLayer destination = profile.Evaluator.CreateOrClearLayer(renderTexture, profile.LayerName);
 			var tilePositions = profile.Pattern.CreateSequence(renderTexture.size.CeiledDivide(renderTexture.tileSize));
 			return new EvaluationOperation(workers, tilePositions.ToImmutableArray(), destination, profile, boxedScene);
 		}

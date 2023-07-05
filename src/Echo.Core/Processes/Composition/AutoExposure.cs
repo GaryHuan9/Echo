@@ -15,10 +15,10 @@ namespace Echo.Core.Processes.Composition;
 public record AutoExposure : ICompositeLayer
 {
 	/// <summary>
-	/// The label of the layer to operate on.
+	/// The name of the layer to operate on.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; } = "main";
+	public string LayerName { get; init; } = "main";
 
 	/// <summary>
 	/// Additional weight given to center pixels.
@@ -53,7 +53,7 @@ public record AutoExposure : ICompositeLayer
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
 		(float min, float max) = await GrabLuminanceRange(context, sourceTexture);
 
 		float logMin = GetLog(min);

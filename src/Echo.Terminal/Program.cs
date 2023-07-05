@@ -92,15 +92,15 @@ class Program
 		//Save results
 		bool savedAny = false;
 
-		foreach ((string layer, string file) in outputLayerFile)
+		foreach ((string name, string file) in outputLayerFile)
 		{
-			if (render.texture.TryGetLayer(layer, out TextureGrid texture))
+			if (render.texture.TryGetLayer(name, out TextureGrid texture))
 			{
 				texture.Save(file);
 				savedAny = true;
-				Console.WriteLine($"Saved render layer '{layer}' to '{file}'.");
+				Console.WriteLine($"Saved render layer '{name}' to '{file}'.");
 			}
-			else Console.WriteLine($"No layer labeled as '{layer}' to output; skipping.");
+			else Console.WriteLine($"No layer named as '{name}' to output; skipping.");
 		}
 
 		if (!savedAny)

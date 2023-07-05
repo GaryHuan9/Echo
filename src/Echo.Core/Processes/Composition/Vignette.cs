@@ -11,10 +11,10 @@ namespace Echo.Core.Processes.Composition;
 public record Vignette : ICompositeLayer
 {
 	/// <summary>
-	/// The label of the layer to operate on.
+	/// The name of the layer to operate on.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; } = "main";
+	public string LayerName { get; init; } = "main";
 
 	/// <summary>
 	/// The strength of the darkening near the edge of the image.
@@ -28,7 +28,7 @@ public record Vignette : ICompositeLayer
 
 	public ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
 
 		return context.RunAsync(MainPass, sourceTexture.size);
 

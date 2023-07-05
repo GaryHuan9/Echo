@@ -52,12 +52,12 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <summary>
 	/// Tries to get a layer from this <see cref="RenderTexture"/>.
 	/// </summary>
-	/// <param name="label">The label of the layer to find.</param>
+	/// <param name="name">The name of the layer to find.</param>
 	/// <param name="layer">Outputs the layer if found.</param>
 	/// <returns>Whether a matching texture is found.</returns>
 	/// <remarks>Since the second parameter of this method outputs a <see cref="TextureGrid"/>,
-	/// this method will always find a <see cref="TextureGrid"/> if its label exist.</remarks>
-	public bool TryGetLayer(string label, out TextureGrid layer) => layers.TryGetValue(label, out layer);
+	/// this method will always find a <see cref="TextureGrid"/> if its name exist.</remarks>
+	public bool TryGetLayer(string name, out TextureGrid layer) => layers.TryGetValue(name, out layer);
 
 	/// <summary>
 	/// Tries to get the first layer from this <see cref="RenderTexture"/> that contains a specific type of <see cref="IColor{T}"/>.
@@ -80,16 +80,16 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <summary>
 	/// Adds a new layer to this <see cref="RenderTexture"/>.
 	/// </summary>
-	/// <param name="label">The <see cref="string"/> to name this new
+	/// <param name="name">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
 	/// <param name="layer">The layer to add.</param>
 	/// <returns>Whether a new layer was added.</returns>
-	public bool TryAddLayer(string label, TextureGrid layer)
+	public bool TryAddLayer(string name, TextureGrid layer)
 	{
 		if (layer.size != size) throw new ArgumentException($"Mismatched size '{layer.size}' with this {nameof(RenderTexture)}.", nameof(layer));
 
-		if (!layers.TryAdd(label, layer)) return false;
-		if (label == "main") Volatile.Write(ref mainTexture, layer);
+		if (!layers.TryAdd(name, layer)) return false;
+		if (name == "main") Volatile.Write(ref mainTexture, layer);
 		else Interlocked.CompareExchange(ref mainTexture, layer, null);
 
 		return true;
@@ -98,18 +98,18 @@ public sealed class RenderTexture : TextureGrid<RGB128>
 	/// <summary>
 	/// Creates a new layer to this <see cref="RenderTexture"/>.
 	/// </summary>
-	/// <param name="label">The <see cref="string"/> to name this new
+	/// <param name="name">The <see cref="string"/> to name this new
 	/// layer. This <see cref="string"/> is case insensitive.</param>
 	/// <returns>The new <see cref="EvaluationLayer{T}"/> that was created.</returns>
-	/// <exception cref="ArgumentException">Thrown if a layer named <paramref name="label"/> already exists.</exception>
-	public EvaluationLayer<T> CreateLayer<T>(string label) where T : unmanaged, IColor<T>
+	/// <exception cref="ArgumentException">Thrown if a layer named <paramref name="name"/> already exists.</exception>
+	public EvaluationLayer<T> CreateLayer<T>(string name) where T : unmanaged, IColor<T>
 	{
-		if (!layers.ContainsKey(label))
+		if (!layers.ContainsKey(name))
 		{
 			var layer = new EvaluationLayer<T>(size, tileSize);
-			if (TryAddLayer(label, layer)) return layer;
+			if (TryAddLayer(name, layer)) return layer;
 		}
 
-		throw new ArgumentException($"A layer named '{label}' already exists.");
+		throw new ArgumentException($"A layer named '{name}' already exists.");
 	}
 }

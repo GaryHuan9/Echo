@@ -19,10 +19,10 @@ public record EvaluationProfile
 	public Evaluator Evaluator { get; init; }
 
 	/// <summary>
-	/// The label of the layer in the <see cref="RenderTexture"/> to write to.
+	/// The name of the destination layer in the <see cref="RenderTexture"/> to write to.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; }
+	public string LayerName { get; init; }
 
 	/// <summary>
 	/// The <see cref="ContinuousDistribution"/> used for this evaluation.
@@ -65,7 +65,7 @@ public record EvaluationProfile
 	public void Validate()
 	{
 		if (Evaluator == null) throw ExceptionHelper.Invalid(nameof(Evaluator), InvalidType.isNull);
-		if (string.IsNullOrEmpty(TargetLayer)) throw ExceptionHelper.Invalid(nameof(TargetLayer), InvalidType.isNull);
+		if (string.IsNullOrEmpty(LayerName)) throw ExceptionHelper.Invalid(nameof(LayerName), InvalidType.isNull);
 		if (Distribution == null) throw ExceptionHelper.Invalid(nameof(Distribution), InvalidType.isNull);
 
 		if (MinEpoch <= 0) throw ExceptionHelper.Invalid(nameof(MinEpoch), MinEpoch, InvalidType.outOfBounds);

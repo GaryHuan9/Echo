@@ -41,7 +41,7 @@
 {
 	.Scene = link scene
 	.Resolution = "512 512"
-	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .TargetLayer = "path" }  ]
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .LayerName = "path" }  ]
 }
 
 :standard = new StandardPathTracedProfile(link scene) { .Resolution = "512 512" }

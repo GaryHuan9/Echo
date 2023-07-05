@@ -10,10 +10,10 @@ namespace Echo.Core.Processes.Composition;
 public record Bloom : ICompositeLayer
 {
 	/// <summary>
-	/// The label of the layer to operate on.
+	/// The name of the layer to operate on.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; } = "main";
+	public string LayerName { get; init; } = "main";
 
 	/// <summary>
 	/// The amount of excess luminance distributed to neighboring pixels. 
@@ -33,7 +33,7 @@ public record Bloom : ICompositeLayer
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		SettableGrid<RGB128> sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		SettableGrid<RGB128> sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
 		using var _ = context.FetchTemporaryTexture(out ArrayGrid<RGB128> workerTexture);
 
 		await context.RunAsync(FilterPass, sourceTexture.size);  //Fill filtered color values to workerTexture

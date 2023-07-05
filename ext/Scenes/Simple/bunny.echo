@@ -51,7 +51,7 @@
 :raw = new RenderProfile
 {
 	.Scene = link scene
-	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .TargetLayer = "path" }  ]
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .LayerName = "path" }  ]
 }
 
 :standard = new StandardPathTracedProfile(link scene)

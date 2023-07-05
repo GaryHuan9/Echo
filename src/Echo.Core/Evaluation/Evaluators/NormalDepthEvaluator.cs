@@ -23,7 +23,7 @@ public sealed record NormalDepthEvaluator : Evaluator
 	[EchoSourceUsable]
 	public bool DivergeOnce { get; set; } = false;
 
-	public override IEvaluationLayer CreateOrClearLayer(RenderTexture texture, string label) => CreateOrClearLayer<NormalDepth128>(texture, label);
+	public override IEvaluationLayer CreateOrClearLayer(RenderTexture texture, string name) => CreateOrClearLayer<NormalDepth128>(texture, name);
 
 	public override Float4 Evaluate(PreparedScene scene, in Ray ray, ContinuousDistribution distribution, Allocator allocator, ref EvaluatorStatistics statistics)
 	{

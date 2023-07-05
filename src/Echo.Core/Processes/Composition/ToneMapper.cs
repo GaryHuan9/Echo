@@ -10,10 +10,10 @@ namespace Echo.Core.Processes.Composition;
 public record ToneMapper : ICompositeLayer
 {
 	/// <summary>
-	/// The label of the layer to operate on.
+	/// The name of the layer to operate on.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; } = "main";
+	public string LayerName { get; init; } = "main";
 
 	/// <summary>
 	/// Alters the saturation of each color, with 0 being completely desaturated and 1 being the original saturation.
@@ -40,7 +40,7 @@ public record ToneMapper : ICompositeLayer
 
 	public async ComputeTask ExecuteAsync(ICompositeContext context)
 	{
-		var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
+		var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
 
 		await context.RunAsync(SaturationPass, sourceTexture.size);
 		await context.RunAsync(CombineChannels ? CombinedPass : PerChannelPass, sourceTexture.size);

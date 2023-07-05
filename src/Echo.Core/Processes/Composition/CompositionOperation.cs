@@ -104,10 +104,10 @@ public sealed class CompositionOperation : AsyncOperation
 		public Int2 RenderSize => renderTexture.size;
 
 		/// <inheritdoc/>
-		public bool TryGetTexture(string label, out TextureGrid layer) => renderTexture.TryGetLayer(label, out layer);
+		public bool TryGetTexture(string name, out TextureGrid layer) => renderTexture.TryGetLayer(name, out layer);
 
 		/// <inheritdoc/>
-		public bool TryAddTexture(string label, TextureGrid texture) => renderTexture.TryAddLayer(label, texture);
+		public bool TryAddTexture(string name, TextureGrid texture) => renderTexture.TryAddLayer(name, texture);
 
 		/// <inheritdoc/>
 		public ComputeTask RunAsync(ICompositeContext.Pass2D pass, Int2 size)

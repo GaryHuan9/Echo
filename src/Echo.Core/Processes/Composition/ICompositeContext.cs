@@ -24,38 +24,38 @@ public interface ICompositeContext
 	/// <summary>
 	/// Gets a <see cref="TextureGrid{T}"/> or throws a <see cref="TextureNotFoundException"/>.
 	/// </summary>
-	public sealed TextureGrid<T> GetReadTexture<T>(string label) where T : unmanaged, IColor<T> =>
-		TryGetTexture(label, out TextureGrid<T> texture) ? texture :
-			throw new TextureNotFoundException(label, false, typeof(T));
+	public sealed TextureGrid<T> GetReadTexture<T>(string name) where T : unmanaged, IColor<T> =>
+		TryGetTexture(name, out TextureGrid<T> texture) ? texture :
+			throw new TextureNotFoundException(name, false, typeof(T));
 
 	/// <summary>
 	/// Gets a <see cref="SettableGrid{T}"/> or throws a <see cref="TextureNotFoundException"/>.
 	/// </summary>
-	public sealed SettableGrid<T> GetWriteTexture<T>(string label) where T : unmanaged, IColor<T> =>
-		TryGetTexture(label, out SettableGrid<T> texture) ? texture :
-			throw new TextureNotFoundException(label, true, typeof(T));
+	public sealed SettableGrid<T> GetWriteTexture<T>(string name) where T : unmanaged, IColor<T> =>
+		TryGetTexture(name, out SettableGrid<T> texture) ? texture :
+			throw new TextureNotFoundException(name, true, typeof(T));
 
 	/// <inheritdoc cref="RenderTexture.TryGetLayer"/>
-	public bool TryGetTexture(string label, out TextureGrid layer);
+	public bool TryGetTexture(string name, out TextureGrid layer);
 
 	/// <inheritdoc cref="RenderTexture.TryGetLayer"/>
-	public sealed bool TryGetTexture<T>(string label, out TextureGrid<T> texture) where T : unmanaged, IColor<T>
+	public sealed bool TryGetTexture<T>(string name, out TextureGrid<T> texture) where T : unmanaged, IColor<T>
 	{
-		bool found = TryGetTexture(label, out TextureGrid candidate);
+		bool found = TryGetTexture(name, out TextureGrid candidate);
 		texture = found ? candidate as TextureGrid<T> : null;
 		return texture != null;
 	}
 
 	/// <inheritdoc cref="RenderTexture.TryGetLayer"/>
-	public sealed bool TryGetTexture<T>(string label, out SettableGrid<T> texture) where T : unmanaged, IColor<T>
+	public sealed bool TryGetTexture<T>(string name, out SettableGrid<T> texture) where T : unmanaged, IColor<T>
 	{
-		bool found = TryGetTexture(label, out TextureGrid candidate);
+		bool found = TryGetTexture(name, out TextureGrid candidate);
 		texture = found ? candidate as SettableGrid<T> : null;
 		return texture != null;
 	}
 
 	/// <inheritdoc cref="RenderTexture.TryAddLayer"/>
-	public bool TryAddTexture(string label, TextureGrid texture);
+	public bool TryAddTexture(string name, TextureGrid texture);
 
 	/// <summary>
 	/// Runs a <see cref="Pass2D"/> on every position within <paramref name="size"/>.
@@ -252,9 +252,9 @@ public interface ICompositeContext
 
 	sealed class TextureNotFoundException : CompositeException
 	{
-		public TextureNotFoundException(string label, bool write, Type type) : base(GetMessage(label, write, type)) { }
+		public TextureNotFoundException(string name, bool write, Type type) : base(GetMessage(name, write, type)) { }
 
-		static string GetMessage(string label, bool write, Type type) =>
-			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>)).Name} of type `{type.Name}` in {nameof(RenderTexture)} labeled as `{label}`.";
+		static string GetMessage(string name, bool write, Type type) =>
+			$"No {(write ? typeof(SettableGrid<>) : typeof(TextureGrid<>)).Name} of type `{type.Name}` in {nameof(RenderTexture)} nameed as `{name}`.";
 	}
 }

@@ -18,22 +18,22 @@ namespace Echo.Core.Processes.Composition;
 public record OidnDenoise : ICompositeLayer
 {
 	/// <summary>
-	/// The label of the layer to operate on.
+	/// The name of the layer to operate on.
 	/// </summary>
 	[EchoSourceUsable]
-	public string TargetLayer { get; init; } = "main";
+	public string LayerName { get; init; } = "main";
 
 	/// <summary>
-	/// The label of the clear albedo layer to read from.
+	/// The name of the albedo layer to read from.
 	/// </summary>
 	[EchoSourceUsable]
-	public string AlbedoLayer { get; init; } = "albedo";
+	public string AlbedoLayerName { get; init; } = "albedo";
 
 	/// <summary>
-	/// The label of the clear <see cref="NormalDepth128"/> layer to read from.
+	/// The name of the <see cref="NormalDepth128"/> layer to read from.
 	/// </summary>
 	[EchoSourceUsable]
-	public string NormalLayer { get; init; } = "normal_depth";
+	public string NormalLayerName { get; init; } = "normal_depth";
 
 	/// <summary>
 	/// Whether to denoise auxiliary input (the albedo and normal).
@@ -55,9 +55,9 @@ public record OidnDenoise : ICompositeLayer
 		try
 		{
 			//Retrieve textures and fill copy content to buffers
-			var sourceTexture = context.GetWriteTexture<RGB128>(TargetLayer);
-			bool hasAlbedo = context.TryGetTexture(AlbedoLayer, out TextureGrid<RGB128> albedoTexture);
-			bool hasNormal = context.TryGetTexture(NormalLayer, out TextureGrid<NormalDepth128> normalTexture);
+			var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
+			bool hasAlbedo = context.TryGetTexture(AlbedoLayerName, out TextureGrid<RGB128> albedoTexture);
+			bool hasNormal = context.TryGetTexture(NormalLayerName, out TextureGrid<NormalDepth128> normalTexture);
 
 			float[] colorBuffer = await CopyToBuffer(sourceTexture);
 			float[] albedoBuffer = hasAlbedo ? await CopyToBuffer(albedoTexture) : null;
