@@ -198,6 +198,11 @@ public class Entity : IEnumerable<Entity>
 	}
 
 	/// <summary>
+	/// Invoked when the dirty transform was just recalculated and cleaned.
+	/// </summary>
+	protected virtual void OnTransformRecalculated() { }
+
+	/// <summary>
 	/// Sets the <see cref="Root"/> of this <see cref="Entity"/>.
 	/// </summary>
 	/// <param name="root">The <see cref="EntityPack"/> to set as <see cref="Root"/>.</param>
@@ -237,6 +242,8 @@ public class Entity : IEnumerable<Entity>
 			_inverseTransform = Parent.InverseTransform * transform;
 			_containedRotation = Parent.ContainedRotation * Rotation;
 		}
+
+		OnTransformRecalculated();
 	}
 
 	void DirtyTransform()

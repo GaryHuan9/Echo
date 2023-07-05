@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Echo.Core.Common.Compute.Async;
 using Echo.Core.Common.Diagnostics;
@@ -52,26 +51,26 @@ public record OidnDenoise : ICompositeLayer
 	{
 		Int2 size = context.RenderSize;
 
+		//Retrieve textures and fill copy content to buffers
+		var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
+		bool hasAlbedo = context.TryGetTexture(AlbedoLayerName, out TextureGrid<RGB128> albedoTexture);
+		bool hasNormal = context.TryGetTexture(NormalLayerName, out TextureGrid<NormalDepth128> normalTexture);
+
+		float[] colorBuffer = await CopyToBuffer(context, sourceTexture);
+		float[] albedoBuffer = hasAlbedo ? await CopyToBuffer(context, albedoTexture) : null;
+		float[] normalBuffer = hasNormal ? await CopyToBuffer(context, normalTexture) : null;
+
 		try
 		{
-			//Retrieve textures and fill copy content to buffers
-			var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
-			bool hasAlbedo = context.TryGetTexture(AlbedoLayerName, out TextureGrid<RGB128> albedoTexture);
-			bool hasNormal = context.TryGetTexture(NormalLayerName, out TextureGrid<NormalDepth128> normalTexture);
-
-			float[] colorBuffer = await CopyToBuffer(sourceTexture);
-			float[] albedoBuffer = hasAlbedo ? await CopyToBuffer(albedoTexture) : null;
-			float[] normalBuffer = hasNormal ? await CopyToBuffer(normalTexture) : null;
-
 			//Denoise and copy result back to texture
 			Denoise(size, colorBuffer, albedoBuffer, normalBuffer);
-			await CopyFromBuffer(colorBuffer, sourceTexture);
+			await CopyFromBuffer(context, sourceTexture, colorBuffer);
 		}
 		catch (DllNotFoundException) { throw new CompositeException($"Precompiled Oidn binaries not found at `{DllPath}`."); }
 
-		async ComputeTask<float[]> CopyToBuffer<T>(TextureGrid<T> sourceTexture) where T : unmanaged, IColor<T>
+		static async ComputeTask<float[]> CopyToBuffer<T>(ICompositeContext context, TextureGrid<T> sourceTexture) where T : unmanaged, IColor<T>
 		{
-			Ensure.AreEqual(sourceTexture.size, size);
+			Int2 size = sourceTexture.size;
 			float[] buffer = GC.AllocateUninitializedArray<float>(size.Product * 3);
 
 			await context.RunAsync(MainPass, size);
@@ -88,9 +87,10 @@ public record OidnDenoise : ICompositeLayer
 			}
 		}
 
-		ComputeTask CopyFromBuffer(float[] buffer, SettableGrid<RGB128> targetTexture)
+		static ComputeTask CopyFromBuffer(ICompositeContext context, SettableGrid<RGB128> targetTexture, float[] buffer)
 		{
-			Ensure.AreEqual(targetTexture.size, size);
+			Int2 size = targetTexture.size;
+			Ensure.AreEqual(size.Product * 3, buffer.Length);
 			return context.RunAsync(MainPass, size);
 
 			void MainPass(Int2 position)

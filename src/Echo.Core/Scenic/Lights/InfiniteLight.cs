@@ -18,12 +18,12 @@ public abstract class InfiniteLight : LightEntity
 {
 	public override Float3 Position
 	{
-		set => throw ModifyTransformException();
+		set => throw SceneException.ModifiedTransform(nameof(InfiniteLight));
 	}
 
 	public override float Scale
 	{
-		set => throw ModifyTransformException();
+		set => throw SceneException.ModifiedTransform(nameof(InfiniteLight));
 	}
 
 	/// <summary>
@@ -71,10 +71,6 @@ public abstract class InfiniteLight : LightEntity
 	protected override void CheckRoot(EntityPack root)
 	{
 		base.CheckRoot(root);
-		if (root is Scene) return;
-
-		throw new SceneException($"Cannot add an {nameof(InfiniteLight)} to an {nameof(EntityPack)} that is not a {nameof(Scene)}.");
+		if (root is not Scene) throw SceneException.RootNotScene(nameof(InfiniteLight));
 	}
-
-	static SceneException ModifyTransformException() => new($"Cannot modify the {nameof(Position)} nor the {nameof(Scale)} of an {nameof(InfiniteLight)}.");
 }

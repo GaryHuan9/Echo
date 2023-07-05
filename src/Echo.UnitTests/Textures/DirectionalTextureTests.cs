@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Mathematics.Randomization;
@@ -15,7 +16,49 @@ namespace Echo.UnitTests.Textures;
 [TestFixture]
 public class CylindricalTextureTests : DirectionalTextureBaseTests
 {
+	static CylindricalTextureTests()
+	{
+		var distribution = new StratifiedDistribution { Extend = 100, Prng = new SystemPrng(1) };
+
+		distribution.BeginSeries(Int2.Zero);
+
+		for (int i = 0; i < distribution.Extend; i++)
+		{
+			distribution.BeginSession();
+			directionInputs.Add(distribution.Next2D().UniformSphere);
+		}
+
+		distribution = distribution with { Prng = new SystemPrng(2) };
+
+		distribution.BeginSeries(Int2.Zero);
+
+		for (int i = 0; i < distribution.Extend; i++)
+		{
+			distribution.BeginSession();
+			uvInputs.Add(distribution.Next2D());
+		}
+	}
+
 	protected override IDirectionalTexture GetTexture() => new CylindricalTexture { Texture = GenerateRandomTexture((Int2)500) };
+
+	static readonly List<Float3> directionInputs = new();
+	static readonly List<Float2> uvInputs = new();
+
+	[Test]
+	public void ToUV([ValueSource(nameof(directionInputs))] Float3 direction)
+	{
+		Float2 uv = CylindricalTexture.ToUV(direction);
+		Float3 check = CylindricalTexture.ToDirection(uv);
+		Assert.That(FastMath.AlmostZero(check.SquaredDistance(direction)));
+	}
+
+	[Test]
+	public void ToDirection([ValueSource(nameof(uvInputs))] Float2 uv)
+	{
+		Float3 direction = CylindricalTexture.ToDirection(uv);
+		Float2 check = CylindricalTexture.ToUV(direction);
+		Assert.That(check, Is.EqualTo(uv));
+	}
 }
 
 [TestFixture]

@@ -22,17 +22,17 @@ public class EntityPack : Entity
 
 	public override Float3 Position
 	{
-		set => throw ModifyTransformException();
+		set => throw SceneException.ModifiedTransform(nameof(EntityPack));
 	}
 
 	public override Versor Rotation
 	{
-		set => throw ModifyTransformException();
+		set => throw SceneException.ModifiedTransform(nameof(EntityPack));
 	}
 
 	public override float Scale
 	{
-		set => throw ModifyTransformException();
+		set => throw SceneException.ModifiedTransform(nameof(EntityPack));
 	}
 
 	/// <summary>
@@ -122,6 +122,4 @@ public class EntityPack : Entity
 
 		foreach (EntityPack parent in instanceParents) parent.DirtyInstances();
 	}
-
-	static SceneException ModifyTransformException() => new($"Cannot modify the transform of an {nameof(EntityPack)}.");
 }

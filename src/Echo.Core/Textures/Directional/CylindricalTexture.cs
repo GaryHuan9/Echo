@@ -80,8 +80,8 @@ public class CylindricalTexture : IDirectionalTexture
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			RGB128 Grab(int x)
 			{
-				var lower = (RGB128)texture[new Int2(x, y + 0)];
-				var upper = (RGB128)texture[new Int2(x, y + 1)];
+				var lower = (RGB128)texture[new Float2(x, y + 0f) * sizeR];
+				var upper = (RGB128)texture[new Float2(x, y + 1f) * sizeR];
 				return lower * sin0 + upper * sin1;
 			}
 		}, sum =>
@@ -123,11 +123,11 @@ public class CylindricalTexture : IDirectionalTexture
 
 		Float2 uv = sampled.content;
 
-		float angle0 = uv.X * Scalars.Tau;
-		float angle1 = uv.Y * Scalars.Pi;
+		float theta = uv.X * Scalars.Tau;
+		float phi = uv.Y * Scalars.Pi;
 
-		FastMath.SinCos(angle0, out float sinT, out float cosT); //Theta
-		FastMath.SinCos(angle1, out float sinP, out float cosP); //Phi
+		FastMath.SinCos(theta, out float sinT, out float cosT);
+		FastMath.SinCos(phi, out float sinP, out float cosP);
 
 		if (!FastMath.Positive(sinP))
 		{
@@ -139,10 +139,28 @@ public class CylindricalTexture : IDirectionalTexture
 		return ((RGB128)Texture[uv], sampled.pdf * Jacobian / sinP);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	static Float2 ToUV(Float3 direction) => new
-	(
-		FastMath.FMA(MathF.Atan2(direction.X, direction.Z), Scalars.PiR / 2f, 0.5f),
-		FastMath.FMA(MathF.Acos(FastMath.Clamp11(direction.Y)), -Scalars.PiR, 1f)
-	);
+	public static Float2 ToUV(Float3 direction)
+	{
+		Ensure.AreEqual(direction.SquaredMagnitude, 1f);
+
+		return new Float2
+		(
+			FastMath.FMA(MathF.Atan2(direction.X, direction.Z), Scalars.TauR, 0.5f),
+			FastMath.FMA(MathF.Acos(FastMath.Clamp11(direction.Y)), -Scalars.PiR, 1f)
+		);
+	}
+
+	public static Float3 ToDirection(Float2 uv)
+	{
+		Ensure.IsTrue(uv.X is >= 0f and <= 1f);
+		Ensure.IsTrue(uv.Y is >= 0f and <= 1f);
+
+		float theta = uv.X * Scalars.Tau;
+		float phi = uv.Y * Scalars.Pi;
+
+		FastMath.SinCos(theta, out float sinT, out float cosT);
+		FastMath.SinCos(phi, out float sinP, out float cosP);
+
+		return new Float3(-sinP * sinT, -cosP, -sinP * cosT).Normalized;
+	}
 }
