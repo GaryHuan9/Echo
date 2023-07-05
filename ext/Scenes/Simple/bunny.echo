@@ -54,5 +54,5 @@
 	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .LayerName = "path" }  ]
 }
 
-:standard = new StandardPathTracedProfile(link scene)
-:final = new StandardPathTracedProfile(link scene "100" "True")
+:standard = new StandardPathTracedProfile(link scene) { .OnlyDenoise = "True" }
+:final = new StandardPathTracedProfile(link scene "100")

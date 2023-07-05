@@ -17,20 +17,19 @@ namespace Echo.Core.Processes;
 public record StandardPathTracedProfile : RenderProfile
 {
 	[EchoSourceUsable]
-	public StandardPathTracedProfile(Scene scene, uint quality = 40, bool onlyDenoise = false, bool watermark = true)
+	public StandardPathTracedProfile(Scene scene, uint quality = 40)
 	{
 		Scene = scene;
 		if (quality == 0) quality = 1;
 
 		var evaluations = ImmutableArray.CreateBuilder<EvaluationProfile>();
-		var composition = ImmutableArray.CreateBuilder<ICompositeLayer>();
 
 		int extend = quality switch
 		{
 			> 800 => 1024,
 			> 190 => 256,
 			> 30 => 64,
-			>= 0 => 16
+			_ => 16
 		};
 
 		int minEpoch = ((float)quality / extend * 2f).Round();
@@ -45,19 +44,63 @@ public record StandardPathTracedProfile : RenderProfile
 		evaluations.Add(template with { NoiseThreshold = 1.0f / quality, Evaluator = new PathTracedEvaluator(), MinEpoch = minEpoch, LayerName = "path" });
 		evaluations.Add(template with { NoiseThreshold = 0.7f / quality, Evaluator = new NormalDepthEvaluator(), MinEpoch = 1, LayerName = "normal_depth" });
 
-		composition.Add(new TextureManage { CopySources = ImmutableArray.Create("path"), CopyLayers = ImmutableArray.Create("main") });
-		composition.Add(new OidnDenoise());
+		EvaluationProfiles = evaluations.ToImmutable();
+		CompositionLayers = CreateCompositionLayers();
+	}
+
+	readonly bool _onlyDenoise;
+	readonly bool _watermark = true;
+
+	/// <summary>
+	/// Whether the composition process performs only denoise and nothing else.
+	/// </summary>
+	[EchoSourceUsable]
+	public bool OnlyDenoise
+	{
+		get => _onlyDenoise;
+		init
+		{
+			if (_onlyDenoise == value) return;
+			_onlyDenoise = value;
+			CompositionLayers = CreateCompositionLayers();
+		}
+	}
+
+	/// <summary>
+	/// Whether to include the <see cref="Echo"/> watermark on the final output.
+	/// </summary>
+	/// <remarks>This option ignores <see cref="OnlyDenoise"/>.</remarks>
+	[EchoSourceUsable]
+	public bool Watermark
+	{
+		get => _watermark;
+		init
+		{
+			if (_watermark == value) return;
+			_watermark = value;
+			CompositionLayers = CreateCompositionLayers();
+		}
+	}
+
+	ImmutableArray<ICompositeLayer> CreateCompositionLayers() => CreateCompositionLayers(OnlyDenoise, Watermark);
+
+	static ImmutableArray<ICompositeLayer> CreateCompositionLayers(bool onlyDenoise, bool watermark)
+	{
+		var builder = ImmutableArray.CreateBuilder<ICompositeLayer>();
+
+		builder.Add(new TextureManage { CopySources = ImmutableArray.Create("path"), CopyLayers = ImmutableArray.Create("main") });
+		builder.Add(new OidnDenoise());
 
 		if (!onlyDenoise)
 		{
-			composition.Add(new AutoExposure());
-			composition.Add(new Vignette());
-			composition.Add(new Bloom());
-			composition.Add(new ToneMapper());
-			composition.Add(new Watermark { Enabled = watermark });
+			builder.Add(new AutoExposure());
+			builder.Add(new Vignette());
+			builder.Add(new Bloom());
+			builder.Add(new ToneMapper());
 		}
 
-		EvaluationProfiles = evaluations.ToImmutable();
-		CompositionLayers = composition.ToImmutable();
+		builder.Add(new Watermark { Enabled = watermark });
+
+		return builder.ToImmutable();
 	}
 }
