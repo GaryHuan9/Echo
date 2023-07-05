@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Runtime.InteropServices;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Scenic.Cameras;
@@ -73,20 +72,29 @@ partial record ScenePreparer
 			);
 		}
 
-		public PreparedScene CreatePreparedScene(ScenePreparer preparer) => new
-		(
-			CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
-			CreatePreparedInstances(preparer), preparer.AcceleratorCreator,
-			new SwatchExtractor(preparer),
-			from entity in source.LoopChildren(true)
-			let light = entity as InfiniteLight
-			where light != null
-			select light,
-			(from entity in source.LoopChildren(true)
-			 let camera = entity as Camera
-			 where camera != null
-			 select camera).SingleOrDefault()
-		);
+		public PreparedScene CreatePreparedScene(ScenePreparer preparer, string cameraName)
+		{
+			var lights = new List<InfiniteLight>();
+			var cameras = new List<Camera>();
+
+			foreach (Entity entity in source.LoopChildren(true))
+			{
+				if (entity is InfiniteLight light) lights.Add(light);
+				else if (entity is Camera camera) cameras.Add(camera);
+			}
+
+			int cameraIndex = cameras.Count == 0 ? -1 : 0;
+
+			if (cameraName != null) cameraIndex = cameras.FindIndex(camera => camera.Name == cameraName);
+			if (cameraIndex < 0) throw new InvalidOperationException($"Cannot find a matching {nameof(Camera)}.");
+
+			return new PreparedScene
+			(
+				CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),
+				CreatePreparedInstances(preparer), preparer.AcceleratorCreator,
+				new SwatchExtractor(preparer), lights, cameras[cameraIndex]
+			);
+		}
 
 		ImmutableArray<PreparedInstance> CreatePreparedInstances(ScenePreparer preparer)
 		{

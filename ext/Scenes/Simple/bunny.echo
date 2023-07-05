@@ -45,14 +45,33 @@
 	.Add(new SphereEntity { .Material = new Emissive { .Albedo = new Pure("hdr(60 30 30)") } .Position = "2 2 -6" .Radius = "0.3" })
 	.Add(new SphereEntity { .Material = new Emissive { .Albedo = new Pure("hdr(30 30 30)") } .Position = "-3 3 -4" .Radius = "0.3" })
 
-	.Add(new Camera("110") { .Position = "0 3 -6" .Rotation = "30 0 0" })
+	.Add(new PerspectiveCamera { .Name = "main" .FieldOfView = "110" .Position = "0 3 -6" .Rotation = "30 0 0" })
+	.Add(new CylindricalCamera { .Name = "cylindrical" .Position = "0 4 -8" })
 }
 
 :raw = new RenderProfile
 {
 	.Scene = link scene
-	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .LayerName = "path" }  ]
+	.EvaluationProfiles = [ new EvaluationProfile { .Evaluator = new PathTracedEvaluator .LayerName = "path" } ]
 }
 
 :standard = new StandardPathTracedProfile(link scene) { .OnlyDenoise = "True" }
 :final = new StandardPathTracedProfile(link scene "100")
+
+:explore = new RenderProfile
+{
+    .Scene = link scene
+    .CameraName = "cylindrical"
+    .Resolution = "2048 1024"
+    .EvaluationProfiles = 
+    [
+        new EvaluationProfile { .Evaluator = new PathTracedEvaluator .LayerName = "path" .NoiseThreshold = "0.02" }
+        new EvaluationProfile { .Evaluator = new NormalDepthEvaluator .LayerName = "normal_depth" }
+        new EvaluationProfile { .Evaluator = new AlbedoEvaluator .LayerName = "albedo" }
+    ]
+    .CompositionLayers =
+    [
+        new TextureManage { .CopySources = [ "path" ] .CopyLayers = [ "main" ] }
+        new OidnDenoise
+    ]
+}

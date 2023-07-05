@@ -34,7 +34,7 @@
 	# Camera position adjusted to fit entire FOV into the box
 	# float radian = Scalars.ToRadians(camera.FieldOfView / 2f)
 	# camera.Position += Float3.Backward * (5 / MathF.Tan(radian))
-	.Add(new Camera("42") { .Position = "0 5 -18.025444" })
+	.Add(new PerspectiveCamera { .FieldOfView = "42" .Position = "0 5 -18.025444" })
 }
 
 :raw = new RenderProfile

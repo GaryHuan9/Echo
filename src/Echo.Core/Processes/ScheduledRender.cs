@@ -140,7 +140,7 @@ public sealed class ScheduledRender
 
 	static PreparationOperation SchedulePreparationOperation(Device device, ScheduledRender render)
 	{
-		var factory = new PreparationOperation.Factory(render.profile.Scene, render.boxedScene);
+		var factory = new PreparationOperation.Factory(render.profile, render.boxedScene);
 		return (PreparationOperation)device.Schedule(factory);
 	}
 

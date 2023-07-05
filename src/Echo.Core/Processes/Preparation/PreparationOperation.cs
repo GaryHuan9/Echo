@@ -4,20 +4,19 @@ using System.Threading;
 using Echo.Core.Aggregation.Preparation;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Async;
-using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Scenic.Preparation;
 
 namespace Echo.Core.Processes.Preparation;
 
 public sealed class PreparationOperation : AsyncOperation
 {
-	PreparationOperation(ImmutableArray<IWorker> workers, Scene sourceScene, StrongBox<PreparedScene> boxedScene) : base(workers)
+	PreparationOperation(ImmutableArray<IWorker> workers, RenderProfile renderProfile, StrongBox<PreparedScene> boxedScene) : base(workers)
 	{
-		this.sourceScene = sourceScene;
+		this.renderProfile = renderProfile;
 		this.boxedScene = boxedScene;
 	}
 
-	readonly Scene sourceScene;
+	readonly RenderProfile renderProfile;
 	readonly StrongBox<PreparedScene> boxedScene;
 
 	/// <summary>
@@ -27,23 +26,23 @@ public sealed class PreparationOperation : AsyncOperation
 
 	protected override ComputeTask Execute()
 	{
-		var preparer = new ScenePreparer(sourceScene);
-		PreparedScene prepared = preparer.Prepare();
+		ScenePreparer preparer = new ScenePreparer(renderProfile.Scene);
+		PreparedScene prepared = preparer.Prepare(renderProfile.CameraName);
 		Volatile.Write(ref boxedScene.Value, prepared);
 		return ComputeTask.CompletedTask;
 	}
 
 	public readonly struct Factory : IOperationFactory
 	{
-		public Factory(Scene sourceScene, StrongBox<PreparedScene> boxedScene)
+		public Factory(RenderProfile renderProfile, StrongBox<PreparedScene> boxedScene)
 		{
-			this.sourceScene = sourceScene;
+			this.renderProfile = renderProfile;
 			this.boxedScene = boxedScene;
 		}
 
-		readonly Scene sourceScene;
+		readonly RenderProfile renderProfile;
 		readonly StrongBox<PreparedScene> boxedScene;
 
-		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new PreparationOperation(workers, sourceScene, boxedScene);
+		public Operation CreateOperation(ImmutableArray<IWorker> workers) => new PreparationOperation(workers, renderProfile, boxedScene);
 	}
 }

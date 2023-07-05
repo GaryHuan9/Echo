@@ -6,6 +6,7 @@ using Echo.Core.Common.Packed;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes.Composition;
 using Echo.Core.Processes.Evaluation;
+using Echo.Core.Scenic.Cameras;
 using Echo.Core.Scenic.Hierarchies;
 using Echo.Core.Textures.Evaluation;
 
@@ -18,10 +19,18 @@ namespace Echo.Core.Processes;
 public record RenderProfile
 {
 	/// <summary>
-	/// The <see cref="Scene"/> to render.
+	/// The <see cref="Echo.Core.Scenic.Hierarchies.Scene"/> to render.
 	/// </summary>
 	[EchoSourceUsable]
 	public Scene Scene { get; init; }
+
+	/// <summary>
+	/// An optional identifier to specify a particular <see cref="Camera"/> to use.
+	/// </summary>
+	/// <remarks>This is matched against the <see cref="Camera.Name"/> property on <see cref="Camera"/>.
+	/// If this is left unassigned (null), an arbitrary <see cref="Camera"/> will be used.</remarks>
+	[EchoSourceUsable]
+	public string CameraName { get; init; }
 
 	/// <summary>
 	/// The size of the destination <see cref="RenderTexture"/> to render to. 
@@ -64,7 +73,7 @@ public record RenderProfile
 		bool validTileSize = BitOperations.IsPow2(TileSize.X) && BitOperations.IsPow2(TileSize.Y);
 		if (!validTileSize) throw ExceptionHelper.Invalid(nameof(TileSize), TileSize, InvalidType.outOfBounds);
 
-		if (EvaluationProfiles.IsDefault) throw ExceptionHelper.Invalid(nameof(EvaluationProfiles), InvalidType.countIsZero);
+		if (EvaluationProfiles.IsDefault) throw ExceptionHelper.Invalid(nameof(EvaluationProfiles), InvalidType.isNull);
 		if (CompositionLayers.IsDefault) throw ExceptionHelper.Invalid(nameof(CompositionLayers), InvalidType.isNull);
 
 		foreach (EvaluationProfile profile in EvaluationProfiles) profile.Validate();

@@ -1,6 +1,4 @@
-﻿using System;
-using Echo.Core.Aggregation.Primitives;
-using Echo.Core.Common.Mathematics;
+﻿using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common.Mathematics.Primitives;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -13,42 +11,33 @@ namespace Echo.Core.Scenic.Cameras;
 /// A sensor through which a <see cref="Scene"/> can be evaluated.
 /// </summary>
 /// <remarks>The origin of <see cref="Ray"/>s.</remarks>
-[EchoSourceUsable]
-public class Camera : Entity
+public abstract class Camera : Entity
 {
-	[EchoSourceUsable]
-	public Camera(float fieldOfView = 60f) => FieldOfView = fieldOfView;
-
-	float fieldOfView;
-	float forwardLength;
-
 	/// <summary>
-	/// Horizontal field of view in degrees.
+	/// An optional identifier for this <see cref="Camera"/>.
 	/// </summary>
 	[EchoSourceUsable]
-	public float FieldOfView
-	{
-		get => fieldOfView;
-		set
-		{
-			fieldOfView = value;
-			forwardLength = 0.5f / MathF.Tan(Scalars.ToRadians(value) / 2f);
-		}
-	}
+	public string Name { get; set; }
 
 	/// <summary>
-	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>.
+	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>, using a <see cref="CameraSample"/>.
 	/// </summary>
-	public Ray SpawnRay(in RaySpawner spawner, in CameraSample sample) => SpawnRay(spawner, sample.uv);
+	public abstract Ray SpawnRay(in RaySpawner spawner, in CameraSample sample);
 
 	/// <summary>
-	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>.
+	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>, without a <see cref="CameraSample"/>.
 	/// </summary>
-	public Ray SpawnRay(in RaySpawner spawner) => SpawnRay(spawner, Float2.Half);
+	public abstract Ray SpawnRay(in RaySpawner spawner);
 
+	/// <summary>
+	/// Identical to <see cref="LookAt(Float3)"/>, except points to an <see cref="Entity"/>.
+	/// </summary>
 	[EchoSourceUsable]
 	public void LookAt(Entity target) => LookAt(target.ContainedPosition);
 
+	/// <summary>
+	/// Points the local <see cref="Float3.Forward"/> direction at a position in world space.
+	/// </summary>
 	[EchoSourceUsable]
 	public void LookAt(Float3 target)
 	{
@@ -60,10 +49,9 @@ public class Camera : Entity
 		Rotation = new Versor(xAngle, yAngle, 0f);
 	}
 
-	Ray SpawnRay(in RaySpawner spawner, Float2 uv)
+	protected override void CheckRoot(EntityPack root)
 	{
-		Float3 direction = spawner.SpawnX(uv).CreateXY(forwardLength);
-		direction = InverseTransform.MultiplyDirection(direction);
-		return new Ray(ContainedPosition, direction.Normalized);
+		base.CheckRoot(root);
+		if (root is not Scene) throw SceneException.RootNotScene(nameof(Camera));
 	}
 }

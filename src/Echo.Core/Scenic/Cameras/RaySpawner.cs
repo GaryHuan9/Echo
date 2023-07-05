@@ -24,7 +24,7 @@ public readonly struct RaySpawner
 	}
 
 	public readonly Int2 position;
-	readonly Float2 sizeR;
+	public readonly Float2 sizeR;
 	readonly Float2 offsets;
 
 	/// <summary>

@@ -118,7 +118,7 @@ public sealed class EvaluationOperation : Operation<EvaluatorStatistics>
 					{
 						distribution.BeginSession();
 
-						var cameraSample = new CameraSample(distribution);
+						var cameraSample = CameraSample.Create(distribution);
 						Ray ray = scene.camera.SpawnRay(spawner, cameraSample);
 
 						Float4 evaluated = profile.Evaluator.Evaluate

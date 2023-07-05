@@ -70,8 +70,9 @@ public sealed partial record ScenePreparer
 	/// <summary>
 	/// Creates a <see cref="PreparedScene"/>.
 	/// </summary>
+	/// <param name="cameraName">An optional identifier to specify which <see cref="Cameras.Camera"/> to be used.</param>
 	/// <returns>The prepared version of the initially input <see cref="Scene"/>.</returns>
-	public PreparedScene Prepare()
+	public PreparedScene Prepare(string cameraName = null)
 	{
 		Node root = CreateOrGetNode(scene);
 		CreateChildren(root, TokenHierarchy.MaxLayer);
@@ -84,7 +85,7 @@ public sealed partial record ScenePreparer
 			if (visited.Add(child)) CreatePrepared(child);
 		}
 
-		return root.CreatePreparedScene(this);
+		return root.CreatePreparedScene(this, cameraName);
 
 		// ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
 		void CreateChildren(Node node, int budget)

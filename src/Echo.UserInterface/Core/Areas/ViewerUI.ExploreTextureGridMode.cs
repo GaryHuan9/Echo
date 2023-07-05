@@ -178,7 +178,8 @@ partial class ViewerUI
 			int length = Volatile.Read(ref pointsLength);
 			if (length == 0) return;
 
-			float fov = Scalars.ToRadians(camera.FieldOfView);
+			// TODO float fov = Scalars.ToRadians(camera.FieldOfView);
+			float fov = 2f;
 			float widthScale = 1f / MathF.Tan(fov / 2f);
 			float heightScale = widthScale * mainTexture.aspects.X;
 
