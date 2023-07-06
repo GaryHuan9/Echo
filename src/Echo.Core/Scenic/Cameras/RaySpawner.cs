@@ -15,7 +15,7 @@ public readonly struct RaySpawner
 	/// Constructs a new <see cref="RaySpawner"/>.
 	/// </summary>
 	/// <param name="texture">The destination <see cref="TextureGrid"/>; most often this is also an <see cref="IEvaluationLayer"/>.</param>
-	/// <param name="position">A location on the <see cref="TextureGrid"/> this <see cref="RaySpawner"/> originates from.</param>
+	/// <param name="position">A pixel location on the <see cref="TextureGrid"/> this <see cref="RaySpawner"/> originates from.</param>
 	public RaySpawner(TextureGrid texture, Int2 position)
 	{
 		sizeR = texture.sizeR;
@@ -28,38 +28,38 @@ public readonly struct RaySpawner
 	readonly Float2 offsets;
 
 	/// <summary>
-	/// Converts a normalized coordinate into a coordinate normalized on the X axis.
+	/// Converts a shift within the pixel into a normalized coordinate on the texture.
 	/// </summary>
-	/// <param name="uv">The normalized coordinate that is between zero and one.</param>
-	/// <returns>The coordinate that is normalized on the X axis based on this <see cref="RaySpawner"/>.</returns>
+	/// <param name="shift">A normalized shift between zero and one within the spawning pixel.</param>
+	/// <returns>The texture coordinate normalized on the X axis based on this <see cref="RaySpawner"/>.</returns>
 	/// <remarks>The returned <see cref="Float2.X"/> component is between -0.5f and 0.5f,
 	/// and the <see cref="Float2.Y"/> component is scaled proportionally around zero.</remarks>
-	public Float2 SpawnX(Float2 uv)
+	public Float2 SpawnX(Float2 shift)
 	{
-		uv += position;
+		shift += position;
 
 		return new Float2
 		(
-			FastMath.FMA(uv.X, sizeR.X, 1f / -2f),
-			FastMath.FMA(uv.Y, sizeR.X, offsets.Y)
+			FastMath.FMA(shift.X, sizeR.X, 1f / -2f),
+			FastMath.FMA(shift.Y, sizeR.X, offsets.Y)
 		);
 	}
 
 	/// <summary>
-	/// Converts a normalized coordinate into a coordinate normalized on the Y axis.
+	/// Converts a shift within the pixel into a normalized coordinate on the texture.
 	/// </summary>
-	/// <param name="uv">The normalized coordinate that is between zero and one.</param>
-	/// <returns>The coordinate that is normalized on the Y axis based on this <see cref="RaySpawner"/>.</returns>
+	/// <param name="shift">A normalized shift between zero and one within the spawning pixel.</param>
+	/// <returns>The texture coordinate normalized on the Y axis based on this <see cref="RaySpawner"/>.</returns>
 	/// <remarks>The returned <see cref="Float2.Y"/> component is between -0.5f and 0.5f,
 	/// and the <see cref="Float2.X"/> component is scaled proportionally around zero.</remarks>
-	public Float2 SpawnY(Float2 uv)
+	public Float2 SpawnY(Float2 shift)
 	{
-		uv += position;
+		shift += position;
 
 		return new Float2
 		(
-			FastMath.FMA(uv.X, sizeR.Y, offsets.X),
-			FastMath.FMA(uv.Y, sizeR.Y, 1f / -2f)
+			FastMath.FMA(shift.X, sizeR.Y, offsets.X),
+			FastMath.FMA(shift.Y, sizeR.Y, 1f / -2f)
 		);
 	}
 }

@@ -88,6 +88,8 @@ partial record ScenePreparer
 			if (cameraName != null) cameraIndex = cameras.FindIndex(camera => camera.Name == cameraName);
 			if (cameraIndex < 0) throw new InvalidOperationException($"Cannot find a matching {nameof(Camera)}.");
 
+			cameras[cameraIndex].Prepare();
+
 			return new PreparedScene
 			(
 				CollectionsMarshal.AsSpan(geometrySources), CollectionsMarshal.AsSpan(lightSources),

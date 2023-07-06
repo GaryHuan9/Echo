@@ -20,9 +20,14 @@ public abstract class Camera : Entity
 	public string Name { get; set; }
 
 	/// <summary>
+	/// Invoked before rendering to initialize this <see cref="Camera"/> and prepare it for rendering.
+	/// </summary>
+	public virtual void Prepare() { }
+
+	/// <summary>
 	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>, using a <see cref="CameraSample"/>.
 	/// </summary>
-	public abstract Ray SpawnRay(in RaySpawner spawner, in CameraSample sample);
+	public abstract Ray SpawnRay(in RaySpawner spawner, CameraSample sample);
 
 	/// <summary>
 	/// Spawns a <see cref="Ray"/> from this <see cref="Camera"/>, without a <see cref="CameraSample"/>.
@@ -33,7 +38,11 @@ public abstract class Camera : Entity
 	/// Identical to <see cref="LookAt(Float3)"/>, except points to an <see cref="Entity"/>.
 	/// </summary>
 	[EchoSourceUsable]
-	public void LookAt(Entity target) => LookAt(target.ContainedPosition);
+	public void LookAt(Entity target)
+	{
+		if (target.Root == Root) LookAt(target.ContainedPosition);
+		throw SceneException.AmbiguousTransform(target);
+	}
 
 	/// <summary>
 	/// Points the local <see cref="Float3.Forward"/> direction at a position in world space.
@@ -41,10 +50,10 @@ public abstract class Camera : Entity
 	[EchoSourceUsable]
 	public void LookAt(Float3 target)
 	{
-		Float3 to = (target - ContainedPosition).Normalized;
+		Float3 direction = (target - ContainedPosition).Normalized;
 
-		float yAngle = -Float2.Up.SignedAngle(to.XZ);
-		float xAngle = -Float2.Right.SignedAngle(to.RotateXZ(yAngle).ZY);
+		float yAngle = -Float2.Up.SignedAngle(direction.XZ);
+		float xAngle = -Float2.Right.SignedAngle(direction.RotateXZ(yAngle).ZY);
 
 		Rotation = new Versor(xAngle, yAngle, 0f);
 	}

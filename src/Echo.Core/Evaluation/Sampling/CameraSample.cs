@@ -7,18 +7,18 @@ namespace Echo.Core.Evaluation.Sampling;
 /// </summary>
 public readonly struct CameraSample
 {
-	public CameraSample(Sample2D uv, Sample1D time)
+	public CameraSample(Sample2D shift, Sample2D lens)
 	{
-		this.uv = uv;
-		this.time = time;
+		this.shift = shift;
+		this.lens = lens;
 	}
 
-	public readonly Sample2D uv;
-	public readonly Sample1D time;
+	public readonly Sample2D shift;
+	public readonly Sample2D lens;
 
 	public static CameraSample Create(ContinuousDistribution distribution) => new
 	(
 		distribution.Next2D(),
-		distribution.Next1D()
+		distribution.Next2D()
 	);
 }

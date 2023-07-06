@@ -17,20 +17,19 @@ public sealed class CylindricalCamera : Camera
 {
 	Float3x3 rotationMatrix;
 
-	public override Ray SpawnRay(in RaySpawner spawner, in CameraSample sample) => SpawnRay(spawner, sample.uv);
-
-	public override Ray SpawnRay(in RaySpawner spawner) => SpawnRay(spawner, Float2.Half);
-
-	protected override void OnTransformRecalculated()
+	public override void Prepare()
 	{
-		base.OnTransformRecalculated();
+		base.Prepare();
 		rotationMatrix = (Float3x3)ContainedRotation;
 	}
 
-	Ray SpawnRay(in RaySpawner spawner, Float2 uv)
-	{
-		uv = (spawner.position + uv) * spawner.sizeR;
+	public override Ray SpawnRay(in RaySpawner spawner, CameraSample sample) => SpawnRay(spawner, sample.shift);
 
+	public override Ray SpawnRay(in RaySpawner spawner) => SpawnRay(spawner, Float2.Half);
+
+	Ray SpawnRay(in RaySpawner spawner, Float2 shift)
+	{
+		Float2 uv = (spawner.position + shift) * spawner.sizeR;
 		Float3 direction = CylindricalTexture.ToDirection(uv);
 		direction = (rotationMatrix * direction).Normalized;
 		return new Ray(ContainedPosition, direction);
