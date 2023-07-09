@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using System.Threading;
 using Echo.Core.Common;
 using Echo.Core.Common.Diagnostics;
@@ -27,6 +28,7 @@ partial class ViewerUI
 
 		Float3 viewPosition;
 		Float3 viewRotation;
+		float viewFieldOfView;
 		float viewSpeed = 0.03f;
 		float viewSensitivity = 0.1f;
 
@@ -76,16 +78,12 @@ partial class ViewerUI
 				resetBuffer = true;
 			}
 
-			if (UpdateViewFromInput()) resetBuffer = true;
-
-			if (resetBuffer)
+			if (UpdateViewFromInput() || resetBuffer)
 			{
-				depthBuffer.AsSpan().Fill(float.NegativeInfinity);
-				colorBuffer.AsSpan().Clear();
-				resetBuffer = false;
+				//If this is too slow in the future, we can rewrite it to use SIMD and progress update across frames
+				bool updated = UpdateBufferFromView(size);
+				if (updated) resetBuffer = false;
 			}
-
-			UpdateBufferFromView(size); //If this is too slow in the future, we can rewrite it to use SIMD and progress update across frames
 
 			UpdateDisplayFromBuffer(size);
 			DrawDisplay(drawList, plane);
@@ -104,8 +102,30 @@ partial class ViewerUI
 
 				if (ImGui.BeginMenu("Settings"))
 				{
+					ImGui.SliderFloat("Field of View", ref viewFieldOfView, 10f, 170f);
 					ImGui.SliderFloat("Speed", ref viewSpeed, 1E-3f, 1E2f, "%f", ImGuiSliderFlags.Logarithmic);
 					ImGui.SliderFloat("Sensitivity", ref viewSensitivity, 0f, 1f);
+
+					ImGui.EndMenu();
+				}
+
+				if (ImGui.BeginMenu("Transform"))
+				{
+					Vector3 position = new Vector3(viewPosition.X, viewPosition.Y, viewPosition.Z);
+					Vector3 rotation = new Vector3(viewRotation.X, viewRotation.Y, viewRotation.Z);
+
+					ImGui.InputFloat3("Position", ref position);
+					ImGui.InputFloat3("Rotation", ref rotation);
+
+					Float3 newPosition = new Float3(position.X, position.Y, position.Z);
+					Float3 newRotation = new Float3(rotation.X, rotation.Y, rotation.Z);
+
+					if (viewPosition != newPosition || viewRotation != newRotation)
+					{
+						viewPosition = newPosition;
+						viewRotation = newRotation;
+						resetBuffer = true;
+					}
 
 					ImGui.EndMenu();
 				}
@@ -129,6 +149,8 @@ partial class ViewerUI
 		{
 			viewPosition = camera.ContainedPosition;
 			viewRotation = camera.ContainedRotation.Angles;
+			viewFieldOfView = camera is PerspectiveCamera perspective ? perspective.FieldOfView : 90f;
+
 			resetBuffer = true;
 		}
 
@@ -173,13 +195,15 @@ partial class ViewerUI
 			static int Pressed(ImGuiKey key) => ImGui.IsKeyDown(key) ? 1 : 0;
 		}
 
-		void UpdateBufferFromView(Int2 size)
+		bool UpdateBufferFromView(Int2 size)
 		{
 			int length = Volatile.Read(ref pointsLength);
-			if (length == 0) return;
+			if (length == 0) return false;
 
-			// TODO float fov = Scalars.ToRadians(camera.FieldOfView);
-			float fov = 2f;
+			depthBuffer.AsSpan(0, size.Product).Fill(float.NegativeInfinity);
+			colorBuffer.AsSpan(0, size.Product).Clear();
+
+			float fov = Scalars.ToRadians(viewFieldOfView);
 			float widthScale = 1f / MathF.Tan(fov / 2f);
 			float heightScale = widthScale * mainTexture.aspects.X;
 
@@ -202,14 +226,18 @@ partial class ViewerUI
 
 				Float2 uv = new Float2(point.X / 2f + 0.5f, point.Y / -2f + 0.5f);
 				Int2 position = (Int2)(uv * size);
-				if (!(Int2.Zero <= position) || !(position < size)) continue;
 
-				int index = position.Y * size.X + position.X;
-				if (point.Z <= depthBuffer[index]) continue;
+				if (Int2.Zero <= position && position < size)
+				{
+					int index = position.Y * size.X + position.X;
+					if (point.Z <= depthBuffer[index]) continue;
 
-				depthBuffer[index] = point.Z;
-				colorBuffer[index] = pointsColor[i];
+					depthBuffer[index] = point.Z;
+					colorBuffer[index] = pointsColor[i];
+				}
 			}
+
+			return true;
 		}
 
 		unsafe void UpdateDisplayFromBuffer(Int2 size)

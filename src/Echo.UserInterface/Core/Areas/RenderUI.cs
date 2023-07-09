@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Text;
 using Echo.Core.Aggregation.Preparation;
+using Echo.Core.Aggregation.Primitives;
 using Echo.Core.Common;
 using Echo.Core.Common.Compute;
 using Echo.Core.Common.Compute.Statistics;
@@ -15,6 +16,7 @@ using Echo.Core.Processes;
 using Echo.Core.Processes.Composition;
 using Echo.Core.Processes.Evaluation;
 using Echo.Core.Processes.Preparation;
+using Echo.Core.Scenic.Cameras;
 using Echo.Core.Textures.Colors;
 using Echo.Core.Textures.Evaluation;
 using Echo.Core.Textures.Grids;
@@ -264,16 +266,21 @@ public sealed class RenderUI : AreaUI
 
 				ImGuiCustom.PropertySeparator();
 
-				if (scene.camera != null)
-				{
-					ImGuiCustom.Property("Camera Position", scene.camera.ContainedPosition.ToInvariant());
-					ImGuiCustom.Property("Camera Forward", (scene.camera.ContainedRotation * Float3.Forward).ToInvariant());
-					ImGuiCustom.Property("Camera Up", (scene.camera.ContainedRotation * Float3.Up).ToInvariant());
-					// TODO ImGuiCustom.Property("Camera Field of View", scene.camera.FieldOfView.ToInvariant()); 
-				}
+				if (scene.camera != null) DrawCameraInfo(scene.camera);
 				else ImGui.TextUnformatted("No camera found");
 
 				ImGuiCustom.EndProperties();
+
+				static void DrawCameraInfo(Camera camera)
+				{
+					ImGuiCustom.Property("Camera Position", camera.ContainedPosition.ToInvariant());
+					ImGuiCustom.Property("Camera Forward", (camera.ContainedRotation * Float3.Forward).ToInvariant());
+					ImGuiCustom.Property("Camera Up", (camera.ContainedRotation * Float3.Up).ToInvariant());
+					ImGuiCustom.Property("Camera Type", camera.GetType().Name);
+
+					if (camera is not PerspectiveCamera perspective) return;
+					ImGuiCustom.Property("Camera Field of View", perspective.FieldOfView.ToInvariant());
+				}
 			}
 
 			ImGuiCustom.EndSection();
@@ -300,17 +307,18 @@ public sealed class RenderUI : AreaUI
 				ImGui.TableSetupColumn("Instance");
 				ImGui.TableHeadersRow();
 
-				ImGuiCustom.TableItem("Unique");
-				ImGuiCustom.TableItem(pack.geometries.counts.triangle.ToInvariant());
-				ImGuiCustom.TableItem(pack.geometries.counts.sphere.ToInvariant());
-				ImGuiCustom.TableItem(pack.geometries.counts.instance.ToInvariant());
-
-				ImGuiCustom.TableItem("Total");
-				ImGuiCustom.TableItem(pack.geometries.countsTotal.triangle.ToInvariant());
-				ImGuiCustom.TableItem(pack.geometries.countsTotal.sphere.ToInvariant());
-				ImGuiCustom.TableItem(pack.geometries.countsTotal.instance.ToInvariant());
+				DrawGeometryCounts("Unique", pack.geometries.counts);
+				DrawGeometryCounts("Total", pack.geometries.countsTotal);
 
 				ImGui.EndTable();
+
+				static void DrawGeometryCounts(string label, in GeometryCounts counts)
+				{
+					ImGuiCustom.TableItem(label);
+					ImGuiCustom.TableItem(counts.triangle.ToInvariant());
+					ImGuiCustom.TableItem(counts.sphere.ToInvariant());
+					ImGuiCustom.TableItem(counts.instance.ToInvariant());
+				}
 			}
 
 			ImGuiCustom.EndSection();

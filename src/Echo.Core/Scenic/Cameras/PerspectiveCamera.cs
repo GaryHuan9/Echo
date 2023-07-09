@@ -24,9 +24,17 @@ public sealed class PerspectiveCamera : Camera
 	[EchoSourceUsable]
 	public float FieldOfView { get; set; } = 65f;
 
+	/// <summary>
+	/// The radius of the lens (in photography, the aperture), controlling the intensity of the depth of field.
+	/// </summary>
+	/// <remarks>This is usually a small number, such as 0.01. If this is zero or negative, depth of field is disabled.</remarks>
 	[EchoSourceUsable]
-	public float LensRadius { get; set; } = 0f;
+	public float LensRadius { get; set; } = 0.01f;
 
+	/// <summary>
+	/// The distance at which this <see cref="PerspectiveCamera"/> produces a perfectly clear image.
+	/// </summary>
+	/// <remarks>If this is zero or negative, depth of field is disabled.</remarks>
 	[EchoSourceUsable]
 	public float FocalDistance { get; set; }
 
