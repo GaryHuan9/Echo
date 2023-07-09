@@ -128,6 +128,7 @@ public sealed class SystemUI : AreaUI
 		if (!ImGuiCustom.BeginSection("Garbage Collector")) return;
 
 		var info = GC.GetGCMemoryInfo();
+		if (info.Index == 0) return;
 
 		if (ImGui.Button("Collect All Generations"))
 		{

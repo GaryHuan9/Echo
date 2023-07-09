@@ -17,13 +17,13 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="ImGui.NET" Version="1.89.2" />
-        <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.1" />
-        <PackageReference Include="ppy.SDL2-CS" Version="1.0.630-alpha" />
+        <PackageReference Include="ImGui.NET" Version="1.89.7.1"/>
+        <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.1"/>
+        <PackageReference Include="ppy.SDL2-CS" Version="1.0.630-alpha"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../Echo.Core/Echo.Core.csproj" />
+        <ProjectReference Include="../Echo.Core/Echo.Core.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

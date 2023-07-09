@@ -3,21 +3,22 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net6.0</TargetFramework>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../Echo.Core/Echo.Core.csproj" />
+        <ProjectReference Include="../Echo.Core/Echo.Core.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.1" />
+        <PackageReference Include="OpenImageDenoisePrecompiled" Version="1.0.1"/>
     </ItemGroup>
 </Project>

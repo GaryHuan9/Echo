@@ -156,9 +156,9 @@ public sealed partial class ViewerUI : AreaUI
 	{
 		//Detect for interaction
 		ImGui.SetCursorScreenPos(region.MinVector2);
-		ImGui.PushAllowKeyboardFocus(false);
+		ImGui.PushTabStop(false);
 		ImGui.InvisibleButton("Viewer", region.extend.AsVector2() * 2f);
-		ImGui.PopAllowKeyboardFocus();
+		ImGui.PopTabStop();
 
 		if (ImGui.IsItemActive() || ImGui.IsItemHovered())
 		{

@@ -10,7 +10,6 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <DefineConstants>TRACE;</DefineConstants>
-        <Optimize>false</Optimize>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -18,8 +17,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="12.2.2" />
-        <ProjectReference Include="../Echo.Generation/Echo.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="12.2.2"/>
+        <ProjectReference Include="../Echo.Generation/Echo.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -28,7 +27,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="Scenic/ExamplesOld/**" />
+        <Compile Remove="Scenic/ExamplesOld/**"/>
     </ItemGroup>
 
 </Project>
