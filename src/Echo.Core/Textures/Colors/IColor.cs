@@ -12,7 +12,7 @@ public interface IColor<out T> where T : unmanaged, IColor<T>
 	/// <summary>
 	/// Returns this <see cref="IColor{T}"/> converted as a <see cref="Float4"/>.
 	/// </summary>
-	public Float4 ToFloat4() => ToRGBA128();
+	public Float4 ToFloat4();
 
 	/// <summary>
 	/// Creates a new <typeparamref name="T"/> from an <see cref="RGBA128"/>.
@@ -22,5 +22,5 @@ public interface IColor<out T> where T : unmanaged, IColor<T>
 	/// <summary>
 	/// Creates a new <typeparamref name="T"/> from a <see cref="Float4"/>.
 	/// </summary>
-	public T FromFloat4(Float4 value) => FromRGBA128((RGBA128)value);
+	public T FromFloat4(Float4 value);
 }

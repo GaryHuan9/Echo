@@ -31,7 +31,13 @@ static class LiteralParser
 		AddTryParser<Int4>(InvariantFormat.TryParse);
 
 		AddTryParser<RGBA128>(RGBA128.TryParse);
-		AddTryParser<RGB128>(RGBA128.TryParse);
+
+		AddTryParser((CharSpan span, out RGB128 result) =>
+		{
+			bool success = RGBA128.TryParse(span, out RGBA128 parsed);
+			result = (RGB128)parsed;
+			return success;
+		});
 
 		AddTryParser((CharSpan span, out Versor result) =>
 		{

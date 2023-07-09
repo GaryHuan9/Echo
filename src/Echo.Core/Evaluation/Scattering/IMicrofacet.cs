@@ -26,35 +26,13 @@ public interface IMicrofacet
 	/// <returns>The area of the shadowed microfacet (blocked by others) over the area of the visible microfacet.</returns>
 	public float ShadowingRatio(Float3 direction);
 
+	/// <summary>
+	/// Samples this <see cref="IMicrofacet"/> and produces a normal direction that should be used.
+	/// </summary>
+	/// <param name="outgoing">The <see cref="BxDF"/> local direction from which light enters.</param>
+	/// <param name="sample">The <see cref="Sample2D"/> to use.</param>
+	/// <returns>The normal direction that was sampled to produce an incident direction.</returns>
 	public Float3 Sample(Float3 outgoing, Sample2D sample);
-
-	/// <summary>
-	/// Calculates the fraction of visible microfacet faces over all microfacet faces from a direction.
-	/// </summary>
-	/// <param name="direction">The direction towards which the visibility is calculated.</param>
-	/// <returns>The calculated fraction, between 0 and 1.</returns>
-	public sealed float Visibility(Float3 direction) => 1f / (1f + ShadowingRatio(direction));
-
-	/// <summary>
-	/// Calculates the fraction of visible microfacet faces from two directions.
-	/// </summary>
-	/// <param name="outgoing">The first direction towards which the visibility is calculated.</param>
-	/// <param name="incident">The second direction towards which the visibility is calculated.</param>
-	/// <returns>The calculated fraction, between 0 and 1.</returns>
-	public sealed float Visibility(Float3 outgoing, Float3 incident) => 1f / (1f + ShadowingRatio(outgoing) + ShadowingRatio(incident));
-
-	/// <summary>
-	/// Calculates the pdf of selecting <paramref name="normal"/> from <see cref="outgoing"/> with <see cref="Sample"/>.
-	/// </summary>
-	/// <param name="outgoing">The unit local source direction from which we hit this <see cref="IMicrofacet"/>.</param>
-	/// <param name="normal">The unit local normal direction that was probabilistically selected to be sampled.</param>
-	/// <returns>The probability density function (pdf) value of this selection.</returns>
-	/// <seealso cref="Sample"/>
-	public sealed float ProbabilityDensity(Float3 outgoing, Float3 normal)
-	{
-		float fraction = ProjectedArea(normal) * Visibility(outgoing);
-		return fraction * FastMath.Abs(outgoing.Dot(normal) / CosineP(outgoing));
-	}
 
 	/// <summary>
 	/// Calculates the alpha value for an <see cref="IMicrofacet"/>.
@@ -70,6 +48,42 @@ public interface IMicrofacet
 		float alpha = roughness * roughness;
 		specular = alpha < Threshold;
 		return specular ? Threshold : alpha;
+	}
+}
+
+public static class MicrofacetExtensions
+{
+	/// <summary>
+	/// Calculates the fraction of visible microfacet faces over all microfacet faces from a direction.
+	/// </summary>
+	/// <param name="microfacet">The <see cref="IMicrofacet"/> to use.</param>
+	/// <param name="direction">The direction towards which the visibility is calculated.</param>
+	/// <returns>The calculated fraction, between 0 and 1.</returns>
+	public static float Visibility<T>(this T microfacet, Float3 direction) where T : IMicrofacet =>
+		1f / (1f + microfacet.ShadowingRatio(direction));
+
+	/// <summary>
+	/// Calculates the fraction of visible microfacet faces from two directions.
+	/// </summary>
+	/// <param name="microfacet">The <see cref="IMicrofacet"/> to use.</param>
+	/// <param name="outgoing">The first direction towards which the visibility is calculated.</param>
+	/// <param name="incident">The second direction towards which the visibility is calculated.</param>
+	/// <returns>The calculated fraction, between 0 and 1.</returns>
+	public static float Visibility<T>(this T microfacet, Float3 outgoing, Float3 incident) where T : IMicrofacet =>
+		1f / (1f + microfacet.ShadowingRatio(outgoing) + microfacet.ShadowingRatio(incident));
+
+	/// <summary>
+	/// Calculates the pdf of selecting <paramref name="normal"/> from <see cref="outgoing"/> with <see cref="IMicrofacet.Sample"/>.
+	/// </summary>
+	/// <param name="microfacet">The <see cref="IMicrofacet"/> to use.</param>
+	/// <param name="outgoing">The unit local source direction from which we hit this <see cref="IMicrofacet"/>.</param>
+	/// <param name="normal">The unit local normal direction that was probabilistically selected to be sampled.</param>
+	/// <returns>The probability density function (pdf) value of this selection.</returns>
+	/// <seealso cref="IMicrofacet.Sample"/>
+	public static float ProbabilityDensity<T>(this T microfacet, Float3 outgoing, Float3 normal) where T : IMicrofacet
+	{
+		float fraction = microfacet.ProjectedArea(normal) * microfacet.Visibility(outgoing);
+		return fraction * FastMath.Abs(outgoing.Dot(normal) / CosineP(outgoing));
 	}
 }
 

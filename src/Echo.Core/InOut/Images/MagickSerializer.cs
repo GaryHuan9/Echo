@@ -89,9 +89,9 @@ public record MagickSerializer : Serializer
 				if (!hasAlpha) value = ((RGBA128)value).AlphaOne;
 				if (gamma) value = ColorConverter.GammaToLinear(value);
 			}
-			else value = Float4.One; //If the pixel is degenerates
+			else value = Float4.One; //If the pixel is degenerate
 
-			texture.Set(new Int2(x, y), ((RGBA128)value).As<T>());
+			texture.Set(new Int2(x, y), default(T).FromRGBA128((RGBA128)value));
 		}
 
 		return texture;

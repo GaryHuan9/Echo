@@ -105,8 +105,9 @@ public sealed class LightCollection
 		{
 			for (int i = 0; i < array.Length; i++)
 			{
+				ref readonly T light = ref array.ItemRef(i);
 				EntityToken token = new EntityToken(type, i);
-				result[++index] = (token, array[i].LightBound);
+				result[++index] = (token, new LightBound(light.BoxBound, light.ConeBound, light.Power));
 			}
 		}
 

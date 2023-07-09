@@ -32,12 +32,6 @@ public interface IPreparedLight
 	public float Power { get; }
 
 	/// <summary>
-	/// The <see cref="LightBound"/> for this <see cref="IPreparedLight"/>, constructed
-	/// from <see cref="BoxBound"/>, <see cref="ConeBound"/>, and <see cref="Power"/>.
-	/// </summary>
-	public sealed LightBound LightBound => new(BoxBound, ConeBound, Power);
-
-	/// <summary>
 	/// Samples the contribution of this <see cref="IPreparedLight"/>.
 	/// </summary>
 	/// <param name="origin">The point towards which we are sampling the contribution of this <see cref="IPreparedLight"/> to.</param>

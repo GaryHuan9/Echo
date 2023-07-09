@@ -71,7 +71,7 @@ public interface ICompositeContext
 	/// Copies the content of a <see cref="Texture"/> to a writeable <see cref="SettableGrid{T}"/>.
 	/// </summary>
 	public sealed ComputeTask CopyAsync<T>(Texture source, SettableGrid<T> destination) where T : unmanaged, IColor<T> =>
-		RunAsync(position => destination.Set(position, source[destination.ToUV(position)].As<T>()), destination.size);
+		RunAsync(position => destination.Set(position, default(T).FromRGBA128(source[destination.ToUV(position)])), destination.size);
 
 	/// <summary>
 	/// Copies the content of a readable <see cref="TextureGrid{T}"/> to a writeable <see cref="SettableGrid{T}"/>.

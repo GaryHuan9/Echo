@@ -68,18 +68,16 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	public RGBA128 ToRGBA128() => this;
 
 	/// <inheritdoc/>
+	public Float4 ToFloat4() => this;
+
+	/// <inheritdoc/>
 	public RGBA128 FromRGBA128(RGBA128 value) => value;
 
 	/// <inheritdoc/>
+	public RGBA128 FromFloat4(Float4 value) => (RGBA128)value;
+
+	/// <inheritdoc/>
 	public string ToString(string format, IFormatProvider provider = null) => d.ToString(format, provider);
-
-	/// <summary>
-	/// Returns this <see cref="RGBA128"/> converted as <typeparamref name="T"/> using <see cref="IColor{T}.FromRGBA128"/>.
-	/// </summary>
-	public T As<T>() where T : unmanaged, IColor<T> => default(T).FromRGBA128(this);
-
-	/// <inheritdoc cref="Parse(ReadOnlySpan{char})"/>
-	public static T Parse<T>(ReadOnlySpan<char> span) where T : unmanaged, IColor<T> => Parse(span).As<T>();
 
 	/// <inheritdoc cref="Parser(ReadOnlySpan{char})"/>
 	/// <returns>If the parsing operation was successful, the result is returned.</returns>
@@ -88,15 +86,6 @@ public readonly partial struct RGBA128 : IColor<RGBA128>, IFormattable
 	{
 		if (TryParse(span, out RGBA128 result)) return result;
 		throw new FormatException($"Cannot parse {span}!");
-	}
-
-	/// <inheritdoc cref="TryParse(ReadOnlySpan{char}, out RGBA128)"/>
-	public static bool TryParse<T>(ReadOnlySpan<char> span, out T result) where T : unmanaged, IColor<T>
-	{
-		bool successful = TryParse(span, out RGBA128 parsed);
-
-		result = parsed.As<T>();
-		return successful;
 	}
 
 	/// <inheritdoc cref="Parser(ReadOnlySpan{char})"/>
