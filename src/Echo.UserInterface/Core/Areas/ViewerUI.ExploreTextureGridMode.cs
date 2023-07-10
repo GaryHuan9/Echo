@@ -147,8 +147,8 @@ partial class ViewerUI
 
 		void ResetCamera()
 		{
-			viewPosition = camera.ContainedPosition;
-			viewRotation = camera.ContainedRotation.Angles;
+			viewPosition = camera.RootedPosition;
+			viewRotation = camera.RootedRotation.Angles;
 			viewFieldOfView = camera is PerspectiveCamera perspective ? perspective.FieldOfView : 90f;
 
 			resetBuffer = true;

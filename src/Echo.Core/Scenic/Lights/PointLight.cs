@@ -16,7 +16,7 @@ namespace Echo.Core.Scenic.Lights;
 [EchoSourceUsable]
 public class PointLight : LightEntity, ILightSource<PreparedPointLight>
 {
-	public PreparedPointLight Extract() => new(Intensity, ContainedPosition);
+	public PreparedPointLight Extract() => new(Intensity, RootedPosition);
 }
 
 /// <summary>

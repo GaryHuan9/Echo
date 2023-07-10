@@ -40,7 +40,7 @@ public abstract class Camera : Entity
 	[EchoSourceUsable]
 	public void LookAt(Entity target)
 	{
-		if (target.Root == Root) LookAt(target.ContainedPosition);
+		if (target.Root == Root) LookAt(target.RootedPosition);
 		throw SceneException.AmbiguousTransform(target);
 	}
 
@@ -50,7 +50,7 @@ public abstract class Camera : Entity
 	[EchoSourceUsable]
 	public void LookAt(Float3 target)
 	{
-		Float3 direction = (target - ContainedPosition).Normalized;
+		Float3 direction = (target - RootedPosition).Normalized;
 
 		float yAngle = -Float2.Up.SignedAngle(direction.XZ);
 		float xAngle = -Float2.Right.SignedAngle(direction.RotateXZ(yAngle).ZY);

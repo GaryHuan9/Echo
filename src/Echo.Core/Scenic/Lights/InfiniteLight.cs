@@ -47,13 +47,13 @@ public abstract class InfiniteLight : LightEntity
 	protected Float3x3 WorldToLocalRotation { get; private set; }
 
 	/// <summary>
-	/// Invoked before rendering; after geometry and other lights are prepared.
-	/// Can be used to initialize this infinite light to prepare it for rendering.
+	/// Invoked before rendering; after geometry and other lights are prepared. Can be
+	/// used to initialize this <see cref="InfiniteLight"/> to prepare it for rendering.
 	/// </summary>
 	public virtual void Prepare(PreparedScene scene)
 	{
-		LocalToWorldRotation = (Float3x3)ContainedRotation;
-		WorldToLocalRotation = (Float3x3)ContainedRotation.Inverse;
+		LocalToWorldRotation = (Float3x3)RootedRotation;
+		WorldToLocalRotation = (Float3x3)RootedRotation.Inverse;
 	}
 
 	/// <summary>

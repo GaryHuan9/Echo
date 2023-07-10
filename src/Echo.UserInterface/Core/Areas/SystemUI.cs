@@ -148,7 +148,7 @@ public sealed class SystemUI : AreaUI
 			ImGuiCustom.Property("Mapped Memory", ((ulong)Environment.WorkingSet).ToInvariantData());
 			ImGuiCustom.Property("Heap Size", ((ulong)info.HeapSizeBytes).ToInvariantData());
 			ImGuiCustom.Property("Available Memory", ((ulong)info.TotalAvailableMemoryBytes).ToInvariantData());
-			ImGuiCustom.Property("Pinned Object Count", info.PinnedObjectsCount.ToString());
+			ImGuiCustom.Property("Pinned Object Count", info.PinnedObjectsCount.ToInvariant());
 			ImGuiCustom.Property("Promoted Memory", ((ulong)info.PromotedBytes).ToInvariantData());
 			ImGuiCustom.Property("GC Block Percentage", info.PauseTimePercentage.ToInvariantPercent());
 			ImGuiCustom.Property("GC Fragmentation", ((ulong)info.FragmentedBytes).ToInvariantData());

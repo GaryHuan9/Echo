@@ -24,7 +24,7 @@ public class OrthographicCamera : Camera
 	public override void Prepare()
 	{
 		base.Prepare();
-		direction = ContainedRotation * Float3.Forward;
+		direction = RootedRotation * Float3.Forward;
 	}
 
 	public override Ray SpawnRay(in RaySpawner spawner, CameraSample sample) => SpawnRay(spawner, sample.shift);

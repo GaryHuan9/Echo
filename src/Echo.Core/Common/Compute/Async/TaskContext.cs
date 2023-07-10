@@ -90,7 +90,7 @@ class TaskContext
 		uint end = start + partitionSize;
 
 		long isBig = (long)partition - (partitionCount - bigPartitions);
-		
+
 		if (isBig >= 0)
 		{
 			start += (uint)isBig;
@@ -113,7 +113,7 @@ class TaskContext
 		uint finished = Interlocked.Increment(ref finishedCount) - 1;
 		Ensure.IsTrue(finished < partitionCount);
 		if (finished + 1 < partitionCount) return;
-		
+
 		using var _ = locker.Fetch();
 		Ensure.IsNull(innerException);
 		for (int i = 0; i < continuations.Count; i++) continuations[i]();

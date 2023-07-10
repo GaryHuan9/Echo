@@ -74,7 +74,7 @@ public sealed class PerspectiveCamera : Camera
 	[EchoSourceUsable]
 	public void Focus(Entity target)
 	{
-		if (target.Root == Root) Focus(target.ContainedPosition);
+		if (target.Root == Root) Focus(target.RootedPosition);
 		throw SceneException.AmbiguousTransform(target);
 	}
 
@@ -85,8 +85,8 @@ public sealed class PerspectiveCamera : Camera
 	[EchoSourceUsable]
 	public void Focus(Float3 target)
 	{
-		Float3 offset = target - ContainedPosition;
-		Float3 forward = ContainedRotation * Float3.Forward;
+		Float3 offset = target - RootedPosition;
+		Float3 forward = RootedRotation * Float3.Forward;
 		FocalDistance = FastMath.Abs(offset.Dot(forward));
 	}
 
@@ -94,6 +94,6 @@ public sealed class PerspectiveCamera : Camera
 	{
 		Float3 direction = spawner.SpawnX(shift).CreateXY(forwardLength);
 		direction = InverseTransform.MultiplyDirection(direction);
-		return new Ray(ContainedPosition, direction.Normalized);
+		return new Ray(RootedPosition, direction.Normalized);
 	}
 }

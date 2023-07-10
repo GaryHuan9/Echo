@@ -86,7 +86,7 @@ public class Entity : IEnumerable<Entity>
 
 	Float4x4 _forwardTransform = Float4x4.Identity;
 	Float4x4 _inverseTransform = Float4x4.Identity;
-	Versor _containedRotation = Versor.Identity;
+	Versor _rootedRotation = Versor.Identity;
 
 	/// <summary>
 	/// A <see cref="Float4x4"/> that transforms from the space of the <see cref="EntityPack"/>
@@ -115,26 +115,26 @@ public class Entity : IEnumerable<Entity>
 	}
 
 	/// <summary>
-	/// The position of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// The position of this <see cref="Entity"/> relative to its <see cref="Root"/>.
 	/// </summary>
-	public Float3 ContainedPosition => Utility.GetPosition(InverseTransform);
+	public Float3 RootedPosition => Utility.GetPosition(InverseTransform);
 
 	/// <summary>
-	/// The rotation of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
+	/// The rotation of this <see cref="Entity"/> relative to its <see cref="Root"/>.
 	/// </summary>
-	public Versor ContainedRotation
+	public Versor RootedRotation
 	{
 		get
 		{
 			RecalculateTransform();
-			return _containedRotation;
+			return _rootedRotation;
 		}
 	}
 
 	/// <summary>
 	/// The <see cref="Scale"/> of this <see cref="Entity"/> relative to its containing <see cref="EntityPack"/>.
 	/// </summary>
-	public float ContainedScale => Utility.GetScale(InverseTransform);
+	public float RootedScale => Utility.GetScale(InverseTransform);
 
 	/// <summary>
 	/// Adds an <see cref="Entity"/> as a child.
@@ -232,7 +232,7 @@ public class Entity : IEnumerable<Entity>
 		{
 			_forwardTransform = transform.Inverse;
 			_inverseTransform = transform;
-			_containedRotation = Rotation;
+			_rootedRotation = Rotation;
 		}
 		else
 		{
@@ -240,7 +240,7 @@ public class Entity : IEnumerable<Entity>
 
 			_forwardTransform = Parent.ForwardTransform * transform.Inverse;
 			_inverseTransform = Parent.InverseTransform * transform;
-			_containedRotation = Parent.ContainedRotation * Rotation;
+			_rootedRotation = Parent.RootedRotation * Rotation;
 		}
 
 		OnTransformRecalculated();

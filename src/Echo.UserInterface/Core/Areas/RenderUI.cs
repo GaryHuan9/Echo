@@ -273,9 +273,9 @@ public sealed class RenderUI : AreaUI
 
 				static void DrawCameraInfo(Camera camera)
 				{
-					ImGuiCustom.Property("Camera Position", camera.ContainedPosition.ToInvariant());
-					ImGuiCustom.Property("Camera Forward", (camera.ContainedRotation * Float3.Forward).ToInvariant());
-					ImGuiCustom.Property("Camera Up", (camera.ContainedRotation * Float3.Up).ToInvariant());
+					ImGuiCustom.Property("Camera Position", camera.RootedPosition.ToInvariant());
+					ImGuiCustom.Property("Camera Forward", (camera.RootedRotation * Float3.Forward).ToInvariant());
+					ImGuiCustom.Property("Camera Up", (camera.RootedRotation * Float3.Up).ToInvariant());
 					ImGuiCustom.Property("Camera Type", camera.GetType().Name);
 
 					if (camera is not PerspectiveCamera perspective) return;
