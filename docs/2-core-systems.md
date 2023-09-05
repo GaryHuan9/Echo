@@ -6,16 +6,19 @@
 
 The main `Echo.Core` is composed of seven major systems, each contributing a different purpose towards to the goal of synthesizing photorealistic images. These systems occupy various namespaces under `Echo.Core` and are catalogued below in order of relative importance.
 
-<!-- TOC -->
-* [Core Systems](#core-systems)
-  * [Evaluation](#evaluation)
-  * [Aggregation](#aggregation)
-  * [Processes](#processes)
-  * [Scenic](#scenic)
-  * [Textures](#textures)
-  * [Common](#common)
-  * [In Out](#in-out)
-<!-- TOC -->
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#evaluation">Evaluation</a></li>
+    <li><a href="#aggregation">Aggregation</a></li>
+    <li><a href="#processes">Processes</a></li>
+    <li><a href="#scenic">Scenic</a></li>
+    <li><a href="#textures">Textures</a></li>
+    <li><a href="#common">Common</a></li>
+    <li><a href="#in-out">In Out</a></li>
+  </ol>
+</details>
 
 ---
 

@@ -6,12 +6,15 @@
 
 A page to get you started in using Echo.
 
-<!-- TOC -->
-* [Getting Started](#getting-started)
-  * [Welcome](#welcome)
-  * [User Interface](#user-interface)
-  * [Code](#code)
-<!-- TOC -->
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#usage">Welcome</a></li>
+    <li><a href="#user-interface">User Interface</a></li>
+    <li><a href="#code">Code</a></li>
+  </ol>
+</details>
 
 ---
 

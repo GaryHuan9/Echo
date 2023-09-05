@@ -6,20 +6,23 @@
 
 The Echo Description Language simply `.json` like syntax 
 
-<!-- TOC -->
-* [Echo Description Language](#echo-description-language)
-  * [Example](#example)
-  * [Implicit types](#implicit-types)
-  * [Scopes (and arrays)](#scopes-and-arrays)
-  * [Literals](#literals)
-<!-- TOC -->
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#example">Example</a></li>
+    <li><a href="#implicit-types">Implicit Types</a></li>
+    <li><a href="#scopes-and-arrays">Scopes (and Arrays)</a></li>
+    <li><a href="#literals">Literals</a></li>
+  </ol>
+</details>
 
 ---
 
 ## Example
 
-## Implicit types
+## Implicit Types
 
-## Scopes (and arrays)
+## Scopes (and Arrays)
 
 ## Literals

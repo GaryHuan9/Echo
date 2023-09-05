@@ -6,13 +6,16 @@
 
 This page documents most materials in `Echo.Core` and how to use them.
 
-<!-- TOC -->
-* [Materials](#materials)
-  * [Diffuse](#diffuse)
-  * [Glossy](#glossy)
-  * [Dielectric](#dielectric)
-  * [Emissive](#emissive)
-<!-- TOC -->
+<!-- TABLE OF CONTENTS -->
+<details>
+  <summary>Table of Contents</summary>
+  <ol>
+    <li><a href="#diffuse">Diffuse</a></li>
+    <li><a href="#glossy">Glossy</a></li>
+    <li><a href="#dielectric">Dielectric</a></li>
+    <li><a href="#emissive">Emissive</a></li>
+  </ol>
+</details>
 
 ---
 
