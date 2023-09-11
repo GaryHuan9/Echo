@@ -6,6 +6,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>10</LangVersion>
         <RootNamespace>Echo.UserInterface</RootNamespace>
+        <RunWorkingDirectory>$(MSBuildProjectDirectory)/../../</RunWorkingDirectory>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -26,10 +27,5 @@
         <ProjectReference Include="../Echo.Core/Echo.Core.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <Content Include="imgui.ini">
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
 
 </Project>

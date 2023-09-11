@@ -6,6 +6,7 @@
         <LangVersion>10</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <TieredCompilation>false</TieredCompilation>
+        <RunWorkingDirectory>$(MSBuildProjectDirectory)/../../</RunWorkingDirectory>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

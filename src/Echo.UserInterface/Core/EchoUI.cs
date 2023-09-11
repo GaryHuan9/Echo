@@ -71,7 +71,9 @@ public sealed class EchoUI : IApplication
 		io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
 		io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 		io.ConfigWindowsMoveFromTitleBarOnly = true;
+		unsafe { io.NativePtr->IniFilename = null; }
 
+		ImGui.LoadIniSettingsFromDisk("ext/imgui.ini");
 		io.Fonts.AddFontFromFileTTF("ext/JetBrainsMono/JetBrainsMono-Bold.ttf", 16f);
 
 		ImGuiStylePtr style = ImGui.GetStyle();

@@ -95,7 +95,7 @@ public sealed class Lambertian : BxDF
 
 /// <summary>
 /// Microfacet diffuse reflection model originally proposed by
-/// Generalization of Lambert's reflectance model [Oren and Nayar 1994].
+/// Generalization of Lambert's Reflectance Model [Oren and Nayar 1994].
 /// Implementation based on: https://mimosa-pudica.net/improved-oren-nayar.html
 /// </summary>
 public sealed class OrenNayar : LambertianReflection

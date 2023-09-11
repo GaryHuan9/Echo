@@ -1,5 +1,3 @@
-:construction: this page is currently under construction! :construction:
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
@@ -14,9 +12,9 @@
     <a href="docs/1-getting-started.md"><strong>Getting started »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Report Bug</a>
+    <a href="https://github.com/GaryHuan9/Echo/issues">Report Bug</a>
     ·
-    <a href="https://github.com/othneildrew/Best-README-Template/issues">Request Feature</a>
+    <a href="https://github.com/GaryHuan9/Echo/issues">Request Feature</a>
   </p>
 </div>
 
@@ -29,7 +27,6 @@
     <li><a href="#installation">Installation</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
     <li><a href="#gallery">Gallery</a></li>
   </ol>
 </details>
@@ -44,13 +41,13 @@ Echo was built from the ground up using C# without any external libraries for al
 
 ## Features
 
-- Path tracing with multiple importance sampling and next event estimation
-- Many cool materials
-- QBVH acceleration and SIMD utilization across the application
-- Light hierarchy to better importance sample lights
-- Multithreading worker pool system supporting C# async (future feature, parallel initialization)
-- Customizable compositing stack with many enhancing effects (and Oidn)
-- Echo description language (with image support from ImageMagick)
+- Unidirectional path tracing with multiple importance sampling and next event estimation.
+- Many cool physically based materials (e.g. `Diffuse`, `Dielectric`, `Conductor`, `Emissive`).
+- Quad-width bounding volume hierarchy acceleration with SIMD utilization across the application.
+- Light hierarchy tree to provide better selections when importance sampling lights.
+- Multithreading worker pool system supporting pause/resume and C# `async` keyword constructs.
+- Customizable compositing stack with many enhancing post processing operators (e.g. `AutoExposure`, `Bloom`, `ToneMapper`, `Vignette`, and [Intel Open Image Denoise](https://www.openimagedenoise.org/)).
+- Flexible scene construction using [Echo description language](docs/4-echo-description-language.md) with image IO support from ImageMagick.
 
 **Academic Papers & Articles Implemented:**
 - Physically Based Rendering: From Theory To Implementation [(Link)](https://pbr-book.org/) - [Pharr, Jakob, and Humphreys 2018]
@@ -70,22 +67,26 @@ Echo was built from the ground up using C# without any external libraries for al
 
 ## Installation
 
-You need dotnet 6.
+To get the project source code, simply clone the repository:
+
+```shell
+git clone https://github.com/GaryHuan9/Echo.git
+```
+
+You will need at least [dotnet 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0) to run the project. A good visual introduction to Echo would probably be `Echo.UserInterface`, and you can launch that by going into the Echo root directory and run the following command. Note that the first argument is a path to a scene to be rendered, and in this case, it will render the Stanford bunny!
+
+```shell
+dotnet run --project src/Echo.UserInterface ext/Scenes/Simple/bunny.echo
+```
+For more extensive information on how to use Echo, please see the [Getting Started](docs/1-getting-started.md) page!.
 
 ## Contributing
 
-All contribution are welcome! Please follow ...
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contribution you make will be **greatly welcomed and appreciated**. If you have a suggestion that would make this project better, please fork the repo and create a pull request. Take a look at the [contribution guide](docs/contributing.md) for tips and suggestions on contributing to this project. You can also simply open an issue with the tag `enhancement`. Thanks again for your contribution!
 
 ## License
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
-
-## Acknowledgments
-
-I would like to thank the following people, organizations, and resources for making this project possible:
-- The Strnad Project at University School for ...
-- The Physically Based Rendering book authors
-- 
+Distributed under the MIT License. See [LICENSE.txt](LICENSE.txt) for more information.
 
 ## Gallery
 

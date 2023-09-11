@@ -54,16 +54,7 @@ public sealed class SchedulerUI : AreaUI
 		string[] arguments = Environment.GetCommandLineArgs();
 		string path = "ext/Scenes/";
 
-		if (arguments.Length > 1)
-		{
-			path = arguments[1];
-
-			if (arguments.Length > 2 && arguments[2] == "build-path")
-			{
-				const string ProjectPath = "../../../../../";
-				path = Path.Combine(ProjectPath, path);
-			}
-		}
+		if (arguments.Length > 1) path = arguments[1];
 
 		ChangeCurrentPath(path);
 	}
