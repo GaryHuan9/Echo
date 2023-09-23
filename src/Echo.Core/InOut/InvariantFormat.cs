@@ -43,8 +43,22 @@ public static class InvariantFormat
 	public static string ToInvariant(this Int3 value) => value.ToString(IntegerPattern, Culture);
 	public static string ToInvariant(this Int4 value) => value.ToString(IntegerPattern, Culture);
 
-	public static string ToInvariant(this TimeSpan value) => value.ToString(@"hh\:mm\:ss\.ff", Culture);
-	public static string ToInvariant(this DateTime value) => value.ToString("HH:mm:ss", Culture);
+	public static string ToInvariant(this TimeSpan value)
+	{
+		const long HoursPerDay = TimeSpan.TicksPerDay / TimeSpan.TicksPerHour;
+		uint hours = (uint)(value.Hours + value.Days * HoursPerDay);
+		return string.Create(Culture, $@"{hours:D2}:{value:mm\:ss\.ff}");
+	}
+
+	public static string ToInvariant(this DateTime value)
+	{
+		DateOnly date = DateOnly.FromDateTime(value);
+		DateOnly now = DateOnly.FromDateTime(DateTime.Now);
+		if (date == now) return value.ToString("HH:mm:ss", Culture);
+
+		int delta = date.DayNumber - now.DayNumber;
+		return string.Create(Culture, $"{delta:+0;-#} {value:HH:mm:ss}");
+	}
 
 	public static string ToInvariant(this in Guid guid)
 	{

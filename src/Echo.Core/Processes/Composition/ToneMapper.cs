@@ -23,6 +23,13 @@ public record ToneMapper : ICompositeLayer
 	public float Saturation { get; init; } = 1f;
 
 	/// <summary>
+	/// A simple fixed multiplier on all colors. Applied before the tone mapping.
+	/// </summary>
+	/// <remarks>A value of 1 has no effect, and a value of 0 turns all colors black.</remarks>
+	[EchoSourceUsable]
+	public float Exposure { get; init; } = 1f;
+
+	/// <summary>
 	/// If true, the mapping effect consider each color as a whole. Otherwise, the mapping is done on each channel individually.
 	/// </summary>
 	[EchoSourceUsable]
@@ -43,7 +50,9 @@ public record ToneMapper : ICompositeLayer
 		var sourceTexture = context.GetWriteTexture<RGB128>(LayerName);
 
 		await context.RunAsync(SaturationPass, sourceTexture.size);
+		await context.RunAsync(ExposurePass, sourceTexture.size);
 		await context.RunAsync(CombineChannels ? CombinedPass : PerChannelPass, sourceTexture.size);
+		return;
 
 		void SaturationPass(Int2 position)
 		{
@@ -51,6 +60,12 @@ public record ToneMapper : ICompositeLayer
 			Float4 gray = (Float4)source.Luminance;
 
 			sourceTexture.Set(position, (RGB128)Float4.Lerp(gray, source, Saturation));
+		}
+
+		void ExposurePass(Int2 position)
+		{
+			RGB128 source = sourceTexture.Get(position);
+			sourceTexture.Set(position, source * Exposure);
 		}
 
 		void CombinedPass(Int2 position)
@@ -100,6 +115,7 @@ public record PassThrough : ToneMapper.ILuminanceAdjuster
 [EchoSourceUsable]
 public record BasicShoulder : ToneMapper.ILuminanceAdjuster
 {
+	[EchoSourceUsable]
 	public float Smoothness { get; init; } = 0.4f;
 
 	public float Adjust(float luminance)
@@ -127,6 +143,7 @@ public class Reinhard : ToneMapper.ILuminanceAdjuster
 	/// <summary>
 	/// The lowest luminance that should be mapped to 1.
 	/// </summary>
+	[EchoSourceUsable]
 	public float WhitePoint
 	{
 		get => _whitePoint;
@@ -180,6 +197,7 @@ public record Hable : ToneMapper.ILuminanceAdjuster
 	/// <summary>
 	/// The lowest luminance that should be mapped to 1.
 	/// </summary>
+	[EchoSourceUsable]
 	public float WhitePoint
 	{
 		get => _whitePoint;

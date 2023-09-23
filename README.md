@@ -44,10 +44,13 @@ Echo was built from the ground up using C# without any external libraries for al
 - Unidirectional path tracing with multiple importance sampling and next event estimation.
 - Many cool physically based materials (e.g. `Diffuse`, `Dielectric`, `Conductor`, `Emissive`).
 - Quad-width bounding volume hierarchy acceleration with SIMD utilization across the application.
-- Light hierarchy tree to provide better selections when importance sampling lights.
+- Light hierarchy tree to provide better per-bounce selections when importance sampling lights.
 - Multithreading worker pool system supporting pause/resume and C# `async` keyword constructs.
+- Support for auxiliary false-color data (e.g. normal, depth, albedo) through common ray tracing interface.
+- Common texturing system allowing various filter modes, color types, and internal memory layouts.
 - Customizable compositing stack with many enhancing post processing operators (e.g. `AutoExposure`, `Bloom`, `ToneMapper`, `Vignette`, and [Intel Open Image Denoise](https://www.openimagedenoise.org/)).
 - Flexible scene construction using [Echo description language](docs/4-echo-description-language.md) with image IO support from ImageMagick.
+- Intuitive renderer control using a graphical user interface through `Echo.UserInterface` for debugging implementation and scenes.
 
 **Academic Papers & Articles Implemented:**
 - Physically Based Rendering: From Theory To Implementation [(Link)](https://pbr-book.org/) - [Pharr, Jakob, and Humphreys 2018]

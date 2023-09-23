@@ -79,7 +79,11 @@ public sealed class FileUI : AreaUI
 		ImGui.EndDisabled();
 
 		ImGui.SameLine();
-		ImGui.TextWrapped(current.FullName);
+		ImGui.PushItemWidth(-1f);
+		string path = current.FullName;
+		uint length = Math.Max(256, (uint)path.Length * 2);
+		if (ImGui.InputText("##path", ref path, length)) currentPath = path;
+		ImGui.PopItemWidth();
 
 		float tableHeight = ImGui.GetContentRegionAvail().Y - ImGui.GetTextLineHeightWithSpacing();
 
