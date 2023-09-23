@@ -22,12 +22,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Content Include="../../ext/**" CopyToOutputDirectory="PreserveNewest" LinkBase="ext/"> </Content>
-	    <Content Include="../../docs/**" CopyToOutputDirectory="PreserveNewest" LinkBase="docs/"> </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Compile Remove="Scenic/ExamplesOld/**"/>
+        <Content Include="../../ext/**" CopyToOutputDirectory="PreserveNewest" LinkBase="ext/"></Content>
+        <Content Include="../../docs/**" CopyToOutputDirectory="PreserveNewest" LinkBase="docs/"></Content>
     </ItemGroup>
 
 </Project>
