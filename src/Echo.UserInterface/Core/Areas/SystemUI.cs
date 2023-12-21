@@ -88,6 +88,13 @@ public sealed class SystemUI : AreaUI
 		ImGui.SliderInt("Update Frequency", ref frequency, 1, 120);
 		FrameFrequency = frequency;
 
+		if (ImGui.Button("Save Layout Configuration"))
+		{
+			string path = EchoUI.ConfigurationFilePath;
+			ImGui.SaveIniSettingsToDisk(path);
+			LogList.Add($"Configuration file saved to '{path}'.");
+		}
+
 		ImGuiCustom.EndSection();
 
 		static string GetConfiguration()

@@ -96,7 +96,7 @@ public record StandardPathTracedProfile : RenderProfile
 			builder.Add(new AutoExposure());
 			builder.Add(new Vignette());
 			builder.Add(new Bloom());
-			builder.Add(new ToneMapper());
+			builder.Add(new ToneMapper { LimitToOne = true });
 		}
 
 		builder.Add(new Watermark { Enabled = watermark });

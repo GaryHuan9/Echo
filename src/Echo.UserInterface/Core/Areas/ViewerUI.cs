@@ -288,8 +288,8 @@ public sealed partial class ViewerUI : AreaUI
 		protected static uint ColorToUInt32(Float4 color)
 		{
 			color = ApproximateSqrt(color.Max(Float4.Zero));
-			color = color.Min(Float4.One) * byte.MaxValue;
-			return ColorConverter.GatherBytes(Sse2.ConvertToVector128Int32(color.v).AsUInt32());
+			var bytes = ColorConverter.Float4ToBytes(color);
+			return ColorConverter.GatherBytes(bytes);
 
 			static Float4 ApproximateSqrt(Float4 value)
 			{

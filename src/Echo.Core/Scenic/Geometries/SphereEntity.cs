@@ -132,12 +132,13 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		Float3 offset = ray.origin - position;
 		float center = -offset.Dot(ray.direction);
 
-		float squared = FastMath.FMA(center, center, FastMath.FMA(radius, radius, -offset.SquaredMagnitude));
+		float squared = FastMath.FMA(radius, radius, -offset.SquaredMagnitude);
+		float extend2 = FastMath.FMA(center, center, squared);
 
-		if (squared < 0f) return false;
+		if (extend2 < 0f) return false;
 
 		//Find appropriate distance
-		float extend = FastMath.Sqrt0(squared);
+		float extend = FastMath.Sqrt0(extend2);
 		float distance = center - extend;
 
 		float threshold = findFar ? DistanceThreshold : 0f;

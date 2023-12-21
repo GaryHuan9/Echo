@@ -39,6 +39,7 @@ public interface IFilter
 			//Find x and y
 			Float2 scaled = uv * texture.size;
 
+			//Round to integer coordinates
 			Vector128<int> x = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.X));
 			Vector128<int> y = Sse2.ConvertToVector128Int32(Vector128.Create(scaled.Y));
 

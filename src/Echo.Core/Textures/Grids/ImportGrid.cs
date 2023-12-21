@@ -1,3 +1,4 @@
+using System;
 using Echo.Core.Common.Packed;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.InOut.Images;
@@ -22,6 +23,33 @@ public sealed class ImportGrid : TextureGrid
 
 	readonly TextureGrid texture;
 
+	/// <summary>
+	/// Allows <see cref="EchoSource"/> access to <see cref="TextureGrid.Wrapper"/> using <see cref="string"/>.
+	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if failed to find a matching <see cref="IWrapper"/>.</exception>
+	/// <seealso cref="TextureGrid.Wrapper"/>
+	[EchoSourceUsable]
+	public string WrapperName
+	{
+		set => Wrapper = ConditionalReturn(value, "clamp", IWrapper.clamp) ??
+						 ConditionalReturn(value, "mirror", IWrapper.mirror) ??
+						 ConditionalReturn(value, "repeat", IWrapper.repeat) ??
+						 throw new ArgumentOutOfRangeException(nameof(value));
+	}
+
+	/// <summary>
+	/// Allows <see cref="EchoSource"/> access to <see cref="TextureGrid.Filter"/> using <see cref="string"/>.
+	/// </summary>
+	/// <exception cref="ArgumentOutOfRangeException">Thrown if failed to find a matching <see cref="IFilter"/>.</exception>
+	/// <seealso cref="TextureGrid.Filter"/>
+	[EchoSourceUsable]
+	public string FilterName
+	{
+		set => Filter = ConditionalReturn(value, "point", IFilter.point) ??
+						ConditionalReturn(value, "bilinear", IFilter.bilinear) ??
+						throw new ArgumentOutOfRangeException(nameof(value));
+	}
+
 	public override RGBA128 this[Int2 position] => texture[position];
 
 	public override void Save(string path, Serializer serializer = null) => texture.Save(path, serializer);
@@ -39,4 +67,7 @@ public sealed class ImportGrid : TextureGrid
 
 		return imported.size;
 	}
+
+	static T ConditionalReturn<T>(string value, string compare, T item) where T : class =>
+		value.Equals(compare, StringComparison.InvariantCultureIgnoreCase) ? item : null;
 }

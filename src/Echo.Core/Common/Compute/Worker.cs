@@ -116,8 +116,6 @@ sealed class Worker : IWorker, IDisposable
 	/// <exception cref="InvalidOperationException">Thrown if <see cref="State"/> is not <see cref="WorkerState.Unassigned"/>.</exception>
 	public void Dispatch(Operation operation)
 	{
-		using var _ = locker.Fetch();
-
 		lock (locker)
 		{
 			if (State != WorkerState.Unassigned) throw new InvalidOperationException();

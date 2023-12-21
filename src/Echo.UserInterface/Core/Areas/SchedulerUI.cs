@@ -6,7 +6,6 @@ using System.Threading;
 using Echo.Core.Common.Compute;
 using Echo.Core.InOut.EchoDescription;
 using Echo.Core.Processes;
-using Echo.UserInterface.Backend;
 using Echo.UserInterface.Core.Common;
 using ImGuiNET;
 

@@ -84,17 +84,21 @@ partial class ViewerUI
 					if (ImGui.MenuItem("Print Total Delta"))
 					{
 						Summation total = Summation.Zero;
+						Summation squared = Summation.Zero;
 
 						for (int y = 0; y < texture.size.Y; y++)
 						for (int x = 0; x < texture.size.X; x++)
 						{
 							Int2 position = new Int2(x, y);
 							Float2 uv = texture.ToUV(position);
-							total += texture[position] - (Float4)reference[uv];
+							Float4 delta = texture[position] - (Float4)reference[uv];
+
+							total += delta;
+							squared += delta * delta;
 						}
 
-						Float4 average = total.Result / texture.size.Product;
-						LogList.Add($"Total delta versus reference is {total.Result.ToInvariant()}, or ({average.ToInvariant()} per pixel.");
+						Float4 error = squared.Result / texture.size.Product;
+						LogList.Add($"Total delta versus reference is {total.Result.ToInvariant()}, or an MSE of {error.ToString()}.");
 					}
 
 					if (ImGui.MenuItem("Stop"))

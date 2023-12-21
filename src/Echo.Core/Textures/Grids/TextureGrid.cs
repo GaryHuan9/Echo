@@ -63,16 +63,16 @@ public abstract class TextureGrid : Texture
 	/// </summary>
 	public readonly Int2 power;
 
-	NotNull<object> _wrapper;
-	NotNull<object> _filter;
+	NotNull<IWrapper> _wrapper;
+	NotNull<IFilter> _filter;
 
 	/// <summary>
 	/// The <see cref="IWrapper"/> used on this <see cref="TextureGrid"/> to convert uv texture coordinates.
 	/// </summary>
 	public IWrapper Wrapper
 	{
-		get => (IWrapper)_wrapper.Value;
-		set => _wrapper = (object)value;
+		get => _wrapper.Value;
+		set => _wrapper = new NotNull<IWrapper>(value);
 	}
 
 	/// <summary>
@@ -80,8 +80,8 @@ public abstract class TextureGrid : Texture
 	/// </summary>
 	public IFilter Filter
 	{
-		get => (IFilter)_filter.Value;
-		set => _filter = (object)value;
+		get => _filter.Value;
+		set => _filter = new NotNull<IFilter>(value);
 	}
 
 	/// <summary>

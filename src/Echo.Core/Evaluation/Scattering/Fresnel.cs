@@ -38,7 +38,7 @@ public readonly struct RealFresnel : IFresnel
 	/// </summary>
 	public Packet CreateIncomplete(float cosOutgoing) =>
 		cosOutgoing > 0f ? //Swap indices of refraction for when outgoing is below
-			new Packet(etaAbove, etaBelow, cosOutgoing) : 
+			new Packet(etaAbove, etaBelow, cosOutgoing) :
 			new Packet(etaBelow, etaAbove, cosOutgoing);
 
 	RGB128 IFresnel.Evaluate(float cosO) => new(Evaluate(cosO));
@@ -112,13 +112,11 @@ public readonly struct RealFresnel : IFresnel
 
 				float para0 = etaIncident * cosO;
 				float para1 = etaOutgoing * cosI;
-
 				float perp0 = etaOutgoing * cosO;
 				float perp1 = etaIncident * cosI;
 
 				float para = (para0 - para1) / (para0 + para1);
 				float perp = (perp0 - perp1) / (perp0 + perp1);
-
 				return (para * para + perp * perp) / 2f;
 			}
 		}

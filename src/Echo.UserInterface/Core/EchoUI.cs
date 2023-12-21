@@ -39,6 +39,8 @@ public sealed class EchoUI : IApplication
 	public Moment Moment { get; private set; }
 	public string Label => "Echo User Interface";
 
+	public static string ConfigurationFilePath => "ext/imgui.ini";
+
 	public void NewFrame(in Moment moment)
 	{
 		Moment = moment;
@@ -74,7 +76,7 @@ public sealed class EchoUI : IApplication
 		io.ConfigWindowsMoveFromTitleBarOnly = true;
 		unsafe { io.NativePtr->IniFilename = null; }
 
-		ImGui.LoadIniSettingsFromDisk("ext/imgui.ini");
+		ImGui.LoadIniSettingsFromDisk(ConfigurationFilePath);
 		io.Fonts.AddFontFromFileTTF("ext/JetBrainsMono/JetBrainsMono-Bold.ttf", 16f);
 
 		ImGuiStylePtr style = ImGui.GetStyle();
@@ -133,14 +135,14 @@ public sealed class EchoUI : IApplication
 		{
 			0 or 1 => new RGB128(0.1581f, 0.6112f, 0.3763f), //Green
 			2 or 3 => (RGB128)RGBA128.Parse("#FA983A"),      //Orange
-			4 => (RGB128)RGBA128.Parse("#DD444C"),           //REDO
-			_ => new RGB128(0.1856f, 0.5488f, 0.9328f)       //Signature
+			4      => (RGB128)RGBA128.Parse("#DD444C"),      //REDO
+			_      => new RGB128(0.1856f, 0.5488f, 0.9328f)  //Signature
 		};
 
 		const float Alpha0 = 0.33f;
 		const float Alpha1 = 0.61f;
 
-		var main = ToVector4(color * 1.0f);
+		var main = ToVector4(color);
 		var white1 = ToVector4(RGBA128.Parse("#FAFBFF"));
 		var white0 = Vector4.Lerp(main, white1, Alpha1);
 		var background0 = ToVector4(RGBA128.Parse("#141517"));

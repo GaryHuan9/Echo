@@ -32,8 +32,15 @@ public record ToneMapper : ICompositeLayer
 	/// <summary>
 	/// If true, the mapping effect consider each color as a whole. Otherwise, the mapping is done on each channel individually.
 	/// </summary>
+	/// <remarks>Disabling this option could cause output saturation to differ from the original saturation.</remarks>
 	[EchoSourceUsable]
 	public bool CombineChannels { get; init; } = true;
+
+	/// <summary>
+	/// Ensure all channels in all output colors are below 1f.
+	/// </summary>
+	[EchoSourceUsable]
+	public bool LimitToOne { get; init; }
 
 	/// <summary>
 	/// The mode to use.
@@ -59,7 +66,7 @@ public record ToneMapper : ICompositeLayer
 			RGB128 source = sourceTexture.Get(position);
 			Float4 gray = (Float4)source.Luminance;
 
-			sourceTexture.Set(position, (RGB128)Float4.Lerp(gray, source, Saturation));
+			sourceTexture.Set(position, (RGB128)Float4.Max(Float4.Lerp(gray, source, Saturation), Float4.Zero));
 		}
 
 		void ExposurePass(Int2 position)
@@ -74,22 +81,24 @@ public record ToneMapper : ICompositeLayer
 			float luminance = source.Luminance;
 			if (FastMath.AlmostZero(luminance)) return;
 
-			RGB128 adjusted = source / luminance * Mode.Adjust(luminance);
-			sourceTexture.Set(position, (RGB128)Float4.Min(adjusted, Float4.One));
+			Float4 adjusted = source / luminance * Mode.Adjust(luminance);
+			if (LimitToOne) adjusted = Float4.Min(adjusted, Float4.One);
+			sourceTexture.Set(position, (RGB128)adjusted);
 		}
 
 		void PerChannelPass(Int2 position)
 		{
 			RGB128 source = sourceTexture.Get(position);
 
-			RGB128 adjusted = new RGB128
+			Float4 adjusted = new RGB128
 			(
 				FastMath.AlmostZero(source.R) ? 0f : Mode.Adjust(source.R),
 				FastMath.AlmostZero(source.G) ? 0f : Mode.Adjust(source.G),
 				FastMath.AlmostZero(source.B) ? 0f : Mode.Adjust(source.B)
 			);
 
-			sourceTexture.Set(position, (RGB128)Float4.Min(adjusted, Float4.One));
+			if (LimitToOne) adjusted = Float4.Min(adjusted, Float4.One);
+			sourceTexture.Set(position, (RGB128)adjusted);
 		}
 	}
 
