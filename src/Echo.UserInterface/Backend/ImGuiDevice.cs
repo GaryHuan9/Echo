@@ -43,7 +43,6 @@ public sealed unsafe class ImGuiDevice : IDisposable
 
 		//Setup SDL hint
 		SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest"); //Can be nearest, linear, or best
 	}
 
 	public void Initialize()
@@ -139,17 +138,20 @@ public sealed unsafe class ImGuiDevice : IDisposable
 		for (int i = 0; i < lists.Count; i++) ExecuteCommandList(lists[i], clipOffset, clipSize);
 
 		SDL_RenderPresent(renderer);
+		return;
 
 		static Float4 Widen(Vector2 vector) => new Float4(vector.AsVector128()).XYXY;
 	}
 
-	public IntPtr CreateTexture(Int2 size, bool streaming, bool bigEndian = false)
+	public IntPtr CreateTexture(Int2 size, bool streaming, bool interpolation = true, bool bigEndian = false)
 	{
 		int access = streaming ?
 			(int)SDL_TextureAccess.SDL_TEXTUREACCESS_STREAMING :
 			(int)SDL_TextureAccess.SDL_TEXTUREACCESS_STATIC;
 		uint format = bigEndian ? SDL_PIXELFORMAT_RGBA8888 : SDL_PIXELFORMAT_ABGR8888;
 
+		string quality = interpolation ? "best" : "nearest";
+		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, quality);
 		IntPtr texture = SDL_CreateTexture(renderer, format, access, size.X, size.Y);
 		if (texture == IntPtr.Zero) throw new BackendException("Failed to create texture.");
 		SDL_SetTextureBlendMode(texture, SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
@@ -180,7 +182,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 	{
 		SDL_GetRendererInfo(renderer, out SDL_RendererInfo info).ThrowOnError();
 
-		var name = (Marshal.PtrToStringAnsi(info.name) ?? "unknown").ToUpper();
+		string name = (Marshal.PtrToStringAnsi(info.name) ?? "unknown").ToUpper();
 		var size = new Int2(info.max_texture_width, info.max_texture_height);
 
 		io.NativePtr->BackendPlatformName = (byte*)Marshal.StringToHGlobalAnsi("SDL2 & Dear ImGui for C#");
@@ -360,7 +362,7 @@ public sealed unsafe class ImGuiDevice : IDisposable
 	{
 		ImPtrVector<ImDrawCmdPtr> buffer = list.CmdBuffer;
 		var vertices = (ImDrawVert*)list.VtxBuffer.Data;
-		var indices = (ushort*)list.IdxBuffer.Data;
+		ushort* indices = (ushort*)list.IdxBuffer.Data;
 
 		for (int i = 0; i < buffer.Size; i++)
 		{

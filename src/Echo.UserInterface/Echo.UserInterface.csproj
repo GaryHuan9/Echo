@@ -7,6 +7,7 @@
         <LangVersion>10</LangVersion>
         <RootNamespace>Echo.UserInterface</RootNamespace>
         <RunWorkingDirectory>$(MSBuildProjectDirectory)/../../</RunWorkingDirectory>
+        <AssemblyVersion>0.9.1</AssemblyVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

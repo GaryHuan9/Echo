@@ -19,6 +19,7 @@ public sealed class EchoUI : IApplication
 
 		areas = ImmutableArray.Create<AreaUI>
 		(
+			new AboutUI(this),
 			new SystemUI(this),
 			new RenderUI(this),
 			new ViewerUI(this),

@@ -6,6 +6,7 @@
         <Configurations>Debug;Release</Configurations>
         <Platforms>AnyCPU</Platforms>
         <LangVersion>10</LangVersion>
+        <AssemblyVersion>0.9.3</AssemblyVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -19,11 +20,6 @@
     <ItemGroup>
         <PackageReference Include="Magick.NET-Q16-HDRI-AnyCPU" Version="12.2.2"/>
         <ProjectReference Include="../Echo.Generation/Echo.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <Content Include="../../ext/**" CopyToOutputDirectory="PreserveNewest" LinkBase="ext/"></Content>
-        <Content Include="../../docs/**" CopyToOutputDirectory="PreserveNewest" LinkBase="docs/"></Content>
     </ItemGroup>
 
 </Project>

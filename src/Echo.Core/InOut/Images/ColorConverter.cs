@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using Echo.Core.Common.Diagnostics;
@@ -142,6 +143,36 @@ public static class ColorConverter
 	}
 
 	/// <summary>
+	/// Converts a <see cref="Float4"/> which represents a color to packed bytes that range from 0 to 255.
+	/// </summary>
+	public static Vector128<uint> Float4ToBytes(Float4 value)
+	{
+		Ensure.IsTrue(Float4.Zero <= value && value <= Float4.One);
+
+		//Converts using 256 intervals and flooring all values
+
+		const float MaxValue = 256;
+		value = (value * MaxValue).Clamp(0f, MathF.BitDecrement(MaxValue));
+		return Sse2.ConvertToVector128Int32WithTruncation(value.v).AsUInt32();
+	}
+
+	/// <summary>
+	/// Converts packed bytes that range from 0 to 255 to a <see cref="Float4"/> that represents a color.
+	/// </summary>
+	public static Float4 BytesToFloat4(Vector128<uint> value)
+	{
+		Ensure.IsTrue(value.GetElement(0) <= byte.MaxValue);
+		Ensure.IsTrue(value.GetElement(1) <= byte.MaxValue);
+		Ensure.IsTrue(value.GetElement(2) <= byte.MaxValue);
+		Ensure.IsTrue(value.GetElement(3) <= byte.MaxValue);
+
+		//Converts using 255 intervals so 0 and 1 roundtrip maps back to 0 and 1
+
+		var converted = Sse2.ConvertToVector128Single(value.AsInt32());
+		return new Float4(converted) * (1f / byte.MaxValue);
+	}
+
+	/// <summary>
 	/// Gathers the first byte of each element in a <see cref="Vector128{T}"/> into an <see cref="uint"/>.
 	/// </summary>
 	public static uint GatherBytes(Vector128<uint> value)
@@ -177,25 +208,6 @@ public static class ColorConverter
 		v = Sse2.Or(v, Sse2.ShiftLeftLogical128BitLane(v, 6));
 		v = Sse2.Or(v, Sse2.ShiftLeftLogical128BitLane(v, 3));
 		return Sse2.And(v, Vector128.Create((uint)byte.MaxValue));
-	}
-
-	static Vector128<uint> Float4ToBytes(Float4 value)
-	{
-		Ensure.IsTrue(Float4.Zero <= value && value <= Float4.One);
-
-		Float4 scaled = value * byte.MaxValue;
-		return Sse2.ConvertToVector128Int32(scaled.v).AsUInt32();
-	}
-
-	static Float4 BytesToFloat4(Vector128<uint> value)
-	{
-		Ensure.IsTrue(value.GetElement(0) <= byte.MaxValue);
-		Ensure.IsTrue(value.GetElement(1) <= byte.MaxValue);
-		Ensure.IsTrue(value.GetElement(2) <= byte.MaxValue);
-		Ensure.IsTrue(value.GetElement(3) <= byte.MaxValue);
-
-		var converted = Sse2.ConvertToVector128Single(value.AsInt32());
-		return new Float4(converted) * (1f / byte.MaxValue);
 	}
 
 	//sRGB approximation using 7th degree polynomial: https://www.desmos.com/calculator/gfb8amzlzo

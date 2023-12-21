@@ -246,8 +246,8 @@ public sealed partial class ViewerUI : AreaUI
 
 			Backend.DestroyTexture(ref display);
 			if (currentSize == Int2.Zero) return true;
-			display = Backend.CreateTexture(currentSize, true);
 
+			display = Backend.CreateTexture(currentSize, true, false);
 			SDL.SDL_SetTextureBlendMode(display, SDL.SDL_BlendMode.SDL_BLENDMODE_BLEND).ThrowOnError();
 			return true;
 		}

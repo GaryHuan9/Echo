@@ -16,15 +16,18 @@ class Program
 {
 	static int Main(string[] arguments)
 	{
-		Console.WriteLine();
 		Console.WriteLine
 		(
-			$"Echo Photorealistic Renderer [Version {GetVersion(typeof(Program))}]\n" +
-			$"Terminal Render User Interface [Version {GetVersion(typeof(Device))}]\n" +
-			"Copyright (C) 2023 Gary Huang, et al.\n" +
-			"All rights reserved."
+			@$"
+Echo Photorealistic Rendering Core [Version {GetVersion(typeof(Program)).ToString(3)}]
+Terminal Render User Interface [Version {GetVersion(typeof(Device)).ToString(3)}]
+.NET Runtime [Version {Environment.Version.ToString(3)}]
+{Environment.OSVersion.VersionString}
+
+Copyright (C) 2020-2023 Gary Huang, et al.
+All rights reserved.
+"
 		);
-		Console.WriteLine();
 
 		//Parse program arguments
 		HandleSwitchHelp(arguments);
@@ -175,10 +178,7 @@ class Program
 	{
 		string path = Path.GetFullPath(arguments[^1]);
 
-		try
-		{
-			return new EchoSource(path);
-		}
+		try { return new EchoSource(path); }
 		catch (FileNotFoundException) { Console.WriteLine($"Cannot find {nameof(EchoSource)} file at '{path}'."); }
 		catch (FormatException exception) { Console.WriteLine($"Encountered syntax error during parse: {exception}"); }
 

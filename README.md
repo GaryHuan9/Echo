@@ -57,6 +57,7 @@ Echo was built from the ground up using C# without any external libraries for al
 - Optimally Combining Sampling Techniques for Monte Carlo Rendering [(Link)](https://cseweb.ucsd.edu/~viscomp/classes/cse168/sp21/readings/veach.pdf) - [Veach and Guibas 1995]
 - Shallow Bounding Volume Hierarchies for Fast SIMD Ray Tracing of Incoherent Rays [(Link)](https://www.uni-ulm.de/fileadmin/website_uni_ulm/iui.inst.100/institut/Papers/QBVH.pdf) - [Dammertz et al. 2008]
 - Importance Sampling of Many Lights with Adaptive Tree Splitting [(Link)](https://fpsunflower.github.io/ckulla/data/many-lights-hpg2018.pdf) - [Estevez and Kulla 2018]
+- Hierarchical Geometric Models for Visible Surface Algorithms [(Link)](https://dl.acm.org/doi/10.1145/360349.360354) - [Clark 1976]
 - Heuristics for Ray Tracing Using Space Subdivision [(Link)](https://graphicsinterface.org/wp-content/uploads/gi1989-22.pdf) - [MacDonald and Booth 1990]
 - Fast and Tight Fitting Bounding Spheres [(Link)](https://ep.liu.se/ecp/034/009/ecp083409.pdf) - [Larsson 2008]
 - Higher Density Uniform Floats [(Link)](https://marc-b-reynolds.github.io/distribution/2017/01/17/DenseFloat.html#the-parts-im-not-tell-you) - [Reynolds 2017]
@@ -92,6 +93,8 @@ Contributions are what make the open source community such an amazing place to l
 Distributed under the MIT License. See [LICENSE.txt](LICENSE.txt) for more information.
 
 ## Gallery
+
+All the following images were completely rendered and post-processed in Echo:
 
 <p align="center">
   <img src="https://github.com/GaryHuan9/Echo/assets/22217952/495304c1-28d8-4615-ad3d-01d48497cc5a" width="500"><br>
