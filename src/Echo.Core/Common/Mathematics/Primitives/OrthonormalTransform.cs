@@ -15,15 +15,16 @@ public readonly struct OrthonormalTransform
 
 		this.axisZ = axisZ;
 
-		if (!FastMath.AlmostZero(axisZ.X) || !FastMath.AlmostZero(axisZ.Y))
+		if (FastMath.AlmostZero(axisZ.X) && FastMath.AlmostZero(axisZ.Y))
 		{
-			axisX = new Float3(axisZ.Y, -axisZ.X, 0f).Normalized; //Equivalent to Float3.Cross(axisZ, Float3.Forward)
-			axisY = Float3.Cross(axisZ, axisX);
+			axisX = Float3.Right;
+			axisY = axisZ.Z > 0f ? Float3.Up : Float3.Down;
 		}
 		else
 		{
-			axisX = Float3.Right;
-			axisY = new Float3(0f, axisZ.Z, -axisZ.Y).Normalized; //Equivalent to Float3.Cross(axisZ, axisX);
+			//Equivalent to axisX = Float3.Cross(axisZ, Float3.Forward).Normalized
+			axisX = new Float3(axisZ.Y, -axisZ.X, 0f).Normalized;
+			axisY = Float3.Cross(axisZ, axisX);
 		}
 
 		Ensure.AreEqual(axisX.SquaredMagnitude, 1f);

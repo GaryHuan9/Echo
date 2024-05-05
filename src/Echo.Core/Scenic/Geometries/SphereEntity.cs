@@ -166,6 +166,9 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		float sinMaxT2 = radius2 / length2;
 		float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
 
+		//If the sphere is too small and the origin is too far away, then it is becoming a delta sample
+		if (FastMath.AlmostZero(1f - cosMaxT)) return Probable<GeometryPoint>.Impossible;
+
 		//Uniform sample cone, defined by theta and phi
 		float cosT = FastMath.FMA(cosMaxT - 1f, sample.x, 1f);
 		float sinT = FastMath.Identity(cosT);
@@ -216,7 +219,9 @@ public readonly struct PreparedSphere : IPreparedGeometry
 		//Since the point is not inside our sphere, the sampling is based on a cone
 		float sinMaxT2 = radius2 / length2;
 		float cosMaxT = FastMath.Sqrt0(1f - sinMaxT2);
-		return Sample2D.UniformConePdf(cosMaxT);
+
+		//If the sphere is too small and the origin is too far away, then it is becoming a delta sample
+		return FastMath.AlmostZero(1f - cosMaxT) ? 0f : Sample2D.UniformConePdf(cosMaxT);
 	}
 
 	GeometryPoint GetPoint(Float3 normal) => new(normal * radius + position, normal);

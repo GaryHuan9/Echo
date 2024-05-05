@@ -47,7 +47,9 @@ public sealed class EchoUI : IApplication
 
 		ImGui.DockSpaceOverViewport(ImGui.GetMainViewport());
 
+#if DEBUG
 		ImGui.ShowDemoWindow();
+#endif
 
 		foreach (AreaUI area in areas) area.NewFrame();
 	}

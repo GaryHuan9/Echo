@@ -103,13 +103,13 @@ public sealed partial class ViewerUI : AreaUI
 				LogPlaneScale = 0f;
 			}
 
-			DrawMode(region);
+			if (!DrawMode(region)) currentMode = null;
+		}
 
-			if (ImGui.BeginMenuBar())
-			{
-				currentMode.DrawMenuBar();
-				ImGui.EndMenuBar();
-			}
+		if (currentMode != null && ImGui.BeginMenuBar())
+		{
+			currentMode.DrawMenuBar();
+			ImGui.EndMenuBar();
 		}
 
 		ProcessMouseInput(region);
@@ -125,7 +125,7 @@ public sealed partial class ViewerUI : AreaUI
 		exploreTextureGridMode?.Dispose();
 	}
 
-	void DrawMode(in Bounds region)
+	bool DrawMode(in Bounds region)
 	{
 		ImDrawListPtr drawList = ImGui.GetWindowDrawList();
 		drawList.PushClipRect(region.MinVector2, region.MaxVector2);
@@ -147,9 +147,10 @@ public sealed partial class ViewerUI : AreaUI
 		}
 
 		Bounds plane = new Bounds(region.center + planeCenter, displayExtend * planeScale);
-		if (!currentMode.Draw(drawList, plane, cursorUV)) currentMode = null;
+		bool keepMode = currentMode.Draw(drawList, plane, cursorUV);
 
 		drawList.PopClipRect();
+		return keepMode;
 	}
 
 	void UpdateCursorPosition(in Bounds region)
@@ -287,9 +288,8 @@ public sealed partial class ViewerUI : AreaUI
 
 		protected static uint ColorToUInt32(Float4 color)
 		{
-			color = ApproximateSqrt(color.Max(Float4.Zero));
-			var bytes = ColorConverter.Float4ToBytes(color);
-			return ColorConverter.GatherBytes(bytes);
+			color = ApproximateSqrt(color.Max(Float4.Zero)).Min(Float4.One);
+			return ColorConverter.GatherBytes(ColorConverter.Float4ToBytes(color));
 
 			static Float4 ApproximateSqrt(Float4 value)
 			{

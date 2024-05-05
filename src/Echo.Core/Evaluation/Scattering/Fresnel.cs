@@ -133,18 +133,18 @@ public readonly struct RealFresnel : IFresnel
 			Ensure.AreEqual(outgoing.Dot(normal), cosOutgoing);
 
 			float eta = etaOutgoing / etaIncident;
-			float cosI = cosOutgoing < 0f ? cosIncident : -cosIncident;
-			return (normal * (eta * cosOutgoing + cosI) - eta * outgoing).Normalized;
+			return (normal * (eta * cosOutgoing + cosIncident) - eta * outgoing).Normalized;
 		}
 
 		float CalculateCosineIncident()
 		{
 			float eta = etaOutgoing / etaIncident;
-			float sinOutgoing2 = FastMath.OneMinus2(cosOutgoing);
-			float sinIncident2 = eta * eta * sinOutgoing2;
+			float sinO2 = FastMath.OneMinus2(cosOutgoing);
+			float sinI2 = eta * eta * sinO2;
 
-			if (sinIncident2 >= 1f) return 0f;
-			return FastMath.Sqrt0(1f - sinIncident2);
+			if (sinI2 >= 1f) return 0f;
+			float result = FastMath.Sqrt0(1f - sinI2);
+			return cosOutgoing > 0f ? -result : result;
 		}
 	}
 }

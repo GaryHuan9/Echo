@@ -48,8 +48,8 @@ public sealed class AboutUI : AreaUI
 		{
 			ImGui.NewLine();
 
-			NameWithVersion("Echo Photorealistic Rendering Core", GetVersion(typeof(AboutUI)));
-			NameWithVersion("Graphical Render User Interface", GetVersion(typeof(Device)));
+			NameWithVersion("Echo Photorealistic Rendering Core", GetVersion(typeof(Device)));
+			NameWithVersion("Graphical Render User Interface", GetVersion(typeof(AboutUI)));
 
 			ImGui.NewLine();
 

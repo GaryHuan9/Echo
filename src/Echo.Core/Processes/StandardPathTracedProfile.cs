@@ -28,8 +28,8 @@ public record StandardPathTracedProfile : RenderProfile
 		{
 			> 800 => 1024,
 			> 190 => 256,
-			> 30 => 64,
-			_ => 16
+			> 30  => 64,
+			_     => 16
 		};
 
 		int minEpoch = ((float)quality / extend * 2f).Round();

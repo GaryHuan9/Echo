@@ -19,8 +19,8 @@ class Program
 		Console.WriteLine
 		(
 			@$"
-Echo Photorealistic Rendering Core [Version {GetVersion(typeof(Program)).ToString(3)}]
-Terminal Render User Interface [Version {GetVersion(typeof(Device)).ToString(3)}]
+Echo Photorealistic Rendering Core [Version {GetVersion(typeof(Device)).ToString(3)}]
+Terminal Render User Interface [Version {GetVersion(typeof(Program)).ToString(3)}]
 .NET Runtime [Version {Environment.Version.ToString(3)}]
 {Environment.OSVersion.VersionString}
 

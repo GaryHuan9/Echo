@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Echo.Core.Aggregation.Primitives;
+using Echo.Core.Common.Mathematics;
 using Echo.Core.Common.Mathematics.Randomization;
 using Echo.Core.Common.Packed;
 using Echo.Core.Evaluation.Sampling;
@@ -92,8 +93,18 @@ public class PreparedSphereTests
 		{
 			distribution.BeginSession();
 
-			(var point, float sampledPdf) = sphere.Sample(origin, distribution.Next2D());
-			Assert.That(sampledPdf, Is.Not.Zero);
+			var sample = sphere.Sample(origin, distribution.Next2D());
+
+			if (sample.NotPossible)
+			{
+				//Basically a delta sample at this point, but we require all geometry samples to be non-delta
+				//So the best we can do (at least with what I can think of now) is to just discard the sample
+				float ratio = sphere.radius * sphere.radius / origin.SquaredDistance(sphere.position);
+				Assert.That(FastMath.AlmostZero(ratio));
+				continue;
+			}
+
+			GeometryPoint point = sample.content;
 			Assert.That(point.normal.SquaredMagnitude, Is.EqualTo(1f).Roughly());
 			Assert.That(point.position, Is.EqualTo(sphere.position + sphere.radius * point.normal));
 
@@ -103,7 +114,7 @@ public class PreparedSphereTests
 			float pdf = sphere.ProbabilityDensity(origin, incident);
 
 			Assert.That(pdf, Is.Not.Zero);
-			Assert.That(pdf, Is.EqualTo(sampledPdf).Roughly(0.1f));
+			Assert.That(pdf, Is.EqualTo(sample.pdf).Roughly(0.1f));
 		}
 	}
 
